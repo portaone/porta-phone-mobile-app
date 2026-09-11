@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../events/events.dart';
 import '../requests/requests.dart';
 import '../responses/responses.dart';
+import 'conference_info.dart';
 import 'handshake.dart';
 
 enum RegistrationStatus {
@@ -80,6 +81,7 @@ class StateHandshake extends Handshake {
     required this.presenceInfos,
     required this.dialogInfos,
     required this.guestLine,
+    this.conference,
   }) : super();
 
   final Duration keepaliveInterval;
@@ -90,8 +92,21 @@ class StateHandshake extends Handshake {
   final List<SignalingDialogInfo> dialogInfos;
   final Line? guestLine;
 
+  /// The conference running on this session, `null` when there is none or the
+  /// Core predates conferencing.
+  final ConferenceInfo? conference;
+
   @override
-  List<Object?> get props => [keepaliveInterval, timestamp, registration, lines, presenceInfos, dialogInfos, guestLine];
+  List<Object?> get props => [
+    keepaliveInterval,
+    timestamp,
+    registration,
+    lines,
+    presenceInfos,
+    dialogInfos,
+    guestLine,
+    conference,
+  ];
 
   static const typeValue = 'state';
 
@@ -220,6 +235,9 @@ class StateHandshake extends Handshake {
       }
     }
 
+    final conferenceJson = json['conference'] as Map<String, dynamic>?;
+    final conference = conferenceJson == null ? null : ConferenceInfo.fromJson(conferenceJson);
+
     return StateHandshake(
       keepaliveInterval: keepaliveInterval,
       timestamp: timestamp,
@@ -228,6 +246,7 @@ class StateHandshake extends Handshake {
       presenceInfos: presenceInfos,
       dialogInfos: dialogInfos,
       guestLine: guestLine,
+      conference: conference,
     );
   }
 }

@@ -1,3 +1,4 @@
+import '../../ice_candidate_json.dart';
 import '../abstract_events.dart';
 
 class IceTrickleEvent extends LineEvent {
@@ -11,10 +12,7 @@ class IceTrickleEvent extends LineEvent {
   static const typeValue = 'ice_trickle';
 
   @override
-  Map<String, dynamic> toJson() => {
-    ...lineBaseJson(typeValue),
-    'candidate': candidate ?? {'completed': true},
-  };
+  Map<String, dynamic> toJson() => {...lineBaseJson(typeValue), 'candidate': iceCandidateToJson(candidate)};
 
   factory IceTrickleEvent.fromJson(Map<String, dynamic> json) {
     final eventTypeValue = json[Event.typeKey];
@@ -22,11 +20,10 @@ class IceTrickleEvent extends LineEvent {
       throw ArgumentError.value(eventTypeValue, Event.typeKey, 'Not equal $typeValue');
     }
 
-    final candidateJson = json['candidate'] as Map<String, dynamic>;
-    if (candidateJson['completed'] == true) {
-      return IceTrickleEvent(transaction: json['transaction'], line: json['line'], candidate: null);
-    } else {
-      return IceTrickleEvent(transaction: json['transaction'], line: json['line'], candidate: candidateJson);
-    }
+    return IceTrickleEvent(
+      transaction: json['transaction'],
+      line: json['line'],
+      candidate: iceCandidateFromJson(json['candidate']),
+    );
   }
 }

@@ -153,4 +153,39 @@ void main() {
     final result = StateHandshake.fromJson(jsonWithNull);
     expect(result.dialogInfos.first.state, equals(SignalingDialogState.unknown));
   });
+
+  test('$StateHandshake fromJson without a conference key leaves conference null', () {
+    expect(StateHandshake.fromJson(json.decode(stateHandshakeJson) as Map<String, dynamic>).conference, isNull);
+  });
+
+  test('$StateHandshake fromJson with conference null', () {
+    final decoded = json.decode(stateHandshakeJson) as Map<String, dynamic>;
+    decoded['conference'] = null;
+
+    expect(StateHandshake.fromJson(decoded).conference, isNull);
+  });
+
+  test('$StateHandshake fromJson with a running conference', () {
+    final decoded = json.decode(stateHandshakeJson) as Map<String, dynamic>;
+    decoded['conference'] = {
+      'room': 4242,
+      'participants': [
+        {'line': 0, 'call_id': 'qwertyuiopasdfghjklzxcvbnm', 'muted': false},
+        {'line': 1, 'call_id': 'second', 'muted': true},
+      ],
+    };
+
+    expect(
+      StateHandshake.fromJson(decoded).conference,
+      equals(
+        const ConferenceInfo(
+          room: 4242,
+          participants: [
+            ConferenceParticipant(line: 0, callId: 'qwertyuiopasdfghjklzxcvbnm'),
+            ConferenceParticipant(line: 1, callId: 'second', muted: true),
+          ],
+        ),
+      ),
+    );
+  });
 }

@@ -230,6 +230,37 @@ void main() {
       expect(decoded.handshake.registration.status, RegistrationStatus.registered);
     });
 
+    test('roundtrip leaves conference null when there is none', () {
+      final event = SignalingHandshakeReceived(handshake: _kHandshake);
+      final encoded = encodeHubEvent(event);
+      final decoded = decodeHubEvent(encoded) as SignalingHandshakeReceived;
+      expect(decoded.handshake.conference, isNull);
+    });
+
+    test('roundtrip preserves a running conference', () {
+      const conference = ConferenceInfo(
+        room: 4242,
+        participants: [
+          ConferenceParticipant(line: 0, callId: 'abc'),
+          ConferenceParticipant(line: 1, callId: 'def', muted: true),
+        ],
+      );
+      final handshake = StateHandshake(
+        keepaliveInterval: _kHandshake.keepaliveInterval,
+        timestamp: _kHandshake.timestamp,
+        registration: _kHandshake.registration,
+        lines: _kHandshake.lines,
+        presenceInfos: _kHandshake.presenceInfos,
+        dialogInfos: _kHandshake.dialogInfos,
+        guestLine: null,
+        conference: conference,
+      );
+      final event = SignalingHandshakeReceived(handshake: handshake);
+      final encoded = encodeHubEvent(event);
+      final decoded = decodeHubEvent(encoded) as SignalingHandshakeReceived;
+      expect(decoded.handshake.conference, equals(conference));
+    });
+
     test('malformed handshake payload returns null', () {
       final msg = [
         'handshake_received',

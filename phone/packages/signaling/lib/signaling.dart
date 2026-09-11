@@ -1,5 +1,6 @@
 library;
 
+export 'src/conference_refusal_reason.dart';
 export 'src/events/events.dart';
 export 'src/exceptions.dart';
 export 'src/handshakes/handshakes.dart';

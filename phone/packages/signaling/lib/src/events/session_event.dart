@@ -1,4 +1,5 @@
 import 'abstract_events.dart';
+import 'conference/conference_events.dart';
 import 'session/session_events.dart';
 
 abstract class SessionEvent extends Event {
@@ -41,5 +42,11 @@ abstract class SessionEvent extends Event {
     RegistrationFailedEvent.typeValue: RegistrationFailedEvent.fromJson,
     UnregisteredEvent.typeValue: UnregisteredEvent.fromJson,
     UnregisteringEvent.typeValue: UnregisteringEvent.fromJson,
+    // Conference events carry no `line` and no `call_id`.
+    ConferenceOfferEvent.typeValue: ConferenceOfferEvent.fromJson,
+    ConferenceIceTrickleEvent.typeValue: ConferenceIceTrickleEvent.fromJson,
+    ConferenceUpdatedEvent.typeValue: ConferenceUpdatedEvent.fromJson,
+    ConferenceFailedEvent.typeValue: ConferenceFailedEvent.fromJson,
+    ConferenceTerminatedEvent.typeValue: ConferenceTerminatedEvent.fromJson,
   };
 }

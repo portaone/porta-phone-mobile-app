@@ -1,5 +1,6 @@
 export 'abstract_events.dart';
 export 'call/call_events.dart';
+export 'conference/conference_events.dart';
 export 'line/line_events.dart';
 export 'session/session_events.dart';
 export 'global/global_events.dart';

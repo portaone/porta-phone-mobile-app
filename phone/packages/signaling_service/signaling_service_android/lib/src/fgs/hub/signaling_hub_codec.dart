@@ -315,5 +315,9 @@ Map<String, dynamic> _encodeHandshake(StateHandshake h) {
     }).toList(),
     'presence_infos': h.presenceInfos.map((info) => info.toJson()).toList(),
     'dialog_infos': h.dialogInfos.map((info) => info.toJson()).toList(),
+    // The running conference, if any. Without it the app isolate
+    // would always see `conference == null` in socket mode and never
+    // reconcile a room that survived a reconnect.
+    if (h.conference != null) 'conference': h.conference!.toJson(),
   };
 }

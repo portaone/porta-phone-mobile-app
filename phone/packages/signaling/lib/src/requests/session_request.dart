@@ -1,3 +1,4 @@
+import 'package:signaling/src/requests/conference/conference_requests.dart';
 import 'package:signaling/src/requests/session/session_requests.dart';
 
 import 'abstract_requests.dart';
@@ -27,5 +28,14 @@ abstract class SessionRequest extends Request {
 
   static final Map<String, SessionRequest Function(Map<String, dynamic>)> _sessionRequestFromJsonDecoders = {
     PresenceSettingsUpdateRequest.typeValue: PresenceSettingsUpdateRequest.fromJson,
+    // Conference requests are session-level even though some carry `line`:
+    // there `line` names a participant, not an address.
+    MergeRequest.typeValue: MergeRequest.fromJson,
+    ConferenceAddRequest.typeValue: ConferenceAddRequest.fromJson,
+    ConferenceAnswerRequest.typeValue: ConferenceAnswerRequest.fromJson,
+    ConferenceIceTrickleRequest.typeValue: ConferenceIceTrickleRequest.fromJson,
+    ConferenceMuteRequest.typeValue: ConferenceMuteRequest.fromJson,
+    ConferenceRemoveRequest.typeValue: ConferenceRemoveRequest.fromJson,
+    ConferenceHangupRequest.typeValue: ConferenceHangupRequest.fromJson,
   };
 }

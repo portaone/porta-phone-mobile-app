@@ -33,8 +33,12 @@ await client.disconnect();
 ```
 Event / Request
 ├── SessionEvent / SessionRequest  (field: transaction)
-│   └── RegisteringEvent, RegisteredEvent, UnregisteredEvent, RegistrationFailedEvent…
-└── LineEvent / LineRequest        (field: line)
+│   ├── RegisteringEvent, RegisteredEvent, UnregisteredEvent, RegistrationFailedEvent…
+│   └── Conference*: ConferenceOfferEvent, ConferenceUpdatedEvent, …
+│       MergeRequest, ConferenceAddRequest, ConferenceMuteRequest, …
+│       Session-level even when they carry `line`: there it is a participant
+│       index, not an address. Never register them as LineEvent/LineRequest.
+└── LineEvent / LineRequest        (field: line, an address)
     ├── IceTrickleEvent, IceHangupEvent, TransferEvent…
     └── CallEvent / CallRequest    (field: callId)
         ├── IncomingCallEvent, CallingEvent, RingingEvent, AcceptedEvent, HangupEvent…
@@ -42,6 +46,13 @@ Event / Request
 ```
 
 Polymorphic deserialization uses decoder maps keyed by the `type` JSON field — no `if/switch`.
+
+**Conference protocol.** The wire-level specification of every
+`merge` / `conference_*` request, response and event, the handshake `conference`
+block, refusal reasons, sequences and the client's local obligations is
+[`docs/conference_protocol.md`](docs/conference_protocol.md). It is self-contained
+and written from the Core implementation; read it before touching any
+`Conference*` class, and update it in the same change when the wire format moves.
 
 ## Key Internals
 
@@ -57,7 +68,7 @@ or disconnect.
 
 | Kind | JSON key | Class | Direction |
 |------|----------|-------|-----------|
-| Handshake | `handshake` | `StateHandshake`, `KeepaliveHandshake` | Server → Client |
+| Handshake | `handshake` | `StateHandshake` (with `conference: ConferenceInfo?`), `KeepaliveHandshake` | Server → Client |
 | Event | `event` | `SessionEvent`, `LineEvent`, `CallEvent` | Server → Client |
 | Response | `response` | `AckResponse`, `ErrorResponse` | Server → Client |
 
