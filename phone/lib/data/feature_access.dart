@@ -466,6 +466,11 @@ abstract final class CallMapper {
     // when the remote core understands the request (see CoreInfo.supportsPeerMessage).
     final isPeerMessageEnabled = systemInfo?.core.supportsPeerMessage ?? false;
 
+    // Capability-gated rather than version-gated: where conferencing is off the
+    // backend refuses a merge with a typed reason, so the only thing to decide
+    // is whether to offer the control at all.
+    final isConferenceEnabled = systemInfo?.adapter?.supportsConference ?? false;
+
     return CallConfig(
       capabilities: CallCapabilitiesConfig(
         isVideoCallEnabled: isVideoEnabled,
@@ -473,6 +478,7 @@ abstract final class CallMapper {
         isAttendedTransferEnabled: transferConfig.enableAttendedTransfer,
         callPullVideoStrategy: callPullVideoStrategy,
         isPeerMessageEnabled: isPeerMessageEnabled,
+        isConferenceEnabled: isConferenceEnabled,
       ),
       triggerConfig: CallTriggerConfig(
         smsFallback: SmsFallbackTriggerConfig(

@@ -19,6 +19,8 @@ class AdapterInfo with EquatableMixin {
 
   bool get supportsSipDialogs => supported?.contains(kSipDialogsFeatureFlag) ?? false;
 
+  bool get supportsConference => supported?.contains(kConferenceFeatureFlag) ?? false;
+
   /// Raw OTP login identifiers advertised by the backend adapter under
   /// `custom.otp_login_identifiers` (e.g. `phone_number`, `email`).
   ///

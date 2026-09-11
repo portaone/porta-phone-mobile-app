@@ -26,6 +26,7 @@ WebtritSystemInfo systemInfoWithSupported(List<String> supported, {Version? core
   when(() => adapterInfo.supported).thenReturn(supported);
   when(() => adapterInfo.supportsSipPresence).thenReturn(supported.contains(kSipPresenceFeatureFlag));
   when(() => adapterInfo.supportsSipDialogs).thenReturn(supported.contains(kSipDialogsFeatureFlag));
+  when(() => adapterInfo.supportsConference).thenReturn(supported.contains(kConferenceFeatureFlag));
   when(() => systemInfo.adapter).thenReturn(adapterInfo);
   when(() => systemInfo.core).thenReturn(coreInfo);
 
