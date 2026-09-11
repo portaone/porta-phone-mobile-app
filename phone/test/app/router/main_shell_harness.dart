@@ -20,7 +20,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
-import 'package:pub_semver/pub_semver.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:ssl_certificates/ssl_certificates.dart';
@@ -42,7 +41,6 @@ import 'package:webtrit_phone/utils/utils.dart';
 
 import '../../helpers/feature_access_factories.dart';
 import '../../mocks/fake_connectivity_service.dart';
-import '../../mocks/feature_access_mocks.dart';
 import '../../mocks/mock_app_preferences.dart';
 import '../../mocks/mock_secure_storage.dart';
 
@@ -147,17 +145,6 @@ class MockContactsAgreementStatusRepository extends Mock implements ContactsAgre
 class MockLogRecordsRepository extends Mock implements LogRecordsRepository {}
 
 class MockRemoteConfigSnapshot extends Mock implements RemoteConfigSnapshot {}
-
-/// Builds a real [WebtritSystemInfo] mock advertising exactly [supported]
-/// adapter capabilities - the lever every scenario of the bug flips.
-WebtritSystemInfo systemInfoWithSupported(List<String> supported) {
-  final systemInfo = MockWebtritSystemInfo();
-  final adapterInfo = MockAdapterInfo();
-  when(() => adapterInfo.supported).thenReturn(supported);
-  when(() => systemInfo.adapter).thenReturn(adapterInfo);
-  when(() => systemInfo.core).thenReturn(CoreInfo(version: Version(0, 1, 0)));
-  return systemInfo;
-}
 
 /// Registers the mocktail fallback values the harness stubs rely on.
 /// Call once from the test file's `setUpAll`.

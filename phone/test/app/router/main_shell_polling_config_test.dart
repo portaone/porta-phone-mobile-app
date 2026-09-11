@@ -50,14 +50,8 @@ final _userInfo = UserInfo(
 /// A session whose core supports the external directory and whose presence
 /// mode is [hybridPresence]: the two inputs the contacts registration reads.
 FeatureAccess _featureAccessWithContacts({required bool hybridPresence}) {
-  final systemInfo = MockWebtritSystemInfo();
-  final adapterInfo = MockAdapterInfo();
-  when(() => adapterInfo.supported).thenReturn([kExtensionsFeatureFlag]);
-  when(() => adapterInfo.supportsSipDialogs).thenReturn(false);
-  when(() => adapterInfo.supportsSipPresence).thenReturn(false);
-  when(() => systemInfo.adapter).thenReturn(adapterInfo);
   // Hybrid presence needs a core that is aware of it (>= 0.28.0-alpha.1).
-  when(() => systemInfo.core).thenReturn(CoreInfo(version: Version(0, 28, 0)));
+  final systemInfo = systemInfoWithSupported([kExtensionsFeatureFlag], coreVersion: Version(0, 28, 0));
 
   final snapshot = MockRemoteConfigSnapshot();
   when(() => snapshot.getBool(any())).thenReturn(null);
@@ -75,11 +69,10 @@ FeatureAccess _featureAccessWithContacts({required bool hybridPresence}) {
 /// A session whose core does or does not offer system notifications: the one
 /// input the notifications registration reads.
 FeatureAccess _featureAccessWithSystemNotifications({required bool supported}) {
-  final systemInfo = MockWebtritSystemInfo();
-  final adapterInfo = MockAdapterInfo();
-  when(() => adapterInfo.supported).thenReturn(supported ? [kSystemNotificationsFeatureFlag] : []);
-  when(() => systemInfo.adapter).thenReturn(adapterInfo);
-  when(() => systemInfo.core).thenReturn(CoreInfo(version: Version(0, 28, 0)));
+  final systemInfo = systemInfoWithSupported(
+    supported ? [kSystemNotificationsFeatureFlag] : const [],
+    coreVersion: Version(0, 28, 0),
+  );
 
   final snapshot = MockRemoteConfigSnapshot();
   when(() => snapshot.getBool(any())).thenReturn(null);

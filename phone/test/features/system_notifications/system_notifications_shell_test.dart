@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:webtrit_phone/data/feature_access.dart';
 import 'package:webtrit_phone/features/system_notifications/system_notifications.dart';
 
-import '../../app/router/main_shell_harness.dart';
 import '../../helpers/feature_access_factories.dart';
 
 /// The shell reads its configuration once, at mount.
