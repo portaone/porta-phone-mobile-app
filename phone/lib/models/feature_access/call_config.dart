@@ -41,6 +41,7 @@ class CallCapabilitiesConfig extends Equatable {
     this.isAttendedTransferEnabled = true,
     this.callPullVideoStrategy = CallPullVideoStrategy.softMute,
     this.isPeerMessageEnabled = false,
+    this.isConferenceEnabled = false,
   });
 
   /// Whether the UI should show video call functionality.
@@ -73,6 +74,13 @@ class CallCapabilitiesConfig extends Equatable {
   /// in-call media_state signal must only be sent when this is `true`.
   final bool isPeerMessageEnabled;
 
+  /// Whether the UI should offer merging established calls into a conference.
+  ///
+  /// Reflects the capability the deployment advertises, nothing else: where it
+  /// is absent the backend refuses a merge outright, so the control could only
+  /// ever fail. Defaults to `false` so a backend that says nothing hides it.
+  final bool isConferenceEnabled;
+
   @override
   List<Object?> get props => [
     isVideoCallEnabled,
@@ -81,5 +89,6 @@ class CallCapabilitiesConfig extends Equatable {
     isAttendedTransferEnabled,
     callPullVideoStrategy,
     isPeerMessageEnabled,
+    isConferenceEnabled,
   ];
 }

@@ -2,18 +2,31 @@ import 'package:mocktail/mocktail.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:theme_schema/models/models.dart';
 
+import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
 import '../mocks/feature_access_mocks.dart';
 
-WebtritSystemInfo createMockSystemInfo() {
+WebtritSystemInfo createMockSystemInfo() => systemInfoWithSupported(const []);
+
+/// A system info whose adapter advertises exactly [supported].
+///
+/// A mock replaces the class whole, so every capability getter has to be
+/// stubbed here too - an unstubbed one throws `Null is not a subtype of bool`
+/// in whichever mapper happens to read it. Stub them from the list, so this
+/// behaves like the real [AdapterInfo] and a capability added later needs one
+/// line here instead of a fix in every test that builds a feature access.
+WebtritSystemInfo systemInfoWithSupported(List<String> supported, {Version? coreVersion}) {
   final systemInfo = MockWebtritSystemInfo();
   final adapterInfo = MockAdapterInfo();
-  final coreInfo = CoreInfo(version: Version(0, 1, 0));
+  final coreInfo = CoreInfo(version: coreVersion ?? Version(0, 1, 0));
 
-  when(() => adapterInfo.supported).thenReturn([]);
+  when(() => adapterInfo.supported).thenReturn(supported);
+  when(() => adapterInfo.supportsSipPresence).thenReturn(supported.contains(kSipPresenceFeatureFlag));
+  when(() => adapterInfo.supportsSipDialogs).thenReturn(supported.contains(kSipDialogsFeatureFlag));
+  when(() => adapterInfo.supportsConference).thenReturn(supported.contains(kConferenceFeatureFlag));
   when(() => systemInfo.adapter).thenReturn(adapterInfo);
   when(() => systemInfo.core).thenReturn(coreInfo);
 

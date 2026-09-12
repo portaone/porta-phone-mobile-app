@@ -93,6 +93,7 @@ const kSystemNotificationsFeatureFlag = 'notifications';
 const kSystemNotificationsPushFeatureFlag = 'notificationsPush';
 const kSipPresenceFeatureFlag = 'sipPresence';
 const kSipDialogsFeatureFlag = 'sipDialogs';
+const kConferenceFeatureFlag = 'conference';
 const kCallHistoryFeatureFlag = 'callHistory';
 const kExtensionsFeatureFlag = 'extensions';
 
