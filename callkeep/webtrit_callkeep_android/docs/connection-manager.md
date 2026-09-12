@@ -17,50 +17,73 @@ has a corresponding shadow registry, `MainProcessConnectionTracker`.
 
 | Field                     | Description                                                                                                 |
 |---------------------------|-------------------------------------------------------------------------------------------------------------|
-| `connections`             | `Map<String, PhoneConnection>` — all `PhoneConnection` objects by callId                                    |
+| `connections`             | `ConcurrentHashMap<String, PhoneConnection>` — all `PhoneConnection` objects by callId                      |
 | `pendingCallIds`          | Calls for which `addPendingForIncomingCall()` was called but `onCreateIncomingConnection` has not yet fired |
-| `pendingMetadata`         | `CallMetadata` stored during `addPendingForIncomingCall()`, consumed in `onCreateIncomingConnection`        |
 | `pendingAnswers`          | Calls where `answerCall` arrived before `onCreateIncomingConnection`                                        |
-| `forcedTerminatedCallIds` | Calls cleared by tearDown; stale Telecom callbacks for these are suppressed                                 |
+| `terminatedCallIds`       | Calls marked terminated by `markTerminated()`                                                               |
+| `forcedTerminatedCallIds` | Pending callIds snapshotted by `cleanConnections()`; stale Telecom callbacks for these are suppressed       |
+
+No metadata is held here. The manager stores callIds and connections; `CallMetadata`
+travels with the intents and the connection itself.
 
 ## Key Methods
 
 ### Pending Call Registration
 
 ```kotlin
-fun addPendingForIncomingCall(callId: String, metadata: CallMetadata)
+fun addPendingForIncomingCall(callId: String): Boolean
+fun removePending(callId: String)
 ```
 
-Called via `NotifyPending` intent from the main process **before** Telecom delivers
-`onCreateIncomingConnection`. Stores `callId` and `metadata` so `PhoneConnectionService` can look
-them up when the connection is created.
+Both run inside `:callkeep_core`. `PhoneConnectionService.onCreateIncomingConnection`
+registers the slot itself when Telecom delivers a call it has not seen, and the
+`NotifyPending` service action registers one ahead of time when the main process gets the
+chance. Neither is guaranteed to come first, which is why registration is idempotent.
+`addPendingForIncomingCall` returns `false` when `cleanConnections()` has already captured
+this callId as force-terminated, i.e. the call is a zombie and must not be re-registered.
 
 ```kotlin
-fun checkAndReservePending(callId: String): Boolean
+fun checkAndReservePending(callId: String): PIncomingCallErrorEnum?
 ```
 
-Atomic check: returns `true` and claims the pending slot if `callId` is in `pendingCallIds`.
-Used to detect races where Telecom creates the connection before the `NotifyPending` intent
-arrives (the connection is created with partial data in that case).
+Atomic check and claim: `null` means the slot was taken and the call may proceed; a
+non-null value is the reason it may not. Used where Telecom and the main process race over
+the same callId.
 
 ### Connection Lifecycle
 
 ```kotlin
-fun addConnection(callId: String, connection: PhoneConnection)
+internal fun addConnection(callId: String, connection: PhoneConnection)
 fun getConnection(callId: String): PhoneConnection?
 fun getConnections(): List<PhoneConnection>
-fun removeConnection(callId: String)
+fun isConnectionAlreadyExists(callId: String): Boolean
+fun isConnectionDisconnected(callId: String): Boolean
+fun isConnectionAnswered(id: String): Boolean
+fun hasVideoConnections(): Boolean
 ```
+
+There is no `removeConnection`. An entry leaves the map in two ways: `cleanConnections()`
+clears the whole set, and `checkAndReservePending` drops a single stale
+`STATE_DISCONNECTED` entry so the same callId can be reused, as a transfer-back does. An
+ordinary call that just ended therefore stays in the map as `STATE_DISCONNECTED`.
+`markTerminated` is narrower than its name suggests: it is called only when a command
+arrives for a connection that no longer exists, so `terminatedCallIds` records
+connection-not-found cases rather than every finished call.
 
 ### State Queries
 
 ```kotlin
 fun isPending(callId: String): Boolean
 fun isForcedTerminated(callId: String): Boolean
-fun getPendingMetadata(callId: String): CallMetadata?
-fun getPendingCallIds(): Set<String>
-fun drainUnconnectedPendingCallIds(): List<String>
+fun drainUnconnectedPendingCallIds(): Set<String>
+fun getActiveConnection(): PhoneConnection?
+fun isExistsIncomingConnection(): Boolean
+fun hasActiveOrHoldingConnection(): Boolean
 ```
+
+`getActiveConnection()` returns the first connection in `STATE_ACTIVE`, and
+`hasActiveOrHoldingConnection()` is a plain boolean: both assume one call is live at a
+time, which is what the incoming-call ringtone choice and the outgoing-call path rely on.
 
 `drainUnconnectedPendingCallIds()` returns pending callIds that have no corresponding
 `PhoneConnection` yet. Used during `TearDownConnections` to generate synthetic `HungUp` events
@@ -71,6 +94,8 @@ for calls Telecom never confirmed.
 ```kotlin
 fun reserveAnswer(callId: String)
 fun consumeAnswer(callId: String): Boolean
+fun addConnectionAndConsumeAnswer(callId: String, connection: PhoneConnection): Boolean
+fun reserveOrGetConnectionToAnswer(callId: String): PhoneConnection?
 ```
 
 `reserveAnswer` is called when the main process sends `ReserveAnswer` (user pressed answer before
@@ -80,12 +105,14 @@ true, the newly created connection is answered immediately.
 ### TearDown
 
 ```kotlin
-fun forceTerminate(callId: String)
-fun clearAll()
+fun markTerminated(callId: String)
+fun cleanConnections()
 ```
 
-`forceTerminate` adds `callId` to `forcedTerminatedCallIds` and removes it from all other sets.
-Subsequent Telecom callbacks for this call are ignored. `clearAll` resets all state.
+`markTerminated` records a callId in `terminatedCallIds`. `cleanConnections` destroys every
+connection and clears the registry, snapshotting the still-pending callIds into
+`forcedTerminatedCallIds` first — Telecom may still deliver `onCreateIncomingConnection` for
+those afterwards, and `isForcedTerminated()` is what rejects them as zombies.
 
 ## Synchronization
 

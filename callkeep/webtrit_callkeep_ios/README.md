@@ -7,11 +7,11 @@ PushKit to deliver native call UI and background VoIP push handling.
 
 ## How it works
 
-| App state | Incoming call UI |
-| --- | --- |
-| Foreground | Flutter-based incoming call screen |
-| Background / locked | System CallKit UI |
-| Terminated | PushKit wakes the app; CallKit UI shown after app initializes |
+| App state           | Incoming call UI                                              |
+|---------------------|---------------------------------------------------------------|
+| Foreground          | Flutter-based incoming call screen                            |
+| Background / locked | System CallKit UI                                             |
+| Terminated          | PushKit wakes the app; CallKit UI shown after app initializes |
 
 PushKit delivers a VoIP push before the user interacts with anything, giving the app time to
 establish signaling and media before CallKit presents the call.
@@ -47,18 +47,24 @@ webtrit_callkeep_ios/
 │       └── converters.dart           # Pigeon <-> platform_interface type conversions
 ├── pigeons/
 │   └── callkeep.messages.dart        # Pigeon input — edit this, then regenerate
-└── ios/Classes/                       # Swift implementation (CallKit + PushKit)
+└── ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/
+    ├── WebtritCallkeepPlugin.m        # CallKit + PushKit integration
+    ├── Converters.m                   # CallKit <-> Pigeon types, provider configuration
+    ├── CallWaitingTonePlayer.m        # synthesized call-waiting beep
+    ├── NSUUID+v5.m                    # name-based UUID from a callId
+    ├── Generated.m                    # Pigeon-generated (DO NOT EDIT)
+    └── include/webtrit_callkeep_ios/  # public headers, incl. Generated.h (DO NOT EDIT)
 ```
 
 ---
 
 ## Delegates
 
-| Delegate | Registration | Purpose |
-| --- | --- | --- |
-| `CallkeepDelegate` | `Callkeep().setDelegate(...)` | Call lifecycle events |
+| Delegate               | Registration                              | Purpose                                       |
+|------------------------|-------------------------------------------|-----------------------------------------------|
+| `CallkeepDelegate`     | `Callkeep().setDelegate(...)`             | Call lifecycle events                         |
 | `PushRegistryDelegate` | `Callkeep().setPushRegistryDelegate(...)` | PushKit VoIP token and incoming push payloads |
-| `CallkeepLogsDelegate` | `Callkeep().setLogsDelegate(...)` | Forward native logs to Dart |
+| `CallkeepLogsDelegate` | `Callkeep().setLogsDelegate(...)`         | Forward native logs to Dart                   |
 
 `PushRegistryDelegate` must be set before the app enters the background if VoIP pushes are
 expected. Failing to do so causes missed pushes.
@@ -92,8 +98,8 @@ Without these, `reportNewIncomingCall` silently fails when the app is background
 flutter pub run pigeon --input pigeons/callkeep.messages.dart
 ```
 
-Never manually edit `lib/src/common/callkeep.pigeon.dart` or Pigeon-generated Swift files under
-`ios/Classes/`. Commit both the input file and all generated outputs together.
+Never manually edit `lib/src/common/callkeep.pigeon.dart` or the Pigeon-generated
+`Generated.h` and `Generated.m`. Commit the input file and all generated outputs together.
 
 ---
 
@@ -111,15 +117,15 @@ dart format --line-length 80 --set-exit-if-changed lib test
 
 - No persistent background services — all background handling goes through CallKit/PushKit.
 - `PushRegistryDelegate` is separate from `CallkeepDelegate`.
-- Never block the main thread in Swift delegate callbacks.
-- Minimum deployment target: iOS 11.
+- Never block the main thread in CallKit delegate callbacks.
+- Minimum deployment target: iOS 13.0 (`webtrit_callkeep_ios.podspec`, `Package.swift`).
 
 ---
 
 ## Related packages
 
-| Package | Description |
-| --- | --- |
-| [`webtrit_callkeep`](../webtrit_callkeep/README.md) | Public API aggregator |
-| [`webtrit_callkeep_platform_interface`](../webtrit_callkeep_platform_interface/README.md) | Shared interface |
-| [`webtrit_callkeep_android`](../webtrit_callkeep_android/README.md) | Android implementation |
+| Package                                                                                   | Description            |
+|-------------------------------------------------------------------------------------------|------------------------|
+| [`webtrit_callkeep`](../webtrit_callkeep/README.md)                                       | Public API aggregator  |
+| [`webtrit_callkeep_platform_interface`](../webtrit_callkeep_platform_interface/README.md) | Shared interface       |
+| [`webtrit_callkeep_android`](../webtrit_callkeep_android/README.md)                       | Android implementation |
