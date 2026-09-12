@@ -514,11 +514,15 @@ class StandaloneCallService : Service() {
     private fun handleHolding(metadata: CallMetadata) {
         val onHold = metadata.hasHold ?: return
         Log.i(TAG, "handleHolding: callId=${metadata.callId}, onHold=$onHold")
-        if (onHold) {
-            audioManager.mode = AudioManager.MODE_NORMAL
-        } else {
-            audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-        }
+        // Hold deliberately leaves the process audio mode alone. The mode says this process is
+        // in a call, which a held call still is, and it is shared by every call the process has
+        // - so deciding it from the call being held drops it out from under the others. It is
+        // raised when a call is answered and released when the last one ends, which is where a
+        // property of the process belongs.
+        //
+        // The Telecom backend behaves the same way and always has: PhoneConnection.onHold and
+        // onUnhold do not touch the mode, and PhoneConnection.onDisconnect releases it only once
+        // no active or holding connection remains.
         val updated = (callMetadataMap[metadata.callId] ?: metadata).copy(hasHold = onHold)
         callMetadataMap[metadata.callId] = updated
         core.notifyConnectionEvent(CallMediaEvent.ConnectionHolding, updated.toBundle())
