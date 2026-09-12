@@ -253,7 +253,7 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
   pigeonResult.supportsVideo = [GetNullableObjectAtIndex(list, 9) boolValue];
   pigeonResult.includesCallsInRecents = [GetNullableObjectAtIndex(list, 10) boolValue];
   pigeonResult.driveIdleTimerDisabled = [GetNullableObjectAtIndex(list, 11) boolValue];
-  pigeonResult.callWaitingToneOwnCallsOnly = list.count > 12 ? GetNullableObjectAtIndex(list, 12) : nil;
+  pigeonResult.callWaitingToneOwnCallsOnly = GetNullableObjectAtIndex(list, 12);
   return pigeonResult;
 }
 + (nullable WTPIOSOptions *)nullableFromList:(NSArray<id> *)list {
@@ -301,10 +301,11 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
   result = result * 31 + @(self.supportsVideo).hash;
   result = result * 31 + @(self.includesCallsInRecents).hash;
   result = result * 31 + @(self.driveIdleTimerDisabled).hash;
+  result = result * 31 + FLTPigeonDeepHash(self.callWaitingToneOwnCallsOnly);
   return result;
 }
 - (NSString *)description {
-  return [NSString stringWithFormat:@"WTPIOSOptions(localizedName: %@, ringtoneSound: %@, ringbackSound: %@, iconTemplateImageAssetName: %@, maximumCallGroups: %ld, maximumCallsPerCallGroup: %ld, supportsHandleTypeGeneric: %@, supportsHandleTypePhoneNumber: %@, supportsHandleTypeEmailAddress: %@, supportsVideo: %@, includesCallsInRecents: %@, driveIdleTimerDisabled: %@)", self.localizedName, self.ringtoneSound, self.ringbackSound, self.iconTemplateImageAssetName, (long)self.maximumCallGroups, (long)self.maximumCallsPerCallGroup, self.supportsHandleTypeGeneric, self.supportsHandleTypePhoneNumber, self.supportsHandleTypeEmailAddress, self.supportsVideo ? @"true" : @"false", self.includesCallsInRecents ? @"true" : @"false", self.driveIdleTimerDisabled ? @"true" : @"false"];
+  return [NSString stringWithFormat:@"WTPIOSOptions(localizedName: %@, ringtoneSound: %@, ringbackSound: %@, iconTemplateImageAssetName: %@, maximumCallGroups: %ld, maximumCallsPerCallGroup: %ld, supportsHandleTypeGeneric: %@, supportsHandleTypePhoneNumber: %@, supportsHandleTypeEmailAddress: %@, supportsVideo: %@, includesCallsInRecents: %@, driveIdleTimerDisabled: %@, callWaitingToneOwnCallsOnly: %@)", self.localizedName, self.ringtoneSound, self.ringbackSound, self.iconTemplateImageAssetName, (long)self.maximumCallGroups, (long)self.maximumCallsPerCallGroup, self.supportsHandleTypeGeneric, self.supportsHandleTypePhoneNumber, self.supportsHandleTypeEmailAddress, self.supportsVideo ? @"true" : @"false", self.includesCallsInRecents ? @"true" : @"false", self.driveIdleTimerDisabled ? @"true" : @"false", self.callWaitingToneOwnCallsOnly];
 }
 @end
 

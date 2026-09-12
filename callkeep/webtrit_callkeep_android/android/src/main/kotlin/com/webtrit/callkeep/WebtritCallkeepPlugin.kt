@@ -173,7 +173,6 @@ class WebtritCallkeepPlugin :
             override fun onDelegateSet() = foregroundService?.onDelegateSet() ?: Unit
         }
 
-    private var delegateLogsFlutterApi: PDelegateLogsFlutterApi? = null
     private var permissionsApi: PermissionsApi? = null
 
     // The BinaryMessenger that belongs to the Activity's Flutter engine, captured
@@ -212,7 +211,6 @@ class WebtritCallkeepPlugin :
             PHostPermissionsApi.setUp(messenger, it)
         }
 
-        delegateLogsFlutterApi = PDelegateLogsFlutterApi(messenger).also { Log.add(it) }
         Log.i(TAG, "onAttachedToEngine id:${flutterPluginBinding.hashCode()}")
 
         DiagnosticsApi(context).let {
@@ -229,8 +227,6 @@ class WebtritCallkeepPlugin :
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         Log.i(TAG, "onDetachedFromEngine id:${binding.hashCode()}")
-        delegateLogsFlutterApi?.let { Log.remove(it) }
-        delegateLogsFlutterApi = null
 
         PHostPermissionsApi.setUp(messenger, null)
         permissionsApi = null

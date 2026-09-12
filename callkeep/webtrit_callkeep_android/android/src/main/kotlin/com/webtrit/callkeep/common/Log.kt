@@ -1,13 +1,26 @@
 package com.webtrit.callkeep.common
 
-import com.webtrit.callkeep.PDelegateLogsFlutterApi
-import com.webtrit.callkeep.PLogTypeEnum
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import android.util.Log as AndroidLog
+
+/**
+ * Severity of a log line.
+ *
+ * Local to this file on purpose. The severity used to come from the generated pigeon
+ * code, left over from a delegate API that relayed log lines to Dart; that API is gone
+ * from the pigeon definition and from the Dart side, so it is plain Kotlin now.
+ */
+enum class LogType {
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
+    VERBOSE,
+}
 
 /**
  * A logging utility that can be instantiated with a specific tag or used statically.
@@ -18,18 +31,18 @@ class Log(
     fun e(
         message: String,
         throwable: Throwable? = null,
-    ) = log(PLogTypeEnum.ERROR, tag, message, throwable)
+    ) = log(LogType.ERROR, tag, message, throwable)
 
-    fun d(message: String) = log(PLogTypeEnum.DEBUG, tag, message)
+    fun d(message: String) = log(LogType.DEBUG, tag, message)
 
-    fun i(message: String) = log(PLogTypeEnum.INFO, tag, message)
+    fun i(message: String) = log(LogType.INFO, tag, message)
 
-    fun v(message: String) = log(PLogTypeEnum.VERBOSE, tag, message)
+    fun v(message: String) = log(LogType.VERBOSE, tag, message)
 
     fun w(
         message: String,
         throwable: Throwable? = null,
-    ) = log(PLogTypeEnum.WARN, tag, message, throwable)
+    ) = log(LogType.WARN, tag, message, throwable)
 
     companion object {
         private const val GLOBAL_PREFIX = "WebtritCallkeep"
@@ -57,16 +70,8 @@ class Log(
             }
         }
 
-        /** No-op: kept for API compatibility until delegate API is removed. */
-        @JvmStatic
-        fun add(delegate: PDelegateLogsFlutterApi) = Unit
-
-        /** No-op: kept for API compatibility until delegate API is removed. */
-        @JvmStatic
-        fun remove(delegate: PDelegateLogsFlutterApi) = Unit
-
         private fun log(
-            type: PLogTypeEnum,
+            type: LogType,
             tag: String,
             message: String,
             throwable: Throwable? = null,
@@ -77,17 +82,17 @@ class Log(
                 // logFilePath not yet configured — fall back to logcat directly
                 val prefixedTag = "$GLOBAL_PREFIX.$tag"
                 when (type) {
-                    PLogTypeEnum.DEBUG -> AndroidLog.d(prefixedTag, message, throwable)
-                    PLogTypeEnum.INFO -> AndroidLog.i(prefixedTag, message, throwable)
-                    PLogTypeEnum.WARN -> AndroidLog.w(prefixedTag, message, throwable)
-                    PLogTypeEnum.ERROR -> AndroidLog.e(prefixedTag, message, throwable)
-                    PLogTypeEnum.VERBOSE -> AndroidLog.v(prefixedTag, message, throwable)
+                    LogType.DEBUG -> AndroidLog.d(prefixedTag, message, throwable)
+                    LogType.INFO -> AndroidLog.i(prefixedTag, message, throwable)
+                    LogType.WARN -> AndroidLog.w(prefixedTag, message, throwable)
+                    LogType.ERROR -> AndroidLog.e(prefixedTag, message, throwable)
+                    LogType.VERBOSE -> AndroidLog.v(prefixedTag, message, throwable)
                 }
             }
         }
 
         private fun writeToFile(
-            type: PLogTypeEnum,
+            type: LogType,
             tag: String,
             message: String,
             throwable: Throwable?,
@@ -98,11 +103,11 @@ class Log(
                 val lockFile = File("$path.lock")
                 val level =
                     when (type) {
-                        PLogTypeEnum.DEBUG -> "D"
-                        PLogTypeEnum.INFO -> "I"
-                        PLogTypeEnum.WARN -> "W"
-                        PLogTypeEnum.ERROR -> "E"
-                        PLogTypeEnum.VERBOSE -> "V"
+                        LogType.DEBUG -> "D"
+                        LogType.INFO -> "I"
+                        LogType.WARN -> "W"
+                        LogType.ERROR -> "E"
+                        LogType.VERBOSE -> "V"
                     }
                 val timestamp = dateFormat.format(Date())
                 val line =
@@ -121,7 +126,7 @@ class Log(
                         FileOutputStream(logFile, true).use { fos ->
                             fos.write(bytes)
                             fos.flush()
-                            if (type == PLogTypeEnum.ERROR || type == PLogTypeEnum.WARN) {
+                            if (type == LogType.ERROR || type == LogType.WARN) {
                                 fos.fd.sync()
                             }
                         }
@@ -137,31 +142,31 @@ class Log(
             tag: String,
             message: String,
             throwable: Throwable? = null,
-        ) = log(PLogTypeEnum.ERROR, tag, message, throwable)
+        ) = log(LogType.ERROR, tag, message, throwable)
 
         @JvmStatic
         fun d(
             tag: String,
             message: String,
-        ) = log(PLogTypeEnum.DEBUG, tag, message)
+        ) = log(LogType.DEBUG, tag, message)
 
         @JvmStatic
         fun i(
             tag: String,
             message: String,
-        ) = log(PLogTypeEnum.INFO, tag, message)
+        ) = log(LogType.INFO, tag, message)
 
         @JvmStatic
         fun w(
             tag: String,
             message: String,
             throwable: Throwable? = null,
-        ) = log(PLogTypeEnum.WARN, tag, message, throwable)
+        ) = log(LogType.WARN, tag, message, throwable)
 
         @JvmStatic
         fun v(
             tag: String,
             message: String,
-        ) = log(PLogTypeEnum.VERBOSE, tag, message)
+        ) = log(LogType.VERBOSE, tag, message)
     }
 }
