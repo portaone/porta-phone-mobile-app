@@ -32,7 +32,7 @@ flutter pub run pigeon --input pigeons/callkeep.messages.dart
 
 ## Related packages
 
-| Package | Path |
-| --- | --- |
+| Package            | Path                                     |
+|--------------------|------------------------------------------|
 | Platform interface | `../webtrit_callkeep_platform_interface` |
-| Aggregator | `../webtrit_callkeep` |
+| Aggregator         | `../webtrit_callkeep`                    |

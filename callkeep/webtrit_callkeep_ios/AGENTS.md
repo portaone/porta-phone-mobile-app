@@ -39,21 +39,21 @@ When adding a converter for a new Pigeon type, add an extension in `lib/src/comm
 
 ## iOS call UI behavior
 
-| App state | UI used |
-| --- | --- |
-| Foreground | Flutter-based incoming call screen |
-| Background / locked | System CallKit UI |
-| Terminated | CallKit via PushKit (VoIP push) wakes the app |
+| App state           | UI used                                       |
+|---------------------|-----------------------------------------------|
+| Foreground          | Flutter-based incoming call screen            |
+| Background / locked | System CallKit UI                             |
+| Terminated          | CallKit via PushKit (VoIP push) wakes the app |
 
 ---
 
 ## Delegates
 
-| Delegate | How to register | Purpose |
-| --- | --- | --- |
-| `CallkeepDelegate` | `Callkeep().setDelegate(...)` | All call lifecycle events |
+| Delegate               | How to register                           | Purpose                                      |
+|------------------------|-------------------------------------------|----------------------------------------------|
+| `CallkeepDelegate`     | `Callkeep().setDelegate(...)`             | All call lifecycle events                    |
 | `PushRegistryDelegate` | `Callkeep().setPushRegistryDelegate(...)` | PushKit VoIP token updates and incoming push |
-| `CallkeepLogsDelegate` | `Callkeep().setLogsDelegate(...)` | Forward native logs to Dart |
+| `CallkeepLogsDelegate` | `Callkeep().setLogsDelegate(...)`         | Forward native logs to Dart                  |
 
 `PushRegistryDelegate` is iOS-only and must be set before the app enters background if VoIP pushes are expected.
 

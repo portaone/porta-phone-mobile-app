@@ -7,11 +7,11 @@ PushKit to deliver native call UI and background VoIP push handling.
 
 ## How it works
 
-| App state | Incoming call UI |
-| --- | --- |
-| Foreground | Flutter-based incoming call screen |
-| Background / locked | System CallKit UI |
-| Terminated | PushKit wakes the app; CallKit UI shown after app initializes |
+| App state           | Incoming call UI                                              |
+|---------------------|---------------------------------------------------------------|
+| Foreground          | Flutter-based incoming call screen                            |
+| Background / locked | System CallKit UI                                             |
+| Terminated          | PushKit wakes the app; CallKit UI shown after app initializes |
 
 PushKit delivers a VoIP push before the user interacts with anything, giving the app time to
 establish signaling and media before CallKit presents the call.
@@ -54,11 +54,11 @@ webtrit_callkeep_ios/
 
 ## Delegates
 
-| Delegate | Registration | Purpose |
-| --- | --- | --- |
-| `CallkeepDelegate` | `Callkeep().setDelegate(...)` | Call lifecycle events |
+| Delegate               | Registration                              | Purpose                                       |
+|------------------------|-------------------------------------------|-----------------------------------------------|
+| `CallkeepDelegate`     | `Callkeep().setDelegate(...)`             | Call lifecycle events                         |
 | `PushRegistryDelegate` | `Callkeep().setPushRegistryDelegate(...)` | PushKit VoIP token and incoming push payloads |
-| `CallkeepLogsDelegate` | `Callkeep().setLogsDelegate(...)` | Forward native logs to Dart |
+| `CallkeepLogsDelegate` | `Callkeep().setLogsDelegate(...)`         | Forward native logs to Dart                   |
 
 `PushRegistryDelegate` must be set before the app enters the background if VoIP pushes are
 expected. Failing to do so causes missed pushes.
@@ -118,8 +118,8 @@ dart format --line-length 80 --set-exit-if-changed lib test
 
 ## Related packages
 
-| Package | Description |
-| --- | --- |
-| [`webtrit_callkeep`](../webtrit_callkeep/README.md) | Public API aggregator |
-| [`webtrit_callkeep_platform_interface`](../webtrit_callkeep_platform_interface/README.md) | Shared interface |
-| [`webtrit_callkeep_android`](../webtrit_callkeep_android/README.md) | Android implementation |
+| Package                                                                                   | Description            |
+|-------------------------------------------------------------------------------------------|------------------------|
+| [`webtrit_callkeep`](../webtrit_callkeep/README.md)                                       | Public API aggregator  |
+| [`webtrit_callkeep_platform_interface`](../webtrit_callkeep_platform_interface/README.md) | Shared interface       |
+| [`webtrit_callkeep_android`](../webtrit_callkeep_android/README.md)                       | Android implementation |

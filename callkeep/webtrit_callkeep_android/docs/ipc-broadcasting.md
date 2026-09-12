@@ -20,18 +20,18 @@ The event type is carried as a string extra inside the intent.
 
 ### Call Lifecycle Events (`:callkeep_core` -> main)
 
-| Event                 | Payload                         | Meaning                                          |
-|-----------------------|---------------------------------|--------------------------------------------------|
-| `IncomingConnectionReported`    | `callId`, `CallMetadata` bundle              | Incoming `PhoneConnection` created -> register in the shadow state (register-only; the delegate is notified via signaling or `ReplayIncomingCall`) |
-| `ReplayIncomingCall`     | `callId`, `CallMetadata` bundle              | Re-deliver a still-ringing incoming call to a freshly attached delegate (sole foreground delivery; from the connection-state replay on delegate attach) |
-| `AnswerCall`             | `callId`                                     | Answer signal (guard); the ACTIVE state arrives separately via `ConnectionStateChanged` |
-| `ConnectionStateChanged` | `callId`, `CallMetadata` bundle (carries `connectionState`) | Authoritative live connection state to mirror into the shadow state (RINGING/DIALING/ACTIVE/HOLDING). Terminal DISCONNECTED is NOT sent here -- it stays on the cause-carrying `HungUp`/`DeclineCall`. |
-| `DeclineCall`            | `callId`                                     | User rejected the call                                     |
-| `HungUp`                 | `callId`, disconnect cause                   | Call disconnected from either side                         |
-| `OngoingCall`         | `callId`, `CallMetadata` bundle | Outgoing connection dialing                      |
-| `OutgoingFailure`     | `callId`, failure info          | Outgoing call could not be created               |
-| `IncomingFailure`     | `callId`, failure info          | Incoming call setup failed                       |
-| `ConnectionNotFound`  | `callId`                        | `PhoneConnection` not found — synthesized HungUp |
+| Event                        | Payload                                                     | Meaning                                                                                                                                                                                                |
+|------------------------------|-------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `IncomingConnectionReported` | `callId`, `CallMetadata` bundle                             | Incoming `PhoneConnection` created -> register in the shadow state (register-only; the delegate is notified via signaling or `ReplayIncomingCall`)                                                     |
+| `ReplayIncomingCall`         | `callId`, `CallMetadata` bundle                             | Re-deliver a still-ringing incoming call to a freshly attached delegate (sole foreground delivery; from the connection-state replay on delegate attach)                                                |
+| `AnswerCall`                 | `callId`                                                    | Answer signal (guard); the ACTIVE state arrives separately via `ConnectionStateChanged`                                                                                                                |
+| `ConnectionStateChanged`     | `callId`, `CallMetadata` bundle (carries `connectionState`) | Authoritative live connection state to mirror into the shadow state (RINGING/DIALING/ACTIVE/HOLDING). Terminal DISCONNECTED is NOT sent here -- it stays on the cause-carrying `HungUp`/`DeclineCall`. |
+| `DeclineCall`                | `callId`                                                    | User rejected the call                                                                                                                                                                                 |
+| `HungUp`                     | `callId`, disconnect cause                                  | Call disconnected from either side                                                                                                                                                                     |
+| `OngoingCall`                | `callId`, `CallMetadata` bundle                             | Outgoing connection dialing                                                                                                                                                                            |
+| `OutgoingFailure`            | `callId`, failure info                                      | Outgoing call could not be created                                                                                                                                                                     |
+| `IncomingFailure`            | `callId`, failure info                                      | Incoming call setup failed                                                                                                                                                                             |
+| `ConnectionNotFound`         | `callId`                                                    | `PhoneConnection` not found — synthesized HungUp                                                                                                                                                       |
 
 ### Call Media Events (`:callkeep_core` -> main)
 
@@ -86,13 +86,13 @@ RECEIVER_NOT_EXPORTED)` on API 33+ and the equivalent on older versions.
 
 ## Receiver Locations
 
-| Receiver                                               | Listens For                                                                               |
-|--------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| `InProcessCallkeepCore.globalReceiver`                 | All global call lifecycle and media events; fans out to `ConnectionEventListener` subs    |
-| `ForegroundService` (via `ConnectionEventListener`)    | Global events routed by `CallkeepCore`                                                    |
-| `IncomingCallService` (via `ConnectionEventListener`)  | Global events routed by `CallkeepCore`                                                    |
-| Per-call dynamic receivers in `ForegroundService`      | `OngoingCall`, `OutgoingFailure`, `IncomingFailure`, `TearDownComplete`                   |
-| `PhoneConnectionService` broadcast receiver            | `NotifyPending` (only during setup)                                                       |
+| Receiver                                              | Listens For                                                                            |
+|-------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `InProcessCallkeepCore.globalReceiver`                | All global call lifecycle and media events; fans out to `ConnectionEventListener` subs |
+| `ForegroundService` (via `ConnectionEventListener`)   | Global events routed by `CallkeepCore`                                                 |
+| `IncomingCallService` (via `ConnectionEventListener`) | Global events routed by `CallkeepCore`                                                 |
+| Per-call dynamic receivers in `ForegroundService`     | `OngoingCall`, `OutgoingFailure`, `IncomingFailure`, `TearDownComplete`                |
+| `PhoneConnectionService` broadcast receiver           | `NotifyPending` (only during setup)                                                    |
 
 `InProcessCallkeepCore` maintains a single `globalReceiver` registered via
 `ConnectionServicePerformBroadcaster`. Individual services no longer register their own receivers
