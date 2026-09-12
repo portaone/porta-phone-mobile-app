@@ -91,29 +91,29 @@ registered `ConnectionEventListener`. `ForegroundService` does not register its 
 
 **Global events** (received via `ConnectionEventListener`):
 
-| Event                 | Handler                               | Main Action                                                              |
-|-----------------------|---------------------------------------|--------------------------------------------------------------------------|
-| `IncomingConnectionReported` | `handleCSIncomingConnectionReported()` | Register the call in the tracker (promote + wakelock + resolve pending callback). Register-only -- no delegate notification |
-| `ReplayIncomingCall`     | `handleCSReplayIncomingCall()`        | Deliver the incoming call to a freshly attached delegate via `didPushIncomingCall` (sole foreground delivery) |
-| `ConnectionStateChanged` | `handleCSReportConnectionStateChanged()` | `updateState()` -- mirror the authoritative connection state into the tracker |
-| `AnswerCall`             | `handleCSReportAnswerCall()`             | `markAnswered()` guard in tracker, call `performAnswerCall()` on Dart delegate |
-| `DeclineCall`         | `handleCSReportDeclineCall()`         | `markTerminated()`, call `performEndCall()`                              |
-| `HungUp`              | `handleCSReportDeclineCall()`         | Same as DeclineCall                                                      |
-| `ConnectionNotFound`  | `handleCSConnectionNotFound()`        | Synthesize HungUp — `performEndCall()`                                   |
-| `AudioMuting`         | Inline                                | Call `performMuteCall()` on Dart delegate                                |
-| `AudioDeviceSet`      | Inline                                | Call `performSetAudioDevice()`                                           |
-| `AudioDevicesUpdate`  | Inline                                | Call `performUpdateAudioDevices()`                                       |
-| `ConnectionHolding`   | Inline                                | Call `performHoldCall()`                                                 |
-| `SentDTMF`            | Inline                                | Call `performSendDTMF()`                                                 |
+| Event                        | Handler                                  | Main Action                                                                                                                 |
+|------------------------------|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `IncomingConnectionReported` | `handleCSIncomingConnectionReported()`   | Register the call in the tracker (promote + wakelock + resolve pending callback). Register-only -- no delegate notification |
+| `ReplayIncomingCall`         | `handleCSReplayIncomingCall()`           | Deliver the incoming call to a freshly attached delegate via `didPushIncomingCall` (sole foreground delivery)               |
+| `ConnectionStateChanged`     | `handleCSReportConnectionStateChanged()` | `updateState()` -- mirror the authoritative connection state into the tracker                                               |
+| `AnswerCall`                 | `handleCSReportAnswerCall()`             | `markAnswered()` guard in tracker, call `performAnswerCall()` on Dart delegate                                              |
+| `DeclineCall`                | `handleCSReportDeclineCall()`            | `markTerminated()`, call `performEndCall()`                                                                                 |
+| `HungUp`                     | `handleCSReportDeclineCall()`            | Same as DeclineCall                                                                                                         |
+| `ConnectionNotFound`         | `handleCSConnectionNotFound()`           | Synthesize HungUp — `performEndCall()`                                                                                      |
+| `AudioMuting`                | Inline                                   | Call `performMuteCall()` on Dart delegate                                                                                   |
+| `AudioDeviceSet`             | Inline                                   | Call `performSetAudioDevice()`                                                                                              |
+| `AudioDevicesUpdate`         | Inline                                   | Call `performUpdateAudioDevices()`                                                                                          |
+| `ConnectionHolding`          | Inline                                   | Call `performHoldCall()`                                                                                                    |
+| `SentDTMF`                   | Inline                                   | Call `performSendDTMF()`                                                                                                    |
 
 **Per-call dynamic receivers** (registered ad-hoc via `CallkeepCore.registerConnectionEvents()`):
 
-| Event             | Handler                           | Main Action                              |
-|-------------------|-----------------------------------|------------------------------------------|
-| `OngoingCall`     | `handleCSReportOngoingCall()`     | Promote outgoing call, notify Dart       |
-| `OutgoingFailure` | `handleCSReportOutgoingFailure()` | `markTerminated()`, notify Dart          |
-| `IncomingFailure` | `handleCSReportIncomingFailure()` | `markTerminated()`, notify Dart          |
-| `TearDownComplete`| Inline lambda                     | Completes the `tearDown()` deferred      |
+| Event              | Handler                           | Main Action                         |
+|--------------------|-----------------------------------|-------------------------------------|
+| `OngoingCall`      | `handleCSReportOngoingCall()`     | Promote outgoing call, notify Dart  |
+| `OutgoingFailure`  | `handleCSReportOutgoingFailure()` | `markTerminated()`, notify Dart     |
+| `IncomingFailure`  | `handleCSReportIncomingFailure()` | `markTerminated()`, notify Dart     |
+| `TearDownComplete` | Inline lambda                     | Completes the `tearDown()` deferred |
 
 ## Duplicate-Notification Guards
 

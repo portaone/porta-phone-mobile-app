@@ -84,18 +84,18 @@ explicit `startService` intents. Events are grouped by broadcaster:
 | `TearDownComplete`    | `:callkeep_core` -> Main | --       | Ack that tearDown completed                                                                                                                              |
 | `ReserveAnswer`       | Main -> `:callkeep_core` | `callId` | Deferred answer reservation cross-process                                                                                                                |
 | `CleanConnections`    | Main -> `:callkeep_core` | --       | Clear all connections without `hungUp()`                                                                                                                 |
-| `ReplayAudioState`      | Main -> `:callkeep_core` | --       | Ask all PhoneConnections to re-emit audio device + mute state; used by `ForegroundService.onDelegateSet()` to restore Flutter audio UI after hot restart |
+| `ReplayAudioState`    | Main -> `:callkeep_core` | --       | Ask all PhoneConnections to re-emit audio device + mute state; used by `ForegroundService.onDelegateSet()` to restore Flutter audio UI after hot restart |
 
 ---
 
 ## Android services
 
-| Service                  | Process          | Purpose                                                      |
-|--------------------------|------------------|--------------------------------------------------------------|
-| `PhoneConnectionService` | `:callkeep_core` | Telecom integration; creates/destroys `PhoneConnection`      |
-| `ForegroundService`      | main             | Active call; Pigeon host; mute/hold/speaker/DTMF             |
-| `IncomingCallService`    | main             | One-shot push-notification-triggered call handling           |
-| `ActiveCallService`      | main             | Notification for multiple simultaneous calls                 |
+| Service                  | Process          | Purpose                                                 |
+|--------------------------|------------------|---------------------------------------------------------|
+| `PhoneConnectionService` | `:callkeep_core` | Telecom integration; creates/destroys `PhoneConnection` |
+| `ForegroundService`      | main             | Active call; Pigeon host; mute/hold/speaker/DTMF        |
+| `IncomingCallService`    | main             | One-shot push-notification-triggered call handling      |
+| `ActiveCallService`      | main             | Notification for multiple simultaneous calls            |
 
 ---
 

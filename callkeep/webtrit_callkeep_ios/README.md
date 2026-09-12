@@ -64,7 +64,6 @@ webtrit_callkeep_ios/
 |------------------------|-------------------------------------------|-----------------------------------------------|
 | `CallkeepDelegate`     | `Callkeep().setDelegate(...)`             | Call lifecycle events                         |
 | `PushRegistryDelegate` | `Callkeep().setPushRegistryDelegate(...)` | PushKit VoIP token and incoming push payloads |
-| `CallkeepLogsDelegate` | `Callkeep().setLogsDelegate(...)`         | Forward native logs to Dart                   |
 
 `PushRegistryDelegate` must be set before the app enters the background if VoIP pushes are
 expected. Failing to do so causes missed pushes.

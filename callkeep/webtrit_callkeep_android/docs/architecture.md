@@ -5,22 +5,22 @@ services, broadcast-based IPC, and a Pigeon bridge to the Flutter layer.
 
 ## Component Index
 
-| Document                                                   | Component                                                                  |
-|------------------------------------------------------------|----------------------------------------------------------------------------|
-| [dual-process.md](dual-process.md)                         | Dual-process design, process boundaries, IPC contract                      |
-| [plugin.md](plugin.md)                                     | `WebtritCallkeepPlugin` — Flutter plugin entry point                       |
-| [callkeep-core.md](callkeep-core.md)                       | `CallkeepCore` / `InProcessCallkeepCore` — main-process state facade       |
-| [foreground-service.md](foreground-service.md)             | `ForegroundService` — bound service, Pigeon host, Telecom bridge           |
-| [connection-tracker.md](connection-tracker.md)             | `MainProcessConnectionTracker` — shadow call-state registry                |
-| [phone-connection-service.md](phone-connection-service.md) | `PhoneConnectionService` — Telecom `ConnectionService` in `:callkeep_core` |
-| [phone-connection.md](phone-connection.md)                 | `PhoneConnection` — single call object inside Telecom                      |
-| [connection-manager.md](connection-manager.md)             | `ConnectionManager` — call registry inside `:callkeep_core`                |
-| [ipc-broadcasting.md](ipc-broadcasting.md)                 | `ConnectionServicePerformBroadcaster` — cross-process event bus            |
-| [background-services.md](background-services.md)           | `IncomingCallService`, `ActiveCallService` — background foreground services|
-| [pigeon-apis.md](pigeon-apis.md)                           | All Pigeon host and Flutter API definitions                                |
-| [models.md](models.md)                                     | `CallMetadata`, `CallHandle`, `AudioDevice`, and other data models         |
-| [notifications.md](notifications.md)                       | Notification builders and channel management                               |
-| [call-flows.md](call-flows.md)                             | End-to-end flows: incoming call, outgoing call, teardown                   |
+| Document                                                   | Component                                                                   |
+|------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [dual-process.md](dual-process.md)                         | Dual-process design, process boundaries, IPC contract                       |
+| [plugin.md](plugin.md)                                     | `WebtritCallkeepPlugin` — Flutter plugin entry point                        |
+| [callkeep-core.md](callkeep-core.md)                       | `CallkeepCore` / `InProcessCallkeepCore` — main-process state facade        |
+| [foreground-service.md](foreground-service.md)             | `ForegroundService` — bound service, Pigeon host, Telecom bridge            |
+| [connection-tracker.md](connection-tracker.md)             | `MainProcessConnectionTracker` — shadow call-state registry                 |
+| [phone-connection-service.md](phone-connection-service.md) | `PhoneConnectionService` — Telecom `ConnectionService` in `:callkeep_core`  |
+| [phone-connection.md](phone-connection.md)                 | `PhoneConnection` — single call object inside Telecom                       |
+| [connection-manager.md](connection-manager.md)             | `ConnectionManager` — call registry inside `:callkeep_core`                 |
+| [ipc-broadcasting.md](ipc-broadcasting.md)                 | `ConnectionServicePerformBroadcaster` — cross-process event bus             |
+| [background-services.md](background-services.md)           | `IncomingCallService`, `ActiveCallService` — background foreground services |
+| [pigeon-apis.md](pigeon-apis.md)                           | All Pigeon host and Flutter API definitions                                 |
+| [models.md](models.md)                                     | `CallMetadata`, `CallHandle`, `AudioDevice`, and other data models          |
+| [notifications.md](notifications.md)                       | Notification builders and channel management                                |
+| [call-flows.md](call-flows.md)                             | End-to-end flows: incoming call, outgoing call, teardown                    |
 
 ## High-Level Diagram
 

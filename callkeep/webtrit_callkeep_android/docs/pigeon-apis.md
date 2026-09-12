@@ -25,24 +25,25 @@ Implemented by: `ForegroundService`
 
 The primary call-control API. All call lifecycle operations from Dart arrive here.
 
-| Method                                       | Description                                        |
-|----------------------------------------------|----------------------------------------------------|
-| `setUp(handle, ...)`                         | Register phone account, init notification channels |
-| `tearDown()`                                 | Hang up all calls, clean up                        |
-| `reportNewIncomingCall(callId, meta)`        | Register incoming call with Telecom                |
-| `reportConnectingOutgoingCall(callId, meta)` | Mark outgoing call as connecting                   |
-| `reportConnectedOutgoingCall(callId, meta)`  | Mark outgoing call as connected                    |
-| `reportEndCall(callId)`                      | Force-end call from Dart side                      |
-| `reportUpdateCall(callId, meta)`             | Update call metadata                               |
-| `startCall(callId, meta)`                    | Initiate an outgoing call                          |
-| `answerCall(callId)`                         | Answer incoming call                               |
-| `endCall(callId)`                            | End a call                                         |
-| `setMuted(callId, muted)`                    | Toggle mute                                        |
-| `setHeld(callId, held)`                      | Toggle hold                                        |
-| `setSpeaker(callId, on)`                     | Toggle speaker                                     |
-| `setAudioDevice(callId, device)`             | Select audio device                                |
-| `sendDTMF(callId, digit)`                    | Send DTMF tone                                     |
-| `onDelegateSet()`                            | Dart signals it is ready to receive events         |
+| Method                                                                               | Description                                        |
+|--------------------------------------------------------------------------------------|----------------------------------------------------|
+| `isSetUp()`                                                                          | Whether the plugin has been set up                 |
+| `setUp(options)`                                                                     | Register phone account, init notification channels |
+| `tearDown()`                                                                         | Hang up all calls, clean up                        |
+| `reportNewIncomingCall(callId, handle, displayName, hasVideo)`                       | Register incoming call with Telecom                |
+| `reportConnectingOutgoingCall(callId)`                                               | Mark outgoing call as connecting                   |
+| `reportConnectedOutgoingCall(callId)`                                                | Mark outgoing call as connected                    |
+| `reportUpdateCall(callId, handle, displayName, hasVideo, proximityEnabled)`          | Update call metadata; unset fields are left alone  |
+| `reportEndCall(callId, displayName, reason)`                                         | Force-end call from Dart side                      |
+| `startCall(callId, handle, displayNameOrContactIdentifier, video, proximityEnabled)` | Initiate an outgoing call                          |
+| `answerCall(callId)`                                                                 | Answer incoming call                               |
+| `endCall(callId)`                                                                    | End a call                                         |
+| `setHeld(callId, onHold)`                                                            | Toggle hold                                        |
+| `setMuted(callId, muted)`                                                            | Toggle mute                                        |
+| `setSpeaker(callId, enabled)`                                                        | Toggle speaker                                     |
+| `setAudioDevice(callId, device)`                                                     | Select audio device                                |
+| `sendDTMF(callId, key)`                                                              | Send DTMF tone                                     |
+| `onDelegateSet()`                                                                    | Dart signals it is ready to receive events         |
 
 ---
 

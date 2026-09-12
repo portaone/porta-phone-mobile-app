@@ -90,7 +90,7 @@ Callkeep (singleton, webtrit_callkeep)
 WebtritCallkeepPlatform (platform_interface)
     │
     ├── WebtritCallkeepAndroid  →  Pigeon  →  Kotlin services
-    └── WebtritCallkeepIOS      →  Pigeon  →  Swift/CallKit
+    └── WebtritCallkeepIOS      →  Pigeon  →  Objective-C/CallKit
 ```
 
 **Flutter to Platform**: `reportNewIncomingCall`, `startCall`, `answerCall`, `endCall`, `setHeld`, `setMuted`,

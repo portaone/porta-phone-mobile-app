@@ -51,39 +51,39 @@ flags on ON_START), `BackgroundPushNotificationIsolateBootstrapApi`, `ExternalEn
 Backed by `MainProcessConnectionTracker`; exact semantics (derived termination, guard behavior,
 invariants) are documented in [connection-tracker.md](connection-tracker.md).
 
-| Method                       | Description                                                          |
-|------------------------------|----------------------------------------------------------------------|
-| `exists(callId)`             | Promoted, non-terminated connection record exists                    |
-| `isPending(callId)`          | Sent to Telecom, `PhoneConnection` not yet created                   |
-| `getPendingCallIds()`        | Non-destructive snapshot of pending ids                              |
-| `isTerminated(callId)`       | Derived: seen before AND absent from all active sets                 |
-| `isAnswered(callId)`         | Answer guard was marked (not the same as STATE_ACTIVE)               |
-| `checkIncomingDuplicate(id)` | null = free; `CALL_ID_ALREADY_EXISTS[_AND_ANSWERED]` otherwise       |
+| Method                       | Description                                                                                                             |
+|------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| `exists(callId)`             | Promoted, non-terminated connection record exists                                                                       |
+| `isPending(callId)`          | Sent to Telecom, `PhoneConnection` not yet created                                                                      |
+| `getPendingCallIds()`        | Non-destructive snapshot of pending ids                                                                                 |
+| `isTerminated(callId)`       | Derived: seen before AND absent from all active sets                                                                    |
+| `isAnswered(callId)`         | Answer guard was marked (not the same as STATE_ACTIVE)                                                                  |
+| `checkIncomingDuplicate(id)` | null = free; `CALL_ID_ALREADY_EXISTS[_AND_ANSWERED]` otherwise                                                          |
 | `routeAnswerCall(id)`        | `AnswerImmediately` / `DeferAnswer` / `NotFound` -- encodes the answer-path decision for `ForegroundService.answerCall` |
-| `get(callId)` / `getAll()`   | `CallMetadata` snapshot(s) of active calls                           |
-| `getState(callId)`           | Last mirrored `PCallkeepConnectionState`                             |
-| `toPCallkeepConnection(id)`  | Pigeon connection object, null if not active                         |
+| `get(callId)` / `getAll()`   | `CallMetadata` snapshot(s) of active calls                                                                              |
+| `getState(callId)`           | Last mirrored `PCallkeepConnectionState`                                                                                |
+| `toPCallkeepConnection(id)`  | Pigeon connection object, null if not active                                                                            |
 
 ## State Mutation API
 
 Mutations are driven mostly from `ForegroundService.onConnectionEvent` as broadcasts arrive from
 the backend; the facade adds one composite:
 
-| Method                              | Typical trigger                                                | Effect                                              |
-|-------------------------------------|----------------------------------------------------------------|-----------------------------------------------------|
-| `addPending(callId)`                | own `startIncomingCall`; outgoing `startCall` pre-registration | Registers pending; resets the four per-call guards first (the sticky ghost guard excepted); true = caller owns the entry |
-| `removePending(callId)`             | registration failure / timeout / decline-before-confirmation / failed outgoing / tearDown and `onDestroy` rollback | Drops the pending entry only                        |
-| `promote(callId, meta, state)`      | `IncomingConnectionReported`; `OngoingCall`; adoption paths    | Full registration; same guard reset as `addPending` (also clears an earlier `markAnswered`) |
-| `markAnswered(callId)`              | `AnswerCall` broadcast; adoption paths (after `promote`); `CallLifecycleHandler` fallback when the push isolate is unreachable | Answer guard only; no state stamp                   |
-| `updateState(callId, state)`        | `ConnectionStateChanged` broadcast                             | Mirrors authoritative state; unconditional; ignores DISCONNECTED |
-| `markTerminated(callId)`            | `reportEndCall`; HungUp/Decline handling                       | Clears active sets; state becomes DISCONNECTED      |
-| `clearAndMarkEndCallDispatched(id)` | HungUp/Decline/`ConnectionNotFound` handler, tearDown, `onDestroy`, confirmation timeout | `markTerminated` + drops the main-process `ConnectionManager` pending reservation + marks endCallDispatched (true = first dispatch) |
-| `reserveAnswer` / `consumeAnswer`   | deferred-answer path / `AnswerCall` handler                    | Deferred answer bookkeeping                         |
-| `drainUnconnectedPendingCallIds()`  | `tearDown`                                                     | Snapshot + clear of pending                         |
-| `clear()`                           | end of `tearDown`; `cleanConnections`                          | Full per-session reset                              |
-| `markDirectNotified` / `consumeDirectNotified` | `tearDown` / HungUp handler                         | Stale-broadcast suppression                         |
-| `markEndCallDispatched(id)`         | `endCall`                                                      | performEndCall dedup; true = first mark             |
-| `markEndedWithoutFlutterState` / `wasEndedWithoutFlutterState` | `reportEndCall(MISSED_WHILE_CONNECTING)` / `reportNewIncomingCall` | Sticky ghost-re-presentation guard |
+| Method                                                         | Typical trigger                                                                                                                | Effect                                                                                                                              |
+|----------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| `addPending(callId)`                                           | own `startIncomingCall`; outgoing `startCall` pre-registration                                                                 | Registers pending; resets the four per-call guards first (the sticky ghost guard excepted); true = caller owns the entry            |
+| `removePending(callId)`                                        | registration failure / timeout / decline-before-confirmation / failed outgoing / tearDown and `onDestroy` rollback             | Drops the pending entry only                                                                                                        |
+| `promote(callId, meta, state)`                                 | `IncomingConnectionReported`; `OngoingCall`; adoption paths                                                                    | Full registration; same guard reset as `addPending` (also clears an earlier `markAnswered`)                                         |
+| `markAnswered(callId)`                                         | `AnswerCall` broadcast; adoption paths (after `promote`); `CallLifecycleHandler` fallback when the push isolate is unreachable | Answer guard only; no state stamp                                                                                                   |
+| `updateState(callId, state)`                                   | `ConnectionStateChanged` broadcast                                                                                             | Mirrors authoritative state; unconditional; ignores DISCONNECTED                                                                    |
+| `markTerminated(callId)`                                       | `reportEndCall`; HungUp/Decline handling                                                                                       | Clears active sets; state becomes DISCONNECTED                                                                                      |
+| `clearAndMarkEndCallDispatched(id)`                            | HungUp/Decline/`ConnectionNotFound` handler, tearDown, `onDestroy`, confirmation timeout                                       | `markTerminated` + drops the main-process `ConnectionManager` pending reservation + marks endCallDispatched (true = first dispatch) |
+| `reserveAnswer` / `consumeAnswer`                              | deferred-answer path / `AnswerCall` handler                                                                                    | Deferred answer bookkeeping                                                                                                         |
+| `drainUnconnectedPendingCallIds()`                             | `tearDown`                                                                                                                     | Snapshot + clear of pending                                                                                                         |
+| `clear()`                                                      | end of `tearDown`; `cleanConnections`                                                                                          | Full per-session reset                                                                                                              |
+| `markDirectNotified` / `consumeDirectNotified`                 | `tearDown` / HungUp handler                                                                                                    | Stale-broadcast suppression                                                                                                         |
+| `markEndCallDispatched(id)`                                    | `endCall`                                                                                                                      | performEndCall dedup; true = first mark                                                                                             |
+| `markEndedWithoutFlutterState` / `wasEndedWithoutFlutterState` | `reportEndCall(MISSED_WHILE_CONNECTING)` / `reportNewIncomingCall`                                                             | Sticky ghost-re-presentation guard                                                                                                  |
 
 `clearAndMarkEndCallDispatched` is the one sanctioned main-process touch of
 `PhoneConnectionService.connectionManager`: it drops the `pendingCallIds` reservation that
@@ -101,13 +101,13 @@ reach it via `startUpdateCall`.)
 the first `addConnectionEventListener` call and unregistered when the last listener is removed
 (ref-counted). Listeners receive events via `onConnectionEvent(event, data)` on the main thread.
 
-| Method                                | Description                                              |
-|---------------------------------------|----------------------------------------------------------|
-| `addConnectionEventListener(l)`       | Register a persistent global subscriber                  |
-| `removeConnectionEventListener(l)`    | Unregister; tears down globalReceiver when list is empty |
-| `registerConnectionEvents(...)`       | Register a temporary per-call dynamic receiver           |
-| `unregisterConnectionEvents(...)`     | Unregister a temporary receiver                          |
-| `notifyConnectionEvent(event, data)`  | Deliver an event directly to listeners and per-call receivers, bypassing ActivityManager broadcast dispatch |
+| Method                               | Description                                                                                                 |
+|--------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `addConnectionEventListener(l)`      | Register a persistent global subscriber                                                                     |
+| `removeConnectionEventListener(l)`   | Unregister; tears down globalReceiver when list is empty                                                    |
+| `registerConnectionEvents(...)`      | Register a temporary per-call dynamic receiver                                                              |
+| `unregisterConnectionEvents(...)`    | Unregister a temporary receiver                                                                             |
+| `notifyConnectionEvent(event, data)` | Deliver an event directly to listeners and per-call receivers, bypassing ActivityManager broadcast dispatch |
 
 **Global events** (routed to all `ConnectionEventListener` subscribers):
 `IncomingConnectionReported`, `ReplayIncomingCall`, `ConnectionStateChanged`, `DeclineCall`,
@@ -140,10 +140,10 @@ devices with no telephony at all (Wi-Fi-only tablets, Android Go builds) route t
 
 ### Call Setup
 
-| Method                                     | Description                                       |
-|--------------------------------------------|---------------------------------------------------|
+| Method                                        | Description                                     |
+|-----------------------------------------------|-------------------------------------------------|
 | `startIncomingCall(meta, onSuccess, onError)` | Reserve pending + trigger incoming registration |
-| `startOutgoingCall(meta)`                  | Trigger outgoing connection creation              |
+| `startOutgoingCall(meta)`                     | Trigger outgoing connection creation            |
 
 `startIncomingCall` owns the `pendingCallIds` reservation: it calls `addPending` first and rejects
 a concurrent duplicate registration (push isolate vs foreground signaling for the same callId)
@@ -162,14 +162,14 @@ pre-register state must clean it themselves or rely on their own timeout safety-
 
 ### Service Lifecycle
 
-| Method                     | Description                                                            |
-|----------------------------|------------------------------------------------------------------------|
-| `tearDownService()`        | Reset backend service state for the next session without hanging up (Telecom: `ServiceAction.TearDown`; standalone: `CleanConnections`) |
-| `sendTearDownConnections()`| Hang up all connections + await `TearDownComplete` ack                 |
-| `sendReserveAnswer(callId)`| Deferred answer applied when the connection is created                 |
-| `sendCleanConnections()`   | Clear backend connections without individual hangups (`ServiceAction.CleanConnections` on both backends) |
-| `replayAudioState()`       | One-way pull: re-emit audio state (device + mute) to a fresh delegate  |
-| `replayConnectionStates()` | One-way pull seeding a freshly attached delegate / restarted main process (cold-start race). For every live connection re-emits `ConnectionStateChanged` (live states only; restores e.g. STATE_ACTIVE for the already-answered adoption), then `AnswerCall` (callId-only metadata) for answered connections, or `ReplayIncomingCall` (full metadata) for still-ringing ones -- the ONLY path by which a fresh delegate learns of a still-ringing call |
+| Method                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `tearDownService()`         | Reset backend service state for the next session without hanging up (Telecom: `ServiceAction.TearDown`; standalone: `CleanConnections`)                                                                                                                                                                                                                                                                                                                |
+| `sendTearDownConnections()` | Hang up all connections + await `TearDownComplete` ack                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `sendReserveAnswer(callId)` | Deferred answer applied when the connection is created                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `sendCleanConnections()`    | Clear backend connections without individual hangups (`ServiceAction.CleanConnections` on both backends)                                                                                                                                                                                                                                                                                                                                               |
+| `replayAudioState()`        | One-way pull: re-emit audio state (device + mute) to a fresh delegate                                                                                                                                                                                                                                                                                                                                                                                  |
+| `replayConnectionStates()`  | One-way pull seeding a freshly attached delegate / restarted main process (cold-start race). For every live connection re-emits `ConnectionStateChanged` (live states only; restores e.g. STATE_ACTIVE for the already-answered adoption), then `AnswerCall` (callId-only metadata) for answered connections, or `ReplayIncomingCall` (full metadata) for still-ringing ones -- the ONLY path by which a fresh delegate learns of a still-ringing call |
 
 ## Related Components
 
