@@ -25,6 +25,7 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
   AVAudioPlayer *_ringback;
   CallWaitingTonePlayer *_callWaitingTone;
   NSMutableSet<NSUUID *> *_ownCallUuids;
+  NSMutableSet<NSUUID *> *_videoCallUuids;
   NSMutableSet<NSUUID *> *_answeringCallUuids;
   BOOL _callWaitingToneOwnCallsOnly;
   CXCallController *_callController;
@@ -55,6 +56,7 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
     // didActivateAudioSession callback, not from the first play request.
     _callWaitingTone = [[CallWaitingTonePlayer alloc] init];
     _ownCallUuids = [NSMutableSet set];
+    _videoCallUuids = [NSMutableSet set];
     _answeringCallUuids = [NSMutableSet set];
     _callWaitingToneOwnCallsOnly = YES;
   }
@@ -190,6 +192,10 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
   [_callWaitingTone stop];
   [_ownCallUuids removeAllObjects];
   [_answeringCallUuids removeAllObjects];
+  // The plugin is done with its calls: no video call of ours is live any more, so the screen
+  // it kept awake is released here rather than left to a setUp() that never clears this set.
+  [_videoCallUuids removeAllObjects];
+  [self refreshIdleTimer];
   if (_provider != nil) {
     [_provider invalidate];
     _provider = nil;
@@ -226,7 +232,12 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
                                     update:callUpdate
                                 completion:^(NSError *error) {
                                   if (error == nil) {
-                                    [self assignIdleTimerDisabled:callUpdate.hasVideo];
+                                    // Only for a call that is still ours: this completion can run
+                                    // after the call ended, was reset or torn down, and must not
+                                    // bring its video state back then.
+                                    if ([self isLiveOwnCallUUID:callUuid]) {
+                                      [self setVideo:callUpdate.hasVideo forCallUUID:callUuid];
+                                    }
                                     completion(nil, nil);
                                   } else if ([error.domain isEqualToString:CXErrorDomainIncomingCall]) {
                                     completion([WTPIncomingCallError makeWithValue:CXErrorCodeIncomingCallErrorToPigeon((CXErrorCodeIncomingCallError) error.code)], nil);
@@ -289,7 +300,12 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
     
   [_provider reportCallWithUUID:[[NSUUID alloc] initWithUUIDString:uuidString]
                         updated:callUpdate];
-  [self assignIdleTimerDisabled:callUpdate.hasVideo];
+  // Only when the caller actually said something about video. This is a partial update, and
+  // an unset hasVideo reads as NO on a fresh CXCallUpdate - taking that at face value let an
+  // update carrying nothing but a display name put a live video call's screen back to sleep.
+  if (hasVideo != nil) {
+    [self setVideo:[hasVideo boolValue] forCallUUID:[[NSUUID alloc] initWithUUIDString:uuidString]];
+  }
   completion(nil);
 }
 
@@ -304,7 +320,7 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
   [_provider reportCallWithUUID:[[NSUUID alloc] initWithUUIDString:uuidString]
                     endedAtDate:nil
                          reason:[reason toCallKit]];
-  [self assignIdleTimerDisabled:NO];
+  [self forgetCall:[[NSUUID alloc] initWithUUIDString:uuidString]];
     
     if ([reason toCallKit] == CXCallEndedReasonUnanswered) {
         UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
@@ -660,6 +676,12 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
                                       NSLog(@"[Callkeep][didReceiveIncomingPushWithPayloadForPushTypeVoIP:withCompletionHandler:][reportNewIncomingCallWithUUID] error = %@", error);
                                       incomingCallError = [WTPIncomingCallError makeWithValue:WTPIncomingCallErrorEnumInternal];
                                     }
+                                  } else if ([self isLiveOwnCallUUID:uuid]) {
+                                    // CallKit took the call: its video state counts from here, and only
+                                    // here. A call CallKit refused never keeps the screen awake, and one
+                                    // that ended or was reset before this completion ran is not brought
+                                    // back into the set by it.
+                                    [self setVideo:callUpdate.hasVideo forCallUUID:uuid];
                                   }
 
                                   [self->_delegateFlutterApi didPushIncomingCallHandle:[callUpdate.remoteHandle toPigeon]
@@ -669,7 +691,6 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
                                                                                   uuid:[uuid UUIDString]
                                                                                  error:incomingCallError
                                                                             completion:^(FlutterError *error) {
-                                                                              [self assignIdleTimerDisabled:callUpdate.hasVideo];
                                                                               completion();
                                                                             }];
                                 }];
@@ -708,6 +729,12 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #pragma mark - CXCallObserverDelegate
 
 - (void)callObserver:(CXCallObserver *)callObserver callChanged:(CXCall *)call {
+  // `calls` lists the calls that are still active; a call that has just ended may already be
+  // gone from it and reaches us only as the argument. Forget its video state here, so it cannot
+  // keep the screen awake after CallKit is done with it.
+  if (call.hasEnded) {
+    [self forgetCall:call.UUID];
+  }
   [self syncCallWaitingTone:callObserver];
 }
 
@@ -727,7 +754,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
       [_answeringCallUuids removeObject:call.UUID];
     }
     if (call.hasEnded) {
-      [_ownCallUuids removeObject:call.UUID];
+      [self forgetCall:call.UUID];
       continue;
     }
     if (_callWaitingToneOwnCallsOnly && ![_ownCallUuids containsObject:call.UUID]) {
@@ -756,6 +783,8 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #endif
   [_callWaitingTone stop];
   [_ownCallUuids removeAllObjects];
+  [_videoCallUuids removeAllObjects];
+  [self refreshIdleTimer];
   [_answeringCallUuids removeAllObjects];
   [_delegateFlutterApi didReset:^(FlutterError *error) {}];
 }
@@ -774,7 +803,11 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
                                  [action fail];
                                } else {
                                  [action fulfill];
-                                 [self assignIdleTimerDisabled:action.video];
+                                 // Same guard as the incoming paths: Dart's answer can come after
+                                 // the call ended, was reset or torn down.
+                                 if ([self isLiveOwnCallUUID:action.callUUID]) {
+                                   [self setVideo:action.video forCallUUID:action.callUUID];
+                                 }
                                }
                              }];
 }
@@ -807,7 +840,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
                                [action fail];
                              } else {
                                [action fulfill];
-                               [self assignIdleTimerDisabled:NO];
+                               [self forgetCall:action.callUUID];
                              }
                            }];
 }
@@ -943,6 +976,63 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
   if (_driveIdleTimerDisabled) {
     [UIApplication sharedApplication].idleTimerDisabled = value;
   }
+}
+
+/// Records whether [uuid] is a video call, and re-decides the idle timer.
+///
+/// The screen is kept awake for a video call because the user is looking at it. That rule
+/// has not changed; what has is the set it is decided over. `idleTimerDisabled` belongs to
+/// the application, not to a call, so deciding it from whichever call last raised an event
+/// lets one call answer for all of them - ending an audio call while a video call is live
+/// let the screen sleep on the video call, and the reverse pinned it awake after the video
+/// call was gone.
+- (void)setVideo:(BOOL)video forCallUUID:(NSUUID *)uuid {
+  if (uuid == nil) {
+    return;
+  }
+  if (video) {
+    [_videoCallUuids addObject:uuid];
+  } else {
+    [_videoCallUuids removeObject:uuid];
+  }
+  [self refreshIdleTimer];
+}
+
+/// The call is over, whoever ended it: it is no longer ours, no longer answering, and no
+/// longer keeps the screen awake. Every end path comes through here, so a completion that
+/// arrives late for the call finds it gone and cannot bring it back.
+- (void)forgetCall:(NSUUID *)uuid {
+  if (uuid == nil) {
+    return;
+  }
+  [_ownCallUuids removeObject:uuid];
+  [_answeringCallUuids removeObject:uuid];
+  [self setVideo:NO forCallUUID:uuid];
+}
+
+/// Whether [uuid] is one of this plugin's calls that is still live: reported by us, not
+/// forgotten by any end path, and not ended as far as the call observer knows. A call the
+/// observer does not list yet counts as live: CallKit may complete a report before the
+/// observer has seen the call.
+- (BOOL)isLiveOwnCallUUID:(NSUUID *)uuid {
+  if (uuid == nil || ![_ownCallUuids containsObject:uuid]) {
+    return NO;
+  }
+  for (CXCall *call in _callController.callObserver.calls) {
+    if ([call.UUID isEqual:uuid]) {
+      return !call.hasEnded;
+    }
+  }
+  return YES;
+}
+
+/// Keeps the screen awake while any live call is a video call.
+///
+/// The set holds only live calls: the observer drops a call from it when CallKit reports it
+/// ended, which is the same place own-call tracking is pruned, so a call that ends while
+/// the app is not looking cannot leave the screen pinned awake.
+- (void)refreshIdleTimer {
+  [self assignIdleTimerDisabled:_videoCallUuids.count > 0];
 }
 
 @end
