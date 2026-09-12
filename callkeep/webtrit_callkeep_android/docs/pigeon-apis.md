@@ -130,20 +130,27 @@ Configures the optional SMS-based incoming call trigger (`IncomingCallSmsTrigger
 
 Kotlin calls these methods on the Dart delegate to notify of call events.
 
-| Method                                       | Description                           |
-|----------------------------------------------|---------------------------------------|
-| `performIncomingCall(callId, meta)`          | Incoming call arrived                 |
-| `performAnswerCall(callId)`                  | Call was answered (from Telecom side) |
-| `performEndCall(callId, reason)`             | Call ended                            |
-| `performHoldCall(callId, onHold)`            | Call hold state changed               |
-| `performMuteCall(callId, muted)`             | Mute state changed                    |
-| `performSendDTMF(callId, digit)`             | DTMF tone                             |
-| `performSetAudioDevice(callId, device)`      | Audio device selected                 |
-| `performUpdateAudioDevices(callId, devices)` | Available audio devices changed       |
-| `performConnecting(callId)`                  | Outgoing call connecting              |
-| `performConnected(callId)`                   | Outgoing call connected               |
-| `performOutgoingFailure(callId, info)`       | Outgoing call failed                  |
-| `performIncomingFailure(callId, info)`       | Incoming call failed                  |
+Every `perform*` is declared to return `bool` and the `did*` methods return nothing. Note
+that Android **ignores the boolean**: every call site passes an empty callback, so a
+delegate returning `false` changes nothing here. It is iOS that acts on it, by failing the
+CallKit action.
+
+| Method                                                                    | Description                             |
+|---------------------------------------------------------------------------|-----------------------------------------|
+| `didPushIncomingCall(handle, displayName, video, callId, error)`          | An incoming call arrived through a push |
+| `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | Place this outgoing call                |
+| `performAnswerCall(callId)`                                               | Answer this call                        |
+| `performEndCall(callId)`                                                  | End this call                           |
+| `performSetHeld(callId, onHold)`                                          | Hold or resume this call                |
+| `performSetMuted(callId, muted)`                                          | Mute or unmute this call                |
+| `performSendDTMF(callId, key)`                                            | Send this DTMF digit                    |
+| `performAudioDeviceSet(callId, device)`                                   | The audio device changed                |
+| `performAudioDevicesUpdate(callId, devices)`                              | The available audio devices changed     |
+| `didActivateAudioSession()`                                               | The call audio session became active    |
+| `didDeactivateAudioSession()`                                             | The call audio session was released     |
+
+`continueStartCallIntent` and `didReset` exist on the shared `CallkeepDelegate` but are
+iOS-only: Android has no source for either, so they are absent from this API.
 
 ---
 

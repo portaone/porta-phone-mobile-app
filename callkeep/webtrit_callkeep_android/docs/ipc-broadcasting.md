@@ -8,13 +8,21 @@
 and the main process. It uses **app-scoped local broadcasts** (the intent's package is set to the
 app package name) so no third-party app can receive or inject events.
 
-All broadcasts use a single action string:
+The intent **action is the event name** — `ConnectionEvent.name`, e.g. `HungUp`,
+`ConnectionStateChanged`. There is no shared action and no event-type extra: a receiver
+subscribes by adding an action per event it cares about, so it is filtered by the system
+rather than in application code.
 
-```text
-com.webtrit.callkeep.CONNECTION_SERVICE_PERFORM
-```
+That has a consequence worth knowing before adding an event: a receiver only gets the
+actions its filter names. The main process builds its filter from
+`InProcessCallkeepCore.GLOBAL_LISTENER_EVENTS`, and `globalReceiver` also matches the
+incoming action against that same list, so a new `ConnectionEvent` missing from it crosses
+the process boundary and is dropped with no error.
 
-The event type is carried as a string extra inside the intent.
+This applies to the Telecom backend only. The standalone backend never leaves the main
+process: `InProcessCallkeepCore.notifyConnectionEvent` hands the event to every listener
+directly, with no allowlist, and only the per-call dynamic receivers filter by action. The
+same new event therefore arrives there and vanishes on Telecom devices - test both.
 
 ## Event Catalogue
 
@@ -60,17 +68,23 @@ Note: Most main -> `:callkeep_core` commands are `startService` intents, not bro
 
 ## Broadcast Transport
 
-```text
-Sender:
-    val intent = Intent(ACTION_CONNECTION_SERVICE_PERFORM)
-        .setPackage(context.packageName)
-        .putExtra(EXTRA_EVENT_TYPE, event.name)
-        .putExtras(payload)
-    context.sendBroadcast(intent)
+Sender — `Context.sendInternalBroadcast` in `common/Extensions.kt`, called from
+`ConnectionServicePerformBroadcaster` with the event name as the action:
 
-Receiver:
-    val filter = IntentFilter(ACTION_CONNECTION_SERVICE_PERFORM)
-    context.registerReceiverCompat(receiver, filter)
+```kotlin
+Intent(action)
+    .apply {
+        setPackage(packageName)
+        addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
+        extras?.let { putExtras(it) }
+    }.also { sendBroadcast(it, permission) }
+```
+
+Receiver — one filter carrying every event the listener wants:
+
+```kotlin
+private fun createIntentFilter(events: List<ConnectionEvent>): IntentFilter =
+    IntentFilter().apply { events.forEach { addAction(it.name) } }
 ```
 
 `registerReceiverCompat` is a helper that calls `registerReceiver(receiver, filter,
@@ -91,12 +105,19 @@ RECEIVER_NOT_EXPORTED)` on API 33+ and the equivalent on older versions.
 | `InProcessCallkeepCore.globalReceiver`                | All global call lifecycle and media events; fans out to `ConnectionEventListener` subs |
 | `ForegroundService` (via `ConnectionEventListener`)   | Global events routed by `CallkeepCore`                                                 |
 | `IncomingCallService` (via `ConnectionEventListener`) | Global events routed by `CallkeepCore`                                                 |
-| Per-call dynamic receivers in `ForegroundService`     | `OngoingCall`, `OutgoingFailure`, `IncomingFailure`, `TearDownComplete`                |
-| `PhoneConnectionService` broadcast receiver           | `NotifyPending` (only during setup)                                                    |
+| Per-call dynamic receivers in `ForegroundService`     | `OngoingCall` and `OutgoingFailure` while a call is being placed; `TearDownComplete`   |
+| `PhoneConnectionService`                              | nothing - it registers no receiver; see the note below on `NotifyPending`              |
 
 `InProcessCallkeepCore` maintains a single `globalReceiver` registered via
 `ConnectionServicePerformBroadcaster`. Individual services no longer register their own receivers
 for `:callkeep_core` events — they subscribe through `CallkeepCore.addConnectionEventListener()`.
+
+Two asymmetries the table cannot show. Traffic towards `:callkeep_core` is not broadcast at
+all: `NotifyPending` and the rest of `ServiceAction` arrive as `startService` intents handled
+in `PhoneConnectionService.onStartCommand`, which is why that service registers no receiver.
+And `IncomingFailure` is dispatched by `PhoneConnectionService` but subscribed to by nobody -
+it is outside `GLOBAL_LISTENER_EVENTS` and no dynamic receiver names it, so a failed incoming
+call is resolved by the main process timing out rather than by this event.
 
 ## Related Components
 

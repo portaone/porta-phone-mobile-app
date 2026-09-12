@@ -1,6 +1,7 @@
 # AGENTS.md — webtrit_callkeep_ios
 
-iOS platform implementation. Two layers: Dart (Flutter side) and Swift (native side, CallKit + PushKit).
+iOS platform implementation. Two layers: Dart (Flutter side) and Objective-C (native side,
+CallKit + PushKit).
 
 ---
 
@@ -15,7 +16,8 @@ webtrit_callkeep_ios/
 │       └── converters.dart             # Extension methods: Pigeon ↔ platform_interface types
 ├── pigeons/
 │   └── callkeep.messages.dart          # Pigeon input — edit this, then regenerate
-└── ios/Classes/                        # Swift implementation
+└── ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/
+                                        # Objective-C implementation
 ```
 
 ---
@@ -29,9 +31,9 @@ webtrit_callkeep_ios/
    flutter pub run pigeon --input pigeons/callkeep.messages.dart
    ```
 
-3. Commit both the input file and all generated output (`callkeep.pigeon.dart`, Swift files under `ios/Classes/`).
+3. Commit both the input file and all generated output (`callkeep.pigeon.dart`, `Generated.h`, `Generated.m`).
 
-**Never manually edit** `lib/src/common/callkeep.pigeon.dart` or Swift files in `ios/Classes/` that are Pigeon-generated.
+**Never manually edit** `lib/src/common/callkeep.pigeon.dart`, `Generated.h` or `Generated.m`.
 
 When adding a converter for a new Pigeon type, add an extension in `lib/src/common/converters.dart`.
 
@@ -78,5 +80,5 @@ Without these, `reportNewIncomingCall` will silently fail when the app is in the
 
 - There is **no persistent background service** on iOS — all background work goes through CallKit/PushKit.
 - The `PushRegistryDelegate` is separate from `CallkeepDelegate`; do not conflate them.
-- Never block the main thread in Swift delegate callbacks — call Dart asynchronously via Pigeon.
-- iOS minimum deployment target: **iOS 11**.
+- Never block the main thread in CallKit delegate callbacks — call Dart asynchronously via Pigeon.
+- iOS minimum deployment target: **iOS 13.0** (`webtrit_callkeep_ios.podspec`, `Package.swift`).

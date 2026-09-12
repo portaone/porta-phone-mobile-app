@@ -9,7 +9,8 @@ See **[AGENTS.md](AGENTS.md)** for commands, architecture detail, Pigeon workflo
 `webtrit_callkeep_ios` is the **iOS platform implementation** of the callkeep plugin. It contains two layers:
 
 - **Dart layer** (`lib/src/`) — `WebtritCallkeepIOS` registers itself as the platform instance and proxies calls via Pigeon.
-- **Swift layer** (`ios/Classes/`) — CallKit + PushKit integration.
+- **Objective-C layer** (`ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/`) — CallKit + PushKit integration, in
+  `WebtritCallkeepPlugin.m` with `Converters.m` and the Pigeon-generated `Generated.m`.
 
 ## Commands
 
@@ -28,7 +29,7 @@ flutter pub run pigeon --input pigeons/callkeep.messages.dart
 - Never edit `lib/src/common/callkeep.pigeon.dart` manually — regenerate via Pigeon.
 - No persistent background services on iOS — all background handling goes through CallKit/PushKit.
 - `PushRegistryDelegate` must be set before the app enters background if VoIP pushes are expected.
-- iOS minimum deployment target: **iOS 11**.
+- iOS minimum deployment target: **iOS 13.0** (`webtrit_callkeep_ios.podspec`, `Package.swift`).
 
 ## Related packages
 
