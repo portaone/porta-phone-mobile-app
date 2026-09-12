@@ -125,6 +125,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// events escalate severity). Cleared when the indicator is hidden.
   final Map<String, int> _slowlinkHits = {};
 
+  /// Signaling error code meaning the call no longer exists on the server.
+  ///
+  /// Named because two handlers read it and a bare 410 says nothing: it is the
+  /// difference between a request that failed and a call that is already gone.
+  static const _callGoneErrorCode = 410;
+
   /// Owns when the app's own ringback tone is heard on an outgoing call: the
   /// wait for possible network audio, and every reason to go silent again.
   late final _ringback = OutgoingRingbackController(
@@ -2318,7 +2324,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
       // If call gone right before answer, consider it as normal flow and avoid showing error notification
       // TODO: implement signaling request response mechanism and handle request specific result instead of catching global errors
-      if (e is WebtritSignalingErrorException && e.code == 410) {
+      if (e is WebtritSignalingErrorException && e.code == _callGoneErrorCode) {
         _peerConnectionManager.completeError(event.callId, e, stackTrace);
         add(_ResetStateEvent.completeCall(event.callId));
         _addToRecents(call!);
@@ -2458,15 +2464,40 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           return activeCall.copyWith(held: event.onHold);
         }),
       );
-    } on NotConnectedException {
-      _logger.warning('__onMutationPerformSetHeld: not connected, let call survive');
-    } on WebtritSignalingTransactionTimeoutException {
-      _logger.warning('__onMutationPerformSetHeld: transaction timeout, let call survive');
     } catch (e, stackTrace) {
+      if (isSurvivableSetHeldFailure(e)) {
+        _logger.warning('__onMutationPerformSetHeld: ${e.runtimeType} $e, let call survive');
+        return;
+      }
       callErrorReporter.handle(e, stackTrace, '__onMutationPerformSetHeld error');
       _peerConnectionManager.completeError(event.callId, e, stackTrace);
       add(_ResetStateEvent.completeCall(event.callId));
     }
+  }
+
+  /// Whether [error] from a hold or unhold transaction leaves the call alive.
+  ///
+  /// A hold that did not happen is only a hold that did not happen. The call is
+  /// still up and still carrying audio, so the one thing lost is the state
+  /// change, and ending the call over it turns a refused control into a dropped
+  /// call. That covers a socket that is not connected, a transaction that timed
+  /// out, and the server declining the request outright.
+  ///
+  /// The refusal is the case that matters ahead: once a line can belong to a
+  /// conference, the server declines to hold a single leg of one, and that is a
+  /// routine answer rather than a fault.
+  ///
+  /// A refusal carrying [_callGoneErrorCode] is the exception to the exception.
+  /// It does not say the hold failed, it says there is no call to hold, so
+  /// keeping it alive locally would strand a call the server has already
+  /// forgotten. Anything else is a failure in this client rather than a failed
+  /// transaction, and still tears the call down.
+  @visibleForTesting
+  static bool isSurvivableSetHeldFailure(Object error) {
+    if (error is NotConnectedException) return true;
+    if (error is WebtritSignalingTransactionTimeoutException) return true;
+    if (error is WebtritSignalingErrorException) return error.code != _callGoneErrorCode;
+    return false;
   }
 
   Future<void> __onMutationPerformSetMuted(_CallMutationEventPerformSetMuted event, Emitter<CallState> emit) async {
