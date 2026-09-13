@@ -1293,8 +1293,8 @@ private open class GeneratedPigeonCodec : StandardMessageCodec() {
 
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface PHostBackgroundPushNotificationIsolateBootstrapApi {
-  fun initializePushNotificationCallback(callbackDispatcher: Long, onNotificationSync: Long, callback: (Result<Unit>) -> Unit)
-  fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean, callback: (Result<PIncomingCallError?>) -> Unit)
+  suspend fun initializePushNotificationCallback(callbackDispatcher: Long, onNotificationSync: Long)
+  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean): PIncomingCallError?
 
   companion object {
     /** The codec used by PHostBackgroundPushNotificationIsolateBootstrapApi. */
@@ -1312,13 +1312,14 @@ interface PHostBackgroundPushNotificationIsolateBootstrapApi {
             val args = message as List<Any?>
             val callbackDispatcherArg = args[0] as Long
             val onNotificationSyncArg = args[1] as Long
-            api.initializePushNotificationCallback(callbackDispatcherArg, onNotificationSyncArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.initializePushNotificationCallback(callbackDispatcherArg, onNotificationSyncArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1334,14 +1335,13 @@ interface PHostBackgroundPushNotificationIsolateBootstrapApi {
             val handleArg = args[1] as PHandle
             val displayNameArg = args[2] as String?
             val hasVideoArg = args[3] as Boolean
-            api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg) { result: Result<PIncomingCallError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1353,21 +1353,21 @@ interface PHostBackgroundPushNotificationIsolateBootstrapApi {
 }
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface PHostBackgroundPushNotificationIsolateApi {
-  fun endCall(callId: String, callback: (Result<Unit>) -> Unit)
-  fun endAllCalls(callback: (Result<Unit>) -> Unit)
+  suspend fun endCall(callId: String)
+  suspend fun endAllCalls()
   /**
    * Terminates the PhoneConnection and stops IncomingCallService.
    * Called when the push isolate is done with an unanswered call
    * (missed, declined, server hangup, signaling error).
    */
-  fun releaseCall(callId: String, callback: (Result<Unit>) -> Unit)
+  suspend fun releaseCall(callId: String)
   /**
    * Stops IncomingCallService without touching the PhoneConnection.
    * Called when the push isolate hands off an already-answered call
    * to the Activity. The PhoneConnection must stay alive so the
    * Activity can adopt it via CALL_ID_ALREADY_EXISTS_AND_ANSWERED.
    */
-  fun handoffCall(callId: String, callback: (Result<Unit>) -> Unit)
+  suspend fun handoffCall(callId: String)
 
   companion object {
     /** The codec used by PHostBackgroundPushNotificationIsolateApi. */
@@ -1384,13 +1384,14 @@ interface PHostBackgroundPushNotificationIsolateApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
-            api.endCall(callIdArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.endCall(callIdArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1401,13 +1402,14 @@ interface PHostBackgroundPushNotificationIsolateApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateApi.endAllCalls$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.endAllCalls{ result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.endAllCalls()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1420,13 +1422,14 @@ interface PHostBackgroundPushNotificationIsolateApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
-            api.releaseCall(callIdArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.releaseCall(callIdArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1439,13 +1442,14 @@ interface PHostBackgroundPushNotificationIsolateApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
-            api.handoffCall(callIdArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.handoffCall(callIdArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {

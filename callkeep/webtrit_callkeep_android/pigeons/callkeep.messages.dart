@@ -227,32 +227,32 @@ class PCallkeepConnection {
 //   PHostBackgroundPushNotificationIsolateApi          -> PHostBackgroundIsolateApi
 @HostApi()
 abstract class PHostBackgroundPushNotificationIsolateBootstrapApi {
-  @asyncCallback
+  @async
   void initializePushNotificationCallback({required int callbackDispatcher, required int onNotificationSync});
 
-  @asyncCallback
+  @async
   PIncomingCallError? reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo);
 }
 
 @HostApi()
 abstract class PHostBackgroundPushNotificationIsolateApi {
-  @asyncCallback
+  @async
   void endCall(String callId);
 
-  @asyncCallback
+  @async
   void endAllCalls();
 
   /// Terminates the PhoneConnection and stops IncomingCallService.
   /// Called when the push isolate is done with an unanswered call
   /// (missed, declined, server hangup, signaling error).
-  @asyncCallback
+  @async
   void releaseCall(String callId);
 
   /// Stops IncomingCallService without touching the PhoneConnection.
   /// Called when the push isolate hands off an already-answered call
   /// to the Activity. The PhoneConnection must stay alive so the
   /// Activity can adopt it via CALL_ID_ALREADY_EXISTS_AND_ANSWERED.
-  @asyncCallback
+  @async
   void handoffCall(String callId);
 }
 

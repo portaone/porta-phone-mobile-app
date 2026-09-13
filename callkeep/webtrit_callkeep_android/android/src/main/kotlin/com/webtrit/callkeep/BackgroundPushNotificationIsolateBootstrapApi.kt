@@ -6,28 +6,26 @@ import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.toCallHandle
 import com.webtrit.callkeep.services.core.CallkeepCore
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 class BackgroundPushNotificationIsolateBootstrapApi(
     private val context: Context,
 ) : PHostBackgroundPushNotificationIsolateBootstrapApi {
-    override fun initializePushNotificationCallback(
+    override suspend fun initializePushNotificationCallback(
         callbackDispatcher: Long,
         onNotificationSync: Long,
-        callback: (Result<Unit>) -> Unit,
     ) {
         StorageDelegate.IncomingCallService.setCallbackDispatcher(context, callbackDispatcher)
         StorageDelegate.IncomingCallService.setOnNotificationSync(context, onNotificationSync)
-
-        callback(Result.success(Unit))
     }
 
-    override fun reportNewIncomingCall(
+    override suspend fun reportNewIncomingCall(
         callId: String,
         handle: PHandle,
         displayName: String?,
         hasVideo: Boolean,
-        callback: (Result<PIncomingCallError?>) -> Unit,
-    ) {
+    ): PIncomingCallError? {
         Log.d(TAG, "reportNewIncomingCall: $callId, $handle, $displayName, $hasVideo")
         val ringtonePath = StorageDelegate.Sound.getRingtonePath(context)
 
@@ -40,11 +38,13 @@ class BackgroundPushNotificationIsolateBootstrapApi(
                 ringtonePath = ringtonePath,
             )
 
-        CallkeepCore.instance.startIncomingCall(
-            metadata = metadata,
-            onSuccess = { callback(Result.success(null)) },
-            onError = { error -> callback(Result.success(error)) },
-        )
+        return suspendCancellableCoroutine { continuation ->
+            CallkeepCore.instance.startIncomingCall(
+                metadata = metadata,
+                onSuccess = { continuation.resume(null) },
+                onError = { error -> continuation.resume(error) },
+            )
+        }
     }
 
     companion object {

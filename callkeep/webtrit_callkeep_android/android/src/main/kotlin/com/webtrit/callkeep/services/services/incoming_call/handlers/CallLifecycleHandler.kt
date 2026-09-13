@@ -118,33 +118,21 @@ class CallLifecycleHandler(
         })
     }
 
-    override fun endCall(
-        callId: String,
-        callback: (Result<Unit>) -> Unit,
-    ) {
+    override suspend fun endCall(callId: String) {
         terminateCall(CallMetadata(callId = callId), DeclineSource.SERVER)
-        callback(Result.success(Unit))
     }
 
-    override fun endAllCalls(callback: (Result<Unit>) -> Unit) {
+    override suspend fun endAllCalls() {
         connectionController.tearDown()
-        callback(Result.success(Unit))
     }
 
-    override fun releaseCall(
-        callId: String,
-        callback: (Result<Unit>) -> Unit,
-    ) {
+    override suspend fun releaseCall(callId: String) {
         Log.d(TAG, "releaseCall: $callId — unanswered, terminating connection and stopping service")
         terminateCall(CallMetadata(callId = callId), DeclineSource.SERVER)
         stopService()
-        callback(Result.success(Unit))
     }
 
-    override fun handoffCall(
-        callId: String,
-        callback: (Result<Unit>) -> Unit,
-    ) {
+    override suspend fun handoffCall(callId: String) {
         // Called when the Activity is taking over the call — either because the user
         // answered via push-notification UI, or because the Activity launched as a
         // full-screen intent and the push isolate's budget expired while the call was
@@ -152,7 +140,6 @@ class CallLifecycleHandler(
         // IncomingCallService is stopped so the Activity can handle the call normally.
         Log.d(TAG, "handoffCall: $callId — stopping service only, connection stays alive (Activity handoff)")
         stopService()
-        callback(Result.success(Unit))
     }
 
     fun release(onComplete: (() -> Unit)? = null) {
