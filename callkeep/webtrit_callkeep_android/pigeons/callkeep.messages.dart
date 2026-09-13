@@ -227,113 +227,113 @@ class PCallkeepConnection {
 //   PHostBackgroundPushNotificationIsolateApi          -> PHostBackgroundIsolateApi
 @HostApi()
 abstract class PHostBackgroundPushNotificationIsolateBootstrapApi {
-  @async
+  @asyncCallback
   void initializePushNotificationCallback({required int callbackDispatcher, required int onNotificationSync});
 
-  @async
+  @asyncCallback
   PIncomingCallError? reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo);
 }
 
 @HostApi()
 abstract class PHostBackgroundPushNotificationIsolateApi {
-  @async
+  @asyncCallback
   void endCall(String callId);
 
-  @async
+  @asyncCallback
   void endAllCalls();
 
   /// Terminates the PhoneConnection and stops IncomingCallService.
   /// Called when the push isolate is done with an unanswered call
   /// (missed, declined, server hangup, signaling error).
-  @async
+  @asyncCallback
   void releaseCall(String callId);
 
   /// Stops IncomingCallService without touching the PhoneConnection.
   /// Called when the push isolate hands off an already-answered call
   /// to the Activity. The PhoneConnection must stay alive so the
   /// Activity can adopt it via CALL_ID_ALREADY_EXISTS_AND_ANSWERED.
-  @async
+  @asyncCallback
   void handoffCall(String callId);
 }
 
 @HostApi()
 abstract class PHostPermissionsApi {
-  @async
+  @asyncCallback
   PSpecialPermissionStatusTypeEnum getFullScreenIntentPermissionStatus();
 
-  @async
+  @asyncCallback
   void openFullScreenIntentSettings();
 
   /// Status of the OEM "display pop-up windows while running in background"
   /// capability (MIUI/HyperOS `OP_BACKGROUND_START_ACTIVITY`), which gates
   /// showing the incoming-call Activity over the lock screen. Best-effort:
   /// reports granted on devices where the capability does not apply.
-  @async
+  @asyncCallback
   PSpecialPermissionStatusTypeEnum getBackgroundActivityStartPermissionStatus();
 
   /// Opens the OEM permissions screen that hosts the "display pop-up windows
   /// while running in background" toggle, with a fallback to app settings.
-  @async
+  @asyncCallback
   void openBackgroundActivityStartSettings();
 
   /// Status of the OEM "display pop-up windows while running in background"
   /// MIUI/HyperOS `OP_SHOW_WHEN_LOCKED` capability, which gates showing the
   /// incoming-call Activity over the lock screen. Best-effort: reports
   /// granted on devices where the capability does not apply.
-  @async
+  @asyncCallback
   PSpecialPermissionStatusTypeEnum getShowWhenLockedPermissionStatus();
 
   /// Opens the OEM permissions screen that hosts the "show on lock screen"
   /// toggle, with a fallback to app settings.
-  @async
+  @asyncCallback
   void openShowWhenLockedSettings();
 
-  @async
+  @asyncCallback
   void openSettings();
 
-  @async
+  @asyncCallback
   PCallkeepAndroidBatteryMode getBatteryMode();
 
   /// How incoming calls are delivered: Telecom `ConnectionService` vs the
   /// limited standalone foreground service (device without `android.software.telecom`).
-  @async
+  @asyncCallback
   PCallkeepAndroidCallDeliveryMode getCallDeliveryMode();
 
-  @async
+  @asyncCallback
   List<PPermissionResult> requestPermissions(List<PCallkeepPermission> permissions);
 
-  @async
+  @asyncCallback
   List<PPermissionResult> checkPermissionsStatus(List<PCallkeepPermission> permissions);
 }
 
 @HostApi()
 abstract class PHostDiagnosticsApi {
-  @async
+  @asyncCallback
   Map<String, Object?> getDiagnosticReport();
 }
 
 @HostApi()
 abstract class PHostSoundApi {
-  @async
+  @asyncCallback
   void playRingbackSound();
 
-  @async
+  @asyncCallback
   void stopRingbackSound();
 }
 
 @FlutterApi()
 abstract class PDelegateBackgroundRegisterFlutterApi {
-  @async
+  @asyncCallback
   void onWakeUpBackgroundHandler(
     int userCallbackHandle,
     PCallkeepServiceStatus status,
     PCallkeepIncomingCallData? callData,
   );
 
-  @async
+  @asyncCallback
   void onApplicationStatusChanged(int applicationStatusCallbackHandle, PCallkeepServiceStatus status);
 
-  @async
+  @asyncCallback
   void onNotificationSync(int pushNotificationSyncStatusHandle, PCallkeepIncomingCallData? callData);
 }
 
@@ -343,35 +343,35 @@ abstract class PHostApi {
   bool isSetUp();
 
   @ObjCSelector('setUp:')
-  @async
+  @asyncCallback
   void setUp(POptions options);
 
   @ObjCSelector('tearDown')
-  @async
+  @asyncCallback
   void tearDown();
 
   @ObjCSelector('reportNewIncomingCall:handle:displayName:hasVideo:')
-  @async
+  @asyncCallback
   PIncomingCallError? reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo);
 
   @ObjCSelector('reportConnectingOutgoingCall:')
-  @async
+  @asyncCallback
   void reportConnectingOutgoingCall(String callId);
 
   @ObjCSelector('reportConnectedOutgoingCall:')
-  @async
+  @asyncCallback
   void reportConnectedOutgoingCall(String callId);
 
   @ObjCSelector('reportUpdateCall:handle:displayName:hasVideo:proximityEnabled:')
-  @async
+  @asyncCallback
   void reportUpdateCall(String callId, PHandle? handle, String? displayName, bool? hasVideo, bool? proximityEnabled);
 
   @ObjCSelector('reportEndCall:displayName:reason:')
-  @async
+  @asyncCallback
   void reportEndCall(String callId, String displayName, PEndCallReason reason);
 
   @ObjCSelector('startCall:handle:displayNameOrContactIdentifier:video:proximityEnabled:')
-  @async
+  @asyncCallback
   PCallRequestError? startCall(
     String callId,
     PHandle handle,
@@ -381,31 +381,31 @@ abstract class PHostApi {
   );
 
   @ObjCSelector('answerCall:')
-  @async
+  @asyncCallback
   PCallRequestError? answerCall(String callId);
 
   @ObjCSelector('endCall:')
-  @async
+  @asyncCallback
   PCallRequestError? endCall(String callId);
 
   @ObjCSelector('setHeld:onHold:')
-  @async
+  @asyncCallback
   PCallRequestError? setHeld(String callId, bool onHold);
 
   @ObjCSelector('setMuted:muted:')
-  @async
+  @asyncCallback
   PCallRequestError? setMuted(String callId, bool muted);
 
   @ObjCSelector('setSpeaker:enabled:')
-  @async
+  @asyncCallback
   PCallRequestError? setSpeaker(String callId, bool enabled);
 
   @ObjCSelector('setAudioDevice:device:')
-  @async
+  @asyncCallback
   PCallRequestError? setAudioDevice(String callId, PAudioDevice device);
 
   @ObjCSelector('sendDTMF:key:')
-  @async
+  @asyncCallback
   PCallRequestError? sendDTMF(String callId, String key);
 
   void onDelegateSet();
@@ -414,66 +414,69 @@ abstract class PHostApi {
 @HostApi()
 abstract class PHostConnectionsApi {
   @ObjCSelector('getConnection:')
-  @async
+  @asyncCallback
   PCallkeepConnection? getConnection(String callId);
 
-  @async
+  @asyncCallback
   List<PCallkeepConnection> getConnections();
 
-  @async
+  @asyncCallback
   void cleanConnections();
 }
 
 @FlutterApi()
 abstract class PDelegateFlutterApi {
+  @asyncCallback
   @ObjCSelector('didPushIncomingCallHandle:displayName:video:id:error:')
   void didPushIncomingCall(PHandle handle, String? displayName, bool video, String callId, PIncomingCallError? error);
 
   @ObjCSelector('performStartCall:handle:displayNameOrContactIdentifier:video:')
-  @async
+  @asyncCallback
   bool performStartCall(String callId, PHandle handle, String? displayNameOrContactIdentifier, bool video);
 
   @ObjCSelector('performAnswerCall:')
-  @async
+  @asyncCallback
   bool performAnswerCall(String callId);
 
   @ObjCSelector('performEndCall:')
-  @async
+  @asyncCallback
   bool performEndCall(String callId);
 
   @ObjCSelector('performSetHeld:onHold:')
-  @async
+  @asyncCallback
   bool performSetHeld(String callId, bool onHold);
 
   @ObjCSelector('performSetMuted:muted:')
-  @async
+  @asyncCallback
   bool performSetMuted(String callId, bool muted);
 
   @ObjCSelector('performSendDTMF:key:')
-  @async
+  @asyncCallback
   bool performSendDTMF(String callId, String key);
 
   @ObjCSelector('audioDeviceSet:device:')
-  @async
+  @asyncCallback
   bool performAudioDeviceSet(String callId, PAudioDevice device);
 
   @ObjCSelector('performAudioDevicesUpdate:devices:')
-  @async
+  @asyncCallback
   bool performAudioDevicesUpdate(String callId, List<PAudioDevice> devices);
 
+  @asyncCallback
   @ObjCSelector('didActivateAudioSession')
   void didActivateAudioSession();
 
+  @asyncCallback
   @ObjCSelector('didDeactivateAudioSession')
   void didDeactivateAudioSession();
 }
 
 @FlutterApi()
 abstract class PDelegateBackgroundServiceFlutterApi {
-  @async
+  @asyncCallback
   void performAnswerCall(String callId);
 
-  @async
+  @asyncCallback
   void performEndCall(String callId);
 }
 
@@ -485,6 +488,7 @@ abstract class PPushRegistryHostApi {
 
 @FlutterApi()
 abstract class PPushRegistryDelegateFlutterApi {
+  @asyncCallback
   @ObjCSelector('didUpdatePushTokenForPushTypeVoIP:')
   void didUpdatePushTokenForPushTypeVoIP(String? token);
 }
@@ -492,7 +496,7 @@ abstract class PPushRegistryDelegateFlutterApi {
 @FlutterApi()
 abstract class PDelegateSmsReceiverFlutterApi {
   /// Called by native side when a matching SMS is received
-  @async
+  @asyncCallback
   void onSmsReceived(String text);
 }
 
@@ -511,7 +515,7 @@ abstract class PHostSmsReceptionConfigApi {
   /// Example:
   /// messagePrefix: "<#> WEBTRIT:"
   /// regexPattern: r'\{"type":"incoming","handle":"([^"]+)","callID":"([^"]+)","displayName":"([^"]+)","hasVideo":(true|false)\}'
-  @async
+  @asyncCallback
   void initializeSmsReception({required String messagePrefix, required String regexPattern});
 }
 
@@ -524,26 +528,26 @@ abstract class PHostActivityControlApi {
   /// Allows the app's activity to be shown over the device lock screen.
   ///
   /// This is an Android-only feature.
-  @async
+  @asyncCallback
   void showOverLockscreen(bool enable);
 
   /// Turns the screen on when the app's window is shown.
   ///
   /// Typically used in conjunction with [showOverLockscreen].
   /// This is an Android-only feature.
-  @async
+  @asyncCallback
   void wakeScreenOnShow(bool enable);
 
   /// Moves the entire task (app) to the background.
   ///
   /// This is an Android-only feature.
   /// Returns `true` if successful.
-  @async
+  @asyncCallback
   bool sendToBackground();
 
   /// Checks if the device screen is currently locked (keyguard is active).
   ///
   /// Returns `false` on non-Android platforms.
-  @async
+  @asyncCallback
   bool isDeviceLocked();
 }
