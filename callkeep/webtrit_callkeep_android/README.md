@@ -98,7 +98,7 @@ Pigeon generates type-safe Kotlin/Dart bindings from a single source file.
 
 ```bash
 # From this directory
-flutter pub run pigeon --input pigeons/callkeep.messages.dart
+../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
 ```
 
 - **Never manually edit** `lib/src/common/callkeep.pigeon.dart` or the Kotlin files under

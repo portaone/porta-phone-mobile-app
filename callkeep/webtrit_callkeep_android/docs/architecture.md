@@ -70,7 +70,7 @@ services, broadcast-based IPC, and a Pigeon bridge to the Flutter layer.
   to deserialize Parcelables, which causes `ClassNotFoundException`. Use Bundle serialization
   (`toBundle()` / `fromBundle()`) instead.
 - **Pigeon files are auto-generated.** Do not edit `Generated.kt` manually. Regenerate with:
-  `flutter pub run pigeon --input pigeons/callkeep.messages.dart`
+  `../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave`
 - **Background isolate entry points** must be annotated with `@pragma('vm:entry-point')` on the
   Dart side.
 - **Cross-process broadcasts must be app-scoped** (`.setPackage(packageName)`) to prevent

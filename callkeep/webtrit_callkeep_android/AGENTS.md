@@ -105,7 +105,7 @@ explicit `startService` intents. Events are grouped by broadcaster:
 2. Run from this package directory:
 
    ```bash
-   flutter pub run pigeon --input pigeons/callkeep.messages.dart
+   ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
    ```
 
 3. Commit both the input file and all generated output (`callkeep.pigeon.dart`, Kotlin files under
