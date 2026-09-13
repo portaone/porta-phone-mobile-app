@@ -9,14 +9,12 @@ class SoundApi(
 ) : PHostSoundApi {
     private val audioManager = AudioManager(context)
 
-    override fun playRingbackSound(callback: (Result<Unit>) -> Unit) {
+    override suspend fun playRingbackSound() {
         val assetPath = StorageDelegate.Sound.getRingbackPath(context)
         if (assetPath != null) audioManager.startRingback(assetPath)
-        callback(Result.success(Unit))
     }
 
-    override fun stopRingbackSound(callback: (Result<Unit>) -> Unit) {
+    override suspend fun stopRingbackSound() {
         audioManager.stopRingback()
-        callback(Result.success(Unit))
     }
 }

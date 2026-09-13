@@ -13,6 +13,12 @@ import io.flutter.plugin.common.StandardMethodCodec
 import io.flutter.plugin.common.StandardMessageCodec
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 private object GeneratedPigeonUtils {
 
   fun createConnectionError(channelName: String): FlutterError {
@@ -1699,7 +1705,7 @@ interface PHostPermissionsApi {
 }
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface PHostDiagnosticsApi {
-  fun getDiagnosticReport(callback: (Result<Map<String, Any?>>) -> Unit)
+  suspend fun getDiagnosticReport(): Map<String, Any?>
 
   companion object {
     /** The codec used by PHostDiagnosticsApi. */
@@ -1714,14 +1720,13 @@ interface PHostDiagnosticsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostDiagnosticsApi.getDiagnosticReport$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.getDiagnosticReport{ result: Result<Map<String, Any?>> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.getDiagnosticReport())
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1733,8 +1738,8 @@ interface PHostDiagnosticsApi {
 }
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface PHostSoundApi {
-  fun playRingbackSound(callback: (Result<Unit>) -> Unit)
-  fun stopRingbackSound(callback: (Result<Unit>) -> Unit)
+  suspend fun playRingbackSound()
+  suspend fun stopRingbackSound()
 
   companion object {
     /** The codec used by PHostSoundApi. */
@@ -1749,13 +1754,14 @@ interface PHostSoundApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostSoundApi.playRingbackSound$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.playRingbackSound{ result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.playRingbackSound()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1766,13 +1772,14 @@ interface PHostSoundApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostSoundApi.stopRingbackSound$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.stopRingbackSound{ result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.stopRingbackSound()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2217,9 +2224,9 @@ interface PHostApi {
 }
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface PHostConnectionsApi {
-  fun getConnection(callId: String, callback: (Result<PCallkeepConnection?>) -> Unit)
-  fun getConnections(callback: (Result<List<PCallkeepConnection>>) -> Unit)
-  fun cleanConnections(callback: (Result<Unit>) -> Unit)
+  suspend fun getConnection(callId: String): PCallkeepConnection?
+  suspend fun getConnections(): List<PCallkeepConnection>
+  suspend fun cleanConnections()
 
   companion object {
     /** The codec used by PHostConnectionsApi. */
@@ -2236,14 +2243,13 @@ interface PHostConnectionsApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
-            api.getConnection(callIdArg) { result: Result<PCallkeepConnection?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.getConnection(callIdArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2254,14 +2260,13 @@ interface PHostConnectionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostConnectionsApi.getConnections$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.getConnections{ result: Result<List<PCallkeepConnection>> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.getConnections())
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2272,13 +2277,14 @@ interface PHostConnectionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostConnectionsApi.cleanConnections$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.cleanConnections{ result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.cleanConnections()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2652,7 +2658,7 @@ interface PHostSmsReceptionConfigApi {
    * messagePrefix: "<#> WEBTRIT:"
    * regexPattern: r'\{"type":"incoming","handle":"([^"]+)","callID":"([^"]+)","displayName":"([^"]+)","hasVideo":(true|false)\}'
    */
-  fun initializeSmsReception(messagePrefix: String, regexPattern: String, callback: (Result<Unit>) -> Unit)
+  suspend fun initializeSmsReception(messagePrefix: String, regexPattern: String)
 
   companion object {
     /** The codec used by PHostSmsReceptionConfigApi. */
@@ -2670,13 +2676,14 @@ interface PHostSmsReceptionConfigApi {
             val args = message as List<Any?>
             val messagePrefixArg = args[0] as String
             val regexPatternArg = args[1] as String
-            api.initializeSmsReception(messagePrefixArg, regexPatternArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.initializeSmsReception(messagePrefixArg, regexPatternArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2693,27 +2700,27 @@ interface PHostActivityControlApi {
    *
    * This is an Android-only feature.
    */
-  fun showOverLockscreen(enable: Boolean, callback: (Result<Unit>) -> Unit)
+  suspend fun showOverLockscreen(enable: Boolean)
   /**
    * Turns the screen on when the app's window is shown.
    *
    * Typically used in conjunction with [showOverLockscreen].
    * This is an Android-only feature.
    */
-  fun wakeScreenOnShow(enable: Boolean, callback: (Result<Unit>) -> Unit)
+  suspend fun wakeScreenOnShow(enable: Boolean)
   /**
    * Moves the entire task (app) to the background.
    *
    * This is an Android-only feature.
    * Returns `true` if successful.
    */
-  fun sendToBackground(callback: (Result<Boolean>) -> Unit)
+  suspend fun sendToBackground(): Boolean
   /**
    * Checks if the device screen is currently locked (keyguard is active).
    *
    * Returns `false` on non-Android platforms.
    */
-  fun isDeviceLocked(callback: (Result<Boolean>) -> Unit)
+  suspend fun isDeviceLocked(): Boolean
 
   companion object {
     /** The codec used by PHostActivityControlApi. */
@@ -2730,13 +2737,14 @@ interface PHostActivityControlApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val enableArg = args[0] as Boolean
-            api.showOverLockscreen(enableArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.showOverLockscreen(enableArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2749,13 +2757,14 @@ interface PHostActivityControlApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val enableArg = args[0] as Boolean
-            api.wakeScreenOnShow(enableArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.wakeScreenOnShow(enableArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2766,14 +2775,13 @@ interface PHostActivityControlApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostActivityControlApi.sendToBackground$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.sendToBackground{ result: Result<Boolean> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.sendToBackground())
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2784,14 +2792,13 @@ interface PHostActivityControlApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostActivityControlApi.isDeviceLocked$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.isDeviceLocked{ result: Result<Boolean> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.isDeviceLocked())
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {

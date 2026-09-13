@@ -88,6 +88,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
     implementation "androidx.work:work-runtime-ktx:2.11.0"
     implementation "androidx.core:core-ktx:1.16.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 
     // Flutter engine jar — required for io.flutter.* references in main sources.

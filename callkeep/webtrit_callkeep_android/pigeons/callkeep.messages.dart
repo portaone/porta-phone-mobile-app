@@ -308,16 +308,16 @@ abstract class PHostPermissionsApi {
 
 @HostApi()
 abstract class PHostDiagnosticsApi {
-  @asyncCallback
+  @async
   Map<String, Object?> getDiagnosticReport();
 }
 
 @HostApi()
 abstract class PHostSoundApi {
-  @asyncCallback
+  @async
   void playRingbackSound();
 
-  @asyncCallback
+  @async
   void stopRingbackSound();
 }
 
@@ -414,13 +414,13 @@ abstract class PHostApi {
 @HostApi()
 abstract class PHostConnectionsApi {
   @ObjCSelector('getConnection:')
-  @asyncCallback
+  @async
   PCallkeepConnection? getConnection(String callId);
 
-  @asyncCallback
+  @async
   List<PCallkeepConnection> getConnections();
 
-  @asyncCallback
+  @async
   void cleanConnections();
 }
 
@@ -515,7 +515,7 @@ abstract class PHostSmsReceptionConfigApi {
   /// Example:
   /// messagePrefix: "<#> WEBTRIT:"
   /// regexPattern: r'\{"type":"incoming","handle":"([^"]+)","callID":"([^"]+)","displayName":"([^"]+)","hasVideo":(true|false)\}'
-  @asyncCallback
+  @async
   void initializeSmsReception({required String messagePrefix, required String regexPattern});
 }
 
@@ -528,26 +528,26 @@ abstract class PHostActivityControlApi {
   /// Allows the app's activity to be shown over the device lock screen.
   ///
   /// This is an Android-only feature.
-  @asyncCallback
+  @async
   void showOverLockscreen(bool enable);
 
   /// Turns the screen on when the app's window is shown.
   ///
   /// Typically used in conjunction with [showOverLockscreen].
   /// This is an Android-only feature.
-  @asyncCallback
+  @async
   void wakeScreenOnShow(bool enable);
 
   /// Moves the entire task (app) to the background.
   ///
   /// This is an Android-only feature.
   /// Returns `true` if successful.
-  @asyncCallback
+  @async
   bool sendToBackground();
 
   /// Checks if the device screen is currently locked (keyguard is active).
   ///
   /// Returns `false` on non-Android platforms.
-  @asyncCallback
+  @async
   bool isDeviceLocked();
 }
