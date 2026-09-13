@@ -391,13 +391,7 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
   final CallkeepDelegate _delegate;
 
   @override
-  Future<void> didPushIncomingCall(
-    PHandle handle,
-    String? displayName,
-    bool video,
-    String callId,
-    PIncomingCallError? error,
-  ) async {
+  void didPushIncomingCall(PHandle handle, String? displayName, bool video, String callId, PIncomingCallError? error) {
     _delegate.didPushIncomingCall(handle.toCallkeep(), displayName, video, callId, error?.value.toCallkeep());
   }
 
@@ -458,12 +452,12 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
   }
 
   @override
-  Future<void> didActivateAudioSession() async {
+  void didActivateAudioSession() {
     _delegate.didActivateAudioSession();
   }
 
   @override
-  Future<void> didDeactivateAudioSession() async {
+  void didDeactivateAudioSession() {
     _delegate.didDeactivateAudioSession();
   }
 }
@@ -474,7 +468,7 @@ class _PushRegistryDelegateRelay implements PPushRegistryDelegateFlutterApi {
   final PushRegistryDelegate _delegate;
 
   @override
-  Future<void> didUpdatePushTokenForPushTypeVoIP(String? token) async {
+  void didUpdatePushTokenForPushTypeVoIP(String? token) {
     _delegate.didUpdatePushTokenForPushTypeVoIP(token);
   }
 }

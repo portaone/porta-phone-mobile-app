@@ -323,17 +323,17 @@ abstract class PHostSoundApi {
 
 @FlutterApi()
 abstract class PDelegateBackgroundRegisterFlutterApi {
-  @asyncCallback
+  @async
   void onWakeUpBackgroundHandler(
     int userCallbackHandle,
     PCallkeepServiceStatus status,
     PCallkeepIncomingCallData? callData,
   );
 
-  @asyncCallback
+  @async
   void onApplicationStatusChanged(int applicationStatusCallbackHandle, PCallkeepServiceStatus status);
 
-  @asyncCallback
+  @async
   void onNotificationSync(int pushNotificationSyncStatusHandle, PCallkeepIncomingCallData? callData);
 }
 
@@ -426,57 +426,54 @@ abstract class PHostConnectionsApi {
 
 @FlutterApi()
 abstract class PDelegateFlutterApi {
-  @asyncCallback
   @ObjCSelector('didPushIncomingCallHandle:displayName:video:id:error:')
   void didPushIncomingCall(PHandle handle, String? displayName, bool video, String callId, PIncomingCallError? error);
 
   @ObjCSelector('performStartCall:handle:displayNameOrContactIdentifier:video:')
-  @asyncCallback
+  @async
   bool performStartCall(String callId, PHandle handle, String? displayNameOrContactIdentifier, bool video);
 
   @ObjCSelector('performAnswerCall:')
-  @asyncCallback
+  @async
   bool performAnswerCall(String callId);
 
   @ObjCSelector('performEndCall:')
-  @asyncCallback
+  @async
   bool performEndCall(String callId);
 
   @ObjCSelector('performSetHeld:onHold:')
-  @asyncCallback
+  @async
   bool performSetHeld(String callId, bool onHold);
 
   @ObjCSelector('performSetMuted:muted:')
-  @asyncCallback
+  @async
   bool performSetMuted(String callId, bool muted);
 
   @ObjCSelector('performSendDTMF:key:')
-  @asyncCallback
+  @async
   bool performSendDTMF(String callId, String key);
 
   @ObjCSelector('audioDeviceSet:device:')
-  @asyncCallback
+  @async
   bool performAudioDeviceSet(String callId, PAudioDevice device);
 
   @ObjCSelector('performAudioDevicesUpdate:devices:')
-  @asyncCallback
+  @async
   bool performAudioDevicesUpdate(String callId, List<PAudioDevice> devices);
 
-  @asyncCallback
   @ObjCSelector('didActivateAudioSession')
   void didActivateAudioSession();
 
-  @asyncCallback
   @ObjCSelector('didDeactivateAudioSession')
   void didDeactivateAudioSession();
 }
 
 @FlutterApi()
 abstract class PDelegateBackgroundServiceFlutterApi {
-  @asyncCallback
+  @async
   void performAnswerCall(String callId);
 
-  @asyncCallback
+  @async
   void performEndCall(String callId);
 }
 
@@ -488,7 +485,6 @@ abstract class PPushRegistryHostApi {
 
 @FlutterApi()
 abstract class PPushRegistryDelegateFlutterApi {
-  @asyncCallback
   @ObjCSelector('didUpdatePushTokenForPushTypeVoIP:')
   void didUpdatePushTokenForPushTypeVoIP(String? token);
 }
@@ -496,7 +492,7 @@ abstract class PPushRegistryDelegateFlutterApi {
 @FlutterApi()
 abstract class PDelegateSmsReceiverFlutterApi {
   /// Called by native side when a matching SMS is received
-  @asyncCallback
+  @async
   void onSmsReceived(String text);
 }
 

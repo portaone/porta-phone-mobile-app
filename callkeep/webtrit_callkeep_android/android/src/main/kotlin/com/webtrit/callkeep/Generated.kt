@@ -1798,54 +1798,60 @@ class PDelegateBackgroundRegisterFlutterApi(private val binaryMessenger: BinaryM
       GeneratedPigeonCodec()
     }
   }
-  fun onWakeUpBackgroundHandler(userCallbackHandleArg: Long, statusArg: PCallkeepServiceStatus, callDataArg: PCallkeepIncomingCallData?, callback: (Result<Unit>) -> Unit)
+  suspend fun onWakeUpBackgroundHandler(userCallbackHandleArg: Long, statusArg: PCallkeepServiceStatus, callDataArg: PCallkeepIncomingCallData?)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundRegisterFlutterApi.onWakeUpBackgroundHandler$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(userCallbackHandleArg, statusArg, callDataArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundRegisterFlutterApi.onWakeUpBackgroundHandler$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(userCallbackHandleArg, statusArg, callDataArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun onApplicationStatusChanged(applicationStatusCallbackHandleArg: Long, statusArg: PCallkeepServiceStatus, callback: (Result<Unit>) -> Unit)
+  suspend fun onApplicationStatusChanged(applicationStatusCallbackHandleArg: Long, statusArg: PCallkeepServiceStatus)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundRegisterFlutterApi.onApplicationStatusChanged$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(applicationStatusCallbackHandleArg, statusArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundRegisterFlutterApi.onApplicationStatusChanged$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(applicationStatusCallbackHandleArg, statusArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun onNotificationSync(pushNotificationSyncStatusHandleArg: Long, callDataArg: PCallkeepIncomingCallData?, callback: (Result<Unit>) -> Unit)
+  suspend fun onNotificationSync(pushNotificationSyncStatusHandleArg: Long, callDataArg: PCallkeepIncomingCallData?)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundRegisterFlutterApi.onNotificationSync$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(pushNotificationSyncStatusHandleArg, callDataArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundRegisterFlutterApi.onNotificationSync$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(pushNotificationSyncStatusHandleArg, callDataArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
@@ -2303,214 +2309,236 @@ class PDelegateFlutterApi(private val binaryMessenger: BinaryMessenger, private 
       GeneratedPigeonCodec()
     }
   }
-  fun didPushIncomingCall(handleArg: PHandle, displayNameArg: String?, videoArg: Boolean, callIdArg: String, errorArg: PIncomingCallError?, callback: (Result<Unit>) -> Unit)
+  suspend fun didPushIncomingCall(handleArg: PHandle, displayNameArg: String?, videoArg: Boolean, callIdArg: String, errorArg: PIncomingCallError?)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didPushIncomingCall$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(handleArg, displayNameArg, videoArg, callIdArg, errorArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didPushIncomingCall$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(handleArg, displayNameArg, videoArg, callIdArg, errorArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun performStartCall(callIdArg: String, handleArg: PHandle, displayNameOrContactIdentifierArg: String?, videoArg: Boolean, callback: (Result<Boolean>) -> Unit)
+  suspend fun performStartCall(callIdArg: String, handleArg: PHandle, displayNameOrContactIdentifierArg: String?, videoArg: Boolean): Boolean
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performStartCall$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg, handleArg, displayNameOrContactIdentifierArg, videoArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else if (it[0] == null) {
-          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performStartCall$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg, handleArg, displayNameOrContactIdentifierArg, videoArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else if (it[0] == null) {
+            continuation.resumeWithException(FlutterError("null-error", "Flutter api returned null value for non-null return value.", ""))
+          } else {
+            val output = it[0] as Boolean
+            continuation.resume(output)
+          }
         } else {
-          val output = it[0] as Boolean
-          callback(Result.success(output))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun performAnswerCall(callIdArg: String, callback: (Result<Boolean>) -> Unit)
+  suspend fun performAnswerCall(callIdArg: String): Boolean
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performAnswerCall$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else if (it[0] == null) {
-          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performAnswerCall$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else if (it[0] == null) {
+            continuation.resumeWithException(FlutterError("null-error", "Flutter api returned null value for non-null return value.", ""))
+          } else {
+            val output = it[0] as Boolean
+            continuation.resume(output)
+          }
         } else {
-          val output = it[0] as Boolean
-          callback(Result.success(output))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun performEndCall(callIdArg: String, callback: (Result<Boolean>) -> Unit)
+  suspend fun performEndCall(callIdArg: String): Boolean
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performEndCall$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else if (it[0] == null) {
-          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performEndCall$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else if (it[0] == null) {
+            continuation.resumeWithException(FlutterError("null-error", "Flutter api returned null value for non-null return value.", ""))
+          } else {
+            val output = it[0] as Boolean
+            continuation.resume(output)
+          }
         } else {
-          val output = it[0] as Boolean
-          callback(Result.success(output))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun performSetHeld(callIdArg: String, onHoldArg: Boolean, callback: (Result<Boolean>) -> Unit)
+  suspend fun performSetHeld(callIdArg: String, onHoldArg: Boolean): Boolean
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performSetHeld$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg, onHoldArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else if (it[0] == null) {
-          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performSetHeld$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg, onHoldArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else if (it[0] == null) {
+            continuation.resumeWithException(FlutterError("null-error", "Flutter api returned null value for non-null return value.", ""))
+          } else {
+            val output = it[0] as Boolean
+            continuation.resume(output)
+          }
         } else {
-          val output = it[0] as Boolean
-          callback(Result.success(output))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun performSetMuted(callIdArg: String, mutedArg: Boolean, callback: (Result<Boolean>) -> Unit)
+  suspend fun performSetMuted(callIdArg: String, mutedArg: Boolean): Boolean
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performSetMuted$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg, mutedArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else if (it[0] == null) {
-          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performSetMuted$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg, mutedArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else if (it[0] == null) {
+            continuation.resumeWithException(FlutterError("null-error", "Flutter api returned null value for non-null return value.", ""))
+          } else {
+            val output = it[0] as Boolean
+            continuation.resume(output)
+          }
         } else {
-          val output = it[0] as Boolean
-          callback(Result.success(output))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun performSendDTMF(callIdArg: String, keyArg: String, callback: (Result<Boolean>) -> Unit)
+  suspend fun performSendDTMF(callIdArg: String, keyArg: String): Boolean
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performSendDTMF$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg, keyArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else if (it[0] == null) {
-          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performSendDTMF$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg, keyArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else if (it[0] == null) {
+            continuation.resumeWithException(FlutterError("null-error", "Flutter api returned null value for non-null return value.", ""))
+          } else {
+            val output = it[0] as Boolean
+            continuation.resume(output)
+          }
         } else {
-          val output = it[0] as Boolean
-          callback(Result.success(output))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun performAudioDeviceSet(callIdArg: String, deviceArg: PAudioDevice, callback: (Result<Boolean>) -> Unit)
+  suspend fun performAudioDeviceSet(callIdArg: String, deviceArg: PAudioDevice): Boolean
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performAudioDeviceSet$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg, deviceArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else if (it[0] == null) {
-          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performAudioDeviceSet$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg, deviceArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else if (it[0] == null) {
+            continuation.resumeWithException(FlutterError("null-error", "Flutter api returned null value for non-null return value.", ""))
+          } else {
+            val output = it[0] as Boolean
+            continuation.resume(output)
+          }
         } else {
-          val output = it[0] as Boolean
-          callback(Result.success(output))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun performAudioDevicesUpdate(callIdArg: String, devicesArg: List<PAudioDevice>, callback: (Result<Boolean>) -> Unit)
+  suspend fun performAudioDevicesUpdate(callIdArg: String, devicesArg: List<PAudioDevice>): Boolean
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performAudioDevicesUpdate$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg, devicesArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else if (it[0] == null) {
-          callback(Result.failure(FlutterError("null-error", "Flutter api returned null value for non-null return value.", "")))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performAudioDevicesUpdate$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg, devicesArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else if (it[0] == null) {
+            continuation.resumeWithException(FlutterError("null-error", "Flutter api returned null value for non-null return value.", ""))
+          } else {
+            val output = it[0] as Boolean
+            continuation.resume(output)
+          }
         } else {
-          val output = it[0] as Boolean
-          callback(Result.success(output))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun didActivateAudioSession(callback: (Result<Unit>) -> Unit)
+  suspend fun didActivateAudioSession()
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didActivateAudioSession$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(null) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didActivateAudioSession$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(null) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun didDeactivateAudioSession(callback: (Result<Unit>) -> Unit)
+  suspend fun didDeactivateAudioSession()
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didDeactivateAudioSession$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(null) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didDeactivateAudioSession$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(null) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
@@ -2523,37 +2551,41 @@ class PDelegateBackgroundServiceFlutterApi(private val binaryMessenger: BinaryMe
       GeneratedPigeonCodec()
     }
   }
-  fun performAnswerCall(callIdArg: String, callback: (Result<Unit>) -> Unit)
+  suspend fun performAnswerCall(callIdArg: String)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundServiceFlutterApi.performAnswerCall$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundServiceFlutterApi.performAnswerCall$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
-  fun performEndCall(callIdArg: String, callback: (Result<Unit>) -> Unit)
+  suspend fun performEndCall(callIdArg: String)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundServiceFlutterApi.performEndCall$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(callIdArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundServiceFlutterApi.performEndCall$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
@@ -2597,20 +2629,22 @@ class PPushRegistryDelegateFlutterApi(private val binaryMessenger: BinaryMesseng
       GeneratedPigeonCodec()
     }
   }
-  fun didUpdatePushTokenForPushTypeVoIP(tokenArg: String?, callback: (Result<Unit>) -> Unit)
+  suspend fun didUpdatePushTokenForPushTypeVoIP(tokenArg: String?)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PPushRegistryDelegateFlutterApi.didUpdatePushTokenForPushTypeVoIP$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(tokenArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PPushRegistryDelegateFlutterApi.didUpdatePushTokenForPushTypeVoIP$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(tokenArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }
@@ -2624,20 +2658,22 @@ class PDelegateSmsReceiverFlutterApi(private val binaryMessenger: BinaryMessenge
     }
   }
   /** Called by native side when a matching SMS is received */
-  fun onSmsReceived(textArg: String, callback: (Result<Unit>) -> Unit)
+  suspend fun onSmsReceived(textArg: String)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateSmsReceiverFlutterApi.onSmsReceived$separatedMessageChannelSuffix"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(textArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateSmsReceiverFlutterApi.onSmsReceived$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(textArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
         } else {
-          callback(Result.success(Unit))
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
         }
-      } else {
-        callback(Result.failure(GeneratedPigeonUtils.createConnectionError(channelName)))
       }
     }
   }

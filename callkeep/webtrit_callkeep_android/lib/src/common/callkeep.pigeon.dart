@@ -2132,7 +2132,7 @@ class PHostConnectionsApi {
 abstract class PDelegateFlutterApi {
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
-  Future<void> didPushIncomingCall(PHandle handle, String? displayName, bool video, String callId, PIncomingCallError? error);
+  void didPushIncomingCall(PHandle handle, String? displayName, bool video, String callId, PIncomingCallError? error);
 
   Future<bool> performStartCall(String callId, PHandle handle, String? displayNameOrContactIdentifier, bool video);
 
@@ -2150,9 +2150,9 @@ abstract class PDelegateFlutterApi {
 
   Future<bool> performAudioDevicesUpdate(String callId, List<PAudioDevice> devices);
 
-  Future<void> didActivateAudioSession();
+  void didActivateAudioSession();
 
-  Future<void> didDeactivateAudioSession();
+  void didDeactivateAudioSession();
 
   static void setUp(PDelegateFlutterApi? api, {
     BinaryMessenger? binaryMessenger,
@@ -2175,7 +2175,7 @@ abstract class PDelegateFlutterApi {
           final String arg_callId = args[3]! as String;
           final PIncomingCallError? arg_error = args[4] as PIncomingCallError?;
           try {
-            await api.didPushIncomingCall(arg_handle, arg_displayName, arg_video, arg_callId, arg_error);
+            api.didPushIncomingCall(arg_handle, arg_displayName, arg_video, arg_callId, arg_error);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
@@ -2370,7 +2370,7 @@ abstract class PDelegateFlutterApi {
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           try {
-            await api.didActivateAudioSession();
+            api.didActivateAudioSession();
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
@@ -2389,7 +2389,7 @@ abstract class PDelegateFlutterApi {
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           try {
-            await api.didDeactivateAudioSession();
+            api.didDeactivateAudioSession();
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
@@ -2500,7 +2500,7 @@ class PPushRegistryHostApi {
 abstract class PPushRegistryDelegateFlutterApi {
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
-  Future<void> didUpdatePushTokenForPushTypeVoIP(String? token);
+  void didUpdatePushTokenForPushTypeVoIP(String? token);
 
   static void setUp(PPushRegistryDelegateFlutterApi? api, {
     BinaryMessenger? binaryMessenger,
@@ -2519,7 +2519,7 @@ abstract class PPushRegistryDelegateFlutterApi {
           final List<Object?> args = message! as List<Object?>;
           final String? arg_token = args[0] as String?;
           try {
-            await api.didUpdatePushTokenForPushTypeVoIP(arg_token);
+            api.didUpdatePushTokenForPushTypeVoIP(arg_token);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

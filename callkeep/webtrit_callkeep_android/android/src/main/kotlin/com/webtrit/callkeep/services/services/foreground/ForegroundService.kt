@@ -50,6 +50,11 @@ import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.core.ConnectionEventListener
 import com.webtrit.callkeep.services.services.incoming_call.IncomingCallRelease
 import com.webtrit.callkeep.services.services.incoming_call.IncomingCallService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -76,6 +81,27 @@ class ForegroundService :
     PHostApi,
     ConnectionEventListener {
     private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+
+    // Carries the calls into Dart. Pigeon generates them as suspend functions; the service
+    // fires them from broadcast handlers and never waits for the answer, so they run here.
+    // Main.immediate sends a call made on the main thread before the caller continues,
+    // which keeps the order the callback-style generated code had.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    /**
+     * Fire a delegate call into Dart without waiting for it. A failure is logged, as the
+     * callback-style code used to ignore it: the delegate may be gone, and there is nobody
+     * to hand the error to.
+     */
+    private fun notifyFlutter(
+        name: String,
+        block: suspend PDelegateFlutterApi.() -> Unit,
+    ) {
+        val api = flutterDelegateApi ?: return
+        scope.launch {
+            runCatching { api.block() }.onFailure { logger.w("$name: delegate call failed: ${it.message}") }
+        }
+    }
 
     private val activityWakelockManager = ActivityWakelockManager(ActivityHolder)
 
@@ -353,15 +379,17 @@ class ForegroundService :
                                 finish(Result.failure(error))
                                 return
                             }
-                            flutterDelegateApi?.performStartCall(
-                                callMetaData.callId,
-                                handle.toPHandle(),
-                                // Pass the resolved label (display name or number), or null when
-                                // unknown; the pigeon contract is nullable and the Flutter client
-                                // decides how to render an unknown caller.
-                                callMetaData.name,
-                                callMetaData.hasVideo ?: false,
-                            ) {}
+                            notifyFlutter("performStartCall") {
+                                performStartCall(
+                                    callMetaData.callId,
+                                    handle.toPHandle(),
+                                    // Pass the resolved label (display name or number), or null when
+                                    // unknown; the pigeon contract is nullable and the Flutter client
+                                    // decides how to render an unknown caller.
+                                    callMetaData.name,
+                                    callMetaData.hasVideo ?: false,
+                                )
+                            }
                             finish(Result.success(null))
                         }
 
@@ -508,7 +536,7 @@ class ForegroundService :
                 // this callback returns but before _CallPerformEvent.answered is processed.
                 core.promote(callId, metadata, PCallkeepConnectionState.STATE_ACTIVE)
                 core.markAnswered(callId)
-                flutterDelegateApi?.performAnswerCall(callId) {}
+                notifyFlutter("performAnswerCall") { performAnswerCall(callId) }
                 logger.i("reportNewIncomingCall: adopted already-answered call callId=$callId, fired performAnswerCall")
             } else {
                 // CALL_ID_ALREADY_EXISTS here is expected in the push+signaling combined flow:
@@ -607,7 +635,7 @@ class ForegroundService :
                             logger.i("reportNewIncomingCall: adopting already-answered call callId=$callId (CALL_ID_ALREADY_EXISTS + STATE_ACTIVE)")
                             core.promote(callId, metadata, PCallkeepConnectionState.STATE_ACTIVE)
                             core.markAnswered(callId)
-                            flutterDelegateApi?.performAnswerCall(callId) {}
+                            notifyFlutter("performAnswerCall") { performAnswerCall(callId) }
                             callback(Result.success(null))
                         } else {
                             // Call still ringing in Telecom but not yet promoted in the tracker
@@ -635,7 +663,7 @@ class ForegroundService :
                         logger.i("reportNewIncomingCall: adopting already-answered call callId=$callId")
                         core.promote(callId, metadata, PCallkeepConnectionState.STATE_ACTIVE)
                         core.markAnswered(callId)
-                        flutterDelegateApi?.performAnswerCall(callId) {}
+                        notifyFlutter("performAnswerCall") { performAnswerCall(callId) }
                         callback(Result.success(null))
                     }
 
@@ -706,7 +734,7 @@ class ForegroundService :
         activeCallIds.forEach { callId ->
             core.markDirectNotified(callId)
             core.clearAndMarkEndCallDispatched(callId)
-            flutterDelegateApi?.performEndCall(callId) {}
+            notifyFlutter("performEndCall") { performEndCall(callId) }
         }
 
         // Step 4: Notify Flutter for pending-only calls.
@@ -719,11 +747,11 @@ class ForegroundService :
         unconnectedPending.forEach { callId ->
             core.markDirectNotified(callId)
             core.clearAndMarkEndCallDispatched(callId)
-            flutterDelegateApi?.performEndCall(callId) {}
+            notifyFlutter("performEndCall") { performEndCall(callId) }
         }
 
         if (activeCallIds.isNotEmpty() || unconnectedPending.isNotEmpty()) {
-            flutterDelegateApi?.didDeactivateAudioSession {}
+            notifyFlutter("didDeactivateAudioSession") { didDeactivateAudioSession() }
         }
 
         // Step 5: Send TearDownConnections command to :callkeep_core via startService.
@@ -933,7 +961,7 @@ class ForegroundService :
             val isFirstEndCall = core.markEndCallDispatched(callId)
             if (isFirstEndCall) {
                 logger.w("endCall: $callId terminated by Telecom before endCall was dispatched — re-notifying Flutter.")
-                flutterDelegateApi?.performEndCall(callId) {}
+                notifyFlutter("performEndCall") { performEndCall(callId) }
             } else {
                 logger.w(
                     "endCall: $callId already terminated and endCall was already dispatched — returning error without re-notifying.",
@@ -1072,13 +1100,15 @@ class ForegroundService :
             return
         }
         logger.i("deliverIncomingToDelegate: delivering incoming callId=${metadata.callId} to delegate")
-        flutterDelegateApi?.didPushIncomingCall(
-            handleArg = handle.toPHandle(),
-            displayNameArg = metadata.displayName,
-            videoArg = metadata.hasVideo ?: false,
-            callIdArg = metadata.callId,
-            errorArg = null,
-        ) {}
+        notifyFlutter("didPushIncomingCall") {
+            didPushIncomingCall(
+                handleArg = handle.toPHandle(),
+                displayNameArg = metadata.displayName,
+                videoArg = metadata.hasVideo ?: false,
+                callIdArg = metadata.callId,
+                errorArg = null,
+            )
+        }
     }
 
     /**
@@ -1160,8 +1190,8 @@ class ForegroundService :
             core.clearAndMarkEndCallDispatched(callId)
             syncScreenWakelock()
 
-            flutterDelegateApi?.performEndCall(callId) {}
-            flutterDelegateApi?.didDeactivateAudioSession {}
+            notifyFlutter("performEndCall") { performEndCall(callId) }
+            notifyFlutter("didDeactivateAudioSession") { didDeactivateAudioSession() }
 
             if (Platform.isLockScreen(baseContext)) {
                 ActivityHolder.finish()
@@ -1178,7 +1208,7 @@ class ForegroundService :
             core.consumeAnswer(callMetaData.callId)
             // Update tracker: call has been answered.
             core.markAnswered(callMetaData.callId)
-            flutterDelegateApi?.didActivateAudioSession {}
+            notifyFlutter("didActivateAudioSession") { didActivateAudioSession() }
 
             if (IncomingCallService.isRunning) {
                 // Push-notification path: tell the background isolate to release its
@@ -1186,7 +1216,7 @@ class ForegroundService :
                 // PhoneConnection.onAnswer() in :callkeep_core.
                 IncomingCallService.release(baseContext, IncomingCallRelease.IC_RELEASE_WITH_ANSWER)
             }
-            flutterDelegateApi?.performAnswerCall(callMetaData.callId) {}
+            notifyFlutter("performAnswerCall") { performAnswerCall(callMetaData.callId) }
         }
     }
 
@@ -1194,14 +1224,17 @@ class ForegroundService :
         logger.d("handleCSReportAudioDeviceSet")
         extras?.let {
             val callMetaData = CallMetadata.fromBundle(it)
-            val audioDevice = callMetaData.audioDevice ?: run {
-                logger.w("handleCSReportAudioDeviceSet: audioDevice not set for callId=${callMetaData.callId}")
-                return
+            val audioDevice =
+                callMetaData.audioDevice ?: run {
+                    logger.w("handleCSReportAudioDeviceSet: audioDevice not set for callId=${callMetaData.callId}")
+                    return
+                }
+            notifyFlutter("performAudioDeviceSet") {
+                performAudioDeviceSet(
+                    callMetaData.callId,
+                    audioDevice.toPAudioDevice(),
+                )
             }
-            flutterDelegateApi?.performAudioDeviceSet(
-                callMetaData.callId,
-                audioDevice.toPAudioDevice(),
-            ) {}
         }
     }
 
@@ -1209,10 +1242,12 @@ class ForegroundService :
         logger.d("handleCsReportAudioDevicesUpdate")
         extras?.let {
             val callMetaData = CallMetadata.fromBundle(it)
-            flutterDelegateApi?.performAudioDevicesUpdate(
-                callMetaData.callId,
-                callMetaData.audioDevices.map { audioDevice -> audioDevice.toPAudioDevice() },
-            ) {}
+            notifyFlutter("performAudioDevicesUpdate") {
+                performAudioDevicesUpdate(
+                    callMetaData.callId,
+                    callMetaData.audioDevices.map { audioDevice -> audioDevice.toPAudioDevice() },
+                )
+            }
         }
     }
 
@@ -1220,10 +1255,12 @@ class ForegroundService :
         logger.d("handleCSReportAudioMuting")
         extras?.let {
             val callMetaData = CallMetadata.fromBundle(it)
-            flutterDelegateApi?.performSetMuted(
-                callMetaData.callId,
-                callMetaData.hasMute ?: false,
-            ) {}
+            notifyFlutter("performSetMuted") {
+                performSetMuted(
+                    callMetaData.callId,
+                    callMetaData.hasMute ?: false,
+                )
+            }
         }
     }
 
@@ -1235,7 +1272,7 @@ class ForegroundService :
             // The HOLDING / ACTIVE shadow state is mirrored from the real connection via
             // ConnectionStateChanged (onStateChanged for Telecom; explicit emit from StandaloneCallService),
             // so this handler only relays the hold action to Flutter.
-            flutterDelegateApi?.performSetHeld(callMetaData.callId, onHold) {}
+            notifyFlutter("performSetHeld") { performSetHeld(callMetaData.callId, onHold) }
         }
     }
 
@@ -1243,10 +1280,12 @@ class ForegroundService :
         logger.d("handleCSReportSentDTMF")
         extras?.let {
             val callMetaData = CallMetadata.fromBundle(it)
-            flutterDelegateApi?.performSendDTMF(
-                callMetaData.callId,
-                callMetaData.dualToneMultiFrequency.toString(),
-            ) {}
+            notifyFlutter("performSendDTMF") {
+                performSendDTMF(
+                    callMetaData.callId,
+                    callMetaData.dualToneMultiFrequency.toString(),
+                )
+            }
         }
     }
 
@@ -1325,6 +1364,7 @@ class ForegroundService :
         tearDownAckReceiver = null
 
         activityWakelockManager.dispose()
+        scope.cancel()
 
         // Phone account registration is tied to the user session, not the service lifecycle.
         // Unregistration happens only in finishTearDown() (explicit logout/tearDown call).

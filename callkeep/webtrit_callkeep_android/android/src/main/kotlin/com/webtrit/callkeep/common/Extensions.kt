@@ -171,15 +171,13 @@ fun Context.startForegroundServiceCompat(
     }
 }
 
-fun PDelegateBackgroundRegisterFlutterApi.syncPushIsolate(
+suspend fun PDelegateBackgroundRegisterFlutterApi.syncPushIsolate(
     context: Context,
     callData: PCallkeepIncomingCallData?,
-    callback: (Result<Unit>) -> Unit,
 ) {
     this.onNotificationSync(
         StorageDelegate.IncomingCallService.getOnNotificationSync(context),
         callData,
-        callback = callback,
     )
 }
 
