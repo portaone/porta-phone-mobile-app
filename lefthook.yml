@@ -21,13 +21,13 @@ pre-commit:
     phone-format:
       root: phone/
       glob: "phone/**/*.dart"
-      exclude: ["*.g.dart", "*.freezed.dart", "*.gr.dart"]
+      exclude: ["**/*.g.dart", "**/*.freezed.dart", "**/*.gr.dart"]
       run: dart format --output=none --set-exit-if-changed {staged_files}
 
     tools-format:
       root: tools/
       glob: "tools/**/*.dart"
-      exclude: ["*.g.dart", "*.freezed.dart", "*.gr.dart"]
+      exclude: ["**/*.g.dart", "**/*.freezed.dart", "**/*.gr.dart"]
       run: dart format --output=none --set-exit-if-changed {staged_files}
 
     analysis-format:
@@ -38,14 +38,14 @@ pre-commit:
     callkeep-format:
       root: callkeep/
       glob: "callkeep/**/*.dart"
-      exclude: ["*.g.dart", "*.freezed.dart", "*.gr.dart", "*.pigeon.dart"]
+      exclude: ["**/*.g.dart", "**/*.freezed.dart", "**/*.gr.dart", "**/*.pigeon.dart"]
       run: dart format --line-length 120 {staged_files}
       stage_fixed: true
 
     callkeep-kotlin:
       root: callkeep/
       glob: "callkeep/**/*.kt"
-      exclude: ["Generated.kt"]
+      exclude: ["**/Generated.kt"]
       run: ktlint --format {staged_files}
       stage_fixed: true
 
