@@ -343,35 +343,35 @@ abstract class PHostApi {
   bool isSetUp();
 
   @ObjCSelector('setUp:')
-  @asyncCallback
+  @async
   void setUp(POptions options);
 
   @ObjCSelector('tearDown')
-  @asyncCallback
+  @async
   void tearDown();
 
   @ObjCSelector('reportNewIncomingCall:handle:displayName:hasVideo:')
-  @asyncCallback
+  @async
   PIncomingCallError? reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo);
 
   @ObjCSelector('reportConnectingOutgoingCall:')
-  @asyncCallback
+  @async
   void reportConnectingOutgoingCall(String callId);
 
   @ObjCSelector('reportConnectedOutgoingCall:')
-  @asyncCallback
+  @async
   void reportConnectedOutgoingCall(String callId);
 
   @ObjCSelector('reportUpdateCall:handle:displayName:hasVideo:proximityEnabled:')
-  @asyncCallback
+  @async
   void reportUpdateCall(String callId, PHandle? handle, String? displayName, bool? hasVideo, bool? proximityEnabled);
 
   @ObjCSelector('reportEndCall:displayName:reason:')
-  @asyncCallback
+  @async
   void reportEndCall(String callId, String displayName, PEndCallReason reason);
 
   @ObjCSelector('startCall:handle:displayNameOrContactIdentifier:video:proximityEnabled:')
-  @asyncCallback
+  @async
   PCallRequestError? startCall(
     String callId,
     PHandle handle,
@@ -381,31 +381,31 @@ abstract class PHostApi {
   );
 
   @ObjCSelector('answerCall:')
-  @asyncCallback
+  @async
   PCallRequestError? answerCall(String callId);
 
   @ObjCSelector('endCall:')
-  @asyncCallback
+  @async
   PCallRequestError? endCall(String callId);
 
   @ObjCSelector('setHeld:onHold:')
-  @asyncCallback
+  @async
   PCallRequestError? setHeld(String callId, bool onHold);
 
   @ObjCSelector('setMuted:muted:')
-  @asyncCallback
+  @async
   PCallRequestError? setMuted(String callId, bool muted);
 
   @ObjCSelector('setSpeaker:enabled:')
-  @asyncCallback
+  @async
   PCallRequestError? setSpeaker(String callId, bool enabled);
 
   @ObjCSelector('setAudioDevice:device:')
-  @asyncCallback
+  @async
   PCallRequestError? setAudioDevice(String callId, PAudioDevice device);
 
   @ObjCSelector('sendDTMF:key:')
-  @asyncCallback
+  @async
   PCallRequestError? sendDTMF(String callId, String key);
 
   void onDelegateSet();

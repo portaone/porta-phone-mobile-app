@@ -44,7 +44,7 @@ class WebtritCallkeepPlugin :
     private var serviceConnection: ServiceConnection? = null
 
     // Registered as the PHostApi handler on activity attach and told when the service binds
-    // and unbinds; see ForegroundServiceProxy for what happens to a call in between.
+    // and unbinds; see ForegroundServiceProxy for what it does with a call in between.
     private val serviceProxy = ForegroundServiceProxy()
 
     private var permissionsApi: PermissionsApi? = null
@@ -276,7 +276,7 @@ class WebtritCallkeepPlugin :
                     // push-isolate engine that started after onAttachedToActivity but before this
                     // async callback fired.
                     foregroundService?.flutterDelegateApi = PDelegateFlutterApi(activityBinaryMessenger ?: messenger)
-                    // Replay any setUp() call that arrived before the service connected.
+                    // Release any setUp() call that arrived before the service connected.
                     foregroundService?.let { serviceProxy.connected(it) }
                 }
 
@@ -287,6 +287,7 @@ class WebtritCallkeepPlugin :
                 }
             }
         serviceConnection = foregroundServiceConnection
+        serviceProxy.binding()
         activity.bindService(intent, foregroundServiceConnection, Context.BIND_AUTO_CREATE)
     }
 

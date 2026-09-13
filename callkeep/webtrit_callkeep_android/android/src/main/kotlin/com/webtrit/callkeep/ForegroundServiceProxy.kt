@@ -1,154 +1,131 @@
 package com.webtrit.callkeep
 
 import com.webtrit.callkeep.common.Log
+import kotlinx.coroutines.CompletableDeferred
 
 /**
  * The [PHostApi] handler registered the moment the activity attaches, so that Dart calls are
  * never lost while the asynchronous bindService() completes. Every call is forwarded to the
  * bound [ForegroundService] at call time.
  *
- * setUp() is the only call that may arrive before the service binds: it is queued and
- * replayed by [connected]. Only one setUp can be in flight at a time; a second call replaces
- * the first. All other calls are only reachable after a successful setUp(), by which point
- * the service is bound.
+ * setUp() is the only call that may arrive before the service binds: it suspends until
+ * [connected] runs. All other calls are only reachable after a successful setUp(), by which
+ * point the service is bound. A call that is still waiting, or that resumes, after
+ * [disconnected] fails with an error rather than reaching a service the activity no longer
+ * holds: pigeon runs each host call on a later main-looper step, so a detach can land between
+ * the call arriving and the call running.
  */
 internal class ForegroundServiceProxy : PHostApi {
     @Volatile
     private var target: PHostApi? = null
 
-    private var pendingSetUp: Pair<POptions, (Result<Unit>) -> Unit>? = null
+    // Completed with the service on bind. Renewed when a bind starts and failed on unbind, so
+    // a setUp() that waited across a detach gets an error, one that arrives after the detach
+    // does not pick up a service completed before it, and one that arrives while the
+    // activity is binding again waits for the new service rather than failing on the old
+    // detach.
+    @Volatile
+    private var connected: CompletableDeferred<PHostApi> = CompletableDeferred()
 
-    /** The service is bound; replay the setUp() that arrived before it. */
+    /** A bind has started; a setUp() from now on waits for the service it will bring. */
+    fun binding() {
+        if (connected.isCompleted) connected = CompletableDeferred()
+    }
+
+    /** The service is bound; release every setUp() waiting for it. */
     fun connected(service: PHostApi) {
         target = service
-        pendingSetUp?.let { (options, callback) ->
-            Log.i(TAG, "connected: replaying queued setUp()")
-            pendingSetUp = null
-            service.setUp(options, callback)
-        }
+        binding()
+        connected.complete(service)
     }
 
-    /** The service is gone. */
+    /** The service is gone; fail every setUp() waiting for it, and every one still to come. */
     fun disconnected() {
         target = null
+        val gone = IllegalStateException("ForegroundService not connected")
+        connected.completeExceptionally(gone)
+        connected = CompletableDeferred<PHostApi>().also { it.completeExceptionally(gone) }
     }
 
-    private fun notConnected() = IllegalStateException("ForegroundService not connected")
+    private fun service(): PHostApi = target ?: throw IllegalStateException("ForegroundService not connected")
 
     override fun isSetUp(): Boolean = target?.isSetUp() ?: false
 
-    override fun setUp(
-        options: POptions,
-        callback: (Result<Unit>) -> Unit,
-    ) {
-        val svc = target
-        if (svc != null) {
-            svc.setUp(options, callback)
-        } else {
-            Log.i(TAG, "setUp: ForegroundService not yet connected, queuing call")
-            pendingSetUp = Pair(options, callback)
-        }
+    override suspend fun setUp(options: POptions) {
+        val service =
+            target ?: run {
+                Log.i(TAG, "setUp: ForegroundService not yet connected, waiting for it")
+                connected.await()
+            }
+        // The await may resume after a detach: the service it returned is no longer the one
+        // this activity holds, and pigeon must not report a setUp that never happened.
+        if (service !== target) throw IllegalStateException("ForegroundService not connected")
+        service.setUp(options)
     }
 
-    override fun tearDown(callback: (Result<Unit>) -> Unit) =
-        target?.tearDown(callback)
-            ?: callback(Result.failure(notConnected()))
+    override suspend fun tearDown() = service().tearDown()
 
-    override fun reportNewIncomingCall(
+    override suspend fun reportNewIncomingCall(
         callId: String,
         handle: PHandle,
         displayName: String?,
         hasVideo: Boolean,
-        callback: (Result<PIncomingCallError?>) -> Unit,
-    ) = target?.reportNewIncomingCall(callId, handle, displayName, hasVideo, callback)
-        ?: callback(Result.failure(notConnected()))
+    ): PIncomingCallError? = service().reportNewIncomingCall(callId, handle, displayName, hasVideo)
 
-    override fun reportConnectingOutgoingCall(
-        callId: String,
-        callback: (Result<Unit>) -> Unit,
-    ) = target?.reportConnectingOutgoingCall(callId, callback)
-        ?: callback(Result.failure(notConnected()))
+    override suspend fun reportConnectingOutgoingCall(callId: String) = service().reportConnectingOutgoingCall(callId)
 
-    override fun reportConnectedOutgoingCall(
-        callId: String,
-        callback: (Result<Unit>) -> Unit,
-    ) = target?.reportConnectedOutgoingCall(callId, callback)
-        ?: callback(Result.failure(notConnected()))
+    override suspend fun reportConnectedOutgoingCall(callId: String) = service().reportConnectedOutgoingCall(callId)
 
-    override fun reportUpdateCall(
+    override suspend fun reportUpdateCall(
         callId: String,
         handle: PHandle?,
         displayName: String?,
         hasVideo: Boolean?,
         proximityEnabled: Boolean?,
-        callback: (Result<Unit>) -> Unit,
-    ) = target?.reportUpdateCall(callId, handle, displayName, hasVideo, proximityEnabled, callback)
-        ?: callback(Result.failure(notConnected()))
+    ) = service().reportUpdateCall(callId, handle, displayName, hasVideo, proximityEnabled)
 
-    override fun reportEndCall(
+    override suspend fun reportEndCall(
         callId: String,
         displayName: String,
         reason: PEndCallReason,
-        callback: (Result<Unit>) -> Unit,
-    ) = target?.reportEndCall(callId, displayName, reason, callback)
-        ?: callback(Result.failure(notConnected()))
+    ) = service().reportEndCall(callId, displayName, reason)
 
-    override fun startCall(
+    override suspend fun startCall(
         callId: String,
         handle: PHandle,
         displayNameOrContactIdentifier: String?,
         video: Boolean,
         proximityEnabled: Boolean,
-        callback: (Result<PCallRequestError?>) -> Unit,
-    ) = target?.startCall(callId, handle, displayNameOrContactIdentifier, video, proximityEnabled, callback)
-        ?: callback(Result.failure(notConnected()))
+    ): PCallRequestError? = service().startCall(callId, handle, displayNameOrContactIdentifier, video, proximityEnabled)
 
-    override fun answerCall(
-        callId: String,
-        callback: (Result<PCallRequestError?>) -> Unit,
-    ) = target?.answerCall(callId, callback)
-        ?: callback(Result.failure(notConnected()))
+    override suspend fun answerCall(callId: String): PCallRequestError? = service().answerCall(callId)
 
-    override fun endCall(
-        callId: String,
-        callback: (Result<PCallRequestError?>) -> Unit,
-    ) = target?.endCall(callId, callback)
-        ?: callback(Result.failure(notConnected()))
+    override suspend fun endCall(callId: String): PCallRequestError? = service().endCall(callId)
 
-    override fun setHeld(
+    override suspend fun setHeld(
         callId: String,
         onHold: Boolean,
-        callback: (Result<PCallRequestError?>) -> Unit,
-    ) = target?.setHeld(callId, onHold, callback)
-        ?: callback(Result.failure(notConnected()))
+    ): PCallRequestError? = service().setHeld(callId, onHold)
 
-    override fun setMuted(
+    override suspend fun setMuted(
         callId: String,
         muted: Boolean,
-        callback: (Result<PCallRequestError?>) -> Unit,
-    ) = target?.setMuted(callId, muted, callback)
-        ?: callback(Result.failure(notConnected()))
+    ): PCallRequestError? = service().setMuted(callId, muted)
 
-    override fun setSpeaker(
+    override suspend fun setSpeaker(
         callId: String,
         enabled: Boolean,
-        callback: (Result<PCallRequestError?>) -> Unit,
-    ) = target?.setSpeaker(callId, enabled, callback)
-        ?: callback(Result.failure(notConnected()))
+    ): PCallRequestError? = service().setSpeaker(callId, enabled)
 
-    override fun setAudioDevice(
+    override suspend fun setAudioDevice(
         callId: String,
         device: PAudioDevice,
-        callback: (Result<PCallRequestError?>) -> Unit,
-    ) = target?.setAudioDevice(callId, device, callback)
-        ?: callback(Result.failure(notConnected()))
+    ): PCallRequestError? = service().setAudioDevice(callId, device)
 
-    override fun sendDTMF(
+    override suspend fun sendDTMF(
         callId: String,
         key: String,
-        callback: (Result<PCallRequestError?>) -> Unit,
-    ) = target?.sendDTMF(callId, key, callback)
-        ?: callback(Result.failure(notConnected()))
+    ): PCallRequestError? = service().sendDTMF(callId, key)
 
     override fun onDelegateSet() = target?.onDelegateSet() ?: Unit
 

@@ -1859,21 +1859,21 @@ class PDelegateBackgroundRegisterFlutterApi(private val binaryMessenger: BinaryM
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface PHostApi {
   fun isSetUp(): Boolean
-  fun setUp(options: POptions, callback: (Result<Unit>) -> Unit)
-  fun tearDown(callback: (Result<Unit>) -> Unit)
-  fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean, callback: (Result<PIncomingCallError?>) -> Unit)
-  fun reportConnectingOutgoingCall(callId: String, callback: (Result<Unit>) -> Unit)
-  fun reportConnectedOutgoingCall(callId: String, callback: (Result<Unit>) -> Unit)
-  fun reportUpdateCall(callId: String, handle: PHandle?, displayName: String?, hasVideo: Boolean?, proximityEnabled: Boolean?, callback: (Result<Unit>) -> Unit)
-  fun reportEndCall(callId: String, displayName: String, reason: PEndCallReason, callback: (Result<Unit>) -> Unit)
-  fun startCall(callId: String, handle: PHandle, displayNameOrContactIdentifier: String?, video: Boolean, proximityEnabled: Boolean, callback: (Result<PCallRequestError?>) -> Unit)
-  fun answerCall(callId: String, callback: (Result<PCallRequestError?>) -> Unit)
-  fun endCall(callId: String, callback: (Result<PCallRequestError?>) -> Unit)
-  fun setHeld(callId: String, onHold: Boolean, callback: (Result<PCallRequestError?>) -> Unit)
-  fun setMuted(callId: String, muted: Boolean, callback: (Result<PCallRequestError?>) -> Unit)
-  fun setSpeaker(callId: String, enabled: Boolean, callback: (Result<PCallRequestError?>) -> Unit)
-  fun setAudioDevice(callId: String, device: PAudioDevice, callback: (Result<PCallRequestError?>) -> Unit)
-  fun sendDTMF(callId: String, key: String, callback: (Result<PCallRequestError?>) -> Unit)
+  suspend fun setUp(options: POptions)
+  suspend fun tearDown()
+  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean): PIncomingCallError?
+  suspend fun reportConnectingOutgoingCall(callId: String)
+  suspend fun reportConnectedOutgoingCall(callId: String)
+  suspend fun reportUpdateCall(callId: String, handle: PHandle?, displayName: String?, hasVideo: Boolean?, proximityEnabled: Boolean?)
+  suspend fun reportEndCall(callId: String, displayName: String, reason: PEndCallReason)
+  suspend fun startCall(callId: String, handle: PHandle, displayNameOrContactIdentifier: String?, video: Boolean, proximityEnabled: Boolean): PCallRequestError?
+  suspend fun answerCall(callId: String): PCallRequestError?
+  suspend fun endCall(callId: String): PCallRequestError?
+  suspend fun setHeld(callId: String, onHold: Boolean): PCallRequestError?
+  suspend fun setMuted(callId: String, muted: Boolean): PCallRequestError?
+  suspend fun setSpeaker(callId: String, enabled: Boolean): PCallRequestError?
+  suspend fun setAudioDevice(callId: String, device: PAudioDevice): PCallRequestError?
+  suspend fun sendDTMF(callId: String, key: String): PCallRequestError?
   fun onDelegateSet()
 
   companion object {
@@ -1906,13 +1906,14 @@ interface PHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val optionsArg = args[0] as POptions
-            api.setUp(optionsArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.setUp(optionsArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1923,13 +1924,14 @@ interface PHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.tearDown$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.tearDown{ result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.tearDown()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1945,14 +1947,13 @@ interface PHostApi {
             val handleArg = args[1] as PHandle
             val displayNameArg = args[2] as String?
             val hasVideoArg = args[3] as Boolean
-            api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg) { result: Result<PIncomingCallError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1965,13 +1966,14 @@ interface PHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
-            api.reportConnectingOutgoingCall(callIdArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.reportConnectingOutgoingCall(callIdArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1984,13 +1986,14 @@ interface PHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
-            api.reportConnectedOutgoingCall(callIdArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.reportConnectedOutgoingCall(callIdArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2007,13 +2010,14 @@ interface PHostApi {
             val displayNameArg = args[2] as String?
             val hasVideoArg = args[3] as Boolean?
             val proximityEnabledArg = args[4] as Boolean?
-            api.reportUpdateCall(callIdArg, handleArg, displayNameArg, hasVideoArg, proximityEnabledArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.reportUpdateCall(callIdArg, handleArg, displayNameArg, hasVideoArg, proximityEnabledArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2028,13 +2032,14 @@ interface PHostApi {
             val callIdArg = args[0] as String
             val displayNameArg = args[1] as String
             val reasonArg = args[2] as PEndCallReason
-            api.reportEndCall(callIdArg, displayNameArg, reasonArg) { result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.reportEndCall(callIdArg, displayNameArg, reasonArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2051,14 +2056,13 @@ interface PHostApi {
             val displayNameOrContactIdentifierArg = args[2] as String?
             val videoArg = args[3] as Boolean
             val proximityEnabledArg = args[4] as Boolean
-            api.startCall(callIdArg, handleArg, displayNameOrContactIdentifierArg, videoArg, proximityEnabledArg) { result: Result<PCallRequestError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.startCall(callIdArg, handleArg, displayNameOrContactIdentifierArg, videoArg, proximityEnabledArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2071,14 +2075,13 @@ interface PHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
-            api.answerCall(callIdArg) { result: Result<PCallRequestError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.answerCall(callIdArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2091,14 +2094,13 @@ interface PHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
-            api.endCall(callIdArg) { result: Result<PCallRequestError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.endCall(callIdArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2112,14 +2114,13 @@ interface PHostApi {
             val args = message as List<Any?>
             val callIdArg = args[0] as String
             val onHoldArg = args[1] as Boolean
-            api.setHeld(callIdArg, onHoldArg) { result: Result<PCallRequestError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.setHeld(callIdArg, onHoldArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2133,14 +2134,13 @@ interface PHostApi {
             val args = message as List<Any?>
             val callIdArg = args[0] as String
             val mutedArg = args[1] as Boolean
-            api.setMuted(callIdArg, mutedArg) { result: Result<PCallRequestError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.setMuted(callIdArg, mutedArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2154,14 +2154,13 @@ interface PHostApi {
             val args = message as List<Any?>
             val callIdArg = args[0] as String
             val enabledArg = args[1] as Boolean
-            api.setSpeaker(callIdArg, enabledArg) { result: Result<PCallRequestError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.setSpeaker(callIdArg, enabledArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2175,14 +2174,13 @@ interface PHostApi {
             val args = message as List<Any?>
             val callIdArg = args[0] as String
             val deviceArg = args[1] as PAudioDevice
-            api.setAudioDevice(callIdArg, deviceArg) { result: Result<PCallRequestError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.setAudioDevice(callIdArg, deviceArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -2196,14 +2194,13 @@ interface PHostApi {
             val args = message as List<Any?>
             val callIdArg = args[0] as String
             val keyArg = args[1] as String
-            api.sendDTMF(callIdArg, keyArg) { result: Result<PCallRequestError?> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.sendDTMF(callIdArg, keyArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {

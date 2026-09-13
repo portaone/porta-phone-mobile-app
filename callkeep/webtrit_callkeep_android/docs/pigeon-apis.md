@@ -131,9 +131,15 @@ Configures the optional SMS-based incoming call trigger (`IncomingCallSmsTrigger
 Kotlin calls these methods on the Dart delegate to notify of call events.
 
 Every `perform*` is declared to return `bool` and the `did*` methods return nothing. Note
-that Android **ignores the boolean**: every call site passes an empty callback, so a
-delegate returning `false` changes nothing here. It is iOS that acts on it, by failing the
-CallKit action.
+that Android **ignores the boolean**: every call site launches the call through
+`ForegroundService.notifyFlutter` and discards the result, so a delegate returning `false`
+changes nothing here. It is iOS that acts on it, by failing the CallKit action.
+
+Pigeon generates these, and every `@async` host method, as Kotlin `suspend` functions. A
+host call runs in a coroutine pigeon launches on `Dispatchers.Main`; the reply goes back
+when the function returns, and a thrown exception becomes a `PlatformException` in Dart. A
+delegate call from Kotlin has to run inside a coroutine: the service and the push-isolate
+communicator keep a `SupervisorJob` scope on `Dispatchers.Main.immediate` for that.
 
 | Method                                                                    | Description                             |
 |---------------------------------------------------------------------------|-----------------------------------------|
