@@ -1457,41 +1457,41 @@ interface PHostBackgroundPushNotificationIsolateApi {
 }
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface PHostPermissionsApi {
-  fun getFullScreenIntentPermissionStatus(callback: (Result<PSpecialPermissionStatusTypeEnum>) -> Unit)
-  fun openFullScreenIntentSettings(callback: (Result<Unit>) -> Unit)
+  suspend fun getFullScreenIntentPermissionStatus(): PSpecialPermissionStatusTypeEnum
+  suspend fun openFullScreenIntentSettings()
   /**
    * Status of the OEM "display pop-up windows while running in background"
    * capability (MIUI/HyperOS `OP_BACKGROUND_START_ACTIVITY`), which gates
    * showing the incoming-call Activity over the lock screen. Best-effort:
    * reports granted on devices where the capability does not apply.
    */
-  fun getBackgroundActivityStartPermissionStatus(callback: (Result<PSpecialPermissionStatusTypeEnum>) -> Unit)
+  suspend fun getBackgroundActivityStartPermissionStatus(): PSpecialPermissionStatusTypeEnum
   /**
    * Opens the OEM permissions screen that hosts the "display pop-up windows
    * while running in background" toggle, with a fallback to app settings.
    */
-  fun openBackgroundActivityStartSettings(callback: (Result<Unit>) -> Unit)
+  suspend fun openBackgroundActivityStartSettings()
   /**
    * Status of the OEM "display pop-up windows while running in background"
    * MIUI/HyperOS `OP_SHOW_WHEN_LOCKED` capability, which gates showing the
    * incoming-call Activity over the lock screen. Best-effort: reports
    * granted on devices where the capability does not apply.
    */
-  fun getShowWhenLockedPermissionStatus(callback: (Result<PSpecialPermissionStatusTypeEnum>) -> Unit)
+  suspend fun getShowWhenLockedPermissionStatus(): PSpecialPermissionStatusTypeEnum
   /**
    * Opens the OEM permissions screen that hosts the "show on lock screen"
    * toggle, with a fallback to app settings.
    */
-  fun openShowWhenLockedSettings(callback: (Result<Unit>) -> Unit)
-  fun openSettings(callback: (Result<Unit>) -> Unit)
-  fun getBatteryMode(callback: (Result<PCallkeepAndroidBatteryMode>) -> Unit)
+  suspend fun openShowWhenLockedSettings()
+  suspend fun openSettings()
+  suspend fun getBatteryMode(): PCallkeepAndroidBatteryMode
   /**
    * How incoming calls are delivered: Telecom `ConnectionService` vs the
    * limited standalone foreground service (device without `android.software.telecom`).
    */
-  fun getCallDeliveryMode(callback: (Result<PCallkeepAndroidCallDeliveryMode>) -> Unit)
-  fun requestPermissions(permissions: List<PCallkeepPermission>, callback: (Result<List<PPermissionResult>>) -> Unit)
-  fun checkPermissionsStatus(permissions: List<PCallkeepPermission>, callback: (Result<List<PPermissionResult>>) -> Unit)
+  suspend fun getCallDeliveryMode(): PCallkeepAndroidCallDeliveryMode
+  suspend fun requestPermissions(permissions: List<PCallkeepPermission>): List<PPermissionResult>
+  suspend fun checkPermissionsStatus(permissions: List<PCallkeepPermission>): List<PPermissionResult>
 
   companion object {
     /** The codec used by PHostPermissionsApi. */
@@ -1506,14 +1506,13 @@ interface PHostPermissionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.getFullScreenIntentPermissionStatus$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.getFullScreenIntentPermissionStatus{ result: Result<PSpecialPermissionStatusTypeEnum> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.getFullScreenIntentPermissionStatus())
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1524,13 +1523,14 @@ interface PHostPermissionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.openFullScreenIntentSettings$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.openFullScreenIntentSettings{ result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.openFullScreenIntentSettings()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1541,14 +1541,13 @@ interface PHostPermissionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.getBackgroundActivityStartPermissionStatus$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.getBackgroundActivityStartPermissionStatus{ result: Result<PSpecialPermissionStatusTypeEnum> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.getBackgroundActivityStartPermissionStatus())
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1559,13 +1558,14 @@ interface PHostPermissionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.openBackgroundActivityStartSettings$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.openBackgroundActivityStartSettings{ result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.openBackgroundActivityStartSettings()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1576,14 +1576,13 @@ interface PHostPermissionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.getShowWhenLockedPermissionStatus$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.getShowWhenLockedPermissionStatus{ result: Result<PSpecialPermissionStatusTypeEnum> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.getShowWhenLockedPermissionStatus())
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1594,13 +1593,14 @@ interface PHostPermissionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.openShowWhenLockedSettings$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.openShowWhenLockedSettings{ result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.openShowWhenLockedSettings()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1611,13 +1611,14 @@ interface PHostPermissionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.openSettings$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.openSettings{ result: Result<Unit> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                reply.reply(GeneratedPigeonUtils.wrapResult(null))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.openSettings()
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1628,14 +1629,13 @@ interface PHostPermissionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.getBatteryMode$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.getBatteryMode{ result: Result<PCallkeepAndroidBatteryMode> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.getBatteryMode())
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1646,14 +1646,13 @@ interface PHostPermissionsApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.getCallDeliveryMode$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.getCallDeliveryMode{ result: Result<PCallkeepAndroidCallDeliveryMode> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.getCallDeliveryMode())
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1666,14 +1665,13 @@ interface PHostPermissionsApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val permissionsArg = args[0] as List<PCallkeepPermission>
-            api.requestPermissions(permissionsArg) { result: Result<List<PPermissionResult>> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.requestPermissions(permissionsArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {
@@ -1686,14 +1684,13 @@ interface PHostPermissionsApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val permissionsArg = args[0] as List<PCallkeepPermission>
-            api.checkPermissionsStatus(permissionsArg) { result: Result<List<PPermissionResult>> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(GeneratedPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(GeneratedPigeonUtils.wrapResult(data))
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.checkPermissionsStatus(permissionsArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
               }
+              reply.reply(wrapped)
             }
           }
         } else {

@@ -258,51 +258,51 @@ abstract class PHostBackgroundPushNotificationIsolateApi {
 
 @HostApi()
 abstract class PHostPermissionsApi {
-  @asyncCallback
+  @async
   PSpecialPermissionStatusTypeEnum getFullScreenIntentPermissionStatus();
 
-  @asyncCallback
+  @async
   void openFullScreenIntentSettings();
 
   /// Status of the OEM "display pop-up windows while running in background"
   /// capability (MIUI/HyperOS `OP_BACKGROUND_START_ACTIVITY`), which gates
   /// showing the incoming-call Activity over the lock screen. Best-effort:
   /// reports granted on devices where the capability does not apply.
-  @asyncCallback
+  @async
   PSpecialPermissionStatusTypeEnum getBackgroundActivityStartPermissionStatus();
 
   /// Opens the OEM permissions screen that hosts the "display pop-up windows
   /// while running in background" toggle, with a fallback to app settings.
-  @asyncCallback
+  @async
   void openBackgroundActivityStartSettings();
 
   /// Status of the OEM "display pop-up windows while running in background"
   /// MIUI/HyperOS `OP_SHOW_WHEN_LOCKED` capability, which gates showing the
   /// incoming-call Activity over the lock screen. Best-effort: reports
   /// granted on devices where the capability does not apply.
-  @asyncCallback
+  @async
   PSpecialPermissionStatusTypeEnum getShowWhenLockedPermissionStatus();
 
   /// Opens the OEM permissions screen that hosts the "show on lock screen"
   /// toggle, with a fallback to app settings.
-  @asyncCallback
+  @async
   void openShowWhenLockedSettings();
 
-  @asyncCallback
+  @async
   void openSettings();
 
-  @asyncCallback
+  @async
   PCallkeepAndroidBatteryMode getBatteryMode();
 
   /// How incoming calls are delivered: Telecom `ConnectionService` vs the
   /// limited standalone foreground service (device without `android.software.telecom`).
-  @asyncCallback
+  @async
   PCallkeepAndroidCallDeliveryMode getCallDeliveryMode();
 
-  @asyncCallback
+  @async
   List<PPermissionResult> requestPermissions(List<PCallkeepPermission> permissions);
 
-  @asyncCallback
+  @async
   List<PPermissionResult> checkPermissionsStatus(List<PCallkeepPermission> permissions);
 }
 
