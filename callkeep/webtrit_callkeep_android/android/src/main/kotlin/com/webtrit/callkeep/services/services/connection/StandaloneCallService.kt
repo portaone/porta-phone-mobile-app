@@ -59,6 +59,24 @@ class StandaloneCallService : Service() {
     // notification when there is no call in progress.
     private var isForeground = false
 
+    // What the foreground notification currently shows. There is one notification id on this
+    // path, so the incoming and ongoing variants overwrite each other, and a refresh has to know
+    // which one is on screen: re-posting the ongoing variant over a ringing call would take away
+    // its Answer and Decline. Remembering only "the last ongoing call" got that wrong.
+    private sealed interface ShownNotification {
+        data object None : ShownNotification
+
+        data class Incoming(
+            val callId: String,
+        ) : ShownNotification
+
+        data class Ongoing(
+            val callId: String,
+        ) : ShownNotification
+    }
+
+    private var shownNotification: ShownNotification = ShownNotification.None
+
     // Foreground service type is two-phase (see the manifest comment on this service):
     //
     // Ringing / call setup: FOREGROUND_SERVICE_TYPE_PHONE_CALL only. Since Android 14 the
@@ -346,6 +364,7 @@ class StandaloneCallService : Service() {
     }
 
     private fun showIncomingCallNotification(metadata: CallMetadata) {
+        shownNotification = ShownNotification.Incoming(metadata.callId)
         val notification =
             StandaloneIncomingCallNotificationBuilder()
                 .apply { setCallMetaData(metadata) }
@@ -363,6 +382,7 @@ class StandaloneCallService : Service() {
      * instead) - it is re-posted under the same [NOTIFICATION_ID] without Answer/Decline actions.
      */
     private fun showActiveCallNotification(metadata: CallMetadata) {
+        shownNotification = ShownNotification.Ongoing(metadata.callId)
         val notification =
             StandaloneActiveCallNotificationBuilder()
                 .apply { setCallMetaData(metadata) }
@@ -547,6 +567,7 @@ class StandaloneCallService : Service() {
         ringingIncomingCallIds.clear()
         answeredCallIds.clear()
         pendingAnswers.clear()
+        shownNotification = ShownNotification.None
         deactivateAudio(force = true)
         core.notifyConnectionEvent(CallCommandEvent.TearDownComplete)
         stopSelf()
@@ -558,6 +579,7 @@ class StandaloneCallService : Service() {
         ringingIncomingCallIds.clear()
         answeredCallIds.clear()
         pendingAnswers.clear()
+        shownNotification = ShownNotification.None
         deactivateAudio(force = true)
         ringtoneManager.stopRingtone()
         ringtoneManager.stopCallWaitingTone()
@@ -681,11 +703,32 @@ class StandaloneCallService : Service() {
         ringingIncomingCallIds.remove(metadata.callId)
         answeredCallIds.remove(metadata.callId)
         pendingAnswers.remove(metadata.callId)
+        val shown = shownNotification
+        val anchorEnded = shown is ShownNotification.Ongoing && shown.callId == metadata.callId
+        if (anchorEnded) {
+            shownNotification = ShownNotification.None
+            // The notification stood for the call that just ended; if another answered call
+            // survives it takes the notification over, rebuilt from what is actually left -
+            // otherwise the old name and a hang-up for a call that is gone stay on screen.
+            survivingAnchor(metadata.callId)?.let { showActiveCallNotification(it) }
+        }
         if (callMetadataMap.isEmpty()) {
             deactivateAudio()
             stopSelf()
         }
     }
+
+    /**
+     * The call to build the ongoing notification from once [endedCallId] has ended: any
+     * answered call, in a stable order so the choice does not wander between refreshes. Null
+     * when nothing answered survives.
+     */
+    private fun survivingAnchor(endedCallId: String): CallMetadata? =
+        answeredCallIds
+            .filter { it != endedCallId }
+            .sorted()
+            .firstOrNull()
+            ?.let { callMetadataMap[it] }
 
     // -------------------------------------------------------------------------
     // Companion (static dispatch interface, mirrors PhoneConnectionService)
