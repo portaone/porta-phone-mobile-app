@@ -57,8 +57,6 @@ class CallActiveScaffold extends StatefulWidget {
 }
 
 class CallActiveScaffoldState extends State<CallActiveScaffold> {
-  static const Duration _remoteFrameProbeDelay = Duration(seconds: 1);
-
   /// Cached `CallBloc` obtained in `initState`.
   /// Avoids unsafe `context.read` during widget deactivation (e.g., navigation pop).
   late final CallBloc _callBloc;
@@ -88,12 +86,9 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   /// the whole call screen (and re-wiring the native video renderer with it).
   final _dtmfInput = ValueNotifier<String>('');
 
-  Timer? _remoteFrameWatcher;
-
-  /// Where frames cannot be analysed there is nothing to wait for, so the remote
-  /// video starts out visible instead of staying hidden for the whole call.
-  bool _hasRenderableRemoteFrame = !FrameAnalysisWorker.isSupported;
-  late final FrameAnalysisWorker _frameAnalysisWorker;
+  /// Looks at the remote video of the current call and says whether it shows
+  /// a picture; it follows the call handed to it in [didUpdateWidget].
+  late final RemoteFrameProbe _remoteFrameProbe;
 
   static const Duration _debounceDuration = Duration(seconds: 2);
   DateTime? _debounceReleaseTime;
@@ -106,9 +101,11 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     // Cache the CallBloc reference to avoid context lookups in callbacks.
     _callBloc = context.read<CallBloc>();
 
+    _remoteFrameProbe = RemoteFrameProbe()
+      ..stream = widget.activeCalls.current.remoteStream
+      ..addListener(_onRemoteFrameChanged);
     _compactController = CompactAutoResetController(initiallyActive: _autoHide);
-    _frameAnalysisWorker = FrameAnalysisWorker()..start();
-    _scheduleNextProbe(Duration.zero);
+    _remoteFrameProbe.start();
 
     // Dispatch interaction debounce whenever any call is in updating state
     // to prevent user race conditions e.g hold or upgrade to video when the call is updating from remote side.
@@ -124,6 +121,8 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   @override
   void didUpdateWidget(covariant CallActiveScaffold oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // The probe follows the current call.
+    _remoteFrameProbe.stream = widget.activeCalls.current.remoteStream;
     // Covers both a change of the call itself and a change of the demand to
     // keep the controls, which arrives as a new value from above.
     _syncAutoHide(reason: 'didUpdateWidget');
@@ -163,13 +162,19 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
 
   @override
   void dispose() {
-    _disposeRemoteFrameWatcher();
-    _frameAnalysisWorker.dispose();
+    _remoteFrameProbe.removeListener(_onRemoteFrameChanged);
+    _remoteFrameProbe.dispose();
     _compactController.removeListener(_onCompactChanged);
     _compactController.dispose();
     _debounceByStateSubscription?.cancel();
     _dtmfInput.dispose();
     super.dispose();
+  }
+
+  /// The picture arriving or going away changes what is drawn behind the
+  /// controls.
+  void _onRemoteFrameChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onCompactChanged() {
@@ -287,13 +292,13 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
           builder: (context, _) {
             return Stack(
               children: [
-                if (_hasRenderableRemoteFrame)
+                if (_remoteFrameProbe.renderable)
                   RemoteVideoViewOverlay(
                     remoteStream: activeCall.remoteStream,
                     videoFit: _videoFit,
                     remotePlaceholderBuilder: widget.remotePlaceholderBuilder,
                     backgroundMode: _backgroundMode,
-                    hasRenderableRemoteFrame: _hasRenderableRemoteFrame,
+                    hasRenderableRemoteFrame: _remoteFrameProbe.renderable,
                     // Its important to hide video if held to avoid showing frozen/last frames when held,
                     // and especially for case when both sides turn on hold and after one side unholds video started to show for another 'holded' side.
                     // Also hidden while another call is focused: the controls
@@ -361,7 +366,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                           interactionsDebounceActive == false &&
                           widget.callStatus == CallStatus.ready &&
                           widget.activeCalls.any((call) => call.updating) == false,
-                      hasRenderableRemoteFrame: _hasRenderableRemoteFrame,
+                      hasRenderableRemoteFrame: _remoteFrameProbe.renderable,
                       onCallSelected: (callId) => _callBloc.add(CallControlEvent.callSelected(callId)),
                       onKeypadToggle: _toggleKeypad,
                       onCameraChanged: _toggleFocusedCamera,
@@ -419,63 +424,6 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
 
   void _onBlurTogglePressed() {
     setState(() => _backgroundMode = _backgroundMode.toggled);
-  }
-
-  MediaStreamTrack? get _currentRemoteVideoTrack {
-    final stream = widget.activeCalls.current.remoteStream;
-    final tracks = stream?.getVideoTracks();
-
-    if (tracks == null || tracks.isEmpty) {
-      return null;
-    }
-
-    return tracks.first;
-  }
-
-  void _scheduleNextProbe(Duration delay) {
-    if (!mounted || !FrameAnalysisWorker.isSupported) return;
-    _remoteFrameWatcher = Timer(delay, _probeRemoteFrame);
-  }
-
-  Future<void> _probeRemoteFrame() async {
-    if (!mounted) return;
-
-    final track = _currentRemoteVideoTrack;
-    if (track == null) {
-      _scheduleNextProbe(_remoteFrameProbeDelay);
-      return;
-    }
-
-    final startTime = DateTime.now();
-    try {
-      final isBlackOrEmpty = await _isTrackFrameBlackOrEmpty(track).timeout(const Duration(seconds: 10));
-      _setHasRenderableRemoteFrame(!isBlackOrEmpty);
-    } catch (_) {
-      // In case of any errors during frame capture or analysis, we optimistically assume that the remote frame is renderable.
-      _setHasRenderableRemoteFrame(true);
-    } finally {
-      final elapsed = DateTime.now().difference(startTime);
-      _logger.fine('Remote frame probe completed in ${elapsed.inMilliseconds}ms, $_hasRenderableRemoteFrame');
-      _scheduleNextProbe(_remoteFrameProbeDelay);
-    }
-  }
-
-  Future<bool> _isTrackFrameBlackOrEmpty(MediaStreamTrack track) async {
-    final capturedFrame = await track.captureFrame();
-    return _frameAnalysisWorker.analyzeFrame(capturedFrame.asUint8List());
-  }
-
-  void _setHasRenderableRemoteFrame(bool value) {
-    if (_hasRenderableRemoteFrame == value || mounted == false) {
-      return;
-    }
-
-    setState(() => _hasRenderableRemoteFrame = value);
-  }
-
-  void _disposeRemoteFrameWatcher() {
-    _remoteFrameWatcher?.cancel();
-    _remoteFrameWatcher = null;
   }
 
   bool get interactionsDebounceActive {
