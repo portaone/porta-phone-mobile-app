@@ -89,6 +89,15 @@ class ActionsScreen extends StatelessWidget {
                       _Btn('DTMF', () => _showDtmfDialog(context, cubit)),
                     ],
                   ),
+
+                  // --- Grouping (presentation of several calls as one) ---
+                  _Section(
+                    title: 'Call Group',
+                    children: [
+                      _Btn('Group answered', cubit.setCallGroup),
+                      _Btn('Ungroup all', cubit.unsetCallGroup),
+                    ],
+                  ),
                 ],
               ),
               DraggableScrollableSheet(

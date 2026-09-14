@@ -171,6 +171,18 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
   }
 
   @override
+  Future<CallkeepCallRequestError?> setCallGroup(String groupId, List<String> callIds) async {
+    final uuids = callIds.map((callId) => _uuidToCallIdMapping.put(callId: callId)).toList();
+    return _api.setCallGroup(uuids).then((value) => value?.value.toCallkeep());
+  }
+
+  @override
+  Future<CallkeepCallRequestError?> unsetCallGroup(List<String> callIds) async {
+    final uuids = callIds.map((callId) => _uuidToCallIdMapping.put(callId: callId)).toList();
+    return _api.unsetCallGroup(uuids).then((value) => value?.value.toCallkeep());
+  }
+
+  @override
   Future<CallkeepCallRequestError?> setSpeaker(String callId, bool enabled) async {
     return _api
         .setSpeaker(_uuidToCallIdMapping.put(callId: callId), enabled)
@@ -261,6 +273,26 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
   }
 
   @override
+  Future<bool> performSetCallGroup(String uuid, String? groupWithUuid) async {
+    // Deliberately tolerant, unlike the sibling handlers. CallKit may name a call
+    // this mapping has never seen - another app's call, or one whose end was
+    // already processed - and the strict lookup would throw, which reaches the
+    // native side as a failed action rather than as the refusal it really is.
+    final callId = _uuidToCallIdMapping.tryGetCallId(uuid: uuid);
+    if (callId == null) {
+      return false;
+    }
+    if (groupWithUuid == null) {
+      return _delegate.performSetCallGroup(callId, null);
+    }
+    final groupWithCallId = _uuidToCallIdMapping.tryGetCallId(uuid: groupWithUuid);
+    if (groupWithCallId == null) {
+      return false;
+    }
+    return _delegate.performSetCallGroup(callId, groupWithCallId);
+  }
+
+  @override
   void didActivateAudioSession() {
     _delegate.didActivateAudioSession();
   }
@@ -302,6 +334,11 @@ class _UUIDToCallIdMapping {
         .key;
     return uuid;
   }
+
+  // Retrieves the Call ID associated with the given UUID, or null when the UUID
+  // is unknown. Use where an unknown UUID is an expected outcome rather than a
+  // programming error.
+  String? tryGetCallId({required String uuid}) => _mapping[uuid.toLowerCase()];
 
   // Retrieves the Call ID associated with the given UUID.
   // Throws a StateError if the UUID is not found in the mapping.

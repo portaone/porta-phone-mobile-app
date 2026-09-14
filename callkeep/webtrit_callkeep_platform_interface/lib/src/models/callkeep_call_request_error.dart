@@ -30,4 +30,18 @@ enum CallkeepCallRequestError {
   /// - Cold Start Race: On some vendors, the service takes too long to bind
   ///   during a cold start following a "dirty" process termination.
   timeout,
+
+  /// The active call backend cannot group calls at the OS level.
+  ///
+  /// Grouping is a presentation concern: the calls themselves keep working, the
+  /// system simply shows them separately. Callers are expected to log this and
+  /// carry on rather than tear the calls down.
+  callGroupingNotSupported,
+
+  /// The call is a member of a call group, and a member is never held on its own.
+  ///
+  /// Hold is refused rather than performed: the calls of a group are one thing
+  /// to the OS, and holding one of them would leave the group with a member
+  /// nobody can hear. Ungroup first, then hold.
+  callIsGrouped,
 }

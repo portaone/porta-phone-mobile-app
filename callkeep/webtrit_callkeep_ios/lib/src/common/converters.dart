@@ -57,6 +57,10 @@ extension PCallRequestErrorEnumConverter on PCallRequestErrorEnum {
         return CallkeepCallRequestError.maximumCallGroupsReached;
       case PCallRequestErrorEnum.internal:
         return CallkeepCallRequestError.internal;
+      case PCallRequestErrorEnum.callGroupingNotSupported:
+        return CallkeepCallRequestError.callGroupingNotSupported;
+      case PCallRequestErrorEnum.callIsGrouped:
+        return CallkeepCallRequestError.callIsGrouped;
     }
   }
 }

@@ -137,7 +137,10 @@ abstract class WebtritCallkeepPlatform extends PlatformInterface {
   }
 
   /// Set the call on hold with the given [callId] and [onHold] flag.
-  /// Returns [CallkeepCallRequestError] if there is an error.
+  /// Returns [CallkeepCallRequestError] if there is an error, and
+  /// [CallkeepCallRequestError.callIsGrouped] when the call is a member of a
+  /// call group: a member is never held on its own, on any platform. Take it
+  /// out of the group first, then hold it.
   Future<CallkeepCallRequestError?> setHeld(String callId, bool onHold) {
     throw UnimplementedError('setHeld() has not been implemented.');
   }
@@ -165,6 +168,73 @@ abstract class WebtritCallkeepPlatform extends PlatformInterface {
   /// Returns [CallkeepCallRequestError] if there is an error.
   Future<CallkeepCallRequestError?> setAudioDevice(String callId, CallkeepAudioDevice device) {
     throw UnimplementedError('setAudioDevice() has not been implemented.');
+  }
+
+  /// Present [callIds] to the operating system as the group of calls [groupId].
+  ///
+  /// This is the OS presentation of several simultaneous calls, nothing more.
+  /// Who mixes the audio, and whether a server is involved at all, is not the
+  /// plugin's business: it is told which calls belong together and says so to
+  /// Telecom or CallKit.
+  ///
+  /// Declarative and idempotent. [groupId] names the group and the list is its
+  /// whole membership: adding a call means calling this again with every
+  /// member, a call left off the list leaves the group, and the platform works
+  /// out what changed. Sending the membership whole also means a caller that
+  /// has lost track - after a reconnect, say - repairs the grouping by stating
+  /// it again rather than by replaying a history of changes.
+  ///
+  /// Every backend holds one group at a time today. Naming a second [groupId]
+  /// while a group with another name is live answers
+  /// [CallkeepCallRequestError.maximumCallGroupsReached] and changes nothing;
+  /// a group whose membership fell below two calls, or that was taken apart,
+  /// frees its name. The id is the caller's: the plugin does not read it, it
+  /// only tells groups apart by it, so more than one group can come without a
+  /// change to this API.
+  ///
+  /// The answer says the backend took the request, not that the operating
+  /// system has finished applying it: Android answers once the request is
+  /// handed to the call service, iOS once CallKit accepts the transaction. The
+  /// application keeps its own membership either way; what the system shows
+  /// follows it.
+  ///
+  /// While grouped, a member answers [CallkeepCallRequestError.callIsGrouped] to
+  /// [setHeld], and a hold the operating system itself puts on a member - Android
+  /// Telecom does that when another call becomes active - is answered by the
+  /// plugin without reaching the delegate, because the calls of a group are one
+  /// thing and the application owns their media.
+  ///
+  /// The membership is applied by the plugin on its own; the delegate's
+  /// `performSetCallGroup` is reached only for grouping the operating system
+  /// starts.
+  ///
+  /// Returns [CallkeepCallRequestError] if there is an error, and
+  /// [CallkeepCallRequestError.callGroupingNotSupported] where the active backend
+  /// cannot group calls at all. Grouping is presentation: a failure leaves every
+  /// call running and is never a reason to end one.
+  Future<CallkeepCallRequestError?> setCallGroup(String groupId, List<String> callIds) {
+    throw UnimplementedError('setCallGroup() has not been implemented.');
+  }
+
+  /// Take [callIds] out of the group, leaving those calls running.
+  ///
+  /// This names the calls that leave, not the membership that stays: it is the
+  /// removal counterpart of [setCallGroup], not a second way to state a group.
+  /// Passing every member takes the group apart. An empty list does nothing, so
+  /// a caller that computes the list and comes up empty cannot dissolve a group
+  /// by accident. A group left with one member is taken apart as well.
+  ///
+  /// A call that leaves a group held - Android Telecom holds one child when
+  /// another becomes active, and the plugin answers that silently while the
+  /// group stands - is made active again on the way out, so the operating
+  /// system holds whichever call it must and that hold reaches the delegate as
+  /// any other. The application decides afterwards which calls to keep held.
+  ///
+  /// Returns [CallkeepCallRequestError] if there is an error, and
+  /// [CallkeepCallRequestError.callGroupingNotSupported] where the active backend
+  /// cannot group calls at all.
+  Future<CallkeepCallRequestError?> unsetCallGroup(List<String> callIds) {
+    throw UnimplementedError('unsetCallGroup() has not been implemented.');
   }
 
   // Permissions section

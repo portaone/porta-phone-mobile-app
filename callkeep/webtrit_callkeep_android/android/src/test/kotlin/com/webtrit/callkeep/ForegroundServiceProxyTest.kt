@@ -100,6 +100,13 @@ class ForegroundServiceProxyTest {
             key: String,
         ): PCallRequestError? = null
 
+        override suspend fun setCallGroup(
+            groupId: String,
+            callIds: List<String>,
+        ): PCallRequestError? = null
+
+        override suspend fun unsetCallGroup(callIds: List<String>): PCallRequestError? = null
+
         override fun onDelegateSet() = Unit
     }
 

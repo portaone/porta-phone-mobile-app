@@ -461,6 +461,30 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   [self requestTransaction:transaction completion:completion];
 }
 
+/// Grouping calls in CallKit is not wired up yet: every `CXCallUpdate` this plugin
+/// builds still reports `supportsGrouping = NO`, so a grouping transaction would be
+/// rejected by the system with a less informative error than this one.
+///
+/// Refused explicitly rather than silently accepted, so the caller can tell that the
+/// system presentation does not match the call state it is holding. The calls
+/// themselves are unaffected either way.
+- (void)setCallGroup:(NSArray<NSString *> *)uuidStrings
+           completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
+#ifdef DEBUG
+  NSLog(@"[Callkeep][setCallGroup] uuidStrings = %@ - not supported yet", uuidStrings);
+#endif
+  completion([WTPCallRequestError makeWithValue:WTPCallRequestErrorEnumCallGroupingNotSupported], nil);
+}
+
+/// Counterpart of `setCallGroup:`; refused for the same reason.
+- (void)unsetCallGroup:(NSArray<NSString *> *)uuidStrings
+             completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
+#ifdef DEBUG
+  NSLog(@"[Callkeep][unsetCallGroup] uuidStrings = %@ - not supported yet", uuidStrings);
+#endif
+  completion([WTPCallRequestError makeWithValue:WTPCallRequestErrorEnumCallGroupingNotSupported], nil);
+}
+
 #pragma mark - WTPHostApi - helpers
 
 - (void)requestTransaction:(CXTransaction *)transaction completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {

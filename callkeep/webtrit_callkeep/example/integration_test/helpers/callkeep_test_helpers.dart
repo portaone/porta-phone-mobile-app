@@ -34,6 +34,7 @@ class RecordingDelegate implements CallkeepDelegate {
   final List<({String callId, bool onHold})> holdEvents = [];
   final List<({String callId, bool muted})> muteEvents = [];
   final List<({String callId, String key})> dtmfEvents = [];
+  final List<({String callId, String? groupWithCallId})> callGroupEvents = [];
   final List<({String callId, CallkeepAudioDevice device})> audioDeviceEvents = [];
   final List<({String callId, List<CallkeepAudioDevice> devices})> audioDevicesUpdateEvents = [];
 
@@ -135,6 +136,12 @@ class RecordingDelegate implements CallkeepDelegate {
   Future<bool> performSendDTMF(String callId, String key) {
     dtmfEvents.add((callId: callId, key: key));
     onPerformSendDTMF?.call(callId, key);
+    return Future.value(true);
+  }
+
+  @override
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId) {
+    callGroupEvents.add((callId: callId, groupWithCallId: groupWithCallId));
     return Future.value(true);
   }
 

@@ -139,6 +139,8 @@ Use these methods to notify the platform about call state changes.
 | `setMuted(callId, muted)` | Mute or unmute |
 | `setSpeaker(callId, on)` | Toggle speaker |
 | `sendDTMF(callId, digit)` | Send a DTMF tone |
+| `setCallGroup(groupId, callIds)` | Present these calls to the OS as the group `groupId` |
+| `unsetCallGroup(callIds)` | Take these calls out of their group |
 
 ### Platform -> Flutter (`CallkeepDelegate`)
 
@@ -156,9 +158,41 @@ Implement `CallkeepDelegate` and pass it to `setDelegate` to receive platform ev
 | `performSendDTMF(callId, digit)` | User sent DTMF from system dial pad |
 | `performAudioDeviceSet(callId, device)` | Audio routing changed to a given device |
 | `performAudioDevicesUpdate(callId, devices)` | The set of available audio devices changed |
+| `performSetCallGroup(callId, groupWithCallId)` | The OS grouped this call with another, or ungrouped it when the second is null - from the system call UI, not from the application's own `setCallGroup`, which the plugin applies itself |
 | `didActivateAudioSession()` | System activated the audio session |
 | `didDeactivateAudioSession()` | System deactivated the audio session |
 | `didReset()` | System reset all call state (iOS only) |
+
+### Call grouping
+
+`setCallGroup` names a group and states its whole membership rather than a change to it, so
+adding a call means calling it again with every member, and the platform works out the
+difference. A
+caller that has lost track repairs the grouping by stating it again. Passing every member to
+`unsetCallGroup` takes the group apart; an empty list does nothing, so a caller that computes
+one cannot take a group apart by accident. A group needs two calls, so naming a single call in
+`setCallGroup` also takes its group apart.
+
+Grouping is presentation: it tells Telecom or CallKit that several calls belong together.
+Nothing about the calls changes, so a backend that cannot group them answers
+`callGroupingNotSupported` and the calls carry on. No backend groups calls yet: every one
+answers `callGroupingNotSupported` (the desktop packages are not supported platforms and keep
+the base stubs). The rules a backend follows once it does are the same everywhere:
+
+- every backend holds one group at a time, and `setCallGroup` states its whole membership: a
+  call left off the list leaves, whatever it was grouped with before; `unsetCallGroup` names
+  the calls that leave. The group's name is the caller's: naming a second group while one is
+  live answers `maximumCallGroupsReached` and changes nothing, and a group that fell apart
+  frees its name, so more than one group can come without a change to the API;
+- a member of a group is never held on its own: `setHeld` on one answers `callIsGrouped`;
+  a hold the OS puts on a member while the group stands (Android Telecom does that when
+  another call becomes active) is answered by the plugin and not reported to the delegate;
+- a group needs two calls; a membership of one, or a member ending, takes the group apart,
+  and an emptied group leaves nothing behind in the OS;
+- a call that leaves a group held is made active again on the way out, so the OS holds
+  whichever call it must and that hold reaches the delegate as any other;
+- the membership the application declares is applied by the plugin itself;
+  `performSetCallGroup` is reached only for grouping the OS starts.
 
 `perform*` methods return `Future<bool>`. Returning `false` refuses the operation; it does not
 end the call. On iOS the CallKit action fails and the system UI goes back to the state it was

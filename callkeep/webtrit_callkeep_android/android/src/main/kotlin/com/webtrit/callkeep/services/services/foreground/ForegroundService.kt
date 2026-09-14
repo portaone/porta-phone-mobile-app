@@ -1055,6 +1055,27 @@ class ForegroundService :
         return null
     }
 
+    /**
+     * Grouping calls at the OS level is not implemented on either Android backend yet.
+     *
+     * Refused explicitly rather than silently accepted: the caller uses the answer to
+     * decide whether the system presentation matches the call state it is holding.
+     * The calls themselves are unaffected either way.
+     */
+    override suspend fun setCallGroup(
+        groupId: String,
+        callIds: List<String>,
+    ): PCallRequestError? {
+        logger.i("setCallGroup: groupId=$groupId, callIds=$callIds, not supported yet")
+        return PCallRequestError(PCallRequestErrorEnum.CALL_GROUPING_NOT_SUPPORTED)
+    }
+
+    /** Counterpart of [setCallGroup]; refused for the same reason. */
+    override suspend fun unsetCallGroup(callIds: List<String>): PCallRequestError? {
+        logger.i("unsetCallGroup: callIds=$callIds, not supported yet")
+        return PCallRequestError(PCallRequestErrorEnum.CALL_GROUPING_NOT_SUPPORTED)
+    }
+
     // --------------------------------
     // Handlers for ConnectionService reports to communicate with the Flutter side
     // --------------------------------

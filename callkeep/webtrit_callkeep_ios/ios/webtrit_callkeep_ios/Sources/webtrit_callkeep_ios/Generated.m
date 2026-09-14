@@ -1039,6 +1039,44 @@ void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger, NSObj
       [channel setMessageHandler:nil];
     }
   }
+  {
+    FlutterBasicMessageChannel *channel =
+      [[FlutterBasicMessageChannel alloc]
+        initWithName:[NSString stringWithFormat:@"%@%@", @"dev.flutter.pigeon.webtrit_callkeep_ios.PHostApi.setCallGroup", messageChannelSuffix]
+        binaryMessenger:binaryMessenger
+        codec:WTGetGeneratedCodec()];
+    if (api) {
+      NSCAssert([api respondsToSelector:@selector(setCallGroup:completion:)], @"WTPHostApi api (%@) doesn't respond to @selector(setCallGroup:completion:)", api);
+      [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+        NSArray<id> *args = message;
+        NSArray<NSString *> *arg_uuidStrings = GetNullableObjectAtIndex(args, 0);
+        [api setCallGroup:arg_uuidStrings completion:^(WTPCallRequestError *_Nullable output, FlutterError *_Nullable error) {
+          callback(wrapResult(output, error));
+        }];
+      }];
+    } else {
+      [channel setMessageHandler:nil];
+    }
+  }
+  {
+    FlutterBasicMessageChannel *channel =
+      [[FlutterBasicMessageChannel alloc]
+        initWithName:[NSString stringWithFormat:@"%@%@", @"dev.flutter.pigeon.webtrit_callkeep_ios.PHostApi.unsetCallGroup", messageChannelSuffix]
+        binaryMessenger:binaryMessenger
+        codec:WTGetGeneratedCodec()];
+    if (api) {
+      NSCAssert([api respondsToSelector:@selector(unsetCallGroup:completion:)], @"WTPHostApi api (%@) doesn't respond to @selector(unsetCallGroup:completion:)", api);
+      [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+        NSArray<id> *args = message;
+        NSArray<NSString *> *arg_uuidStrings = GetNullableObjectAtIndex(args, 0);
+        [api unsetCallGroup:arg_uuidStrings completion:^(WTPCallRequestError *_Nullable output, FlutterError *_Nullable error) {
+          callback(wrapResult(output, error));
+        }];
+      }];
+    } else {
+      [channel setMessageHandler:nil];
+    }
+  }
 }
 @interface WTPDelegateFlutterApi ()
 @property(nonatomic, strong) NSObject<FlutterBinaryMessenger> *binaryMessenger;
@@ -1204,6 +1242,26 @@ void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger, NSObj
       binaryMessenger:self.binaryMessenger
       codec:WTGetGeneratedCodec()];
   [channel sendMessage:@[arg_uuidString ?: [NSNull null], arg_key ?: [NSNull null]] reply:^(NSArray<id> *reply) {
+    if (reply != nil) {
+      if (reply.count > 1) {
+        completion(nil, [FlutterError errorWithCode:reply[0] message:reply[1] details:reply[2]]);
+      } else {
+        NSNumber *output = reply[0] == [NSNull null] ? nil : reply[0];
+        completion(output, nil);
+      }
+    } else {
+      completion(nil, createConnectionError(channelName));
+    }
+  }];
+}
+- (void)performSetCallGroup:(NSString *)arg_uuidString groupWithCallId:(nullable NSString *)arg_groupWithUuidString completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion {
+  NSString *channelName = [NSString stringWithFormat:@"%@%@", @"dev.flutter.pigeon.webtrit_callkeep_ios.PDelegateFlutterApi.performSetCallGroup", _messageChannelSuffix];
+  FlutterBasicMessageChannel *channel =
+    [FlutterBasicMessageChannel
+      messageChannelWithName:channelName
+      binaryMessenger:self.binaryMessenger
+      codec:WTGetGeneratedCodec()];
+  [channel sendMessage:@[arg_uuidString ?: [NSNull null], arg_groupWithUuidString ?: [NSNull null]] reply:^(NSArray<id> *reply) {
     if (reply != nil) {
       if (reply.count > 1) {
         completion(nil, [FlutterError errorWithCode:reply[0] message:reply[1] details:reply[2]]);

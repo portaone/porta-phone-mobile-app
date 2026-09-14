@@ -94,11 +94,19 @@ WebtritCallkeepPlatform (platform_interface)
 ```
 
 **Flutter to Platform**: `reportNewIncomingCall`, `startCall`, `answerCall`, `endCall`, `setHeld`, `setMuted`,
-`setSpeaker`, `sendDTMF`, `setAudioDevice`.
+`setSpeaker`, `sendDTMF`, `setAudioDevice`, `setCallGroup`, `unsetCallGroup`.
 
 **Platform to Flutter** (via `CallkeepDelegate`): `performStartCall`, `performAnswerCall`, `performEndCall`,
 `performSetHeld`, `performSetMuted`, `performSendDTMF`, `performAudioDeviceSet`, `performAudioDevicesUpdate`,
-`didActivateAudioSession`, `didDeactivateAudioSession`, `didPushIncomingCall`.
+`performSetCallGroup`, `didActivateAudioSession`, `didDeactivateAudioSession`, `didPushIncomingCall`.
+
+`setCallGroup` names the group and takes its whole membership, not a change to it; a second
+name while one group is live is refused with `maximumCallGroupsReached`;
+`unsetCallGroup` names the calls that leave it; both speak only about how the operating system
+presents the calls. The vocabulary stays on
+that side of the fence deliberately: a group of calls belongs to Telecom and CallKit, whereas a
+conference - a room, its participants, who is mixing the audio - belongs to the application.
+Nothing in this surface names one, and nothing should.
 
 `didReset` and `continueStartCallIntent` are declared on `CallkeepDelegate` but are delivered by iOS only:
 the Android side has no source for either event, so they are absent from the Android pigeon surface.

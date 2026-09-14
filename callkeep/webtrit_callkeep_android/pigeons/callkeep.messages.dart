@@ -162,6 +162,20 @@ enum PCallRequestErrorEnum {
   /// - Cold Start Latency: On certain vendors (e.g., Itel, Android One),
   ///   the OS may deadlock or time out during service binding after a cold start.
   timeout,
+
+  /// The active call backend cannot group calls at the OS level.
+  ///
+  /// Grouping is a presentation concern: the calls themselves keep working, the
+  /// system simply shows them separately. Callers are expected to log this and
+  /// carry on rather than tear the calls down.
+  callGroupingNotSupported,
+
+  /// The call is a member of a call group, and a member is never held on its own.
+  ///
+  /// Hold is refused rather than performed: the calls of a group are one thing
+  /// to the OS, and holding one of them would leave the group with a member
+  /// nobody can hear. Ungroup first, then hold.
+  callIsGrouped,
 }
 
 // TODO: See https://github.com/flutter/flutter/issues/87307
@@ -408,6 +422,14 @@ abstract class PHostApi {
   @async
   PCallRequestError? sendDTMF(String callId, String key);
 
+  @ObjCSelector('setCallGroup:callIds:')
+  @async
+  PCallRequestError? setCallGroup(String groupId, List<String> callIds);
+
+  @ObjCSelector('unsetCallGroup:')
+  @async
+  PCallRequestError? unsetCallGroup(List<String> callIds);
+
   void onDelegateSet();
 }
 
@@ -460,6 +482,10 @@ abstract class PDelegateFlutterApi {
   @ObjCSelector('performAudioDevicesUpdate:devices:')
   @async
   bool performAudioDevicesUpdate(String callId, List<PAudioDevice> devices);
+
+  @ObjCSelector('performSetCallGroup:groupWithCallId:')
+  @async
+  bool performSetCallGroup(String callId, String? groupWithCallId);
 
   @ObjCSelector('didActivateAudioSession')
   void didActivateAudioSession();

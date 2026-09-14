@@ -73,6 +73,18 @@ typedef NS_ENUM(NSUInteger, WTPCallRequestErrorEnum) {
   WTPCallRequestErrorEnumCallUuidAlreadyExists = 3,
   WTPCallRequestErrorEnumMaximumCallGroupsReached = 4,
   WTPCallRequestErrorEnumInternal = 5,
+  /// CallKit call grouping is not wired up yet.
+  ///
+  /// Grouping is a presentation concern: the calls themselves keep working, the
+  /// system simply shows them separately. Callers are expected to log this and
+  /// carry on rather than tear the calls down.
+  WTPCallRequestErrorEnumCallGroupingNotSupported = 6,
+  /// The call is a member of a call group, and a member is never held on its own.
+  ///
+  /// Hold is refused rather than performed: the calls of a group are one thing
+  /// to the OS, and holding one of them would leave the group with a member
+  /// nobody can hear. Ungroup first, then hold.
+  WTPCallRequestErrorEnumCallIsGrouped = 7,
 };
 
 /// Wrapper for WTPCallRequestErrorEnum to allow for nullability.
@@ -196,6 +208,8 @@ extern void SetUpWTPHostAndroidServiceApiWithSuffix(id<FlutterBinaryMessenger> b
 - (void)setMuted:(NSString *)uuidString muted:(BOOL)muted completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
 - (void)setSpeaker:(NSString *)uuidString enabled:(BOOL)enabled completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
 - (void)sendDTMF:(NSString *)uuidString key:(NSString *)key completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
+- (void)setCallGroup:(NSArray<NSString *> *)uuidStrings completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
+- (void)unsetCallGroup:(NSArray<NSString *> *)uuidStrings completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
 @end
 
 extern void SetUpWTPHostApi(id<FlutterBinaryMessenger> binaryMessenger, NSObject<WTPHostApi> *_Nullable api);
@@ -214,6 +228,7 @@ extern void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger
 - (void)performSetHeld:(NSString *)uuidString onHold:(BOOL)onHold completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 - (void)performSetMuted:(NSString *)uuidString muted:(BOOL)muted completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 - (void)performSendDTMF:(NSString *)uuidString key:(NSString *)key completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
+- (void)performSetCallGroup:(NSString *)uuidString groupWithCallId:(nullable NSString *)groupWithUuidString completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 - (void)didActivateAudioSession:(void (^)(FlutterError *_Nullable))completion;
 - (void)didDeactivateAudioSession:(void (^)(FlutterError *_Nullable))completion;
 - (void)didReset:(void (^)(FlutterError *_Nullable))completion;

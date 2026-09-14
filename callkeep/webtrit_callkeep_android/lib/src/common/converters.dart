@@ -69,6 +69,10 @@ extension PCallRequestErrorEnumConverter on PCallRequestErrorEnum {
         return CallkeepCallRequestError.selfManagedPhoneAccountNotRegistered;
       case PCallRequestErrorEnum.timeout:
         return CallkeepCallRequestError.timeout;
+      case PCallRequestErrorEnum.callGroupingNotSupported:
+        return CallkeepCallRequestError.callGroupingNotSupported;
+      case PCallRequestErrorEnum.callIsGrouped:
+        return CallkeepCallRequestError.callIsGrouped;
     }
   }
 }

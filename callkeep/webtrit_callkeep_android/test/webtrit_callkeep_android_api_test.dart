@@ -222,6 +222,32 @@ void main() {
       expect(await WebtritCallkeepPlatform.instance.setMuted('call-1', true), isNull);
     });
 
+    test('setCallGroup returns null when successful', () async {
+      _mockValue('$_prefix.PHostApi.setCallGroup', null);
+      expect(await WebtritCallkeepPlatform.instance.setCallGroup('room', ['call-1', 'call-2']), isNull);
+    });
+
+    test('setCallGroup reports that the backend cannot group calls', () async {
+      _mockPigeon(
+        '$_prefix.PHostApi.setCallGroup',
+        PCallRequestError(value: PCallRequestErrorEnum.callGroupingNotSupported),
+      );
+      expect(
+        await WebtritCallkeepPlatform.instance.setCallGroup('room', ['call-1', 'call-2']),
+        CallkeepCallRequestError.callGroupingNotSupported,
+      );
+    });
+
+    test('unsetCallGroup returns null when successful', () async {
+      _mockValue('$_prefix.PHostApi.unsetCallGroup', null);
+      expect(await WebtritCallkeepPlatform.instance.unsetCallGroup(['call-1']), isNull);
+    });
+
+    test('unsetCallGroup accepts an empty list, which groups nothing apart', () async {
+      _mockValue('$_prefix.PHostApi.unsetCallGroup', null);
+      expect(await WebtritCallkeepPlatform.instance.unsetCallGroup([]), isNull);
+    });
+
     test('setSpeaker returns null when successful', () async {
       _mockValue('$_prefix.PHostApi.setSpeaker', null);
       expect(await WebtritCallkeepPlatform.instance.setSpeaker('call-1', false), isNull);

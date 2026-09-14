@@ -34,6 +34,8 @@ lib/src/
 - `setUp(CallkeepOptions)` / `tearDown()` — initialize/shutdown native integration
 - `reportNewIncomingCall` / `startCall` / `answerCall` / `endCall` — call lifecycle
 - `setHeld` / `setMuted` / `sendDTMF` / `setAudioDevice` — in-call controls
+- `setCallGroup(groupId, callIds)` / `unsetCallGroup` — present several calls to the OS as one named group; the list is
+  the whole membership, an empty one does nothing
 - `statusStream` / `currentStatus` — `CallkeepStatus` enum stream (uninitialized → configuring → active → terminating)
 - `setDelegate(CallkeepDelegate?)` / `setPushRegistryDelegate(PushRegistryDelegate?)` — event callbacks
 
