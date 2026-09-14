@@ -80,7 +80,12 @@ class _DialogChatInfoState extends State<DialogChatInfo> {
                 body: ContactInfoBuilder(
                   source: ContactSourceId(ContactSourceType.external, participant),
                   builder: (context, contact) {
-                    return Padding(
+                    // Full width, whatever is in the column: a contact with no
+                    // numbers to list has nothing wide below the name, and a
+                    // column left to size itself would hug the avatar at the
+                    // left edge instead of centering it.
+                    return Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         children: [
@@ -105,14 +110,6 @@ class _DialogChatInfoState extends State<DialogChatInfo> {
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               // color: theme.primaryColor,
-                            ),
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              'id: ${state.credentials.chatId ?? "n/a"}',
-                              style: const TextStyle(fontSize: 12),
-                              textAlign: TextAlign.right,
                             ),
                           ),
                           const SizedBox(height: 24),
