@@ -1429,6 +1429,10 @@
   "@messaging_MessageField_hint": {},
   "messaging_MessageListView_typingTrail": "is typing...",
   "@messaging_MessageListView_typingTrail": {},
+  "messaging_MessageView_actionsHint": "open the message actions",
+  "@messaging_MessageView_actionsHint": {
+    "description": "Screen reader hint on a message bubble, spoken as 'double-tap and hold to <hint>': what a long press on the message opens."
+  },
   "messaging_MessageView_delete": "Delete",
   "@messaging_MessageView_delete": {},
   "messaging_MessageView_deleted": "[deleted]",

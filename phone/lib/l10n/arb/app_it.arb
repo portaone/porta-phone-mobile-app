@@ -1393,6 +1393,8 @@
   "@messaging_MessageField_hint": {},
   "messaging_MessageListView_typingTrail": "stampe...",
   "@messaging_MessageListView_typingTrail": {},
+  "messaging_MessageView_actionsHint": "aprire le azioni del messaggio",
+  "@messaging_MessageView_actionsHint": {},
   "messaging_MessageView_delete": "Eliminare",
   "@messaging_MessageView_delete": {},
   "messaging_MessageView_deleted": "[cancellato]",

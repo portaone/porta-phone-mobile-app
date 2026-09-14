@@ -419,6 +419,15 @@ test.
     Open sheets through `context.showModalBottomSheet` (the `BuildContext`
     extension next to `showSnackBar`), which names the barrier "Dismiss" the
     way dialogs do; a test keeps the bare Flutter call out of `lib/`.
+12. **A gesture is not a semantics boundary, and a reader's long press is a
+    touch.** `GestureDetector` adds its actions to the nearest node above it
+    that IS a boundary - in a list, the whole row - so the node a reader lands
+    on can be far wider than the thing that answers a finger. TalkBack's and
+    VoiceOver's double-tap-and-hold then deliver a real touch to the centre of
+    that node, and beside a short bubble the centre is empty space. Put
+    `Semantics(container: true)` on the touch target itself (see
+    `MessageBubble`), so node and target are one rectangle, and check it with
+    a long press at the node's centre rather than by invoking the action.
 
 ## Third-party widgets
 

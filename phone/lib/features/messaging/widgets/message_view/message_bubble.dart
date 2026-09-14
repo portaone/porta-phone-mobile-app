@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 /// One message in a conversation: the bubble with its content on the
 /// sender's side of the row, an optional [leading] slot beside it, and the
 /// menu of [actions] a long press on the bubble opens.
+///
+/// The long press - the gesture and the accessibility node it makes - sits
+/// on the bubble itself, not on the row. A screen reader's double-tap-and-hold
+/// is a real touch at the centre of the focused node, and a node that spans
+/// the row around a short bubble has its centre in empty space, where nothing
+/// answers. With the node and the touch target being the one rectangle, the
+/// centre is always on the bubble.
 class MessageBubble extends StatefulWidget {
   const MessageBubble({
     super.key,
@@ -70,13 +78,24 @@ class _MessageBubbleState extends State<MessageBubble> {
     final isMine = widget.isMine;
     final hasActions = widget.actions.isNotEmpty;
 
-    final bubble = GestureDetector(
-      onLongPress: hasActions ? _openActions : null,
-      child: Container(
-        key: _bubbleKey,
-        decoration: widget.decoration,
-        padding: widget.padding,
-        child: IntrinsicWidth(child: widget.child),
+    // The node is made HERE, at the bubble's edge: a gesture is no semantics
+    // boundary of its own, so without this its long press would flow up into
+    // the nearest boundary - the row in the list - and the node a reader
+    // lands on would be the row again, however small the bubble. The
+    // content's text merges into this node; a link inside the text keeps a
+    // node of its own, so its tap is not swallowed.
+    final bubble = Semantics(
+      container: true,
+      // Said after the content: "double-tap and hold to <hint>".
+      onLongPressHint: hasActions ? context.l10n.messaging_MessageView_actionsHint : null,
+      child: GestureDetector(
+        onLongPress: hasActions ? _openActions : null,
+        child: Container(
+          key: _bubbleKey,
+          decoration: widget.decoration,
+          padding: widget.padding,
+          child: IntrinsicWidth(child: widget.child),
+        ),
       ),
     );
 

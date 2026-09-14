@@ -1593,6 +1593,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messaging_MessageListView_typingTrail => 'stampe...';
 
   @override
+  String get messaging_MessageView_actionsHint => 'aprire le azioni del messaggio';
+
+  @override
   String get messaging_MessageView_delete => 'Eliminare';
 
   @override
