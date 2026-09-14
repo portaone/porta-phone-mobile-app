@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 
 class SslAuthErrorView extends StatelessWidget {
@@ -66,8 +67,7 @@ class SslAuthErrorView extends StatelessWidget {
   }
 
   void _showSslDetails(BuildContext context, SslAuthError error) {
-    showModalBottomSheet(
-      context: context,
+    context.showModalBottomSheet(
       showDragHandle: true,
       builder: (_) => Padding(
         padding: const EdgeInsets.all(16),
