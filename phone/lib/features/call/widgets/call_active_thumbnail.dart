@@ -1,10 +1,6 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:logging/logging.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -15,8 +11,6 @@ import '../bloc/call_bloc.dart';
 import '../utils/utils.dart';
 import 'stream_thumbnail.dart';
 import 'thumbnail_frame.dart';
-
-final _logger = Logger('CallActiveThumbnail');
 
 class CallActiveThumbnail extends StatefulWidget {
   const CallActiveThumbnail({
@@ -39,82 +33,43 @@ class CallActiveThumbnail extends StatefulWidget {
 }
 
 class _CallActiveThumbnailState extends State<CallActiveThumbnail> {
-  static const Duration _remoteFrameProbeDelay = Duration(seconds: 1);
-
-  /// Where frames cannot be analysed there is nothing to wait for, so the remote
-  /// video is shown without a probe confirming it first.
-  static const bool _showsRemoteVideoUnprobed = !FrameAnalysisWorker.isSupported;
-
-  Timer? _remoteFrameWatcher;
-  bool _hasRenderableRemoteFrame = _showsRemoteVideoUnprobed;
-  late final FrameAnalysisWorker _frameAnalysisWorker;
+  /// Looks at the remote video and says whether it shows a picture; it
+  /// follows the call handed to it in [didUpdateWidget].
+  late final RemoteFrameProbe _remoteFrameProbe;
 
   @override
   void initState() {
     super.initState();
-    _frameAnalysisWorker = FrameAnalysisWorker()..start();
-    _scheduleNextProbe(Duration.zero);
+    _remoteFrameProbe = RemoteFrameProbe()
+      ..stream = widget.activeCall.remoteStream
+      ..addListener(_onRemoteFrameChanged)
+      ..start();
   }
 
   @override
   void didUpdateWidget(CallActiveThumbnail oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Reset when the remote stream changes so we don't flash stale content.
-    if (oldWidget.activeCall.remoteStream != widget.activeCall.remoteStream) {
-      _setHasRenderableRemoteFrame(_showsRemoteVideoUnprobed);
-    }
+    // A new stream forgets the picture of the old one, so nothing stale
+    // flashes while the new one is probed.
+    _remoteFrameProbe.stream = widget.activeCall.remoteStream;
   }
 
   @override
   void dispose() {
-    _remoteFrameWatcher?.cancel();
-    _frameAnalysisWorker.dispose();
+    _remoteFrameProbe.removeListener(_onRemoteFrameChanged);
+    _remoteFrameProbe.dispose();
     super.dispose();
   }
 
-  MediaStreamTrack? get _remoteVideoTrack {
-    final tracks = widget.activeCall.remoteStream?.getVideoTracks();
-    return (tracks != null && tracks.isNotEmpty) ? tracks.first : null;
-  }
-
-  void _scheduleNextProbe(Duration delay) {
-    if (!mounted || !FrameAnalysisWorker.isSupported) return;
-    _remoteFrameWatcher = Timer(delay, _probeRemoteFrame);
-  }
-
-  Future<void> _probeRemoteFrame() async {
-    if (!mounted) return;
-
-    final track = _remoteVideoTrack;
-    if (track == null) {
-      _scheduleNextProbe(_remoteFrameProbeDelay);
-      return;
-    }
-
-    try {
-      final capturedFrame = await track.captureFrame().timeout(const Duration(seconds: 10));
-      final isBlackOrEmpty = await _frameAnalysisWorker.analyzeFrame(capturedFrame.asUint8List());
-      _setHasRenderableRemoteFrame(!isBlackOrEmpty);
-    } catch (_) {
-      _setHasRenderableRemoteFrame(true);
-    } finally {
-      _logger.fine('Thumbnail frame probe done, hasRenderableFrame=$_hasRenderableRemoteFrame');
-      _scheduleNextProbe(_remoteFrameProbeDelay);
-    }
-  }
-
-  void _setHasRenderableRemoteFrame(bool value) {
-    if (_hasRenderableRemoteFrame == value || !mounted) return;
-    setState(() => _hasRenderableRemoteFrame = value);
+  void _onRemoteFrameChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasRemoteVideo = widget.activeCall.remoteStream?.getVideoTracks().isNotEmpty ?? false;
-
     // Hide video when held to avoid showing frozen/last frames, and also when the
     // frame analyser hasn't confirmed renderable content yet (black/empty guard).
-    final displayStream = hasRemoteVideo && widget.activeCall.held == false && _hasRenderableRemoteFrame;
+    final displayStream = widget.activeCall.held == false && _remoteFrameProbe.renderable;
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
