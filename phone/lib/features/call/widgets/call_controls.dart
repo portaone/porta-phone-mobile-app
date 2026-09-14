@@ -6,7 +6,6 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
-import '../bloc/call_bloc.dart';
 import '../extensions/extensions.dart';
 import '../models/models.dart';
 import '../utils/utils.dart';

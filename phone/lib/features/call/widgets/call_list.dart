@@ -10,6 +10,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/call_bloc.dart';
+import '../models/models.dart';
 import '../view/call_screen_style.dart';
 
 /// The list-of-calls roster for the call screen.
