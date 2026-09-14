@@ -157,6 +157,12 @@ dependencies:
       ref: main_ext_rebase_11.08.26
 
 dev_dependencies:
+  # Reached directly by the hub replay tests, which drive the Android hub and the
+  # shared session projection end to end into a real CallBloc.
+  signaling_service_android:
+    path: ./packages/signaling_service/signaling_service_android
+  signaling_service_platform_interface:
+    path: ./packages/signaling_service/signaling_service_platform_interface
   integration_test:
     sdk: flutter
   flutter_test:

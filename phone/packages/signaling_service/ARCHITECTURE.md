@@ -126,7 +126,7 @@ graph TD
 
 | Direction    | Message                   | Description                                                 |
 |--------------|---------------------------|-------------------------------------------------------------|
-| Client → Hub | `{ sub, id, replyPort }`  | Subscribe; hub replies with ack then replays session buffer |
+| Client → Hub | `{ sub, id, replyPort }`  | Subscribe; hub replies with ack, then the session's lifecycle events and a handshake rendered from its session snapshot |
 | Client → Hub | `{ unsub, id }`           | Unsubscribe                                                 |
 | Client → Hub | `{ exec, id, corr, req }` | Execute request; hub replies `[result, corr, error?]`       |
 | Hub → Client | `SignalingModuleEvent`    | Forwarded to every subscriber in real time                  |
@@ -135,7 +135,7 @@ graph TD
 
 ```
 awaitAck()   ← registers the internal Completer FIRST (before ack can arrive)
-start()      ← sends {sub} to hub → hub sends sub-ack + session buffer replay
+start()      ← sends {sub} to hub → hub sends sub-ack + lifecycle replay with the current handshake
 await ack    ← now safe to wait; ack arrives because start() already fired
 ```
 
@@ -213,6 +213,15 @@ CallBloc constructed later:
 
 `connect()` clears the buffer — each reconnect starts fresh.
 Both `SignalingModule` and `SignalingHubModule` maintain independent session buffers.
+
+The buffer replays state, not history: a `SessionSnapshot` (in `signaling_service_platform_interface`)
+keeps the handshake the session opened with current with the registration events and every call's
+events on its line (numbered or guest; a hangup frees the line at its position), and `snapshot`
+renders the handshake the server would send now. A subscriber that attaches late - a new isolate
+attaching to the hub, or a consumer subscribing to the module after it attached - takes the path it
+takes after a reconnect, where the server itself describes calls that are already up. Protocol
+events are never replayed; what they changed is in the snapshot. Because every boundary keeps the
+same buffer, a call that ended between one boundary's replay and the next is gone at both.
 
 ---
 

@@ -41,6 +41,7 @@ import 'package:webtrit_phone/services/services.dart';
 class CallBlocHarness {
   CallBlocHarness({
     bool sendPresenceSettings = false,
+    UserMediaBuilder? userMediaBuilder,
     CallCapabilitiesConfig capabilities = const CallCapabilitiesConfig(),
   }) {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +59,7 @@ class CallBlocHarness {
       submitNotification: notifications.add,
       callkeep: callkeep,
       callkeepConnections: _FakeCallkeepConnections(),
-      userMediaBuilder: _FakeUserMediaBuilder(),
+      userMediaBuilder: userMediaBuilder ?? _FakeUserMediaBuilder(),
       contactResolver: _FakeContactResolver(),
       callErrorReporter: errors,
       sendPresenceSettings: sendPresenceSettings,
@@ -173,6 +174,23 @@ class FakeSignalingModule extends Fake implements SignalingModule {
 
 /// Records what the bloc asked the OS to do; every request is accepted.
 class FakeCallkeep extends Fake implements Callkeep {
+  @override
+  Future<CallkeepIncomingCallError?> reportNewIncomingCall(
+    String callId,
+    CallkeepHandle handle, {
+    String? displayName,
+    bool hasVideo = false,
+  }) async => null;
+
+  @override
+  Future<void> reportUpdateCall(
+    String callId, {
+    CallkeepHandle? handle,
+    String? displayName,
+    bool? hasVideo,
+    bool? proximityEnabled,
+  }) async {}
+
   final List<String> ended = [];
   final List<({String callId, bool onHold})> held = [];
   final List<({String groupId, List<String> callIds})> groups = [];
@@ -226,7 +244,10 @@ class _FakeCallkeepPlatform extends WebtritCallkeepPlatform {
   Future<void> stopRingbackSound() async {}
 }
 
-class _FakeCallLogsRepository extends Fake implements CallLogsRepository {}
+class _FakeCallLogsRepository extends Fake implements CallLogsRepository {
+  @override
+  Future<void> add(NewCall call) async {}
+}
 
 class _FakePresenceInfoRepository extends Fake implements PresenceInfoRepository {
   @override
@@ -257,6 +278,9 @@ class _FakeCallkeepConnections extends Fake implements CallkeepConnections {
 
 class _FakeUserMediaBuilder extends Fake implements UserMediaBuilder {}
 
-class _FakeContactResolver extends Fake implements ContactResolver {}
+class _FakeContactResolver extends Fake implements ContactResolver {
+  @override
+  Future<Contact?> resolve(String? number) async => null;
+}
 
 class _FakeConnectivityService extends Fake implements ConnectivityService {}

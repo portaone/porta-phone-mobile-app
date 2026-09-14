@@ -55,11 +55,11 @@ Hub wire protocol (Map messages, subscriber → hub):
 
 | Command | Fields | Description |
 |---------|--------|-------------|
-| `sub`   | `id`, `port` | Subscribe; hub replies with sub-ack then replays session buffer |
+| `sub`   | `id`, `port` | Subscribe; hub replies with sub-ack, then the session's lifecycle events and a handshake rendered from its `SessionSnapshot` |
 | `unsub` | `id` | Unsubscribe |
 | `exec`  | `id`, `corr`, `req` | Execute request; hub replies with `[_kExecuteResult, corr, error?]` |
 
-Session buffer on the hub side mirrors the one in the module — cleared on `SignalingConnecting`.
+The hub keeps the same `SignalingEventBuffer` as the module: lifecycle events in order and a `SessionSnapshot` (`signaling_service_platform_interface`) - the handshake kept current by the registration and call events, guest line included - rendered again for a late subscriber; cleared on `SignalingConnecting`. Protocol events are never replayed across the boundary.
 
 ### `SignalingHubClient`
 
@@ -198,7 +198,10 @@ POST_NOTIFICATIONS
 ## Session buffer
 
 For the buffer contract and which event types are buffered see
-`signaling_service_platform_interface/AGENTS.md`.
+`signaling_service_platform_interface/AGENTS.md`. The hub renders a handshake from the shared
+`SessionSnapshot` (calls on their lines with their events so far, current registration), so a late
+subscriber restores calls the way it does after a reconnect instead of re-living the session's
+events; the app's handshake plan carries the caller's last media state with a restored call.
 
 Raw `SignalingHubClient.events` does **not** replay — always wrap it in
 `SignalingHubModule` or attach a listener before calling `start()`.

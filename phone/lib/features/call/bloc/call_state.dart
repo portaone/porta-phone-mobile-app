@@ -425,6 +425,28 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   @override
   bool get wasHungUp => hungUpTime != null;
 
+  /// The answer default for an incoming [offer]: a video offer is answered
+  /// with video unless the caller has since reported the camera off.
+  /// [remoteVideo] is the caller's last reported camera state, `null` while
+  /// nothing was reported.
+  static bool incomingVideo(JsepValue? offer, bool? remoteVideo) => (offer?.hasVideo ?? false) && (remoteVideo ?? true);
+
+  /// This call as the caller's [offer] describes it: the offer, its [line],
+  /// the answer default and the caller's camera state. Every place that learns
+  /// of an incoming offer applies it this way - the fast path that wakes an
+  /// answer already waiting for the offer and the queued incoming mutation -
+  /// so the answer opens the same media whichever of them runs first. An
+  /// event re-delivered without a jsep keeps the offer already stored.
+  ActiveCall withIncomingOffer(JsepValue? offer, {required int? line, bool? remoteVideo}) {
+    final resolvedOffer = offer ?? incomingOffer;
+    return copyWith(
+      incomingOffer: resolvedOffer,
+      line: line,
+      video: incomingVideo(resolvedOffer, remoteVideo),
+      remoteCameraEnabled: remoteVideo ?? remoteCameraEnabled,
+    );
+  }
+
   /// Whether the remote peer is expected to send (or is already sending) video.
   ///
   /// Returns `true` when the remote stream contains at least one video track

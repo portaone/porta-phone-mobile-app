@@ -63,27 +63,38 @@ All events are typed and exhaustively matchable:
 
 ### Session buffer contract
 
-All platform implementations use `SignalingEventBuffer` (defined in this package) to
-replay current session state to late subscribers.
+Every replay boundary - the module that owns the socket, the Android foreground-service hub,
+the module that proxies it in the app isolate and the plugin that fronts them - uses
+`SignalingEventBuffer` (defined in this package), so no two of them can disagree about the
+session a late subscriber sees.
 
-**Buffered (state events):** `SignalingConnecting` (also clears the buffer on each new
-connect), `SignalingConnected`, `SignalingConnectionFailed`, `SignalingDisconnecting`,
-`SignalingDisconnected`, `SignalingHandshakeReceived`.
+**Replayed as they came (lifecycle):** `SignalingConnecting` (starts a new session: everything
+before it is dropped), `SignalingConnected`, `SignalingConnectionFailed`,
+`SignalingDisconnecting`, `SignalingDisconnected`.
 
-**Not buffered:** `SignalingProtocolEvent` — these are transient data (ICE candidates,
-call requests/responses, etc.). Replaying them to a late subscriber would produce
-incorrect behaviour because the events are no longer actionable by the time the
-subscriber attaches.
+**Replayed as state:** the handshake. It is kept as a `SessionSnapshot` - the `StateHandshake`
+the session opened with, folded with every protocol event that changes session state: the
+registration events, and each call's events on its line (numbered or guest), newest first as the
+server orders a log; a new call opens its line, a hangup or missed call frees it at its position.
+A late subscriber receives a handshake rendered from it, the one the server would send now, and
+takes the same path it takes after a reconnect. A second handshake in one session replaces the
+state and is replayed once.
+
+**Never replayed:** `SignalingProtocolEvent` itself. What it changed is in the snapshot; the
+rest (ICE candidates, DTMF, a media state a live call already applied) is not actionable later.
+The snapshot does not keep presence, dialog or conference blocks current; they stay as the
+handshake reported them.
 
 ### `SignalingEventBuffer`
 
-Encapsulates the session buffer rules so platform implementations do not duplicate them:
+Encapsulates the rules so platform implementations do not duplicate them:
 
 ```dart
 class SignalingEventBuffer {
-  void onEvent(SignalingModuleEvent event); // records event per the contract above
-  List<SignalingModuleEvent> get snapshot;  // copy for replay on new subscriber
-  void clear();                             // called on explicit session reset
+  void onEvent(SignalingModuleEvent event); // folds the event in per the contract above
+  List<SignalingModuleEvent> get snapshot;  // lifecycle + the current handshake, for a new subscriber
+  bool get hasActiveCalls;                  // a call is up on any line, guest line included
+  void clear();                             // explicit session reset
 }
 ```
 

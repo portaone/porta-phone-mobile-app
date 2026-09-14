@@ -147,13 +147,6 @@ List<dynamic> encodePong() => [_tagPong];
 
 bool isPong(List<dynamic> msg) => msg.isNotEmpty && msg[0] == _tagPong;
 
-/// Returns true when [entry] is an encoded [SignalingHandshakeReceived] event.
-///
-/// Used by [SignalingHub] to evict stale handshake entries from the session
-/// buffer when a terminal call event ([HangupEvent] or [MissedCallEvent])
-/// arrives — avoids exposing the private tag.
-bool isHubEventHandshakeReceived(List<dynamic> entry) => entry.isNotEmpty && entry[0] == _tagHandshakeReceived;
-
 Object? _encodeExecuteError(Object? error) {
   if (error == null) return null;
   if (error is WebtritSignalingErrorException) {
@@ -295,6 +288,15 @@ Object? _decodeExecuteError(Object? encodedError) {
   }
 }
 
+Map<String, dynamic>? _encodeLine(Line? line) {
+  if (line == null) return null;
+  final encodedLogs = line.callLogs
+      .whereType<CallEventLog>()
+      .map((log) => [log.timestamp, log.callEvent.toJson()])
+      .toList();
+  return {'call_id': line.callId, 'call_logs': encodedLogs};
+}
+
 Map<String, dynamic> _encodeHandshake(StateHandshake h) {
   return {
     'handshake': StateHandshake.typeValue,
@@ -305,14 +307,10 @@ Map<String, dynamic> _encodeHandshake(StateHandshake h) {
       if (h.registration.code != null) 'code': h.registration.code,
       if (h.registration.reason != null) 'reason': h.registration.reason,
     },
-    'lines': h.lines.map((line) {
-      if (line == null) return null;
-      final encodedLogs = line.callLogs
-          .whereType<CallEventLog>()
-          .map((log) => [log.timestamp, log.callEvent.toJson()])
-          .toList();
-      return {'call_id': line.callId, 'call_logs': encodedLogs};
-    }).toList(),
+    'lines': h.lines.map(_encodeLine).toList(),
+    // A guest line is a call like any other to the app isolate; dropping it
+    // here made every forwarded handshake end a live guest call.
+    if (h.guestLine != null) 'guest_line': _encodeLine(h.guestLine),
     'presence_infos': h.presenceInfos.map((info) => info.toJson()).toList(),
     'dialog_infos': h.dialogInfos.map((info) => info.toJson()).toList(),
     // The running conference, if any. Without it the app isolate

@@ -21,16 +21,19 @@ final _logger = Logger('SignalingHubModule');
 ///
 /// ## Two-level buffering
 ///
-/// [SignalingHub] holds a session buffer and replays it to each new
-/// [SignalingHubClient] on subscribe (isolate-boundary replay). This module
-/// holds a second [SignalingEventBuffer] for same-isolate consumers of
-/// [events]: a caller may subscribe to [events] after the hub's replay has
-/// already been forwarded through [_hubClient], so the local buffer is
-/// needed to serve those late subscribers.
+/// [SignalingHub] brings a new [SignalingHubClient] up to date on subscribe
+/// with the session's lifecycle events and a handshake rendered from its
+/// session snapshot (isolate-boundary replay). This module holds a second
+/// [SignalingEventBuffer] for same-isolate consumers of [events]: a caller
+/// may subscribe to [events] after the hub's replay has already been
+/// forwarded through [_hubClient], so the local buffer is needed to serve
+/// those late subscribers.
 ///
-/// Both buffers apply identical rules (cleared on [SignalingConnecting],
-/// [SignalingProtocolEvent] items never included) and receive events in the
-/// same order, so they cannot diverge.
+/// Both sides keep the same [SignalingEventBuffer]: lifecycle events in order
+/// and a handshake rendered from the session's state, folded with every
+/// protocol event - so a call that ended after the hub's replay reached this
+/// module is gone from what this module replays too, and the two cannot
+/// diverge. Protocol events themselves are never replayed.
 class SignalingHubModule implements SignalingModule {
   SignalingHubModule(this._hubClient) {
     _sub = _hubClient.events.listen(_onHubEvent, onDone: _onHubDone);

@@ -1664,7 +1664,7 @@ packages:
     source: path
     version: "0.0.1"
   signaling_service_android:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       path: "packages/signaling_service/signaling_service_android"
       relative: true
@@ -1678,7 +1678,7 @@ packages:
     source: path
     version: "0.0.1"
   signaling_service_platform_interface:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       path: "packages/signaling_service/signaling_service_platform_interface"
       relative: true

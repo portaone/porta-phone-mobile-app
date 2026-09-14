@@ -1009,10 +1009,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             '__onCallSignalingEventIncoming: fast-pathing offer to awaiting push call — '
             'callId=${event.callId} status=$s',
           );
+          // The offer wakes an answer that may already be waiting for it, and
+          // the answer reads the media flags the moment it wakes - so the
+          // call is applied here exactly as the incoming mutation queued
+          // behind that answer will apply it, camera state included.
           emit(
             state.copyWithMappedActiveCall(
               event.callId,
-              (call) => call.copyWith(incomingOffer: event.jsep, line: event.line),
+              (call) => call.withIncomingOffer(event.jsep, line: event.line, remoteVideo: event.remoteVideo),
             ),
           );
         }
@@ -1091,6 +1095,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         replaceCallId: event.replaceCallId,
         isFocus: event.isFocus,
         jsep: event.jsep,
+        remoteVideo: event.remoteVideo,
       ),
     );
   }
@@ -2958,7 +2963,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> __onMutationSignalingIncoming(_CallMutationEventSignalingIncoming event, Emitter<CallState> emit) async {
-    final video = event.jsep?.hasVideo ?? false;
+    // A call restored from a log is answered as the caller left it: an offer
+    // with video whose camera was turned off since is an audio call, the same
+    // as the live media-state handler would have made it. The rule lives in
+    // [ActiveCall.incomingVideo], shared with the fast path above.
+    final remoteVideo = event.remoteVideo;
+    final video = ActiveCall.incomingVideo(event.jsep, remoteVideo);
     final handle = CallkeepHandle.number(event.caller);
     final displayName = event.callerDisplayName;
 
@@ -3014,13 +3024,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     ActiveCall? activeCall = state.retrieveActiveCall(event.callId);
 
     if (activeCall != null) {
-      // Preserve an already-stored offer when the server re-delivers the
-      // IncomingCallEvent without a jsep (e.g. a state-sync message after
-      // reconnect that omits the SDP). Overwriting with null here would
-      // silently clear the offer and cause __onCallPerformEventAnswered to
-      // time out waiting for it.
-      final resolvedOffer = event.jsep ?? activeCall.incomingOffer;
-
+      // withIncomingOffer preserves an already-stored offer when the server
+      // re-delivers the IncomingCallEvent without a jsep (e.g. a state-sync
+      // message after reconnect that omits the SDP). Overwriting with null
+      // here would silently clear the offer and cause
+      // __onCallPerformEventAnswered to time out waiting for it.
       if (event.jsep == null && activeCall.incomingOffer != null) {
         _logger.info(
           '__onMutationSignalingIncoming: keeping existing offer — '
@@ -3034,14 +3042,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           'callId=${event.callId} status=${activeCall.processingStatus}',
         );
       }
-      activeCall = activeCall.copyWith(
-        line: event.line,
-        handle: handle,
-        displayName: displayName,
-        video: video,
-        transfer: transfer,
-        incomingOffer: resolvedOffer,
-      );
+      activeCall = activeCall
+          .withIncomingOffer(event.jsep, line: event.line, remoteVideo: remoteVideo)
+          .copyWith(handle: handle, displayName: displayName, transfer: transfer);
       emit(state.copyWithMappedActiveCall(event.callId, (_) => activeCall!));
     } else {
       activeCall = ActiveCall(
@@ -3051,6 +3054,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         handle: handle,
         displayName: displayName,
         video: video,
+        remoteCameraEnabled: remoteVideo,
         createdTime: clock.now(),
         transfer: transfer,
         incomingOffer: event.jsep,
@@ -4043,11 +4047,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
               acceptedEvent: action.acceptedEvent,
               acceptedTime: action.acceptedTime,
               incomingCallEvent: action.incomingCallEvent,
+              remoteCameraEnabled: action.mediaState?.video,
             ),
           );
 
         case HandleIncomingCallAction():
-          _handleSignalingEvent(action.event);
+          // The caller's last word on the camera travels with the offer: a
+          // media state dispatched after it would run before the mutation that
+          // creates the call and find nothing to apply to.
+          _dispatchIncomingCall(action.event, remoteVideo: action.mediaState?.video);
 
         case EndLocalCallAction():
           await callkeep.endCall(action.callId);
@@ -4133,7 +4141,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           '_handleHandshakeReceived: replaying offer for push-registered call — '
           'callId=${line.callId} status=${call.processingStatus}',
         );
-        _handleSignalingEvent(callEvent);
+        // Newest first: the first media state in the log is the caller's latest.
+        final mediaState = line.callLogs
+            .whereType<CallEventLog>()
+            .map((log) => log.callEvent)
+            .whereType<MediaStatePeerMessageEvent>()
+            .firstOrNull;
+        _dispatchIncomingCall(callEvent, remoteVideo: mediaState?.video);
         break; // one offer per line is sufficient; avoid duplicate dispatches
       }
     }
@@ -4180,6 +4194,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       handle: handle,
       displayName: displayName,
       video: video,
+      remoteCameraEnabled: event.remoteCameraEnabled,
       createdTime: clock.now(),
       incomingOffer: incomingOffer,
       processingStatus: direction == CallDirection.incoming
@@ -4199,23 +4214,31 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     );
   }
 
+  /// Turns an [IncomingCallEvent] into the bloc's incoming event, heard live
+  /// or restored from a log; [remoteVideo] is the caller's camera as the log
+  /// last reported it, which only a restored call has.
+  void _dispatchIncomingCall(IncomingCallEvent event, {bool? remoteVideo}) {
+    _logger.warning('[SIG] IncomingCallEvent: callId=${event.callId} caller=${event.caller} callee=${event.callee}');
+    add(
+      _CallSignalingEvent.incoming(
+        line: event.line,
+        callId: event.callId,
+        callee: event.callee,
+        caller: event.caller,
+        callerDisplayName: event.callerDisplayName,
+        referredBy: event.referredBy,
+        replaceCallId: event.replaceCallId,
+        isFocus: event.isFocus,
+        jsep: JsepValue.fromOptional(event.jsep),
+        remoteVideo: remoteVideo,
+      ),
+    );
+  }
+
   void _handleSignalingEvent(Event event) {
     _logger.info('[SIG] ${event.runtimeType}');
     if (event is IncomingCallEvent) {
-      _logger.warning('[SIG] IncomingCallEvent: callId=${event.callId} caller=${event.caller} callee=${event.callee}');
-      add(
-        _CallSignalingEvent.incoming(
-          line: event.line,
-          callId: event.callId,
-          callee: event.callee,
-          caller: event.caller,
-          callerDisplayName: event.callerDisplayName,
-          referredBy: event.referredBy,
-          replaceCallId: event.replaceCallId,
-          isFocus: event.isFocus,
-          jsep: JsepValue.fromOptional(event.jsep),
-        ),
-      );
+      _dispatchIncomingCall(event);
     } else if (event is RingingEvent) {
       add(_CallSignalingEvent.ringing(line: event.line, callId: event.callId));
     } else if (event is ProceedingEvent) {
