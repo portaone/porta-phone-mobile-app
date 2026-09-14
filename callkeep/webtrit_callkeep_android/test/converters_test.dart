@@ -143,6 +143,13 @@ void main() {
     test('timeout', () {
       expect(PCallRequestErrorEnum.timeout.toCallkeep(), CallkeepCallRequestError.timeout);
     });
+
+    test('callGroupingNotSupported', () {
+      expect(
+        PCallRequestErrorEnum.callGroupingNotSupported.toCallkeep(),
+        CallkeepCallRequestError.callGroupingNotSupported,
+      );
+    });
   });
 
   // ---------------------------------------------------------------------------

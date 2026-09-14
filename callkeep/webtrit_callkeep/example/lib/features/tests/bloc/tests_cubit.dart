@@ -175,6 +175,12 @@ class TestsCubit extends Cubit<TestsState> implements CallkeepDelegate, Callkeep
   }
 
   @override
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId) {
+    emit(state.log(LogEntry.event('[cb] performSetCallGroup id=$callId groupWith=$groupWithCallId')));
+    return Future.value(true);
+  }
+
+  @override
   Future<bool> performAudioDeviceSet(String callId, CallkeepAudioDevice device) {
     emit(state.log(LogEntry.event('[cb] performAudioDeviceSet id=$callId device=${device.name}')));
     return Future.value(true);

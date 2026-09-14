@@ -75,6 +75,7 @@ CallkeepHandle.sip('user@example.com')
 | `performSendDTMF` | DTMF sent from system dial pad |
 | `performAudioDeviceSet` | Audio routing changed to a given device |
 | `performAudioDevicesUpdate` | The set of available audio devices changed |
+| `performSetCallGroup` | The OS grouped this call with another from its own call UI, or ungrouped it when the second is null; the application's own `setCallGroup` is applied by the plugin |
 | `didActivateAudioSession` | System activated the audio session |
 | `didDeactivateAudioSession` | System deactivated the audio session |
 | `didReset` | System reset all call state (iOS only) |

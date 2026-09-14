@@ -59,6 +59,21 @@ class InProcessCallkeepCore internal constructor(
 
     override fun addConnectionEventListener(listener: ConnectionEventListener) {
         listeners.add(listener)
+        ensureReceiving()
+    }
+
+    override fun removeConnectionEventListener(listener: ConnectionEventListener) {
+        // The receiver stays: the calls, and the state the core keeps for them, outlive the
+        // listeners - the foreground service goes with the activity - and a call that ends
+        // meanwhile still has to reach the tracker. See consumeWithoutListeners.
+        listeners.remove(listener)
+    }
+
+    /**
+     * Registers the global receiver once. It is needed from the first listener, and from the
+     * first call the tracker learns about, since a call may end while nobody is listening.
+     */
+    private fun ensureReceiving() {
         synchronized(receiverLock) {
             if (globalReceiver == null) {
                 globalReceiver =
@@ -74,20 +89,6 @@ class InProcessCallkeepCore internal constructor(
         }
     }
 
-    override fun removeConnectionEventListener(listener: ConnectionEventListener) {
-        listeners.remove(listener)
-        synchronized(receiverLock) {
-            if (listeners.isEmpty()) {
-                globalReceiver?.let { receiver ->
-                    runCatching {
-                        ConnectionServicePerformBroadcaster.unregisterConnectionPerformReceiver(context, receiver)
-                    }
-                }
-                globalReceiver = null
-            }
-        }
-    }
-
     private fun createGlobalReceiver(): BroadcastReceiver =
         object : BroadcastReceiver() {
             override fun onReceive(
@@ -96,9 +97,28 @@ class InProcessCallkeepCore internal constructor(
             ) {
                 val action = intent?.action ?: return
                 val event = GLOBAL_LISTENER_EVENTS.find { it.name == action } ?: return
+                consumeWithoutListeners(event, intent.extras)
                 listeners.forEach { it.onConnectionEvent(event, intent.extras) }
             }
         }
+
+    /**
+     * What the core does with an event itself when no listener is there to do it: a call that
+     * ends while the activity's bridge is away is marked terminated, so the state the core
+     * keeps for it - its group above all - follows the call and not the bridge. With a
+     * [CallEndListener] attached the foreground service handles the end with its full context
+     * (pending incoming calls, stale broadcasts of a previous session) and the core stays out
+     * of its way. Any other listener only observes - the incoming-call service handles
+     * `AnswerCall` and nothing else - so its presence changes nothing here.
+     */
+    private fun consumeWithoutListeners(
+        event: ConnectionEvent,
+        data: Bundle?,
+    ) {
+        if (event !in TERMINAL_EVENTS || listeners.any { it is CallEndListener }) return
+        val callId = data?.let { CallMetadata.fromBundleOrNull(it) }?.callId ?: return
+        tracker.markTerminated(callId)
+    }
 
     // -------------------------------------------------------------------------
     // State queries
@@ -140,7 +160,10 @@ class InProcessCallkeepCore internal constructor(
     // State mutations
     // -------------------------------------------------------------------------
 
-    override fun addPending(callId: String): Boolean = tracker.addPending(callId)
+    override fun addPending(callId: String): Boolean {
+        ensureReceiving()
+        return tracker.addPending(callId)
+    }
 
     override fun removePending(callId: String) = tracker.removePending(callId)
 
@@ -148,7 +171,10 @@ class InProcessCallkeepCore internal constructor(
         callId: String,
         metadata: CallMetadata,
         state: PCallkeepConnectionState,
-    ) = tracker.promote(callId, metadata, state)
+    ) {
+        ensureReceiving()
+        tracker.promote(callId, metadata, state)
+    }
 
     override fun markAnswered(callId: String) = tracker.markAnswered(callId)
 
@@ -188,8 +214,7 @@ class InProcessCallkeepCore internal constructor(
 
     override fun markEndedWithoutFlutterState(callId: String) = tracker.markEndedWithoutFlutterState(callId)
 
-    override fun wasEndedWithoutFlutterState(callId: String): Boolean =
-        tracker.wasEndedWithoutFlutterState(callId)
+    override fun wasEndedWithoutFlutterState(callId: String): Boolean = tracker.wasEndedWithoutFlutterState(callId)
 
     // -------------------------------------------------------------------------
     // Connection event receivers
@@ -220,6 +245,7 @@ class InProcessCallkeepCore internal constructor(
         val actionName = event.name
         val intent = Intent(actionName).apply { data?.let { putExtras(it) } }
 
+        consumeWithoutListeners(event, data)
         // Deliver to global listeners (ForegroundService, IncomingCallService, etc.)
         listeners.forEach { it.onConnectionEvent(event, data) }
 
@@ -316,6 +342,30 @@ class InProcessCallkeepCore internal constructor(
 
     override fun startHoldingCall(metadata: CallMetadata) = router.startHoldingCall(metadata)
 
+    override fun startSetCallGroup(
+        groupId: String,
+        callIds: List<String>,
+    ): CallGroupOutcome {
+        // One group at a time on both backends. A second name while another group is live is
+        // refused and nothing changes; the name is kept with the membership so the next request
+        // can be told apart. The backends themselves keep only the membership.
+        val live = tracker.currentGroupId()
+        if (live != null && live != groupId) return CallGroupOutcome.LIMIT_REACHED
+        if (!router.setCallGroup(callIds)) return CallGroupOutcome.NOT_SUPPORTED
+        tracker.declareGroup(groupId, callIds)
+        return CallGroupOutcome.ACCEPTED
+    }
+
+    override fun startUnsetCallGroup(callIds: List<String>): CallGroupOutcome {
+        if (!router.unsetCallGroup(callIds)) return CallGroupOutcome.NOT_SUPPORTED
+        tracker.releaseFromGroup(callIds)
+        return CallGroupOutcome.ACCEPTED
+    }
+
+    override fun isGrouped(callId: String): Boolean = tracker.isGrouped(callId)
+
+    override fun groupMembersWith(callId: String): List<String> = tracker.groupMembersWith(callId)
+
     override fun startSpeaker(metadata: CallMetadata) = router.startSpeaker(metadata)
 
     override fun setAudioDevice(metadata: CallMetadata) = router.setAudioDevice(metadata)
@@ -345,6 +395,7 @@ class InProcessCallkeepCore internal constructor(
          * TearDownComplete, IncomingFailure) are excluded — they stay as dynamic
          * receivers registered via [registerConnectionEvents].
          */
+
         internal val GLOBAL_LISTENER_EVENTS: List<ConnectionEvent> =
             listOf(
                 CallLifecycleEvent.IncomingConnectionReported,
@@ -360,5 +411,9 @@ class InProcessCallkeepCore internal constructor(
                 CallMediaEvent.ConnectionHolding,
                 CallMediaEvent.SentDTMF,
             )
+
+        // The events after which a call is over, whoever ended it.
+        internal val TERMINAL_EVENTS: Set<ConnectionEvent> =
+            setOf(CallLifecycleEvent.DeclineCall, CallLifecycleEvent.HungUp, CallLifecycleEvent.ConnectionNotFound)
     }
 }

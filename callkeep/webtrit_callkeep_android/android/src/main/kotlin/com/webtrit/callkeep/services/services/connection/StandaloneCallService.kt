@@ -14,6 +14,7 @@ import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.R
 import com.webtrit.callkeep.common.ActivityHolder
 import com.webtrit.callkeep.common.AssetCacheManager
+import com.webtrit.callkeep.common.CallDataConst
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.startForegroundServiceCompat
@@ -29,6 +30,7 @@ import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.broadcaster.CallMediaEvent
 import com.webtrit.callkeep.services.core.CallkeepCore
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import com.webtrit.callkeep.managers.AudioManager as CallkeepAudioManager
 
 /**
@@ -206,6 +208,7 @@ class StandaloneCallService : Service() {
                 is StandaloneServiceCommand.ReplayConnections -> handleReplayConnectionStates()
                 is StandaloneServiceCommand.Reserve -> handleReserveAnswer(command.callId)
                 is StandaloneServiceCommand.Call -> dispatchCall(command.action, command.metadata)
+                is StandaloneServiceCommand.Group -> dispatchGroup(command.action, command.callIds)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exception with action: ${intent?.action}", e)
@@ -287,7 +290,30 @@ class StandaloneCallService : Service() {
             StandaloneServiceAction.ReserveAnswer,
             StandaloneServiceAction.ReplayAudioState,
             StandaloneServiceAction.ReplayConnectionStates,
+            StandaloneServiceAction.SetCallGroup,
+            StandaloneServiceAction.UnsetCallGroup,
+            StandaloneServiceAction.HungUpCallGroup,
             -> Log.w(TAG, "dispatchCall: unexpected non-call action $action, ignoring")
+        }
+    }
+
+    /**
+     * Routes a [StandaloneServiceCommand.Group] to its handler.
+     *
+     * Grouping is presentation only on this backend. There is no Telecom conference to build and
+     * nothing about the calls themselves changes: they were already independent and stay that
+     * way. What the group buys is that the service, and through it the user, can speak about the
+     * calls as one thing.
+     */
+    private fun dispatchGroup(
+        action: StandaloneServiceAction,
+        callIds: List<String>,
+    ) {
+        when (action) {
+            StandaloneServiceAction.SetCallGroup -> handleSetCallGroup(callIds)
+            StandaloneServiceAction.UnsetCallGroup -> handleUnsetCallGroup(callIds)
+            StandaloneServiceAction.HungUpCallGroup -> handleHungUpCallGroup(callIds)
+            else -> Log.w(TAG, "dispatchGroup: unexpected non-group action $action, ignoring")
         }
     }
 
@@ -364,7 +390,6 @@ class StandaloneCallService : Service() {
     }
 
     private fun showIncomingCallNotification(metadata: CallMetadata) {
-        shownNotification = ShownNotification.Incoming(metadata.callId)
         val notification =
             StandaloneIncomingCallNotificationBuilder()
                 .apply { setCallMetaData(metadata) }
@@ -372,6 +397,7 @@ class StandaloneCallService : Service() {
         // Still the ringing phase - the app may be in the background, so the type must stay
         // phone-call only (same restriction as in promoteToForeground).
         startForegroundServiceCompat(this, NOTIFICATION_ID, notification, ringingForegroundServiceType)
+        shownNotification = ShownNotification.Incoming(metadata.callId)
     }
 
     /**
@@ -385,8 +411,10 @@ class StandaloneCallService : Service() {
         shownNotification = ShownNotification.Ongoing(metadata.callId)
         val notification =
             StandaloneActiveCallNotificationBuilder()
-                .apply { setCallMetaData(metadata) }
-                .build()
+                .apply {
+                    setCallMetaData(metadata)
+                    setGroupMembers(groupMembersOf(metadata.callId))
+                }.build()
         // The call is answered: re-promote with PHONE_CALL | MICROPHONE so microphone access
         // survives the app going to background mid-call. The answer flow guarantees a visible
         // activity at this point, which makes adding the restricted microphone type legal on
@@ -555,6 +583,93 @@ class StandaloneCallService : Service() {
         )
     }
 
+    private fun handleSetCallGroup(callIds: List<String>) {
+        Log.i(TAG, "handleSetCallGroup: callIds=$callIds")
+        val next = withCallGroup(callGroupIds, callIds, ::newCallGroupId)
+        replaceCallGroups(next)
+    }
+
+    private fun handleUnsetCallGroup(callIds: List<String>) {
+        Log.i(TAG, "handleUnsetCallGroup: callIds=$callIds")
+        val next = withoutCallGroup(callGroupIds, callIds)
+        replaceCallGroups(next)
+    }
+
+    /**
+     * Ends every call named by the group hang-up action.
+     *
+     * Reached only from the grouped notification, whose one button stands for the whole group.
+     * Each leg goes through the ordinary hang-up so the application sees the same events it would
+     * for calls ended one at a time, and takes the room down on its own terms.
+     */
+    private fun handleHungUpCallGroup(callIds: List<String>) {
+        Log.i(TAG, "handleHungUpCallGroup: callIds=$callIds")
+        callIds.forEach { callId ->
+            val meta = callMetadataMap[callId] ?: CallMetadata(callId = callId)
+            handleHungUpCall(meta)
+        }
+    }
+
+    /**
+     * Swaps the whole group assignment in one step.
+     *
+     * The reconciliation is a pure function over the previous assignment, so the map is replaced
+     * rather than edited in place - an in-place edit would leave a half-applied assignment visible
+     * to anything reading the map between the removals and the additions.
+     */
+    private fun replaceCallGroups(next: Map<String, String>) {
+        if (callGroupIds.toMap() == next) return
+        callGroupIds.keys.retainAll(next.keys)
+        callGroupIds.putAll(next)
+        Log.d(TAG, "replaceCallGroups: assignment is now $callGroupIds")
+        refreshOngoingNotification()
+    }
+
+    /**
+     * Re-posts the ongoing-call notification so it reflects the grouping that just changed.
+     *
+     * Only when the ongoing variant is the one on screen. A ringing call has priority: its
+     * notification carries Answer and Decline, and re-posting the ongoing variant over it would
+     * take them away. Grouping does not answer anything, so a ringing call is left ringing.
+     */
+    private fun refreshOngoingNotification() {
+        val shown = shownNotification as? ShownNotification.Ongoing ?: return
+        val metadata = callMetadataMap[shown.callId] ?: return
+        showActiveCallNotification(metadata)
+    }
+
+    /**
+     * The call to build the ongoing notification from once [endedCallId] has ended.
+     *
+     * A call from the same group [wasGroupedWith] comes first, so a room keeps being shown as
+     * the room; otherwise any answered call, in a stable order so the choice does not wander
+     * between refreshes. Null when nothing answered survives.
+     */
+    private fun survivingAnchor(
+        endedCallId: String,
+        wasGroupedWith: Map<String, String>,
+    ): CallMetadata? {
+        val formerGroup = wasGroupedWith[endedCallId]
+        val candidates = answeredCallIds.filter { it != endedCallId }.sorted()
+        val preferred = candidates.firstOrNull { formerGroup != null && wasGroupedWith[it] == formerGroup }
+        return (preferred ?: candidates.firstOrNull())?.let { callMetadataMap[it] }
+    }
+
+    /**
+     * Every call grouped with [callId], this one included, or empty when it stands alone.
+     *
+     * Ordered by call id so the notification does not reshuffle the names on every refresh; the
+     * assignment itself is an unordered map.
+     */
+    private fun groupMembersOf(callId: String): List<CallMetadata> {
+        val groupId = callGroupIds[callId] ?: return emptyList()
+        return callGroupIds
+            .filterValues { it == groupId }
+            .keys
+            .sorted()
+            .mapNotNull { callMetadataMap[it] }
+    }
+
     private fun handleTearDownConnections() {
         Log.i(TAG, "handleTearDownConnections: cleaning up ${callMetadataMap.size} calls")
         ringtoneManager.stopRingtone()
@@ -567,6 +682,7 @@ class StandaloneCallService : Service() {
         ringingIncomingCallIds.clear()
         answeredCallIds.clear()
         pendingAnswers.clear()
+        callGroupIds.clear()
         shownNotification = ShownNotification.None
         deactivateAudio(force = true)
         core.notifyConnectionEvent(CallCommandEvent.TearDownComplete)
@@ -579,6 +695,7 @@ class StandaloneCallService : Service() {
         ringingIncomingCallIds.clear()
         answeredCallIds.clear()
         pendingAnswers.clear()
+        callGroupIds.clear()
         shownNotification = ShownNotification.None
         deactivateAudio(force = true)
         ringtoneManager.stopRingtone()
@@ -705,30 +822,22 @@ class StandaloneCallService : Service() {
         pendingAnswers.remove(metadata.callId)
         val shown = shownNotification
         val anchorEnded = shown is ShownNotification.Ongoing && shown.callId == metadata.callId
+        if (anchorEnded) shownNotification = ShownNotification.None
+        val before = callGroupIds.toMap()
+        // A call that has ended cannot be in a group, and a group that drops to one member is
+        // not a group any more - withoutCallGroup applies both rules.
+        replaceCallGroups(withoutCallGroup(before, listOf(metadata.callId)))
         if (anchorEnded) {
-            shownNotification = ShownNotification.None
             // The notification stood for the call that just ended; if another answered call
             // survives it takes the notification over, rebuilt from what is actually left -
-            // otherwise the old name and a hang-up for a call that is gone stay on screen.
-            survivingAnchor(metadata.callId)?.let { showActiveCallNotification(it) }
+            // otherwise the old name and the old hang-up membership would stay on screen.
+            survivingAnchor(metadata.callId, before)?.let { showActiveCallNotification(it) }
         }
         if (callMetadataMap.isEmpty()) {
             deactivateAudio()
             stopSelf()
         }
     }
-
-    /**
-     * The call to build the ongoing notification from once [endedCallId] has ended: any
-     * answered call, in a stable order so the choice does not wander between refreshes. Null
-     * when nothing answered survives.
-     */
-    private fun survivingAnchor(endedCallId: String): CallMetadata? =
-        answeredCallIds
-            .filter { it != endedCallId }
-            .sorted()
-            .firstOrNull()
-            ?.let { callMetadataMap[it] }
 
     // -------------------------------------------------------------------------
     // Companion (static dispatch interface, mirrors PhoneConnectionService)
@@ -758,6 +867,68 @@ class StandaloneCallService : Service() {
         internal val ringingIncomingCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
         internal val answeredCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
         internal val pendingAnswers: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+        // Which group each call belongs to, callId -> groupId. Absence means the call stands
+        // alone, which is the state of every call until the application says otherwise, so the
+        // map is empty for the overwhelming majority of calls. Several groups can coexist: the
+        // identifier is what distinguishes them, and it is a plain String because this map is
+        // read from the main process alongside the others.
+        internal val callGroupIds: ConcurrentHashMap<String, String> = ConcurrentHashMap()
+
+        private val callGroupSequence = AtomicLong()
+
+        private fun newCallGroupId(): String = "group-${callGroupSequence.incrementAndGet()}"
+
+        /**
+         * The group assignment after [callIds] are declared to be the group.
+         *
+         * There is one group at a time, and the request is declarative: it says the group
+         * contains exactly these calls. So a member that has dropped off the list leaves it,
+         * whatever it was grouped with before, and calling this repeatedly with a growing list
+         * adds calls to the same group. Keeping the group's id while any listed call already
+         * belongs to it is what lets the notification recognise the group it was showing.
+         *
+         * A group needs two calls to exist, so an assignment that leaves one behind is dissolved
+         * rather than kept as a group of one. That also makes [withCallGroup] with a single call
+         * the way to take a group apart, matching what the caller said: this call is alone now.
+         * An empty list names no group at all and changes nothing.
+         */
+        internal fun withCallGroup(
+            groups: Map<String, String>,
+            callIds: Collection<String>,
+            groupIdFactory: () -> String,
+        ): Map<String, String> {
+            if (callIds.isEmpty()) return groups.toMap()
+            val groupId = callIds.firstNotNullOfOrNull { groups[it] } ?: groupIdFactory()
+            val next = mutableMapOf<String, String>()
+            callIds.forEach { next[it] = groupId }
+            return withoutLoneMembers(next)
+        }
+
+        /**
+         * The group assignment after [callIds] leave whatever group they are in.
+         *
+         * The calls themselves are untouched; only the grouping is. An empty list does nothing,
+         * so a caller that computes the list and comes up empty cannot take a group apart by
+         * accident. Passing every member takes the group apart, and so does passing all but one,
+         * because the one left behind is no longer in a group either.
+         */
+        internal fun withoutCallGroup(
+            groups: Map<String, String>,
+            callIds: Collection<String>,
+        ): Map<String, String> {
+            if (callIds.isEmpty()) return groups.toMap()
+            val next = groups.toMutableMap()
+            callIds.forEach { next.remove(it) }
+            return withoutLoneMembers(next)
+        }
+
+        /** Drops every group that has fewer than two members; one call is not a group. */
+        private fun withoutLoneMembers(groups: MutableMap<String, String>): Map<String, String> {
+            val sizes = groups.values.groupingBy { it }.eachCount()
+            groups.entries.removeAll { sizes.getValue(it.value) < 2 }
+            return groups
+        }
 
         /**
          * `true` when a call other than [excludingCallId] is still ringing, i.e. registered in
@@ -864,6 +1035,30 @@ class StandaloneCallService : Service() {
         fun tearDown(context: Context) {
             communicate(context, StandaloneServiceAction.TearDownConnections, null)
         }
+
+        /**
+         * Sends a group membership to the running service.
+         *
+         * Carries a plain string array rather than [CallMetadata], because membership belongs to
+         * the group and not to any one call. Dropped silently when the service is not running,
+         * like every other command here: there are then no calls to group.
+         */
+        fun sendCallGroup(
+            context: Context,
+            action: StandaloneServiceAction,
+            callIds: List<String>,
+        ) {
+            val intent =
+                Intent(context, StandaloneCallService::class.java).apply {
+                    this.action = action.action
+                    putExtra(CallDataConst.CALL_IDS, callIds.toTypedArray())
+                }
+            try {
+                context.startService(intent)
+            } catch (e: Exception) {
+                Log.w(TAG, "sendCallGroup: startService failed for action=${action.name}: $e")
+            }
+        }
     }
 }
 
@@ -892,6 +1087,9 @@ enum class StandaloneServiceAction {
     AudioDeviceSet,
     ReplayAudioState,
     ReplayConnectionStates,
+    SetCallGroup,
+    UnsetCallGroup,
+    HungUpCallGroup,
     ;
 
     val action: String get() = "callkeep_standalone_$name"

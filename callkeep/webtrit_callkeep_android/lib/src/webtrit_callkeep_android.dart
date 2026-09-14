@@ -148,6 +148,16 @@ class WebtritCallkeepAndroid extends WebtritCallkeepPlatform {
   }
 
   @override
+  Future<CallkeepCallRequestError?> setCallGroup(String groupId, List<String> callIds) {
+    return _api.setCallGroup(groupId, callIds).then((value) => value?.value.toCallkeep());
+  }
+
+  @override
+  Future<CallkeepCallRequestError?> unsetCallGroup(List<String> callIds) {
+    return _api.unsetCallGroup(callIds).then((value) => value?.value.toCallkeep());
+  }
+
+  @override
   Future<CallkeepCallRequestError?> setSpeaker(String callId, bool enabled) {
     return _api.setSpeaker(callId, enabled).then((value) => value?.value.toCallkeep());
   }
@@ -418,6 +428,11 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
   @override
   Future<bool> performSetMuted(String callId, bool muted) {
     return _delegate.performSetMuted(callId, muted);
+  }
+
+  @override
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId) {
+    return _delegate.performSetCallGroup(callId, groupWithCallId);
   }
 
   @override

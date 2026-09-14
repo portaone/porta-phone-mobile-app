@@ -4,7 +4,7 @@
 
 **Extends**: `Service`
 
-**Implements**: `PHostApi` (Pigeon-generated), `ConnectionEventListener`
+**Implements**: `PHostApi` (Pigeon-generated), `CallEndListener` (a `ConnectionEventListener` that owns the end of a call)
 
 **Annotation**: `@Keep` (must not be renamed or removed by ProGuard/R8)
 
@@ -71,16 +71,35 @@
 
 ### Call Control
 
-| Method                           | Behavior                                                                                                               |
-|----------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| `startCall(callId, meta)`        | `CallkeepCore.startOutgoingCall()`                                                                                     |
-| `answerCall(callId)`             | Deferred if `PhoneConnection` not yet created (stored in `pendingAnswers`); otherwise `CallkeepCore.startAnswerCall()` |
-| `endCall(callId)`                | `CallkeepCore.startHungUpCall()`                                                                                       |
-| `setMuted(callId, muted)`        | `CallkeepCore.startMutingCall()`                                                                                       |
-| `setHeld(callId, held)`          | `CallkeepCore.startHoldingCall()`                                                                                      |
-| `setSpeaker(callId, on)`         | `CallkeepCore.startSpeaker()`                                                                                          |
-| `setAudioDevice(callId, device)` | `CallkeepCore.setAudioDevice()`                                                                                        |
-| `sendDTMF(callId, digit)`        | `CallkeepCore.startSendDtmf()`                                                                                         |
+| Method                           | Behavior                                                                                                                                                                                 |
+|----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `startCall(callId, meta)`        | `CallkeepCore.startOutgoingCall()`                                                                                                                                                       |
+| `answerCall(callId)`             | Deferred if `PhoneConnection` not yet created (stored in `pendingAnswers`); otherwise `CallkeepCore.startAnswerCall()`                                                                   |
+| `endCall(callId)`                | `CallkeepCore.startHungUpCall()`                                                                                                                                                         |
+| `setMuted(callId, muted)`        | `CallkeepCore.startMutingCall()`                                                                                                                                                         |
+| `setHeld(callId, held)`          | `CallkeepCore.startHoldingCall()`; answers `callIsGrouped` without forwarding when `CallkeepCore.isGrouped()` says the call is in a group                                                |
+| `setSpeaker(callId, on)`         | `CallkeepCore.startSpeaker()`                                                                                                                                                            |
+| `setAudioDevice(callId, device)` | `CallkeepCore.setAudioDevice()`                                                                                                                                                          |
+| `sendDTMF(callId, digit)`        | `CallkeepCore.startSendDtmf()`                                                                                                                                                           |
+| `setCallGroup(groupId, callIds)` | `CallkeepCore.startSetCallGroup()`; its `CallGroupOutcome` becomes the answer: `maximumCallGroupsReached` when another group is live, `callGroupingNotSupported` when no backend took it |
+| `unsetCallGroup(callIds)`        | `CallkeepCore.startUnsetCallGroup()`; the core releases the calls from the group on success                                                                                              |
+
+## Call Groups
+
+The backend that presents a group runs in another process (Telecom) or in a service of its own
+(standalone), so the main process cannot ask it synchronously whether a call is grouped. The
+answer comes from the membership the application declared, and that membership lives where the
+calls live: each call's record in `MainProcessConnectionTracker` carries the `groupId` it was
+declared into, and `CallkeepCore` is the one place that changes it - `startSetCallGroup`
+declares (one group at a time; a second name while another is live is `LIMIT_REACHED`),
+`startUnsetCallGroup` releases, `markTerminated` takes a call out whichever way it ended (the
+host calls `endCall` and `reportEndCall`, and the `HungUp`, `DeclineCall` and
+`ConnectionNotFound` events the call service reports), a group left with one member is no group,
+and `clear()` empties everything with the session on `tearDown`. This service does none of that
+itself: it forwards the pigeon calls and reads `isGrouped` for `setHeld` and `groupMembersWith`
+for the notification's hang-up. Because the state sits with the calls and not with this service,
+it outlives the activity's bridge: the service is destroyed with the activity while the calls
+and their group live on in the backend, and the next bridge finds them as the calls left them.
 
 ## Connection Event Listener: `onConnectionEvent()`
 

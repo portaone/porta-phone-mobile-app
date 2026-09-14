@@ -160,6 +160,30 @@ pre-register state must clean it themselves or rely on their own timeout safety-
 `startMutingCall`, `startHoldingCall`, `startSpeaker`, `setAudioDevice` -- all take
 `CallMetadata` and are routed to the active backend.
 
+### Call Grouping
+
+`startSetCallGroup(groupId, callIds)` and `startUnsetCallGroup(callIds)` are the exception to
+the paragraph above, twice over. They take a list of call ids rather than `CallMetadata`,
+because the membership of a group is not a property of any one call; and they answer with a
+`CallGroupOutcome` rather than nothing: `ACCEPTED`, `NOT_SUPPORTED` when no backend took the
+request, `LIMIT_REACHED` when another group is live under another name (every backend holds
+one group at a time). `ForegroundService` turns that into the pigeon answer. The core is also
+where the declared membership is kept: on `ACCEPTED` it records the group on each call in
+`MainProcessConnectionTracker`, `startUnsetCallGroup` releases the calls, `markTerminated`
+takes an ended call out and dissolves a group left with one member, and `clear()` empties it
+with the session. `isGrouped(callId)` and `groupMembersWith(callId)` read it. The core keeps
+its global receiver registered from the first call it learns about, not only while a listener
+is attached, and while no `CallEndListener` is attached it marks a call terminated itself on
+`HungUp`, `DeclineCall` and `ConnectionNotFound`: a member that ends while the activity's bridge
+is away still leaves its group, and the next bridge finds the record as the calls left it. The
+foreground service is the one `CallEndListener`: while it is attached it handles the end with
+its full context and the core stays out of its way. A listener that only observes - the
+incoming-call service handles `AnswerCall` and nothing else - does not count, so its presence
+while the bridge is away changes nothing. Both backends
+take the request today; the standalone backend keeps the membership, the Telecom backend builds
+an `android.telecom.Conference` (see `PhoneConference`). Grouping only changes how the OS
+presents calls that run either way, so a refusal is never a reason to end one.
+
 ### Service Lifecycle
 
 | Method                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                            |

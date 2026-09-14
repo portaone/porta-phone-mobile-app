@@ -7,6 +7,7 @@ import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.common.TelephonyUtils
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.PhoneConnectionService
+import com.webtrit.callkeep.services.services.connection.ServiceAction
 import com.webtrit.callkeep.services.services.connection.StandaloneCallService
 import com.webtrit.callkeep.services.services.connection.StandaloneServiceAction
 
@@ -166,13 +167,48 @@ class CallServiceRouter(
         )
 
     // -------------------------------------------------------------------------
+    // Call grouping
+    // -------------------------------------------------------------------------
+
+    /**
+     * Asks the active backend to present [callIds] as one group, returning whether it can group
+     * calls at all.
+     *
+     * Unlike every other command here the answer matters to the caller, because grouping is the
+     * one thing the two backends do not both do yet. The Telecom path needs an
+     * [android.telecom.Conference] and says so by refusing.
+     */
+    fun setCallGroup(callIds: List<String>): Boolean =
+        route(
+            telecom = {
+                PhoneConnectionService.startCallGroup(ctx, ServiceAction.SetCallGroup, callIds)
+                true
+            },
+            standalone = {
+                StandaloneCallService.sendCallGroup(ctx, StandaloneServiceAction.SetCallGroup, callIds)
+                true
+            },
+        )
+
+    /** Counterpart of [setCallGroup]. */
+    fun unsetCallGroup(callIds: List<String>): Boolean =
+        route(
+            telecom = {
+                PhoneConnectionService.startCallGroup(ctx, ServiceAction.UnsetCallGroup, callIds)
+                true
+            },
+            standalone = {
+                StandaloneCallService.sendCallGroup(ctx, StandaloneServiceAction.UnsetCallGroup, callIds)
+                true
+            },
+        )
+
+    // -------------------------------------------------------------------------
     // Internal
     // -------------------------------------------------------------------------
 
-    private inline fun route(
-        telecom: () -> Unit,
-        standalone: () -> Unit,
-    ) {
-        if (isTelecomSupported) telecom() else standalone()
-    }
+    private inline fun <T> route(
+        telecom: () -> T,
+        standalone: () -> T,
+    ): T = if (isTelecomSupported) telecom() else standalone()
 }

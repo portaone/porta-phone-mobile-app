@@ -50,6 +50,9 @@ class _NoOpDelegate implements CallkeepDelegate {
   Future<bool> performSendDTMF(String callId, String key) => Future.value(true);
 
   @override
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId) => Future.value(true);
+
+  @override
   Future<bool> performAudioDeviceSet(String callId, CallkeepAudioDevice device) => Future.value(true);
 
   @override

@@ -18,6 +18,8 @@ enum class ServiceAction {
     ReplayAudioState,
     ReplayConnectionStates,
     NotifyPending,
+    SetCallGroup,
+    UnsetCallGroup,
     ;
 
     companion object {

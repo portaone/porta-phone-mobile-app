@@ -42,6 +42,11 @@ sealed class PhoneServiceCommand {
         val metadata: CallMetadata?,
     ) : PhoneServiceCommand()
 
+    data class Group(
+        val action: ServiceAction,
+        val callIds: List<String>,
+    ) : PhoneServiceCommand()
+
     companion object {
         /**
          * Builds a [PhoneServiceCommand] from [intent], or returns `null` when the action is
@@ -73,6 +78,15 @@ sealed class PhoneServiceCommand {
 
                 ServiceAction.NotifyPending -> {
                     intent.extras?.getString(CallDataConst.CALL_ID)?.let { Pending(it) }
+                }
+
+                ServiceAction.SetCallGroup,
+                ServiceAction.UnsetCallGroup,
+                -> {
+                    // Membership belongs to the group, not to any call in it, so this carries a
+                    // plain list of ids rather than CallMetadata. An empty one parses: it is a
+                    // request that changes nothing, not a malformed intent.
+                    intent.extras?.getStringArray(CallDataConst.CALL_IDS)?.let { Group(action, it.toList()) }
                 }
 
                 else -> {

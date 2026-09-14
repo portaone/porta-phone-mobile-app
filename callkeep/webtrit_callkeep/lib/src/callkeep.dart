@@ -174,6 +174,32 @@ class Callkeep {
     return platform.sendDTMF(callId, key);
   }
 
+  /// Present [callIds] to the operating system as the group of calls [groupId].
+  ///
+  /// Declarative and idempotent: the list is the whole membership, so adding a
+  /// call means calling this again with every member. Every backend holds one
+  /// group at a time today; a second [groupId] while another group is live
+  /// answers [CallkeepCallRequestError.maximumCallGroupsReached].
+  ///
+  /// Returns [CallkeepCallRequestError] if there is an error, and
+  /// [CallkeepCallRequestError.callGroupingNotSupported] where the active backend
+  /// cannot group calls at all. Grouping is presentation: a failure leaves every
+  /// call running.
+  Future<CallkeepCallRequestError?> setCallGroup(String groupId, List<String> callIds) {
+    return platform.setCallGroup(groupId, callIds);
+  }
+
+  /// Take [callIds] out of the group they are in, leaving those calls running.
+  ///
+  /// Passing every member takes the group apart; an empty list does nothing.
+  ///
+  /// Returns [CallkeepCallRequestError] if there is an error, and
+  /// [CallkeepCallRequestError.callGroupingNotSupported] where the active backend
+  /// cannot group calls at all.
+  Future<CallkeepCallRequestError?> unsetCallGroup(List<String> callIds) {
+    return platform.unsetCallGroup(callIds);
+  }
+
   /// Set the speaker with the given [callId] and [enabled] flag.
   /// Returns [CallkeepCallRequestError] if there is an error.
   @Deprecated('Use setAudioDevice instead. This method will be removed in the next major version.')

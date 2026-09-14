@@ -51,6 +51,25 @@ abstract class CallkeepDelegate {
   /// Perform audio devices update
   Future<bool> performAudioDevicesUpdate(String callId, List<CallkeepAudioDevice> devices);
 
+  /// Perform grouping requested by the operating system.
+  ///
+  /// [groupWithCallId] names the call to group [callId] with; `null` means
+  /// ungroup. Return `false` to refuse, which leaves the system presentation
+  /// unchanged.
+  ///
+  /// Deliberately not the shape of [WebtritCallkeepPlatform.setCallGroup]. The
+  /// application states a whole membership; the operating system reports one
+  /// pair at a time, because that is all CallKit's `CXSetGroupCallAction`
+  /// carries and all Telecom's conference callbacks say. An implementer that
+  /// keeps membership has to fold these events into it.
+  ///
+  /// Reached only for grouping the operating system started - a merge or split
+  /// in the system call UI. A membership the application declared through
+  /// [WebtritCallkeepPlatform.setCallGroup] or [WebtritCallkeepPlatform.unsetCallGroup]
+  /// is applied by the plugin on its own, on every platform, and is not
+  /// confirmed here again.
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId);
+
   /// Audio session activated
   void didActivateAudioSession();
 

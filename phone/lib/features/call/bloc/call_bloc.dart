@@ -4475,6 +4475,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   @override
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId) {
+    // Refused until the bloc keeps conference state. Accepting would let the OS
+    // present a group the application does not know about, and every later
+    // decision here - which calls to hold, which to hang up - reads that state.
+    _logger.info('performSetCallGroup refused: callId=$callId groupWith=$groupWithCallId');
+    return Future.value(false);
+  }
+
+  @override
   Future<bool> performAudioDeviceSet(String callId, CallkeepAudioDevice device) {
     final callDevice = CallAudioDevice.fromCallkeep(device);
     return _perform(_CallPerformEvent.audioDeviceSet(callId, callDevice));

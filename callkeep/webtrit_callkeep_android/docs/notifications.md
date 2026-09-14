@@ -105,7 +105,11 @@ notification (`NOTIFICATION_ID = 1`) summarizing every active call, not one entr
 - **Title**: singular or plural depending on the number of calls.
 - **Text**: the caller names of all active calls, joined.
 - **Action**: one Hang up button. Its `PendingIntent` targets `ActiveCallService` with the
-  `Decline` action and carries the **first** call's bundle in the extras.
+  `Decline` action and carries the **first** call's bundle in the extras. If that call is in a
+  group (`CallkeepCore.groupMembersWith`), the service hangs up every member; otherwise that call alone.
+- **Telecom groups**: once calls are a `PhoneConference`, Telecom files it as a managed call and
+  the system dialer posts its own "Conference call" notification (hang-up, speaker, mute) above
+  this one; its hang-up reaches `PhoneConference.onDisconnect()` and ends every call.
 - **Behavior**: `setOngoing(true)`, `setOnlyAlertOnce(true)`, media style with the action in
   compact view. As an ongoing FGS notification it cannot be swiped away.
 
@@ -120,6 +124,13 @@ Internal builders used by `StandaloneCallService` (the single-process fallback p
 not register with Telecom). They mirror the ringing and active variants on the incoming and
 active channels; the standalone answer goes through `StandaloneAnswerTrampolineActivity` and
 all action intents target `StandaloneCallService` instead of the dual-process services.
+
+`StandaloneActiveCallNotificationBuilder` also takes the calls grouped with the one it is
+built from. There is a single notification id on this path, so a group cannot be shown as
+one entry per call - the entries would overwrite each other and leave whichever call was
+answered last standing for the whole group. A grouped notification names every member, and
+its hang-up action ends every one of them, through
+`StandaloneServiceAction.HungUpCallGroup` rather than the single-call `HungUpCall`.
 
 In addition, `StandaloneCallService.promoteToForeground()` posts a short-lived inline
 placeholder notification (built without any of these builders) on

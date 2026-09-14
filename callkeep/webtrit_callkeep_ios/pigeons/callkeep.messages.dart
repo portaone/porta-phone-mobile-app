@@ -71,6 +71,20 @@ enum PCallRequestErrorEnum {
   callUuidAlreadyExists,
   maximumCallGroupsReached,
   internal,
+
+  /// CallKit call grouping is not wired up yet.
+  ///
+  /// Grouping is a presentation concern: the calls themselves keep working, the
+  /// system simply shows them separately. Callers are expected to log this and
+  /// carry on rather than tear the calls down.
+  callGroupingNotSupported,
+
+  /// The call is a member of a call group, and a member is never held on its own.
+  ///
+  /// Hold is refused rather than performed: the calls of a group are one thing
+  /// to the OS, and holding one of them would leave the group with a member
+  /// nobody can hear. Ungroup first, then hold.
+  callIsGrouped,
 }
 
 // TODO: See https://github.com/flutter/flutter/issues/87307
@@ -160,6 +174,14 @@ abstract class PHostApi {
   @ObjCSelector('sendDTMF:key:')
   @async
   PCallRequestError? sendDTMF(String uuidString, String key);
+
+  @ObjCSelector('setCallGroup:')
+  @async
+  PCallRequestError? setCallGroup(List<String> uuidStrings);
+
+  @ObjCSelector('unsetCallGroup:')
+  @async
+  PCallRequestError? unsetCallGroup(List<String> uuidStrings);
 }
 
 @FlutterApi()
@@ -200,6 +222,10 @@ abstract class PDelegateFlutterApi {
   @ObjCSelector('performSendDTMF:key:')
   @async
   bool performSendDTMF(String uuidString, String key);
+
+  @ObjCSelector('performSetCallGroup:groupWithCallId:')
+  @async
+  bool performSetCallGroup(String uuidString, String? groupWithUuidString);
 
   @ObjCSelector('didActivateAudioSession')
   void didActivateAudioSession();

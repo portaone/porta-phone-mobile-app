@@ -54,4 +54,8 @@ internal data class CallRecord(
     // never lands here, making this a semantic discriminator rather than a timing bet.
     // Cleared only via MainProcessConnectionTracker.clear() on tearDown.
     val endedWithoutFlutterState: Boolean = false,
+    // The call group the application declared this call into, by the caller's name for it;
+    // null while the call is in none. Cleared with termination: a call that ended is in no
+    // group, and a partner left alone by it is released as well (a group needs two calls).
+    val groupId: String? = null,
 )

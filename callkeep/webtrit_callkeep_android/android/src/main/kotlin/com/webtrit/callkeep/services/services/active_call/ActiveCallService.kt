@@ -113,7 +113,17 @@ class ActiveCallService : Service() {
         // only way left to hang up the specific call instead of tearing everything down.
         val call = callsMetadata.firstOrNull() ?: intentMetadata
         if (call != null) {
-            CallkeepCore.instance.startHungUpCall(call)
+            // One notification stands for a whole group, so its hang-up ends every member, the
+            // way the standalone backend's notification does; a call outside a group ends alone.
+            val members = CallkeepCore.instance.groupMembersWith(call.callId)
+            if (members.size >= 2) {
+                Log.i(TAG, "hungUpCall: ${call.callId} is grouped, hanging up $members")
+                members.forEach { id ->
+                    CallkeepCore.instance.startHungUpCall(callsMetadata.firstOrNull { it.callId == id } ?: CallMetadata(callId = id))
+                }
+            } else {
+                CallkeepCore.instance.startHungUpCall(call)
+            }
         } else {
             // Hang up tapped on a notification with no known calls (re-posted by a null-intent
             // restart).

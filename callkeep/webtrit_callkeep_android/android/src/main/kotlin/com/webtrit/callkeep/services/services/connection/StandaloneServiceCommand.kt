@@ -15,7 +15,8 @@ import com.webtrit.callkeep.models.CallMetadata
  * [android.os.Bundle] would otherwise reach `CallMetadata.fromBundle` and throw an uncaught
  * `IllegalArgumentException`.
  *
- * Every call action carries non-null [CallMetadata]; [Reserve] carries a non-null `callId`.
+ * Every call action carries non-null [CallMetadata]; [Reserve] carries a non-null `callId`;
+ * [Group] carries a membership list, which is not a property of any one call.
  */
 sealed class StandaloneServiceCommand {
     data object TearDown : StandaloneServiceCommand()
@@ -33,6 +34,11 @@ sealed class StandaloneServiceCommand {
     data class Call(
         val action: StandaloneServiceAction,
         val metadata: CallMetadata,
+    ) : StandaloneServiceCommand()
+
+    data class Group(
+        val action: StandaloneServiceAction,
+        val callIds: List<String>,
     ) : StandaloneServiceCommand()
 
     companion object {
@@ -62,6 +68,15 @@ sealed class StandaloneServiceCommand {
 
                 StandaloneServiceAction.ReserveAnswer -> {
                     intent.extras?.getString(CallDataConst.CALL_ID)?.let { Reserve(it) }
+                }
+
+                StandaloneServiceAction.SetCallGroup,
+                StandaloneServiceAction.UnsetCallGroup,
+                StandaloneServiceAction.HungUpCallGroup,
+                -> {
+                    // An empty membership is a legitimate request that changes nothing, so it
+                    // parses; only a missing extra is a malformed intent.
+                    intent.extras?.getStringArray(CallDataConst.CALL_IDS)?.let { Group(action, it.toList()) }
                 }
 
                 else -> {

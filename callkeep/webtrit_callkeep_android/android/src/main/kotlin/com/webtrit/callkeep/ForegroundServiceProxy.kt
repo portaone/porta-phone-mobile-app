@@ -127,6 +127,13 @@ internal class ForegroundServiceProxy : PHostApi {
         key: String,
     ): PCallRequestError? = service().sendDTMF(callId, key)
 
+    override suspend fun setCallGroup(
+        groupId: String,
+        callIds: List<String>,
+    ): PCallRequestError? = service().setCallGroup(groupId, callIds)
+
+    override suspend fun unsetCallGroup(callIds: List<String>): PCallRequestError? = service().unsetCallGroup(callIds)
+
     override fun onDelegateSet() = target?.onDelegateSet() ?: Unit
 
     companion object {

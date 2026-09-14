@@ -14,12 +14,25 @@ import com.webtrit.callkeep.models.CallConnectionState
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.broadcaster.ConnectionEvent
 
+/** What became of a grouping request, as the core answers it. */
+enum class CallGroupOutcome {
+    /** The backend took the request and the membership is recorded. */
+    ACCEPTED,
+
+    /** The active backend cannot group calls at all. */
+    NOT_SUPPORTED,
+
+    /** Another group is live under another name; every backend holds one at a time. */
+    LIMIT_REACHED,
+}
+
 /**
  * Routing result for [CallkeepCore.routeAnswerCall].
  *
  * Encodes which action [ForegroundService.answerCall] should take without
  * leaking state-query details outside the facade.
  */
+
 sealed class AnswerCallRoute {
     /** A live [PhoneConnection] exists — answer via IPC immediately. */
     object AnswerImmediately : AnswerCallRoute()
@@ -43,6 +56,16 @@ fun interface ConnectionEventListener {
         data: Bundle?,
     )
 }
+
+/**
+ * A [ConnectionEventListener] that owns the end of a call: on `HungUp`, `DeclineCall` and
+ * `ConnectionNotFound` it marks the call terminated itself, with context the core does not
+ * have (pending incoming calls, stale broadcasts of a previous session). While one is attached
+ * the core leaves those events to it; while none is - a listener that only observes, such as
+ * the incoming-call service, does not count - the core marks the call terminated itself, so
+ * the state it keeps for the call, its group above all, follows the call and not the listener.
+ */
+interface CallEndListener : ConnectionEventListener
 
 /**
  * Single facade for all interactions with the `:callkeep_core` process.
@@ -264,6 +287,24 @@ interface CallkeepCore {
     fun startMutingCall(metadata: CallMetadata)
 
     fun startHoldingCall(metadata: CallMetadata)
+
+    /**
+     * Presents [callIds] to the operating system as the group [groupId], and records the
+     * membership on acceptance; the [CallGroupOutcome] says why it was refused otherwise.
+     */
+    fun startSetCallGroup(
+        groupId: String,
+        callIds: List<String>,
+    ): CallGroupOutcome
+
+    /** Takes [callIds] out of their group; [CallGroupOutcome.NOT_SUPPORTED] when the backend cannot group calls. */
+    fun startUnsetCallGroup(callIds: List<String>): CallGroupOutcome
+
+    /** Whether the application has declared [callId] into a call group. */
+    fun isGrouped(callId: String): Boolean
+
+    /** Every call sharing a group with [callId], [callId] included; empty when it is in none. */
+    fun groupMembersWith(callId: String): List<String>
 
     fun startSpeaker(metadata: CallMetadata)
 

@@ -46,8 +46,9 @@ import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.broadcaster.CallMediaEvent
 import com.webtrit.callkeep.services.broadcaster.ConnectionEvent
 import com.webtrit.callkeep.services.core.AnswerCallRoute
+import com.webtrit.callkeep.services.core.CallEndListener
+import com.webtrit.callkeep.services.core.CallGroupOutcome
 import com.webtrit.callkeep.services.core.CallkeepCore
-import com.webtrit.callkeep.services.core.ConnectionEventListener
 import com.webtrit.callkeep.services.services.incoming_call.IncomingCallRelease
 import com.webtrit.callkeep.services.services.incoming_call.IncomingCallService
 import kotlinx.coroutines.CancellableContinuation
@@ -82,7 +83,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ForegroundService :
     Service(),
     PHostApi,
-    ConnectionEventListener {
+    CallEndListener {
     private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
     // Carries the calls into Dart. Pigeon generates them as suspend functions; the service
@@ -1026,6 +1027,11 @@ class ForegroundService :
         onHold: Boolean,
     ): PCallRequestError? {
         logger.i("setHeld: callId=$callId, onHold=$onHold")
+        if (core.isGrouped(callId)) {
+            // A member of a group is never held on its own; see PCallRequestErrorEnum.CALL_IS_GROUPED.
+            logger.i("setHeld: $callId is in a call group, refusing")
+            return PCallRequestError(PCallRequestErrorEnum.CALL_IS_GROUPED)
+        }
         val metadata = CallMetadata(callId = callId, hasHold = onHold)
         core.startHoldingCall(metadata)
         return null
@@ -1053,6 +1059,31 @@ class ForegroundService :
             )
         core.setAudioDevice(metadata)
         return null
+    }
+
+    /**
+     * A grouping request's outcome, as a pigeon answer. Grouping is presentation either way, so
+     * a refusal is never a reason to end a call; it is explicit rather than a silent success so
+     * the caller can tell that the system presentation does not match the call state it holds.
+     */
+    private fun callGroupResult(outcome: CallGroupOutcome): PCallRequestError? =
+        when (outcome) {
+            CallGroupOutcome.ACCEPTED -> null
+            CallGroupOutcome.NOT_SUPPORTED -> PCallRequestError(PCallRequestErrorEnum.CALL_GROUPING_NOT_SUPPORTED)
+            CallGroupOutcome.LIMIT_REACHED -> PCallRequestError(PCallRequestErrorEnum.MAXIMUM_CALL_GROUPS_REACHED)
+        }
+
+    override suspend fun setCallGroup(
+        groupId: String,
+        callIds: List<String>,
+    ): PCallRequestError? {
+        logger.i("setCallGroup: groupId=$groupId, callIds=$callIds")
+        return callGroupResult(core.startSetCallGroup(groupId, callIds))
+    }
+
+    override suspend fun unsetCallGroup(callIds: List<String>): PCallRequestError? {
+        logger.i("unsetCallGroup: callIds=$callIds")
+        return callGroupResult(core.startUnsetCallGroup(callIds))
     }
 
     // --------------------------------
@@ -1385,6 +1416,9 @@ class ForegroundService :
 
         activityWakelockManager.dispose()
         scope.cancel()
+        // The group registry is not cleared here: this service is the activity's bridge and
+        // goes with the activity, while the calls and their group live on in the backend.
+        // The registry follows the calls, so it is emptied with the session in tearDown.
 
         // Phone account registration is tied to the user session, not the service lifecycle.
         // Unregistration happens only in finishTearDown() (explicit logout/tearDown call).

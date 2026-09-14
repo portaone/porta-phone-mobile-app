@@ -26,6 +26,21 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
   /// on a re-report of the same ID within the same session.
   final Set<String> _terminatedCallIds = {};
 
+  /// Group id by callId for the calls declared grouped through [setCallGroup].
+  ///
+  /// The browser has no system call UI to present a group in, so grouping here is
+  /// bookkeeping only: it decides what [setHeld] answers, the same way the Android
+  /// standalone backend keeps membership without a Telecom conference.
+  final Map<String, String> _callGroups = {};
+
+  void _forgetGroupOf(String callId) {
+    final group = _callGroups.remove(callId);
+    if (group == null) return;
+    // A group of one is not a group.
+    final left = _callGroups.entries.where((e) => e.value == group).map((e) => e.key).toList();
+    if (left.length < 2) _callGroups.removeWhere((_, g) => g == group);
+  }
+
   // ---------------------------------------------------------------------------
   // Platform identity
   // ---------------------------------------------------------------------------
@@ -77,6 +92,7 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
       _delegate?.didDeactivateAudioSession();
     }
     _connections.clear();
+    _callGroups.clear();
     _terminatedCallIds.clear();
     _delegate?.didReset();
   }
@@ -138,6 +154,7 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
   @override
   Future<void> reportEndCall(String callId, String displayName, CallkeepEndCallReason reason) async {
     _connections.remove(callId);
+    _forgetGroupOf(callId);
     _terminatedCallIds.add(callId);
     _delegate?.didDeactivateAudioSession();
   }
@@ -185,6 +202,8 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
     _terminatedCallIds.add(callId);
     await _delegate?.performEndCall(callId);
     _connections.remove(callId);
+    // Ended here or reported ended, the call leaves its group either way.
+    _forgetGroupOf(callId);
     _delegate?.didDeactivateAudioSession();
     return null;
   }
@@ -194,8 +213,42 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
     if (!_connections.containsKey(callId)) {
       return CallkeepCallRequestError.unknownCallUuid;
     }
+    // A member of a group is never held on its own; see CallkeepCallRequestError.callIsGrouped.
+    if (_callGroups.containsKey(callId)) {
+      return CallkeepCallRequestError.callIsGrouped;
+    }
     _updateConnectionState(callId, onHold ? CallkeepConnectionState.stateHolding : CallkeepConnectionState.stateActive);
     await _delegate?.performSetHeld(callId, onHold);
+    return null;
+  }
+
+  @override
+  Future<CallkeepCallRequestError?> setCallGroup(String groupId, List<String> callIds) async {
+    // One group at a time. A second name while another group is live is refused with the
+    // answer CallKit gives for its own group limit, and nothing changes.
+    final live = _callGroups.values.firstOrNull;
+    if (live != null && live != groupId) return CallkeepCallRequestError.maximumCallGroupsReached;
+    final known = callIds.where(_connections.containsKey).toList();
+    if (known.isEmpty) return null;
+    if (known.length < 2) {
+      // One call named as the whole membership: the group is over for everyone in it.
+      _callGroups.clear();
+      return null;
+    }
+    // The list is the whole membership, so whatever was grouped before and is not listed
+    // now is out.
+    _callGroups.clear();
+    for (final id in known) {
+      _callGroups[id] = groupId;
+    }
+    return null;
+  }
+
+  @override
+  Future<CallkeepCallRequestError?> unsetCallGroup(List<String> callIds) async {
+    for (final id in callIds) {
+      _forgetGroupOf(id);
+    }
     return null;
   }
 
@@ -240,6 +293,7 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
   Future<void> cleanConnections() async {
     _connections.clear();
     _terminatedCallIds.clear();
+    _callGroups.clear();
   }
 
   // ---------------------------------------------------------------------------

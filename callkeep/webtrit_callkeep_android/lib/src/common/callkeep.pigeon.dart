@@ -224,7 +224,19 @@ enum PCallRequestErrorEnum {
   ///   fails to trigger `onCreateOutgoingConnection`.
   /// - Cold Start Latency: On certain vendors (e.g., Itel, Android One),
   ///   the OS may deadlock or time out during service binding after a cold start.
-  timeout;
+  timeout,
+  /// The active call backend cannot group calls at the OS level.
+  ///
+  /// Grouping is a presentation concern: the calls themselves keep working, the
+  /// system simply shows them separately. Callers are expected to log this and
+  /// carry on rather than tear the calls down.
+  callGroupingNotSupported,
+  /// The call is a member of a call group, and a member is never held on its own.
+  ///
+  /// Hold is refused rather than performed: the calls of a group are one thing
+  /// to the OS, and holding one of them would leave the group with a member
+  /// nobody can hear. Ungroup first, then hold.
+  callIsGrouped;
 }
 
 enum PCallkeepLifecycleEvent {
@@ -2036,6 +2048,44 @@ class PHostApi {
     return pigeonVar_replyValue as PCallRequestError?;
   }
 
+  Future<PCallRequestError?> setCallGroup(String groupId, List<String> callIds) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.setCallGroup$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[groupId, callIds]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+    return pigeonVar_replyValue as PCallRequestError?;
+  }
+
+  Future<PCallRequestError?> unsetCallGroup(List<String> callIds) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.unsetCallGroup$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callIds]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+    return pigeonVar_replyValue as PCallRequestError?;
+  }
+
   Future<void> onDelegateSet() async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.onDelegateSet$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2149,6 +2199,8 @@ abstract class PDelegateFlutterApi {
   Future<bool> performAudioDeviceSet(String callId, PAudioDevice device);
 
   Future<bool> performAudioDevicesUpdate(String callId, List<PAudioDevice> devices);
+
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId);
 
   void didActivateAudioSession();
 
@@ -2352,6 +2404,28 @@ abstract class PDelegateFlutterApi {
           final List<PAudioDevice> arg_devices = (args[1]! as List<Object?>).cast<PAudioDevice>();
           try {
             final bool output = await api.performAudioDevicesUpdate(arg_callId, arg_devices);
+            return wrapResponse(result: output);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performSetCallGroup$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final String arg_callId = args[0]! as String;
+          final String? arg_groupWithCallId = args[1] as String?;
+          try {
+            final bool output = await api.performSetCallGroup(arg_callId, arg_groupWithCallId);
             return wrapResponse(result: output);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

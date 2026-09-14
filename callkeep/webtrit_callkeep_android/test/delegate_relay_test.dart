@@ -75,6 +75,12 @@ class _FakeCallkeepDelegate implements CallkeepDelegate {
   }
 
   @override
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId) async {
+    _record('performSetCallGroup', [callId, groupWithCallId]);
+    return true;
+  }
+
+  @override
   Future<bool> performAudioDeviceSet(String callId, CallkeepAudioDevice device) async {
     _record('performAudioDeviceSet', [callId, device]);
     return true;
@@ -261,6 +267,20 @@ void main() {
       final args = fake.calls['performSendDTMF']![0];
       expect(args[0], 'call-3');
       expect(args[1], '5');
+    });
+
+    test('performSetCallGroup forwards callId and the call to group with', () async {
+      await _send('$_prefix.PDelegateFlutterApi.performSetCallGroup', ['call-4', 'call-5']);
+      final args = fake.calls['performSetCallGroup']![0];
+      expect(args[0], 'call-4');
+      expect(args[1], 'call-5');
+    });
+
+    test('performSetCallGroup forwards a null second call, which means ungroup', () async {
+      await _send('$_prefix.PDelegateFlutterApi.performSetCallGroup', ['call-4', null]);
+      final args = fake.calls['performSetCallGroup']![0];
+      expect(args[0], 'call-4');
+      expect(args[1], isNull);
     });
 
     test('performAudioDeviceSet converts PAudioDevice by name mapping', () async {

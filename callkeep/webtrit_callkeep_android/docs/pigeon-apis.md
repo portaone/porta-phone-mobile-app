@@ -43,7 +43,16 @@ The primary call-control API. All call lifecycle operations from Dart arrive her
 | `setSpeaker(callId, enabled)`                                                        | Toggle speaker                                     |
 | `setAudioDevice(callId, device)`                                                     | Select audio device                                |
 | `sendDTMF(callId, key)`                                                              | Send DTMF tone                                     |
+| `setCallGroup(groupId, callIds)`                                                     | Present these calls to the OS as one group         |
+| `unsetCallGroup(callIds)`                                                            | Take these calls out of their group                |
 | `onDelegateSet()`                                                                    | Dart signals it is ready to receive events         |
+
+`setCallGroup` names the group and takes its whole membership rather than a
+change to it. Both backends implement them: the standalone backend keeps the membership,
+the Telecom backend builds an `android.telecom.Conference`. `callGroupingNotSupported` is
+still the answer of a backend that cannot group. `setHeld` on a declared member of a group
+answers `callIsGrouped` instead of holding it; `ForegroundService` keeps the declared
+membership for that, because the Telecom backend lives in another process.
 
 ---
 
@@ -142,19 +151,20 @@ when the function returns, and a thrown exception becomes a `PlatformException` 
 delegate call from Kotlin has to run inside a coroutine: the service and the push-isolate
 communicator keep a `SupervisorJob` scope on `Dispatchers.Main.immediate` for that.
 
-| Method                                                                    | Description                             |
-|---------------------------------------------------------------------------|-----------------------------------------|
-| `didPushIncomingCall(handle, displayName, video, callId, error)`          | An incoming call arrived through a push |
-| `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | Place this outgoing call                |
-| `performAnswerCall(callId)`                                               | Answer this call                        |
-| `performEndCall(callId)`                                                  | End this call                           |
-| `performSetHeld(callId, onHold)`                                          | Hold or resume this call                |
-| `performSetMuted(callId, muted)`                                          | Mute or unmute this call                |
-| `performSendDTMF(callId, key)`                                            | Send this DTMF digit                    |
-| `performAudioDeviceSet(callId, device)`                                   | The audio device changed                |
-| `performAudioDevicesUpdate(callId, devices)`                              | The available audio devices changed     |
-| `didActivateAudioSession()`                                               | The call audio session became active    |
-| `didDeactivateAudioSession()`                                             | The call audio session was released     |
+| Method                                                                    | Description                                                                    |
+|---------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| `didPushIncomingCall(handle, displayName, video, callId, error)`          | An incoming call arrived through a push                                        |
+| `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | Place this outgoing call                                                       |
+| `performAnswerCall(callId)`                                               | Answer this call                                                               |
+| `performEndCall(callId)`                                                  | End this call                                                                  |
+| `performSetHeld(callId, onHold)`                                          | Hold or resume this call                                                       |
+| `performSetMuted(callId, muted)`                                          | Mute or unmute this call                                                       |
+| `performSendDTMF(callId, key)`                                            | Send this DTMF digit                                                           |
+| `performAudioDeviceSet(callId, device)`                                   | The audio device changed                                                       |
+| `performAudioDevicesUpdate(callId, devices)`                              | The available audio devices changed                                            |
+| `performSetCallGroup(callId, groupWithCallId)`                            | The OS grouped this call with another, or ungrouped it when the second is null |
+| `didActivateAudioSession()`                                               | The call audio session became active                                           |
+| `didDeactivateAudioSession()`                                             | The call audio session was released                                            |
 
 `continueStartCallIntent` and `didReset` exist on the shared `CallkeepDelegate` but are
 iOS-only: Android has no source for either, so they are absent from this API.

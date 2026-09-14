@@ -270,6 +270,38 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
     }
   }
 
+  /// Groups every answered line as one call in the OS; the list is the whole membership.
+  void setCallGroup() async {
+    final ids = state.lines.where((l) => l.isAnswered).map((l) => l.id).toList();
+    try {
+      final err = await _callkeep.setCallGroup('room', ids);
+      if (err != null) {
+        emit(state.log(LogEntry.error('setCallGroup($ids): ${err.name}')));
+      } else {
+        emit(state.log(LogEntry.success('setCallGroup($ids): ok')));
+        await _syncConnections();
+      }
+    } catch (e) {
+      emit(state.log(LogEntry.error('setCallGroup: $e')));
+    }
+  }
+
+  /// Takes every line out of the group; the calls keep running.
+  void unsetCallGroup() async {
+    final ids = state.lines.map((l) => l.id).toList();
+    try {
+      final err = await _callkeep.unsetCallGroup(ids);
+      if (err != null) {
+        emit(state.log(LogEntry.error('unsetCallGroup($ids): ${err.name}')));
+      } else {
+        emit(state.log(LogEntry.success('unsetCallGroup($ids): ok')));
+        await _syncConnections();
+      }
+    } catch (e) {
+      emit(state.log(LogEntry.error('unsetCallGroup: $e')));
+    }
+  }
+
   void sendDTMF(String key) async {
     try {
       final err = await _callkeep.sendDTMF(state.currentCallId, key);
@@ -508,6 +540,12 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
   @override
   Future<bool> performSendDTMF(String callId, String key) {
     emit(state.log(LogEntry.event('[cb] performSendDTMF id=$callId key=$key')));
+    return Future.value(true);
+  }
+
+  @override
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId) {
+    emit(state.log(LogEntry.event('[cb] performSetCallGroup id=$callId groupWith=$groupWithCallId')));
     return Future.value(true);
   }
 

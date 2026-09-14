@@ -378,7 +378,23 @@ enum class PCallRequestErrorEnum(val raw: Int) {
    * - Cold Start Latency: On certain vendors (e.g., Itel, Android One),
    *   the OS may deadlock or time out during service binding after a cold start.
    */
-  TIMEOUT(8);
+  TIMEOUT(8),
+  /**
+   * The active call backend cannot group calls at the OS level.
+   *
+   * Grouping is a presentation concern: the calls themselves keep working, the
+   * system simply shows them separately. Callers are expected to log this and
+   * carry on rather than tear the calls down.
+   */
+  CALL_GROUPING_NOT_SUPPORTED(9),
+  /**
+   * The call is a member of a call group, and a member is never held on its own.
+   *
+   * Hold is refused rather than performed: the calls of a group are one thing
+   * to the OS, and holding one of them would leave the group with a member
+   * nobody can hear. Ungroup first, then hold.
+   */
+  CALL_IS_GROUPED(10);
 
   companion object {
     fun ofRaw(raw: Int): PCallRequestErrorEnum? {
@@ -1874,6 +1890,8 @@ interface PHostApi {
   suspend fun setSpeaker(callId: String, enabled: Boolean): PCallRequestError?
   suspend fun setAudioDevice(callId: String, device: PAudioDevice): PCallRequestError?
   suspend fun sendDTMF(callId: String, key: String): PCallRequestError?
+  suspend fun setCallGroup(groupId: String, callIds: List<String>): PCallRequestError?
+  suspend fun unsetCallGroup(callIds: List<String>): PCallRequestError?
   fun onDelegateSet()
 
   companion object {
@@ -2208,6 +2226,45 @@ interface PHostApi {
         }
       }
       run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.setCallGroup$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val groupIdArg = args[0] as String
+            val callIdsArg = args[1] as List<String>
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.setCallGroup(groupIdArg, callIdsArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.unsetCallGroup$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val callIdsArg = args[0] as List<String>
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                listOf(api.unsetCallGroup(callIdsArg))
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.onDelegateSet$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
@@ -2486,6 +2543,28 @@ class PDelegateFlutterApi(private val binaryMessenger: BinaryMessenger, private 
       val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performAudioDevicesUpdate$separatedMessageChannelSuffix"
       val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
       channel.send(listOf(callIdArg, devicesArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else if (it[0] == null) {
+            continuation.resumeWithException(FlutterError("null-error", "Flutter api returned null value for non-null return value.", ""))
+          } else {
+            val output = it[0] as Boolean
+            continuation.resume(output)
+          }
+        } else {
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
+        }
+      }
+    }
+  }
+  suspend fun performSetCallGroup(callIdArg: String, groupWithCallIdArg: String?): Boolean
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performSetCallGroup$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg, groupWithCallIdArg)) {
         if (it is List<*>) {
           if (it.size > 1) {
             continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
