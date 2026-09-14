@@ -11,6 +11,7 @@ import 'package:webtrit_phone/features/settings/features/diagnostic/bloc/network
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/agreement_status.dart';
 import 'package:webtrit_phone/utils/utils.dart';
+import 'package:webtrit_phone/widgets/widgets.dart' show showAppBottomSheet;
 
 import '../../../widgets/widgets.dart';
 import '../bloc/diagnostic_cubit.dart';
@@ -73,7 +74,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
                   ),
                   subtitle: Text(state.pushTokenStatus.type.title(context)),
                   onTap: () {
-                    showModalBottomSheet(
+                    showAppBottomSheet(
                       context: context,
                       builder: (BuildContext context) => DiagnosticPushDetails(
                         status: state.pushTokenStatus,
@@ -87,7 +88,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
                   DiagnosticBatteryModeItem(
                     batteryMode: state.batteryMode,
                     onTap: () {
-                      showModalBottomSheet(
+                      showAppBottomSheet(
                         context: context,
                         builder: (BuildContext context) => DiagnosticBatteryModeDetails(
                           batteryMode: state.batteryMode,
@@ -102,7 +103,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
                 if (androidTarget && state.callDeliveryMode == CallkeepAndroidCallDeliveryMode.standalone) ...[
                   GroupTitleListTile(titleData: context.l10n.diagnostic_callingMode_groupTitle),
                   DiagnosticCallingModeItem(
-                    onTap: () => showModalBottomSheet(
+                    onTap: () => showAppBottomSheet(
                       context: context,
                       builder: (BuildContext context) => const DiagnosticCallingModeDetails(),
                     ),
@@ -116,7 +117,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
                     .map(
                       (permission) => DiagnosticPermissionItem(
                         permissionWithStatus: permission,
-                        onTap: () => showModalBottomSheet(
+                        onTap: () => showAppBottomSheet(
                           context: context,
                           builder: (BuildContext context) {
                             return DiagnosticPermissionDetails(
@@ -136,7 +137,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
                     title: context.l10n.diagnostic_fullScreenIntent_tile_title,
                     status: state.fullScreenIntentStatus,
                     onTap: () {
-                      showModalBottomSheet(
+                      showAppBottomSheet(
                         context: context,
                         builder: (BuildContext context) => DiagnosticSpecialPermissionDetails(
                           title: context.l10n.diagnostic_fullScreenIntent_tile_title,
@@ -158,7 +159,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
                     title: context.l10n.diagnostic_xiaomi_backgroundActivityStart_tile_title,
                     status: state.backgroundActivityStartStatus,
                     onTap: () {
-                      showModalBottomSheet(
+                      showAppBottomSheet(
                         context: context,
                         builder: (BuildContext context) => DiagnosticSpecialPermissionDetails(
                           title: context.l10n.diagnostic_xiaomi_backgroundActivityStart_tile_title,
@@ -177,7 +178,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
                     title: context.l10n.diagnostic_xiaomi_showWhenLocked_tile_title,
                     status: state.showWhenLockedStatus,
                     onTap: () {
-                      showModalBottomSheet(
+                      showAppBottomSheet(
                         context: context,
                         builder: (BuildContext context) => DiagnosticSpecialPermissionDetails(
                           title: context.l10n.diagnostic_xiaomi_showWhenLocked_tile_title,
@@ -204,7 +205,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
                     description: context.l10n.diagnosticScreen_contacts_agreement_description,
                     status: contactsAgreementStatus,
                     onTap: () {
-                      showModalBottomSheet(
+                      showAppBottomSheet(
                         context: context,
                         builder: (BuildContext context) => DiagnosticAgreementDetails(
                           title: context.l10n.diagnosticScreen_contacts_agreement_title,
@@ -222,7 +223,7 @@ class _DiagnosticScreenState extends State<DiagnosticScreen> with WidgetsBinding
                 GroupTitleListTile(titleData: context.l10n.diagnostic_network_groupTitle),
                 DiagnosticNetworkTestItem(
                   onTap: () {
-                    showModalBottomSheet(
+                    showAppBottomSheet(
                       context: context,
                       builder: (_) => BlocProvider.value(
                         value: context.read<NetworkTesterCubit>(),

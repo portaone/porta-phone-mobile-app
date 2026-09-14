@@ -21,7 +21,7 @@ class _SmsConversationBuilderViewState extends State<SmsConversationBuilderView>
   late final builderCubit = context.read<SmsConversationBuilderCubit>();
 
   Future<void> onMultipleUserNumbers(List<String> userNumbers) async {
-    final result = await showModalBottomSheet(
+    final result = await showAppBottomSheet(
       context: context,
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),

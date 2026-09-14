@@ -412,6 +412,13 @@ test.
     web and reading the DOM - and the same `isButton` decides whether the
     chooser is a button or a text field a person can type into, which is why
     both pass `selectOnly: true`.
+11. **A modal bottom sheet's barrier is a control named "Scrim".** Flutter labels
+    it with the Material name of the dimming layer, and on Android and iOS the
+    barrier is in the tree with a tap that closes the sheet - a sheet that fills
+    the screen leaves it one strip high at the status bar, announced as "Scrim".
+    Open sheets through `showAppBottomSheet`, which names the barrier "Dismiss"
+    the way dialogs do; a test keeps direct `showModalBottomSheet` calls out of
+    `lib/`.
 
 ## Third-party widgets
 
