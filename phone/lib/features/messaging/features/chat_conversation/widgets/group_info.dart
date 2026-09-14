@@ -112,7 +112,7 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
       builder: (context, state) {
         if (state is CVSReady && state.chat != null) {
           final chat = state.chat!;
-          final name = chat.name ?? '${context.l10n.messaging_GroupInfo_titlePrefix}: ${chat.id}';
+          final name = chat.title(context.l10n);
 
           final groupAuthorities = chat.members.firstWhere((m) => m.userId == widget.userId).groupAuthorities;
           final amIOwner = groupAuthorities == GroupAuthorities.owner;

@@ -131,18 +131,16 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
 
   Widget groupContent() {
     final lastMessage = widget.lastMessage;
+    final title = widget.conversation.title(context.l10n);
     return ListTile(
-      leading: GroupAvatar(name: widget.conversation.name ?? widget.conversation.id.toString(), size: 20),
+      leading: GroupAvatar(name: title, size: 20),
       title: Row(
         children: [
           Expanded(
             child: Row(
               children: [
                 Flexible(
-                  child: Text(
-                    widget.conversation.name ?? 'Chat ${widget.conversation.id}',
-                    style: const TextStyle(overflow: TextOverflow.ellipsis),
-                  ),
+                  child: Text(title, style: const TextStyle(overflow: TextOverflow.ellipsis)),
                 ),
                 const SizedBox(width: 4),
                 usersCount(),

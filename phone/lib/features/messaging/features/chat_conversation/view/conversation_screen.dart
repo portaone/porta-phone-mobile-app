@@ -104,7 +104,11 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                       final (:chatId, :participantId) = state.credentials;
                       if (participantId != null) return dialogTitle(participantId);
 
-                      return textTitle(chatId.toString());
+                      // A group with no name of its own: the same title it
+                      // carries in the list and in Group info, never the bare
+                      // number.
+                      final id = state.chat?.id ?? chatId;
+                      return textTitle(id == null ? '' : context.l10n.messaging_GroupInfo_titlePrefix(id));
                     }
 
                     return const SizedBox();
