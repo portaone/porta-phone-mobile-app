@@ -166,6 +166,13 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   /// Delivers [event] to the bloc as if the server sent it.
   void emit(Event event) => _events.add(SignalingProtocolEvent(event: event));
 
+  /// A hangup cancels the call's pending requests; there is no queue here.
+  @override
+  void cancelRequestsByCallId(String callId) {}
+
+  @override
+  void clearTerminatingMark(String callId) {}
+
   /// Delivers [handshake] to the bloc as if the session had just (re)connected.
   void emitHandshake(StateHandshake handshake) => _events.add(SignalingHandshakeReceived(handshake: handshake));
 

@@ -134,10 +134,10 @@ void main() {
     expect(h.bloc.state.activeCalls.single.remoteCameraEnabled, isFalse);
   });
 
-  test('a call that ended after the module attached is gone for a listener that comes later', () async {
-    // The module in the app isolate attaches to the hub first; its own
-    // consumer subscribes only afterwards. A hangup in between must reach that
-    // consumer as an absent call, not as the ringing call the module first saw.
+  test('a consumer wired before the ack gets the replay, and the live events after it', () async {
+    // The module in the app isolate keeps no buffer: its one consumer listens
+    // before the hub's ack, receives the session as it stands, and from then
+    // on the live events - here a hangup that empties the restored call.
     final source = _Source();
     final hub = SignalingHub(source)..start();
     source.controller.add(SignalingConnecting());
@@ -149,32 +149,39 @@ void main() {
       ),
     );
     await pumpEventQueue();
-    final client = SignalingHubClient.tryConnect('module-first')!;
+    final client = SignalingHubClient.tryConnect('consumer-first')!;
     final ack = client.awaitAck();
     final module = SignalingHubModule(client);
-    expect(await ack, isTrue);
-    await pumpEventQueue();
-
-    source.controller.add(
-      SignalingProtocolEvent(
-        event: const HangupEvent(line: 0, callId: 'ended', code: 200, reason: 'OK'),
-      ),
-    );
-    await pumpEventQueue();
-    expect(hub.hasActiveCalls, isFalse);
-
     final h = CallBlocHarness();
     final subscription = module.events.listen((event) {
       if (event is SignalingHandshakeReceived) h.signaling.emitHandshake(event.handshake);
       if (event is SignalingProtocolEvent) h.signaling.emit(event.event);
     });
+    expect(await ack, isTrue);
     await pumpEventQueue();
-    final calls = h.bloc.state.activeCalls.toList();
+    final restored = h.bloc.state.activeCalls.map((c) => c.callId).toList();
+
+    // 487 is what the server sends for a ringing call the caller gave up on.
+    source.controller.add(
+      SignalingProtocolEvent(
+        event: const HangupEvent(line: 0, callId: 'ended', code: 487, reason: 'Request Terminated'),
+      ),
+    );
+    // The hangup crosses two ports and the bloc's mutation queue; a bounded
+    // wait, not a fixed number of pumps. The fake callkeep never answers
+    // reportEndCall with performEndCall, so the report to callkeep is what is
+    // observable here, not the call's removal from the state.
+    final deadline = DateTime.now().add(const Duration(seconds: 2));
+    while (h.callkeep.ended.isEmpty && DateTime.now().isBefore(deadline)) {
+      await pumpEventQueue();
+    }
+    final endedInCallkeep = h.callkeep.ended.toList();
     await subscription.cancel();
     await h.close();
     await module.dispose();
     await hub.dispose();
     await source.controller.close();
-    expect(calls, isEmpty);
+    expect(restored, ['ended']);
+    expect(endedInCallkeep, ['ended']);
   });
 }

@@ -481,11 +481,13 @@ Your app manifest only needs `INTERNET`.
 
 ## Session buffer and late subscribers
 
-Both `SignalingModule` (service isolate) and `SignalingHubModule` (main isolate) maintain an
-internal session buffer — the ordered list of events since the last `SignalingConnecting`. Any
-new subscriber receives this buffer synchronously on `.listen()`, making it safe to subscribe
-after `start()` or `attach()` has already returned. The buffer is cleared on each reconnect so
-stale events from a previous session are never replayed.
+`SignalingModule` (service isolate) and the Android plugin (main isolate) maintain an internal
+session buffer — the lifecycle events since the last `SignalingConnecting` and the current
+handshake. Any new subscriber receives this buffer synchronously on `.listen()`, making it safe
+to subscribe after `start()` or `attach()` has already returned. The buffer is cleared on each
+reconnect so stale events from a previous session are never replayed. `SignalingHubModule` has
+none: `HubConnectionManager` listens to it before the hub's ack, and the hub's replay is
+delivered once.
 
 Across the isolate boundary the hub replays state rather than events: a `SessionSnapshot` keeps
 the session's handshake current with the registration events and every call's events on its

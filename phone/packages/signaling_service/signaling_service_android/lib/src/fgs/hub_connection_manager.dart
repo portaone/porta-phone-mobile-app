@@ -152,28 +152,40 @@ class HubConnectionManager {
         // internal Completer is in place before the hub's sub-ack can arrive.
         final ackFuture = client.awaitAck(timeout: ackTimeout);
         final module = SignalingHubModule(client);
+        // The hub's replay of the session follows its ack at once, so the
+        // listener is in place before the ack is awaited: nothing the hub
+        // sends is lost, and the module needs no buffer of its own. Until this
+        // attempt is known to be the current one, events are held back rather
+        // than forwarded on behalf of a generation that may have moved on.
+        var adopted = false;
+        final pending = <SignalingModuleEvent>[];
+        final moduleSub = module.events.listen(
+          (event) => adopted ? _onEvent(event) : pending.add(event),
+          onError: _onError,
+          onDone: () {
+            if (!adopted || _tearingDown) return;
+            _logger.warning('HubConnectionManager: hub module stream closed — hub died, restarting discovery');
+            _module = null;
+            _moduleSub = null;
+            if (_isActive()) begin();
+          },
+        );
         final ackReceived = await ackFuture;
 
         if (ackReceived) {
           consecutiveStaleAcks = 0;
           if (_generation != generation || !_isActive()) {
             _logger.fine('_initLoop gen=$generation ack received but generation changed, disposing stale module');
+            await moduleSub.cancel();
             await module.dispose();
             return;
           }
           _module = module;
+          _moduleSub = moduleSub;
           _logger.info('_initLoop gen=$generation hub connected (consumerId=${client.consumerId})');
-          _moduleSub = _module!.events.listen(
-            _onEvent,
-            onError: _onError,
-            onDone: () {
-              if (_tearingDown) return;
-              _logger.warning('HubConnectionManager: hub module stream closed — hub died, restarting discovery');
-              _module = null;
-              _moduleSub = null;
-              if (_isActive()) begin();
-            },
-          );
+          adopted = true;
+          pending.forEach(_onEvent);
+          pending.clear();
           return;
         }
 
@@ -181,6 +193,7 @@ class HubConnectionManager {
         _logger.fine(
           '_initLoop gen=$generation ack timeout -- stale port ($consecutiveStaleAcks/$stalePortThreshold), retrying',
         );
+        await moduleSub.cancel();
         await module.dispose();
 
         if (consecutiveStaleAcks >= stalePortThreshold) {
