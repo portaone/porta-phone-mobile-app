@@ -28,7 +28,7 @@ webtrit_callkeep_ios/
 2. Run from this package directory:
 
    ```bash
-   flutter pub run pigeon --input pigeons/callkeep.messages.dart
+   ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
    ```
 
 3. Commit both the input file and all generated output (`callkeep.pigeon.dart`, `Generated.h`, `Generated.m`).
@@ -55,7 +55,6 @@ When adding a converter for a new Pigeon type, add an extension in `lib/src/comm
 |------------------------|-------------------------------------------|----------------------------------------------|
 | `CallkeepDelegate`     | `Callkeep().setDelegate(...)`             | All call lifecycle events                    |
 | `PushRegistryDelegate` | `Callkeep().setPushRegistryDelegate(...)` | PushKit VoIP token updates and incoming push |
-| `CallkeepLogsDelegate` | `Callkeep().setLogsDelegate(...)`         | Forward native logs to Dart                  |
 
 `PushRegistryDelegate` is iOS-only and must be set before the app enters background if VoIP pushes are expected.
 

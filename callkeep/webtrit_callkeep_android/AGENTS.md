@@ -84,18 +84,18 @@ explicit `startService` intents. Events are grouped by broadcaster:
 | `TearDownComplete`    | `:callkeep_core` -> Main | --       | Ack that tearDown completed                                                                                                                              |
 | `ReserveAnswer`       | Main -> `:callkeep_core` | `callId` | Deferred answer reservation cross-process                                                                                                                |
 | `CleanConnections`    | Main -> `:callkeep_core` | --       | Clear all connections without `hungUp()`                                                                                                                 |
-| `ReplayAudioState`      | Main -> `:callkeep_core` | --       | Ask all PhoneConnections to re-emit audio device + mute state; used by `ForegroundService.onDelegateSet()` to restore Flutter audio UI after hot restart |
+| `ReplayAudioState`    | Main -> `:callkeep_core` | --       | Ask all PhoneConnections to re-emit audio device + mute state; used by `ForegroundService.onDelegateSet()` to restore Flutter audio UI after hot restart |
 
 ---
 
 ## Android services
 
-| Service                  | Process          | Purpose                                                      |
-|--------------------------|------------------|--------------------------------------------------------------|
-| `PhoneConnectionService` | `:callkeep_core` | Telecom integration; creates/destroys `PhoneConnection`      |
-| `ForegroundService`      | main             | Active call; Pigeon host; mute/hold/speaker/DTMF             |
-| `IncomingCallService`    | main             | One-shot push-notification-triggered call handling           |
-| `ActiveCallService`      | main             | Notification for multiple simultaneous calls                 |
+| Service                  | Process          | Purpose                                                 |
+|--------------------------|------------------|---------------------------------------------------------|
+| `PhoneConnectionService` | `:callkeep_core` | Telecom integration; creates/destroys `PhoneConnection` |
+| `ForegroundService`      | main             | Active call; Pigeon host; mute/hold/speaker/DTMF        |
+| `IncomingCallService`    | main             | One-shot push-notification-triggered call handling      |
+| `ActiveCallService`      | main             | Notification for multiple simultaneous calls            |
 
 ---
 
@@ -105,7 +105,7 @@ explicit `startService` intents. Events are grouped by broadcaster:
 2. Run from this package directory:
 
    ```bash
-   flutter pub run pigeon --input pigeons/callkeep.messages.dart
+   ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
    ```
 
 3. Commit both the input file and all generated output (`callkeep.pigeon.dart`, Kotlin files under

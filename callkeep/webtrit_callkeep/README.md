@@ -57,7 +57,6 @@ Stream<CallkeepStatus> status = Callkeep().statusStream;
 ```dart
 Callkeep().setDelegate(myDelegate);                    // call events
 Callkeep().setPushRegistryDelegate(myPRDelegate);      // iOS VoIP push token (iOS only)
-Callkeep().setLogsDelegate(myLogsDelegate);            // native log forwarding
 ```
 
 ### Call reporting

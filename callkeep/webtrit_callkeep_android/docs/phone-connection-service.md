@@ -71,24 +71,24 @@ Its responsibilities:
 Explicit `startService` intents arrive here. The intent action is a `ServiceAction` enum value
 encoded as a string extra.
 
-| `ServiceAction`       | Description                                                                        |
-|-----------------------|------------------------------------------------------------------------------------|
-| `TearDownConnections` | Call `hungUp()` on every `PhoneConnection`, then broadcast `TearDownComplete`      |
-| `ReserveAnswer`       | Store deferred answer for `callId` (call `ConnectionManager.reserveAnswer()`)      |
-| `CleanConnections`    | Clear all connections without hanging up                                           |
-| `ReplayAudioState`      | Re-emit audio state for all active connections (hot-restart recovery)              |
+| `ServiceAction`          | Description                                                                        |
+|--------------------------|------------------------------------------------------------------------------------|
+| `TearDownConnections`    | Call `hungUp()` on every `PhoneConnection`, then broadcast `TearDownComplete`      |
+| `ReserveAnswer`          | Store deferred answer for `callId` (call `ConnectionManager.reserveAnswer()`)      |
+| `CleanConnections`       | Clear all connections without hanging up                                           |
+| `ReplayAudioState`       | Re-emit audio state for all active connections (hot-restart recovery)              |
 | `ReplayConnectionStates` | Re-fire `AnswerCall` broadcast for all answered connections (hot-restart recovery) |
-| `AnswerCall`          | Call `PhoneConnection.onAnswer()` for the specified call                           |
-| `DeclineCall`         | Call `PhoneConnection.onReject()`                                                  |
-| `HungUpCall`          | Call `PhoneConnection.onDisconnect()`                                              |
-| `EstablishCall`       | Set connection to STATE_ACTIVE                                                     |
-| `UpdateCall`          | Update `PhoneConnection` metadata                                                  |
-| `MuteCall`            | `PhoneConnection.changeMuteState()`                                                |
-| `HoldCall`            | `PhoneConnection.onHold()` / `onUnhold()`                                          |
-| `SpeakerCall`         | Route audio to speaker                                                             |
-| `SetAudioDevice`      | Select audio device                                                                |
-| `SendDtmf`            | Send DTMF tone                                                                     |
-| `NotifyPending`       | Register callId as pending before `onCreateIncomingConnection` arrives             |
+| `AnswerCall`             | Call `PhoneConnection.onAnswer()` for the specified call                           |
+| `DeclineCall`            | Call `PhoneConnection.onReject()`                                                  |
+| `HungUpCall`             | Call `PhoneConnection.onDisconnect()`                                              |
+| `EstablishCall`          | Set connection to STATE_ACTIVE                                                     |
+| `UpdateCall`             | Update `PhoneConnection` metadata                                                  |
+| `MuteCall`               | `PhoneConnection.changeMuteState()`                                                |
+| `HoldCall`               | `PhoneConnection.onHold()` / `onUnhold()`                                          |
+| `SpeakerCall`            | Route audio to speaker                                                             |
+| `SetAudioDevice`         | Select audio device                                                                |
+| `SendDtmf`               | Send DTMF tone                                                                     |
+| `NotifyPending`          | Register callId as pending before `onCreateIncomingConnection` arrives             |
 
 ## Event Dispatch
 

@@ -27,7 +27,7 @@ flutter analyze lib test
 dart format --line-length 80 --set-exit-if-changed lib test
 
 # Pigeon regeneration (after editing pigeons/callkeep.messages.dart)
-flutter pub run pigeon --input pigeons/callkeep.messages.dart
+../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
 ```
 
 ## Critical rules

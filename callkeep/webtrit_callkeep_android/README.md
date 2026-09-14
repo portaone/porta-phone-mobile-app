@@ -77,7 +77,7 @@ The public API is covered by integration tests located in
 | `callkeep_delegate_edge_cases_test.dart`   | `setDelegate(null)` mid-call, delegate swap, `didPushIncomingCall`, audio session callbacks |
 | `callkeep_client_scenarios_test.dart`      | `answerCall` idempotency, ringback sound, async `performEndCall` contract                   |
 | `callkeep_reportendcall_reasons_test.dart` | All `CallkeepEndCallReason` values via `reportEndCall`                                      |
-| `callkeep_delivery_mode_test.dart`         | `getCallDeliveryMode` query (Android only) and the no-op behaviour on non-Android          |
+| `callkeep_delivery_mode_test.dart`         | `getCallDeliveryMode` query (Android only) and the no-op behaviour on non-Android           |
 | `callkeep_stress_test.dart`                | Concurrent duplicate reports, rapid tearDown, spam scenarios                                |
 
 `all_tests.dart` is an aggregator entry point that runs every suite above in a single driver
@@ -98,7 +98,7 @@ Pigeon generates type-safe Kotlin/Dart bindings from a single source file.
 
 ```bash
 # From this directory
-flutter pub run pigeon --input pigeons/callkeep.messages.dart
+../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
 ```
 
 - **Never manually edit** `lib/src/common/callkeep.pigeon.dart` or the Kotlin files under

@@ -44,8 +44,7 @@ lib/src/
 ├── delegate/
 │   ├── callkeep_delegate.dart                 # Main call event callbacks
 │   ├── callkeep_push_registry_delegate.dart   # iOS PushKit VoIP token/push (iOS only)
-│   ├── callkeep_android_service_delegate.dart # Background isolate callbacks (Android only)
-│   └── callkeep_logs_delegate.dart            # Native log forwarding
+│   └── callkeep_android_service_delegate.dart # Background isolate callbacks (Android only)
 ├── helpers/
 ├── annotation/
 └── consts/
@@ -74,7 +73,8 @@ CallkeepHandle.sip('user@example.com')
 | `performSetHeld` | Hold toggled from system UI |
 | `performSetMuted` | Mute toggled from system UI |
 | `performSendDTMF` | DTMF sent from system dial pad |
-| `performSetSpeaker` | Speaker toggled from system UI |
+| `performAudioDeviceSet` | Audio routing changed to a given device |
+| `performAudioDevicesUpdate` | The set of available audio devices changed |
 | `didActivateAudioSession` | System activated the audio session |
 | `didDeactivateAudioSession` | System deactivated the audio session |
 | `didReset` | System reset all call state (iOS only) |

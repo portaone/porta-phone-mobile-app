@@ -7,12 +7,12 @@ lifecycle is driven by the services that own them. Each call phase has a dedicat
 the dual-process (Telecom) path and the standalone path have separate builder families that
 share the same notification channels.
 
-| Phase / path                  | Builder                                     | Channel                                    |
-|-------------------------------|---------------------------------------------|--------------------------------------------|
-| Incoming call (Telecom path)  | `IncomingCallNotificationBuilder`           | `INCOMING_CALL_NOTIFICATION_CHANNEL_ID`    |
-| Active call (Telecom path)    | `ActiveCallNotificationBuilder`             | `ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL` |
-| Incoming call (standalone)    | `StandaloneIncomingCallNotificationBuilder` | `INCOMING_CALL_NOTIFICATION_CHANNEL_ID`    |
-| Active call (standalone)      | `StandaloneActiveCallNotificationBuilder`   | `ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL` |
+| Phase / path                 | Builder                                     | Channel                                    |
+|------------------------------|---------------------------------------------|--------------------------------------------|
+| Incoming call (Telecom path) | `IncomingCallNotificationBuilder`           | `INCOMING_CALL_NOTIFICATION_CHANNEL_ID`    |
+| Active call (Telecom path)   | `ActiveCallNotificationBuilder`             | `ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL` |
+| Incoming call (standalone)   | `StandaloneIncomingCallNotificationBuilder` | `INCOMING_CALL_NOTIFICATION_CHANNEL_ID`    |
+| Active call (standalone)     | `StandaloneActiveCallNotificationBuilder`   | `ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL` |
 
 The abstract base `NotificationBuilder` (`kotlin/com/webtrit/callkeep/notifications/NotificationBuilder.kt`)
 centralizes the audio/video branching of the incoming-call content (title, description, small
@@ -29,10 +29,10 @@ Registers the three notification channels (and deletes the legacy
 `ForegroundService.setUp()` on the Telecom path and from `StandaloneCallService` on the
 standalone path.
 
-| Channel ID                                 | Importance | Description                                            |
-|--------------------------------------------|------------|--------------------------------------------------------|
-| `INCOMING_CALL_NOTIFICATION_CHANNEL_ID`    | `HIGH`     | Heads-up notification with ringtone for incoming calls |
-| `ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL` | `LOW`      | Persistent silent notification for active calls        |
+| Channel ID                                 | Importance | Description                                                              |
+|--------------------------------------------|------------|--------------------------------------------------------------------------|
+| `INCOMING_CALL_NOTIFICATION_CHANNEL_ID`    | `HIGH`     | Heads-up notification with ringtone for incoming calls                   |
+| `ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL` | `LOW`      | Persistent silent notification for active calls                          |
 | `FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID`  | `LOW`      | Standalone-service placeholder notification (see the standalone section) |
 
 ---
@@ -48,13 +48,13 @@ its users - `PhoneConnection` and `ConnectionServicePerformBroadcaster` - run in
 lives; the main-process `ActiveCallService` never reads it and only sees the copy serialized
 into each start intent.
 
-| Method                                   | Action                                                                   |
-|------------------------------------------|--------------------------------------------------------------------------|
-| `showIncomingCallNotification(metadata)` | Starts `IncomingCallService` with the call data                          |
-| `cancelIncomingNotification(answered)`   | Releases `IncomingCallService` via an internal broadcast (answer/decline) |
+| Method                                   | Action                                                                     |
+|------------------------------------------|----------------------------------------------------------------------------|
+| `showIncomingCallNotification(metadata)` | Starts `IncomingCallService` with the call data                            |
+| `cancelIncomingNotification(answered)`   | Releases `IncomingCallService` via an internal broadcast (answer/decline)  |
 | `showActiveCallNotification(id, meta)`   | Adds/moves the call to the head of `activeCalls`, then upserts the service |
-| `cancelActiveCallNotification(id)`       | Removes the call from `activeCalls`, then upserts the service            |
-| `tearDown()`                             | Stops both notification services                                         |
+| `cancelActiveCallNotification(id)`       | Removes the call from `activeCalls`, then upserts the service              |
+| `tearDown()`                             | Stops both notification services                                           |
 
 The private `upsertActiveCallsService()` implements the active-call lifecycle: while
 `activeCalls` is non-empty it (re)starts `ActiveCallService` with the full list serialized
@@ -135,15 +135,15 @@ sole producer on the foreground channel.
 
 Handles ringtone, ringback and call-waiting tone playback, plus device-capability queries.
 
-| Method                        | Description                                                            |
-|-------------------------------|------------------------------------------------------------------------|
-| `startRingtone(sound)`        | Ring or vibrate by ringer mode: ringtone (asset path or system default) in normal mode with volume; vibration only in vibrate mode or at zero volume; nothing in silent mode |
-| `stopRingtone()`              | Stop ringtone and vibration                                            |
-| `startRingback(asset)`        | Play outgoing ringback tone                                            |
-| `stopRingback()`              | Stop ringback                                                          |
-| `startCallWaitingTone()`      | Play the call-waiting tone for a second incoming call                  |
-| `stopCallWaitingTone()`       | Stop the call-waiting tone                                             |
-| `isSupportEarpiese()` etc.    | Query available devices (earpiece, speakerphone, wired headset, Bluetooth) |
+| Method                     | Description                                                                                                                                                                  |
+|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `startRingtone(sound)`     | Ring or vibrate by ringer mode: ringtone (asset path or system default) in normal mode with volume; vibration only in vibrate mode or at zero volume; nothing in silent mode |
+| `stopRingtone()`           | Stop ringtone and vibration                                                                                                                                                  |
+| `startRingback(asset)`     | Play outgoing ringback tone                                                                                                                                                  |
+| `stopRingback()`           | Stop ringback                                                                                                                                                                |
+| `startCallWaitingTone()`   | Play the call-waiting tone for a second incoming call                                                                                                                        |
+| `stopCallWaitingTone()`    | Stop the call-waiting tone                                                                                                                                                   |
+| `isSupportEarpiese()` etc. | Query available devices (earpiece, speakerphone, wired headset, Bluetooth)                                                                                                   |
 
 ---
 

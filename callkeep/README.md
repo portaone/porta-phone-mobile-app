@@ -146,21 +146,24 @@ Implement `CallkeepDelegate` and pass it to `setDelegate` to receive platform ev
 
 | Method | When it fires |
 | --- | --- |
-| `didPushIncomingCall(callId, handle, ..., error)` | Platform has registered the incoming call (or reports an error) |
+| `didPushIncomingCall(handle, displayName, video, callId, error)` | Platform has registered the incoming call (or reports an error) |
 | `performAnswerCall(callId)` | User answered from system UI |
 | `performEndCall(callId)` | User ended from system UI or system terminated the call |
-| `performStartCall(callId, handle, ...)` | User initiated outgoing call from system UI (e.g. Siri) |
-| `continueStartCallIntent(callId, handle, ...)` | System confirmed outgoing call intent (iOS only) |
+| `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | User initiated outgoing call from system UI (e.g. Siri) |
+| `continueStartCallIntent(handle, displayName, video)` | System confirmed outgoing call intent (iOS only) |
 | `performSetHeld(callId, onHold)` | User toggled hold from system UI |
 | `performSetMuted(callId, muted)` | User toggled mute from system UI |
 | `performSendDTMF(callId, digit)` | User sent DTMF from system dial pad |
-| `performSetSpeaker(callId, on)` | User toggled speaker from system UI |
+| `performAudioDeviceSet(callId, device)` | Audio routing changed to a given device |
+| `performAudioDevicesUpdate(callId, devices)` | The set of available audio devices changed |
 | `didActivateAudioSession()` | System activated the audio session |
 | `didDeactivateAudioSession()` | System deactivated the audio session |
 | `didReset()` | System reset all call state (iOS only) |
 
-`perform*` methods return `Future<bool>`. Return `false` to signal failure — the platform will
-terminate the call.
+`perform*` methods return `Future<bool>`. Returning `false` refuses the operation; it does not
+end the call. On iOS the CallKit action fails and the system UI goes back to the state it was
+in. On Android the answer is discarded - every delegate call there passes an empty result
+handler - so a refusal changes nothing and the operation stands.
 
 ---
 

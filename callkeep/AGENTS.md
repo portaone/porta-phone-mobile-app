@@ -43,7 +43,7 @@ flutter test test/path/to/test_file.dart
 Run from `webtrit_callkeep_android/` or `webtrit_callkeep_ios/` after modifying the pigeon input:
 
 ```bash
-flutter pub run pigeon --input pigeons/callkeep.messages.dart
+../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
 ```
 
 Generated files (`*.pigeon.dart`, Kotlin/Swift output) must be committed together with the input change.
@@ -90,7 +90,7 @@ Callkeep (singleton, webtrit_callkeep)
 WebtritCallkeepPlatform (platform_interface)
     │
     ├── WebtritCallkeepAndroid  →  Pigeon  →  Kotlin services
-    └── WebtritCallkeepIOS      →  Pigeon  →  Swift/CallKit
+    └── WebtritCallkeepIOS      →  Pigeon  →  Objective-C/CallKit
 ```
 
 **Flutter to Platform**: `reportNewIncomingCall`, `startCall`, `answerCall`, `endCall`, `setHeld`, `setMuted`,

@@ -20,7 +20,6 @@ This package defines the **shared contract** between the aggregator and all plat
 | `lib/src/delegate/callkeep_delegate.dart` | `CallkeepDelegate` — main callback interface |
 | `lib/src/delegate/callkeep_android_service_delegate.dart` | `CallkeepBackgroundServiceDelegate` — background isolate callbacks |
 | `lib/src/delegate/callkeep_push_registry_delegate.dart` | `PushRegistryDelegate` — iOS PushKit token/call events |
-| `lib/src/delegate/callkeep_logs_delegate.dart` | `CallkeepLogsDelegate` — native log forwarding |
 | `lib/src/models/` | All shared data classes and enums |
 | `lib/src/consts/` | Call path keys/values, call data constants |
 | `lib/src/helpers/` | `AndroidPendingCallHandler` and other utilities |

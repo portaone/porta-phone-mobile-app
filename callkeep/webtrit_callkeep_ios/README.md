@@ -64,7 +64,6 @@ webtrit_callkeep_ios/
 |------------------------|-------------------------------------------|-----------------------------------------------|
 | `CallkeepDelegate`     | `Callkeep().setDelegate(...)`             | Call lifecycle events                         |
 | `PushRegistryDelegate` | `Callkeep().setPushRegistryDelegate(...)` | PushKit VoIP token and incoming push payloads |
-| `CallkeepLogsDelegate` | `Callkeep().setLogsDelegate(...)`         | Forward native logs to Dart                   |
 
 `PushRegistryDelegate` must be set before the app enters the background if VoIP pushes are
 expected. Failing to do so causes missed pushes.
@@ -95,7 +94,7 @@ Without these, `reportNewIncomingCall` silently fails when the app is background
 
 ```bash
 # From this directory
-flutter pub run pigeon --input pigeons/callkeep.messages.dart
+../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
 ```
 
 Never manually edit `lib/src/common/callkeep.pigeon.dart` or the Pigeon-generated
