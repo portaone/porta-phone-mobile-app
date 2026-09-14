@@ -104,7 +104,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
   }
 
   Future<void> onNewChatConversation() async {
-    showModalBottomSheet(
+    showAppBottomSheet(
       useSafeArea: true,
       isScrollControlled: true,
       context: context,
@@ -136,7 +136,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
   }
 
   Future<void> onNewSmsConversation() async {
-    showModalBottomSheet(
+    showAppBottomSheet(
       useSafeArea: true,
       isScrollControlled: true,
       context: context,

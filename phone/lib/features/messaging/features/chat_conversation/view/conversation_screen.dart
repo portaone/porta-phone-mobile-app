@@ -37,7 +37,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     final isGroup = state is CVSReady && state.chat?.type == ChatType.group;
 
     if (isDialog) {
-      showModalBottomSheet(
+      showAppBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
@@ -57,7 +57,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     }
 
     if (isGroup) {
-      showModalBottomSheet(
+      showAppBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
         context: context,
