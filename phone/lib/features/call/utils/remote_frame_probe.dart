@@ -19,6 +19,17 @@ final _logger = Logger('RemoteFrameProbe');
 /// judge it off the UI thread; [renderable] is the verdict, and listeners hear
 /// when it changes.
 ///
+/// The verdict belongs to the track it was taken from and to no other. A
+/// track is replaced by a new call, by a renegotiation within the same call,
+/// or removed altogether - and a stream keeps its identity while its tracks
+/// come and go, so the track is checked on every probe, not only when [stream]
+/// is set. Whenever the current track is not the probed one, the verdict is
+/// forgotten and the picture starts over as unprobed; an answer that arrives
+/// about a track no longer current is dropped, and the current one is probed
+/// at once rather than after the usual pause. The optimistic answer to a
+/// capture that failed is treated the same - it is most often the old stream
+/// closing after the call moved on.
+///
 /// Where frames cannot be analysed (see [FrameAnalysisWorker.isSupported])
 /// nothing is ever probed and [renderable] stays true: the video is shown
 /// rather than hidden for the whole call.
@@ -29,8 +40,8 @@ class RemoteFrameProbe extends ChangeNotifier {
     this.captureTimeout = const Duration(seconds: 10),
   }) : _worker = worker ?? FrameAnalysisWorker();
 
-  /// What [renderable] is before any frame has been probed: nothing to show,
-  /// unless nothing can be analysed.
+  /// What [renderable] is before any frame has been probed, and whenever the
+  /// track changes: nothing to show, unless nothing can be analysed.
   static const bool showsUnprobed = !FrameAnalysisWorker.isSupported;
 
   /// How long after a verdict the next frame is looked at.
@@ -42,16 +53,25 @@ class RemoteFrameProbe extends ChangeNotifier {
   final FrameAnalysisWorker _worker;
 
   MediaStream? _stream;
+  MediaStreamTrack? _probedTrack;
   bool _renderable = showsUnprobed;
   Timer? _timer;
   bool _disposed = false;
 
-  /// Whether the last probed frame had something in it.
+  /// Whether the probed frame of the current track had something in it.
   bool get renderable => _renderable;
 
+  /// The track the current verdict was taken on, if any.
+  @visibleForTesting
+  MediaStreamTrack? get probedTrack => _probedTrack;
+
   /// The stream to watch - the remote stream of the call on screen. Hand over
-  /// the new one whenever that call changes.
-  set stream(MediaStream? value) => _stream = value;
+  /// the new one whenever that call changes; a change of track inside the
+  /// same stream needs no call, the next probe notices it.
+  set stream(MediaStream? value) {
+    _stream = value;
+    _forgetIfTrackChanged();
+  }
 
   /// Starts the worker and the first probe. Once, after construction.
   void start() {
@@ -73,6 +93,13 @@ class RemoteFrameProbe extends ChangeNotifier {
     return (tracks == null || tracks.isEmpty) ? null : tracks.first;
   }
 
+  /// Drops the verdict if it is about a track other than the current one.
+  void _forgetIfTrackChanged() {
+    if (_currentTrack == _probedTrack) return;
+    _probedTrack = null;
+    _setRenderable(showsUnprobed, reason: 'track changed');
+  }
+
   void _setRenderable(bool value, {required String reason}) {
     if (_renderable == value) return;
     _renderable = value;
@@ -90,6 +117,7 @@ class RemoteFrameProbe extends ChangeNotifier {
     if (_disposed) return;
 
     final track = _currentTrack;
+    _forgetIfTrackChanged();
     if (track == null) {
       _schedule(interval);
       return;
@@ -107,6 +135,13 @@ class RemoteFrameProbe extends ChangeNotifier {
     final elapsed = DateTime.now().difference(startTime);
 
     if (_disposed) return;
+    if (_currentTrack != track) {
+      _logger.fine('probe done in ${elapsed.inMilliseconds}ms, dropped: the track is no longer current');
+      _schedule(Duration.zero);
+      return;
+    }
+
+    _probedTrack = track;
     _setRenderable(renderable, reason: 'probe done in ${elapsed.inMilliseconds}ms');
     _schedule(interval);
   }

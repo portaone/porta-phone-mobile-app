@@ -81,6 +81,7 @@ void main() {
         async.elapse(Duration.zero);
         expect(track.captures, 1, reason: 'the first probe runs at once');
         expect(probe.renderable, isTrue);
+        expect(probe.probedTrack, same(track));
         expect(notified, 1);
       });
     });
@@ -148,6 +149,101 @@ void main() {
         async.elapse(probe.interval);
         expect(track.captures, 1);
         expect(probe.renderable, isTrue);
+      });
+    });
+
+    group('the verdict belongs to its track', () {
+      test('a new stream forgets the old picture at once', () {
+        fakeAsync((async) {
+          probe
+            ..stream = _Stream(_Track())
+            ..start();
+          async.elapse(Duration.zero);
+          expect(probe.renderable, isTrue);
+
+          probe.stream = _Stream(_Track(immediate: false));
+          expect(probe.renderable, isFalse, reason: 'forgotten before any probe, the moment the stream changes');
+          expect(probe.probedTrack, isNull);
+          expect(notified, 2);
+        });
+      });
+
+      test('a track swapped inside the same stream is noticed by the next probe', () {
+        fakeAsync((async) {
+          final stream = _Stream(_Track());
+          probe
+            ..stream = stream
+            ..start();
+          async.elapse(Duration.zero);
+          expect(probe.renderable, isTrue);
+
+          final swapped = _Track(immediate: false);
+          stream.track = swapped;
+          expect(probe.renderable, isTrue, reason: 'nobody told the probe; it finds out on its own');
+          async.elapse(probe.interval);
+          expect(probe.renderable, isFalse);
+          expect(swapped.captures, 1, reason: 'and the new track is probed in the same breath');
+        });
+      });
+
+      test('a track removed from the stream takes its picture with it', () {
+        fakeAsync((async) {
+          final stream = _Stream(_Track());
+          probe
+            ..stream = stream
+            ..start();
+          async.elapse(Duration.zero);
+          expect(probe.renderable, isTrue);
+
+          stream.track = null;
+          async.elapse(probe.interval);
+          expect(probe.renderable, isFalse);
+          expect(probe.probedTrack, isNull);
+        });
+      });
+
+      test('an answer about a track no longer current is dropped, the current one probed at once', () {
+        fakeAsync((async) {
+          final old = _Track(immediate: false);
+          probe
+            ..stream = _Stream(old)
+            ..start();
+          async.elapse(Duration.zero);
+          expect(old.captures, 1);
+
+          final next = _Track(immediate: false);
+          probe.stream = _Stream(next);
+          // The old stream closes and its capture fails - the optimistic answer
+          // is about the old track and must not become the new one's picture.
+          old.pending.single.completeError(StateError('stream closed'));
+          // Zero delay, not a microtask: the dropped answer schedules a timer.
+          async.elapse(Duration.zero);
+          expect(probe.renderable, isFalse);
+          expect(next.captures, 1, reason: 'no interval wait after a dropped answer');
+
+          // The new track's own answer still counts.
+          next.pending.single.complete(Uint8List(4).buffer);
+          async.flushMicrotasks();
+          expect(probe.renderable, isTrue);
+          expect(probe.probedTrack, same(next));
+        });
+      });
+
+      test('a successful answer about an old track is dropped as well', () {
+        fakeAsync((async) {
+          final old = _Track(immediate: false);
+          final stream = _Stream(old);
+          probe
+            ..stream = stream
+            ..start();
+          async.elapse(Duration.zero);
+
+          stream.track = _Track(immediate: false);
+          old.pending.single.complete(Uint8List(4).buffer);
+          async.flushMicrotasks();
+          expect(probe.renderable, isFalse);
+          expect(probe.probedTrack, isNull);
+        });
       });
     });
 
