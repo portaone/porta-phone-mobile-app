@@ -78,6 +78,9 @@ void main() {
       final semantics = tester.ensureSemantics();
       final call = VideoCall();
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      // The node appears once the screen has probed the picture, which takes
+      // a moment of clock, not just a frame.
+      await tester.pump(const Duration(milliseconds: 1));
 
       final toggle = find.bySemanticsIdentifier(callControlsToggleId);
       expectTapTargetSemantics(
@@ -117,6 +120,18 @@ void main() {
       // Nothing to put away, so the screen-sized stop would only stand between
       // a screen reader and the controls.
       expect(find.bySemanticsIdentifier(callControlsToggleId), findsNothing);
+      await teardownCallScaffold(tester);
+      semantics.dispose();
+    });
+
+    testWidgets('nor in an audio call, where the controls never hide', (tester) async {
+      final semantics = tester.ensureSemantics();
+      final call = makeCall(acceptedTime: DateTime(2024), displayName: 'Boris Klein');
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+
+      // A named action that does nothing is worse than none.
+      expect(find.bySemanticsIdentifier(callControlsToggleId), findsNothing);
+      expect(reachableControls(tester), contains(callActionsHangupId));
       await teardownCallScaffold(tester);
       semantics.dispose();
     });
