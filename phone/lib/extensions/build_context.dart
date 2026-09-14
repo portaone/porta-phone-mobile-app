@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as material show showModalBottomSheet;
 
 import 'package:provider/provider.dart';
 
@@ -95,5 +96,40 @@ extension BuildContextSnackBar on BuildContext {
     } on ProviderNotFoundException catch (_) {
       return null;
     }
+  }
+}
+
+extension BuildContextBottomSheet on BuildContext {
+  /// Shows the one modal bottom sheet the app has, with its barrier named for
+  /// what it does.
+  ///
+  /// Flutter labels the barrier behind a modal bottom sheet "Scrim" - the
+  /// Material name of the dimming layer - and on Android and iOS that barrier
+  /// is a real control: it is in the accessibility tree, and a tap on it
+  /// closes the sheet. A sheet that fills the screen leaves the barrier one
+  /// strip high, at the status bar, and that strip then announces itself as
+  /// "Scrim". Dialogs name the same barrier "Dismiss" ([showDialog] does),
+  /// which says what a tap on it does. So does this.
+  ///
+  /// Only the options the app uses are taken; add one here rather than call
+  /// Flutter's function directly, so the label stays on every sheet.
+  Future<T?> showModalBottomSheet<T>({
+    required WidgetBuilder builder,
+    bool isScrollControlled = false,
+    bool useSafeArea = false,
+    bool? showDragHandle,
+    Color? backgroundColor,
+    Clip? clipBehavior,
+  }) {
+    return material.showModalBottomSheet<T>(
+      context: this,
+      builder: builder,
+      isScrollControlled: isScrollControlled,
+      useSafeArea: useSafeArea,
+      showDragHandle: showDragHandle,
+      backgroundColor: backgroundColor,
+      clipBehavior: clipBehavior,
+      barrierLabel: MaterialLocalizations.of(this).modalBarrierDismissLabel,
+    );
   }
 }
