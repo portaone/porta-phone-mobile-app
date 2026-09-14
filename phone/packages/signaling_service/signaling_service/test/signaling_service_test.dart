@@ -192,6 +192,46 @@ void main() {
       await service.dispose();
     });
 
+    test('connects with the mode updateMode switched to, not the one it was created with', () async {
+      // The user switched incoming-call delivery from the persistent socket to
+      // push; a reconnect afterwards must not bring the socket service back.
+      final service = WebtritSignalingService(config: _kConfig, mode: SignalingServiceMode.persistent);
+      service.connect();
+      await Future<void>.delayed(Duration.zero);
+      platform.inject(SignalingConnected());
+      await Future<void>.delayed(Duration.zero);
+
+      await WebtritSignalingService.updateMode(SignalingServiceMode.pushBound);
+      platform.inject(
+        SignalingDisconnected(
+          code: 1000,
+          reason: null,
+          knownCode: SignalingDisconnectCode.normalClosure,
+          recommendedReconnectDelay: Duration.zero,
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      service.connect();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(platform.updatedModes, [SignalingServiceMode.pushBound]);
+      expect(platform.startedModes, [SignalingServiceMode.persistent, SignalingServiceMode.pushBound]);
+      await service.dispose();
+    });
+
+    test('a disposed instance leaves the set updateMode switches', () async {
+      final before = WebtritSignalingService.liveInstanceCount;
+      final service = WebtritSignalingService(config: _kConfig, mode: SignalingServiceMode.persistent);
+      expect(WebtritSignalingService.liveInstanceCount, before + 1);
+
+      await service.dispose();
+
+      expect(WebtritSignalingService.liveInstanceCount, before, reason: 'a disposed instance is not held');
+      await WebtritSignalingService.updateMode(SignalingServiceMode.pushBound);
+      expect(platform.updatedModes, [SignalingServiceMode.pushBound]);
+      expect(platform.startedModes, isEmpty);
+    });
+
     test('is idempotent while start is pending', () async {
       final service = WebtritSignalingService(config: _kConfig);
       service.connect();

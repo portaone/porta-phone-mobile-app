@@ -46,8 +46,8 @@ await service.attach();
 // 3. Send a request (while connected)
 await service.execute(HangupRequest(transaction: 'tx-1', line: 1, callId: 'call-1'));
 
-// 4. Switch mode at runtime without restarting the WebSocket connection
-await service.updateMode(SignalingServiceMode.pushBound);
+// 4. Switch mode at runtime (static: the platform and every live instance)
+await WebtritSignalingService.updateMode(SignalingServiceMode.pushBound);
 
 // 5. Stop
 await service.dispose();
@@ -64,7 +64,7 @@ await service.dispose();
 | `start(config, {mode})` | Starts the platform service; `mode` defaults to `SignalingServiceMode.persistent` |
 | `attach()` | Connects to an already-running hub without starting a new service |
 | `execute(request)` | Sends a `Request` via the active connection; throws when not connected |
-| `updateMode(mode)` | Switches service lifecycle mode at runtime without restarting the WebSocket |
+| `updateMode(mode)` | Static. Switches the lifecycle mode of the platform and of every live instance, so a later `connect()` starts in the new mode |
 | `setIncomingCallHandler(callback)` | Registers the app-side incoming call callback for background handling (Android); no-op on iOS |
 | `dispose()` | Stops the service and releases all resources |
 

@@ -391,8 +391,9 @@ await service.attach(); // connects to the already-running hub
 
 ```dart
 // Promote from pushBound to persistent after the user explicitly opens the app:
-await service.updateMode(SignalingServiceMode.persistent);
-// WebSocket connection is NOT restarted -- only the onTaskRemoved behaviour changes.
+await WebtritSignalingService.updateMode(SignalingServiceMode.persistent);
+// Every live instance connects in the new mode from now on; the one the
+// instance was created with is not brought back by a later reconnect.
 ```
 
 ### Send a request
@@ -423,7 +424,7 @@ await service.dispose();
 | `start(config, {mode})` | Starts the platform service; `mode` defaults to `SignalingServiceMode.persistent` |
 | `attach()` | Connects to an already-running hub without starting a new service |
 | `execute(request)` | Sends a `Request` via the active connection; throws `StateError` when not connected |
-| `updateMode(mode)` | Switches lifecycle mode at runtime without restarting the WebSocket |
+| `updateMode(mode)` | Static. Switches the lifecycle mode of the platform and of every live instance, so a later `connect()` keeps the new mode |
 | `setIncomingCallHandler(callback)` | Registers app-side background incoming-call callback (Android only; no-op on iOS) |
 | `dispose()` | Stops the service and releases all resources |
 
