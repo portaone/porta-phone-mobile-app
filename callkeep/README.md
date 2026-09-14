@@ -175,11 +175,11 @@ one cannot take a group apart by accident. A group needs two calls, so naming a 
 
 Grouping is presentation: it tells Telecom or CallKit that several calls belong together.
 Nothing about the calls changes, so a backend that cannot group them answers
-`callGroupingNotSupported` and the calls carry on. Both Android backends group calls today:
-the standalone one keeps the membership itself, Telecom gets an `android.telecom.Conference`;
-CallKit and web still answer `callGroupingNotSupported` (the desktop packages are not
-supported platforms and keep the base stubs). The rules a backend follows are the same
-everywhere:
+`callGroupingNotSupported` and the calls carry on. Every native backend groups calls today:
+the Android standalone one keeps the membership itself, Telecom gets an
+`android.telecom.Conference`, CallKit a `CXSetGroupCallAction`; web still answers
+`callGroupingNotSupported` (the desktop packages are not supported platforms and keep the
+base stubs). The rules a backend follows are the same everywhere:
 
 - every backend holds one group at a time, and `setCallGroup` states its whole membership: a
   call left off the list leaves, whatever it was grouped with before; `unsetCallGroup` names

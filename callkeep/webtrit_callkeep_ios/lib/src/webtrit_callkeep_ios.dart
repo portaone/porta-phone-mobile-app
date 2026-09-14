@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:uuid/uuid.dart';
+import 'package:webtrit_callkeep_ios/src/common/call_group_coordinator.dart';
 import 'package:webtrit_callkeep_ios/src/common/callkeep.pigeon.dart';
 import 'package:webtrit_callkeep_ios/src/common/converters.dart';
 import 'package:webtrit_callkeep_platform_interface/webtrit_callkeep_platform_interface.dart';
@@ -17,12 +18,22 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
   final _soundApi = PHostSoundApi();
 
   final _UUIDToCallIdMapping _uuidToCallIdMapping = _UUIDToCallIdMapping();
+  late final CallGroupCoordinator _callGroups = CallGroupCoordinator(
+    release: (callIds) => _api
+        .unsetCallGroup(callIds.map((callId) => _uuidToCallIdMapping.put(callId: callId)).toList())
+        .then((value) => value?.value.toCallkeep()),
+    group: (callIds) => _api
+        .setCallGroup(callIds.map((callId) => _uuidToCallIdMapping.put(callId: callId)).toList())
+        .then((value) => value?.value.toCallkeep()),
+  );
   final _CallkeepActionHistory _callkeepActionHistory = _CallkeepActionHistory();
 
   @override
   void setDelegate(CallkeepDelegate? delegate) {
     if (delegate != null) {
-      PDelegateFlutterApi.setUp(_CallkeepDelegateRelay(delegate, _uuidToCallIdMapping, _callkeepActionHistory));
+      PDelegateFlutterApi.setUp(
+        _CallkeepDelegateRelay(delegate, _uuidToCallIdMapping, _callkeepActionHistory, _callGroups),
+      );
     } else {
       PDelegateFlutterApi.setUp(null);
     }
@@ -54,6 +65,10 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
 
   @override
   Future<void> tearDown() {
+    // The provider is invalidated with every call it held, so no call is in a group any
+    // more; the record starts a new session, and a grouping answered after this point for a
+    // call of the old one records nothing.
+    _callGroups.sessionEnded();
     return _api.tearDown();
   }
 
@@ -65,6 +80,7 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
     bool hasVideo,
   ) async {
     final uuid = _uuidToCallIdMapping.put(callId: callId);
+    _callGroups.callReported(callId);
     final error = await _api.reportNewIncomingCall(uuid, handle.toPigeon(), displayName, hasVideo);
     final callkeepError = error?.value.toCallkeep();
 
@@ -124,6 +140,7 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
 
   @override
   Future<void> reportEndCall(String callId, String displayName, CallkeepEndCallReason reason) async {
+    _callGroups.callEnded(callId);
     return _api.reportEndCall(
       _uuidToCallIdMapping.put(callId: callId),
       displayName,
@@ -139,6 +156,7 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
     bool video,
     bool proximityEnabled,
   ) async {
+    _callGroups.callReported(callId);
     return _api
         .startCall(
           _uuidToCallIdMapping.put(callId: callId),
@@ -162,6 +180,11 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
 
   @override
   Future<CallkeepCallRequestError?> setHeld(String callId, bool onHold) async {
+    // A member of a group is never held on its own: the group is one thing to CallKit, and
+    // holding one call would leave it with a member nobody can hear. Same answer as Android.
+    if (_callGroups.isGrouped(callId)) {
+      return CallkeepCallRequestError.callIsGrouped;
+    }
     return _api.setHeld(_uuidToCallIdMapping.put(callId: callId), onHold).then((value) => value?.value.toCallkeep());
   }
 
@@ -171,16 +194,11 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
   }
 
   @override
-  Future<CallkeepCallRequestError?> setCallGroup(String groupId, List<String> callIds) async {
-    final uuids = callIds.map((callId) => _uuidToCallIdMapping.put(callId: callId)).toList();
-    return _api.setCallGroup(uuids).then((value) => value?.value.toCallkeep());
-  }
+  Future<CallkeepCallRequestError?> setCallGroup(String groupId, List<String> callIds) =>
+      _callGroups.declare(groupId, callIds);
 
   @override
-  Future<CallkeepCallRequestError?> unsetCallGroup(List<String> callIds) async {
-    final uuids = callIds.map((callId) => _uuidToCallIdMapping.put(callId: callId)).toList();
-    return _api.unsetCallGroup(uuids).then((value) => value?.value.toCallkeep());
-  }
+  Future<CallkeepCallRequestError?> unsetCallGroup(List<String> callIds) => _callGroups.release(callIds);
 
   @override
   Future<CallkeepCallRequestError?> setSpeaker(String callId, bool enabled) async {
@@ -206,12 +224,18 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
 }
 
 class _CallkeepDelegateRelay implements PDelegateFlutterApi {
-  const _CallkeepDelegateRelay(this._delegate, this._uuidToCallIdMapping, this._callkeepActionHistory);
+  const _CallkeepDelegateRelay(
+    this._delegate,
+    this._uuidToCallIdMapping,
+    this._callkeepActionHistory,
+    this._callGroups,
+  );
 
   final CallkeepDelegate _delegate;
 
   final _UUIDToCallIdMapping _uuidToCallIdMapping;
   final _CallkeepActionHistory _callkeepActionHistory;
+  final CallGroupCoordinator _callGroups;
 
   @override
   void continueStartCallIntent(PHandle handle, String? displayName, bool video) {
@@ -250,16 +274,23 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
   @override
   Future<bool> performEndCall(String uuid) async {
     _callkeepActionHistory.add(uuid: uuid, action: _CallkeepAction.performEndCall());
-    final result = await _delegate.performEndCall(_uuidToCallIdMapping.getCallId(uuid: uuid));
+    final callId = _uuidToCallIdMapping.getCallId(uuid: uuid);
+    final result = await _delegate.performEndCall(callId);
     if (result) {
       _uuidToCallIdMapping.delete(uuid: uuid);
+      _callGroups.callEnded(callId);
     }
     return result;
   }
 
   @override
   Future<bool> performSetHeld(String uuid, bool onHold) async {
-    return _delegate.performSetHeld(_uuidToCallIdMapping.getCallId(uuid: uuid), onHold);
+    final callId = _uuidToCallIdMapping.getCallId(uuid: uuid);
+    // A hold CallKit puts on a member of a group - a call switch, say - is answered here and
+    // not reported: the group is one thing and the application owns its media, the same way
+    // the Android backend complies with Telecom's hold on a grouped child without telling it.
+    if (_callGroups.isGrouped(callId)) return true;
+    return _delegate.performSetHeld(callId, onHold);
   }
 
   @override
@@ -304,6 +335,8 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
 
   @override
   void didReset() {
+    // Every call the provider tracked is gone, so no call is in a group either.
+    _callGroups.sessionEnded();
     _delegate.didReset();
   }
 }

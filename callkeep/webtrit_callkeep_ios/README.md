@@ -70,6 +70,43 @@ expected. Failing to do so causes missed pushes.
 
 ---
 
+## Call groups
+
+`setCallGroup` / `unsetCallGroup` present several calls as one CallKit call group. CallKit keeps
+no readable record of who is grouped with whom, so the package keeps it on the Dart side
+(`CallGroupAssignment`, a record of membership and nothing else: one group at a time, under
+the name the caller gave it; a second name while one is live answers
+`maximumCallGroupsReached`) and only ever tells CallKit what to do. `CallGroupCoordinator`
+owns that record and runs each request as a sequence of stages against it, one request at a
+time in the order they were made, so a release or a second name made while a grouping is in
+flight is planned against what that grouping left: members
+that left are ungrouped first, then the group that remains is stated in full as one transaction
+of `CXSetGroupCallAction`s grouping every member with the first. The record changes only once
+CallKit takes a stage, so a refused request leaves the record describing what CallKit still
+shows and a retry asks again.
+
+CallKit hands every `CXSetGroupCallAction` back through the provider delegate, the package's own
+included. The plugin fulfils the ones it requested itself (remembered by action UUID until the
+delegate performs them); only grouping started in the system call UI reaches
+`CallkeepDelegate.performSetCallGroup`. `supportsGrouping` / `supportsUngrouping` are raised on
+the calls for the request only and lowered when CallKit answers it, so the system UI never offers
+merge or split controls the application did not ask for.
+
+A member of a group is never held on its own: `setHeld` answers `callIsGrouped`, and a hold
+CallKit itself puts on a member is fulfilled by the plugin without reaching the delegate. The
+record follows the calls, and the coordinator is where every end path reports: a call that ends
+leaves its group and its lifetime ends (a call reported under the same id afterwards is a new
+one, not the one a request in flight was asked for), a provider reset and `tearDown` end the
+session and let the next session's requests run ahead of the old session's stranded ones. A
+request is about the session and the calls it was made in: the coordinator takes the session
+and the lifetime of every named call when the request is made, before it waits its turn, and
+checks them when its turn comes and again after every awaited stage - a request of a session
+that ended is over, a member that ended or was replaced is left out - so neither a request that
+waited in the queue nor a late answer records anything but what is still live, asks an
+invalidated provider for anything, or touches the next session's groups.
+
+---
+
 ## iOS-only API
 
 ```dart

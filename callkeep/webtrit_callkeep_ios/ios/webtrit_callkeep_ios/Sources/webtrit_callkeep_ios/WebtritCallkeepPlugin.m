@@ -27,6 +27,8 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
   NSMutableSet<NSUUID *> *_ownCallUuids;
   NSMutableSet<NSUUID *> *_videoCallUuids;
   NSMutableSet<NSUUID *> *_answeringCallUuids;
+  // Group actions this plugin asked CallKit for, by action UUID, until CallKit answers them.
+  NSMutableSet<NSUUID *> *_requestedGroupActionUuids;
   BOOL _callWaitingToneOwnCallsOnly;
   CXCallController *_callController;
   BOOL _driveIdleTimerDisabled;
@@ -58,6 +60,7 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
     _ownCallUuids = [NSMutableSet set];
     _videoCallUuids = [NSMutableSet set];
     _answeringCallUuids = [NSMutableSet set];
+    _requestedGroupActionUuids = [NSMutableSet set];
     _callWaitingToneOwnCallsOnly = YES;
   }
   return self;
@@ -461,28 +464,139 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   [self requestTransaction:transaction completion:completion];
 }
 
-/// Grouping calls in CallKit is not wired up yet: every `CXCallUpdate` this plugin
-/// builds still reports `supportsGrouping = NO`, so a grouping transaction would be
-/// rejected by the system with a less informative error than this one.
+/// Parses [uuidStrings] into CallKit UUIDs, dropping any that are malformed.
 ///
-/// Refused explicitly rather than silently accepted, so the caller can tell that the
-/// system presentation does not match the call state it is holding. The calls
-/// themselves are unaffected either way.
+/// A string CallKit cannot parse names no call, so grouping the rest is better than failing
+/// the whole request over one bad entry.
+- (NSArray<NSUUID *> *)callUUIDsFromStrings:(NSArray<NSString *> *)uuidStrings {
+  NSMutableArray<NSUUID *> *uuids = [NSMutableArray arrayWithCapacity:uuidStrings.count];
+  for (NSString *uuidString in uuidStrings) {
+    NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:uuidString];
+    if (uuid != nil) {
+      [uuids addObject:uuid];
+    } else {
+#ifdef DEBUG
+      NSLog(@"[Callkeep][callUUIDsFromStrings] skipping malformed uuid %@", uuidString);
+#endif
+    }
+  }
+  return uuids;
+}
+
+/// Tells CallKit that [uuid] may now be grouped, or taken out of a group.
+///
+/// Calls are reported with grouping off, and it is raised here for the moment a grouping
+/// request is being made rather than for the life of the call. The flags are what put the
+/// merge and split controls in the system call UI, and offering either one in a build whose
+/// backend cannot conference would show a control that can only fail. Merging is started from
+/// the application instead, and there is no split flow to offer yet.
+///
+/// Holding and DTMF are restated alongside the grouping flags. Apple documents a call update
+/// as carrying only new and changed information, and the header gives the `BOOL` properties no
+/// default, so this is a precaution rather than a correction: the set here is the one every
+/// call is reported with, and restating it can never take a capability away.
+- (void)setGroupingAllowed:(BOOL)grouping ungrouping:(BOOL)ungrouping forCallUUID:(NSUUID *)uuid {
+  CXCallUpdate *callUpdate = [[CXCallUpdate alloc] init];
+  callUpdate.supportsGrouping = grouping;
+  callUpdate.supportsUngrouping = ungrouping;
+  callUpdate.supportsHolding = YES;
+  callUpdate.supportsDTMF = YES;
+  [_provider reportCallWithUUID:uuid updated:callUpdate];
+}
+
 - (void)setCallGroup:(NSArray<NSString *> *)uuidStrings
            completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
 #ifdef DEBUG
-  NSLog(@"[Callkeep][setCallGroup] uuidStrings = %@ - not supported yet", uuidStrings);
+  NSLog(@"[Callkeep][setCallGroup] uuidStrings = %@", uuidStrings);
 #endif
-  completion([WTPCallRequestError makeWithValue:WTPCallRequestErrorEnumCallGroupingNotSupported], nil);
+  NSArray<NSUUID *> *uuids = [self callUUIDsFromStrings:uuidStrings];
+  if (uuids.count == 0) {
+    // An empty membership names no group and changes nothing.
+    completion(nil, nil);
+    return;
+  }
+  if (uuids.count == 1) {
+    // One call is not a group, so naming it as the whole membership means it now stands alone.
+    [self requestUngroupingOfCallUUIDs:uuids completion:completion];
+    return;
+  }
+
+  // Every member is grouped with the first, which is what makes calling this again with a
+  // longer membership add to the same group rather than start another one.
+  NSUUID *anchor = uuids.firstObject;
+  NSMutableArray<CXAction *> *actions = [NSMutableArray arrayWithCapacity:uuids.count - 1];
+  for (NSUUID *uuid in uuids) {
+    [self setGroupingAllowed:YES ungrouping:NO forCallUUID:uuid];
+    if ([uuid isEqual:anchor]) {
+      continue;
+    }
+    [actions addObject:[[CXSetGroupCallAction alloc] initWithCallUUID:uuid callUUIDToGroupWith:anchor]];
+  }
+  [self requestGroupTransaction:[[CXTransaction alloc] initWithActions:actions] forCallUUIDs:uuids completion:completion];
 }
 
-/// Counterpart of `setCallGroup:`; refused for the same reason.
 - (void)unsetCallGroup:(NSArray<NSString *> *)uuidStrings
              completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
 #ifdef DEBUG
-  NSLog(@"[Callkeep][unsetCallGroup] uuidStrings = %@ - not supported yet", uuidStrings);
+  NSLog(@"[Callkeep][unsetCallGroup] uuidStrings = %@", uuidStrings);
 #endif
-  completion([WTPCallRequestError makeWithValue:WTPCallRequestErrorEnumCallGroupingNotSupported], nil);
+  NSArray<NSUUID *> *uuids = [self callUUIDsFromStrings:uuidStrings];
+  if (uuids.count == 0) {
+    // An empty list does nothing, so a caller that computes one cannot take a group apart by
+    // accident.
+    completion(nil, nil);
+    return;
+  }
+  [self requestUngroupingOfCallUUIDs:uuids completion:completion];
+}
+
+/// Takes [uuids] out of whatever group they are in, leaving the calls themselves running.
+///
+/// A nil second UUID is CallKit's way of saying ungroup.
+- (void)requestUngroupingOfCallUUIDs:(NSArray<NSUUID *> *)uuids
+                          completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
+  NSMutableArray<CXAction *> *actions = [NSMutableArray arrayWithCapacity:uuids.count];
+  for (NSUUID *uuid in uuids) {
+    [self setGroupingAllowed:NO ungrouping:YES forCallUUID:uuid];
+    [actions addObject:[[CXSetGroupCallAction alloc] initWithCallUUID:uuid callUUIDToGroupWith:nil]];
+  }
+  [self requestGroupTransaction:[[CXTransaction alloc] initWithActions:actions] forCallUUIDs:uuids completion:completion];
+}
+
+/// Requests a grouping transaction and closes the capability window behind it.
+///
+/// Grouping was allowed on [uuids] for this request only. Once CallKit reports the transaction
+/// complete - fulfilled, failed or refused by the delegate - both flags go back to NO, so the
+/// system call UI is never left offering a merge or split the application did not ask for.
+/// The completion is what CallKit gives: it fires after the provider has answered every action
+/// in the transaction. Two overlapping requests on the same call would close each other's
+/// window early; the application issues one grouping request at a time, and the flags are
+/// re-raised by every request, so the cost of that is a refused action, not a stuck one.
+- (void)requestGroupTransaction:(CXTransaction *)transaction
+                   forCallUUIDs:(NSArray<NSUUID *> *)uuids
+                     completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
+  // CallKit hands every action back through the provider delegate, the plugin's own included.
+  // Remembering them lets the delegate tell a grouping the application asked for, which it
+  // fulfils on its own, from one started in the system call UI, which the application decides.
+  // The delegate forgets an action as it fulfils it; the completion below only runs before
+  // the delegate is asked - CallKit answers a request once it is committed, not once it is
+  // performed - so it clears them only when the request was refused outright.
+  for (CXAction *action in transaction.actions) {
+    [_requestedGroupActionUuids addObject:action.UUID];
+  }
+  __weak typeof(self) weakSelf = self;
+  [self requestTransaction:transaction completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+    typeof(self) strongSelf = weakSelf;
+    if (error != nil || flutterError != nil) {
+      for (CXAction *action in transaction.actions) {
+        [strongSelf->_requestedGroupActionUuids removeObject:action.UUID];
+      }
+    }
+    for (NSUUID *uuid in uuids) {
+      [strongSelf setGroupingAllowed:NO ungrouping:NO forCallUUID:uuid];
+    }
+    completion(error, flutterError);
+  }];
 }
 
 #pragma mark - WTPHostApi - helpers
@@ -901,9 +1015,28 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 
 - (void)provider:(CXProvider *)provider performSetGroupCallAction:(CXSetGroupCallAction *)action {
 #ifdef DEBUG
-  NSLog(@"[Callkeep][CXProviderDelegate][provider:performSetGroupCallAction:] - not implemented");
+  NSLog(@"[Callkeep][CXProviderDelegate][provider:performSetGroupCallAction:]");
 #endif
-  [action fail];
+  // Reached for grouping this plugin requested as well as for grouping started elsewhere:
+  // CallKit routes every action through the provider delegate, the same way hold does. A
+  // grouping the application asked for through setCallGroup is already its decision, so it is
+  // fulfilled here without asking again - the way the Android backends apply a group without
+  // a round trip. Only a grouping started in the system call UI goes to the application, where
+  // a refusal fails the action and leaves the system presentation as it was.
+  if ([_requestedGroupActionUuids containsObject:action.UUID]) {
+    [_requestedGroupActionUuids removeObject:action.UUID];
+    [action fulfill];
+    return;
+  }
+  [_delegateFlutterApi performSetCallGroup:action.callUUID.UUIDString
+                           groupWithCallId:action.callUUIDToGroupWith.UUIDString
+                                completion:^(NSNumber *fulfill, FlutterError *error) {
+                                  if (error != nil || [fulfill boolValue] != YES) {
+                                    [action fail];
+                                  } else {
+                                    [action fulfill];
+                                  }
+                                }];
 }
 
 - (void)provider:(CXProvider *)provider performPlayDTMFCallAction:(CXPlayDTMFCallAction *)action {
