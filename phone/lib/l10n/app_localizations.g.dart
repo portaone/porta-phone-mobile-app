@@ -2857,11 +2857,11 @@ abstract class AppLocalizations {
   /// **'Group info'**
   String get messaging_GroupInfo_title;
 
-  /// No description provided for @messaging_GroupInfo_titlePrefix.
+  /// Name shown for a group chat that has no name of its own: in the chat list, in the chat title and in Group info. {id} is the chat's number.
   ///
   /// In en, this message translates to:
-  /// **'Group:'**
-  String get messaging_GroupInfo_titlePrefix;
+  /// **'Group {id}'**
+  String messaging_GroupInfo_titlePrefix(int id);
 
   /// Button text shown when removing moderator status from a user in a group chat. Condition: user is currently a moderator and can be demoted to a regular member.
   ///

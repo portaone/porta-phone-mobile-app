@@ -112,7 +112,7 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
       builder: (context, state) {
         if (state is CVSReady && state.chat != null) {
           final chat = state.chat!;
-          final name = chat.name ?? '${context.l10n.messaging_GroupInfo_titlePrefix}: ${chat.id}';
+          final name = chat.title(context.l10n);
 
           final groupAuthorities = chat.members.firstWhere((m) => m.userId == widget.userId).groupAuthorities;
           final amIOwner = groupAuthorities == GroupAuthorities.owner;
@@ -150,16 +150,15 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
                     ),
                   ],
                 ),
-                body: Padding(
+                // Full width for the same reason as the contact info: the
+                // column must not size itself to the avatar.
+                body: Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     children: [
                       const SizedBox(height: 32),
                       GroupAvatar(name: name, size: 50),
-                      SizedBox(
-                        width: double.infinity,
-                        child: Text('id: ${chat.id}', style: const TextStyle(fontSize: 12), textAlign: TextAlign.right),
-                      ),
                       const SizedBox(height: 24),
                       nameField(chat, canChangeName),
                       const SizedBox(height: 24),

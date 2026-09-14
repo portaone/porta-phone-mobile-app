@@ -22,6 +22,34 @@ class MockSmsRepository extends Mock implements SmsRepository {}
 
 class MockContactsRepository extends Mock implements ContactsRepository {}
 
+final _created = DateTime(2026, 9, 1);
+
+/// A direct chat between the signed-in user and one other person.
+Chat dialogChat({required int id}) => Chat(
+  id: id,
+  type: ChatType.direct,
+  name: null,
+  createdAt: _created,
+  updatedAt: _created,
+  members: [
+    ChatMember(id: 1, chatId: id, userId: 'user-1', groupAuthorities: null),
+    ChatMember(id: 2, chatId: id, userId: 'user-2', groupAuthorities: null),
+  ],
+);
+
+/// A group of two, owned by the signed-in user.
+Chat groupChat({required int id, String? name}) => Chat(
+  id: id,
+  type: ChatType.group,
+  name: name,
+  createdAt: _created,
+  updatedAt: _created,
+  members: [
+    ChatMember(id: 1, chatId: id, userId: 'user-1', groupAuthorities: GroupAuthorities.owner),
+    ChatMember(id: 2, chatId: id, userId: 'user-2', groupAuthorities: null),
+  ],
+);
+
 /// Everything the two conversation screens read from around them.
 ///
 /// The screens are pumped in a state that is not ready yet: the app bar - the
@@ -62,6 +90,33 @@ class ConversationScreenHarness {
   /// known to be a group either, so the menu has nothing to open.
   void withUnknownConversationLoading() {
     when(() => conversationCubit.state).thenReturn(const CVSInit((chatId: 1, participantId: null)));
+  }
+
+  /// A loaded dialog with one other person, whose contact card is still on
+  /// its way (the repository answers with nothing yet).
+  void withDialogReady({int chatId = 6}) {
+    when(() => conversationCubit.state)
+        .thenReturn(CVSReady((chatId: chatId, participantId: 'user-2'), chat: dialogChat(id: chatId)));
+    withNoContactCards();
+  }
+
+  /// A loaded group of two, owned by the signed-in user.
+  void withGroupReady({int chatId = 42, String? name = 'Team'}) {
+    when(() => conversationCubit.state)
+        .thenReturn(CVSReady((chatId: chatId, participantId: null), chat: groupChat(id: chatId, name: name)));
+    withNoContactCards();
+  }
+
+  /// Every member's card is asked for and none arrives - the screens name
+  /// the members as unknown and stay put.
+  void withNoContactCards() {
+    when(
+      () => contactsRepository.watchContactBySourceWithPhonesAndEmails(
+        any(),
+        any(),
+        fetchIfMissing: any(named: 'fetchIfMissing'),
+      ),
+    ).thenAnswer((_) => Stream<Contact?>.value(null));
   }
 
   void withSmsConversation() {

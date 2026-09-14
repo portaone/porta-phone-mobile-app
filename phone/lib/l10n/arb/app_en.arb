@@ -1412,8 +1412,15 @@
   "@messaging_GroupInfo_removeUserBtnText": {},
   "messaging_GroupInfo_title": "Group info",
   "@messaging_GroupInfo_title": {},
-  "messaging_GroupInfo_titlePrefix": "Group:",
-  "@messaging_GroupInfo_titlePrefix": {},
+  "messaging_GroupInfo_titlePrefix": "Group {id}",
+  "@messaging_GroupInfo_titlePrefix": {
+    "description": "Name shown for a group chat that has no name of its own: in the chat list, in the chat title and in Group info. {id} is the chat's number.",
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
   "messaging_GroupInfo_unmakeModeratorBtnText": "Unmake moderator",
   "@messaging_GroupInfo_unmakeModeratorBtnText": {
     "description": "Button text shown when removing moderator status from a user in a group chat. Condition: user is currently a moderator and can be demoted to a regular member."
