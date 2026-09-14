@@ -2,6 +2,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -20,8 +21,7 @@ class StatusIconPickerSheet extends StatelessWidget {
   const StatusIconPickerSheet({super.key});
 
   static Future<String?> show(BuildContext context) {
-    return showModalBottomSheet<String>(
-      context: context,
+    return context.showModalBottomSheet<String>(
       useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.surface,

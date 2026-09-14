@@ -104,10 +104,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
   }
 
   Future<void> onNewChatConversation() async {
-    showModalBottomSheet(
+    context.showModalBottomSheet(
       useSafeArea: true,
       isScrollControlled: true,
-      context: context,
       builder: (context) => BlocProvider(
         create: (context) => ChatConversationBuilderCubit(
           messagingBloc.state.client,
@@ -136,10 +135,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
   }
 
   Future<void> onNewSmsConversation() async {
-    showModalBottomSheet(
+    context.showModalBottomSheet(
       useSafeArea: true,
       isScrollControlled: true,
-      context: context,
       builder: (context) => BlocProvider(
         create: (context) => SmsConversationBuilderCubit(
           smsRepository,
