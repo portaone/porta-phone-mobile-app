@@ -4584,6 +4584,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // Acknowledged, not yet done: the entry stays until the server's hangup
       // for the call confirms it, so a handshake planned in between still
       // sees the call as one being ended rather than as one to bring back.
+    } on WebtritSignalingErrorException catch (e, s) {
+      // The server received the request and refused it - the call is gone
+      // already, or the request is not applicable to it. Sending the same
+      // request again on the next handshake would get the same answer, and a
+      // queued entry would only end up in that handshake's plan.
+      queuedTerminationRequestsRepository.remove(request);
+      _logger.warning('_dispatchTerminationRequest refused by the server, not retried. source=$source', e, s);
     } catch (e, s) {
       // The request did not reach the server (socket down, timeout): it is
       // replayed from the repository by the next handshake.
