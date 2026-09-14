@@ -153,8 +153,8 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
 
   /// Whether the picture of the other person is on the screen right now - the
   /// far side sends frames with something in them, and nothing keeps them off.
-  /// The same condition decides whether the controls show an avatar instead
-  /// (see `CallControlsParams.focusedFrameRenderable`).
+  /// Decided once, here: it tells the controls whether to show an avatar
+  /// instead, and whether they may hide at all.
   bool get _remotePictureShown => _remoteFrameProbe.renderable && !_remoteVideoHidden;
 
   /// Whether the controls may hide themselves as things stand: only over a
@@ -327,7 +327,6 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                     videoFit: _videoFit,
                     remotePlaceholderBuilder: widget.remotePlaceholderBuilder,
                     backgroundMode: _backgroundMode,
-                    hasRenderableRemoteFrame: _remoteFrameProbe.renderable,
                     hideVideo: _remoteVideoHidden,
                   ),
                 // The same gesture for anyone navigating by name rather than
@@ -390,7 +389,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                           interactionsDebounceActive == false &&
                           widget.callStatus == CallStatus.ready &&
                           widget.activeCalls.any((call) => call.updating) == false,
-                      hasRenderableRemoteFrame: _remoteFrameProbe.renderable,
+                      remotePictureShown: _remotePictureShown,
                       onCallSelected: (callId) => _callBloc.add(CallControlEvent.callSelected(callId)),
                       onKeypadToggle: _toggleKeypad,
                       onCameraChanged: _toggleFocusedCamera,

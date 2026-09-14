@@ -376,7 +376,7 @@ void main() {
         interactionsEnabled: true,
         // A live video call: the picture fills the screen behind the
         // controls, so the avatar stands down.
-        hasRenderableRemoteFrame: true,
+        remotePictureShown: true,
         dtmfInput: ValueNotifier(''),
         onCallSelected: (_) {},
         onKeypadToggle: (_) {},

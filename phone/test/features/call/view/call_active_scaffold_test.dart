@@ -253,6 +253,35 @@ void main() {
       await teardownCallScaffold(tester);
     });
 
+    testWidgets('a live picture behind a held focus does not stand in for the held one', (tester) async {
+      // The frames are probed on the live (current) call; with the held call
+      // focused, the controls describe her, and her avatar must be there.
+      final live = VideoCall();
+      final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
+      await tester.pump(const Duration(milliseconds: 1));
+
+      expect(find.descendant(of: find.byType(CallRemoteAvatar), matching: find.text('CD')), findsOneWidget);
+
+      // Focus back on the live call: the picture is hers, the avatar stands down.
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: live));
+      await tester.pump();
+      expect(find.byType(CallRemoteAvatar), findsNothing);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a held video call shows its avatar even as the only call', (tester) async {
+      // Every call held: the screen keeps the video of a held call off the
+      // screen rather than freeze on its last frame, and a blank background
+      // must not be left standing in for the person.
+      final held = VideoCall(held: true);
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held], focusedCall: held));
+      await tester.pump(const Duration(milliseconds: 1));
+
+      expect(find.byType(CallRemoteAvatar), findsOneWidget);
+      await teardownCallScaffold(tester);
+    });
+
     testWidgets('with a held call focused, the avatar shows that call, not the live one', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 3;

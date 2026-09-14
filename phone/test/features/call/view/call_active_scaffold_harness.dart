@@ -86,7 +86,7 @@ ActiveCall makeCall({
 /// either way. [framesArrive] false is a far side that announces video but
 /// never delivers a frame worth showing: no track, so no probe ever succeeds.
 class VideoCall extends ActiveCall {
-  VideoCall({this.cameraOn = true, this.framesArrive = true})
+  VideoCall({this.cameraOn = true, this.framesArrive = true, super.held})
     : _remoteStream = framesArrive ? _UnprobableRemoteStream() : null,
       super(
         callId: 'video',

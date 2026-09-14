@@ -45,7 +45,7 @@ class CallControlsPortrait extends StatelessWidget {
           // by the info block and the action area and scales itself
           // down into it - so growing content (e.g. the open in-call
           // keypad) shrinks the avatar, never the controls.
-          if (!params.focusedFrameRenderable && !params.keypadShown)
+          if (!params.remotePictureShown && !params.keypadShown)
             Flexible(
               child: Center(
                 child: FittedBox(

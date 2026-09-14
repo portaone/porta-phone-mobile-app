@@ -200,7 +200,7 @@ class _InfoZone extends StatelessWidget {
     // too narrow for the picture and the gap beside it. The lines saying
     // who the call is with matter more than the portrait, so the avatar
     // gives way rather than overflow.
-    final avatarShown = !params.focusedFrameRenderable && constraints.maxWidth >= avatarRadius * 2 + 24 + 48;
+    final avatarShown = !params.remotePictureShown && constraints.maxWidth >= avatarRadius * 2 + 24 + 48;
     if (!avatarShown) {
       // No picture beside the lines (a live video already fills the screen,
       // or the zone is too narrow for the portrait) - the lines still stand
