@@ -172,6 +172,19 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// An incoming call that is still ringing - offered but not yet accepted.
   bool get isIncomingRinging => isIncoming && !wasAccepted;
 
+  /// A call registered from a push whose offer never arrived as a live
+  /// event, whichever of the answer's steps it has reached meanwhile: the
+  /// answer waits for the offer and times out without it. The handshake plan
+  /// delivers the offer from the call's log to such a call.
+  bool get awaitsOffer =>
+      incomingOffer == null &&
+      switch (processingStatus) {
+        CallProcessingStatus.incomingFromPush ||
+        CallProcessingStatus.incomingSubmittedAnswer ||
+        CallProcessingStatus.incomingPerformingStarted => true,
+        _ => false,
+      };
+
   @override
   bool get wasHungUp => hungUpTime != null;
 

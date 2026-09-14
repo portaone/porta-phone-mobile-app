@@ -42,6 +42,7 @@ class CallBlocHarness {
   CallBlocHarness({
     bool sendPresenceSettings = false,
     UserMediaBuilder? userMediaBuilder,
+    CallkeepConnections? callkeepConnections,
     CallCapabilitiesConfig capabilities = const CallCapabilitiesConfig(),
   }) {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +59,7 @@ class CallBlocHarness {
       onSessionMissedReported: () async {},
       submitNotification: notifications.add,
       callkeep: callkeep,
-      callkeepConnections: _FakeCallkeepConnections(),
+      callkeepConnections: callkeepConnections ?? _FakeCallkeepConnections(),
       userMediaBuilder: userMediaBuilder ?? _FakeUserMediaBuilder(),
       contactResolver: _FakeContactResolver(),
       callErrorReporter: errors,
