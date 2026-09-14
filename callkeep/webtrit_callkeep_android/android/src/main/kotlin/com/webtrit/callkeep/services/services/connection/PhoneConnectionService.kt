@@ -14,6 +14,7 @@ import androidx.annotation.RequiresPermission
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.AssetCacheManager
+import com.webtrit.callkeep.common.CallDataConst
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.TelephonyUtils
@@ -145,12 +146,108 @@ class PhoneConnectionService : ConnectionService() {
                 is PhoneServiceCommand.CallOp -> {
                     phoneConnectionServiceDispatcher.dispatch(command.action, command.metadata)
                 }
+
+                is PhoneServiceCommand.Group -> {
+                    handleCallGroup(command.action, command.callIds)
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exception $e with service action: ${intent.action},")
         }
 
         return START_NOT_STICKY
+    }
+
+    /**
+     * Builds or takes apart a Telecom [android.telecom.Conference] for [callIds].
+     *
+     * Telecom treats two connections of one application as rivals and holds one when the other
+     * becomes active. A conference is the sanctioned way to say they are one thing. The calls
+     * themselves are untouched - this changes what the framework, the shade and a headset think
+     * they are looking at, nothing else.
+     *
+     * A group needs two calls, so a membership smaller than that takes the group apart instead,
+     * which is the same rule the standalone backend applies.
+     */
+    private fun handleCallGroup(
+        action: ServiceAction,
+        callIds: List<String>,
+    ) {
+        val connections = callIds.mapNotNull { connectionManager.getConnection(it) }
+        Log.i(TAG, "handleCallGroup: action=$action requested=$callIds resolved=${connections.size}")
+        // There is one group at a time, so the conference that stands is found among every
+        // connection, not only the listed ones: a membership naming none of its members still
+        // means it is over.
+        val current = connectionManager.getConnections().firstNotNullOfOrNull { it.conference as? PhoneConference }
+
+        if (action == ServiceAction.SetCallGroup && connections.size < 2) {
+            if (callIds.isEmpty()) return
+            // One call named as the whole membership: the group is over for everyone in it.
+            current?.let {
+                Log.i(TAG, "handleCallGroup: a membership of one, taking the group apart")
+                it.dissolve()
+            }
+            return
+        }
+
+        if (action == ServiceAction.UnsetCallGroup) {
+            val touched = mutableSetOf<PhoneConference>()
+            connections.forEach { connection ->
+                (connection.conference as? PhoneConference)?.let { conference ->
+                    Log.i(TAG, "handleCallGroup: removing ${connection.callId} from its group")
+                    conference.removeConnection(connection)
+                    touched += conference
+                }
+            }
+            touched.forEach { it.dissolveIfLonely() }
+            // While grouped, a hold from Telecom's sequencing was answered without telling the
+            // application, so a removed call can be held for Telecom and active for the
+            // application. Making it active again lets the sequencer hold whichever call it must,
+            // and that hold now reaches the application like any other.
+            connections.filter { it.state == Connection.STATE_HOLDING }.forEach {
+                Log.i(TAG, "handleCallGroup: ${it.callId} was held as a child, making it active")
+                it.setActive()
+            }
+            return
+        }
+
+        val existing = current
+        if (existing != null) {
+            Log.i(TAG, "handleCallGroup: restating the existing group")
+            // The list is the whole membership: a child left off it leaves the group, and a call
+            // that was held as a child is made active on the way out (see the unset path above).
+            existing.connections.filterIsInstance<PhoneConnection>().filter { it !in connections }.forEach {
+                Log.i(TAG, "handleCallGroup: ${it.callId} was left off the membership, removing")
+                existing.removeConnection(it)
+                if (it.state == Connection.STATE_HOLDING) it.setActive()
+            }
+            connections.filter { it.conference == null }.forEach {
+                existing.addConnection(it)
+                it.setActive()
+            }
+            if (existing.dissolveIfLonely()) return
+            // Telecom held the group when the application started the call that is joining it
+            // now. The group is speaking again, so it is active again.
+            if (existing.state == Connection.STATE_HOLDING) {
+                Log.i(TAG, "handleCallGroup: the group was held, making it active")
+                existing.setActive()
+            }
+            return
+        }
+
+        val conference = PhoneConference(TelephonyUtils(applicationContext).getPhoneAccountHandle())
+        connections.forEach { conference.addConnection(it) }
+        addConference(conference)
+        // Every member of a group is speaking, so every child is active. Telephony conferences
+        // work this way because the radio reports all legs active; here the states are ours to
+        // set, and leaving a child held would mean a participant nobody can hear. Done after
+        // addConference so Telecom already knows they belong to one thing when they go active.
+        connections.forEach { it.setActive() }
+        Log.i(
+            TAG,
+            "handleCallGroup: addConference returned, children=${conference.connections.size} " +
+                "state=${conference.state}",
+        )
     }
 
     /**
@@ -498,10 +595,11 @@ class PhoneConnectionService : ConnectionService() {
 
             // Re-deliver the call-setup event so a freshly attached delegate adopts/shows the call.
             when {
-                connection.hasAnswered ->
+                connection.hasAnswered -> {
                     performEventHandle(CallLifecycleEvent.AnswerCall, CallMetadata(callId = connection.callId))
+                }
 
-                connection.state == Connection.STATE_RINGING ->
+                connection.state == Connection.STATE_RINGING -> {
                     // A still-ringing incoming call whose owning Flutter delegate is freshly attached
                     // (push->foreground isolate handoff or hot restart). The delegate that originally
                     // received IncomingConnectionReported is gone, so the new one has no record of this call.
@@ -509,6 +607,7 @@ class PhoneConnectionService : ConnectionService() {
                     // processes signaling events (handshake/hangup). Without this the call lives only
                     // as a native connection and an incoming hangup is dropped (no matching ActiveCall).
                     performEventHandle(CallLifecycleEvent.ReplayIncomingCall, connection.currentMetadata)
+                }
             }
         }
     }
@@ -767,8 +866,9 @@ class PhoneConnectionService : ConnectionService() {
             val uri: Uri = TelephonyUtils.buildOutgoingUri(number)
 
             // If there is already an active call not on hold, we terminate it and start a new one,
-            // otherwise, we would encounter an exception when placing the outgoing call.
-            connectionManager.getActiveConnection()?.let {
+            // otherwise, we would encounter an exception when placing the outgoing call. A member
+            // of a group is never that call: the group is what Telecom holds for the new one.
+            connectionManager.getActiveConnection()?.takeUnless { it.isGrouped }?.let {
                 Log.i(TAG, "onOutgoingCall, hung up previous call: $it")
                 it.hungUp()
             }
@@ -807,8 +907,7 @@ class PhoneConnectionService : ConnectionService() {
                         Log.w(TAG, "startIncomingCall: addNewIncomingCall failed for callId=${metadata.callId}, re-registering PhoneAccount and retrying once", it)
                         TelephonyUtils(context).registerPhoneAccount()
                         TelephonyUtils(context).addNewIncomingCall(metadata)
-                    }
-                    .onSuccess { onSuccess() }
+                    }.onSuccess { onSuccess() }
                     .onFailure { e ->
                         Log.e(TAG, "startIncomingCall: addNewIncomingCall failed after re-register for callId=${metadata.callId}", e)
                         connectionManager.removePending(metadata.callId)
@@ -818,6 +917,27 @@ class PhoneConnectionService : ConnectionService() {
                 Log.w(TAG, "Incoming call rejected: ${incomingCallError.value}")
                 onError(incomingCallError)
             })
+        }
+
+        /**
+         * Sends a group membership to the connection service.
+         *
+         * Carries a plain array of ids rather than [CallMetadata], because membership belongs to
+         * the group and not to any one call in it.
+         */
+        fun startCallGroup(
+            context: Context,
+            action: ServiceAction,
+            callIds: List<String>,
+        ) {
+            val intent = Intent(context, PhoneConnectionService::class.java)
+            intent.action = action.action
+            intent.putExtra(CallDataConst.CALL_IDS, callIds.toTypedArray())
+            try {
+                context.startService(intent)
+            } catch (e: Exception) {
+                Log.w(TAG, "startCallGroup: failed to start service for ${action.name}: $e")
+            }
         }
 
         private fun communicate(

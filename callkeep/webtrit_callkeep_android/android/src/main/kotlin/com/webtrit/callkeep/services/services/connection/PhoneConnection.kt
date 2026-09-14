@@ -105,6 +105,24 @@ class PhoneConnection internal constructor(
     val hasHold: Boolean
         get() = state == STATE_HOLDING
 
+    /**
+     * Whether this call is part of a group, and therefore not something to hold on its own.
+     *
+     * Telecom holds one call to make another active and does not exempt two children of the same
+     * conference, so a member of a group is asked to hold routinely. The request has to be
+     * answered - a connection that does not reach the state Telecom asked for is disconnected a
+     * few seconds later with "did not reach the target state in timeout window" - but it must
+     * not travel any further.
+     *
+     * Beyond Telecom's own bookkeeping the hold means nothing here. A room's audio is mixed away
+     * from the device, so the leg carries the room whatever Telecom thinks of it, and telling the
+     * application to hold it would take one participant out of a conversation nobody asked to
+     * change. The same goes for a hold arriving from the application: a merged leg is not held on
+     * its own from either direction, which is the rule the server states by refusing one.
+     */
+    val isGrouped: Boolean
+        get() = conference != null
+
     var hasAnswered: Boolean = false
         private set
 
@@ -244,6 +262,10 @@ class PhoneConnection internal constructor(
         logger.d("Putting call on hold: $callId")
         super.onHold()
         setOnHold()
+        if (isGrouped) {
+            logger.i("onHold: $callId is in a group, Telecom is answered but the application is not told")
+            return
+        }
         dispatcher(CallMediaEvent.ConnectionHolding, metadata.copy(hasHold = true))
     }
 
@@ -254,6 +276,10 @@ class PhoneConnection internal constructor(
         logger.d("Taking call off hold: $callId")
         super.onUnhold()
         setActive()
+        if (isGrouped) {
+            logger.i("onUnhold: $callId is in a group, Telecom is answered but the application is not told")
+            return
+        }
         dispatcher(CallMediaEvent.ConnectionHolding, metadata.copy(hasHold = false))
     }
 
@@ -283,6 +309,14 @@ class PhoneConnection internal constructor(
         logger.v("Connection state is now: $stateText for callId: $callId")
         super.onStateChanged(state)
         handleConnectionTimeout(state)
+        if (state == STATE_DISCONNECTED) {
+            // Telecom drops a disconnected child from its conference on its own, but the group
+            // that is left behind is ours to close once it has fewer than two calls.
+            (conference as? PhoneConference)?.let {
+                it.removeConnection(this)
+                it.dissolveIfLonely()
+            }
+        }
 
         if (lastKnownState == STATE_NEW && state == STATE_DIALING) {
             onDialing()
@@ -688,13 +722,17 @@ class PhoneConnection internal constructor(
             // WebRTC's stream even after MODE_IN_COMMUNICATION is set. requestAudioFocusForCall()
             // is a hidden @SystemApi we can't call, so mirror the intent with the public API.
             if (forcedAudioFocusRequest == null) {
-                val attributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .build()
-                val request = AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-                    .setAudioAttributes(attributes)
-                    .build()
+                val attributes =
+                    AudioAttributes
+                        .Builder()
+                        .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                val request =
+                    AudioFocusRequest
+                        .Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                        .setAudioAttributes(attributes)
+                        .build()
                 val result = sysAm.requestAudioFocus(request)
                 if (result == android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                     forcedAudioFocusRequest = request

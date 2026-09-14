@@ -81,6 +81,8 @@ class PhoneConnectionServiceDispatcher(
             ServiceAction.CleanConnections,
             ServiceAction.ReplayAudioState,
             ServiceAction.ReplayConnectionStates,
+            ServiceAction.SetCallGroup,
+            ServiceAction.UnsetCallGroup,
             -> logger.w("dispatch: unexpected IPC command action: $action")
         }
     }

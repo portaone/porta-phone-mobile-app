@@ -179,10 +179,10 @@ is away still leaves its group, and the next bridge finds the record as the call
 foreground service is the one `CallEndListener`: while it is attached it handles the end with
 its full context and the core stays out of its way. A listener that only observes - the
 incoming-call service handles `AnswerCall` and nothing else - does not count, so its presence
-while the bridge is away changes nothing. The standalone
-backend takes the request and keeps the membership; the Telecom backend still refuses, so a
-request there is `NOT_SUPPORTED`. Grouping only changes how the OS presents calls that run
-either way, so a refusal is never a reason to end one.
+while the bridge is away changes nothing. Both backends
+take the request today; the standalone backend keeps the membership, the Telecom backend builds
+an `android.telecom.Conference` (see `PhoneConference`). Grouping only changes how the OS
+presents calls that run either way, so a refusal is never a reason to end one.
 
 ### Service Lifecycle
 

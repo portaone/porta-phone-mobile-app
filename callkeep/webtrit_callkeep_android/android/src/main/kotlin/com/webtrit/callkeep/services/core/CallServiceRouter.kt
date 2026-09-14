@@ -7,6 +7,7 @@ import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.common.TelephonyUtils
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.PhoneConnectionService
+import com.webtrit.callkeep.services.services.connection.ServiceAction
 import com.webtrit.callkeep.services.services.connection.StandaloneCallService
 import com.webtrit.callkeep.services.services.connection.StandaloneServiceAction
 
@@ -179,7 +180,10 @@ class CallServiceRouter(
      */
     fun setCallGroup(callIds: List<String>): Boolean =
         route(
-            telecom = { false },
+            telecom = {
+                PhoneConnectionService.startCallGroup(ctx, ServiceAction.SetCallGroup, callIds)
+                true
+            },
             standalone = {
                 StandaloneCallService.sendCallGroup(ctx, StandaloneServiceAction.SetCallGroup, callIds)
                 true
@@ -189,7 +193,10 @@ class CallServiceRouter(
     /** Counterpart of [setCallGroup]. */
     fun unsetCallGroup(callIds: List<String>): Boolean =
         route(
-            telecom = { false },
+            telecom = {
+                PhoneConnectionService.startCallGroup(ctx, ServiceAction.UnsetCallGroup, callIds)
+                true
+            },
             standalone = {
                 StandaloneCallService.sendCallGroup(ctx, StandaloneServiceAction.UnsetCallGroup, callIds)
                 true
