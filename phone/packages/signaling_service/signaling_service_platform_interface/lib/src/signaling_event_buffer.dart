@@ -1,26 +1,68 @@
 import 'models/signaling_module_event.dart';
+import 'session_snapshot.dart';
 
-/// Maintains a session-scoped replay buffer for [SignalingModuleEvent] streams.
+/// What a late subscriber of a [SignalingModuleEvent] stream receives: the
+/// session's lifecycle so far, and its state as it stands now.
 ///
-/// Encapsulates two rules shared across all platform implementations:
-/// - [SignalingConnecting] clears the buffer (new session started).
-/// - [SignalingProtocolEvent] items are never buffered -- they are transient
-///   (ICE candidates, call requests/responses) and must be consumed live.
+/// The rules, shared by every replay boundary - the module that owns the
+/// socket, the foreground-service hub, the module that proxies it in the app
+/// isolate and the plugin that fronts them all - so that no two of them
+/// disagree about the session:
+/// - [SignalingConnecting] starts a new session: everything before it is gone;
+/// - lifecycle events are kept in order and replayed as they came;
+/// - the handshake is kept as a [SessionSnapshot], folded with every protocol
+///   event that changes session state (registration, a call's events), and
+///   replayed as the handshake the server would send now - a ringing call as a
+///   line whose log carries the offer, an ended call gone;
+/// - protocol events themselves are never replayed: what they changed is in
+///   the snapshot, and the rest (ICE candidates, DTMF, a media state that a
+///   live call already applied) is not actionable later.
 ///
-/// Call [onEvent] for every emitted event, then use [snapshot] to replay
-/// buffered state to late subscribers.
+/// Call [onEvent] for every emitted event, then [snapshot] to replay to a late
+/// subscriber.
 class SignalingEventBuffer {
-  final _buffer = <SignalingModuleEvent>[];
+  SignalingEventBuffer({int Function()? now}) : _now = now;
 
-  /// Records [event] into the buffer according to the session buffer contract.
+  final int Function()? _now;
+
+  /// The lifecycle events in order; `null` marks where the handshake goes.
+  final _lifecycle = <SignalingModuleEvent?>[];
+  SessionSnapshot? _session;
+
+  /// Whether a call is up on any line of the session, as the snapshot knows it.
+  bool get hasActiveCalls => _session?.hasActiveCalls ?? false;
+
+  /// Records [event] into the buffer according to the contract above.
   void onEvent(SignalingModuleEvent event) {
-    if (event is SignalingConnecting) _buffer.clear();
-    if (event is! SignalingProtocolEvent) _buffer.add(event);
+    switch (event) {
+      case SignalingConnecting():
+        clear();
+        _lifecycle.add(event);
+      case SignalingHandshakeReceived(:final handshake):
+        // One slot per session: a further handshake, should a server ever send
+        // one, replaces the state and is not replayed twice.
+        if (_session == null) _lifecycle.add(null);
+        _session = SessionSnapshot(handshake, now: _now);
+      case SignalingProtocolEvent(:final event):
+        _session?.apply(event);
+      default:
+        _lifecycle.add(event);
+    }
   }
 
-  /// A snapshot of buffered events for replay to a new subscriber.
-  List<SignalingModuleEvent> get snapshot => List<SignalingModuleEvent>.of(_buffer);
+  /// A snapshot of what to replay to a new subscriber: the lifecycle events,
+  /// with the handshake rendered from the session as it stands now.
+  List<SignalingModuleEvent> get snapshot {
+    final session = _session;
+    return [
+      for (final event in _lifecycle)
+        if (event != null) event else if (session != null) SignalingHandshakeReceived(handshake: session.toHandshake()),
+    ];
+  }
 
-  /// Clears all buffered events.
-  void clear() => _buffer.clear();
+  /// Clears the buffer and the session state.
+  void clear() {
+    _lifecycle.clear();
+    _session = null;
+  }
 }

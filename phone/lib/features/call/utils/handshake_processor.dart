@@ -53,6 +53,7 @@ final class RestoreCallAction extends HandshakeAction {
     required this.acceptedEvent,
     required this.acceptedTime,
     this.incomingCallEvent,
+    this.mediaState,
   });
 
   final int line;
@@ -60,6 +61,10 @@ final class RestoreCallAction extends HandshakeAction {
   final AcceptedEvent acceptedEvent;
   final DateTime acceptedTime;
   final IncomingCallEvent? incomingCallEvent;
+
+  /// The remote side's latest media state, when the log carries one: the
+  /// caller may have turned the camera off while nobody here was listening.
+  final MediaStatePeerMessageEvent? mediaState;
 }
 
 /// Deliver an unanswered [IncomingCallEvent] to the BLoC signaling handler.
@@ -68,9 +73,15 @@ final class RestoreCallAction extends HandshakeAction {
 /// earliest call log entry is an [IncomingCallEvent], and the call is not yet
 /// tracked in BLoC state.
 final class HandleIncomingCallAction extends HandshakeAction {
-  const HandleIncomingCallAction({required this.event});
+  const HandleIncomingCallAction({required this.event, this.mediaState});
 
   final IncomingCallEvent event;
+
+  /// The remote side's latest media state after the offer, when the log
+  /// carries one. A live call would have applied it as it came; a call
+  /// restored from the log is answered as the caller left it - a video offer
+  /// downgraded to audio is answered as audio.
+  final MediaStatePeerMessageEvent? mediaState;
 }
 
 /// Call [Callkeep.endCall] for a local connection that is no longer present in
@@ -181,6 +192,11 @@ class HandshakeProcessor {
       // AcceptedEvent may not be the latest entry after a re-INVITE or transfer -
       // search the full log list rather than checking only the newest entry.
       final acceptedLogEntry = callEventLogEntries.where((log) => log.callEvent is AcceptedEvent).firstOrNull;
+      // Newest first, so the first media state found is the one that stands.
+      final mediaState = callEventLogEntries
+          .map((log) => log.callEvent)
+          .whereType<MediaStatePeerMessageEvent>()
+          .firstOrNull;
 
       CallkeepConnection? connection;
       if (callEvent != null) {
@@ -233,6 +249,7 @@ class HandshakeProcessor {
             acceptedEvent: acceptedEvent,
             acceptedTime: DateTime.fromMillisecondsSinceEpoch(acceptedLogEntry.timestamp),
             incomingCallEvent: earliestCallEvent is IncomingCallEvent ? earliestCallEvent : null,
+            mediaState: mediaState,
           ),
         );
         continue;
@@ -258,7 +275,7 @@ class HandshakeProcessor {
           acceptedLogEntry == null &&
           earliestCallEvent is IncomingCallEvent &&
           !activeCallIds.contains(activeLine.callId)) {
-        actions.add(HandleIncomingCallAction(event: earliestCallEvent));
+        actions.add(HandleIncomingCallAction(event: earliestCallEvent, mediaState: mediaState));
       }
     }
 

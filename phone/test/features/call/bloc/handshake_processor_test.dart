@@ -511,6 +511,52 @@ void main() {
   // queued termination requests
   // -------------------------------------------------------------------------
 
+  group('remote media state in the log', () {
+    // The caller may turn the camera off while nobody here was listening; the
+    // log carries that as a MediaStatePeerMessageEvent after the offer, newest
+    // first, and the plan hands the latest one on with the call.
+    test('an unanswered incoming call carries the latest media state', () async {
+      final line = _makeLine(
+        callLogs: [
+          CallEventLog(
+            timestamp: 3000,
+            callEvent: const MediaStatePeerMessageEvent(line: _kLine, callId: _kCallId, video: false),
+          ),
+          CallEventLog(
+            timestamp: 2000,
+            callEvent: const MediaStatePeerMessageEvent(line: _kLine, callId: _kCallId, video: true),
+          ),
+          CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent()),
+        ],
+      );
+      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final action = actions.single as HandleIncomingCallAction;
+      expect(action.mediaState?.video, isFalse, reason: 'the newest entry is the one that stands');
+    });
+
+    test('an accepted call carries the latest media state', () async {
+      final line = _makeLine(
+        callLogs: [
+          CallEventLog(
+            timestamp: 3000,
+            callEvent: const MediaStatePeerMessageEvent(line: _kLine, callId: _kCallId, video: false),
+          ),
+          CallEventLog(timestamp: 2000, callEvent: _makeAcceptedEvent()),
+          CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent()),
+        ],
+      );
+      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final action = actions.single as RestoreCallAction;
+      expect(action.mediaState?.video, isFalse);
+    });
+
+    test('a log without a media state hands on none', () async {
+      final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent())]);
+      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      expect((actions.single as HandleIncomingCallAction).mediaState, isNull);
+    });
+  });
+
   group('conference block', () {
     test('a room the server reports is hung up first, ahead of the per-line actions', () async {
       // The client keeps no room, so one the server has is one it cannot rejoin.

@@ -237,6 +237,25 @@ void main() {
       expect(decoded.handshake.conference, isNull);
     });
 
+    test('roundtrip preserves the guest line', () {
+      final handshake = StateHandshake(
+        keepaliveInterval: const Duration(seconds: 30),
+        timestamp: 1,
+        registration: const Registration(status: RegistrationStatus.registered),
+        lines: const [],
+        presenceInfos: const [],
+        dialogInfos: const [],
+        guestLine: Line(
+          callId: 'guest',
+          callLogs: const [CallEventLog(timestamp: 5, callEvent: AcceptedEvent(line: null, callId: 'guest'))],
+        ),
+      );
+      final decoded = decodeHubEvent(encodeHubEvent(SignalingHandshakeReceived(handshake: handshake)));
+      final guest = (decoded as SignalingHandshakeReceived).handshake.guestLine;
+      expect(guest?.callId, 'guest');
+      expect((guest!.callLogs.single as CallEventLog).callEvent, isA<AcceptedEvent>());
+    });
+
     test('roundtrip preserves a running conference', () {
       const conference = ConferenceInfo(
         room: 4242,

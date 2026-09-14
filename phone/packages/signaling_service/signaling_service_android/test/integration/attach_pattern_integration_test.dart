@@ -451,15 +451,19 @@ void main() {
       expect(events.whereType<SignalingConnecting>(), hasLength(1));
     });
 
-    test('stale call line is evicted from handshake after HangupEvent', () async {
+    test('a call that ended before attach is gone from the replayed handshake, its line kept in place', () async {
       // Scenario: push isolate handles first call; first call ends (HangupEvent).
-      // The handshake must still be replayed to late subscribers but without the
-      // dead call's line in handshake.lines.
+      // The late subscriber gets the session as it stands: the handshake is
+      // replayed once, and the dead call's line is free - at its position, since
+      // the position is the line number.
       final kHandshakeWithLine = StateHandshake(
         keepaliveInterval: const Duration(seconds: 30),
         timestamp: 1705322000000,
         registration: const Registration(status: RegistrationStatus.registered),
-        lines: [Line(callId: 'first-call-id', callLogs: const [])],
+        lines: [
+          Line(callId: 'first-call-id', callLogs: const []),
+          Line(callId: 'other-call-id', callLogs: const []),
+        ],
         presenceInfos: const [],
         dialogInfos: const [],
         guestLine: null,
@@ -468,15 +472,12 @@ void main() {
       final (:manager, :fakeClient) = await _startServiceSide();
       addTearDown(() => manager.handleStatus(enabled: false));
 
-      // Inject handshake that contains the first call's line.
       fakeClient.injectHandshake(kHandshakeWithLine);
       await Future<void>.delayed(Duration.zero);
 
-      // First call ends — hub evicts its line from the buffered handshake.
-      fakeClient.injectEvent(HangupEvent(line: 1, callId: 'first-call-id', code: 200, reason: 'OK'));
+      fakeClient.injectEvent(HangupEvent(line: 0, callId: 'first-call-id', code: 200, reason: 'OK'));
       await Future<void>.delayed(Duration.zero);
 
-      // Activity opens and attaches as a late subscriber.
       final (:hubClient, :hubModule) = await _attachMainSide('attach-stale-line-1');
       addTearDown(hubModule.dispose);
 
@@ -484,26 +485,32 @@ void main() {
       hubModule.events.listen(events.add);
       await Future<void>.delayed(Duration.zero);
 
-      // Handshake is still replayed (registration status etc. still useful).
       final handshakes = events.whereType<SignalingHandshakeReceived>().toList();
       expect(handshakes, hasLength(1), reason: 'Handshake itself must still be replayed');
-      // But the dead call's line must have been removed.
-      expect(
-        handshakes.first.handshake.lines,
-        isEmpty,
-        reason: 'Dead call line must be evicted from handshake.lines on HangupEvent',
-      );
+      final lines = handshakes.single.handshake.lines;
+      expect(lines, hasLength(2), reason: 'a freed line keeps its position');
+      expect(lines[0], isNull, reason: 'the dead call is gone');
+      expect(lines[1]?.callId, 'other-call-id');
     });
 
-    test('call history is replayed to late subscriber — ringing state', () async {
+    test('a call ringing before attach is in the replayed handshake with its offer', () async {
       // Scenario: call arrives via IncomingCallEvent; Activity opens while still ringing.
-      // Late subscriber must receive IncomingCallEvent so CallBloc reaches incomingFromOffer.
+      // The late subscriber sees the call as a handshake line whose log carries the
+      // IncomingCallEvent with the SDP offer, the way the server reports a ringing
+      // call after a reconnect; no event is replayed.
       final (:manager, :fakeClient) = await _startServiceSide();
       addTearDown(() => manager.handleStatus(enabled: false));
 
       fakeClient.injectHandshake(_kHandshake);
-      fakeClient.injectEvent(HangupEvent(line: 1, callId: 'first-call-id', code: 200, reason: 'OK'));
-      fakeClient.injectEvent(IncomingCallEvent(line: 1, callId: 'second-call-id', callee: 'bob', caller: 'alice'));
+      fakeClient.injectEvent(
+        IncomingCallEvent(
+          line: 1,
+          callId: 'second-call-id',
+          callee: 'bob',
+          caller: 'alice',
+          jsep: const {'type': 'offer', 'sdp': 'v=0'},
+        ),
+      );
       await Future<void>.delayed(Duration.zero);
 
       final (:hubClient, :hubModule) = await _attachMainSide('history-ringing-1');
@@ -513,26 +520,22 @@ void main() {
       hubModule.events.listen(events.add);
       await Future<void>.delayed(Duration.zero);
 
-      final protocolEvents = events.whereType<SignalingProtocolEvent>().toList();
-      expect(
-        protocolEvents.where((e) => e.event is IncomingCallEvent).length,
-        1,
-        reason: 'Ringing call: IncomingCallEvent must be replayed',
-      );
-      expect(
-        protocolEvents.where((e) => e.event is AcceptedEvent).length,
-        0,
-        reason: 'Ringing call: no AcceptedEvent yet',
-      );
+      expect(events.whereType<SignalingProtocolEvent>(), isEmpty, reason: 'state is replayed, not events');
+      final handshake = events.whereType<SignalingHandshakeReceived>().single.handshake;
+      final line = handshake.lines[1];
+      expect(line?.callId, 'second-call-id');
+      final log = line!.callLogs.single as CallEventLog;
+      expect(log.callEvent, isA<IncomingCallEvent>().having((e) => e.jsep, 'jsep', isNotNull));
     });
 
-    test('call history is replayed to late subscriber — answered state', () async {
+    test('a call answered before attach shows its whole log, newest first', () async {
       // Scenario: call arrived and was answered (AcceptedEvent) before Activity opened.
-      // Late subscriber must receive both IncomingCallEvent AND AcceptedEvent so that
-      // CallBloc reaches the active/accepted state rather than staying in incomingFromOffer.
+      // The handshake line carries both events, so the handshake processor restores
+      // the call as accepted rather than ringing.
       final (:manager, :fakeClient) = await _startServiceSide();
       addTearDown(() => manager.handleStatus(enabled: false));
 
+      fakeClient.injectHandshake(_kHandshake);
       fakeClient.injectEvent(IncomingCallEvent(line: 1, callId: 'call-id', callee: 'bob', caller: 'alice'));
       fakeClient.injectEvent(AcceptedEvent(line: 1, callId: 'call-id'));
       await Future<void>.delayed(Duration.zero);
@@ -544,20 +547,16 @@ void main() {
       hubModule.events.listen(events.add);
       await Future<void>.delayed(Duration.zero);
 
-      final protocolEvents = events.whereType<SignalingProtocolEvent>().toList();
-      // Both events must be replayed in order.
-      expect(protocolEvents.where((e) => e.event is IncomingCallEvent).length, 1);
-      expect(protocolEvents.where((e) => e.event is AcceptedEvent).length, 1);
-      final incoming = protocolEvents.indexWhere((e) => e.event is IncomingCallEvent);
-      final accepted = protocolEvents.indexWhere((e) => e.event is AcceptedEvent);
-      expect(incoming < accepted, isTrue, reason: 'IncomingCallEvent must come before AcceptedEvent');
+      final line = events.whereType<SignalingHandshakeReceived>().single.handshake.lines[1]!;
+      final kinds = line.callLogs.map((l) => (l as CallEventLog).callEvent.runtimeType).toList();
+      expect(kinds, [AcceptedEvent, IncomingCallEvent], reason: 'newest first, as the server orders a log');
     });
 
-    test('call history is NOT replayed after HangupEvent', () async {
-      // After the call ends, no events should be replayed to late subscribers.
+    test('a call that ended before attach is not in the replayed handshake', () async {
       final (:manager, :fakeClient) = await _startServiceSide();
       addTearDown(() => manager.handleStatus(enabled: false));
 
+      fakeClient.injectHandshake(_kHandshake);
       fakeClient.injectEvent(IncomingCallEvent(line: 1, callId: 'call-id', callee: 'bob', caller: 'alice'));
       fakeClient.injectEvent(HangupEvent(line: 1, callId: 'call-id', code: 200, reason: 'OK'));
       await Future<void>.delayed(Duration.zero);
@@ -569,11 +568,31 @@ void main() {
       hubModule.events.listen(events.add);
       await Future<void>.delayed(Duration.zero);
 
-      expect(
-        events.whereType<SignalingProtocolEvent>(),
-        isEmpty,
-        reason: 'Ended call: no protocol events must be replayed',
-      );
+      expect(events.whereType<SignalingProtocolEvent>(), isEmpty);
+      final lines = events.whereType<SignalingHandshakeReceived>().single.handshake.lines;
+      expect(lines.whereType<Line>(), isEmpty, reason: 'Ended call: no line is up');
+    });
+
+    test('the registration a late subscriber sees is the current one', () async {
+      // The handshake always says unregistered (SIP REGISTER has not completed);
+      // the RegisteredEvent that follows is folded into the replayed handshake.
+      final (:manager, :fakeClient) = await _startServiceSide();
+      addTearDown(() => manager.handleStatus(enabled: false));
+
+      fakeClient.injectHandshake(_kHandshake);
+      fakeClient.injectEvent(RegisteredEvent());
+      await Future<void>.delayed(Duration.zero);
+
+      final (:hubClient, :hubModule) = await _attachMainSide('registration-1');
+      addTearDown(hubModule.dispose);
+
+      final events = <SignalingModuleEvent>[];
+      hubModule.events.listen(events.add);
+      await Future<void>.delayed(Duration.zero);
+
+      final handshake = events.whereType<SignalingHandshakeReceived>().single.handshake;
+      expect(handshake.registration.status, RegistrationStatus.registered);
+      expect(events.whereType<SignalingProtocolEvent>(), isEmpty);
     });
   });
 

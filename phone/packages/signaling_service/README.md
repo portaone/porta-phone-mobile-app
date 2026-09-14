@@ -309,9 +309,9 @@ responsible for triggering the system call notification via callkeep.
                                                                     v
                                                                Activity creates
                                                                attach()  <-- main isolate
-                                                               CallBloc receives full
-                                                               session buffer (call event
-                                                               replayed immediately)
+                                                               CallBloc receives the
+                                                               session as it stands: a
+                                                               handshake with the live calls
 ```
 
 ### Callback registration
@@ -486,6 +486,12 @@ internal session buffer — the ordered list of events since the last `Signaling
 new subscriber receives this buffer synchronously on `.listen()`, making it safe to subscribe
 after `start()` or `attach()` has already returned. The buffer is cleared on each reconnect so
 stale events from a previous session are never replayed.
+
+Across the isolate boundary the hub replays state rather than events: a `SessionSnapshot` keeps
+the session's handshake current with the registration events and every call's events on its
+line, and a subscriber that attaches late receives the lifecycle events with a handshake
+rendered from it - a ringing call as a line whose log carries the offer, an answered call with
+its accepted event, an ended call gone. Protocol events are never replayed to a late subscriber.
 
 ---
 

@@ -154,6 +154,7 @@ sealed class _CallSignalingEvent extends CallEvent {
     String? replaceCallId,
     bool? isFocus,
     JsepValue? jsep,
+    bool? remoteVideo,
   }) = _CallSignalingEventIncoming;
 
   const factory _CallSignalingEvent.ringing({required int? line, required String callId}) = _CallSignalingEventRinging;
@@ -275,6 +276,7 @@ class _CallSignalingEventIncoming extends _CallSignalingEvent {
     this.replaceCallId,
     this.isFocus,
     this.jsep,
+    this.remoteVideo,
   });
 
   final int? line;
@@ -294,6 +296,10 @@ class _CallSignalingEventIncoming extends _CallSignalingEvent {
   final bool? isFocus;
 
   final JsepValue? jsep;
+
+  /// The caller's camera as last reported before this call was seen here, when
+  /// the call is restored from a log rather than heard live; null otherwise.
+  final bool? remoteVideo;
 
   @override
   List<Object?> get props => [
@@ -1272,6 +1278,7 @@ class _RestoreAcceptedCall extends CallEvent {
     required this.acceptedEvent,
     required this.acceptedTime,
     this.incomingCallEvent,
+    this.remoteCameraEnabled,
   });
 
   final int line;
@@ -1280,8 +1287,11 @@ class _RestoreAcceptedCall extends CallEvent {
   final DateTime acceptedTime;
   final IncomingCallEvent? incomingCallEvent;
 
+  /// The remote camera as the log last reported it, or null when it never did.
+  final bool? remoteCameraEnabled;
+
   @override
-  List<Object?> get props => [line, callId, acceptedEvent, acceptedTime, incomingCallEvent];
+  List<Object?> get props => [line, callId, acceptedEvent, acceptedTime, incomingCallEvent, remoteCameraEnabled];
 }
 
 // ─── Mutation events ────────────────────────────────────────────────────────
@@ -1344,6 +1354,7 @@ sealed class _CallMutationEvent extends CallEvent {
     String? replaceCallId,
     bool? isFocus,
     JsepValue? jsep,
+    bool? remoteVideo,
   }) = _CallMutationEventSignalingIncoming;
   const factory _CallMutationEvent.signalingAccepted({required String callId, JsepValue? jsep}) =
       _CallMutationEventSignalingAccepted;
@@ -1561,6 +1572,7 @@ class _CallMutationEventSignalingIncoming extends _CallMutationEvent {
     this.replaceCallId,
     this.isFocus,
     this.jsep,
+    this.remoteVideo,
   });
   final int? line;
   final String callId;
@@ -1571,6 +1583,7 @@ class _CallMutationEventSignalingIncoming extends _CallMutationEvent {
   final String? replaceCallId;
   final bool? isFocus;
   final JsepValue? jsep;
+  final bool? remoteVideo;
   @override
   List<Object?> get props => [
     line,
@@ -1582,6 +1595,7 @@ class _CallMutationEventSignalingIncoming extends _CallMutationEvent {
     replaceCallId,
     isFocus,
     jsep,
+    remoteVideo,
   ];
 }
 

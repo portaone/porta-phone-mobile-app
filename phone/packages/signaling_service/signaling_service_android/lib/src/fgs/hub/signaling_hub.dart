@@ -19,6 +19,12 @@ final _logger = Logger('SignalingHub');
 /// Any isolate (e.g. push notification isolate) can subscribe by looking up
 /// [kSignalingHubPortName] via [IsolateNameServer].
 ///
+/// A subscriber that attaches after the session started is brought up to date
+/// with state, not history: it receives the session's lifecycle events and a
+/// handshake rendered from the hub's [SessionSnapshot] - the calls that are up
+/// with their events so far, the registration as it stands - and takes the
+/// same path it takes after a reconnect. Protocol events are never replayed.
+///
 /// Protocol -- subscriber -> hub: [SignalingHubCommand.encode] / [SignalingHubCommand.decode].
 /// Protocol -- hub -> subscriber (List): see [encodeHubEvent] / [decodeHubEvent].
 class SignalingHub {
@@ -38,57 +44,25 @@ class SignalingHub {
   /// (no subscribers — app is closed, persistent-service mode).
   bool get hasSubscribers => _subscribers.isNotEmpty;
 
-  /// True when at least one call is currently active (tracked via [_callEventHistory]).
+  /// True when a call is up on any line of the session.
   ///
   /// Used by [SignalingSyncHandler] to skip manager recreation when a config-change
   /// sync arrives mid-call, preventing the WebSocket from being torn down while
   /// the user is on a call.
-  bool get hasActiveCalls => _callEventHistory.isNotEmpty;
+  bool get hasActiveCalls => _session.hasActiveCalls;
 
-  /// Encoded non-protocol events since the last [SignalingConnecting] event.
+  /// The session as a late subscriber needs it: the lifecycle events of the
+  /// current WebSocket session and a handshake rendered from the session's
+  /// state as it stands now - the same [SignalingEventBuffer] every other
+  /// replay boundary keeps, so the app isolate and this hub cannot disagree
+  /// about which calls are up. Encoded on replay, never stored encoded.
   ///
-  /// Replayed to late subscribers so they receive the current connection state
-  /// ([SignalingConnecting], [SignalingConnected], [SignalingHandshakeReceived]).
-  ///
-  /// Protocol events ([SignalingProtocolEvent]) are intentionally excluded:
-  /// call-level events are tracked separately in [_callEventHistory] so that
-  /// ended calls can be evicted in O(1) without scanning this list. Storing
-  /// all protocol events here would require decoding each entry on eviction
-  /// and would cause the buffer to grow unboundedly over a long session.
-  final List<List<dynamic>> _sessionBuffer = [];
-
-  /// Last encoded registration-state protocol event in the current session.
-  ///
-  /// The initial [StateHandshake] always carries [RegistrationStatus.unregistered]
-  /// because SIP REGISTER hasn't completed yet. The server then sends a
-  /// [RegisteredEvent] (or similar) as a protocol event, which is normally
-  /// excluded from [_sessionBuffer]. Without this field, a late subscriber
-  /// (e.g. the main app opening after the FGS has been running) would only see
-  /// the initial unregistered handshake and get stuck at "Unregistered".
-  ///
-  /// Cleared on each [SignalingConnecting] (new WebSocket session).
-  /// Replaced on each registration state transition event.
-  List<dynamic>? _lastRegistrationEvent;
-
-  /// callId → ordered list of encoded [SignalingProtocolEvent]s for that call.
-  ///
-  /// Tracks the lifecycle of each incoming call that arrived during the current
-  /// WebSocket session so that late subscribers (e.g. the Activity opening
-  /// after a push-notification isolate has already processed the call) receive
-  /// the full event sequence and can reconstruct the correct current state.
-  ///
-  /// Without this map a subscriber that opens after [AcceptedEvent] would only
-  /// receive [IncomingCallEvent] replayed from [_sessionBuffer] and incorrectly
-  /// treat an already-answered call as still ringing.
-  ///
-  /// Lifecycle:
-  /// - [IncomingCallEvent] - new entry created for callId.
-  /// - Non-null [StateHandshake] lines on connect - entry created for each active line in [_onModuleEvent].
-  /// - Subsequent [CallEvent]s (e.g. [AcceptedEvent], [RingingEvent]) - appended.
-  /// - Terminal events ([HangupEvent], [MissedCallEvent]) - entry removed;
-  ///   the dead call's line is also evicted from the buffered handshake.
-  /// - [SignalingConnecting] - entire map cleared (new session).
-  final Map<String, List<List<dynamic>>> _callEventHistory = {};
+  /// A late subscriber is a new isolate with no memory of the session: what it
+  /// needs is where the session stands, not the events that got it there.
+  /// Replaying events would mean replaying the right ones, in the right order,
+  /// with the buffered handshake patched to agree with them - a second copy of
+  /// the call state machine, kept in the transport.
+  final SignalingEventBuffer _session = SignalingEventBuffer();
 
   StreamSubscription<SignalingModuleEvent>? _moduleSubscription;
   bool _started = false;
@@ -124,105 +98,19 @@ class SignalingHub {
   Future<void> dispose() async {
     _logger.warning(
       'Hub disposing — cancelling event forwarding to ${_subscribers.length} subscriber(s); '
-      'pending calls in history: ${_callEventHistory.length}',
+      'active calls: $hasActiveCalls',
     );
     IsolateNameServer.removePortNameMapping(kSignalingHubPortName);
     await _moduleSubscription?.cancel();
     _receivePort.close();
     _subscribers.clear();
-    _sessionBuffer.clear();
-    _callEventHistory.clear();
-    _lastRegistrationEvent = null;
+    _session.clear();
     _logger.fine('Hub disposed');
   }
 
   void _onModuleEvent(SignalingModuleEvent event) {
-    if (event is SignalingConnecting) {
-      _sessionBuffer.clear();
-      _callEventHistory.clear();
-      _lastRegistrationEvent = null;
-    }
-    final encoded = encodeHubEvent(event);
-    if (event is! SignalingProtocolEvent) {
-      _sessionBuffer.add(encoded);
-      if (event is SignalingHandshakeReceived) {
-        for (final line in event.handshake.lines) {
-          if (line != null) {
-            _callEventHistory.putIfAbsent(line.callId, () => []);
-          }
-        }
-      }
-    } else {
-      _updateCallHistory(event.event, encoded);
-      if (_isRegistrationEvent(event.event)) {
-        _lastRegistrationEvent = encoded;
-      }
-    }
-    _broadcast(encoded);
-  }
-
-  bool _isRegistrationEvent(Event event) =>
-      event is RegisteredEvent ||
-      event is UnregisteredEvent ||
-      event is RegisteringEvent ||
-      event is RegistrationFailedEvent ||
-      event is UnregisteringEvent;
-
-  /// Updates [_callEventHistory] based on a protocol event.
-  ///
-  /// - [IncomingCallEvent]: starts a new history entry for that callId.
-  /// - Subsequent [CallEvent]s: appended to the existing history so that late
-  ///   subscribers replay the full sequence (e.g. [IncomingCallEvent] →
-  ///   [AcceptedEvent]) and reach the correct current state.
-  /// - Terminal events ([HangupEvent], [MissedCallEvent]): remove the history
-  ///   entry and evict the dead call's line from the buffered handshake.
-  /// - Non-[CallEvent] protocol events: no call history affected.
-  void _updateCallHistory(Event event, List<dynamic> encoded) {
-    if (event is IncomingCallEvent) {
-      _callEventHistory[event.callId] = [encoded];
-      return;
-    }
-    if (event is! CallEvent) return;
-
-    if (event is HangupEvent || event is MissedCallEvent) {
-      // Always evict the dead call's line from the handshake - regardless of
-      // how the call was tracked in [_callEventHistory] (via IncomingCallEvent
-      // or via StateHandshake lines populated in [_onModuleEvent]).
-      _evictHandshakeLine(event.callId);
-      _callEventHistory.remove(event.callId);
-      _logger.fine('Hub: call history removed (terminal) callId=${event.callId}');
-      return;
-    }
-
-    // Non-terminal event: append to history if this call is being tracked
-    // (i.e. it arrived via IncomingCallEvent during this session).
-    final history = _callEventHistory[event.callId];
-    if (history != null) {
-      history.add(encoded);
-      _logger.fine('Hub: call history appended ${event.runtimeType} callId=${event.callId}');
-    }
-  }
-
-  /// Removes the [callId] entry from the [lines] list inside the buffered
-  /// [SignalingHandshakeReceived] entry (if present).
-  ///
-  /// Mutates the encoded map in-place: no re-encoding required because
-  /// [_sessionBuffer] holds a direct reference to the same [Map] object that
-  /// [encodeHubEvent] produced for the handshake.
-  void _evictHandshakeLine(String callId) {
-    for (final entry in _sessionBuffer) {
-      if (!isHubEventHandshakeReceived(entry) || entry.length < 2) continue;
-      final map = entry[1];
-      if (map is! Map) continue;
-      final lines = map['lines'];
-      if (lines is! List) continue;
-      final before = lines.length;
-      lines.removeWhere((l) => l is Map && l['call_id'] == callId);
-      if (lines.length != before) {
-        _logger.fine('Hub: evicted handshake line callId=$callId');
-      }
-      return;
-    }
+    _session.onEvent(event);
+    _broadcast(encodeHubEvent(event));
   }
 
   void _broadcast(List<dynamic> encoded) {
@@ -268,28 +156,11 @@ class SignalingHub {
     _logger.fine('Hub subscriber added: ${cmd.consumerId} (total: ${_subscribers.length})');
     // Ack first so the subscriber knows the hub port is alive (not stale).
     cmd.replyPort.send(encodeSubAck());
-    // Replay current session buffer so the new subscriber gets the full connection state.
-    for (final event in List<List<dynamic>>.from(_sessionBuffer)) {
-      cmd.replyPort.send(event);
-    }
-    // Replay the last registration state transition so the subscriber doesn't
-    // get stuck at the initial "unregistered" status from the StateHandshake.
-    // The initial handshake always carries unregistered because SIP REGISTER
-    // hasn't completed yet; the subsequent RegisteredEvent (a protocol event)
-    // is not in [_sessionBuffer], so late subscribers would miss it without this.
-    final regEvent = _lastRegistrationEvent;
-    if (regEvent != null) {
-      cmd.replyPort.send(regEvent);
-    }
-    // Replay the full event history for each active in-session call.
-    // Protocol events are not stored in [_sessionBuffer], so without this
-    // replay a late subscriber would miss events that arrived after the initial
-    // handshake — e.g. an [AcceptedEvent] that already moved the call out of
-    // the ringing state before the Activity opened.
-    for (final history in List<List<List<dynamic>>>.from(_callEventHistory.values)) {
-      for (final encoded in history) {
-        cmd.replyPort.send(encoded);
-      }
+    // Replay the session's lifecycle, with the handshake rendered from the
+    // session as it stands now: the calls that are up with their events so
+    // far, and the registration as it is, not as the handshake first said.
+    for (final event in _session.snapshot) {
+      cmd.replyPort.send(encodeHubEvent(event));
     }
   }
 
