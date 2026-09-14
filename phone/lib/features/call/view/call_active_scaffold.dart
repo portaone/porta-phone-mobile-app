@@ -138,6 +138,23 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     }
   }
 
+  /// Whether the video of the current call is kept off the screen: while it
+  /// is held (the picture would freeze on its last frame - and when both sides
+  /// hold and one resumes, the other would see video start while still held)
+  /// and while another call is focused (the controls describe that one, and a
+  /// live picture of somebody else behind them would put two people on screen
+  /// at once).
+  bool get _remoteVideoHidden {
+    final activeCall = widget.activeCalls.current;
+    return activeCall.held || widget.focusedCall.callId != activeCall.callId;
+  }
+
+  /// Whether the picture of the other person is on the screen right now - the
+  /// far side sends frames with something in them, and nothing keeps them off.
+  /// Decided once, here, and handed to the controls, which show an avatar
+  /// instead when it is not.
+  bool get _remotePictureShown => _remoteFrameProbe.renderable && !_remoteVideoHidden;
+
   /// Whether the controls may hide themselves as things stand.
   bool get _autoHide => widget.activeCalls.shouldAutoHideControls(keepControlsVisible: widget.keepControlsVisible);
 
@@ -298,14 +315,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                     videoFit: _videoFit,
                     remotePlaceholderBuilder: widget.remotePlaceholderBuilder,
                     backgroundMode: _backgroundMode,
-                    hasRenderableRemoteFrame: _remoteFrameProbe.renderable,
-                    // Its important to hide video if held to avoid showing frozen/last frames when held,
-                    // and especially for case when both sides turn on hold and after one side unholds video started to show for another 'holded' side.
-                    // Also hidden while another call is focused: the controls
-                    // and the avatar describe the focused call, and a live
-                    // picture of somebody else moving behind them would put
-                    // two different people on screen at once.
-                    hideVideo: activeCall.held || widget.focusedCall.callId != activeCall.callId,
+                    hideVideo: _remoteVideoHidden,
                   ),
                 // The same gesture for anyone navigating by name rather than
                 // by sight, as a node with a name of its own. It is offered
@@ -366,7 +376,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                           interactionsDebounceActive == false &&
                           widget.callStatus == CallStatus.ready &&
                           widget.activeCalls.any((call) => call.updating) == false,
-                      hasRenderableRemoteFrame: _remoteFrameProbe.renderable,
+                      remotePictureShown: _remotePictureShown,
                       onCallSelected: (callId) => _callBloc.add(CallControlEvent.callSelected(callId)),
                       onKeypadToggle: _toggleKeypad,
                       onCameraChanged: _toggleFocusedCamera,

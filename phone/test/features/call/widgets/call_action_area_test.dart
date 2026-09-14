@@ -32,7 +32,7 @@ void main() {
         availableAudioDevices: const [],
         callConfig: callConfig,
         interactionsEnabled: interactionsEnabled,
-        hasRenderableRemoteFrame: false,
+        remotePictureShown: false,
         dtmfInput: ValueNotifier(''),
         onCallSelected: (_) {},
         onKeypadToggle: (_) {},
@@ -120,49 +120,6 @@ void main() {
         findsOneWidget,
       );
       expect(find.text(context.l10n.call_FocusedActionHint_willBeHeld('Dana Weber'), findRichText: true), findsNothing);
-    });
-  });
-
-  group('CallControlsParams - whose picture is behind the controls', () {
-    CallControlsParams paramsFor({required List<ActiveCall> activeCalls, required ActiveCall focusedCall}) {
-      return CallControlsParams(
-        activeCalls: activeCalls,
-        focusedCall: focusedCall,
-        availableAudioDevices: const [],
-        callConfig: const CallCapabilitiesConfig(),
-        interactionsEnabled: true,
-        hasRenderableRemoteFrame: true,
-        dtmfInput: ValueNotifier(''),
-        onCallSelected: (_) {},
-        onKeypadToggle: (_) {},
-        onCameraChanged: (_) {},
-        onCameraPermissionDeniedPressed: () {},
-        onMutedChanged: (_) {},
-        onAudioDeviceChanged: (_) {},
-        onBlindTransferInitiated: () {},
-        onAttendedTransferInitiated: () {},
-        onAttendedTransferSubmitted: (_) {},
-        onHeldChanged: (_) {},
-        onKeyPressed: (_) {},
-        onHangup: () {},
-        onAccept: () {},
-      );
-    }
-
-    test('a frame rendered for the current call does not stand in for a held focused one', () {
-      final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      // The screen probes frames on the derived current call (the live one) -
-      // with the held call focused, its avatar must still be offered.
-      expect(paramsFor(activeCalls: [held, active], focusedCall: held).focusedFrameRenderable, isFalse);
-      expect(paramsFor(activeCalls: [held, active], focusedCall: active).focusedFrameRenderable, isTrue);
-    });
-
-    test('a held focus shows its avatar even when it is the current call', () {
-      final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
-      // Every call held: the screen hides the video of a held call rather
-      // than freeze on its last frame, so a blank background must not be
-      // left standing in for the person.
-      expect(paramsFor(activeCalls: [held], focusedCall: held).focusedFrameRenderable, isFalse);
     });
   });
 

@@ -28,7 +28,7 @@ class CallControlsParams {
     required this.availableAudioDevices,
     required this.callConfig,
     required this.interactionsEnabled,
-    required this.hasRenderableRemoteFrame,
+    required this.remotePictureShown,
     required this.onCallSelected,
     required this.onKeypadToggle,
     required this.onCameraChanged,
@@ -62,9 +62,12 @@ class CallControlsParams {
   /// ready and while a call is being renegotiated.
   final bool interactionsEnabled;
 
-  /// Whether there is a picture behind the controls; without one the avatar
-  /// takes its place.
-  final bool hasRenderableRemoteFrame;
+  /// Whether the picture of the focused call's other person is on the screen
+  /// behind the controls; without one the avatar takes its place. Decided by
+  /// the screen, which owns the frame probe and knows whose video it keeps
+  /// off the screen (a held call's, or the current call's while another one
+  /// is focused).
+  final bool remotePictureShown;
 
   final ValueChanged<String> onCallSelected;
   final ValueChanged<bool> onKeypadToggle;
@@ -93,14 +96,6 @@ class CallControlsParams {
   /// lose nor duplicate digits, and a keypress repaints the digits alone
   /// instead of rebuilding the whole call screen.
   final ValueListenable<String> dtmfInput;
-
-  /// Whether the picture behind the controls belongs to the focused call -
-  /// only then may its avatar stand down. The screen probes frames on the
-  /// derived current call, which says nothing about a held or audio-only
-  /// focused one; a held focus shows its avatar too, since the screen hides
-  /// the video of a held call rather than freeze on its last frame.
-  bool get focusedFrameRenderable =>
-      hasRenderableRemoteFrame && focusedCall.callId == activeCalls.current.callId && !focusedCall.held;
 }
 
 /// Everything the user can press during a call: the toolbar, the call
