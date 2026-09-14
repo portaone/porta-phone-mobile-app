@@ -81,6 +81,23 @@ final class EndLocalCallAction extends HandshakeAction {
   final String callId;
 }
 
+/// Send a [ConferenceHangupRequest]: the server reports a conference room on
+/// this session that the client cannot rejoin.
+///
+/// The room lives on the media server and outlives a signaling drop, but the
+/// client's own connection to it does not survive an app restart, and a room
+/// is never rejoined - the server offers it once. Left standing it would keep
+/// its participants in the mix with nobody hosting them, and refuse every
+/// later merge as `conference_already_active` for the rest of the session.
+/// Hanging the room up leaves the calls in it untouched; they are restored
+/// like any other call. Emitted first, before the per-line actions, since the
+/// BLoC stops after a [HangupSignalingAction] or [DeclineSignalingAction].
+final class HangupStaleConferenceAction extends HandshakeAction {
+  const HangupStaleConferenceAction({required this.room});
+
+  final int room;
+}
+
 /// Processes a [StateHandshake] and returns the list of [HandshakeAction]s the
 /// BLoC should execute.
 ///
@@ -103,6 +120,12 @@ final class EndLocalCallAction extends HandshakeAction {
 /// - For each local Callkeep connection whose call ID is absent from the handshake
 ///   lines -> [EndLocalCallAction].
 ///
+/// **The conference block:**
+/// - A [conference] the server reports is one the client cannot rejoin, so it
+///   -> [HangupStaleConferenceAction], ahead of everything else. The client keeps
+///   no conference of its own yet; once it does, a room it still holds is
+///   adopted or forgotten instead (`docs/conference_protocol.md`, section 7).
+///
 /// When queued terminations exist in the repository, they are emitted first as
 /// regular [HangupSignalingAction]/[DeclineSignalingAction] entries, removed
 /// from the repository immediately, and excluded from subsequent handshake-line
@@ -121,8 +144,9 @@ class HandshakeProcessor {
     required List<Line?> lines,
     required Line? guestLine,
     required Set<String> activeCallIds,
+    ConferenceInfo? conference,
   }) async {
-    final actions = <HandshakeAction>[];
+    final actions = <HandshakeAction>[if (conference != null) HangupStaleConferenceAction(room: conference.room)];
 
     /// Prepare termination queue actions
     final queuedTerminationCallIds = <String>{};
