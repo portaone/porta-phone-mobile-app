@@ -1578,6 +1578,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messaging_MessageListView_typingTrail => 'is typing...';
 
   @override
+  String get messaging_MessageView_actionsHint => 'open the message actions';
+
+  @override
   String get messaging_MessageView_delete => 'Delete';
 
   @override

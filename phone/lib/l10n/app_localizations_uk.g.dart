@@ -1608,6 +1608,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messaging_MessageListView_typingTrail => 'друкує...';
 
   @override
+  String get messaging_MessageView_actionsHint => 'відкрити дії з повідомленням';
+
+  @override
   String get messaging_MessageView_delete => 'Видалити';
 
   @override

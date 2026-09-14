@@ -1575,6 +1575,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get messaging_MessageListView_typingTrail => 'กำลังพิมพ์...';
 
   @override
+  String get messaging_MessageView_actionsHint => 'เปิดการดำเนินการกับข้อความ';
+
+  @override
   String get messaging_MessageView_delete => 'ลบ';
 
   @override
