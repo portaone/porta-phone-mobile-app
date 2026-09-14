@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show VoidCallback;
+import 'package:flutter/foundation.dart' show VoidCallback, visibleForTesting;
 import 'package:logging/logging.dart';
 import 'package:signaling/signaling.dart';
 import 'package:signaling_service_platform_interface/signaling_service_platform_interface.dart';
@@ -49,7 +49,8 @@ final _logger = Logger('WebtritSignalingService');
 ///     the background isolate.
 ///   - [setCallEventHandler] -- registers the call-event callback for
 ///     background handling.
-///   - [updateMode] -- switches the service lifecycle mode.
+///   - [updateMode] -- switches the service lifecycle mode, for the platform
+///     and for every live instance alike.
 class WebtritSignalingService implements SignalingModule {
   WebtritSignalingService({
     required SignalingServiceConfig config,
@@ -59,10 +60,25 @@ class WebtritSignalingService implements SignalingModule {
        _mode = mode,
        _startPendingTimeout = startPendingTimeout {
     _serviceEventsSub = SignalingServicePlatform.instance.events.listen(_onServiceEvent, onDone: _onServiceEventsDone);
+    _live.add(this);
   }
 
+  /// The instances of this isolate that are not disposed yet: [updateMode]
+  /// switches their mode along with the platform's. Statics are per isolate,
+  /// so the push isolate's instance is not reached from the main one.
+  static final _live = <WebtritSignalingService>{};
+
+  /// How many instances [updateMode] would switch right now - the registry's
+  /// size, so a test can see an instance leave it on [dispose].
+  @visibleForTesting
+  static int get liveInstanceCount => _live.length;
+
   final SignalingServiceConfig _config;
-  final SignalingServiceMode _mode;
+
+  /// The mode every [connect] starts the platform with. Set once from the
+  /// constructor and switched by [updateMode]: a reconnect after the user
+  /// changed the incoming-call delivery must not bring the old mode back.
+  SignalingServiceMode _mode;
   final Duration _startPendingTimeout;
   final _requestQueue = SignalingRequestQueue();
 
@@ -221,6 +237,7 @@ class WebtritSignalingService implements SignalingModule {
   @override
   Future<void> dispose() async {
     _isDisposed = true;
+    _live.remove(this);
     _requestQueue.failAll(NotConnectedException('WebtritSignalingService is disposed'));
     await _serviceEventsSub?.cancel();
     _serviceEventsSub = null;
@@ -251,8 +268,22 @@ class WebtritSignalingService implements SignalingModule {
   static Future<void> setCallEventHandler(Function callback) =>
       SignalingServicePlatform.instance.setCallEventHandler(callback);
 
-  /// Switches the service lifecycle mode without restarting the connection.
-  static Future<void> updateMode(SignalingServiceMode mode) => SignalingServicePlatform.instance.updateMode(mode);
+  /// Switches the service lifecycle mode.
+  ///
+  /// The platform restarts its service in [mode]; the live instances take the
+  /// mode too, so that the next [connect] any of them makes - a forced
+  /// reconnect on an answer while the socket is down, say - starts the
+  /// platform in the mode the user chose rather than the one the instance
+  /// was created with. Without that, a switch from the persistent socket to
+  /// push would be undone by the first reconnect, which would bring the
+  /// foreground-service isolate back beside the direct socket, the two then
+  /// evicting each other from the one session every couple of seconds.
+  static Future<void> updateMode(SignalingServiceMode mode) {
+    for (final service in _live) {
+      service._mode = mode;
+    }
+    return SignalingServicePlatform.instance.updateMode(mode);
+  }
 
   /// Stops the native signaling service and clears stored credentials.
   ///
