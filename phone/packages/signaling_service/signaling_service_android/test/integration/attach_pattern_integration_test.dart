@@ -348,21 +348,38 @@ Future<({_TestIsolateManager manager, _FakeSignalingClient fakeClient})> _startS
   return (manager: manager, fakeClient: fakeClient);
 }
 
-/// Simulates [WebtritSignalingServiceAndroid.attach]: connects to an existing
-/// hub as a late subscriber and wraps it in [SignalingHubModule].
-Future<({SignalingHubClient hubClient, SignalingHubModule hubModule})> _attachMainSide(String consumerId) async {
+/// Simulates [WebtritSignalingServiceAndroid.attach] the way
+/// [HubConnectionManager] does it: connects to an existing hub as a late
+/// subscriber, wraps it in [SignalingHubModule] and listens BEFORE the ack is
+/// awaited - the hub's replay follows its ack at once and is delivered once.
+/// [events] collects everything the module emits from that moment on.
+Future<({SignalingHubClient hubClient, SignalingHubModule hubModule, List<SignalingModuleEvent> events})>
+_attachMainSide(String consumerId) async {
   final hubClient = SignalingHubClient.tryConnect(consumerId);
   expect(hubClient, isNotNull, reason: 'Hub must be registered before attach()');
   final ackFuture = hubClient!.awaitAck(timeout: const Duration(seconds: 2));
-  hubClient.start();
+  final hubModule = SignalingHubModule(hubClient);
+  final events = <SignalingModuleEvent>[];
+  hubModule.events.listen(events.add);
   final acked = await ackFuture;
   expect(acked, isTrue);
-  final hubModule = SignalingHubModule(hubClient);
-  return (hubClient: hubClient, hubModule: hubModule);
+  await Future<void>.delayed(Duration.zero);
+  return (hubClient: hubClient, hubModule: hubModule, events: events);
 }
 
 Future<T> _waitFor<T extends SignalingModuleEvent>(Stream<SignalingModuleEvent> stream) =>
     stream.whereType<T>().first.timeout(const Duration(seconds: 3));
+
+/// Waits until [events], collected since attach, carries a [SignalingConnected]:
+/// the module keeps no buffer, so a wait on the stream after the fact would
+/// miss a replay that already came.
+Future<void> _untilConnected(List<SignalingModuleEvent> events) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 3));
+  while (events.whereType<SignalingConnected>().isEmpty) {
+    if (DateTime.now().isAfter(deadline)) fail('SignalingConnected not seen within 3s');
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -373,16 +390,16 @@ void main() {
   // attach() -- session buffer replay
   // -------------------------------------------------------------------------
 
-  group('attach() -- session buffer replay', () {
+  group('attach() -- session replay after the ack', () {
     test('main side receives SignalingConnected from session buffer after attach', () async {
       final (:manager, :fakeClient) = await _startServiceSide();
       addTearDown(() => manager.handleStatus(enabled: false));
 
       // Hub is connected before main side attaches -- session buffer must replay.
-      final (:hubClient, :hubModule) = await _attachMainSide('attach-buffer-1');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('attach-buffer-1');
       addTearDown(hubModule.dispose);
 
-      await _waitFor<SignalingConnected>(hubModule.events);
+      expect(events.whereType<SignalingConnected>(), hasLength(1));
       expect(hubModule.isConnected, isTrue);
     });
 
@@ -394,12 +411,8 @@ void main() {
       fakeClient.injectHandshake(_kHandshake);
       await Future<void>.delayed(Duration.zero);
 
-      final (:hubClient, :hubModule) = await _attachMainSide('attach-buffer-2');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('attach-buffer-2');
       addTearDown(hubModule.dispose);
-
-      final events = <SignalingModuleEvent>[];
-      hubModule.events.listen(events.add);
-      await Future<void>.delayed(Duration.zero);
 
       expect(events.whereType<SignalingConnecting>(), hasLength(1));
       expect(events.whereType<SignalingConnected>(), hasLength(1));
@@ -439,12 +452,8 @@ void main() {
       await manager.handleStatus(enabled: true);
       await Future<void>.delayed(Duration.zero);
 
-      final (:hubClient, :hubModule) = await _attachMainSide('attach-buffer-3');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('attach-buffer-3');
       addTearDown(hubModule.dispose);
-
-      final events = <SignalingModuleEvent>[];
-      hubModule.events.listen(events.add);
-      await Future<void>.delayed(Duration.zero);
 
       // Must NOT replay handshake from the first session.
       expect(events.whereType<SignalingHandshakeReceived>(), isEmpty);
@@ -478,12 +487,8 @@ void main() {
       fakeClient.injectEvent(HangupEvent(line: 0, callId: 'first-call-id', code: 200, reason: 'OK'));
       await Future<void>.delayed(Duration.zero);
 
-      final (:hubClient, :hubModule) = await _attachMainSide('attach-stale-line-1');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('attach-stale-line-1');
       addTearDown(hubModule.dispose);
-
-      final events = <SignalingModuleEvent>[];
-      hubModule.events.listen(events.add);
-      await Future<void>.delayed(Duration.zero);
 
       final handshakes = events.whereType<SignalingHandshakeReceived>().toList();
       expect(handshakes, hasLength(1), reason: 'Handshake itself must still be replayed');
@@ -513,12 +518,8 @@ void main() {
       );
       await Future<void>.delayed(Duration.zero);
 
-      final (:hubClient, :hubModule) = await _attachMainSide('history-ringing-1');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('history-ringing-1');
       addTearDown(hubModule.dispose);
-
-      final events = <SignalingModuleEvent>[];
-      hubModule.events.listen(events.add);
-      await Future<void>.delayed(Duration.zero);
 
       expect(events.whereType<SignalingProtocolEvent>(), isEmpty, reason: 'state is replayed, not events');
       final handshake = events.whereType<SignalingHandshakeReceived>().single.handshake;
@@ -540,12 +541,8 @@ void main() {
       fakeClient.injectEvent(AcceptedEvent(line: 1, callId: 'call-id'));
       await Future<void>.delayed(Duration.zero);
 
-      final (:hubClient, :hubModule) = await _attachMainSide('history-answered-1');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('history-answered-1');
       addTearDown(hubModule.dispose);
-
-      final events = <SignalingModuleEvent>[];
-      hubModule.events.listen(events.add);
-      await Future<void>.delayed(Duration.zero);
 
       final line = events.whereType<SignalingHandshakeReceived>().single.handshake.lines[1]!;
       final kinds = line.callLogs.map((l) => (l as CallEventLog).callEvent.runtimeType).toList();
@@ -561,12 +558,8 @@ void main() {
       fakeClient.injectEvent(HangupEvent(line: 1, callId: 'call-id', code: 200, reason: 'OK'));
       await Future<void>.delayed(Duration.zero);
 
-      final (:hubClient, :hubModule) = await _attachMainSide('history-hangup-1');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('history-hangup-1');
       addTearDown(hubModule.dispose);
-
-      final events = <SignalingModuleEvent>[];
-      hubModule.events.listen(events.add);
-      await Future<void>.delayed(Duration.zero);
 
       expect(events.whereType<SignalingProtocolEvent>(), isEmpty);
       final lines = events.whereType<SignalingHandshakeReceived>().single.handshake.lines;
@@ -583,12 +576,8 @@ void main() {
       fakeClient.injectEvent(RegisteredEvent());
       await Future<void>.delayed(Duration.zero);
 
-      final (:hubClient, :hubModule) = await _attachMainSide('registration-1');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('registration-1');
       addTearDown(hubModule.dispose);
-
-      final events = <SignalingModuleEvent>[];
-      hubModule.events.listen(events.add);
-      await Future<void>.delayed(Duration.zero);
 
       final handshake = events.whereType<SignalingHandshakeReceived>().single.handshake;
       expect(handshake.registration.status, RegistrationStatus.registered);
@@ -605,10 +594,10 @@ void main() {
       final (:manager, :fakeClient) = await _startServiceSide();
       addTearDown(() => manager.handleStatus(enabled: false));
 
-      final (:hubClient, :hubModule) = await _attachMainSide('attach-live-1');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('attach-live-1');
       addTearDown(hubModule.dispose);
 
-      await _waitFor<SignalingConnected>(hubModule.events);
+      await _untilConnected(events);
 
       final received = _waitFor<SignalingHandshakeReceived>(hubModule.events);
       fakeClient.injectHandshake(_kHandshake);
@@ -621,31 +610,31 @@ void main() {
       final (:manager, :fakeClient) = await _startServiceSide();
       addTearDown(() => manager.handleStatus(enabled: false));
 
-      final (:hubClient, :hubModule) = await _attachMainSide('attach-live-2');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('attach-live-2');
       addTearDown(hubModule.dispose);
 
-      await _waitFor<SignalingConnected>(hubModule.events);
+      await _untilConnected(events);
 
-      final events = <SignalingProtocolEvent>[];
-      hubModule.events.whereType<SignalingProtocolEvent>().listen(events.add);
+      final protocolEvents = <SignalingProtocolEvent>[];
+      hubModule.events.whereType<SignalingProtocolEvent>().listen(protocolEvents.add);
 
       fakeClient.injectEvent(UnregisteredEvent());
       fakeClient.injectEvent(RegisteredEvent());
       await Future<void>.delayed(const Duration(milliseconds: 30));
 
-      expect(events, hasLength(2));
-      expect(events[0].event, isA<UnregisteredEvent>());
-      expect(events[1].event, isA<RegisteredEvent>());
+      expect(protocolEvents, hasLength(2));
+      expect(protocolEvents[0].event, isA<UnregisteredEvent>());
+      expect(protocolEvents[1].event, isA<RegisteredEvent>());
     });
 
     test('main side receives SignalingDisconnected when server disconnects after attach', () async {
       final (:manager, :fakeClient) = await _startServiceSide();
       addTearDown(() => manager.handleStatus(enabled: false));
 
-      final (:hubClient, :hubModule) = await _attachMainSide('attach-live-3');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('attach-live-3');
       addTearDown(hubModule.dispose);
 
-      await _waitFor<SignalingConnected>(hubModule.events);
+      await _untilConnected(events);
 
       final received = _waitFor<SignalingDisconnected>(hubModule.events);
       fakeClient.injectDisconnect(SignalingDisconnectCode.normalClosure.code, 'logout');
@@ -665,10 +654,10 @@ void main() {
       final (:manager, :fakeClient) = await _startServiceSide();
       addTearDown(() => manager.handleStatus(enabled: false));
 
-      final (:hubClient, :hubModule) = await _attachMainSide('attach-exec-1');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('attach-exec-1');
       addTearDown(hubModule.dispose);
 
-      await _waitFor<SignalingConnected>(hubModule.events);
+      await _untilConnected(events);
 
       final request = HangupRequest(transaction: 'tx-attach-1', line: 1, callId: 'call-attach');
       await hubModule.execute(request)!.timeout(const Duration(seconds: 2));
@@ -697,7 +686,7 @@ void main() {
       });
 
       // Attach before module.connect() is called.
-      final (:hubClient, :hubModule) = await _attachMainSide('attach-exec-2');
+      final (:hubClient, :hubModule, events: _) = await _attachMainSide('attach-exec-2');
       addTearDown(hubModule.dispose);
 
       // hubModule.isConnected is false -- execute returns null per SignalingModule contract.
@@ -723,10 +712,7 @@ void main() {
       final mainSide = await _attachMainSide('coexist-main-1');
       addTearDown(mainSide.hubModule.dispose);
 
-      await Future.wait([
-        _waitFor<SignalingConnected>(pushSide.hubModule.events),
-        _waitFor<SignalingConnected>(mainSide.hubModule.events),
-      ]);
+      await Future.wait([_untilConnected(pushSide.events), _untilConnected(mainSide.events)]);
 
       final pushHandshake = _waitFor<SignalingHandshakeReceived>(pushSide.hubModule.events);
       final mainHandshake = _waitFor<SignalingHandshakeReceived>(mainSide.hubModule.events);
@@ -747,10 +733,7 @@ void main() {
       final mainSide = await _attachMainSide('coexist-main-2');
       addTearDown(mainSide.hubModule.dispose);
 
-      await Future.wait([
-        _waitFor<SignalingConnected>(pushSide.hubModule.events),
-        _waitFor<SignalingConnected>(mainSide.hubModule.events),
-      ]);
+      await Future.wait([_untilConnected(pushSide.events), _untilConnected(mainSide.events)]);
 
       // Push consumer unsubscribes (push isolate work done).
       await pushSide.hubModule.dispose();
@@ -772,10 +755,7 @@ void main() {
       final mainSide = await _attachMainSide('coexist-main-3');
       addTearDown(mainSide.hubModule.dispose);
 
-      await Future.wait([
-        _waitFor<SignalingConnected>(pushSide.hubModule.events),
-        _waitFor<SignalingConnected>(mainSide.hubModule.events),
-      ]);
+      await Future.wait([_untilConnected(pushSide.events), _untilConnected(mainSide.events)]);
 
       final request = HangupRequest(transaction: 'tx-coexist', line: 1, callId: 'call-co');
       await mainSide.hubModule.execute(request)!.timeout(const Duration(seconds: 2));
@@ -819,10 +799,10 @@ void main() {
     test('hub is unavailable after manager stop', () async {
       final (:manager, :fakeClient) = await _startServiceSide();
 
-      final (:hubClient, :hubModule) = await _attachMainSide('pb-lifecycle-1');
+      final (:hubClient, :hubModule, :events) = await _attachMainSide('pb-lifecycle-1');
       addTearDown(hubModule.dispose);
 
-      await _waitFor<SignalingConnected>(hubModule.events);
+      await _untilConnected(events);
       expect(hubModule.isConnected, isTrue);
 
       // Service stops.
@@ -858,7 +838,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       final side1 = await _attachMainSide('pb-restart-1');
-      await _waitFor<SignalingConnected>(side1.hubModule.events);
+      await _untilConnected(side1.events);
       await side1.hubModule.dispose();
 
       await manager.handleStatus(enabled: false);
@@ -872,7 +852,7 @@ void main() {
       final side2 = await _attachMainSide('pb-restart-2');
       addTearDown(side2.hubModule.dispose);
 
-      await _waitFor<SignalingConnected>(side2.hubModule.events);
+      await _untilConnected(side2.events);
       expect(side2.hubModule.isConnected, isTrue);
     });
 
@@ -906,14 +886,14 @@ void main() {
 
       // First attach.
       final side1 = await _attachMainSide('persistent-cycle-1a');
-      await _waitFor<SignalingConnected>(side1.hubModule.events);
+      await _untilConnected(side1.events);
       await side1.hubModule.dispose();
 
       // Hub is still alive -- second attach succeeds.
       final side2 = await _attachMainSide('persistent-cycle-1b');
       addTearDown(side2.hubModule.dispose);
 
-      await _waitFor<SignalingConnected>(side2.hubModule.events);
+      await _untilConnected(side2.events);
       expect(side2.hubModule.isConnected, isTrue);
     });
 
@@ -925,10 +905,7 @@ void main() {
       final side2 = await _attachMainSide('persistent-fanout-1b');
       addTearDown(side2.hubModule.dispose);
 
-      await Future.wait([
-        _waitFor<SignalingConnected>(side1.hubModule.events),
-        _waitFor<SignalingConnected>(side2.hubModule.events),
-      ]);
+      await Future.wait([_untilConnected(side1.events), _untilConnected(side2.events)]);
 
       // side1 disposes (e.g. Activity closed, app backgrounded).
       await side1.hubModule.dispose();

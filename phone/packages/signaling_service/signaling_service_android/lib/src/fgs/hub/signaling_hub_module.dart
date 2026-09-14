@@ -19,21 +19,15 @@ final _logger = Logger('SignalingHubModule');
 /// [disconnect] sends a [SignalingHubDisconnectCommand] similarly.
 /// [dispose] unsubscribes from the hub and releases resources.
 ///
-/// ## Two-level buffering
+/// ## No buffer of its own
 ///
-/// [SignalingHub] brings a new [SignalingHubClient] up to date on subscribe
-/// with the session's lifecycle events and a handshake rendered from its
-/// session snapshot (isolate-boundary replay). This module holds a second
-/// [SignalingEventBuffer] for same-isolate consumers of [events]: a caller
-/// may subscribe to [events] after the hub's replay has already been
-/// forwarded through [_hubClient], so the local buffer is needed to serve
-/// those late subscribers.
-///
-/// Both sides keep the same [SignalingEventBuffer]: lifecycle events in order
-/// and a handshake rendered from the session's state, folded with every
-/// protocol event - so a call that ended after the hub's replay reached this
-/// module is gone from what this module replays too, and the two cannot
-/// diverge. Protocol events themselves are never replayed.
+/// [SignalingHub] brings a new [SignalingHubClient] up to date right after
+/// its subscribe ack, with the session's lifecycle events and a handshake
+/// rendered from its session snapshot. That replay is delivered once, so the
+/// one consumer of [events] - [HubConnectionManager] - listens before the ack
+/// is awaited and misses nothing; a listener that comes later sees only what
+/// follows. Consumers further up subscribe to the plugin, which keeps the
+/// session buffer for them.
 class SignalingHubModule implements SignalingModule {
   SignalingHubModule(this._hubClient) {
     _sub = _hubClient.events.listen(_onHubEvent, onDone: _onHubDone);
@@ -46,19 +40,10 @@ class SignalingHubModule implements SignalingModule {
   bool _connected = false;
   StreamSubscription<SignalingModuleEvent>? _sub;
 
-  final _eventBuffer = SignalingEventBuffer();
   final _controller = StreamController<SignalingModuleEvent>.broadcast();
 
   @override
-  Stream<SignalingModuleEvent> get events {
-    return Stream.multi((sink) {
-      final sub = _controller.stream.listen(sink.add, onError: sink.addError, onDone: sink.close);
-      sink.onCancel = sub.cancel;
-      for (final event in _eventBuffer.snapshot) {
-        sink.add(event);
-      }
-    }, isBroadcast: true);
-  }
+  Stream<SignalingModuleEvent> get events => _controller.stream;
 
   @override
   bool get isConnected => _connected;
@@ -101,7 +86,6 @@ class SignalingHubModule implements SignalingModule {
     await _sub?.cancel();
     await _hubClient.dispose();
     if (!_controller.isClosed) await _controller.close();
-    _eventBuffer.clear();
     _logger.fine('SignalingHubModule disposed');
   }
 
@@ -134,7 +118,6 @@ class SignalingHubModule implements SignalingModule {
     }
 
     if (_controller.isClosed) return;
-    _eventBuffer.onEvent(event);
     _controller.add(event);
   }
 }

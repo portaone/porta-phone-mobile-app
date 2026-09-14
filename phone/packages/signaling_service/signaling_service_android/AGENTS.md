@@ -59,7 +59,7 @@ Hub wire protocol (Map messages, subscriber → hub):
 | `unsub` | `id` | Unsubscribe |
 | `exec`  | `id`, `corr`, `req` | Execute request; hub replies with `[_kExecuteResult, corr, error?]` |
 
-The hub keeps the same `SignalingEventBuffer` as the module: lifecycle events in order and a `SessionSnapshot` (`signaling_service_platform_interface`) - the handshake kept current by the registration and call events, guest line included - rendered again for a late subscriber; cleared on `SignalingConnecting`. Protocol events are never replayed across the boundary.
+The hub keeps a `SignalingEventBuffer`: lifecycle events in order and a `SessionSnapshot` (`signaling_service_platform_interface`) - the handshake kept current by the registration and call events, guest line included - rendered again for a late subscriber; cleared on `SignalingConnecting`. Protocol events are never replayed across the boundary.
 
 ### `SignalingHubClient`
 
@@ -93,7 +93,7 @@ what sends the `sub` command that triggers the ack.
 Used by the main isolate when the hub is already running in the foreground service.
 
 - `connect()` / `disconnect()` are **no-ops** — the hub owns the connection lifecycle.
-- Maintains its own `_sessionBuffer` for late subscribers to the `events` stream.
+- Keeps no buffer: `HubConnectionManager` listens to `events` before awaiting the hub's ack, so the replay that follows the ack is not missed. A later listener sees only what follows.
 - `isConnected` tracks `SignalingConnected` / `SignalingDisconnected` / `SignalingConnectionFailed`.
 
 ### Background isolate entry points
