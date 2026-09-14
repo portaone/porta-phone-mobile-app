@@ -166,13 +166,37 @@ class CallServiceRouter(
         )
 
     // -------------------------------------------------------------------------
+    // Call grouping
+    // -------------------------------------------------------------------------
+
+    /**
+     * Asks the active backend to present [callIds] as one group, returning whether it can group
+     * calls at all.
+     *
+     * Unlike every other command here the answer matters to the caller, because grouping is the
+     * one thing a backend may not do. Neither does yet: the Telecom path needs an
+     * [android.telecom.Conference] and the standalone path a membership of its own, and each
+     * says so by refusing.
+     */
+    fun setCallGroup(callIds: List<String>): Boolean =
+        route(
+            telecom = { false },
+            standalone = { false },
+        )
+
+    /** Counterpart of [setCallGroup]. */
+    fun unsetCallGroup(callIds: List<String>): Boolean =
+        route(
+            telecom = { false },
+            standalone = { false },
+        )
+
+    // -------------------------------------------------------------------------
     // Internal
     // -------------------------------------------------------------------------
 
-    private inline fun route(
-        telecom: () -> Unit,
-        standalone: () -> Unit,
-    ) {
-        if (isTelecomSupported) telecom() else standalone()
-    }
+    private inline fun <T> route(
+        telecom: () -> T,
+        standalone: () -> T,
+    ): T = if (isTelecomSupported) telecom() else standalone()
 }

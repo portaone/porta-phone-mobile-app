@@ -48,8 +48,10 @@ The primary call-control API. All call lifecycle operations from Dart arrive her
 | `onDelegateSet()`                                                                    | Dart signals it is ready to receive events         |
 
 `setCallGroup` names the group and takes its whole membership rather than a
-change to it. Neither backend implements them yet: `ForegroundService` answers
-`callGroupingNotSupported`, which stays the answer of a backend that cannot group.
+change to it. Neither backend implements them yet, so `callGroupingNotSupported` is every
+answer; it stays the answer of a backend that cannot group. `setHeld` on a declared member of
+a group answers `callIsGrouped` instead of holding it; `CallkeepCore` keeps the declared
+membership for that, because the Telecom backend lives in another process.
 
 ---
 

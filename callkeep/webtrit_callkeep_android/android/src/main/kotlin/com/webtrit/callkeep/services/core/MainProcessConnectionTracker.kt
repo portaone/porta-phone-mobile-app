@@ -191,8 +191,67 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
                 answered = false,
                 pendingAnswer = false,
                 state = PCallkeepConnectionState.STATE_DISCONNECTED,
+                groupId = null,
             )
         }
+        releaseLoneGroupMembers()
+    }
+
+    // -------------------------------------------------------------------------
+    // Call groups
+    // -------------------------------------------------------------------------
+
+    override fun declareGroup(
+        groupId: String,
+        callIds: List<String>,
+    ) {
+        if (callIds.isEmpty()) return
+        if (callIds.size < 2) {
+            // One call named as the whole membership: the group is over for everyone in it.
+            forEachGrouped { id -> transition(id) { it.copy(groupId = null) } }
+            return
+        }
+        // One group at a time: the list is its whole membership, so whatever was grouped
+        // before and is not listed now is out.
+        forEachGrouped { id -> if (id !in callIds) transition(id) { it.copy(groupId = null) } }
+        callIds.forEach { id -> transition(id) { it.copy(groupId = groupId) } }
+    }
+
+    override fun releaseFromGroup(callIds: List<String>) {
+        callIds.forEach { id -> calls.computeIfPresent(id) { _, rec -> rec.copy(groupId = null) } }
+        releaseLoneGroupMembers()
+    }
+
+    override fun isGrouped(callId: String): Boolean = calls[callId]?.groupId != null
+
+    override fun groupMembersWith(callId: String): List<String> {
+        val group = calls[callId]?.groupId ?: return emptyList()
+        return calls.entries
+            .filter { it.value.groupId == group }
+            .map { it.key }
+            .sorted()
+    }
+
+    override fun currentGroupId(): String? = calls.values.firstNotNullOfOrNull { it.groupId }
+
+    private inline fun forEachGrouped(action: (String) -> Unit) {
+        calls.entries
+            .filter { it.value.groupId != null }
+            .map { it.key }
+            .forEach(action)
+    }
+
+    /** A group needs two calls: a member left alone is released from it. */
+    private fun releaseLoneGroupMembers() {
+        val sizes =
+            calls.values
+                .mapNotNull { it.groupId }
+                .groupingBy { it }
+                .eachCount()
+        calls.entries
+            .filter { (sizes[it.value.groupId] ?: 0) < 2 && it.value.groupId != null }
+            .map { it.key }
+            .forEach { id -> calls.computeIfPresent(id) { _, rec -> rec.copy(groupId = null) } }
     }
 
     // -------------------------------------------------------------------------
@@ -206,8 +265,7 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
     override fun isPending(callId: String): Boolean = calls[callId]?.pending == true
 
     /** Returns a non-destructive snapshot of all currently pending call IDs. */
-    override fun getPendingCallIds(): Set<String> =
-        calls.entries.filter { it.value.pending }.mapTo(mutableSetOf()) { it.key }
+    override fun getPendingCallIds(): Set<String> = calls.entries.filter { it.value.pending }.mapTo(mutableSetOf()) { it.key }
 
     /**
      * Returns true if [callId] was previously observed (i.e. its [CallRecord.state] was set
@@ -367,8 +425,7 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
         transition(callId) { it.copy(endedWithoutFlutterState = true) }
     }
 
-    override fun wasEndedWithoutFlutterState(callId: String): Boolean =
-        calls[callId]?.endedWithoutFlutterState == true
+    override fun wasEndedWithoutFlutterState(callId: String): Boolean = calls[callId]?.endedWithoutFlutterState == true
 
     companion object {
         /**

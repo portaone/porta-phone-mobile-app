@@ -85,6 +85,31 @@ interface ConnectionTracker {
     fun clear()
 
     // -------------------------------------------------------------------------
+    // Call groups
+    // -------------------------------------------------------------------------
+
+    /**
+     * Declares [callIds] as the whole membership of the group [groupId]. One group at a
+     * time: whatever was grouped before and is not listed now is out. A list of one takes
+     * the group apart for everyone; an empty list changes nothing.
+     */
+    fun declareGroup(
+        groupId: String,
+        callIds: List<String>,
+    )
+
+    /** Takes [callIds] out of their group; a group left with one member is no group. */
+    fun releaseFromGroup(callIds: List<String>)
+
+    fun isGrouped(callId: String): Boolean
+
+    /** Every call sharing a group with [callId], [callId] included; empty when it is in none. */
+    fun groupMembersWith(callId: String): List<String>
+
+    /** The name of the one live group, or null while there is none. */
+    fun currentGroupId(): String?
+
+    // -------------------------------------------------------------------------
     // Callback guards (moved from ForegroundService)
     // These track which Pigeon callbacks have already been dispatched so that
     // duplicate or stale events are suppressed without per-field clear() calls.

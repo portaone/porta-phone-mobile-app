@@ -33,13 +33,13 @@ transition replaces the whole record in a single atomic `compute {}` step, so a 
 observes a consistent snapshot and never a half-applied transition; different calls never block
 each other.
 
-| `CallRecord` field       | Type                          | Description                                                                    |
-|--------------------------|-------------------------------|--------------------------------------------------------------------------------|
-| `metadata`               | `CallMetadata?`               | Full metadata while the call is registered (promoted); null otherwise. `metadata != null` is what `exists()`/`getAll()` report |
-| `pending`                | `Boolean`                     | Sent to Telecom, `PhoneConnection` not yet created. Independent of `metadata`: a push-path re-registration can set it on an already-promoted call, so registration and pending are separate fields, not one exclusive phase |
-| `state`                  | `PCallkeepConnectionState?`   | Last known Telecom state. Doubles as the "ever seen" marker for derived termination: it survives termination (as `STATE_DISCONNECTED`) and the `addPending` guard reset |
-| `answered`               | `Boolean`                     | Answer guard (the user answered). Guard only: the ACTIVE state itself is mirrored via `updateState` |
-| `pendingAnswer`          | `Boolean`                     | Deferred answer (user pressed answer before `PhoneConnection` existed)         |
+| `CallRecord` field | Type                        | Description                                                                                                                                                                                                                 |
+|--------------------|-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `metadata`         | `CallMetadata?`             | Full metadata while the call is registered (promoted); null otherwise. `metadata != null` is what `exists()`/`getAll()` report                                                                                              |
+| `pending`          | `Boolean`                   | Sent to Telecom, `PhoneConnection` not yet created. Independent of `metadata`: a push-path re-registration can set it on an already-promoted call, so registration and pending are separate fields, not one exclusive phase |
+| `state`            | `PCallkeepConnectionState?` | Last known Telecom state. Doubles as the "ever seen" marker for derived termination: it survives termination (as `STATE_DISCONNECTED`) and the `addPending` guard reset                                                     |
+| `answered`         | `Boolean`                   | Answer guard (the user answered). Guard only: the ACTIVE state itself is mirrored via `updateState`                                                                                                                         |
+| `pendingAnswer`    | `Boolean`                   | Deferred answer (user pressed answer before `PhoneConnection` existed)                                                                                                                                                      |
 
 A record with every field at its default is observationally identical to an absent one, so
 records are never removed individually -- they live until `clear()` wipes the session (same
@@ -49,14 +49,24 @@ There is **no explicit terminated flag**. Termination is derived (see below). Th
 `terminatedCallIds` set was removed: it blocked callId reuse (e.g. blind transfer-back) and
 allowed "terminated AND active at the same time" corruption.
 
+## Call Groups
+
+Each record carries `groupId`, the name of the call group the application declared the call
+into, or null. `declareGroup(groupId, callIds)` states a group's whole membership (one group
+at a time: calls not listed leave, a list of one takes the group apart), `releaseFromGroup`
+takes calls out, and `markTerminated` clears it, since a call that ended is in no group; after
+either, a group left with one member is dissolved. `isGrouped`, `groupMembersWith` and
+`currentGroupId` read it, and `clear()` drops it with everything else. The state lives here,
+with the calls, so it outlives the activity's bridge service the way the calls do.
+
 ## Callback Guards
 
 These record fields suppress duplicate or stale Dart notifications for the same call:
 
-| `CallRecord` field         | Reset on `addPending`/`promote` | Purpose                                                                                                       |
-|----------------------------|---------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `directNotified`           | yes                             | Termination notified directly via `performEndCall` in `tearDown()`. Suppresses the stale async `HungUp` broadcast that arrives after the next session starts. Consumed on read (`consumeDirectNotified`) |
-| `endCallDispatched`        | yes                             | `performEndCall` was already dispatched (or a `HungUpCall` IPC sent). Prevents a second dispatch. `markEndCallDispatched` returns true only on first mark |
+| `CallRecord` field         | Reset on `addPending`/`promote` | Purpose                                                                                                                                                                                                                                                                                                                                                                                                            |
+|----------------------------|---------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `directNotified`           | yes                             | Termination notified directly via `performEndCall` in `tearDown()`. Suppresses the stale async `HungUp` broadcast that arrives after the next session starts. Consumed on read (`consumeDirectNotified`)                                                                                                                                                                                                           |
+| `endCallDispatched`        | yes                             | `performEndCall` was already dispatched (or a `HungUpCall` IPC sent). Prevents a second dispatch. `markEndCallDispatched` returns true only on first mark                                                                                                                                                                                                                                                          |
 | `endedWithoutFlutterState` | **no (sticky)**                 | The app ended this call while it was never presented in Flutter state (the call==null signaling-hangup path). Read by `reportNewIncomingCall` to reject EVERY stale ghost re-presentation of the dead call. Sticky by design: a stale handshake can replay the dead incoming several times, and a transfer-back reuses a call the app DID know, so its end never lands here. Cleared only by `clear()` on tearDown |
 
 The asymmetry in the reset column is deliberate and load-bearing: resetting the ghost guard on
@@ -147,18 +157,18 @@ clear()
 
 ## Query Methods
 
-| Method                     | Returns                                                                     |
-|----------------------------|-----------------------------------------------------------------------------|
-| `exists(callId)`           | True if the record's `metadata` is set (promoted and not terminated)        |
-| `isPending(callId)`        | True if the record's `pending` flag is set                                  |
-| `getPendingCallIds()`      | Non-destructive snapshot of the ids with `pending` set                      |
-| `isTerminated(callId)`     | Derived, see formula above (one record snapshot)                            |
-| `isAnswered(callId)`       | True if the record's `answered` flag is set                                 |
-| `get(callId)`              | The record's `CallMetadata?`                                                |
-| `getAll()`                 | Metadata of all records with `metadata` set (active calls only)             |
-| `getState(callId)`         | The record's `PCallkeepConnectionState?`                                    |
-| `toPCallkeepConnection(id)`| Pigeon connection built from one record; null unless `metadata` is set      |
-| `wasEndedWithoutFlutterState(id)` | Sticky ghost-guard read (not consumed)                               |
+| Method                            | Returns                                                                |
+|-----------------------------------|------------------------------------------------------------------------|
+| `exists(callId)`                  | True if the record's `metadata` is set (promoted and not terminated)   |
+| `isPending(callId)`               | True if the record's `pending` flag is set                             |
+| `getPendingCallIds()`             | Non-destructive snapshot of the ids with `pending` set                 |
+| `isTerminated(callId)`            | Derived, see formula above (one record snapshot)                       |
+| `isAnswered(callId)`              | True if the record's `answered` flag is set                            |
+| `get(callId)`                     | The record's `CallMetadata?`                                           |
+| `getAll()`                        | Metadata of all records with `metadata` set (active calls only)        |
+| `getState(callId)`                | The record's `PCallkeepConnectionState?`                               |
+| `toPCallkeepConnection(id)`       | Pigeon connection built from one record; null unless `metadata` is set |
+| `wasEndedWithoutFlutterState(id)` | Sticky ghost-guard read (not consumed)                                 |
 
 ## Semantic Invariants
 
@@ -237,19 +247,19 @@ sticky ghost guard (5), the state-only-record semantics (2), and answered-blocks
 
 **Mutations by trigger:**
 
-| Mutation                | Called from                                                                                  |
-|-------------------------|----------------------------------------------------------------------------------------------|
-| `addPending`            | `InProcessCallkeepCore.startIncomingCall` (owns the entry); `ForegroundService.startCall` (outgoing pre-registration) |
-| `promote`               | `ForegroundService`: `IncomingConnectionReported` handler; `OngoingCall` per-call receiver (outgoing, `STATE_DIALING`); four sites in `reportNewIncomingCall` -- three already-answered adoptions (`STATE_ACTIVE`, each followed by `markAnswered`) and the still-ringing broadcast-lag promote (`STATE_RINGING`, no `markAnswered` -- see invariant 4) |
-| `markAnswered`          | `AnswerCall` handler (`handleCSReportAnswerCall`); adoption paths (after `promote`); `CallLifecycleHandler.performAnswerCall` fallback when the push isolate is unreachable |
-| `updateState`           | `ConnectionStateChanged` handler (source of truth: `PhoneConnection.onStateChanged` in `:callkeep_core`, or `StandaloneCallService` transitions) |
-| `updateMetadata`        | `InProcessCallkeepCore.startUpdateCall` (e.g. mid-call hasVideo toggle)                       |
-| `markTerminated`        | `reportEndCall` (synchronous, ahead of the `DeclineCall` echo); via `clearAndMarkEndCallDispatched` in the `HungUp`/`DeclineCall`/`ConnectionNotFound` handler, tearDown steps, and the incoming-confirmation timeout |
-| `removePending`         | rollback paths: failed/timed-out incoming registration, decline-before-confirmation (`HungUp`/`DeclineCall` handler with a pending incoming callback), failed outgoing, tearDown step 1b, `ForegroundService.onDestroy` |
-| `reserveAnswer`/`consumeAnswer` | `answerCall` deferred path / `AnswerCall` handler                                     |
-| `drainUnconnectedPendingCallIds` | `tearDown` step 2                                                                    |
-| `clear`                 | end of `tearDown` (after TearDownComplete ack or timeout); `ConnectionsApi.cleanConnections`  |
-| guard marks             | `tearDown` and `ForegroundService.onDestroy` (directNotified + endCallDispatched for unresolved pending incomings; onDestroy runs WITHOUT a subsequent `clear()`), `endCall`, `reportEndCall` (`MISSED_WHILE_CONNECTING` arms the ghost guard) |
+| Mutation                         | Called from                                                                                                                                                                                                                                                                                                                                             |
+|----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `addPending`                     | `InProcessCallkeepCore.startIncomingCall` (owns the entry); `ForegroundService.startCall` (outgoing pre-registration)                                                                                                                                                                                                                                   |
+| `promote`                        | `ForegroundService`: `IncomingConnectionReported` handler; `OngoingCall` per-call receiver (outgoing, `STATE_DIALING`); four sites in `reportNewIncomingCall` -- three already-answered adoptions (`STATE_ACTIVE`, each followed by `markAnswered`) and the still-ringing broadcast-lag promote (`STATE_RINGING`, no `markAnswered` -- see invariant 4) |
+| `markAnswered`                   | `AnswerCall` handler (`handleCSReportAnswerCall`); adoption paths (after `promote`); `CallLifecycleHandler.performAnswerCall` fallback when the push isolate is unreachable                                                                                                                                                                             |
+| `updateState`                    | `ConnectionStateChanged` handler (source of truth: `PhoneConnection.onStateChanged` in `:callkeep_core`, or `StandaloneCallService` transitions)                                                                                                                                                                                                        |
+| `updateMetadata`                 | `InProcessCallkeepCore.startUpdateCall` (e.g. mid-call hasVideo toggle)                                                                                                                                                                                                                                                                                 |
+| `markTerminated`                 | `reportEndCall` (synchronous, ahead of the `DeclineCall` echo); via `clearAndMarkEndCallDispatched` in the `HungUp`/`DeclineCall`/`ConnectionNotFound` handler, tearDown steps, and the incoming-confirmation timeout                                                                                                                                   |
+| `removePending`                  | rollback paths: failed/timed-out incoming registration, decline-before-confirmation (`HungUp`/`DeclineCall` handler with a pending incoming callback), failed outgoing, tearDown step 1b, `ForegroundService.onDestroy`                                                                                                                                 |
+| `reserveAnswer`/`consumeAnswer`  | `answerCall` deferred path / `AnswerCall` handler                                                                                                                                                                                                                                                                                                       |
+| `drainUnconnectedPendingCallIds` | `tearDown` step 2                                                                                                                                                                                                                                                                                                                                       |
+| `clear`                          | end of `tearDown` (after TearDownComplete ack or timeout); `ConnectionsApi.cleanConnections`                                                                                                                                                                                                                                                            |
+| guard marks                      | `tearDown` and `ForegroundService.onDestroy` (directNotified + endCallDispatched for unresolved pending incomings; onDestroy runs WITHOUT a subsequent `clear()`), `endCall`, `reportEndCall` (`MISSED_WHILE_CONNECTING` arms the ghost guard)                                                                                                          |
 
 **Reads:**
 

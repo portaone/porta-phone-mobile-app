@@ -105,7 +105,8 @@ notification (`NOTIFICATION_ID = 1`) summarizing every active call, not one entr
 - **Title**: singular or plural depending on the number of calls.
 - **Text**: the caller names of all active calls, joined.
 - **Action**: one Hang up button. Its `PendingIntent` targets `ActiveCallService` with the
-  `Decline` action and carries the **first** call's bundle in the extras.
+  `Decline` action and carries the **first** call's bundle in the extras. If that call is in a
+  group (`CallkeepCore.groupMembersWith`), the service hangs up every member; otherwise that call alone.
 - **Behavior**: `setOngoing(true)`, `setOnlyAlertOnce(true)`, media style with the action in
   compact view. As an ongoing FGS notification it cannot be swiped away.
 
