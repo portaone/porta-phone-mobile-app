@@ -95,7 +95,8 @@ class _CallPullBadgeState extends State<CallPullBadge> with TickerProviderStateM
     // media layout matches the server's answer for a video call, avoiding the
     // setRemoteDescription m-line mismatch; the user can enable the camera
     // afterwards. See CallPullVideoStrategy.
-    final mirrorVideo = callBloc.callPullVideoStrategy == CallPullVideoStrategy.mirror && dialog.hasVideo == true;
+    final mirrorVideo =
+        callBloc.capabilities.callPullVideoStrategy == CallPullVideoStrategy.mirror && dialog.hasVideo == true;
 
     callBloc.add(
       CallControlEvent.started(

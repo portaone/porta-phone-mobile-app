@@ -39,7 +39,10 @@ import 'package:webtrit_phone/services/services.dart';
 /// });
 /// ```
 class CallBlocHarness {
-  CallBlocHarness({bool sendPresenceSettings = false, bool peerMessageSupported = false}) {
+  CallBlocHarness({
+    bool sendPresenceSettings = false,
+    CallCapabilitiesConfig capabilities = const CallCapabilitiesConfig(),
+  }) {
     TestWidgetsFlutterBinding.ensureInitialized();
     _installPlatformStubs();
     bloc = CallBloc(
@@ -59,8 +62,7 @@ class CallBlocHarness {
       contactResolver: _FakeContactResolver(),
       callErrorReporter: errors,
       sendPresenceSettings: sendPresenceSettings,
-      callPullVideoStrategy: CallPullVideoStrategy.softMute,
-      peerMessageSupported: peerMessageSupported,
+      capabilities: capabilities,
       onDiagnosticReportRequested: (_, _) {},
       signalingModule: signaling,
       peerConnectionManager: peers,
