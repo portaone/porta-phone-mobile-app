@@ -3,11 +3,14 @@
 /// the accessibility tests look at the same screen from different angles.
 library;
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
@@ -69,14 +72,23 @@ ActiveCall makeCall({
   );
 }
 
-/// A connected two-way video call - the only kind whose controls hide
-/// themselves after a few idle seconds.
+/// A connected video call with the other person's picture on the screen - the
+/// only kind whose controls hide themselves after a few idle seconds.
 ///
-/// Both flags are getters over live media streams, so they are answered here
-/// instead of being assembled out of fake tracks.
+/// The video flags are getters over live media streams, so they are answered
+/// here instead of being assembled out of fake tracks. The picture is another
+/// matter: the screen probes a frame of the remote video track before it
+/// treats the picture as there, so the call carries one track to probe. Its
+/// capture fails, and a failed capture counts as a renderable frame - the
+/// screen would rather show a picture it could not check than hide one.
+///
+/// [cameraOn] is the own camera; the picture of the other person is there
+/// either way. [framesArrive] false is a far side that announces video but
+/// never delivers a frame worth showing: no track, so no probe ever succeeds.
 class VideoCall extends ActiveCall {
-  VideoCall()
-    : super(
+  VideoCall({this.cameraOn = true, this.framesArrive = true})
+    : _remoteStream = framesArrive ? _UnprobableRemoteStream() : null,
+      super(
         callId: 'video',
         direction: CallDirection.incoming,
         line: 0,
@@ -88,11 +100,35 @@ class VideoCall extends ActiveCall {
         displayName: 'Anna Marchenko',
       );
 
+  final bool cameraOn;
+  final bool framesArrive;
+
+  // One stream with one track for the life of the call, as a real call has:
+  // the screen tells a probe of the current track from a stale one by
+  // identity, and a fresh fake per read would make every answer stale.
+  final MediaStream? _remoteStream;
+
   @override
-  bool get isCameraActive => true;
+  bool get isCameraActive => cameraOn;
 
   @override
   bool get remoteVideo => true;
+
+  @override
+  MediaStream? get remoteStream => _remoteStream;
+}
+
+/// A remote stream with one video track whose frames cannot be captured.
+class _UnprobableRemoteStream extends Fake implements MediaStream {
+  final _track = _UnprobableVideoTrack();
+
+  @override
+  List<MediaStreamTrack> getVideoTracks() => [_track];
+}
+
+class _UnprobableVideoTrack extends Fake implements MediaStreamTrack {
+  @override
+  Future<ByteBuffer> captureFrame() => throw StateError('no frames to capture in a test');
 }
 
 /// How visible the block that holds every call control currently is: 1 while it

@@ -92,7 +92,17 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
 
   /// Where frames cannot be analysed there is nothing to wait for, so the remote
   /// video starts out visible instead of staying hidden for the whole call.
-  bool _hasRenderableRemoteFrame = !FrameAnalysisWorker.isSupported;
+  static const bool _showsRemoteVideoUnprobed = !FrameAnalysisWorker.isSupported;
+
+  /// Whether the last probed frame of the remote video had something in it.
+  ///
+  /// It is about [_probedTrack] and no other: the track it was probed on. As
+  /// soon as the current call shows another track - a new call, a track
+  /// replaced or removed within the same call - the answer is forgotten and
+  /// the picture starts over, unprobed; and an answer that arrives about a
+  /// track no longer current is dropped (see [_probeRemoteFrame]).
+  bool _hasRenderableRemoteFrame = _showsRemoteVideoUnprobed;
+  MediaStreamTrack? _probedTrack;
   late final FrameAnalysisWorker _frameAnalysisWorker;
 
   static const Duration _debounceDuration = Duration(seconds: 2);
@@ -124,8 +134,17 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   @override
   void didUpdateWidget(covariant CallActiveScaffold oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Covers both a change of the call itself and a change of the demand to
-    // keep the controls, which arrives as a new value from above.
+    // The probed frame belongs to the track it was taken from. Another track
+    // - a new current call, or the same call renegotiated - has shown nothing
+    // yet, so it starts unprobed; otherwise the previous picture would let the
+    // controls hide before this one has a picture of its own. (A rebuild
+    // follows this callback, so no setState is needed.)
+    if (_currentRemoteVideoTrack != _probedTrack) {
+      _probedTrack = null;
+      _hasRenderableRemoteFrame = _showsRemoteVideoUnprobed;
+    }
+    // Covers a change of the call itself, of its picture just above, and of
+    // the demand to keep the controls, which arrives as a new value from above.
     _syncAutoHide(reason: 'didUpdateWidget');
     // A DTMF session belongs to the call it was opened for: when the focus
     // moves - a tap on another row, a ringing call grabbing it, the focused
@@ -139,8 +158,30 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     }
   }
 
-  /// Whether the controls may hide themselves as things stand.
-  bool get _autoHide => widget.activeCalls.shouldAutoHideControls(keepControlsVisible: widget.keepControlsVisible);
+  /// Whether the video of the current call is kept off the screen: while it
+  /// is held (the picture would freeze on its last frame - and when both sides
+  /// hold and one resumes, the other would see video start while still held)
+  /// and while another call is focused (the controls describe that one, and a
+  /// live picture of somebody else behind them would put two people on screen
+  /// at once).
+  bool get _remoteVideoHidden {
+    final activeCall = widget.activeCalls.current;
+    return activeCall.held || widget.focusedCall.callId != activeCall.callId;
+  }
+
+  /// Whether the picture of the other person is on the screen right now - the
+  /// far side sends frames with something in them, and nothing keeps them off.
+  /// The same condition decides whether the controls show an avatar instead
+  /// (see `CallControlsParams.focusedFrameRenderable`).
+  bool get _remotePictureShown => _hasRenderableRemoteFrame && !_remoteVideoHidden;
+
+  /// Whether the controls may hide themselves as things stand: only over a
+  /// picture worth uncovering, and only while nothing demands they stay. Off
+  /// a picture - an audio call, a ringing one, a far side sending black -
+  /// hiding them would leave the screen empty, with no hint of how to get
+  /// them back.
+  bool get _autoHide =>
+      _remotePictureShown && widget.activeCalls.shouldAutoHideControls(keepControlsVisible: widget.keepControlsVisible);
 
   /// Turns the auto-hide of the call controls on or off.
   void _syncAutoHide({required String reason}) {
@@ -152,7 +193,9 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
 
   /// Shows or hides the call controls on a tap anywhere on the call screen -
   /// the picture, the bare toolbar, the space around the controls - or only
-  /// ever shows them while they are required to stay.
+  /// ever shows them while they are required to stay. Where the auto-hide is
+  /// off, the controller refuses to hide and the tap changes nothing: no
+  /// video check is needed here, and none belongs here.
   void _toggleControls() {
     if (widget.keepControlsVisible) {
       _compactController.setCompact(false, reason: 'the controls are required to stay');
@@ -294,20 +337,15 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                     remotePlaceholderBuilder: widget.remotePlaceholderBuilder,
                     backgroundMode: _backgroundMode,
                     hasRenderableRemoteFrame: _hasRenderableRemoteFrame,
-                    // Its important to hide video if held to avoid showing frozen/last frames when held,
-                    // and especially for case when both sides turn on hold and after one side unholds video started to show for another 'holded' side.
-                    // Also hidden while another call is focused: the controls
-                    // and the avatar describe the focused call, and a live
-                    // picture of somebody else moving behind them would put
-                    // two different people on screen at once.
-                    hideVideo: activeCall.held || widget.focusedCall.callId != activeCall.callId,
+                    hideVideo: _remoteVideoHidden,
                   ),
                 // The same gesture for anyone navigating by name rather than
                 // by sight, as a node with a name of its own. It is offered
-                // only while it changes something: with the controls pinned
-                // there is nothing to put away, and announcing an action that
-                // does nothing is worse than announcing none.
-                if (!widget.keepControlsVisible)
+                // only while it changes something: with the controls pinned,
+                // or with no picture to uncover, there is nothing to put away,
+                // and announcing an action that does nothing is worse than
+                // announcing none.
+                if (_autoHide)
                   AnimatedBuilder(
                     animation: _compactController,
                     builder: (context, _) => Positioned.fill(
@@ -441,23 +479,45 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     if (!mounted) return;
 
     final track = _currentRemoteVideoTrack;
+    // A track can change under the same widget - a stream keeps its identity
+    // while its tracks come and go - so the check in didUpdateWidget is
+    // repeated here, once per probe.
+    if (track != _probedTrack) {
+      _probedTrack = null;
+      _setHasRenderableRemoteFrame(_showsRemoteVideoUnprobed);
+    }
     if (track == null) {
       _scheduleNextProbe(_remoteFrameProbeDelay);
       return;
     }
 
     final startTime = DateTime.now();
+    bool renderable;
     try {
-      final isBlackOrEmpty = await _isTrackFrameBlackOrEmpty(track).timeout(const Duration(seconds: 10));
-      _setHasRenderableRemoteFrame(!isBlackOrEmpty);
+      renderable = !await _isTrackFrameBlackOrEmpty(track).timeout(const Duration(seconds: 10));
     } catch (_) {
       // In case of any errors during frame capture or analysis, we optimistically assume that the remote frame is renderable.
-      _setHasRenderableRemoteFrame(true);
-    } finally {
-      final elapsed = DateTime.now().difference(startTime);
-      _logger.fine('Remote frame probe completed in ${elapsed.inMilliseconds}ms, $_hasRenderableRemoteFrame');
-      _scheduleNextProbe(_remoteFrameProbeDelay);
+      renderable = true;
     }
+    final elapsed = DateTime.now().difference(startTime);
+
+    // The answer is about the frame it was taken from. By the time it arrives
+    // the screen may be on another call, or the same call on another track,
+    // and an answer about the old one says nothing about the new one - least
+    // of all the optimistic answer to a capture that failed because the old
+    // stream closed. Such an answer is dropped, and the new one is probed at
+    // once rather than after the usual pause.
+    final stale = !mounted || _currentRemoteVideoTrack != track;
+    if (stale) {
+      _logger.fine('Remote frame probe completed in ${elapsed.inMilliseconds}ms, dropped as stale');
+      _scheduleNextProbe(Duration.zero);
+      return;
+    }
+
+    _probedTrack = track;
+    _setHasRenderableRemoteFrame(renderable);
+    _logger.fine('Remote frame probe completed in ${elapsed.inMilliseconds}ms, $_hasRenderableRemoteFrame');
+    _scheduleNextProbe(_remoteFrameProbeDelay);
   }
 
   Future<bool> _isTrackFrameBlackOrEmpty(MediaStreamTrack track) async {
@@ -471,6 +531,9 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     }
 
     setState(() => _hasRenderableRemoteFrame = value);
+    // The picture arriving or going away changes whether the controls may
+    // hide, the same way a change of the call does.
+    _syncAutoHide(reason: 'remote frame');
   }
 
   void _disposeRemoteFrameWatcher() {
