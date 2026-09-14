@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
@@ -21,8 +22,7 @@ class _SmsConversationBuilderViewState extends State<SmsConversationBuilderView>
   late final builderCubit = context.read<SmsConversationBuilderCubit>();
 
   Future<void> onMultipleUserNumbers(List<String> userNumbers) async {
-    final result = await showModalBottomSheet(
-      context: context,
+    final result = await context.showModalBottomSheet(
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
         child: Column(

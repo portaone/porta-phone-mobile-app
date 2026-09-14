@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -37,10 +38,9 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     final isGroup = state is CVSReady && state.chat?.type == ChatType.group;
 
     if (isDialog) {
-      showModalBottomSheet(
+      context.showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
-        context: context,
         builder: (context) => BlocProvider.value(
           value: conversationCubit,
           child: ClipRRect(
@@ -57,10 +57,9 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     }
 
     if (isGroup) {
-      showModalBottomSheet(
+      context.showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
-        context: context,
         builder: (context) => BlocProvider.value(
           value: conversationCubit,
           child: ClipRRect(
