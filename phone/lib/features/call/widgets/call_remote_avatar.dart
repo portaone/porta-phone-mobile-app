@@ -6,7 +6,7 @@ import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
-import '../bloc/call_bloc.dart';
+import '../models/models.dart';
 import '../utils/utils.dart';
 
 /// Remote party avatar rendered in the area the remote video normally occupies.

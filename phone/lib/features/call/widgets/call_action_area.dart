@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../bloc/call_bloc.dart';
+import '../models/models.dart';
 import '../view/call_screen_styles.dart';
 import 'active_call_actions.dart';
 import 'call_controls.dart';
