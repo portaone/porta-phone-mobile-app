@@ -107,14 +107,6 @@ class _DialogChatInfoState extends State<DialogChatInfo> {
                               // color: theme.primaryColor,
                             ),
                           ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Text(
-                              'id: ${state.credentials.chatId ?? "n/a"}',
-                              style: const TextStyle(fontSize: 12),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
                           const SizedBox(height: 24),
                           if (contact != null && contact.kind == ContactKind.visible) ...[
                             const Divider(),

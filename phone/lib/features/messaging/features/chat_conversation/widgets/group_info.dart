@@ -156,10 +156,6 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
                     children: [
                       const SizedBox(height: 32),
                       GroupAvatar(name: name, size: 50),
-                      SizedBox(
-                        width: double.infinity,
-                        child: Text('id: ${chat.id}', style: const TextStyle(fontSize: 12), textAlign: TextAlign.right),
-                      ),
                       const SizedBox(height: 24),
                       nameField(chat, canChangeName),
                       const SizedBox(height: 24),
