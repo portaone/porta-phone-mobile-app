@@ -101,6 +101,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     // Cache the CallBloc reference to avoid context lookups in callbacks.
     _callBloc = context.read<CallBloc>();
 
+    // The probe comes first: the controller's initial state reads it.
     _remoteFrameProbe = RemoteFrameProbe()
       ..stream = widget.activeCalls.current.remoteStream
       ..addListener(_onRemoteFrameChanged);
@@ -121,10 +122,11 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   @override
   void didUpdateWidget(covariant CallActiveScaffold oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // The probe follows the current call.
+    // The probe follows the current call; a new stream forgets the picture of
+    // the old one before the controls below decide anything on it.
     _remoteFrameProbe.stream = widget.activeCalls.current.remoteStream;
-    // Covers both a change of the call itself and a change of the demand to
-    // keep the controls, which arrives as a new value from above.
+    // Covers a change of the call itself, of its picture just above, and of
+    // the demand to keep the controls, which arrives as a new value from above.
     _syncAutoHide(reason: 'didUpdateWidget');
     // A DTMF session belongs to the call it was opened for: when the focus
     // moves - a tap on another row, a ringing call grabbing it, the focused
@@ -151,12 +153,17 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
 
   /// Whether the picture of the other person is on the screen right now - the
   /// far side sends frames with something in them, and nothing keeps them off.
-  /// Decided once, here, and handed to the controls, which show an avatar
-  /// instead when it is not.
+  /// Decided once, here: it tells the controls whether to show an avatar
+  /// instead, and whether they may hide at all.
   bool get _remotePictureShown => _remoteFrameProbe.renderable && !_remoteVideoHidden;
 
-  /// Whether the controls may hide themselves as things stand.
-  bool get _autoHide => widget.activeCalls.shouldAutoHideControls(keepControlsVisible: widget.keepControlsVisible);
+  /// Whether the controls may hide themselves as things stand: only over a
+  /// picture worth uncovering, and only while nothing demands they stay. Off
+  /// a picture - an audio call, a ringing one, a far side sending black -
+  /// hiding them would leave the screen empty, with no hint of how to get
+  /// them back.
+  bool get _autoHide =>
+      _remotePictureShown && widget.activeCalls.shouldAutoHideControls(keepControlsVisible: widget.keepControlsVisible);
 
   /// Turns the auto-hide of the call controls on or off.
   void _syncAutoHide({required String reason}) {
@@ -168,7 +175,9 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
 
   /// Shows or hides the call controls on a tap anywhere on the call screen -
   /// the picture, the bare toolbar, the space around the controls - or only
-  /// ever shows them while they are required to stay.
+  /// ever shows them while they are required to stay. Where the auto-hide is
+  /// off, the controller refuses to hide and the tap changes nothing: no
+  /// video check is needed here, and none belongs here.
   void _toggleControls() {
     if (widget.keepControlsVisible) {
       _compactController.setCompact(false, reason: 'the controls are required to stay');
@@ -188,9 +197,12 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     super.dispose();
   }
 
-  /// The picture arriving or going away changes what is drawn behind the
-  /// controls.
+  /// The picture arriving or going away changes whether the controls may
+  /// hide, the same way a change of the call does - and what is drawn behind
+  /// them. (The probe may also fire from inside [didUpdateWidget], where a
+  /// rebuild is already on its way; the extra setState is harmless there.)
   void _onRemoteFrameChanged() {
+    _syncAutoHide(reason: 'remote frame');
     if (mounted) setState(() {});
   }
 
@@ -319,10 +331,11 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                   ),
                 // The same gesture for anyone navigating by name rather than
                 // by sight, as a node with a name of its own. It is offered
-                // only while it changes something: with the controls pinned
-                // there is nothing to put away, and announcing an action that
-                // does nothing is worse than announcing none.
-                if (!widget.keepControlsVisible)
+                // only while it changes something: with the controls pinned,
+                // or with no picture to uncover, there is nothing to put away,
+                // and announcing an action that does nothing is worse than
+                // announcing none.
+                if (_autoHide)
                   AnimatedBuilder(
                     animation: _compactController,
                     builder: (context, _) => Positioned.fill(

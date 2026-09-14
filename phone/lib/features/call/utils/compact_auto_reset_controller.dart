@@ -7,6 +7,10 @@ final _logger = Logger('CompactAutoResetController');
 
 /// Manages a state that automatically reverts from an expanded state to a
 /// compact state after a specified duration of inactivity.
+///
+/// The compact state exists only while the controller is active: deactivating
+/// expands, and an inactive controller refuses to compact. So "compact with no
+/// timer to undo it" cannot be reached from any caller.
 class CompactAutoResetController extends ChangeNotifier {
   static const int defaultAutoResetSeconds = 5;
 
@@ -75,7 +79,8 @@ class CompactAutoResetController extends ChangeNotifier {
   /// Toggles the compact state.
   ///
   /// If currently compact, it expands and starts the timer.
-  /// If currently expanded, it compacts and stops the timer.
+  /// If currently expanded, it compacts and stops the timer - while the
+  /// controller is active; an inactive one stays expanded, see [setCompact].
   void toggle() {
     if (_compact) {
       setCompact(false, reason: 'toggle(expand)');
@@ -85,16 +90,21 @@ class CompactAutoResetController extends ChangeNotifier {
   }
 
   /// Manually sets the compact state.
+  ///
+  /// Compacting is refused while the controller is inactive. Inactive means
+  /// nothing wants the UI out of the way, and a compact state reached without
+  /// the timer would be one nothing reverts: the timer is the only thing that
+  /// ever expands on its own. So an inactive controller is always expanded,
+  /// whoever asks - a tap, a key, a future caller.
   void setCompact(bool value, {String reason = 'setCompact'}) {
+    if (value && !_active) {
+      _logger.fine('$reason: compacting refused, the controller is inactive');
+      return;
+    }
     if (_compact == value) return;
 
     _compact = value;
     _logger.info('$reason: compact changed to $_compact');
-
-    if (!_active) {
-      notifyListeners();
-      return;
-    }
 
     if (_compact) {
       _cancelTimer(reason: 'compacted');

@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
@@ -384,6 +388,11 @@ void main() {
     // What hiding them costs a screen reader is checked next door, in
     // call_active_scaffold_semantics_test.dart.
     const idleDelay = Duration(seconds: 8);
+    // The controls have nothing to hide behind until the far side's picture
+    // is on the screen, and the screen only knows that after it has probed a
+    // frame. The probe is a zero-delay timer, and a plain pump moves no
+    // clock: let a moment pass so it fires.
+    Future<void> pumpUntilPictureProbed(WidgetTester tester) => tester.pump(const Duration(milliseconds: 1));
 
     testWidgets('on their own they hide once the call is left alone', (tester) async {
       final call = VideoCall();
@@ -398,6 +407,7 @@ void main() {
     testWidgets('a tap anywhere shows and hides them again', (tester) async {
       final call = VideoCall();
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpUntilPictureProbed(tester);
 
       await tester.tapAt(const Offset(20, 400));
       await tester.pump(kThemeAnimationDuration);
@@ -409,26 +419,89 @@ void main() {
       await teardownCallScaffold(tester);
     });
 
-    testWidgets('the tap works the same with no video to tap on', (tester) async {
-      // An audio call has no video layer at all, and a ringing one is not even
-      // connected - the tap still belongs to the whole screen.
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [ringing], focusedCall: ringing));
-
-      await tester.tapAt(const Offset(20, 400));
-      await tester.pump(kThemeAnimationDuration);
-      expect(controlsOpacity(tester, of: find.byType(IncomingCallActions)), 0);
-      await teardownCallScaffold(tester);
-    });
-
     testWidgets('the bare toolbar counts as anywhere too', (tester) async {
       // The toolbar carries the status line and nothing else to press, so a tap
       // on it belongs to the same gesture as a tap on the picture.
       final call = VideoCall();
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await pumpUntilPictureProbed(tester);
 
       await tester.tapAt(tester.getCenter(find.byType(AppBar)));
       await tester.pump(kThemeAnimationDuration);
       expect(controlsOpacity(tester), 0);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('the own camera being off changes nothing - the picture is the other person', (tester) async {
+      final call = VideoCall(cameraOn: false);
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+
+      await tester.pump(idleDelay);
+      expect(controlsOpacity(tester), 0);
+
+      await tester.tapAt(const Offset(20, 400));
+      await tester.pump(kThemeAnimationDuration);
+      expect(controlsOpacity(tester), 1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('in an audio call they stay, idle or tapped', (tester) async {
+      // WT-1832: a stray tap during a voice call used to take away the avatar,
+      // the name and every button, leaving a bare screen and no hint that a
+      // second tap brings them back. There is no picture to uncover in an
+      // audio call, so there is nothing for the tap to do.
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+
+      await tester.pump(idleDelay);
+      expect(controlsOpacity(tester), 1);
+
+      await tester.tapAt(const Offset(20, 400));
+      await tester.pump(kThemeAnimationDuration);
+      expect(controlsOpacity(tester), 1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a ringing call keeps its answer buttons through a tap', (tester) async {
+      // The same screen takes the incoming call, and a tap there used to hide
+      // the way to answer or decline it.
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [ringing], focusedCall: ringing));
+
+      await tester.tapAt(const Offset(20, 400));
+      await tester.pump(kThemeAnimationDuration);
+      expect(controlsOpacity(tester, of: find.byType(IncomingCallActions)), 1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a far side that announces video but sends nothing to show keeps them too', (tester) async {
+      // Announced video with black or missing frames puts the avatar up in
+      // place of the picture, and hiding the controls would take the avatar
+      // with them.
+      final call = VideoCall(framesArrive: false);
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+
+      await tester.pump(idleDelay);
+      expect(controlsOpacity(tester), 1);
+
+      await tester.tapAt(const Offset(20, 400));
+      await tester.pump(kThemeAnimationDuration);
+      expect(controlsOpacity(tester), 1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('with a held call focused over the live video, they stay as well', (tester) async {
+      // The picture of the live call is kept off the screen while a held call
+      // is focused (the controls describe the held one), so once more there
+      // is nothing to uncover.
+      final live = VideoCall();
+      final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
+
+      await tester.pump(idleDelay);
+      expect(controlsOpacity(tester), 1);
+
+      await tester.tapAt(const Offset(20, 400));
+      await tester.pump(kThemeAnimationDuration);
+      expect(controlsOpacity(tester), 1);
       await teardownCallScaffold(tester);
     });
 
@@ -446,4 +519,178 @@ void main() {
       await teardownCallScaffold(tester);
     });
   });
+
+  group('CallActiveScaffold - the picture belongs to the call it was probed on', () {
+    // The screen stays put while the call it shows changes underneath it
+    // (CallScreen rebuilds the same scaffold for the life of the call state),
+    // and what it learnt about one call's picture must not carry over to the
+    // next. From the review of the WT-1832 change.
+    const idleDelay = Duration(seconds: 8);
+
+    for (final kind in ['audio', 'held', 'ringing']) {
+      testWidgets('controls hidden over the video come back when the call becomes $kind', (tester) async {
+        final video = VideoCall();
+        await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [video], focusedCall: video));
+        await tester.pump(idleDelay);
+        expect(controlsOpacity(tester), 0);
+        final before = tester.state(find.byType(CallActiveScaffold));
+
+        final next = makeCall(
+          callId: 'next',
+          held: kind == 'held',
+          processingStatus: kind == 'ringing' ? CallProcessingStatus.incomingFromOffer : CallProcessingStatus.connected,
+          acceptedTime: kind == 'ringing' ? null : DateTime(2024),
+        );
+        await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [next], focusedCall: next));
+        expect(tester.state(find.byType(CallActiveScaffold)), same(before), reason: 'the same screen, another call');
+        await tester.pump(kThemeAnimationDuration);
+        expect(controlsOpacity(tester, of: kind == 'ringing' ? find.byType(IncomingCallActions) : null), 1);
+        await teardownCallScaffold(tester);
+      });
+    }
+
+    testWidgets('a replacement one-way video call waits for a frame of its own', (tester) async {
+      // The previous call's picture was probed and found renderable; the next
+      // call has a track but its first frame is still on its way. The
+      // controls have nothing to hide behind yet.
+      final previous = VideoCall(cameraOn: false);
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [previous], focusedCall: previous));
+      await tester.pump(const Duration(milliseconds: 1));
+      final before = tester.state(find.byType(CallActiveScaffold));
+
+      final track = _PendingFrameTrack();
+      final next = _oneWayVideoCall('next', track);
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [next], focusedCall: next));
+      expect(tester.state(find.byType(CallActiveScaffold)), same(before));
+      await tester.pump(const Duration(seconds: 6));
+      expect(track.captures, greaterThan(0), reason: 'the new track is being probed');
+      expect(track.frame.isCompleted, isFalse);
+      final opacity = controlsOpacity(tester);
+
+      track.frame.completeError(StateError('test finished'));
+      await tester.pump();
+      await teardownCallScaffold(tester);
+      expect(opacity, 1, reason: 'the replacement call has delivered no frame to uncover');
+    });
+
+    testWidgets('a track replaced within the same call is probed afresh', (tester) async {
+      // A renegotiation hands the same call another remote track. What the
+      // old track showed says nothing about the new one.
+      final oldTrack = _PendingFrameTrack();
+      final call = _oneWayVideoCall('same', oldTrack);
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await tester.pump(const Duration(milliseconds: 1));
+      oldTrack.frame.completeError(StateError('capture failed, counts as a picture'));
+      await tester.pump();
+      final before = tester.state(find.byType(CallActiveScaffold));
+
+      final newTrack = _PendingFrameTrack();
+      final renegotiated = _oneWayVideoCall('same', newTrack);
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [renegotiated], focusedCall: renegotiated));
+      expect(tester.state(find.byType(CallActiveScaffold)), same(before));
+      await tester.pump(const Duration(seconds: 6));
+      expect(newTrack.captures, greaterThan(0));
+      expect(newTrack.frame.isCompleted, isFalse);
+      final opacity = controlsOpacity(tester);
+
+      newTrack.frame.completeError(StateError('test finished'));
+      await tester.pump();
+      await teardownCallScaffold(tester);
+      expect(opacity, 1, reason: 'the new track has delivered no frame to uncover');
+    });
+
+    testWidgets('a track swapped inside the stream, with no new call state, is caught by the next probe', (
+      tester,
+    ) async {
+      // The stream object stays the same and only its track list changes, so
+      // nothing rebuilds the screen; the periodic probe notices on its own.
+      final oldTrack = _PendingFrameTrack();
+      final stream = _RemoteStream(oldTrack);
+      final call = _oneWayVideoCall('same', oldTrack, stream: stream);
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
+      await tester.pump(const Duration(milliseconds: 1));
+      oldTrack.frame.completeError(StateError('capture failed, counts as a picture'));
+      await tester.pump();
+
+      final newTrack = _PendingFrameTrack();
+      stream.track = newTrack;
+      await tester.pump(const Duration(seconds: 6));
+      expect(newTrack.captures, greaterThan(0));
+      expect(newTrack.frame.isCompleted, isFalse);
+      final opacity = controlsOpacity(tester);
+
+      newTrack.frame.completeError(StateError('test finished'));
+      await tester.pump();
+      await teardownCallScaffold(tester);
+      expect(opacity, 1, reason: 'the swapped-in track has delivered no frame to uncover');
+    });
+
+    testWidgets('a capture still pending from the previous call cannot authorise hiding on the next', (tester) async {
+      // The old stream closes once the call is gone and its capture fails; a
+      // failed capture counts as a renderable frame - for the call it was
+      // taken on, which is no longer the one on screen.
+      final oldTrack = _PendingFrameTrack();
+      final previous = _oneWayVideoCall('previous', oldTrack);
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [previous], focusedCall: previous));
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(oldTrack.captures, 1);
+
+      final nextTrack = _PendingFrameTrack();
+      final next = _oneWayVideoCall('next', nextTrack);
+      final before = tester.state(find.byType(CallActiveScaffold));
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [next], focusedCall: next));
+      expect(tester.state(find.byType(CallActiveScaffold)), same(before));
+      oldTrack.frame.completeError(StateError('previous stream is closed'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 6));
+      expect(nextTrack.captures, greaterThan(0));
+      expect(nextTrack.frame.isCompleted, isFalse);
+      final opacity = controlsOpacity(tester);
+
+      nextTrack.frame.completeError(StateError('test finished'));
+      await tester.pump();
+      await teardownCallScaffold(tester);
+      expect(opacity, 1, reason: 'the old capture must not activate the new call\'s auto-hide');
+    });
+  });
 }
+
+/// A remote video track whose frame capture stays pending until the test
+/// completes it, counting how often it was asked.
+class _PendingFrameTrack extends Fake implements MediaStreamTrack {
+  final frame = Completer<ByteBuffer>();
+  int captures = 0;
+
+  @override
+  Future<ByteBuffer> captureFrame() {
+    captures++;
+    return frame.future;
+  }
+}
+
+/// A remote stream whose single video track can be swapped, the way a
+/// renegotiation replaces a track inside the stream that stays.
+class _RemoteStream extends Fake implements MediaStream {
+  _RemoteStream(this.track);
+
+  MediaStreamTrack track;
+
+  @override
+  List<MediaStreamTrack> getVideoTracks() => [track];
+}
+
+/// A connected call with the own camera off and the far side's video track
+/// present - a real ActiveCall, so remoteVideo and isCameraActive are the
+/// production getters over these streams.
+ActiveCall _oneWayVideoCall(String id, MediaStreamTrack track, {MediaStream? stream}) => ActiveCall(
+  callId: id,
+  direction: CallDirection.incoming,
+  line: 0,
+  handle: kHandle,
+  createdTime: DateTime(2024),
+  video: false,
+  remoteStream: stream ?? _RemoteStream(track),
+  processingStatus: CallProcessingStatus.connected,
+  acceptedTime: DateTime(2024),
+  displayName: id,
+);
