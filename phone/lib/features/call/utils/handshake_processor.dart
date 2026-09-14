@@ -1,6 +1,7 @@
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:signaling/signaling.dart';
 
+import 'package:webtrit_phone/features/call/models/models.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -84,6 +85,31 @@ final class HandleIncomingCallAction extends HandshakeAction {
   final MediaStatePeerMessageEvent? mediaState;
 }
 
+/// Hand the offer found in the log to a call the BLoC already tracks but
+/// never received a live [IncomingCallEvent] for.
+///
+/// A push registers the call before the socket is up; the offer normally
+/// follows as a live event, and when the socket was down at that moment the
+/// event never comes and [LocalCall.hasOffer] stays false. The next handshake
+/// carries the original [IncomingCallEvent] with the offer inside the call's
+/// log, and the answer path cannot proceed without it. The BLoC treats this
+/// exactly as [HandleIncomingCallAction]: the incoming handler stores the
+/// offer in the existing call and reports it to callkeep a second time, which
+/// answers `callIdAlreadyExists*` and is handled.
+///
+/// Emitted after the per-line actions and only when no
+/// [HangupSignalingAction]/[DeclineSignalingAction] cut the plan short: the
+/// BLoC stops at those, and an offer is of no use to a session being torn down.
+final class DeliverOfferAction extends HandshakeAction {
+  const DeliverOfferAction({required this.event, this.mediaState});
+
+  final IncomingCallEvent event;
+
+  /// The remote side's latest media state after the offer, when the log
+  /// carries one - see [HandleIncomingCallAction.mediaState].
+  final MediaStatePeerMessageEvent? mediaState;
+}
+
 /// Call [Callkeep.endCall] for a local connection that is no longer present in
 /// the signaling state.
 final class EndLocalCallAction extends HandshakeAction {
@@ -109,6 +135,32 @@ final class HangupStaleConferenceAction extends HandshakeAction {
   final int room;
 }
 
+/// A call the BLoC already tracks, as much of it as the handshake plan needs.
+///
+/// The plan is decided against the local state without depending on it: the
+/// BLoC describes its calls in these terms and executes what comes back.
+final class LocalCall {
+  const LocalCall({required this.callId, required this.status, required this.hasOffer});
+
+  final String callId;
+  final CallProcessingStatus status;
+
+  /// Whether the call already holds its SDP offer.
+  final bool hasOffer;
+
+  /// A call registered from a push whose offer never arrived as a live event,
+  /// whichever of the answer's steps it has reached meanwhile: the answer
+  /// waits for the offer and times out without it.
+  bool get awaitsOffer =>
+      !hasOffer &&
+      switch (status) {
+        CallProcessingStatus.incomingFromPush ||
+        CallProcessingStatus.incomingSubmittedAnswer ||
+        CallProcessingStatus.incomingPerformingStarted => true,
+        _ => false,
+      };
+}
+
 /// Processes a [StateHandshake] and returns the list of [HandshakeAction]s the
 /// BLoC should execute.
 ///
@@ -126,6 +178,9 @@ final class HangupStaleConferenceAction extends HandshakeAction {
 /// - If the log contains an [AcceptedEvent] (non-terminated call, not yet in BLoC) -> [RestoreCallAction]
 ///   (covers both incoming and outgoing calls; [AcceptedEvent] may not be the newest entry after re-INVITE).
 /// - If the earliest log is an unanswered [IncomingCallEvent] (not terminated, not accepted, not in BLoC) -> [HandleIncomingCallAction].
+/// - If the line's call is in the BLoC but still waiting for its offer
+///   ([LocalCall.awaitsOffer]) and the log carries an [IncomingCallEvent] with
+///   one -> [DeliverOfferAction], appended after the per-line actions.
 ///
 /// **Loop C -orphaned local connections:**
 /// - For each local Callkeep connection whose call ID is absent from the handshake
@@ -154,10 +209,15 @@ class HandshakeProcessor {
   Future<List<HandshakeAction>> process({
     required List<Line?> lines,
     required Line? guestLine,
-    required Set<String> activeCallIds,
+    required Iterable<LocalCall> localCalls,
     ConferenceInfo? conference,
   }) async {
     final actions = <HandshakeAction>[if (conference != null) HangupStaleConferenceAction(room: conference.room)];
+    final activeCallIds = localCalls.map((call) => call.callId).toSet();
+    final callIdsAwaitingOffer = localCalls.where((call) => call.awaitsOffer).map((call) => call.callId).toSet();
+    // Kept apart from [actions]: an early return above leaves them out, as an
+    // offer is of no use to a session being torn down.
+    final offerActions = <DeliverOfferAction>[];
 
     /// Prepare termination queue actions
     final queuedTerminationCallIds = <String>{};
@@ -277,6 +337,20 @@ class HandshakeProcessor {
           !activeCallIds.contains(activeLine.callId)) {
         actions.add(HandleIncomingCallAction(event: earliestCallEvent, mediaState: mediaState));
       }
+
+      // A call the BLoC registered from a push and is still waiting to hear
+      // the offer for: the newest log entry carrying one is the offer, and it
+      // is delivered once per line.
+      if (callIdsAwaitingOffer.contains(activeLine.callId)) {
+        final offerEvent = callEventLogEntries
+            .map((log) => log.callEvent)
+            .whereType<IncomingCallEvent>()
+            .where((event) => event.jsep != null)
+            .firstOrNull;
+        if (offerEvent != null) {
+          offerActions.add(DeliverOfferAction(event: offerEvent, mediaState: mediaState));
+        }
+      }
     }
 
     final lineCallIds = allLines.map((l) => l.callId).toSet();
@@ -286,6 +360,6 @@ class HandshakeProcessor {
       }
     }
 
-    return actions;
+    return [...actions, ...offerActions];
   }
 }
