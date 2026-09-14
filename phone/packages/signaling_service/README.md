@@ -212,19 +212,22 @@ hub. It does **not** start a new service and does **not** open a new WebSocket.
     |
     +- step 1: ackFuture = client.awaitAck()   <- register Completer FIRST
     |                                             (before ack can arrive)
-    +- step 2: client.start()                  <- sends {cmd:'sub'} to hub
+    +- step 2: SignalingHubModule wraps client <- its constructor calls
+    |                                             client.start(): {cmd:'sub'}
     |                                             hub receives 'sub'
     |                                             hub sends: sub-ack
-    |                                             hub replays session buffer
+    |                                             hub sends: the session replay
+    |          the manager listens to module.events right away
     +- step 3: await ackFuture                 <- now wait; ack arrives
                     |                             because start() already fired
                     v
-             SignalingHubModule wraps client
-                    |
-                    +- replays session buffer synchronously to events stream
-                    |  (SignalingConnecting ... SignalingConnected ... HandshakeReceived)
+             the hub's replay arrives on the listener already in place
+                    |  (SignalingConnecting ... SignalingConnected ... HandshakeReceived,
+                    |   the handshake rendered from the hub's session snapshot)
                     |
                     +- all future events forwarded from hub in real time
+                       (the module keeps no buffer; a later listener sees only
+                        what follows)
 
  Note: awaitAck() MUST be called before start().
        Awaiting the future before start() always times out --
@@ -482,11 +485,13 @@ Your app manifest only needs `INTERNET`.
 
 ## Session buffer and late subscribers
 
-Both `SignalingModule` (service isolate) and `SignalingHubModule` (main isolate) maintain an
-internal session buffer — the ordered list of events since the last `SignalingConnecting`. Any
-new subscriber receives this buffer synchronously on `.listen()`, making it safe to subscribe
-after `start()` or `attach()` has already returned. The buffer is cleared on each reconnect so
-stale events from a previous session are never replayed.
+`SignalingModule` (service isolate) and the Android plugin (main isolate) maintain an internal
+session buffer — the lifecycle events since the last `SignalingConnecting` and the current
+handshake. Any new subscriber receives this buffer synchronously on `.listen()`, making it safe
+to subscribe after `start()` or `attach()` has already returned. The buffer is cleared on each
+reconnect so stale events from a previous session are never replayed. `SignalingHubModule` has
+none: `HubConnectionManager` listens to it before the hub's ack, and the hub's replay is
+delivered once.
 
 Across the isolate boundary the hub replays state rather than events: a `SessionSnapshot` keeps
 the session's handshake current with the registration events and every call's events on its

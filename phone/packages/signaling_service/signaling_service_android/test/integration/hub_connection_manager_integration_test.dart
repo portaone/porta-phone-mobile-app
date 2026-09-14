@@ -201,6 +201,35 @@ void main() {
       expect(manager.isConnected, isTrue);
     });
 
+    test('the replay the hub sends after its ack reaches onEvent', () async {
+      // The module keeps no buffer: the manager listens before the ack, and
+      // the session as it stood before begin() arrives through onEvent.
+      module = _FakeSignalingModule();
+      hub = _startHub(module!);
+      module!.inject(
+        SignalingHandshakeReceived(
+          handshake: StateHandshake(
+            keepaliveInterval: const Duration(seconds: 30),
+            timestamp: 1,
+            registration: const Registration(status: RegistrationStatus.registered),
+            lines: const [null],
+            presenceInfos: const [],
+            dialogInfos: const [],
+            guestLine: null,
+          ),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final (:manager, :received) = _buildManager();
+      addTearDown(manager.tearDown);
+
+      manager.begin();
+      await _waitFor(() => received.whereType<SignalingHandshakeReceived>().isNotEmpty);
+
+      expect(received.map((e) => e.runtimeType), [SignalingConnecting, SignalingConnected, SignalingHandshakeReceived]);
+    });
+
     test('forwards events from hub to onEvent callback', () async {
       module = _FakeSignalingModule();
       hub = _startHub(module!);
