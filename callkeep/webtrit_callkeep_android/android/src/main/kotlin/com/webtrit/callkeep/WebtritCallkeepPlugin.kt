@@ -43,137 +43,10 @@ class WebtritCallkeepPlugin :
     private var foregroundService: ForegroundService? = null
     private var serviceConnection: ServiceConnection? = null
 
-    // Queued setUp call that arrived before ForegroundService bound.
-    // Only one setUp can be in-flight at a time; a second call replaces the first.
-    private var pendingSetUp: Pair<POptions, (Result<Unit>) -> Unit>? = null
+    // Registered as the PHostApi handler on activity attach and told when the service binds
+    // and unbinds; see ForegroundServiceProxy for what it does with a call in between.
+    private val serviceProxy = ForegroundServiceProxy()
 
-    // Proxy registered as the PHostApi handler immediately on activity attach so that
-    // Dart calls are never lost while the async bindService() completes.
-    // All methods delegate to foregroundService at call time.
-    // setUp() is the only method that may arrive before the service connects: it is
-    // queued and replayed in onServiceConnected. All other methods are only reachable
-    // after a successful setUp(), by which point the service is already connected.
-    private val serviceProxy =
-        object : PHostApi {
-            override fun isSetUp(): Boolean = foregroundService?.isSetUp() ?: false
-
-            override fun setUp(
-                options: POptions,
-                callback: (Result<Unit>) -> Unit,
-            ) {
-                val svc = foregroundService
-                if (svc != null) {
-                    svc.setUp(options, callback)
-                } else {
-                    Log.i(TAG, "setUp: ForegroundService not yet connected, queuing call")
-                    pendingSetUp = Pair(options, callback)
-                }
-            }
-
-            override fun tearDown(callback: (Result<Unit>) -> Unit) =
-                foregroundService?.tearDown(callback)
-                    ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun reportNewIncomingCall(
-                callId: String,
-                handle: PHandle,
-                displayName: String?,
-                hasVideo: Boolean,
-                callback: (Result<PIncomingCallError?>) -> Unit,
-            ) = foregroundService?.reportNewIncomingCall(callId, handle, displayName, hasVideo, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun reportConnectingOutgoingCall(
-                callId: String,
-                callback: (Result<Unit>) -> Unit,
-            ) = foregroundService?.reportConnectingOutgoingCall(callId, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun reportConnectedOutgoingCall(
-                callId: String,
-                callback: (Result<Unit>) -> Unit,
-            ) = foregroundService?.reportConnectedOutgoingCall(callId, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun reportUpdateCall(
-                callId: String,
-                handle: PHandle?,
-                displayName: String?,
-                hasVideo: Boolean?,
-                proximityEnabled: Boolean?,
-                callback: (Result<Unit>) -> Unit,
-            ) = foregroundService?.reportUpdateCall(callId, handle, displayName, hasVideo, proximityEnabled, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun reportEndCall(
-                callId: String,
-                displayName: String,
-                reason: PEndCallReason,
-                callback: (Result<Unit>) -> Unit,
-            ) = foregroundService?.reportEndCall(callId, displayName, reason, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun startCall(
-                callId: String,
-                handle: PHandle,
-                displayNameOrContactIdentifier: String?,
-                video: Boolean,
-                proximityEnabled: Boolean,
-                callback: (Result<PCallRequestError?>) -> Unit,
-            ) = foregroundService?.startCall(callId, handle, displayNameOrContactIdentifier, video, proximityEnabled, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun answerCall(
-                callId: String,
-                callback: (Result<PCallRequestError?>) -> Unit,
-            ) = foregroundService?.answerCall(callId, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun endCall(
-                callId: String,
-                callback: (Result<PCallRequestError?>) -> Unit,
-            ) = foregroundService?.endCall(callId, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun setHeld(
-                callId: String,
-                onHold: Boolean,
-                callback: (Result<PCallRequestError?>) -> Unit,
-            ) = foregroundService?.setHeld(callId, onHold, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun setMuted(
-                callId: String,
-                muted: Boolean,
-                callback: (Result<PCallRequestError?>) -> Unit,
-            ) = foregroundService?.setMuted(callId, muted, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun setSpeaker(
-                callId: String,
-                enabled: Boolean,
-                callback: (Result<PCallRequestError?>) -> Unit,
-            ) = foregroundService?.setSpeaker(callId, enabled, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun setAudioDevice(
-                callId: String,
-                device: PAudioDevice,
-                callback: (Result<PCallRequestError?>) -> Unit,
-            ) = foregroundService?.setAudioDevice(callId, device, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun sendDTMF(
-                callId: String,
-                key: String,
-                callback: (Result<PCallRequestError?>) -> Unit,
-            ) = foregroundService?.sendDTMF(callId, key, callback)
-                ?: callback(Result.failure(IllegalStateException("ForegroundService not connected")))
-
-            override fun onDelegateSet() = foregroundService?.onDelegateSet() ?: Unit
-        }
-
-    private var delegateLogsFlutterApi: PDelegateLogsFlutterApi? = null
     private var permissionsApi: PermissionsApi? = null
 
     // The BinaryMessenger that belongs to the Activity's Flutter engine, captured
@@ -212,7 +85,6 @@ class WebtritCallkeepPlugin :
             PHostPermissionsApi.setUp(messenger, it)
         }
 
-        delegateLogsFlutterApi = PDelegateLogsFlutterApi(messenger).also { Log.add(it) }
         Log.i(TAG, "onAttachedToEngine id:${flutterPluginBinding.hashCode()}")
 
         DiagnosticsApi(context).let {
@@ -229,8 +101,6 @@ class WebtritCallkeepPlugin :
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         Log.i(TAG, "onDetachedFromEngine id:${binding.hashCode()}")
-        delegateLogsFlutterApi?.let { Log.remove(it) }
-        delegateLogsFlutterApi = null
 
         PHostPermissionsApi.setUp(messenger, null)
         permissionsApi = null
@@ -406,20 +276,18 @@ class WebtritCallkeepPlugin :
                     // push-isolate engine that started after onAttachedToActivity but before this
                     // async callback fired.
                     foregroundService?.flutterDelegateApi = PDelegateFlutterApi(activityBinaryMessenger ?: messenger)
-                    // Flush any setUp() call that arrived before the service connected.
-                    pendingSetUp?.let { (options, callback) ->
-                        Log.i(TAG, "ForegroundService connected: replaying queued setUp()")
-                        pendingSetUp = null
-                        foregroundService?.setUp(options, callback)
-                    }
+                    // Release any setUp() call that arrived before the service connected.
+                    foregroundService?.let { serviceProxy.connected(it) }
                 }
 
                 override fun onServiceDisconnected(name: ComponentName?) {
                     Log.w(TAG, "ForegroundService disconnected")
                     foregroundService = null
+                    serviceProxy.disconnected()
                 }
             }
         serviceConnection = foregroundServiceConnection
+        serviceProxy.binding()
         activity.bindService(intent, foregroundServiceConnection, Context.BIND_AUTO_CREATE)
     }
 
@@ -437,6 +305,7 @@ class WebtritCallkeepPlugin :
 
         serviceConnection = null
         foregroundService = null
+        serviceProxy.disconnected()
         PHostApi.setUp(messenger, null)
     }
 

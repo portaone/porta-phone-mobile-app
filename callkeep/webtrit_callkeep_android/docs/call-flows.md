@@ -87,7 +87,7 @@ second incoming call arrives while the first is still ringing, Telecom calls
         |   broadcast: HungUp(id2)
         v
 4.  ForegroundService.handleCSReportDeclineCall()
-        |   pendingIncomingCallbacks[id2] exists (Pigeon response deferred)
+        |   pendingIncomingCalls[id2] exists (host call still suspended)
         |   reply with PIncomingCallError(callRejectedBySystem)
         |   (performEndCall is NOT fired — call was never confirmed to Flutter)
         v
