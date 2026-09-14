@@ -8,6 +8,7 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'message_body.dart';
+import 'message_bubble.dart';
 
 enum NameViewMode { none, show }
 
@@ -59,34 +60,11 @@ class SmsMessageView extends StatefulWidget {
 }
 
 class _SmsMessageViewState extends State<SmsMessageView> {
-  // Key to get the position of the message body to show the popup menu
-  late final bodyKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
     // Call the onRendered callback after the message is mounted by flutter framework
     WidgetsBinding.instance.addPostFrameCallback((_) => widget.onRendered?.call());
-  }
-
-  // Get the position of the message body on the screen overlay to show the popup menu
-  RelativeRect getPosition(bool isMine) {
-    final RenderBox renderBox = bodyKey.currentContext!.findRenderObject()! as RenderBox;
-    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
-    late Offset offset = const Offset(0, 0);
-
-    Offset a = renderBox.localToGlobal(offset, ancestor: overlay);
-
-    // For body that extended beyond app bar
-    if (a.dy < MediaQuery.of(context).padding.top) {
-      a = Offset(a.dx, MediaQuery.of(context).padding.top + 12);
-    }
-
-    Offset b = isMine
-        ? renderBox.localToGlobal(renderBox.size.bottomRight(Offset.zero) + offset, ancestor: overlay)
-        : renderBox.localToGlobal(renderBox.size.bottomLeft(Offset.zero) + offset, ancestor: overlay);
-
-    return RelativeRect.fromRect(Rect.fromPoints(a, b), Offset.zero & overlay.size);
   }
 
   @override
@@ -137,84 +115,48 @@ class _SmsMessageViewState extends State<SmsMessageView> {
         ),
     ];
 
-    return GestureDetector(
-      onLongPress: () async {
-        // Dismiss keyboard if it's open and wait for it to close before showing the popup
-        // to keep the popup in the right position
-        if (FocusScope.of(context).hasFocus) {
-          FocusScope.of(context).unfocus();
-          await Future.delayed(const Duration(milliseconds: 400));
-          if (!mounted) return;
-        }
-
-        // Check if has any items to show
-        if (popupItems.isEmpty) return;
-
-        final position = getPosition(isMine);
-        showMenu(context: this.context, position: position, items: popupItems);
-      },
-      child: Padding(
-        padding: isMine
-            ? const EdgeInsets.only(left: 48, right: 8, top: 4, bottom: 4)
-            : const EdgeInsets.only(left: 8, right: 48, top: 4, bottom: 4),
-        child: Row(
-          mainAxisAlignment: isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (!isMine) ...[
-              if (widget.avatarViewMode == AvatarViewMode.show) ...[
-                LeadingAvatar(username: senderNumber?.substring(senderNumber.length - 2) ?? '', radius: 20),
-                const SizedBox(width: 8),
-              ],
-              if (widget.avatarViewMode == AvatarViewMode.space) const SizedBox(width: 48),
-            ],
-            Flexible(
-              child: FadeIn(
-                duration: playFadeForNewMessage ? const Duration(milliseconds: 300) : Duration.zero,
-                child: Container(
-                  decoration: theme.messageDecoration(isMine, isViewedByUser),
-                  padding: const EdgeInsets.all(12),
-                  child: IntrinsicWidth(
-                    child: Column(
-                      key: bodyKey,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.nameViewMode == NameViewMode.show) ...[
-                          Text(senderNumber ?? '', style: theme.userNameStyle),
-                          const SizedBox(height: 4),
-                        ],
-                        if (!isDeleted) ...[MessageBody(text: content, isMine: isMine, style: theme.contentStyle)],
-                        if (isDeleted) ...[
-                          Text(context.l10n.messaging_MessageView_deleted, style: theme.subContentStyle),
-                        ],
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            if (isMine && isSended) ...[
-                              Text(message.sendingStatus.nameL10n(context), style: theme.subContentStyle),
-                              const SizedBox(width: 2),
-                            ],
-                            if (isMine && !isSended)
-                              CircularProgressTemplate(color: colorScheme.onSurface, size: 12, width: 1),
-                            if (isMine && isSended && !isViewedByMembers)
-                              Icon(Icons.done, color: colorScheme.tertiary, size: 12),
-                            if (isMine && isViewedByMembers)
-                              Icon(Icons.done_all, color: colorScheme.tertiary, size: 12),
-                            const SizedBox(width: 2),
-                            if (message?.createdAt != null)
-                              Text(message!.createdAt.toHHmm, style: theme.subContentStyle),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+    return MessageBubble(
+      isMine: isMine,
+      decoration: theme.messageDecoration(isMine, isViewedByUser),
+      padding: const EdgeInsets.all(12),
+      actions: popupItems,
+      fadeIn: playFadeForNewMessage,
+      leading: isMine
+          ? null
+          : switch (widget.avatarViewMode) {
+              AvatarViewMode.show => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: LeadingAvatar(username: senderNumber?.substring(senderNumber.length - 2) ?? '', radius: 20),
               ),
-            ),
+              AvatarViewMode.space => const SizedBox(width: 48),
+              AvatarViewMode.none => null,
+            },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.nameViewMode == NameViewMode.show) ...[
+            Text(senderNumber ?? '', style: theme.userNameStyle),
+            const SizedBox(height: 4),
           ],
-        ),
+          if (!isDeleted) ...[MessageBody(text: content, isMine: isMine, style: theme.contentStyle)],
+          if (isDeleted) ...[Text(context.l10n.messaging_MessageView_deleted, style: theme.subContentStyle)],
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (isMine && isSended) ...[
+                Text(message.sendingStatus.nameL10n(context), style: theme.subContentStyle),
+                const SizedBox(width: 2),
+              ],
+              if (isMine && !isSended) CircularProgressTemplate(color: colorScheme.onSurface, size: 12, width: 1),
+              if (isMine && isSended && !isViewedByMembers) Icon(Icons.done, color: colorScheme.tertiary, size: 12),
+              if (isMine && isViewedByMembers) Icon(Icons.done_all, color: colorScheme.tertiary, size: 12),
+              const SizedBox(width: 2),
+              if (message?.createdAt != null) Text(message!.createdAt.toHHmm, style: theme.subContentStyle),
+            ],
+          ),
+        ],
       ),
     );
   }
