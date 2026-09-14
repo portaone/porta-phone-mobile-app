@@ -12,8 +12,15 @@ extension ActiveCallRingback on ActiveCall {
 }
 
 extension ActiveCallListAutoCompact on List<ActiveCall> {
-  /// Determines whether UI controls should auto-compact (auto-hide / Compact Mode)
-  /// based on the current call state.
+  /// Whether the call itself allows the controls to auto-compact (auto-hide /
+  /// Compact Mode): a connected call with video coming in from the far side.
+  ///
+  /// Only the far side counts. The controls get out of the way of the picture
+  /// of the other person, and that picture is there whether or not the own
+  /// camera is on; a one-way video call is watched the same as a two-way one.
+  /// Whether the picture actually renders - a far side that announces video
+  /// but sends black frames - is not known here; the screen that probes the
+  /// frames adds that condition on top.
   bool get shouldAutoCompact {
     if (isEmpty) return false;
 
@@ -24,7 +31,7 @@ extension ActiveCallListAutoCompact on List<ActiveCall> {
     if (activeCall.wasHungUp) return false;
     if (activeCall.processingStatus != CallProcessingStatus.connected) return false;
 
-    return activeCall.isCameraActive && activeCall.remoteVideo;
+    return activeCall.remoteVideo;
   }
 
   /// Whether the call controls may hide themselves after a few idle seconds.

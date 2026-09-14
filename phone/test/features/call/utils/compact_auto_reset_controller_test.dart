@@ -133,20 +133,34 @@ void main() {
         });
       });
 
-      test('toggle() switches compact state but DOES NOT start timer when inactive', () {
-        // Ensure inactive
+      test('toggle() while inactive leaves the state expanded', () {
+        // A compact state reached with no timer to undo it is one nothing
+        // reverts, so an inactive controller refuses to compact at all.
         expect(controller.active, isFalse);
-        expect(controller.compact, isFalse);
+        var notified = 0;
+        controller.addListener(() => notified++);
 
-        // Toggle to compact
-        controller.toggle();
-        expect(controller.compact, isTrue);
-        expect(controller.isRunning, isFalse);
-
-        // Toggle back to expanded
         controller.toggle();
         expect(controller.compact, isFalse);
         expect(controller.isRunning, isFalse);
+        expect(notified, 0, reason: 'nothing changed, so nobody is told');
+      });
+
+      test('setCompact(true) while inactive is refused, deactivating expands', () {
+        fakeAsync((async) {
+          controller.setCompact(true, reason: 'test');
+          expect(controller.compact, isFalse);
+
+          controller.activate();
+          async.elapse(const Duration(seconds: 5));
+          expect(controller.compact, isTrue);
+
+          // Inactive means expanded, whichever way it got there.
+          controller.deactivate();
+          expect(controller.compact, isFalse);
+          controller.setCompact(true, reason: 'test');
+          expect(controller.compact, isFalse);
+        });
       });
     });
   });
@@ -197,16 +211,18 @@ void main() {
       expect(calls.shouldAutoCompact, isFalse);
     });
 
-    test('Returns true ONLY if cameraEnabled AND remoteVideo (Both active on current call)', () {
+    test('Returns true with remote video on a two-way video call', () {
       final List<ActiveCall> calls = [
         MockActiveCall(processingStatus: CallProcessingStatus.connected, isCameraActive: true, remoteVideo: true),
       ];
       expect(calls.shouldAutoCompact, isTrue);
     });
 
-    test('Returns false if local camera is OFF (The "Black Void" prevention)', () {
-      // UX Logic: If I turn off my camera, I must see the UI,
-      // even if the remote side sends video (or black frames).
+    test('The own camera does not matter: a one-way video call compacts too', () {
+      // The controls get out of the way of the other person's picture, and
+      // that picture is there whether or not the own camera is on. A far side
+      // that announces video but sends black frames is not caught here - the
+      // screen probes the frames and adds that condition on top.
       final List<ActiveCall> calls = [
         MockActiveCall(
           processingStatus: CallProcessingStatus.connected,
@@ -214,11 +230,7 @@ void main() {
           remoteVideo: true, // Remote ON
         ),
       ];
-      expect(
-        calls.shouldAutoCompact,
-        isFalse,
-        reason: 'UI must remain visible when local camera is off to prevent black screen',
-      );
+      expect(calls.shouldAutoCompact, isTrue);
     });
 
     test('Returns false if remote video is OFF', () {
