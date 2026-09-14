@@ -145,6 +145,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   late final PeerConnectionManager _peerConnectionManager;
   late final HandshakeProcessor _handshakeProcessor;
+
   final ConnectivityService _connectivityService;
 
   CallBloc({
@@ -183,10 +184,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _mediaManager = CallMediaManager(callkeep: callkeep);
     _signalingModule = signalingModule;
     _peerConnectionManager = peerConnectionManager;
-    _handshakeProcessor = HandshakeProcessor(
-      callkeepConnections: callkeepConnections,
-      queuedTerminationRequestsRepository: queuedTerminationRequestsRepository,
-    );
+    _handshakeProcessor = HandshakeProcessor(queuedTerminationRequestsRepository: queuedTerminationRequestsRepository);
 
     _reconnectController = SignalingReconnectController(
       signalingModule: signalingModule,
@@ -1322,6 +1320,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         );
     }
 
+    // The server confirms a termination this side asked for with a hangup:
+    // the queued request has done its work and is not replayed.
+    for (final request in queuedTerminationRequestsRepository.getAll.values) {
+      if (request.callId == event.callId) queuedTerminationRequestsRepository.remove(request);
+    }
     add(_CallMutationEvent.signalingHangup(callId: event.callId, code: event.code, reason: event.reason));
   }
 
@@ -1974,6 +1977,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // Condition occur when the user interacts with a push notification before signaling is properly initialized.
     // In this case, the CallKeep method "reportNewIncomingCall" may return callIdAlreadyTerminated.
     if (state.retrieveActiveCall(event.callId)?.line == _kUndefinedLine) {
+      // The call has no line yet, so the decline cannot be sent from here; it
+      // is recorded for the next handshake, which knows the line and sends it
+      // (the server's hangup, when it comes first, clears it). Until then the
+      // record keeps a handshake plan from presenting the call again.
+      queuedTerminationRequestsRepository.put(
+        QueuedTerminationRequest(type: QueuedTerminationRequestType.decline, callId: event.callId, line: null),
+      );
       add(_ResetStateEvent.completeCall(event.callId));
       return;
     }
@@ -3990,11 +4000,32 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       );
     }
 
-    final actions = await _handshakeProcessor.process(
-      lines: stateHandshake.lines,
-      guestLine: stateHandshake.guestLine,
+    // The callkeep reads are the only awaits on the way to the plan, and they
+    // come first: the plan is then decided in the same turn it is executed,
+    // from the state as it stands and from the session as the module knows
+    // it now - a call that ended while the reads were in flight is already
+    // gone from that handshake, whichever side ended it. What the bloc
+    // processed meanwhile is the plan's input, not something it can overtake.
+    final handshakeLines = [...stateHandshake.lines, stateHandshake.guestLine].whereType<Line>().toList();
+    final lineCallIds = {
+      for (final line in handshakeLines) ...[
+        line.callId,
+        ...line.callLogs.whereType<CallEventLog>().take(1).map((log) => log.callEvent.callId),
+      ],
+    };
+    final connections = await callkeepConnections.getConnections();
+    final lineConnections = Map.fromIterables(
+      lineCallIds,
+      await Future.wait(lineCallIds.map(callkeepConnections.getConnection)),
+    );
+    final session = _signalingModule.sessionHandshake ?? stateHandshake;
+    final actions = _handshakeProcessor.process(
+      lines: session.lines,
+      guestLine: session.guestLine,
       activeCalls: state.activeCalls,
-      conference: stateHandshake.conference,
+      connections: connections,
+      lineConnections: lineConnections,
+      conference: session.conference,
     );
 
     _logger.warning(
@@ -4004,37 +4035,40 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     for (final action in actions) {
       switch (action) {
+        // The requests below go through the same lifecycle as an end the
+        // user makes now - recorded until the server confirms them - and are
+        // sent without waiting for their answers: an await between two
+        // actions would reopen the window the plan was made to avoid, and
+        // each action concerns one call. Where the processor found the
+        // session being torn down it has already cut the plan short itself;
+        // a hangup replayed from the termination queue says nothing about the
+        // other lines, and stopping here once left a live call unanswered
+        // while a queued decline kept failing.
         case HangupSignalingAction():
-          await _signalingModule
-              .execute(
-                HangupRequest(
-                  transaction: WebtritSignalingClient.generateTransactionId(),
-                  line: action.line,
-                  callId: action.callId,
-                ),
-              )
-              ?.catchError((e, s) => callErrorReporter.handle(e, s, '_handleHandshakeReceived hangupRequest error'));
-          // Early return is intentional: HangupSignalingAction means the
-          // entire session is being torn down. The rest of the plan waits for
-          // the next handshake cycle after the hang-up settles (the processor
-          // has already left offer delivery out of a plan that ends this way).
-          _logger.info('_handleHandshakeReceived: HangupSignalingAction — stopping here, callId=${action.callId}');
-          return;
+          unawaited(
+            _dispatchTerminationRequest(
+              request: QueuedTerminationRequest(
+                type: QueuedTerminationRequestType.hangup,
+                line: action.line,
+                callId: action.callId,
+              ),
+              source: '_handleHandshakeReceived',
+            ),
+          );
+          _logger.info('_handleHandshakeReceived: HangupSignalingAction sent, callId=${action.callId}');
 
         case DeclineSignalingAction():
-          await _signalingModule
-              .execute(
-                DeclineRequest(
-                  transaction: WebtritSignalingClient.generateTransactionId(),
-                  line: action.line,
-                  callId: action.callId,
-                ),
-              )
-              ?.catchError((e, s) => callErrorReporter.handle(e, s, '_handleHandshakeReceived declineRequest error'));
-          // Early return mirrors HangupSignalingAction: the incoming call is
-          // being declined server-side.
-          _logger.info('_handleHandshakeReceived: DeclineSignalingAction — stopping here, callId=${action.callId}');
-          return;
+          unawaited(
+            _dispatchTerminationRequest(
+              request: QueuedTerminationRequest(
+                type: QueuedTerminationRequestType.decline,
+                line: action.line,
+                callId: action.callId,
+              ),
+              source: '_handleHandshakeReceived',
+            ),
+          );
+          _logger.info('_handleHandshakeReceived: DeclineSignalingAction sent, callId=${action.callId}');
 
         case RestoreCallAction():
           add(
@@ -4055,13 +4089,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           _dispatchIncomingCall(action.event, remoteVideo: action.mediaState?.video);
 
         case DeliverOfferAction():
-          // The plan was made from the calls as they stood before the awaits
-          // above; the call may have ended or found its offer meanwhile, so
-          // the state is read again here, as the walk this action replaced
-          // read it at this point. The handler is the same as for a live
-          // offer: it stores the offer in the waiting call and reports the
-          // call to callkeep a second time, which answers callIdAlreadyExists*
-          // and is handled there.
+          // The handler is the same as for a live offer: it stores the offer
+          // in the waiting call and reports the call to callkeep a second
+          // time, which answers callIdAlreadyExists* and is handled there.
+          // The state is read once more here - the queued signaling events
+          // above may have already answered or removed the call.
           final waiting = state.retrieveActiveCall(action.event.callId);
           if (waiting != null && waiting.awaitsOffer) {
             _logger.info('_handleHandshakeReceived: delivering offer to push-registered call ${action.event.callId}');
@@ -4071,14 +4103,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           }
 
         case EndLocalCallAction():
-          await callkeep.endCall(action.callId);
+          unawaited(callkeep.endCall(action.callId));
 
         case HangupStaleConferenceAction():
           // Never refused, a no-op without a room; the calls in it carry on.
           _logger.info('_handleHandshakeReceived: hanging up conference room ${action.room} this client cannot rejoin');
-          await _signalingModule
-              .execute(ConferenceHangupRequest(transaction: WebtritSignalingClient.generateTransactionId()))
-              ?.catchError((e, s) => callErrorReporter.handle(e, s, '_handleHandshakeReceived conferenceHangup error'));
+          unawaited(
+            _signalingModule
+                .execute(ConferenceHangupRequest(transaction: WebtritSignalingClient.generateTransactionId()))
+                ?.catchError(
+                  (e, s) => callErrorReporter.handle(e, s, '_handleHandshakeReceived conferenceHangup error'),
+                ),
+          );
       }
     }
   }
@@ -4545,8 +4581,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     queuedTerminationRequestsRepository.put(request);
     try {
       await _executeTerminationRequest(request);
-      queuedTerminationRequestsRepository.remove(request);
+      // Acknowledged, not yet done: the entry stays until the server's hangup
+      // for the call confirms it, so a handshake planned in between still
+      // sees the call as one being ended rather than as one to bring back.
     } catch (e, s) {
+      // The request did not reach the server (socket down, timeout): it is
+      // replayed from the repository by the next handshake.
       _logger.warning('_dispatchTerminationRequest failed, request queued for retry. source=$source', e, s);
     }
   }

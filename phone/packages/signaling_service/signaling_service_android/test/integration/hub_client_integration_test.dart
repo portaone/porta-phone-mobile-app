@@ -38,6 +38,9 @@ typedef _SignalingClientFactory =
 // ---------------------------------------------------------------------------
 
 class _SignalingModule implements SignalingModule {
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   _SignalingModule({
     required this.coreUrl,
     required this.tenantId,

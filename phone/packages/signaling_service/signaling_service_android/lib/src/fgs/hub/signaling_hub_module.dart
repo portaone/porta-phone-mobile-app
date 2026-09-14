@@ -48,6 +48,10 @@ class SignalingHubModule implements SignalingModule {
   @override
   bool get isConnected => _connected;
 
+  /// The module keeps no session of its own; the plugin, its consumer, does.
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   @override
   Future<void>? execute(Request request) {
     if (!_connected) return null;

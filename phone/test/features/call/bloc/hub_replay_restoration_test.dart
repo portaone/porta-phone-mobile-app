@@ -18,6 +18,9 @@ import 'call_bloc_harness.dart';
 /// The probes were written by the review of the hub snapshot change and are
 /// adopted as its coverage.
 class _Source extends Fake implements SignalingModule {
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   final controller = StreamController<SignalingModuleEvent>.broadcast();
 
   @override

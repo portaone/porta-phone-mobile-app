@@ -70,6 +70,9 @@ class WebtritSignalingServiceAndroid extends SignalingServicePlatform {
 
   final _eventBuffer = SignalingEventBuffer();
 
+  @override
+  StateHandshake? get sessionHandshake => _eventBuffer.sessionHandshake;
+
   late final _hubManager = HubConnectionManager(
     consumerId: 'android_plugin_$hashCode',
     onEvent: (event) {

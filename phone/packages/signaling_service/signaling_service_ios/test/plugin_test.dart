@@ -50,6 +50,9 @@ class _FakeSignalingClient extends Fake implements WebtritSignalingClient {
 ///
 /// Used in place of the deleted per-platform SignalingModule class.
 class _FakeSignalingModule implements SignalingModule {
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   _FakeSignalingModule(this._client);
 
   final _FakeSignalingClient _client;
@@ -166,6 +169,9 @@ SignalingModuleFactory _failingFactory(Object error) {
 
 /// A [SignalingModule] whose connect() immediately emits a connection failure.
 class _FailingSignalingModule implements SignalingModule {
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   _FailingSignalingModule(this._error);
 
   final Object _error;

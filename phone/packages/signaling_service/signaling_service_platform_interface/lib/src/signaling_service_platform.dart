@@ -31,6 +31,10 @@ abstract class SignalingServicePlatform extends PlatformInterface {
   /// Broadcast stream of all signaling events.
   Stream<SignalingModuleEvent> get events;
 
+  /// The session as the platform knows it now - see [SignalingModule.sessionHandshake].
+  /// Platforms that keep no session buffer answer `null`.
+  StateHandshake? get sessionHandshake => null;
+
   /// Configures and starts the signaling service with the given [config].
   ///
   /// [mode] controls the service lifecycle (Android only -- ignored on iOS):

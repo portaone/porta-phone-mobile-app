@@ -62,6 +62,9 @@ class WebtritSignalingServiceDirect extends SignalingServicePlatform {
 
   final _eventBuffer = SignalingEventBuffer();
 
+  @override
+  StateHandshake? get sessionHandshake => _eventBuffer.sessionHandshake;
+
   /// Set to true by [stopService] and [dispose]; reset to false at the start
   /// of [start]. Guards against a [dispose]/[stopService] call racing with an
   /// in-progress [start] at the [_tearDownModule] and [onBeforeStart]

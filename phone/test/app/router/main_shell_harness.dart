@@ -14,6 +14,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:signaling/signaling.dart';
 
 import 'package:drift/native.dart';
 import 'package:bloc_test/bloc_test.dart';
@@ -91,6 +92,9 @@ class FakeFirebaseMessaging extends Fake implements FirebaseMessaging {
 /// A signaling connection that never leaves the process: no events, always
 /// "connected enough" for the shell to build.
 class FakeSignalingModule extends Fake implements SignalingModule {
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   final _events = StreamController<SignalingModuleEvent>.broadcast();
 
   @override

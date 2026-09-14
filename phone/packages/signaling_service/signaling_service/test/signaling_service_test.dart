@@ -9,6 +9,9 @@ import 'package:signaling_service_platform_interface/signaling_service_platform_
 import 'package:signaling_service/signaling_service.dart';
 
 class _FakeModule implements SignalingModule {
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   final _ctrl = StreamController<SignalingModuleEvent>.broadcast();
   bool _connected = false;
 
