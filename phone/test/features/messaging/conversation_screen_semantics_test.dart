@@ -38,6 +38,10 @@ void main() {
       await settle(tester);
 
       expect(find.byType(DialogChatInfo), findsOneWidget);
+      // The strip above the sheet is the barrier, a way out - named as one,
+      // not as Flutter's "Scrim" (WT-1884).
+      expect(find.bySemanticsLabel('Scrim'), findsNothing);
+      expect(find.bySemanticsLabel('Dismiss'), findsOneWidget);
 
       handle.dispose();
     });
