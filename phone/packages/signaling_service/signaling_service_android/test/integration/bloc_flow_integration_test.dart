@@ -386,15 +386,31 @@ Future<({_SignalingModule module, SignalingHub hub, _FakeSignalingClient fakeCli
   return (module: module, hub: hub, fakeClient: fakeClient);
 }
 
-/// Builds the "client side": subscribes a hub client and wraps it in a module.
-Future<({SignalingHubClient hubClient, SignalingHubModule hubModule})> _buildClientSide(String consumerId) async {
+/// Builds the "client side" the way [HubConnectionManager] does: wraps a hub
+/// client in a module and, when given, attaches [bloc] BEFORE the ack is
+/// awaited - the hub's replay follows its ack at once and the module keeps no
+/// buffer for a consumer that comes later.
+Future<({SignalingHubClient hubClient, SignalingHubModule hubModule})> _buildClientSide(
+  String consumerId, {
+  _BlocSimulator? bloc,
+}) async {
   final hubClient = SignalingHubClient.tryConnect(consumerId);
   expect(hubClient, isNotNull);
   final ackFuture = hubClient!.awaitAck(timeout: const Duration(seconds: 2));
-  hubClient.start();
-  await ackFuture;
   final hubModule = SignalingHubModule(hubClient);
+  bloc?.attach(hubModule.events);
+  await ackFuture;
   return (hubClient: hubClient, hubModule: hubModule);
+}
+
+/// Waits until [condition] holds, polling; a wait on the module's stream
+/// after the fact would miss a replay that already came.
+Future<void> _until(bool Function() condition) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 3));
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) fail('condition not met within 3s');
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
 }
 
 Future<T> _waitFor<T extends SignalingModuleEvent>(Stream<SignalingModuleEvent> stream) =>
@@ -658,20 +674,16 @@ void main() {
         await module.dispose();
       });
 
-      final side1 = await _buildClientSide('bloc-multi-1');
-      final side2 = await _buildClientSide('bloc-multi-2');
+      final bloc1 = _BlocSimulator();
+      final bloc2 = _BlocSimulator();
+      addTearDown(bloc1.dispose);
+      addTearDown(bloc2.dispose);
+      final side1 = await _buildClientSide('bloc-multi-1', bloc: bloc1);
+      final side2 = await _buildClientSide('bloc-multi-2', bloc: bloc2);
       addTearDown(side1.hubModule.dispose);
       addTearDown(side2.hubModule.dispose);
 
-      final bloc1 = _BlocSimulator()..attach(side1.hubModule.events);
-      final bloc2 = _BlocSimulator()..attach(side2.hubModule.events);
-      addTearDown(bloc1.dispose);
-      addTearDown(bloc2.dispose);
-
-      await Future.wait([
-        _waitFor<SignalingConnected>(side1.hubModule.events),
-        _waitFor<SignalingConnected>(side2.hubModule.events),
-      ]);
+      await _until(() => bloc1.isConnected && bloc2.isConnected);
 
       expect(bloc1.isConnected, isTrue);
       expect(bloc2.isConnected, isTrue);

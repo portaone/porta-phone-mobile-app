@@ -196,8 +196,10 @@ void main() {
   // Session buffer / late subscriber replay
   // -------------------------------------------------------------------------
 
-  group('SignalingHubModule -- session buffer replay', () {
-    test('late subscriber receives buffered events from current session', () async {
+  group('SignalingHubModule -- no buffer of its own', () {
+    test('a listener sees what arrives after it, not what came before', () async {
+      // The hub replays the session once, right after its ack; the manager
+      // listens before the ack. Nothing is kept for a listener that comes later.
       final hub = _FakeHubClient();
       final module = SignalingHubModule(hub);
       addTearDown(module.dispose);
@@ -209,46 +211,11 @@ void main() {
 
       final late = <SignalingModuleEvent>[];
       module.events.listen(late.add);
+      hub.inject(SignalingProtocolEvent(event: RegisteredEvent()));
       await Future<void>.delayed(Duration.zero);
 
-      expect(late.whereType<SignalingConnecting>(), hasLength(1));
-      expect(late.whereType<SignalingConnected>(), hasLength(1));
-      expect(late.whereType<SignalingHandshakeReceived>(), hasLength(1));
-    });
-
-    test('SignalingConnecting clears the buffer for a new session', () async {
-      final hub = _FakeHubClient();
-      final module = SignalingHubModule(hub);
-      addTearDown(module.dispose);
-
-      // First session events.
-      hub.inject(SignalingConnecting());
-      hub.inject(SignalingConnected());
-      hub.inject(SignalingHandshakeReceived(handshake: _kHandshake));
-      hub.inject(
-        SignalingDisconnected(
-          code: 1000,
-          reason: null,
-          knownCode: SignalingDisconnectCode.normalClosure,
-          recommendedReconnectDelay: const Duration(seconds: 3),
-        ),
-      );
-      await Future<void>.delayed(Duration.zero);
-
-      // Second session starts -- buffer is cleared.
-      hub.inject(SignalingConnecting());
-      await Future<void>.delayed(Duration.zero);
-
-      final late = <SignalingModuleEvent>[];
-      module.events.listen(late.add);
-      await Future<void>.delayed(Duration.zero);
-
-      expect(
-        late.whereType<SignalingHandshakeReceived>(),
-        isEmpty,
-        reason: 'Handshake from first session must not appear in second session buffer',
-      );
-      expect(late.whereType<SignalingConnecting>(), hasLength(1));
+      expect(late.map((e) => e.runtimeType), [SignalingProtocolEvent]);
+      expect(module.isConnected, isTrue, reason: 'the module itself still tracked the connection');
     });
   });
 

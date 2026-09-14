@@ -212,13 +212,14 @@ CallBloc constructed later:
 ```
 
 `connect()` clears the buffer — each reconnect starts fresh.
-Both `SignalingModule` and `SignalingHubModule` maintain independent session buffers.
+`SignalingHubModule` keeps no buffer of its own: `HubConnectionManager` listens to it before the
+hub's ack, and the hub's replay, which follows the ack at once, is delivered once.
 
 The buffer replays state, not history: a `SessionSnapshot` (in `signaling_service_platform_interface`)
 keeps the handshake the session opened with current with the registration events and every call's
 events on its line (numbered or guest; a hangup frees the line at its position), and `snapshot`
 renders the handshake the server would send now. A subscriber that attaches late - a new isolate
-attaching to the hub, or a consumer subscribing to the module after it attached - takes the path it
+attaching to the hub, or a consumer subscribing to the plugin after it attached - takes the path it
 takes after a reconnect, where the server itself describes calls that are already up. Protocol
 events are never replayed; what they changed is in the snapshot. Because every boundary keeps the
 same buffer, a call that ended between one boundary's replay and the next is gone at both.
