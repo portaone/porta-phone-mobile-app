@@ -3990,6 +3990,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       lines: stateHandshake.lines,
       guestLine: stateHandshake.guestLine,
       activeCallIds: state.activeCalls.map((c) => c.callId).toSet(),
+      conference: stateHandshake.conference,
     );
 
     _logger.warning(
@@ -4050,6 +4051,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
         case EndLocalCallAction():
           await callkeep.endCall(action.callId);
+
+        case HangupStaleConferenceAction():
+          // Never refused, a no-op without a room; the calls in it carry on.
+          _logger.info('_handleHandshakeReceived: hanging up conference room ${action.room} this client cannot rejoin');
+          await _signalingModule
+              .execute(ConferenceHangupRequest(transaction: WebtritSignalingClient.generateTransactionId()))
+              ?.catchError((e, s) => callErrorReporter.handle(e, s, '_handleHandshakeReceived conferenceHangup error'));
       }
     }
 

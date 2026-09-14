@@ -511,6 +511,27 @@ void main() {
   // queued termination requests
   // -------------------------------------------------------------------------
 
+  group('conference block', () {
+    test('a room the server reports is hung up first, ahead of the per-line actions', () async {
+      // The client keeps no room, so one the server has is one it cannot rejoin.
+      // It goes first because the BLoC stops after a hangup or decline action.
+      final line = _makeLine(callLogs: [CallEventLog(timestamp: 0, callEvent: _makeProceedingEvent())]);
+      final actions = await processor.process(
+        lines: [line],
+        guestLine: null,
+        activeCallIds: {},
+        conference: const ConferenceInfo(room: 4242),
+      );
+      expect(actions.first, isA<HangupStaleConferenceAction>().having((a) => a.room, 'room', 4242));
+      expect(actions.last, isA<HangupSignalingAction>());
+    });
+
+    test('no room reported, nothing to hang up', () async {
+      final actions = await processor.process(lines: [], guestLine: null, activeCallIds: {}, conference: null);
+      expect(actions, isEmpty);
+    });
+  });
+
   group('queued termination requests', () {
     test('returns regular signaling actions for queued requests', () async {
       final queued = {

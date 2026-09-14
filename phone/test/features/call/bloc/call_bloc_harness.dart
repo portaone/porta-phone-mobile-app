@@ -165,6 +165,9 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   /// Delivers [event] to the bloc as if the server sent it.
   void emit(Event event) => _events.add(SignalingProtocolEvent(event: event));
 
+  /// Delivers [handshake] to the bloc as if the session had just (re)connected.
+  void emitHandshake(StateHandshake handshake) => _events.add(SignalingHandshakeReceived(handshake: handshake));
+
   Future<void> close() => _events.close();
 }
 
@@ -225,15 +228,32 @@ class _FakeCallkeepPlatform extends WebtritCallkeepPlatform {
 
 class _FakeCallLogsRepository extends Fake implements CallLogsRepository {}
 
-class _FakePresenceInfoRepository extends Fake implements PresenceInfoRepository {}
+class _FakePresenceInfoRepository extends Fake implements PresenceInfoRepository {
+  @override
+  Future<void> setInitialPresenceInfo(List<PresenceInfo> presenceInfos) async {}
+}
 
-class _FakeDialogInfoRepository extends Fake implements DialogInfoRepository {}
+class _FakeDialogInfoRepository extends Fake implements DialogInfoRepository {
+  @override
+  Future<void> setInitialDialogInfo(List<DialogInfo> dialogInfo) async {}
+}
 
 class _FakePresenceSettingsRepository extends Fake implements PresenceSettingsRepository {}
 
-class _FakeQueuedTerminationRequestsRepository extends Fake implements QueuedTerminationRequestsRepository {}
+class _FakeQueuedTerminationRequestsRepository extends Fake implements QueuedTerminationRequestsRepository {
+  @override
+  Map<String, QueuedTerminationRequest> get getAll => const {};
+}
 
-class _FakeCallkeepConnections extends Fake implements CallkeepConnections {}
+/// No native connections: what the plugin reports on iOS, and on Android
+/// while nothing is up.
+class _FakeCallkeepConnections extends Fake implements CallkeepConnections {
+  @override
+  Future<CallkeepConnection?> getConnection(String callId) async => null;
+
+  @override
+  Future<List<CallkeepConnection>> getConnections() async => const [];
+}
 
 class _FakeUserMediaBuilder extends Fake implements UserMediaBuilder {}
 
