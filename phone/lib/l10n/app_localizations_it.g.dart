@@ -1579,7 +1579,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messaging_GroupInfo_title => 'Informazioni sul gruppo';
 
   @override
-  String get messaging_GroupInfo_titlePrefix => 'Gruppo:';
+  String messaging_GroupInfo_titlePrefix(int id) {
+    return 'Gruppo $id';
+  }
 
   @override
   String get messaging_GroupInfo_unmakeModeratorBtnText => 'Annulla moderatore';

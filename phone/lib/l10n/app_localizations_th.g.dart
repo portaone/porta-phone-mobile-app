@@ -1561,7 +1561,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get messaging_GroupInfo_title => 'ข้อมูลกลุ่ม';
 
   @override
-  String get messaging_GroupInfo_titlePrefix => 'กลุ่ม:';
+  String messaging_GroupInfo_titlePrefix(int id) {
+    return 'กลุ่ม $id';
+  }
 
   @override
   String get messaging_GroupInfo_unmakeModeratorBtnText => 'ยกเลิกการเป็นผู้ดูแล';

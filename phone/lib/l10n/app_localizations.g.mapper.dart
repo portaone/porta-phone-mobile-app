@@ -724,7 +724,6 @@ extension AppLocalizationsExtension on AppLocalizations {
       'messaging_GroupInfo_removeUserBtnText' =>
         messaging_GroupInfo_removeUserBtnText,
       'messaging_GroupInfo_title' => messaging_GroupInfo_title,
-      'messaging_GroupInfo_titlePrefix' => messaging_GroupInfo_titlePrefix,
       'messaging_GroupInfo_unmakeModeratorBtnText' =>
         messaging_GroupInfo_unmakeModeratorBtnText,
       'messaging_MessageField_hint' => messaging_MessageField_hint,
@@ -1984,6 +1983,12 @@ extension AppLocalizationsExtension on AppLocalizations {
           messaging_ConversationBuilders_contactExtension(extension),
         _ => throw ArgumentError(
           'messaging_ConversationBuilders_contactExtension requires 1 arguments',
+        ),
+      },
+      'messaging_GroupInfo_titlePrefix' => switch (args) {
+        [final int id] => messaging_GroupInfo_titlePrefix(id),
+        _ => throw ArgumentError(
+          'messaging_GroupInfo_titlePrefix requires 1 arguments',
         ),
       },
       'notifications_errorSnackBar_signalingDisconnectWithCodeName' =>

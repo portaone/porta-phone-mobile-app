@@ -1,4 +1,5 @@
 export 'phoenix_socket.dart';
+export 'chat.dart';
 export 'contact.dart';
 export 'conversations_tab.dart';
 export 'group_authorities.dart';

@@ -1594,7 +1594,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messaging_GroupInfo_title => 'Інформація про групу';
 
   @override
-  String get messaging_GroupInfo_titlePrefix => 'Група:';
+  String messaging_GroupInfo_titlePrefix(int id) {
+    return 'Група $id';
+  }
 
   @override
   String get messaging_GroupInfo_unmakeModeratorBtnText => 'Прибрати модератора';
