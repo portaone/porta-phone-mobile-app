@@ -174,21 +174,26 @@ class CallServiceRouter(
      * calls at all.
      *
      * Unlike every other command here the answer matters to the caller, because grouping is the
-     * one thing a backend may not do. Neither does yet: the Telecom path needs an
-     * [android.telecom.Conference] and the standalone path a membership of its own, and each
-     * says so by refusing.
+     * one thing the two backends do not both do yet. The Telecom path needs an
+     * [android.telecom.Conference] and says so by refusing.
      */
     fun setCallGroup(callIds: List<String>): Boolean =
         route(
             telecom = { false },
-            standalone = { false },
+            standalone = {
+                StandaloneCallService.sendCallGroup(ctx, StandaloneServiceAction.SetCallGroup, callIds)
+                true
+            },
         )
 
     /** Counterpart of [setCallGroup]. */
     fun unsetCallGroup(callIds: List<String>): Boolean =
         route(
             telecom = { false },
-            standalone = { false },
+            standalone = {
+                StandaloneCallService.sendCallGroup(ctx, StandaloneServiceAction.UnsetCallGroup, callIds)
+                true
+            },
         )
 
     // -------------------------------------------------------------------------

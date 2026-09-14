@@ -13,4 +13,7 @@ object CallDataConst {
     const val HAS_MUTE = "hasMute"
     const val HAS_HOLD = "hasHold"
     const val DTMF = "dtmf"
+
+    /** String array; carries the membership of a call group, which is not a property of one call. */
+    const val CALL_IDS = "callIds"
 }

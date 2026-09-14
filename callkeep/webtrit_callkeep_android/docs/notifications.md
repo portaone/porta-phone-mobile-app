@@ -122,6 +122,13 @@ not register with Telecom). They mirror the ringing and active variants on the i
 active channels; the standalone answer goes through `StandaloneAnswerTrampolineActivity` and
 all action intents target `StandaloneCallService` instead of the dual-process services.
 
+`StandaloneActiveCallNotificationBuilder` also takes the calls grouped with the one it is
+built from. There is a single notification id on this path, so a group cannot be shown as
+one entry per call - the entries would overwrite each other and leave whichever call was
+answered last standing for the whole group. A grouped notification names every member, and
+its hang-up action ends every one of them, through
+`StandaloneServiceAction.HungUpCallGroup` rather than the single-call `HungUpCall`.
+
 In addition, `StandaloneCallService.promoteToForeground()` posts a short-lived inline
 placeholder notification (built without any of these builders) on
 `FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID`, only to satisfy the 5-second `startForeground`

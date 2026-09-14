@@ -118,6 +118,42 @@ class ServiceCommandTest {
     }
 
     @Test
+    fun standalone_setCallGroup_withMembership_returnsGroup() {
+        val extras = Bundle().apply { putStringArray(CallDataConst.CALL_IDS, arrayOf("call-1", "call-2")) }
+        assertEquals(
+            StandaloneServiceCommand.Group(StandaloneServiceAction.SetCallGroup, listOf("call-1", "call-2")),
+            StandaloneServiceCommand.from(intent(StandaloneServiceAction.SetCallGroup.action, extras)),
+        )
+    }
+
+    @Test
+    fun standalone_unsetCallGroup_withEmptyMembership_returnsGroup() {
+        // An empty membership is a legitimate request that changes nothing, so it must parse
+        // rather than be reported as a malformed intent.
+        val extras = Bundle().apply { putStringArray(CallDataConst.CALL_IDS, emptyArray()) }
+        assertEquals(
+            StandaloneServiceCommand.Group(StandaloneServiceAction.UnsetCallGroup, emptyList()),
+            StandaloneServiceCommand.from(intent(StandaloneServiceAction.UnsetCallGroup.action, extras)),
+        )
+    }
+
+    @Test
+    fun standalone_hungUpCallGroup_withMembership_returnsGroup() {
+        // The group hang-up carries a membership rather than call metadata, so it must not fall
+        // through to the metadata branch, which would drop it for want of a callId.
+        val extras = Bundle().apply { putStringArray(CallDataConst.CALL_IDS, arrayOf("call-1", "call-2")) }
+        assertEquals(
+            StandaloneServiceCommand.Group(StandaloneServiceAction.HungUpCallGroup, listOf("call-1", "call-2")),
+            StandaloneServiceCommand.from(intent(StandaloneServiceAction.HungUpCallGroup.action, extras)),
+        )
+    }
+
+    @Test
+    fun standalone_setCallGroup_withoutMembership_returnsNull() {
+        assertNull(StandaloneServiceCommand.from(intent(StandaloneServiceAction.SetCallGroup.action, Bundle())))
+    }
+
+    @Test
     fun standalone_unknownAction_returnsNull() {
         assertNull(StandaloneServiceCommand.from(intent("not_a_standalone_action", null)))
     }
