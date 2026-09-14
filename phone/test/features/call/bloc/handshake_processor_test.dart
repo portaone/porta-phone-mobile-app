@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:signaling/signaling.dart';
 
+import 'package:webtrit_phone/features/call/models/models.dart';
 import 'package:webtrit_phone/features/call/utils/handshake_processor.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
@@ -49,6 +50,19 @@ CallkeepConnection _makeConnection({
   return CallkeepConnection(callId: callId, state: state, disconnectCause: null);
 }
 
+/// A call the BLoC tracks as it normally does: offered, with its offer in hand.
+KnownCall _tracked({String callId = _kCallId}) {
+  return KnownCall(callId: callId, status: CallProcessingStatus.incomingFromOffer, hasOffer: true);
+}
+
+/// A call a push registered whose offer never came as a live event.
+KnownCall _awaitingOffer({
+  String callId = _kCallId,
+  CallProcessingStatus status = CallProcessingStatus.incomingFromPush,
+}) {
+  return KnownCall(callId: callId, status: status, hasOffer: false);
+}
+
 QueuedTerminationRequest _makeQueuedTerminationRequest({
   QueuedTerminationRequestType type = QueuedTerminationRequestType.decline,
   String callId = _kCallId,
@@ -90,12 +104,12 @@ void main() {
 
   group('empty handshake', () {
     test('returns empty list when lines is empty', () async {
-      final actions = await processor.process(lines: [], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [], guestLine: null, knownCalls: const []);
       expect(actions, isEmpty);
     });
 
     test('returns empty list when all lines are null', () async {
-      final actions = await processor.process(lines: [null, null], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [null, null], guestLine: null, knownCalls: const []);
       expect(actions, isEmpty);
     });
   });
@@ -108,7 +122,7 @@ void main() {
     test('returns HandleIncomingCallAction for single IncomingCallEvent', () async {
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<HandleIncomingCallAction>());
@@ -128,7 +142,7 @@ void main() {
         ],
       );
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<HandleIncomingCallAction>());
@@ -144,7 +158,7 @@ void main() {
         ],
       );
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<HandleIncomingCallAction>());
@@ -158,7 +172,7 @@ void main() {
         ],
       );
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {_kCallId});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: [_tracked()]);
 
       expect(actions.whereType<HandleIncomingCallAction>(), isEmpty);
     });
@@ -178,7 +192,7 @@ void main() {
 
     test('returns RestoreCallAction when connection is null and call not in state', () async {
       final line = makeRestorationLine();
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<RestoreCallAction>());
@@ -196,7 +210,7 @@ void main() {
         ],
       );
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       final a = actions.first as RestoreCallAction;
       expect(a.acceptedTime, DateTime.fromMillisecondsSinceEpoch(9999));
@@ -204,7 +218,7 @@ void main() {
 
     test('skips restoration when callId already in activeCallIds', () async {
       final line = makeRestorationLine();
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {_kCallId});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: [_tracked()]);
 
       expect(actions, isEmpty);
     });
@@ -216,7 +230,7 @@ void main() {
             .thenAnswer((_) async => _makeConnection(state: CallkeepConnectionState.stateActive));
 
         final line = makeRestorationLine();
-        final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+        final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
         expect(actions, hasLength(1));
         expect(actions.first, isA<RestoreCallAction>());
@@ -231,7 +245,7 @@ void main() {
 
         // stateDisconnected with AcceptedEvent -> early exit with HangupSignalingAction, not RestoreCallAction
         final line = makeRestorationLine();
-        final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+        final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
         expect(actions.whereType<RestoreCallAction>(), isEmpty);
       },
@@ -245,7 +259,7 @@ void main() {
         ],
       );
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions.whereType<RestoreCallAction>(), isEmpty);
     });
@@ -264,7 +278,7 @@ void main() {
         ],
       );
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<RestoreCallAction>());
@@ -285,7 +299,7 @@ void main() {
         ],
       );
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions.whereType<RestoreCallAction>(), isEmpty);
     });
@@ -299,7 +313,7 @@ void main() {
     test('returns RestoreCallAction with incomingCallEvent null', () async {
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 5000, callEvent: _makeAcceptedEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<RestoreCallAction>());
@@ -313,7 +327,7 @@ void main() {
     test('skips restoration when callId already in activeCallIds', () async {
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 5000, callEvent: _makeAcceptedEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {_kCallId});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: [_tracked()]);
 
       expect(actions, isEmpty);
     });
@@ -321,7 +335,7 @@ void main() {
     test('skips restoration when AcceptedEvent.line is null', () async {
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 5000, callEvent: _makeAcceptedEvent(line: null))]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions.whereType<RestoreCallAction>(), isEmpty);
     });
@@ -338,7 +352,7 @@ void main() {
 
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeAcceptedEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<HangupSignalingAction>());
@@ -353,23 +367,23 @@ void main() {
 
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeProceedingEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<HangupSignalingAction>());
     });
 
-    test('early exit: EndLocalCallAction is NOT generated even if orphaned connections exist', () async {
+    test('early exit: EndKnownCallAction is NOT generated even if orphaned connections exist', () async {
       when(() => mockConnections.getConnection(_kCallId))
           .thenAnswer((_) async => _makeConnection(state: CallkeepConnectionState.stateDisconnected));
       when(() => mockConnections.getConnections()).thenAnswer((_) async => [_makeConnection(callId: 'orphan-id')]);
 
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeAcceptedEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
-      expect(actions.whereType<EndLocalCallAction>(), isEmpty);
+      expect(actions.whereType<EndKnownCallAction>(), isEmpty);
     });
   });
 
@@ -384,7 +398,7 @@ void main() {
 
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<DeclineSignalingAction>());
@@ -394,29 +408,29 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // Orphaned local connections - EndLocalCallAction
+  // Orphaned local connections - EndKnownCallAction
   // -------------------------------------------------------------------------
 
   group('local connection not in handshake', () {
-    test('returns EndLocalCallAction for each orphaned local connection', () async {
+    test('returns EndKnownCallAction for each orphaned local connection', () async {
       when(() => mockConnections.getConnections())
           .thenAnswer((_) async => [_makeConnection(callId: 'orphan-1'), _makeConnection(callId: 'orphan-2')]);
 
-      final actions = await processor.process(lines: [], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(2));
-      expect(actions.every((a) => a is EndLocalCallAction), isTrue);
-      final ids = actions.cast<EndLocalCallAction>().map((a) => a.callId).toSet();
+      expect(actions.every((a) => a is EndKnownCallAction), isTrue);
+      final ids = actions.cast<EndKnownCallAction>().map((a) => a.callId).toSet();
       expect(ids, {'orphan-1', 'orphan-2'});
     });
 
-    test('does NOT return EndLocalCallAction when local connection callId is in handshake', () async {
+    test('does NOT return EndKnownCallAction when local connection callId is in handshake', () async {
       when(() => mockConnections.getConnections()).thenAnswer((_) async => [_makeConnection(callId: _kCallId)]);
 
       final line = _makeLine(callLogs: []);
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
-      expect(actions.whereType<EndLocalCallAction>(), isEmpty);
+      expect(actions.whereType<EndKnownCallAction>(), isEmpty);
     });
   });
 
@@ -431,7 +445,7 @@ void main() {
       // server still has it with ProceedingEvent → HangupRequest must be sent
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeProceedingEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<HangupSignalingAction>());
@@ -445,7 +459,7 @@ void main() {
       // If the call IS in activeCalls the user is still in the call — must not hang up.
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeProceedingEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {_kCallId});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: [_tracked()]);
 
       expect(actions.whereType<HangupSignalingAction>(), isEmpty);
     });
@@ -460,7 +474,7 @@ void main() {
         ],
       );
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions.whereType<HangupSignalingAction>(), isEmpty);
       expect(actions.whereType<RestoreCallAction>(), hasLength(1));
@@ -470,7 +484,7 @@ void main() {
       // Unanswered incoming call with no connection — HandleIncomingCallAction path, not hangup.
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent())]);
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions.whereType<HangupSignalingAction>(), isEmpty);
     });
@@ -486,7 +500,7 @@ void main() {
         ],
       );
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions.whereType<HangupSignalingAction>(), isEmpty);
     });
@@ -500,7 +514,7 @@ void main() {
     test('processes guestLine the same as regular lines', () async {
       final guestLine = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent())]);
 
-      final actions = await processor.process(lines: [], guestLine: guestLine, activeCallIds: {});
+      final actions = await processor.process(lines: [], guestLine: guestLine, knownCalls: const []);
 
       expect(actions, hasLength(1));
       expect(actions.first, isA<HandleIncomingCallAction>());
@@ -529,7 +543,7 @@ void main() {
           CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent()),
         ],
       );
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
       final action = actions.single as HandleIncomingCallAction;
       expect(action.mediaState?.video, isFalse, reason: 'the newest entry is the one that stands');
     });
@@ -545,15 +559,134 @@ void main() {
           CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent()),
         ],
       );
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
       final action = actions.single as RestoreCallAction;
       expect(action.mediaState?.video, isFalse);
     });
 
     test('a log without a media state hands on none', () async {
       final line = _makeLine(callLogs: [CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent())]);
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
       expect((actions.single as HandleIncomingCallAction).mediaState, isNull);
+    });
+  });
+
+  group('offer delivery to a push-registered call', () {
+    const offer = {'type': 'offer', 'sdp': 'v=0\r\nm=audio 9 RTP/AVP 0\r\n'};
+    final incomingWithOffer = IncomingCallEvent(
+      line: _kLine,
+      callId: _kCallId,
+      callee: 'callee',
+      caller: '1234',
+      jsep: offer,
+    );
+
+    test('a call waiting for its offer gets the offer from the log', () async {
+      final line = _makeLine(callLogs: [CallEventLog(timestamp: 1, callEvent: incomingWithOffer)]);
+
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: [_awaitingOffer()]);
+
+      final delivered = actions.whereType<DeliverOfferAction>().single;
+      expect(delivered.event.jsep, offer);
+      expect(actions.whereType<HandleIncomingCallAction>(), isEmpty, reason: 'the call is already tracked');
+    });
+
+    for (final status in [
+      CallProcessingStatus.incomingSubmittedAnswer,
+      CallProcessingStatus.incomingPerformingStarted,
+    ]) {
+      test('a call answered before the handshake ($status) gets the offer too', () async {
+        final line = _makeLine(callLogs: [CallEventLog(timestamp: 1, callEvent: incomingWithOffer)]);
+
+        final actions = await processor.process(
+          lines: [line],
+          guestLine: null,
+          knownCalls: [_awaitingOffer(status: status)],
+        );
+
+        expect(actions.whereType<DeliverOfferAction>(), hasLength(1));
+      });
+    }
+
+    test('the newest offer in the log is the one delivered, once per line', () async {
+      final older = IncomingCallEvent(
+        line: _kLine,
+        callId: _kCallId,
+        callee: 'callee',
+        caller: '1234',
+        jsep: const {'sdp': 'old'},
+      );
+      final line = _makeLine(
+        callLogs: [
+          CallEventLog(timestamp: 3, callEvent: _makeRingingEvent()),
+          CallEventLog(timestamp: 2, callEvent: incomingWithOffer),
+          CallEventLog(timestamp: 1, callEvent: older),
+        ],
+      );
+
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: [_awaitingOffer()]);
+
+      expect(actions.whereType<DeliverOfferAction>().single.event.jsep, offer);
+    });
+
+    test('the caller\'s latest media state travels with the offer', () async {
+      final line = _makeLine(
+        callLogs: [
+          CallEventLog(
+            timestamp: 2,
+            callEvent: const MediaStatePeerMessageEvent(line: _kLine, callId: _kCallId, video: false),
+          ),
+          CallEventLog(timestamp: 1, callEvent: incomingWithOffer),
+        ],
+      );
+
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: [_awaitingOffer()]);
+
+      expect(actions.whereType<DeliverOfferAction>().single.mediaState?.video, isFalse);
+    });
+
+    test('a call that already holds its offer is left alone', () async {
+      final line = _makeLine(callLogs: [CallEventLog(timestamp: 1, callEvent: incomingWithOffer)]);
+
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: [_tracked()]);
+
+      expect(actions, isEmpty);
+    });
+
+    test('a log without an offer delivers nothing', () async {
+      final line = _makeLine(callLogs: [CallEventLog(timestamp: 1, callEvent: _makeIncomingEvent())]);
+
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: [_awaitingOffer()]);
+
+      expect(actions, isEmpty);
+    });
+
+    test('offer delivery comes after the per-line actions', () async {
+      final other = _makeLine(
+        callId: 'other',
+        callLogs: [CallEventLog(timestamp: 1, callEvent: _makeIncomingEvent(callId: 'other'))],
+      );
+      final waiting = _makeLine(callLogs: [CallEventLog(timestamp: 1, callEvent: incomingWithOffer)]);
+
+      final actions = await processor.process(lines: [waiting, other], guestLine: null, knownCalls: [_awaitingOffer()]);
+
+      expect(actions.map((a) => a.runtimeType), [HandleIncomingCallAction, DeliverOfferAction]);
+    });
+
+    test('a plan that tears the session down carries no offer', () async {
+      // A disconnected local connection for another line ends the plan early.
+      when(() => mockConnections.getConnection('other'))
+          .thenAnswer((_) async => _makeConnection(callId: 'other', state: CallkeepConnectionState.stateDisconnected));
+      final waiting = _makeLine(callLogs: [CallEventLog(timestamp: 1, callEvent: incomingWithOffer)]);
+      final dying = _makeLine(
+        callId: 'other',
+        callLogs: [CallEventLog(timestamp: 1, callEvent: _makeAcceptedEvent(callId: 'other'))],
+      );
+
+      final actions = await processor.process(lines: [waiting, dying], guestLine: null, knownCalls: [_awaitingOffer()]);
+
+      expect(actions.whereType<HangupSignalingAction>(), hasLength(1));
+      expect(actions.whereType<DeliverOfferAction>(), isEmpty);
     });
   });
 
@@ -565,7 +698,7 @@ void main() {
       final actions = await processor.process(
         lines: [line],
         guestLine: null,
-        activeCallIds: {},
+        knownCalls: const [],
         conference: const ConferenceInfo(room: 4242),
       );
       expect(actions.first, isA<HangupStaleConferenceAction>().having((a) => a.room, 'room', 4242));
@@ -573,7 +706,7 @@ void main() {
     });
 
     test('no room reported, nothing to hang up', () async {
-      final actions = await processor.process(lines: [], guestLine: null, activeCallIds: {}, conference: null);
+      final actions = await processor.process(lines: [], guestLine: null, knownCalls: const [], conference: null);
       expect(actions, isEmpty);
     });
   });
@@ -586,7 +719,7 @@ void main() {
       };
       when(() => mockQueuedTerminationRequestsRepository.getAll).thenReturn(queued);
 
-      final actions = await processor.process(lines: [], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [], guestLine: null, knownCalls: const []);
 
       expect(actions.whereType<DeclineSignalingAction>().map((a) => a.callId).toSet(), {'call-1'});
       expect(actions.whereType<HangupSignalingAction>().map((a) => a.callId).toSet(), {'call-2'});
@@ -599,7 +732,7 @@ void main() {
         'decline:${line.callId}': _makeQueuedTerminationRequest(callId: line.callId),
       });
 
-      final actions = await processor.process(lines: [line], guestLine: null, activeCallIds: {});
+      final actions = await processor.process(lines: [line], guestLine: null, knownCalls: const []);
 
       expect(actions.whereType<DeclineSignalingAction>(), hasLength(1));
       expect(actions.whereType<HandleIncomingCallAction>(), isEmpty);
