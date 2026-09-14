@@ -100,14 +100,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   final ContactResolver contactResolver;
   final CallErrorReporter callErrorReporter;
   final bool sendPresenceSettings;
-  final CallPullVideoStrategy callPullVideoStrategy;
 
-  /// Whether the remote core supports the `peer_message` side channel.
-  ///
-  /// An older core rejects an unknown `peer_message` request by closing the
-  /// signaling socket (code 4600), so [_sendMediaState] is suppressed unless
-  /// this is `true`.
-  final bool peerMessageSupported;
+  /// What the deployment lets a call do, as one value rather than a flag per
+  /// feature: the pull-video strategy, whether the core takes `peer_message`
+  /// (an older core closes the signaling socket with code 4600 on an unknown
+  /// request, so [_sendMediaState] is suppressed unless it does), and the
+  /// capabilities the UI reads. The same value the call screen gets.
+  final CallCapabilitiesConfig capabilities;
   final VoidCallback? onCallEnded;
   final OnDiagnosticReportRequested onDiagnosticReportRequested;
 
@@ -165,8 +164,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     required this.contactResolver,
     required this.callErrorReporter,
     required this.sendPresenceSettings,
-    required this.callPullVideoStrategy,
-    required this.peerMessageSupported,
+    required this.capabilities,
     required this.onDiagnosticReportRequested,
     this.isCameraPermissionGranted,
     this.sdpMunger,
@@ -1148,7 +1146,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // An older core does not know the peer_message request and would tear down
     // the whole signaling socket (code 4600) in response, so skip the signal
     // entirely when the core does not advertise support.
-    if (!peerMessageSupported) {
+    if (!capabilities.isPeerMessageEnabled) {
       _logger.fine('_sendMediaState: skipped (core does not support peer_message) for call ${call.callId}');
       return;
     }
@@ -2119,7 +2117,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // video calls are not pullable at all; under the mirror strategy a video pull
       // already carries a real (camera-backed) video track from the started event's
       // video flag - so in both cases the recvonly m-line is not needed here.
-      if (activeCall.fromReplaces != null && callPullVideoStrategy == CallPullVideoStrategy.softMute) {
+      if (activeCall.fromReplaces != null && capabilities.callPullVideoStrategy == CallPullVideoStrategy.softMute) {
         await peerConnectionPolicyApplier?.apply(
           peerConnection,
           hasRemoteVideo: true,
