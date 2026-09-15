@@ -181,6 +181,43 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     }
   }
 
+  /// Puts everything picked back where it was.
+  void restoreSelectedVoicemails() async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
+      await _repository.restoreMultipleVoicemails(state.selectedVoicemailsIds);
+    } catch (e, s) {
+      _logger.severe('Error restoring selected voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.restoreSelectedVoicemails');
+    } finally {
+      // Whatever happened, some of them may have moved, so the list on screen
+      // is re-read rather than guessed at.
+      await _afterTrashChange();
+    }
+  }
+
+  /// Deletes everything picked for good.
+  void removeSelectedVoicemailsPermanently() async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
+      await _repository.removeMultipleVoicemailsPermanently(state.selectedVoicemailsIds);
+    } catch (e, s) {
+      _logger.severe('Error permanently removing selected voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeSelectedVoicemailsPermanently');
+    } finally {
+      await _afterTrashChange();
+    }
+  }
+
+  /// Leaves selection and re-reads whichever list is on screen.
+  ///
+  /// The selection was made over the trash, which is not stored, so nothing
+  /// else would notice that it is no longer what it was.
+  Future<void> _afterTrashChange() async {
+    _safeEmit(state.copyWith(selectedVoicemailsIds: const [], status: VoicemailStatus.loaded));
+    if (state.filter.isRemote) await fetchTrashedVoicemails();
+  }
+
   /// Deletes a message, which means the trash where there is one.
   ///
   /// Answers whether the server took it. The caller needs to know because a

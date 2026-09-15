@@ -3083,6 +3083,15 @@ class AppLocalizationsTh extends AppLocalizations {
       'ข้อความเสียงที่เลือกจะถูกลบอย่างถาวร คุณต้องการดำเนินการต่อหรือไม่?';
 
   @override
+  String get voicemail_Dialog_deleteSelectedPermanentlyContent =>
+      'ข้อความที่เลือกจะถูกลบออกจากกล่องข้อความและไม่สามารถกู้คืนได้';
+
+  @override
+  String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count) {
+    return 'ลบข้อความ $count รายการถาวรหรือไม่';
+  }
+
+  @override
   String get voicemail_Dialog_deleteSelectedTitle => 'ลบข้อความเสียงที่เลือกหรือไม่?';
 
   @override
@@ -3176,6 +3185,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get voicemail_Label_restore => 'กู้คืน';
+
+  @override
+  String get voicemail_Label_restoreSelected => 'กู้คืนรายการที่เลือก';
 
   @override
   String get voicemail_Label_retry => 'ลองอีกครั้ง';

@@ -5677,6 +5677,18 @@ abstract class AppLocalizations {
   /// **'Selected voicemails will be permanently deleted. Do you want to continue?'**
   String get voicemail_Dialog_deleteSelectedContent;
 
+  /// Warns that deleting the picked voicemails for good cannot be undone.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected messages will be removed from your mailbox and cannot be restored.'**
+  String get voicemail_Dialog_deleteSelectedPermanentlyContent;
+
+  /// Asks before deleting the picked voicemails for good.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} messages permanently?'**
+  String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count);
+
   /// No description provided for @voicemail_Dialog_deleteSelectedTitle.
   ///
   /// In en, this message translates to:
@@ -5856,6 +5868,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore'**
   String get voicemail_Label_restore;
+
+  /// Toolbar action that puts the picked trashed voicemails back.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore selected'**
+  String get voicemail_Label_restoreSelected;
 
   /// No description provided for @voicemail_Label_retry.
   ///
