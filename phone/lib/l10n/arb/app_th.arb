@@ -2740,6 +2740,10 @@
   "@voicemail_Label_moveToTrash": {
     "description": "Menu action that moves a voicemail to the trash, where it can be restored."
   },
+  "voicemail_Label_openContact": "เปิดรายชื่อติดต่อ",
+  "@voicemail_Label_openContact": {
+    "description": "Menu action that opens the card of whoever left the voicemail."
+  },
   "voicemail_Label_playbackError": "เล่นไม่สำเร็จ",
   "@voicemail_Label_playbackError": {},
   "voicemail_Label_restore": "กู้คืน",
@@ -2848,6 +2852,10 @@
         "type": "String"
       }
     }
+  },
+  "voicemail_Snackbar_contactGone": "ไม่มีรายชื่อติดต่อนี้ในสมุดที่อยู่ของคุณแล้ว",
+  "@voicemail_Snackbar_contactGone": {
+    "description": "Shown when the caller is no longer in the address book by the time their card is asked for."
   },
   "voicemail_Snackbar_notConfigured": "ติดต่อผู้ดูแลระบบของคุณเพื่อเปิดใช้งานข้อความเสียง",
   "@voicemail_Snackbar_notConfigured": {},

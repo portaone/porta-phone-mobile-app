@@ -23,7 +23,7 @@ MainFlavor? mainFlavorOfTabRoute(String routeName) {
       return MainFlavor.keypad;
     case ConversationsScreenPageRoute.name:
       return MainFlavor.messaging;
-    case VoicemailTabPageRoute.name:
+    case VoicemailRouterPageRoute.name:
       return MainFlavor.voicemail;
     case EmbeddedTabPageRoute.name:
       return MainFlavor.embedded;
