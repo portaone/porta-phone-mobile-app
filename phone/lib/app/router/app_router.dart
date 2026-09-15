@@ -240,13 +240,17 @@ class AppRouter extends RootStackRouter {
                 AutoRoute(page: EmbeddedTabPageRoute.page, path: 'embedded/:id', usesPathAsKey: true),
                 AutoRoute(page: ConversationsScreenPageRoute.page, path: MainFlavor.messaging.name),
                 AutoRoute(
-                  page: VoicemailTabPageRoute.page,
+                  page: VoicemailRouterPageRoute.page,
                   path: MainFlavor.voicemail.name,
                   guards: [
                     FeatureGuard(
                       shouldAllow: () => _featureChecker.isEnabled(FeatureFlag.voicemail),
                       onDenied: UndefinedScreenPageRoute(undefinedType: UndefinedType.stackScreenNotSupported),
                     ),
+                  ],
+                  children: [
+                    AutoRoute(page: VoicemailTabPageRoute.page, path: ''),
+                    AutoRoute(page: ContactScreenPageRoute.page, path: 'contact'),
                   ],
                 ),
               ],
@@ -291,6 +295,9 @@ class AppRouter extends RootStackRouter {
                     ),
                   ],
                 ),
+                // The settings stack reaches a contact from the voicemail screen
+                // it hosts, so it declares the route the same way a tab does.
+                AutoRoute(page: ContactScreenPageRoute.page, path: 'contact'),
                 AutoRoute(page: PresenceSettingsScreenPageRoute.page, path: 'presence'),
                 AutoRoute(page: CallerIdSettingsScreenPageRoute.page, path: 'caller-id'),
                 AutoRoute(page: SessionsScreenPageRoute.page, path: 'sessions'),
@@ -517,7 +524,7 @@ class AppRouter extends RootStackRouter {
               FavoritesBottomMenuTab() => const FavoritesRouterPageRoute(),
               KeypadBottomMenuTab() => const KeypadScreenPageRoute(),
               MessagingBottomMenuTab() => const ConversationsScreenPageRoute(),
-              VoicemailBottomMenuTab() => const VoicemailTabPageRoute(),
+              VoicemailBottomMenuTab() => const VoicemailRouterPageRoute(),
             },
           ],
         ),
