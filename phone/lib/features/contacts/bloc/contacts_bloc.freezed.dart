@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ContactsState {
 
- String get search; ContactSourceType get sourceType;
+ String get search; ContactSourceType get sourceType; bool get favorites;
 /// Create a copy of ContactsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ContactsStateCopyWith<ContactsState> get copyWith => _$ContactsStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactsState&&(identical(other.search, search) || other.search == search)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactsState&&(identical(other.search, search) || other.search == search)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.favorites, favorites) || other.favorites == favorites));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,search,sourceType);
+int get hashCode => Object.hash(runtimeType,search,sourceType,favorites);
 
 @override
 String toString() {
-  return 'ContactsState(search: $search, sourceType: $sourceType)';
+  return 'ContactsState(search: $search, sourceType: $sourceType, favorites: $favorites)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $ContactsStateCopyWith<$Res>  {
   factory $ContactsStateCopyWith(ContactsState value, $Res Function(ContactsState) _then) = _$ContactsStateCopyWithImpl;
 @useResult
 $Res call({
- String search, ContactSourceType sourceType
+ String search, ContactSourceType sourceType, bool favorites
 });
 
 
@@ -62,11 +62,12 @@ class _$ContactsStateCopyWithImpl<$Res>
 
 /// Create a copy of ContactsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? search = null,Object? sourceType = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? search = null,Object? sourceType = null,Object? favorites = null,}) {
   return _then(ContactsState(
 search: null == search ? _self.search : search // ignore: cast_nullable_to_non_nullable
 as String,sourceType: null == sourceType ? _self.sourceType : sourceType // ignore: cast_nullable_to_non_nullable
-as ContactSourceType,
+as ContactSourceType,favorites: null == favorites ? _self.favorites : favorites // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

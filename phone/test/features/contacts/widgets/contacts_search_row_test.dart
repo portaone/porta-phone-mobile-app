@@ -12,11 +12,20 @@ import 'package:webtrit_phone/theme/theme.dart';
 class _RememberedSourceType implements ActiveContactSourceTypeRepository {
   ContactSourceType _value = ContactSourceType.external;
 
+  /// What the chooser was left on, remembered the way the app remembers it.
+  bool favorites = false;
+
   @override
   ContactSourceType getActiveContactSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => _value;
 
   @override
   Future<void> setActiveContactSourceType(ContactSourceType value) async => _value = value;
+
+  @override
+  bool getFavoritesPicked({bool defaultValue = false}) => favorites;
+
+  @override
+  Future<void> setFavoritesPicked(bool value) async => favorites = value;
 
   @override
   Future<void> clear() async {}
