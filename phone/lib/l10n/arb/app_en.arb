@@ -259,6 +259,30 @@
   "@call_CallList_outgoing": {
     "description": "Trailing label on a ringing outgoing row in the call list."
   },
+  "conferenceRefusal_conferenceDisabled": "Conferences are not available on this account",
+  "@conferenceRefusal_conferenceDisabled": {
+    "description": "Shown when the deployment does not offer conferences and the server refuses a merge."
+  },
+  "conferenceRefusal_conferenceAlreadyActive": "A conference is already running",
+  "@conferenceRefusal_conferenceAlreadyActive": {
+    "description": "Shown when a merge is refused because this session already hosts a conference."
+  },
+  "conferenceRefusal_lineAlreadyInConference": "That call is already in the conference",
+  "@conferenceRefusal_lineAlreadyInConference": {
+    "description": "Shown when a call the user asked to add is already part of the conference."
+  },
+  "conferenceRefusal_callsAreGone": "Those calls are no longer available to merge",
+  "@conferenceRefusal_callsAreGone": {
+    "description": "Shown when a merge is refused because the calls it named are no longer there to merge."
+  },
+  "conferenceRefusal_lineNotReady": "That participant is still joining",
+  "@conferenceRefusal_lineNotReady": {
+    "description": "Shown when the server refuses to mute a participant it has not finished adding."
+  },
+  "conferenceRefusal_unavailable": "The calls could not be merged",
+  "@conferenceRefusal_unavailable": {
+    "description": "Shown when a merge is refused for a reason the user can do nothing about."
+  },
   "call_CallList_header": "{count, plural, one{{count} call - tap to choose} other{{count} calls - tap to choose}}",
   "@call_CallList_header": {
     "description": "Header above the call list on the call screen when more than one call is in progress.",
@@ -1491,6 +1515,18 @@
   },
   "notifications_messageSnackBarAction_callVideoDowngraded": "Settings",
   "@notifications_messageSnackBarAction_callVideoDowngraded": {},
+  "notifications_messageSnackBar_conferenceFailed": "The conference could not be set up",
+  "@notifications_messageSnackBar_conferenceFailed": {
+    "description": "Shown when a conference that was being set up failed; the merged calls go on as separate calls."
+  },
+  "notifications_messageSnackBar_conferenceVideoLeg": "A video call cannot join a conference",
+  "@notifications_messageSnackBar_conferenceVideoLeg": {
+    "description": "Shown when a conference failed because one of the merged calls is a video call, which the audio mixer cannot take."
+  },
+  "notifications_messageSnackBar_conferenceEnded": "The conference has ended, the calls continue",
+  "@notifications_messageSnackBar_conferenceEnded": {
+    "description": "Shown when the server ends a conference while its calls are still up; they go on as separate calls."
+  },
   "notifications_errorSnackBar_activeLineBlindTransferWarning": "You are already on the line with the recipient you are trying to blind transfer to",
   "@notifications_errorSnackBar_activeLineBlindTransferWarning": {
     "description": "Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target."
