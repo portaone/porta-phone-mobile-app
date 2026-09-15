@@ -40,6 +40,7 @@ void main() {
       onSubmitNotification: (_) {},
       saveSupported: true,
       trashSupported: true,
+      forwardSupported: true,
     );
   });
 

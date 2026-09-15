@@ -1329,6 +1329,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get logRecordsConsole_PopupMenuItem_clear => 'Очистити';
 
   @override
+  String get main_Button_cancelPicking => 'Скасувати';
+
+  @override
   String get main_BottomNavigationBarItemLabel_chats => 'Чати';
 
   @override
@@ -3209,6 +3212,12 @@ class AppLocalizationsUk extends AppLocalizations {
       'Повідомлення, які ви сюди переносите, далі займають місце у скриньці, доки кошик не очищено.';
 
   @override
+  String get voicemail_Label_forward => 'Переслати';
+
+  @override
+  String get voicemail_Label_forwardChoosing => 'Виберіть, кому переслати';
+
+  @override
   String get voicemail_Label_markAsHeard => 'Позначити як прослухане';
 
   @override
@@ -3258,6 +3267,11 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String voicemail_SemanticsLabel_forwardTo(String name) {
+    return 'Переслати: $name';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_loading => 'Завантаження';
 
   @override
@@ -3277,6 +3291,25 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voicemail_Snackbar_movedToTrash => 'Переміщено в кошик';
+
+  @override
+  String get voicemail_Snackbar_forwardFailed => 'Не вдалося переслати';
+
+  @override
+  String voicemail_Snackbar_forwardRecipientFull(String name) {
+    return '$name більше не може приймати переслані повідомлення';
+  }
+
+  @override
+  String get voicemail_Snackbar_forwardTooLarge => 'Повідомлення завелике, щоб його переслати';
+
+  @override
+  String get voicemail_Snackbar_forwardUnavailable => 'Пересилання недоступне';
+
+  @override
+  String voicemail_Snackbar_forwarded(String name) {
+    return 'Переслано: $name';
+  }
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Зверніться до адміністратора, щоб активувати голосову пошту.';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:webtrit_phone/features/main/widgets/widgets.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -52,7 +53,13 @@ class MainScreen extends StatelessWidget {
     // The wording belongs to whatever is doing the asking, not to this screen:
     // the bar is the same bar whether a call is being handed on or a message
     // is being passed to a colleague.
-    final transferBanner = announces ? TransferBottomNavigationBar(pickPurpose!.announcement) : null;
+    final transferBanner = announces
+        ? TransferBottomNavigationBar(
+            pickPurpose!.announcement,
+            onCancel: pickPurpose!.onCancel,
+            cancelLabel: context.l10n.main_Button_cancelPicking,
+          )
+        : null;
 
     // The screen is the one home of the bar-visibility rule for every host,
     // the previews included: a menu of one section shows no bar - there is

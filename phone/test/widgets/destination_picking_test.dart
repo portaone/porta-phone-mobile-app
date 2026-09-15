@@ -96,6 +96,9 @@ class _Purpose implements DestinationPickPurpose {
   bool accepts(DestinationCandidate candidate) => takes;
 
   @override
+  VoidCallback? get onCancel => null;
+
+  @override
   IconData get pickIcon => Icons.phone_forwarded;
 
   @override
@@ -117,6 +120,9 @@ class _EqualPurpose implements DestinationPickPurpose {
 
   @override
   bool accepts(DestinationCandidate candidate) => true;
+
+  @override
+  VoidCallback? get onCancel => null;
 
   @override
   IconData get pickIcon => Icons.phone_forwarded;

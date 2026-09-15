@@ -38,6 +38,12 @@ class BlindTransferPurpose extends Equatable implements DestinationPickPurpose {
   @override
   bool accepts(DestinationCandidate candidate) => candidate.number != null;
 
+  /// Nothing: the way out of handing a call over is to go back to the call,
+  /// and the floating call thumbnail is on screen the whole time offering
+  /// exactly that.
+  @override
+  VoidCallback? get onCancel => null;
+
   @override
   IconData get pickIcon => Icons.phone_forwarded;
 

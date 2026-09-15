@@ -7,7 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/features.dart';
+import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/features/voicemail/widgets/voicemail_flavor_overlay.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -80,19 +82,44 @@ class _MainScreenPageState extends State<MainScreenPage> {
         // by the previews, which have nothing to be choosing for. This is the
         // one place that decides what is being picked, which is what keeps the
         // lists below from each knowing about the features that ask.
-        final pickPurpose = context.select<CallBloc, bool>((bloc) => bloc.state.isBlingTransferInitiated)
-            ? BlindTransferPurpose(
-                announcement: context.l10n.main_Text_blindTransferInitiated,
-                pickLabel: context.l10n.contact_SemanticsLabel_transfer,
-                controller: CallControllerScope.of(context),
-              )
-            : null;
+        //
+        // Only one at a time, and a call in hand comes first: somebody holding
+        // a call they are trying to hand on cannot wait while a message finds
+        // a recipient.
+        final forwarding = context.select<VoicemailForwardingCubit, Voicemail?>((cubit) => cubit.state.pending);
+        final handingCallOver = context.select<CallBloc, bool>((bloc) => bloc.state.isBlingTransferInitiated);
+
+        final DestinationPickPurpose? pickPurpose;
+        if (handingCallOver) {
+          pickPurpose = BlindTransferPurpose(
+            announcement: context.l10n.main_Text_blindTransferInitiated,
+            pickLabel: context.l10n.contact_SemanticsLabel_transfer,
+            controller: CallControllerScope.of(context),
+          );
+        } else if (forwarding != null) {
+          pickPurpose = ForwardVoicemailPurpose(
+            announcement: context.l10n.voicemail_Label_forwardChoosing,
+            pickLabel: context.l10n.voicemail_SemanticsLabel_forwardTo,
+            messageId: forwarding.id,
+            onPicked: (recipient) => context.read<VoicemailForwardingCubit>().sendTo(recipient),
+            onCancel: context.read<VoicemailForwardingCubit>().cancel,
+          );
+        } else {
+          pickPurpose = null;
+        }
 
         return MainScreen(
           // Above the sections, so every list they build can ask whether a
           // choice is being made without reaching into the feature that wants
           // one.
-          body: DestinationPicking(purpose: pickPurpose, child: child),
+          // The outcome is said here rather than on the voicemail screen: by
+          // the time there is one the person is in the address book, and the
+          // screen that started this is two tabs away.
+          body: BlocListener<VoicemailForwardingCubit, VoicemailForwardingState>(
+            listenWhen: (previous, current) => previous.report != current.report && current.report != null,
+            listener: _reportForward,
+            child: DestinationPicking(purpose: pickPurpose, child: child),
+          ),
           tabs: tabs,
           pickPurpose: pickPurpose,
           // The shell above provides the unread state this reads.
@@ -177,6 +204,35 @@ class _MainScreenPageState extends State<MainScreenPage> {
 }
 
 /// Handles the logic for bottom menu tab interactions and persistence.
+/// Says what came of passing a message on, wherever the person now is.
+void _reportForward(BuildContext context, VoicemailForwardingState state) {
+  final report = state.report!;
+  final cubit = context.read<VoicemailForwardingCubit>();
+  final l10n = context.l10n;
+  cubit.reportShown();
+
+  if (report.outcome == VoicemailForwardOutcome.sent) {
+    context.showSnackBar(l10n.voicemail_Snackbar_forwarded(report.recipientName));
+    return;
+  }
+
+  final message = switch (report.outcome) {
+    VoicemailForwardOutcome.tooLarge => l10n.voicemail_Snackbar_forwardTooLarge,
+    VoicemailForwardOutcome.recipientFull => l10n.voicemail_Snackbar_forwardRecipientFull(report.recipientName),
+    VoicemailForwardOutcome.unavailable => l10n.voicemail_Snackbar_forwardUnavailable,
+    _ => l10n.voicemail_Snackbar_forwardFailed,
+  };
+
+  context.showErrorSnackBar(
+    message,
+    // Offered only where trying again could end differently. A recording that
+    // is too big stays too big, and a colleague who is full stays full.
+    action: report.outcome.isRetryable
+        ? SnackBarAction(label: l10n.voicemail_Label_retry, onPressed: () => cubit.retry(report))
+        : null,
+  );
+}
+
 abstract final class BottomMenuTabHandler {
   /// Processes a tab tap by persisting the selection and updating the UI router.
   static void handleTap(

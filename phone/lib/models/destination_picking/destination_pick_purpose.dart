@@ -33,6 +33,15 @@ abstract interface class DestinationPickPurpose {
   /// see that they are there and not pickable, not wonder where they went.
   bool accepts(DestinationCandidate candidate);
 
+  /// Gives up on the choice, or null where this purpose has no giving up to
+  /// offer.
+  ///
+  /// Not every one needs it. A call being handed over is left by returning to
+  /// the call, which is a control the person already has on screen; a message
+  /// looking for a recipient has nothing of the kind, and without this the
+  /// only way out would be to send it to somebody.
+  VoidCallback? get onCancel;
+
   /// The mark the control that picks a row carries.
   ///
   /// Handing a call on and passing a message along are different gestures, and
