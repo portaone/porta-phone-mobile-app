@@ -15,6 +15,7 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
     this.filter = VoicemailFilter.all,
     this.filters = const [VoicemailFilter.all, VoicemailFilter.unheard],
     this.forwardSupported = false,
+    this.forwarderNames = const {},
     this.error,
   });
 
@@ -57,6 +58,14 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   @override
   final bool forwardSupported;
 
+  /// Names for the colleagues who forwarded messages on, by their user id.
+  ///
+  /// Only the ones the address book knows. An id with nobody behind it stays
+  /// out, and the tile shows the id: it is a poor name but a true one, and
+  /// saying nothing would hide that the message was forwarded at all.
+  @override
+  final Map<String, String> forwarderNames;
+
   @override
   final Object? error;
 
@@ -67,6 +76,14 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
     VoicemailFilter.saved => items.where((item) => item.saved == true).toList(),
     VoicemailFilter.trash => trashedItems,
   };
+
+  /// What to show for who passed [voicemail] along, or null when nobody did.
+  String? forwarderOf(Voicemail voicemail) {
+    final forwardedBy = voicemail.forwardedBy;
+    if (forwardedBy == null) return null;
+
+    return forwarderNames[forwardedBy] ?? forwardedBy;
+  }
 
   /// Whether this mailbox can keep a message.
   ///

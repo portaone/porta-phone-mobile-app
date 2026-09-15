@@ -2131,6 +2131,12 @@ extension AppLocalizationsExtension on AppLocalizations {
           'voicemail_Dialog_emptyTrashContent requires 1 arguments',
         ),
       },
+      'voicemail_Label_forwardedBy' => switch (args) {
+        [final String name] => voicemail_Label_forwardedBy(name),
+        _ => throw ArgumentError(
+          'voicemail_Label_forwardedBy requires 1 arguments',
+        ),
+      },
       'voicemail_Label_unheardCount' => switch (args) {
         [final int count] => voicemail_Label_unheardCount(count),
         _ => throw ArgumentError(

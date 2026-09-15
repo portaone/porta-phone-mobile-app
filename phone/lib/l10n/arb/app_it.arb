@@ -2707,6 +2707,15 @@
   "@voicemail_Label_forwardChoosing": {
     "description": "Banner shown while the user is browsing the address book for somebody to forward a voicemail to."
   },
+  "voicemail_Label_forwardedBy": "Inoltrato da {name}",
+  "@voicemail_Label_forwardedBy": {
+    "description": "Says who passed a voicemail along; the sender stays the original caller.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_Label_markAsHeard": "Segna come ascoltato",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Segna come nuovo",

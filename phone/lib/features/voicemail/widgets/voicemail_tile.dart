@@ -31,6 +31,7 @@ class VoicemailTile extends StatelessWidget {
     required this.onDeletedPermanently,
     required this.onLongPress,
     required this.onTap,
+    this.forwardedByName,
     this.saveSupported = false,
     this.trashSupported = false,
     this.forwardSupported = false,
@@ -50,6 +51,13 @@ class VoicemailTile extends StatelessWidget {
   /// A message reporting no flag sits in a mailbox that cannot hold one, so
   /// offering to save it would promise something that will not stay.
   final bool saveSupported;
+
+  /// Who passed this message along, or null when nobody did.
+  ///
+  /// Shown as a line of its own rather than in place of the sender, because
+  /// the sender is still the person who left the recording. Both names matter
+  /// and they answer different questions: who called, and how it got here.
+  final String? forwardedByName;
 
   /// Whether this mailbox has a trash, which decides what deleting means.
   ///
@@ -116,7 +124,7 @@ class VoicemailTile extends StatelessWidget {
               ),
           ],
         ),
-        subtitle: _VoicemailSubtitle(voicemail: voicemail, dateFormat: dateFormat),
+        subtitle: _VoicemailSubtitle(voicemail: voicemail, dateFormat: dateFormat, forwardedByName: forwardedByName),
         bottom: AudioView(path: voicemail.url!, cacheKey: voicemail.id, onPlaybackStarted: _onPlaybackStarted),
         trailing: SemanticAction(
           label: context.l10n.voicemail_SemanticsLabel_moreActions,
@@ -253,15 +261,44 @@ class VoicemailTile extends StatelessWidget {
 /// It uses an [AnimatedSwitcher] to transition between an empty state, a loading indicator
 /// for unknown statuses, and a solid circle for unread messages
 class _VoicemailSubtitle extends StatelessWidget {
-  const _VoicemailSubtitle({required this.voicemail, required this.dateFormat});
+  const _VoicemailSubtitle({required this.voicemail, required this.dateFormat, this.forwardedByName});
 
   final Voicemail voicemail;
   final DateFormat dateFormat;
+  final String? forwardedByName;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final forwardedByName = this.forwardedByName;
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _dateRow(context, colorScheme),
+        if (forwardedByName != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Row(
+              spacing: 4,
+              children: [
+                Icon(Icons.forward_to_inbox_outlined, size: 14, color: colorScheme.onSurfaceVariant),
+                Flexible(
+                  child: Text(
+                    context.l10n.voicemail_Label_forwardedBy(forwardedByName),
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _dateRow(BuildContext context, ColorScheme colorScheme) {
     return Row(
       children: [
         AnimatedSwitcher(
