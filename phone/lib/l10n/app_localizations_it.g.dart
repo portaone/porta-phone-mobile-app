@@ -3209,6 +3209,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Label_forwardChoosing => 'Scegli a chi inoltrare';
 
   @override
+  String voicemail_Label_forwardedBy(String name) {
+    return 'Inoltrato da $name';
+  }
+
+  @override
   String get voicemail_Label_markAsHeard => 'Segna come ascoltato';
 
   @override

@@ -5815,6 +5815,12 @@ abstract class AppLocalizations {
   /// **'Choose who to forward to'**
   String get voicemail_Label_forwardChoosing;
 
+  /// Says who passed a voicemail along; the sender stays the original caller.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwarded by {name}'**
+  String voicemail_Label_forwardedBy(String name);
+
   /// No description provided for @voicemail_Label_markAsHeard.
   ///
   /// In en, this message translates to:
