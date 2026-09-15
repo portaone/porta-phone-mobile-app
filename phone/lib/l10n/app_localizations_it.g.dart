@@ -283,6 +283,24 @@ class AppLocalizationsIt extends AppLocalizations {
   String get call_CallList_outgoing => 'In uscita';
 
   @override
+  String get conferenceRefusal_conferenceDisabled => 'Le conferenze non sono disponibili per questo account';
+
+  @override
+  String get conferenceRefusal_conferenceAlreadyActive => 'Una conferenza è già in corso';
+
+  @override
+  String get conferenceRefusal_lineAlreadyInConference => 'Quella chiamata è già in conferenza';
+
+  @override
+  String get conferenceRefusal_callsAreGone => 'Quelle chiamate non sono più unibili';
+
+  @override
+  String get conferenceRefusal_lineNotReady => 'Quel partecipante si sta ancora unendo';
+
+  @override
+  String get conferenceRefusal_unavailable => 'Impossibile unire le chiamate';
+
+  @override
   String call_CallList_header(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1664,6 +1682,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Impostazioni';
+
+  @override
+  String get notifications_messageSnackBar_conferenceFailed => 'Impossibile avviare la conferenza';
+
+  @override
+  String get notifications_messageSnackBar_conferenceVideoLeg => 'Una videochiamata non può entrare in conferenza';
+
+  @override
+  String get notifications_messageSnackBar_conferenceEnded => 'La conferenza è terminata, le chiamate continuano';
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>

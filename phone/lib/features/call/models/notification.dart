@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:signaling/signaling.dart';
 
 import 'package:webtrit_phone/app/notifications/models/notification.dart';
+import 'package:webtrit_phone/features/call/extensions/extensions.dart';
 import 'package:webtrit_phone/app/notifications/models/error_field.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -294,6 +295,50 @@ final class BlindTransferFailedNotification extends MessageNotification {
   @override
   String l10n(BuildContext context) {
     return context.l10n.notifications_errorSnackBar_blindTransferFailed;
+  }
+}
+
+/// The server refused to build the room, or to add a call to it.
+///
+/// The wire reason is kept for the log and turned into words at the moment of
+/// showing; what the server calls `conference_already_active` is not a
+/// sentence to put in front of a person.
+final class ConferenceRefusedNotification extends MessageNotification {
+  const ConferenceRefusedNotification(this.reason);
+
+  final String reason;
+
+  @override
+  String l10n(BuildContext context) => ConferenceRefusalReason.fromReason(reason).l10n(context);
+}
+
+/// The room could not be built and the calls are ordinary calls again.
+///
+/// Today the server refuses for one reason only, a video call among the
+/// legs, and that one the user can act on; anything else is reported as a
+/// conference that could not be set up.
+final class ConferenceFailedNotification extends MessageNotification {
+  const ConferenceFailedNotification({required this.reason});
+
+  final String reason;
+
+  @override
+  String l10n(BuildContext context) {
+    if (reason == _videoNotSupported) return context.l10n.notifications_messageSnackBar_conferenceVideoLeg;
+    return context.l10n.notifications_messageSnackBar_conferenceFailed;
+  }
+
+  static const _videoNotSupported = 'video_not_supported';
+}
+
+/// The room ended on the server's side while calls were still up; they go
+/// on as ordinary calls.
+final class ConferenceEndedNotification extends MessageNotification {
+  const ConferenceEndedNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.notifications_messageSnackBar_conferenceEnded;
   }
 }
 

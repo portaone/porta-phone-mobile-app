@@ -751,6 +751,24 @@ sealed class CallControlEvent extends CallEvent {
 
   const factory CallControlEvent.attendedRequestApproved({required String referId, required String referTo}) =
       _CallControlEventAttendedRequestApproved;
+
+  /// Merges the answered calls [callIds] into a conference room hosted by
+  /// this client. Two or more are needed; the server takes one as well but
+  /// the client does not offer it.
+  const factory CallControlEvent.merged(List<String> callIds) = _CallControlEventMerged;
+
+  /// Adds one more answered call to the room that already exists.
+  const factory CallControlEvent.conferenceAdded(String callId) = _CallControlEventConferenceAdded;
+
+  /// Mutes or unmutes a participant for everyone in the room.
+  const factory CallControlEvent.conferenceParticipantMuted(String callId, bool muted) =
+      _CallControlEventConferenceParticipantMuted;
+
+  /// Mutes or unmutes the host's own microphone towards the room.
+  const factory CallControlEvent.conferenceSelfMuted(bool muted) = _CallControlEventConferenceSelfMuted;
+
+  /// Ends the conference and hangs up every leg.
+  const factory CallControlEvent.conferenceEnded() = _CallControlEventConferenceEnded;
 }
 
 class _CallControlEventStarted extends CallControlEvent with CallControlEventStartedMixin {
@@ -962,6 +980,50 @@ class _CallControlEventAttendedRequestDeclined extends CallControlEvent {
 
   @override
   List<Object?> get props => [callId, referId];
+}
+
+class _CallControlEventMerged extends CallControlEvent {
+  const _CallControlEventMerged(this.callIds);
+
+  final List<String> callIds;
+
+  @override
+  List<Object?> get props => [callIds];
+}
+
+class _CallControlEventConferenceAdded extends CallControlEvent {
+  const _CallControlEventConferenceAdded(this.callId);
+
+  final String callId;
+
+  @override
+  List<Object?> get props => [callId];
+}
+
+class _CallControlEventConferenceParticipantMuted extends CallControlEvent {
+  const _CallControlEventConferenceParticipantMuted(this.callId, this.muted);
+
+  final String callId;
+  final bool muted;
+
+  @override
+  List<Object?> get props => [callId, muted];
+}
+
+class _CallControlEventConferenceSelfMuted extends CallControlEvent {
+  const _CallControlEventConferenceSelfMuted(this.muted);
+
+  final bool muted;
+
+  @override
+  List<Object?> get props => [muted];
+}
+
+class _CallControlEventConferenceEnded extends CallControlEvent {
+  const _CallControlEventConferenceEnded();
+
+  @override
+  List<Object?> get props => const [];
 }
 
 class _CallControlEventAttendedRequestApproved extends CallControlEvent {
@@ -1396,6 +1458,34 @@ sealed class _CallMutationEvent extends CallEvent {
     IncomingCallEvent? incomingCallEvent,
     required AcceptedEvent acceptedEvent,
   }) = _CallMutationEventRestoreCall;
+
+  // conference: the host's intents, then what the server says of the room
+  const factory _CallMutationEvent.controlMerge(List<String> callIds) = _CallMutationEventControlMerge;
+  const factory _CallMutationEvent.controlConferenceAdd(String callId) = _CallMutationEventControlConferenceAdd;
+  const factory _CallMutationEvent.controlConferenceMute(String callId, bool muted) =
+      _CallMutationEventControlConferenceMute;
+  const factory _CallMutationEvent.controlConferenceSelfMute(bool muted) = _CallMutationEventControlConferenceSelfMute;
+  const factory _CallMutationEvent.controlConferenceEnd() = _CallMutationEventControlConferenceEnd;
+  const factory _CallMutationEvent.conferenceOffer({
+    required int room,
+    required Map<String, dynamic> jsep,
+    required List<ConferenceParticipant> participants,
+  }) = _CallMutationEventConferenceOffer;
+  const factory _CallMutationEvent.conferenceRemoteCandidate(Map<String, dynamic>? candidate) =
+      _CallMutationEventConferenceRemoteCandidate;
+  const factory _CallMutationEvent.conferenceLocalCandidate(RTCIceCandidate? candidate) =
+      _CallMutationEventConferenceLocalCandidate;
+  const factory _CallMutationEvent.conferenceUpdated({
+    required int room,
+    required List<ConferenceParticipant> participants,
+  }) = _CallMutationEventConferenceUpdated;
+  const factory _CallMutationEvent.conferenceFailed({int? room, required String reason, String? detail}) =
+      _CallMutationEventConferenceFailed;
+  const factory _CallMutationEvent.conferenceTerminated({int? room}) = _CallMutationEventConferenceTerminated;
+
+  /// The connection to the mixer is gone, or the room never finished being
+  /// built; either way this client cannot be in it.
+  const factory _CallMutationEvent.conferenceLost() = _CallMutationEventConferenceLost;
 }
 
 // ── perform variants ─────────────────────────────────────────────────────────
@@ -1718,4 +1808,92 @@ class _CallMutationEventRestoreCall extends _CallMutationEvent {
   final AcceptedEvent acceptedEvent;
   @override
   List<Object?> get props => [callId, line, acceptedTime, incomingCallEvent, acceptedEvent];
+}
+
+class _CallMutationEventControlMerge extends _CallMutationEvent {
+  const _CallMutationEventControlMerge(this.callIds);
+  final List<String> callIds;
+  @override
+  List<Object?> get props => [callIds];
+}
+
+class _CallMutationEventControlConferenceAdd extends _CallMutationEvent {
+  const _CallMutationEventControlConferenceAdd(this.callId);
+  final String callId;
+  @override
+  List<Object?> get props => [callId];
+}
+
+class _CallMutationEventControlConferenceMute extends _CallMutationEvent {
+  const _CallMutationEventControlConferenceMute(this.callId, this.muted);
+  final String callId;
+  final bool muted;
+  @override
+  List<Object?> get props => [callId, muted];
+}
+
+class _CallMutationEventControlConferenceSelfMute extends _CallMutationEvent {
+  const _CallMutationEventControlConferenceSelfMute(this.muted);
+  final bool muted;
+  @override
+  List<Object?> get props => [muted];
+}
+
+class _CallMutationEventControlConferenceEnd extends _CallMutationEvent {
+  const _CallMutationEventControlConferenceEnd();
+  @override
+  List<Object?> get props => const [];
+}
+
+class _CallMutationEventConferenceOffer extends _CallMutationEvent {
+  const _CallMutationEventConferenceOffer({required this.room, required this.jsep, required this.participants});
+  final int room;
+  final Map<String, dynamic> jsep;
+  final List<ConferenceParticipant> participants;
+  @override
+  List<Object?> get props => [room, jsep, participants];
+}
+
+class _CallMutationEventConferenceRemoteCandidate extends _CallMutationEvent {
+  const _CallMutationEventConferenceRemoteCandidate(this.candidate);
+  final Map<String, dynamic>? candidate;
+  @override
+  List<Object?> get props => [candidate];
+}
+
+class _CallMutationEventConferenceLocalCandidate extends _CallMutationEvent {
+  const _CallMutationEventConferenceLocalCandidate(this.candidate);
+  final RTCIceCandidate? candidate;
+  @override
+  List<Object?> get props => [candidate];
+}
+
+class _CallMutationEventConferenceUpdated extends _CallMutationEvent {
+  const _CallMutationEventConferenceUpdated({required this.room, required this.participants});
+  final int room;
+  final List<ConferenceParticipant> participants;
+  @override
+  List<Object?> get props => [room, participants];
+}
+
+class _CallMutationEventConferenceFailed extends _CallMutationEvent {
+  const _CallMutationEventConferenceFailed({this.room, required this.reason, this.detail});
+  final int? room;
+  final String reason;
+  final String? detail;
+  @override
+  List<Object?> get props => [room, reason, detail];
+}
+
+class _CallMutationEventConferenceTerminated extends _CallMutationEvent {
+  const _CallMutationEventConferenceTerminated({this.room});
+  final int? room;
+  @override
+  List<Object?> get props => [room];
+}
+
+class _CallMutationEventConferenceLost extends _CallMutationEvent {
+  const _CallMutationEventConferenceLost();
+  @override
+  List<Object?> get props => const [];
 }
