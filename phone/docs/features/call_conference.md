@@ -21,6 +21,8 @@ lib/features/call/
   models/conference_state.dart        ConferenceState, ConferencePhase
   bloc/call_bloc.dart                 the handlers, in the "conference" section
   bloc/call_state.dart                the derivations: mergeableCallIds, mergeableLegs, canMerge, canAdd
+  widgets/conference_panel.dart       the room on screen: the host, the participants, End
+  widgets/call_list_action.dart       the Merge and Add controls in a roster header
 ```
 
 ## The model
@@ -138,6 +140,31 @@ command still outstanding** for that call is that command coming home; anything
 else is somebody's intention. The value alone cannot decide, because the
 platform does not wait for the report before the command returns, so a report
 can still be in flight when the host asks for the opposite.
+
+## On the screen
+
+The way in is the roster header - the strip that appears when there is more
+than one call and says how many there are. That is where the set of calls to
+choose between is already named, and it is the same set there is something to
+merge; with one call there is neither header nor button. Where the deployment
+offers no rooms the control is absent rather than disabled, because the server
+would refuse a merge outright; where it does, it stays visible and goes
+disabled while this particular set cannot be merged, so it does not appear and
+vanish as a call is answered or ends.
+
+While a room stands the roster gives way to a panel (`ConferencePanel`): the
+legs are one conversation, not calls to choose between. It lists the host and
+every participant by line, each row carrying the room-wide mute for that
+person and a way to drop them, and the room's own End. Calls outside the room
+keep their rows underneath, under a header that says so, with the same control
+offered as `Add`.
+
+The control grid below acts on the room whenever the focused call is a leg: its
+hangup ends the room rather than silently picking one participant, its
+microphone shows and sets the room's mute, and hold and transfer are gone
+because a leg has neither.
+
+Refusals reach the person as a sentence, not as the code the server sent.
 
 ## The operating system
 
