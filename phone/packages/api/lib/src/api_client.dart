@@ -351,6 +351,7 @@ class WebtritApiClient {
       pathSegments,
       token,
       requestDataJson,
+      headers: headers,
       requestOptions: requestOptions,
       responseOptions: responseOptions,
     );
@@ -368,6 +369,7 @@ class WebtritApiClient {
       pathSegments,
       token,
       null,
+      headers: headers,
       requestOptions: requestOptions,
       responseOptions: responseOptions,
     );
