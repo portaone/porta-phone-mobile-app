@@ -2774,6 +2774,14 @@
   "@voicemail_Label_emptyTrashHint": {
     "description": "Explains, on an empty trash, what keeping messages there would cost."
   },
+  "voicemail_Label_forward": "Forward",
+  "@voicemail_Label_forward": {
+    "description": "Menu action that passes a voicemail on to a colleague."
+  },
+  "voicemail_Label_forwardChoosing": "Choose who to forward to",
+  "@voicemail_Label_forwardChoosing": {
+    "description": "Banner shown while the user is browsing the address book for somebody to forward a voicemail to."
+  },
   "voicemail_Label_markAsHeard": "Mark as heard",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Mark as new",
@@ -2824,6 +2832,15 @@
       }
     }
   },
+  "voicemail_SemanticsLabel_forwardTo": "Forward to {name}",
+  "@voicemail_SemanticsLabel_forwardTo": {
+    "description": "Accessibility name of a row in the forward picker.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_loading": "Loading",
   "@voicemail_SemanticsLabel_loading": {
     "description": "Announced while a voicemail is being prepared for playback."
@@ -2851,6 +2868,32 @@
   "voicemail_Snackbar_movedToTrash": "Moved to trash",
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."
+  },
+  "voicemail_Snackbar_forwardFailed": "Could not forward",
+  "@voicemail_Snackbar_forwardFailed": {
+    "description": "Shown when forwarding failed for a reason the person cannot act on."
+  },
+  "voicemail_Snackbar_forwardRecipientFull": "{name} cannot receive more forwarded messages",
+  "@voicemail_Snackbar_forwardRecipientFull": {
+    "description": "Shown when the colleague has as many forwarded messages as they are allowed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "voicemail_Snackbar_forwardTooLarge": "Message too large to forward",
+  "@voicemail_Snackbar_forwardTooLarge": {},
+  "voicemail_Snackbar_forwardUnavailable": "Forwarding is not available",
+  "@voicemail_Snackbar_forwardUnavailable": {},
+  "voicemail_Snackbar_forwarded": "Forwarded to {name}",
+  "@voicemail_Snackbar_forwarded": {
+    "description": "Confirms that a copy of the voicemail reached a colleague.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "voicemail_Snackbar_notConfigured": "Contact your administrator to activate voicemail",
   "@voicemail_Snackbar_notConfigured": {},

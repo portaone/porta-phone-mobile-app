@@ -2702,6 +2702,14 @@
   "@voicemail_Label_emptyTrashHint": {
     "description": "Explains, on an empty trash, what keeping messages there would cost."
   },
+  "voicemail_Label_forward": "ส่งต่อ",
+  "@voicemail_Label_forward": {
+    "description": "Menu action that passes a voicemail on to a colleague."
+  },
+  "voicemail_Label_forwardChoosing": "เลือกผู้รับการส่งต่อ",
+  "@voicemail_Label_forwardChoosing": {
+    "description": "Banner shown while the user is browsing the address book for somebody to forward a voicemail to."
+  },
   "voicemail_Label_markAsHeard": "ทำเครื่องหมายว่าฟังแล้ว",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "ทำเครื่องหมายว่าใหม่",
@@ -2752,6 +2760,15 @@
       }
     }
   },
+  "voicemail_SemanticsLabel_forwardTo": "ส่งต่อถึง {name}",
+  "@voicemail_SemanticsLabel_forwardTo": {
+    "description": "Accessibility name of a row in the forward picker.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_loading": "กำลังโหลด",
   "@voicemail_SemanticsLabel_loading": {
     "description": "Announced while a voicemail is being prepared for playback."
@@ -2779,6 +2796,32 @@
   "voicemail_Snackbar_movedToTrash": "ย้ายไปถังขยะแล้ว",
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."
+  },
+  "voicemail_Snackbar_forwardFailed": "ส่งต่อไม่สำเร็จ",
+  "@voicemail_Snackbar_forwardFailed": {
+    "description": "Shown when forwarding failed for a reason the person cannot act on."
+  },
+  "voicemail_Snackbar_forwardRecipientFull": "{name} ไม่สามารถรับข้อความที่ส่งต่อได้อีก",
+  "@voicemail_Snackbar_forwardRecipientFull": {
+    "description": "Shown when the colleague has as many forwarded messages as they are allowed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "voicemail_Snackbar_forwardTooLarge": "ข้อความใหญ่เกินกว่าจะส่งต่อได้",
+  "@voicemail_Snackbar_forwardTooLarge": {},
+  "voicemail_Snackbar_forwardUnavailable": "ไม่สามารถส่งต่อได้",
+  "@voicemail_Snackbar_forwardUnavailable": {},
+  "voicemail_Snackbar_forwarded": "ส่งต่อถึง {name} แล้ว",
+  "@voicemail_Snackbar_forwarded": {
+    "description": "Confirms that a copy of the voicemail reached a colleague.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "voicemail_Snackbar_notConfigured": "ติดต่อผู้ดูแลระบบของคุณเพื่อเปิดใช้งานข้อความเสียง",
   "@voicemail_Snackbar_notConfigured": {},
