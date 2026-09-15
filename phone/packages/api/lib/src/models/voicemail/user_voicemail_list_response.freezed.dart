@@ -46,7 +46,7 @@ abstract mixin class $UserVoicemailListResponseCopyWith<$Res>  {
   factory $UserVoicemailListResponseCopyWith(UserVoicemailListResponse value, $Res Function(UserVoicemailListResponse) _then) = _$UserVoicemailListResponseCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'has_new_messages') bool hasNewMessages, List<UserVoicemailItem> items
+ bool hasNewMessages, List<UserVoicemailItem> items
 });
 
 

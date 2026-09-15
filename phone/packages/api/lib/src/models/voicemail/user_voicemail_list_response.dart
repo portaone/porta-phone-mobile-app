@@ -1,5 +1,3 @@
-// ignore_for_file: invalid_annotation_target
-
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'user_voicemail_list_response.freezed.dart';
@@ -7,12 +5,9 @@ part 'user_voicemail_list_response.freezed.dart';
 part 'user_voicemail_list_response.g.dart';
 
 @freezed
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class UserVoicemailListResponse with _$UserVoicemailListResponse {
-  const UserVoicemailListResponse({
-    @JsonKey(name: 'has_new_messages') required this.hasNewMessages,
-    required this.items,
-  });
+  const UserVoicemailListResponse({required this.hasNewMessages, required this.items});
 
   @override
   final bool hasNewMessages;
@@ -26,7 +21,7 @@ class UserVoicemailListResponse with _$UserVoicemailListResponse {
 }
 
 @freezed
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class UserVoicemailItem with _$UserVoicemailItem {
   const UserVoicemailItem({
     required this.id,

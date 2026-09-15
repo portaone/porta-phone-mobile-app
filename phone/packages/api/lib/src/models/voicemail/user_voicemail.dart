@@ -5,7 +5,7 @@ part 'user_voicemail.freezed.dart';
 part 'user_voicemail.g.dart';
 
 @freezed
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class UserVoicemail with _$UserVoicemail {
   const UserVoicemail({
     required this.id,
@@ -52,7 +52,7 @@ class UserVoicemail with _$UserVoicemail {
 }
 
 @freezed
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class UserVoicemailAttachment with _$UserVoicemailAttachment {
   const UserVoicemailAttachment({
     required this.filename,
