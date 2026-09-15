@@ -27,6 +27,7 @@ class VoicemailTile extends StatelessWidget {
     required this.onToggleSeenStatus,
     required this.onToggleSavedStatus,
     required this.onForwarded,
+    required this.onOpenContact,
     required this.onRestored,
     required this.onDeletedPermanently,
     required this.onLongPress,
@@ -83,12 +84,21 @@ class VoicemailTile extends StatelessWidget {
   final void Function(Voicemail) onToggleSeenStatus;
   final void Function(Voicemail) onToggleSavedStatus;
   final void Function(Voicemail) onForwarded;
+  final void Function(Voicemail) onOpenContact;
   final void Function(Voicemail) onRestored;
   final void Function(Voicemail) onDeletedPermanently;
   final void Function(Voicemail) onLongPress;
   final void Function(Voicemail)? onTap;
 
   bool get _savingOffered => saveSupported && voicemail.saved != null;
+
+  /// Whether the caller is somebody the address book already knows.
+  ///
+  /// The name shown on the tile is the answer: it is the caller's number
+  /// unless a contact was found for it, so a name that differs from the number
+  /// means there is a card to open. Offering the action for a stranger would
+  /// lead to an empty screen.
+  bool get _contactKnown => voicemail.displaySender != voicemail.sender;
   bool get _saved => voicemail.saved == true;
 
   @override
@@ -205,6 +215,14 @@ class VoicemailTile extends StatelessWidget {
           title: Text(_saved ? context.l10n.voicemail_Label_unsave : context.l10n.voicemail_Label_save),
         ),
       ),
+    if (_contactKnown)
+      PopupMenuItem(
+        value: _VoicemailMenuAction.openContact,
+        child: ListTile(
+          leading: const Icon(Icons.person_outline),
+          title: Text(context.l10n.voicemail_Label_openContact),
+        ),
+      ),
     if (forwardSupported)
       PopupMenuItem(
         value: _VoicemailMenuAction.forward,
@@ -243,6 +261,9 @@ class VoicemailTile extends StatelessWidget {
         break;
       case _VoicemailMenuAction.delete:
         onDeleted(voicemail);
+        break;
+      case _VoicemailMenuAction.openContact:
+        onOpenContact(voicemail);
         break;
       case _VoicemailMenuAction.forward:
         onForwarded(voicemail);
@@ -332,4 +353,13 @@ class _VoicemailSubtitle extends StatelessWidget {
   }
 }
 
-enum _VoicemailMenuAction { call, toggleSeenStatus, toggleSavedStatus, forward, delete, restore, deletePermanently }
+enum _VoicemailMenuAction {
+  call,
+  toggleSeenStatus,
+  toggleSavedStatus,
+  openContact,
+  forward,
+  delete,
+  restore,
+  deletePermanently,
+}

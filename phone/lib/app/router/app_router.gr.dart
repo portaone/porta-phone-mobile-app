@@ -1773,6 +1773,22 @@ class UserAgreementScreenPageRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [VoicemailRouterPage]
+class VoicemailRouterPageRoute extends PageRouteInfo<void> {
+  const VoicemailRouterPageRoute({List<PageRouteInfo>? children})
+    : super(VoicemailRouterPageRoute.name, initialChildren: children);
+
+  static const String name = 'VoicemailRouterPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const VoicemailRouterPage();
+    },
+  );
+}
+
+/// generated route for
 /// [VoicemailScreenPage]
 class VoicemailScreenPageRoute extends PageRouteInfo<void> {
   const VoicemailScreenPageRoute({List<PageRouteInfo>? children})

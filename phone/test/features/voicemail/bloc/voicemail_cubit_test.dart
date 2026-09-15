@@ -9,6 +9,8 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 
 class _Repository extends Mock implements VoicemailRepository {}
 
+class _Contacts extends Mock implements ContactsRepository {}
+
 Voicemail _voicemail(String id, {bool? saved, String? forwardedBy}) => Voicemail(
   id: id,
   date: '2026-09-15T10:00:00Z',
@@ -37,6 +39,7 @@ void main() {
     when(() => repository.fetchVoicemails()).thenAnswer((_) async {});
     cubit = VoicemailCubit(
       repository: repository,
+      contactsRepository: _Contacts(),
       onCallStarted: (_) {},
       onSubmitNotification: (_) {},
       saveSupported: true,
@@ -175,6 +178,27 @@ void main() {
 
       expect(await cubit.removeVoicemail('1'), isTrue);
     });
+  });
+
+  test('the caller of a message is asked for by the number that left it', () async {
+    // The mailbox holds the number; the address book holds the card. A screen
+    // reaching for a repository itself was how this used to be done.
+    final contacts = _Contacts();
+    when(() => contacts.getContactByPhoneNumber(any())).thenAnswer((_) async => null);
+    final cubit = VoicemailCubit(
+      repository: repository,
+      contactsRepository: contacts,
+      onCallStarted: (_) {},
+      onSubmitNotification: (_) {},
+      saveSupported: true,
+      trashSupported: true,
+      forwardSupported: true,
+    );
+
+    await cubit.callerOf(_voicemail('1'));
+
+    verify(() => contacts.getContactByPhoneNumber('101')).called(1);
+    await cubit.close();
   });
 
   group('who forwarded a message on', () {

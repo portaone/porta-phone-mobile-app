@@ -5851,6 +5851,12 @@ abstract class AppLocalizations {
   /// **'Move to trash'**
   String get voicemail_Label_moveToTrash;
 
+  /// Menu action that opens the card of whoever left the voicemail.
+  ///
+  /// In en, this message translates to:
+  /// **'Open contact'**
+  String get voicemail_Label_openContact;
+
   /// No description provided for @voicemail_Label_playbackError.
   ///
   /// In en, this message translates to:
@@ -5988,6 +5994,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Forwarded to {name}'**
   String voicemail_Snackbar_forwarded(String name);
+
+  /// Shown when the caller is no longer in the address book by the time their card is asked for.
+  ///
+  /// In en, this message translates to:
+  /// **'That contact is no longer in your address book'**
+  String get voicemail_Snackbar_contactGone;
 
   /// No description provided for @voicemail_Snackbar_notConfigured.
   ///

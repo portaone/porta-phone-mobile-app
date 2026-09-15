@@ -50,6 +50,7 @@ class VoicemailScreenHost extends StatelessWidget {
         BlocProvider(
           create: (context) => VoicemailCubit(
             repository: context.read<VoicemailRepository>(),
+            contactsRepository: context.read<ContactsRepository>(),
             onCallStarted: (number) => callBloc.add(CallControlEvent.started(number: number, video: false)),
             onSubmitNotification: (n) => notificationsBloc.add(NotificationsSubmitted(n)),
             // What the backend supports decides which views are offered at
