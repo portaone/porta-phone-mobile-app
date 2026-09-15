@@ -15,7 +15,7 @@ void main() {
   late VoicemailRepositoryImpl repo;
   late MockWebtritApiClient apiClient;
 
-  setUp(() {
+  setUp(() async {
     appDatabase = AppDatabase(NativeDatabase.memory());
     apiClient = MockWebtritApiClient();
     repo = VoicemailRepositoryImpl(
@@ -24,6 +24,11 @@ void main() {
       appDatabase: appDatabase,
       sessionGuard: const EmptySessionGuard(),
     );
+    // Let the refresh the constructor starts finish before a test seeds or
+    // asserts. It is detached (`.ignore()`), so without this a test races the
+    // very cycle it is exercising: what it observes depends on which of the two
+    // reaches the database first.
+    await pumpEventQueue();
   });
 
   tearDown(() async {
