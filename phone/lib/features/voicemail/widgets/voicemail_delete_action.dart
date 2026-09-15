@@ -61,7 +61,7 @@ class _VoicemailDeleteActionState extends State<VoicemailDeleteAction> {
             alignment: AlignmentDirectional.topCenter,
             children: [
               IconButton(
-                icon: const Icon(Icons.delete),
+                icon: Icon(state.isShowingTrash ? Icons.delete_forever : Icons.delete),
                 onPressed: state.visibleItems.isNotEmpty
                     ? () => selecting ? _onDeleteSelected() : _onDeleteAll()
                     : null,
@@ -96,18 +96,65 @@ class _VoicemailDeleteActionState extends State<VoicemailDeleteAction> {
     }
   }
 
+  /// Deleting what is picked, which in the trash is the end of the line.
+  ///
+  /// Everywhere else the messages go to the trash and can be had back, so the
+  /// question is milder and the same one it has always been. In the trash there
+  /// is nowhere further for them to go, and the question says so and counts
+  /// them - which is the part a person cannot check once the dialog is over
+  /// the list.
   void _onDeleteSelected() async {
+    final state = context.read<VoicemailCubit>().state;
+    final count = state.selectedVoicemailsIds.length;
+    final permanent = state.isShowingTrash;
+
     final confirmed =
         (await ConfirmDialog.showDangerous(
           context,
-          title: context.l10n.voicemail_Dialog_deleteSelectedTitle,
-          content: context.l10n.voicemail_Dialog_deleteSelectedContent,
+          title: permanent
+              ? context.l10n.voicemail_Dialog_deleteSelectedPermanentlyTitle(count)
+              : context.l10n.voicemail_Dialog_deleteSelectedTitle,
+          content: permanent
+              ? context.l10n.voicemail_Dialog_deleteSelectedPermanentlyContent
+              : context.l10n.voicemail_Dialog_deleteSelectedContent,
         )) ??
         false;
 
-    if (confirmed && mounted) {
-      context.read<VoicemailCubit>().removeSelectedVoicemails();
-    }
+    if (!confirmed || !mounted) return;
+
+    final cubit = context.read<VoicemailCubit>();
+    // A plain delete in the trash would send an already-trashed message to the
+    // trash again, which the backend accepts and which does nothing at all.
+    permanent ? cubit.removeSelectedVoicemailsPermanently() : cubit.removeSelectedVoicemails();
+  }
+}
+
+/// Puts back everything picked, offered only over the trash.
+///
+/// The one action in the header that is not destructive, which is why it sits
+/// apart from the control beside it rather than inside it.
+class VoicemailRestoreAction extends StatelessWidget {
+  const VoicemailRestoreAction({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<VoicemailCubit, VoicemailState>(
+      builder: (context, state) {
+        if (!state.isShowingTrash || !state.isMultipleVoicemailsSelection) return const SizedBox.shrink();
+
+        return SemanticAction(
+          label:
+              '${context.l10n.voicemail_Label_restoreSelected}, '
+              '${context.l10n.common_SemanticsValue_selectedCount(state.selectedVoicemailsIds.length)}',
+          child: IconButton(
+            icon: const Icon(Icons.restore_from_trash),
+            // No confirmation. Putting a message back is what the trash is for,
+            // and anything it undoes is one tap away from being redone.
+            onPressed: () => context.read<VoicemailCubit>().restoreSelectedVoicemails(),
+          ),
+        );
+      },
+    );
   }
 }
 
