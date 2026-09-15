@@ -299,6 +299,79 @@ class AppLocalizationsEn extends AppLocalizations {
   String get conferenceRefusal_unavailable => 'The calls could not be merged';
 
   @override
+  String get call_CallList_add => 'Add';
+
+  @override
+  String get call_SemanticsLabel_add => 'Add the calls to the conference';
+
+  @override
+  String call_CallList_outsideHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count calls outside the conference',
+      one: '$count call outside the conference',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferencePanel_header(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Conference - $count participants',
+      one: 'Conference - $count participant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get call_ConferencePanel_you => 'You';
+
+  @override
+  String get call_ConferencePanel_hostStatus => 'Host';
+
+  @override
+  String get call_ConferencePanel_participantStatus => 'In the conference';
+
+  @override
+  String get call_ConferencePanel_participantMuted => 'Muted for everyone';
+
+  @override
+  String get call_ConferencePanel_end => 'End';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfMute => 'Mute your microphone';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfUnmute => 'Unmute your microphone';
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantMute(String name) {
+    return 'Mute $name for everyone';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantUnmute(String name) {
+    return 'Unmute $name for everyone';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantHangup(String name) {
+    return 'End the call with $name';
+  }
+
+  @override
+  String get call_SemanticsLabel_conferenceEnd => 'End the conference and every call in it';
+
+  @override
+  String get call_CallList_merge => 'Merge';
+
+  @override
+  String get call_SemanticsLabel_merge => 'Merge the calls into a conference';
+
+  @override
   String call_CallList_header(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
