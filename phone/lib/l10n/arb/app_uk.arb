@@ -2654,6 +2654,17 @@
   "@voicemail_Filter_unheard": {
     "description": "Voicemail filter showing only the messages not yet heard."
   },
+  "voicemail_Dialog_emptyTrashContent": "{count, plural, one{Повідомлення в кошику буде вилучено, а місце, яке воно займає, звільнено.} other{Усі {count} повідомлень у кошику буде вилучено, а місце, яке вони займають, звільнено.}}",
+  "@voicemail_Dialog_emptyTrashContent": {
+    "description": "Warns how much emptying the trash removes and that it frees that space.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voicemail_Dialog_emptyTrashTitle": "Очистити кошик?",
+  "@voicemail_Dialog_emptyTrashTitle": {},
   "voicemail_Label_call": "Дзвінок",
   "@voicemail_Label_call": {},
   "voicemail_Label_delete": "Видалити",
@@ -2676,6 +2687,10 @@
   },
   "voicemail_Label_emptyTrash": "Кошик порожній",
   "@voicemail_Label_emptyTrash": {},
+  "voicemail_Label_emptyTrashAction": "Очистити кошик",
+  "@voicemail_Label_emptyTrashAction": {
+    "description": "Toolbar action that deletes everything in the trash for good."
+  },
   "voicemail_Label_emptyTrashHint": "Повідомлення, які ви сюди переносите, далі займають місце у скриньці, доки кошик не очищено.",
   "@voicemail_Label_emptyTrashHint": {
     "description": "Explains, on an empty trash, what keeping messages there would cost."

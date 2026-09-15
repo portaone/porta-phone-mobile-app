@@ -2657,6 +2657,17 @@
   "@voicemail_Filter_unheard": {
     "description": "Voicemail filter showing only the messages not yet heard."
   },
+  "voicemail_Dialog_emptyTrashContent": "ข้อความทั้ง {count} รายการในถังขยะจะถูกลบและคืนพื้นที่ที่ใช้อยู่",
+  "@voicemail_Dialog_emptyTrashContent": {
+    "description": "Warns how much emptying the trash removes and that it frees that space.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voicemail_Dialog_emptyTrashTitle": "ล้างถังขยะหรือไม่",
+  "@voicemail_Dialog_emptyTrashTitle": {},
   "voicemail_Label_call": "โทร",
   "@voicemail_Label_call": {},
   "voicemail_Label_delete": "ลบ",
@@ -2679,6 +2690,10 @@
   },
   "voicemail_Label_emptyTrash": "ถังขยะว่างเปล่า",
   "@voicemail_Label_emptyTrash": {},
+  "voicemail_Label_emptyTrashAction": "ล้างถังขยะ",
+  "@voicemail_Label_emptyTrashAction": {
+    "description": "Toolbar action that deletes everything in the trash for good."
+  },
   "voicemail_Label_emptyTrashHint": "ข้อความที่ย้ายมาที่นี่ยังคงใช้พื้นที่กล่องข้อความจนกว่าจะล้างถังขยะ",
   "@voicemail_Label_emptyTrashHint": {
     "description": "Explains, on an empty trash, what keeping messages there would cost."

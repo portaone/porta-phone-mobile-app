@@ -3151,6 +3151,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Filter_unheard => 'Nuovi';
 
   @override
+  String voicemail_Dialog_emptyTrashContent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Tutti i $count messaggi nel cestino saranno rimossi e lo spazio che occupano sara liberato.',
+      one: 'Il messaggio nel cestino sara rimosso e lo spazio che occupa sara liberato.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voicemail_Dialog_emptyTrashTitle => 'Svuotare il cestino?';
+
+  @override
   String get voicemail_Label_call => 'Chiama';
 
   @override
@@ -3177,6 +3191,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voicemail_Label_emptyTrash => 'Il cestino e vuoto';
+
+  @override
+  String get voicemail_Label_emptyTrashAction => 'Svuota cestino';
 
   @override
   String get voicemail_Label_emptyTrashHint =>

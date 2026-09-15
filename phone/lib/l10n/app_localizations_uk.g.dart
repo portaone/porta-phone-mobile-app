@@ -3159,6 +3159,20 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Filter_unheard => 'Нові';
 
   @override
+  String voicemail_Dialog_emptyTrashContent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Усі $count повідомлень у кошику буде вилучено, а місце, яке вони займають, звільнено.',
+      one: 'Повідомлення в кошику буде вилучено, а місце, яке воно займає, звільнено.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voicemail_Dialog_emptyTrashTitle => 'Очистити кошик?';
+
+  @override
   String get voicemail_Label_call => 'Дзвінок';
 
   @override
@@ -3186,6 +3200,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voicemail_Label_emptyTrash => 'Кошик порожній';
+
+  @override
+  String get voicemail_Label_emptyTrashAction => 'Очистити кошик';
 
   @override
   String get voicemail_Label_emptyTrashHint =>

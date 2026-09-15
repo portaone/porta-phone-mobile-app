@@ -3104,6 +3104,14 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Filter_unheard => 'ใหม่';
 
   @override
+  String voicemail_Dialog_emptyTrashContent(int count) {
+    return 'ข้อความทั้ง $count รายการในถังขยะจะถูกลบและคืนพื้นที่ที่ใช้อยู่';
+  }
+
+  @override
+  String get voicemail_Dialog_emptyTrashTitle => 'ล้างถังขยะหรือไม่';
+
+  @override
   String get voicemail_Label_call => 'โทร';
 
   @override
@@ -3130,6 +3138,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get voicemail_Label_emptyTrash => 'ถังขยะว่างเปล่า';
+
+  @override
+  String get voicemail_Label_emptyTrashAction => 'ล้างถังขยะ';
 
   @override
   String get voicemail_Label_emptyTrashHint => 'ข้อความที่ย้ายมาที่นี่ยังคงใช้พื้นที่กล่องข้อความจนกว่าจะล้างถังขยะ';
