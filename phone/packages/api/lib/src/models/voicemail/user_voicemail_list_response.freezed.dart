@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserVoicemailListResponse {
 
- bool get hasNewMessages; List<UserVoicemailItem> get items;
+ bool get hasNewMessages; List<UserVoicemailSummary> get items;
 /// Create a copy of UserVoicemailListResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -46,7 +46,7 @@ abstract mixin class $UserVoicemailListResponseCopyWith<$Res>  {
   factory $UserVoicemailListResponseCopyWith(UserVoicemailListResponse value, $Res Function(UserVoicemailListResponse) _then) = _$UserVoicemailListResponseCopyWithImpl;
 @useResult
 $Res call({
- bool hasNewMessages, List<UserVoicemailItem> items
+ bool hasNewMessages, List<UserVoicemailSummary> items
 });
 
 
@@ -67,7 +67,7 @@ class _$UserVoicemailListResponseCopyWithImpl<$Res>
   return _then(UserVoicemailListResponse(
 hasNewMessages: null == hasNewMessages ? _self.hasNewMessages : hasNewMessages // ignore: cast_nullable_to_non_nullable
 as bool,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
-as List<UserVoicemailItem>,
+as List<UserVoicemailSummary>,
   ));
 }
 
@@ -200,20 +200,20 @@ case _:
 
 
 /// @nodoc
-mixin _$UserVoicemailItem {
+mixin _$UserVoicemailSummary {
 
  String get id; String get date; double get duration; bool get seen; int get size; String get type;
-/// Create a copy of UserVoicemailItem
+/// Create a copy of UserVoicemailSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$UserVoicemailItemCopyWith<UserVoicemailItem> get copyWith => _$UserVoicemailItemCopyWithImpl<UserVoicemailItem>(this as UserVoicemailItem, _$identity);
+$UserVoicemailSummaryCopyWith<UserVoicemailSummary> get copyWith => _$UserVoicemailSummaryCopyWithImpl<UserVoicemailSummary>(this as UserVoicemailSummary, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailItem&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.seen, seen) || other.seen == seen)&&(identical(other.size, size) || other.size == size)&&(identical(other.type, type) || other.type == type));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.seen, seen) || other.seen == seen)&&(identical(other.size, size) || other.size == size)&&(identical(other.type, type) || other.type == type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -222,15 +222,15 @@ int get hashCode => Object.hash(runtimeType,id,date,duration,seen,size,type);
 
 @override
 String toString() {
-  return 'UserVoicemailItem(id: $id, date: $date, duration: $duration, seen: $seen, size: $size, type: $type)';
+  return 'UserVoicemailSummary(id: $id, date: $date, duration: $duration, seen: $seen, size: $size, type: $type)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $UserVoicemailItemCopyWith<$Res>  {
-  factory $UserVoicemailItemCopyWith(UserVoicemailItem value, $Res Function(UserVoicemailItem) _then) = _$UserVoicemailItemCopyWithImpl;
+abstract mixin class $UserVoicemailSummaryCopyWith<$Res>  {
+  factory $UserVoicemailSummaryCopyWith(UserVoicemailSummary value, $Res Function(UserVoicemailSummary) _then) = _$UserVoicemailSummaryCopyWithImpl;
 @useResult
 $Res call({
  String id, String date, double duration, bool seen, int size, String type
@@ -241,17 +241,17 @@ $Res call({
 
 }
 /// @nodoc
-class _$UserVoicemailItemCopyWithImpl<$Res>
-    implements $UserVoicemailItemCopyWith<$Res> {
-  _$UserVoicemailItemCopyWithImpl(this._self, this._then);
+class _$UserVoicemailSummaryCopyWithImpl<$Res>
+    implements $UserVoicemailSummaryCopyWith<$Res> {
+  _$UserVoicemailSummaryCopyWithImpl(this._self, this._then);
 
-  final UserVoicemailItem _self;
-  final $Res Function(UserVoicemailItem) _then;
+  final UserVoicemailSummary _self;
+  final $Res Function(UserVoicemailSummary) _then;
 
-/// Create a copy of UserVoicemailItem
+/// Create a copy of UserVoicemailSummary
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? duration = null,Object? seen = null,Object? size = null,Object? type = null,}) {
-  return _then(UserVoicemailItem(
+  return _then(UserVoicemailSummary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as String,duration: null == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
@@ -265,8 +265,8 @@ as String,
 }
 
 
-/// Adds pattern-matching-related methods to [UserVoicemailItem].
-extension UserVoicemailItemPatterns on UserVoicemailItem {
+/// Adds pattern-matching-related methods to [UserVoicemailSummary].
+extension UserVoicemailSummaryPatterns on UserVoicemailSummary {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
