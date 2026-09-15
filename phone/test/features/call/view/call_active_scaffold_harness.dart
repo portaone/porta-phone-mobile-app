@@ -161,6 +161,10 @@ Widget buildCallScaffold(
   required ActiveCall focusedCall,
   AppPermissions? appPermissions,
   bool keepControlsVisible = false,
+  CallCapabilitiesConfig callConfig = const CallCapabilitiesConfig(),
+  bool canMerge = false,
+  bool canAdd = false,
+  ConferenceState conference = const ConferenceState(),
 }) {
   Widget scaffold = BlocProvider<CallBloc>.value(
     value: callBloc,
@@ -170,7 +174,10 @@ Widget buildCallScaffold(
       focusedCall: focusedCall,
       audioDevice: null,
       availableAudioDevices: const [],
-      callConfig: const CallCapabilitiesConfig(),
+      callConfig: callConfig,
+      canMerge: canMerge,
+      canAdd: canAdd,
+      conference: conference,
       localePlaceholderBuilder: null,
       remotePlaceholderBuilder: null,
       keepControlsVisible: keepControlsVisible,

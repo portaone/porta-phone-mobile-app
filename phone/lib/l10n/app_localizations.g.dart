@@ -562,6 +562,108 @@ abstract class AppLocalizations {
   /// **'The calls could not be merged'**
   String get conferenceRefusal_unavailable;
 
+  /// Label of the button above the calls standing outside a conference that brings them into it.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get call_CallList_add;
+
+  /// Accessibility name of the button that brings the calls outside a conference into it.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the calls to the conference'**
+  String get call_SemanticsLabel_add;
+
+  /// Header above the calls that are up while a conference is running but are not part of it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} call outside the conference} other{{count} calls outside the conference}}'**
+  String call_CallList_outsideHeader(int count);
+
+  /// Header above the conference panel on the call screen; the count is the number of participants, the host not included.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Conference - {count} participant} other{Conference - {count} participants}}'**
+  String call_ConferencePanel_header(int count);
+
+  /// Name of the host's own row in the conference panel.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get call_ConferencePanel_you;
+
+  /// Status line of the host's own row in the conference panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get call_ConferencePanel_hostStatus;
+
+  /// Status line of a participant row in the conference panel.
+  ///
+  /// In en, this message translates to:
+  /// **'In the conference'**
+  String get call_ConferencePanel_participantStatus;
+
+  /// Status line of a participant the host muted for everyone in the room.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted for everyone'**
+  String get call_ConferencePanel_participantMuted;
+
+  /// Label of the button that ends the conference and every call in it.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get call_ConferencePanel_end;
+
+  /// Accessibility name of the control that mutes the host's microphone towards the conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute your microphone'**
+  String get call_SemanticsLabel_conferenceSelfMute;
+
+  /// Accessibility name of the control that unmutes the host's microphone towards the conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute your microphone'**
+  String get call_SemanticsLabel_conferenceSelfUnmute;
+
+  /// Accessibility name of the control that mutes one conference participant for everyone; the name identifies which participant.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute {name} for everyone'**
+  String call_SemanticsLabel_conferenceParticipantMute(String name);
+
+  /// Accessibility name of the control that unmutes one conference participant for everyone; the name identifies which participant.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute {name} for everyone'**
+  String call_SemanticsLabel_conferenceParticipantUnmute(String name);
+
+  /// Accessibility name of the control that ends one conference participant's call; the name identifies which participant.
+  ///
+  /// In en, this message translates to:
+  /// **'End the call with {name}'**
+  String call_SemanticsLabel_conferenceParticipantHangup(String name);
+
+  /// Accessibility name of the control that ends the conference and every call in it.
+  ///
+  /// In en, this message translates to:
+  /// **'End the conference and every call in it'**
+  String get call_SemanticsLabel_conferenceEnd;
+
+  /// Label of the button above the call list that merges the calls into a conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get call_CallList_merge;
+
+  /// Accessibility name of the button that merges the calls into a conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge the calls into a conference'**
+  String get call_SemanticsLabel_merge;
+
   /// Header above the call list on the call screen when more than one call is in progress.
   ///
   /// In en, this message translates to:
