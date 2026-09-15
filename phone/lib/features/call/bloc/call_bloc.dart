@@ -2450,6 +2450,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> __onMutationPerformSetHeld(_CallMutationEventPerformSetHeld event, Emitter<CallState> emit) async {
+    if (state.isConferenced(event.callId)) {
+      // A leg of the room is not held or resumed on its own: the plugin
+      // already answers such a request with callIsGrouped, and the server
+      // would refuse it as line_in_conference. Nothing changes here.
+      _logger.info('__onMutationPerformSetHeld: ${event.callId} is a conference leg, ignoring onHold=${event.onHold}');
+      return;
+    }
     try {
       await state.performOnActiveCall(event.callId, (activeCall) {
         if (event.onHold) {
@@ -2508,7 +2515,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> __onMutationPerformSetMuted(_CallMutationEventPerformSetMuted event, Emitter<CallState> emit) async {
-    await _setMicrophoneAttached(event.callId, attached: !event.muted);
+    // A leg's microphone is already off its own connection for as long as it
+    // is in the room; only the flag is kept, for when the leg is a call again.
+    if (!state.isConferenced(event.callId)) {
+      await _setMicrophoneAttached(event.callId, attached: !event.muted);
+    }
 
     emit(
       state.copyWithMappedActiveCall(event.callId, (activeCall) {
@@ -2615,9 +2626,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     /// If there is an active call, the call should be put on hold before making a new call.
     /// Or it will be ended automatically by platform (via callkeep:performEndAction).
-    await Future.forEach(state.activeCalls, (ActiveCall activeCall) async {
-      final shouldHold = activeCall.held == false;
-      if (shouldHold) await callkeep.setHeld(activeCall.callId, onHold: true);
+    /// The conference room's legs are not among them - see [CallState.callIdsToHoldBeforeOutgoing].
+    await Future.forEach(state.callIdsToHoldBeforeOutgoing, (String callId) async {
+      await callkeep.setHeld(callId, onHold: true);
     });
 
     final callId = WebtritSignalingClient.generateCallId();

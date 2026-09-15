@@ -5,6 +5,7 @@ export 'blind_transfer_purpose.dart';
 export 'call_audio_device.dart';
 export 'call_display.dart';
 export 'call_network_quality.dart';
+export 'conference_state.dart';
 export 'ice_connection_issue.dart';
 export 'jsep_value.dart';
 export 'notification.dart';

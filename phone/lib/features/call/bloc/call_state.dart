@@ -11,6 +11,7 @@ class CallState with _$CallState {
     this.audioDevice,
     this.availableAudioDevices = const [],
     this.selectedCallId,
+    this.conference = const ConferenceState(),
   });
 
   @override
@@ -44,7 +45,51 @@ class CallState with _$CallState {
   @override
   final String? selectedCallId;
 
+  /// The conference room this client hosts; an empty one when there is none.
+  @override
+  final ConferenceState conference;
+
   CallStatus get status => callServiceState.status;
+
+  /// Whether [callId] is a leg of the conference room.
+  bool isConferenced(String callId) => conference.isLeg(callId);
+
+  /// The active calls that are legs of the room, in list order.
+  List<String> get conferencedCallIds => [
+    for (final call in activeCalls)
+      if (isConferenced(call.callId)) call.callId,
+  ];
+
+  /// The accepted calls a merge can take: answered, audio, on a numbered
+  /// line (the server names a leg by line), not being transferred, not
+  /// already in the room.
+  List<String> get mergeableCallIds => [
+    for (final call in activeCalls)
+      if (call.wasAccepted && !call.video && call.line != null && call.transfer == null && !isConferenced(call.callId))
+        call.callId,
+  ];
+
+  /// Whether the Merge control is available: the server supports rooms
+  /// ([isConferenceEnabled]), none is up yet, and at least two calls can be
+  /// merged. The server accepts a merge of a single line; the app asks for two.
+  bool canMerge({required bool isConferenceEnabled}) =>
+      isConferenceEnabled && !conference.isPresent && mergeableCallIds.length >= 2;
+
+  /// Whether a call outside the room can be brought into it: the room is
+  /// established - while it is still assembling its offer has not arrived and
+  /// it is not this client's to add to yet - and at least one call can join.
+  /// [mergeableCallIds] already leaves out the legs, so during a room it is
+  /// exactly the calls outside it that qualify.
+  bool canAdd({required bool isConferenceEnabled}) =>
+      isConferenceEnabled && conference.phase == ConferencePhase.active && mergeableCallIds.isNotEmpty;
+
+  /// The calls to put on hold before a new outgoing call is placed: every
+  /// call not already held, except the room's legs - they stay in the mix,
+  /// and the server would refuse the hold anyway.
+  List<String> get callIdsToHoldBeforeOutgoing => [
+    for (final call in activeCalls)
+      if (!call.held && !isConferenced(call.callId)) call.callId,
+  ];
 
   /// The call the action area should act on: the explicitly [selectedCallId]
   /// when it still maps to a live call, otherwise the derived `current`.
@@ -55,7 +100,16 @@ class CallState with _$CallState {
   ActiveCall? get focusedCall {
     if (activeCalls.isEmpty) return null;
     final selected = selectedCallId == null ? null : retrieveActiveCall(selectedCallId!);
-    return selected ?? activeCalls.current;
+    return selected ?? _firstLeg ?? activeCalls.current;
+  }
+
+  /// With a room up, the call the action area acts on by default is the
+  /// room's first leg by line: the legs are what the user is in.
+  ActiveCall? get _firstLeg {
+    if (!conference.isPresent) return null;
+    final legs = activeCalls.where((call) => isConferenced(call.callId)).toList()
+      ..sort((a, b) => (a.line ?? 0).compareTo(b.line ?? 0));
+    return legs.firstOrNull;
   }
 
   /// Indicates that the handshake phase has completed and registration status is available.
@@ -232,10 +286,18 @@ class CallState with _$CallState {
     final selectedCallId = this.selectedCallId == callId
         ? activeCalls.firstWhereOrNull((call) => call.isIncoming && !call.wasAccepted)?.callId
         : this.selectedCallId;
+    // A leg that ends leaves the room; the server's next list says the same.
+    final conference = this.conference.isLeg(callId)
+        ? this.conference.copyWith(
+            legs: {...this.conference.legs}..remove(callId),
+            participants: this.conference.participants.where((participant) => participant.callId != callId).toList(),
+          )
+        : this.conference;
     return copyWith(
       activeCalls: activeCalls,
       minimized: activeCalls.isEmpty ? null : minimized,
       selectedCallId: selectedCallId,
+      conference: conference,
     );
   }
 
@@ -246,19 +308,21 @@ class CallState with _$CallState {
     return copyWith(selectedCallId: callId);
   }
 
-  /// Ids of every active call except [callId], in list order. Pure data query;
-  /// the event layer (see the combined-action plans on [CallControlEvent])
-  /// turns these into the primitive events to dispatch.
+  /// Ids of every active call except [callId] and the room's legs, in list
+  /// order. Pure data query; the event layer (see the combined-action plans
+  /// on [CallControlEvent]) turns these into the primitive events to dispatch.
+  /// The legs are left out: they are in the mix, not calls to hold.
   List<String> otherCallIds(String callId) => [
     for (final call in activeCalls)
-      if (call.callId != callId) call.callId,
+      if (call.callId != callId && !isConferenced(call.callId)) call.callId,
   ];
 
   /// Ids of every other answered, not-yet-held call - the ones that must be
-  /// put on hold before resuming [callId] so only one call stays live. Pure
-  /// data query for the event-layer plans.
+  /// put on hold before resuming [callId] so only one call stays live. The
+  /// room's legs are left out, as in [otherCallIds]. Pure data query for the
+  /// event-layer plans.
   List<String> otherCallIdsToHold(String callId) => [
     for (final call in activeCalls)
-      if (call.callId != callId && call.wasAccepted && !call.held) call.callId,
+      if (call.callId != callId && call.wasAccepted && !call.held && !isConferenced(call.callId)) call.callId,
   ];
 }
