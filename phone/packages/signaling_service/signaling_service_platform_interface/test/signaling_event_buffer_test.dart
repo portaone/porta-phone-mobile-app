@@ -83,6 +83,30 @@ void main() {
     expect(buffer.hasActiveCalls, isFalse);
   });
 
+  test('a room built after the handshake is in the one a late subscriber gets', () {
+    // The protocol events themselves are never replayed, so a conference that
+    // came up while nobody was listening is only visible as the block of the
+    // handshake rendered now - which is how the subscriber learns of a room it
+    // is not connected to and must end.
+    buffer.onEvent(SignalingConnecting());
+    buffer.onEvent(SignalingHandshakeReceived(handshake: _handshake(lines: [null])));
+    buffer.onEvent(
+      _protocol(
+        const ConferenceOfferEvent(
+          room: 7,
+          jsep: {'type': 'offer', 'sdp': 'v=0'},
+          participants: [ConferenceParticipant(line: 0, callId: 'a')],
+        ),
+      ),
+    );
+
+    expect(replayed().conference?.room, 7);
+    expect(kinds(), [SignalingConnecting, SignalingHandshakeReceived]);
+
+    buffer.onEvent(_protocol(const ConferenceTerminatedEvent(room: 7)));
+    expect(replayed().conference, isNull);
+  });
+
   test('clear empties the buffer and the session', () {
     buffer.onEvent(SignalingConnecting());
     buffer.onEvent(
