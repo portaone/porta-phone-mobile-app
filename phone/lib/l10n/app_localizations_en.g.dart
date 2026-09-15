@@ -3198,6 +3198,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Label_moveToTrash => 'Move to trash';
 
   @override
+  String get voicemail_Label_openContact => 'Open contact';
+
+  @override
   String get voicemail_Label_playbackError => 'Playback failed';
 
   @override
@@ -3281,6 +3284,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String voicemail_Snackbar_forwarded(String name) {
     return 'Forwarded to $name';
   }
+
+  @override
+  String get voicemail_Snackbar_contactGone => 'That contact is no longer in your address book';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Contact your administrator to activate voicemail';

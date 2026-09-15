@@ -1494,6 +1494,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Label_markAsHeard' => voicemail_Label_markAsHeard,
       'voicemail_Label_markAsNew' => voicemail_Label_markAsNew,
       'voicemail_Label_moveToTrash' => voicemail_Label_moveToTrash,
+      'voicemail_Label_openContact' => voicemail_Label_openContact,
       'voicemail_Label_playbackError' => voicemail_Label_playbackError,
       'voicemail_Label_restore' => voicemail_Label_restore,
       'voicemail_Label_restoreSelected' => voicemail_Label_restoreSelected,
@@ -1516,6 +1517,7 @@ extension AppLocalizationsExtension on AppLocalizations {
         voicemail_Snackbar_forwardTooLarge,
       'voicemail_Snackbar_forwardUnavailable' =>
         voicemail_Snackbar_forwardUnavailable,
+      'voicemail_Snackbar_contactGone' => voicemail_Snackbar_contactGone,
       'voicemail_Snackbar_notConfigured' => voicemail_Snackbar_notConfigured,
       'voicemail_Title_notSupported' => voicemail_Title_notSupported,
       'voicemail_Widget_forwardSheetTitle' =>

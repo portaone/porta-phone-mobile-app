@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
@@ -166,6 +169,7 @@ class VoicemailListView extends StatelessWidget {
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
           onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
           onForwarded: (it) => _onForwardVoicemail(context, it),
+          onOpenContact: (it) => _onOpenContact(context, it),
           onRestored: (it) => cubit.restoreVoicemail(it.id),
           onDeletedPermanently: (it) => _onDeletePermanently(context, it),
           onCall: (it) => cubit.startCall(it),
@@ -207,6 +211,28 @@ class VoicemailListView extends StatelessWidget {
       l10n.voicemail_Snackbar_movedToTrash,
       action: SnackBarAction(label: l10n.voicemail_Label_undo, onPressed: () => cubit.restoreVoicemail(voicemail.id)),
     );
+  }
+
+  /// Opens the card of whoever left the message.
+  ///
+  /// The contact is looked up when it is asked for rather than carried on
+  /// every message: the tile already knows that a contact exists, because it
+  /// is showing that person's name, and what it does not have is the row's id.
+  /// A lookup on an explicit action costs one query; carrying the id would
+  /// cost a column and a mapping on every message ever listed.
+  void _onOpenContact(BuildContext context, Voicemail voicemail) async {
+    final l10n = context.l10n;
+    final contact = await context.read<ContactsRepository>().getContactByPhoneNumber(voicemail.sender);
+    if (!context.mounted) return;
+
+    // The address book can have moved on since the list was drawn - a contact
+    // deleted on another device, a sync that dropped them.
+    if (contact == null) {
+      context.showSnackBar(l10n.voicemail_Snackbar_contactGone);
+      return;
+    }
+
+    context.router.navigate(ContactScreenPageRoute(contactId: contact.id));
   }
 
   /// Passes a message on to a colleague, and says what came of it.
