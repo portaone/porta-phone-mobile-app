@@ -637,6 +637,22 @@ void main() {
       expect(s.mergeableCallIds, ['outside', 'another']);
     });
 
+    test('concerns takes an unnamed room as this one and a named other as somebody else', () {
+      expect(state.conference.concerns(7), isTrue);
+      expect(state.conference.concerns(null), isTrue, reason: 'a failure before the room was named');
+      expect(state.conference.concerns(6), isFalse);
+      const assembling = ConferenceState(phase: ConferencePhase.assembling, legs: {'leg-a': 0});
+      expect(assembling.concerns(6), isTrue, reason: 'no id here yet, so nothing to tell apart');
+    });
+
+    test('mergeableLegs names each asked-for call by its line, and skips the rest', () {
+      final ringing = _makeCall(callId: 'ringing', line: 4, processingStatus: CallProcessingStatus.incomingFromOffer);
+      final another = _makeCall(callId: 'another', line: 6, acceptedTime: DateTime(2024));
+      final s = state.copyWith(activeCalls: [legA, legB, outside, ringing, another]);
+
+      expect(s.mergeableLegs(['outside', 'another', 'ringing', 'leg-a', 'gone']), {'outside': 2, 'another': 6});
+    });
+
     test('canMerge needs the capability, no room yet, and two mergeable calls', () {
       final two = CallState(activeCalls: [legA, legB]);
 
