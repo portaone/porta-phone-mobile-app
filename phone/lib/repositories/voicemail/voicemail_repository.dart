@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:logging/logging.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:app_database/app_database.dart';
 
@@ -91,6 +92,18 @@ abstract class VoicemailRepository implements Refreshable {
   /// This and emptying the trash are the only things that free the space a
   /// message occupies in the mailbox; moving one to the trash does not.
   Future<void> removeVoicemailPermanently(String messageId, {String? localeCode});
+
+  /// Passes a voicemail on to another user of the same backend, and answers
+  /// with the id it now has in the RECIPIENT's list.
+  ///
+  /// Nothing local changes: the copy lands in their mailbox, not this one, and
+  /// the original is untouched. The recipient is not notified either - it shows
+  /// up the next time they look.
+  ///
+  /// [toUserId] is a user id as the contacts endpoint reports it, not a phone
+  /// number; the backend checks it against that endpoint and refuses anything
+  /// it does not know.
+  Future<String> forwardVoicemail(String messageId, {required String toUserId, String? localeCode});
 
   /// Deletes everything in the trash for good.
   ///
@@ -389,6 +402,30 @@ class VoicemailRepositoryImpl
   }
 
   @override
+  Future<String> forwardVoicemail(String messageId, {required String toUserId, String? localeCode}) async {
+    if (_fetching != null) {
+      await _fetching;
+    }
+
+    try {
+      return await _webtritApiClient.forwardUserVoicemail(
+        _token,
+        messageId,
+        toUserId: toUserId,
+        // One key per deliberate forward. The client retries a request that
+        // failed below HTTP, and a forward that timed out may well have been
+        // delivered, so without a key a flaky network turns one message into
+        // several; with it the retry answers with the original result.
+        idempotencyKey: const Uuid().v4(),
+        locale: localeCode,
+      );
+    } on UnauthorizedException catch (e) {
+      _sessionGuard.onUnauthorized(e);
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> emptyVoicemailTrash({String? localeCode}) async {
     if (_fetching != null) {
       await _fetching;
@@ -586,6 +623,9 @@ class EmptyVoicemailRepository implements VoicemailRepository {
 
   @override
   Future<void> emptyVoicemailTrash({String? localeCode}) => Future.value();
+
+  @override
+  Future<String> forwardVoicemail(String messageId, {required String toUserId, String? localeCode}) => Future.value('');
 
   @override
   Stream<int> watchUnreadVoicemailsCount() => Stream.value(0);
