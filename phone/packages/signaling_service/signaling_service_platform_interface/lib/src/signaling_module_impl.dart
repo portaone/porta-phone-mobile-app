@@ -118,6 +118,9 @@ class SignalingModuleImpl implements SignalingModule {
   final _controller = StreamController<SignalingModuleEvent>.broadcast(sync: true);
 
   final _eventBuffer = SignalingEventBuffer();
+
+  @override
+  StateHandshake? get sessionHandshake => _eventBuffer.sessionHandshake;
   final _requestQueue = SignalingRequestQueue();
 
   WebtritSignalingClient? _client;

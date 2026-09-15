@@ -138,9 +138,14 @@ final class HangupStaleConferenceAction extends HandshakeAction {
 /// Processes a [StateHandshake] and returns the list of [HandshakeAction]s the
 /// BLoC should execute.
 ///
-/// Separating the decision logic from execution (signaling calls, callkeep calls,
-/// BLoC event dispatch) keeps this class free of side effects and makes it
-/// straightforward to unit-test with only a mocked [CallkeepConnections].
+/// The plan is a pure function of its inputs - the session's lines as the
+/// signaling module knows them now, the BLoC's calls, and the callkeep
+/// connections the BLoC read for it - and is computed in one synchronous
+/// step. Nothing is awaited in here: the BLoC gathers the callkeep reads
+/// first, then plans and executes in the same turn, so nothing can change
+/// under the plan between deciding and acting on it. What arrives while the
+/// reads are in flight reaches the plan as input (a freed line, a call in
+/// [activeCalls]) instead of being overtaken by it.
 ///
 /// The processor handles two loops from the original [CallBloc._handleHandshakeReceived]:
 ///
@@ -167,25 +172,33 @@ final class HangupStaleConferenceAction extends HandshakeAction {
 ///   adopted or forgotten instead (`docs/conference_protocol.md`, section 7).
 ///
 /// When queued terminations exist in the repository, they are emitted first as
-/// regular [HangupSignalingAction]/[DeclineSignalingAction] entries, removed
-/// from the repository immediately, and excluded from subsequent handshake-line
-/// processing.
+/// regular [HangupSignalingAction]/[DeclineSignalingAction] entries and
+/// excluded from subsequent handshake-line processing. A record stays until
+/// the server confirms the end; one for a call the session no longer carries
+/// is dropped here instead of being sent.
 ///
 /// If a terminal disconnected-state action is produced during line traversal,
 /// the processor exits early to match the original `return` semantics, while
 /// preserving any already-collected queued actions.
 class HandshakeProcessor {
-  HandshakeProcessor({required this.callkeepConnections, required this.queuedTerminationRequestsRepository});
+  HandshakeProcessor({required this.queuedTerminationRequestsRepository});
 
-  final CallkeepConnections callkeepConnections;
   final QueuedTerminationRequestsRepository queuedTerminationRequestsRepository;
 
-  Future<List<HandshakeAction>> process({
+  /// Plans the actions for a handshake.
+  ///
+  /// [connections] is every local callkeep connection ([CallkeepConnections.getConnections])
+  /// and [lineConnections] the connection callkeep reports for a line's
+  /// latest call id ([CallkeepConnections.getConnection]), both read by the
+  /// caller just before this.
+  List<HandshakeAction> process({
     required List<Line?> lines,
     required Line? guestLine,
     required Iterable<ActiveCall> activeCalls,
+    List<CallkeepConnection> connections = const [],
+    Map<String, CallkeepConnection?> lineConnections = const {},
     ConferenceInfo? conference,
-  }) async {
+  }) {
     final actions = <HandshakeAction>[if (conference != null) HangupStaleConferenceAction(room: conference.room)];
     final activeCallIds = activeCalls.map((call) => call.callId).toSet();
     final callIdsAwaitingOffer = activeCalls.where((call) => call.awaitsOffer).map((call) => call.callId).toSet();
@@ -198,13 +211,27 @@ class HandshakeProcessor {
     final queuedTerminationRequests = queuedTerminationRequestsRepository.getAll;
 
     for (final request in queuedTerminationRequests.values) {
+      // A recorded termination is an intent to end the call, kept until the
+      // server confirms it: a hangup for the call, a refusal of the request,
+      // or - decided here - a session that no longer carries the call, in
+      // which case there is nothing left to end. A call ended natively before
+      // its offer arrived was recorded without a line; the session shows
+      // which line carries it now. The record is not consumed by the replay:
+      // it goes with the request through the same lifecycle as an immediate
+      // end, and until it is confirmed the line is not planned as a call.
+      final isGuest = guestLine?.callId == request.callId;
+      final index = lines.indexWhere((line) => line?.callId == request.callId);
+      if (!isGuest && index < 0) {
+        queuedTerminationRequestsRepository.remove(request);
+        continue;
+      }
+      final line = request.line ?? (isGuest ? null : index);
       switch (request.type) {
         case QueuedTerminationRequestType.hangup:
-          actions.add(HangupSignalingAction(line: request.line, callId: request.callId));
+          actions.add(HangupSignalingAction(line: line, callId: request.callId));
         case QueuedTerminationRequestType.decline:
-          actions.add(DeclineSignalingAction(line: request.line, callId: request.callId));
+          actions.add(DeclineSignalingAction(line: line, callId: request.callId));
       }
-      queuedTerminationRequestsRepository.remove(request);
       queuedTerminationCallIds.add(request.callId);
     }
 
@@ -213,7 +240,7 @@ class HandshakeProcessor {
       ...lines,
       guestLine,
     ].whereType<Line>().where((line) => !queuedTerminationCallIds.contains(line.callId)).toList();
-    final localConnections = await callkeepConnections.getConnections();
+    final localConnections = connections;
 
     for (final activeLine in allLines) {
       // callLogs is newest-first: firstOrNull = latest, lastOrNull = earliest.
@@ -232,21 +259,23 @@ class HandshakeProcessor {
           .whereType<MediaStatePeerMessageEvent>()
           .firstOrNull;
 
+      // A call is server-terminated when the latest event is a final hangup or missed.
+      final isTerminated = callEvent is HangupEvent || callEvent is MissedCallEvent;
+
       CallkeepConnection? connection;
       if (callEvent != null) {
-        connection = await callkeepConnections.getConnection(callEvent.callId);
+        connection = lineConnections[callEvent.callId];
 
         if (connection?.state == CallkeepConnectionState.stateDisconnected) {
           if (callEvent is IncomingCallEvent) {
             return [...actions, DeclineSignalingAction(line: callEvent.line, callId: callEvent.callId)];
-          } else if (callEvent is! HangupEvent && callEvent is! MissedCallEvent) {
+          } else if (!isTerminated) {
             return [...actions, HangupSignalingAction(line: callEvent.line, callId: callEvent.callId)];
           }
         } else if (connection == null &&
             !activeCallIds.contains(activeLine.callId) &&
             earliestCallEvent is! IncomingCallEvent &&
-            callEvent is! HangupEvent &&
-            callEvent is! MissedCallEvent &&
+            !isTerminated &&
             acceptedLogEntry == null) {
           // Orphaned outgoing call: the server still has the call but both
           // CallKeep and BLoC have no record of it. This happens when the user
@@ -267,9 +296,6 @@ class HandshakeProcessor {
           return [...actions, HangupSignalingAction(line: callEvent.line, callId: callEvent.callId)];
         }
       }
-
-      // A call is server-terminated when the latest event is a final hangup or missed.
-      final isTerminated = callEvent is HangupEvent || callEvent is MissedCallEvent;
 
       if (!isTerminated &&
           acceptedLogEntry != null &&

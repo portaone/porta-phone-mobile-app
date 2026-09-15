@@ -1,4 +1,6 @@
 import 'models/signaling_module_event.dart';
+import 'package:signaling/signaling.dart';
+
 import 'session_snapshot.dart';
 
 /// What a late subscriber of a [SignalingModuleEvent] stream receives: the
@@ -31,6 +33,11 @@ class SignalingEventBuffer {
 
   /// Whether a call is up on any line of the session, as the snapshot knows it.
   bool get hasActiveCalls => _session?.hasActiveCalls ?? false;
+
+  /// The session as it stands now: the handshake it opened with, kept
+  /// current by every event since - a hangup frees its line, a registration
+  /// event updates the status. `null` before a handshake.
+  StateHandshake? get sessionHandshake => _session?.toHandshake();
 
   /// Records [event] into the buffer according to the contract above.
   void onEvent(SignalingModuleEvent event) {

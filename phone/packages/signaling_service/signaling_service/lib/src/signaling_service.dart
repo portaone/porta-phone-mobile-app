@@ -107,6 +107,9 @@ class WebtritSignalingService implements SignalingModule {
   @override
   bool get isConnected => _isConnected;
 
+  @override
+  StateHandshake? get sessionHandshake => SignalingServicePlatform.instance.sessionHandshake;
+
   /// Starts the signaling service and initiates a WebSocket connection.
   ///
   /// No-op when the service has been disposed ([_isDisposed]), a start is

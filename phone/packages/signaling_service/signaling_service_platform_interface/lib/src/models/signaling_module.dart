@@ -18,6 +18,13 @@ abstract interface class SignalingModule {
   /// Whether the signaling session is currently connected and ready to execute requests.
   bool get isConnected;
 
+  /// The session as the module knows it now: the handshake rendered from
+  /// the session's state after every event received so far, or `null`
+  /// before a handshake. A consumer that plans from a handshake it received
+  /// earlier reads this once it is ready to act, so a call that ended in the
+  /// meantime is already gone from what it plans on.
+  StateHandshake? get sessionHandshake;
+
   /// Sends [request] to the server and returns a [Future] that completes when
   /// the server acknowledges it.
   ///

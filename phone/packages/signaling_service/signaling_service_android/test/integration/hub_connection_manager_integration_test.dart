@@ -23,6 +23,9 @@ import 'package:signaling_service_android/src/fgs/hub_connection_manager.dart';
 // ---------------------------------------------------------------------------
 
 class _FakeSignalingModule implements SignalingModule {
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   final _controller = StreamController<SignalingModuleEvent>.broadcast();
   final List<SignalingModuleEvent> _buffer = [];
   bool _connected = false;

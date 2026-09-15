@@ -14,6 +14,9 @@ import 'package:signaling_service_android/src/fgs/isolate/signaling_foreground_i
 /// Fake [SignalingModule] that tracks [connect] calls and lets tests control
 /// [isConnected] and the event stream directly.
 class _FakeSignalingModule extends Fake implements SignalingModule {
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   final _controller = StreamController<SignalingModuleEvent>.broadcast();
 
   int connectCount = 0;

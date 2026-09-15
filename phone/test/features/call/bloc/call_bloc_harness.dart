@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:signaling/signaling.dart';
+import 'package:signaling_service_platform_interface/signaling_service_platform_interface.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:webtrit_phone/app/notifications/notifications.dart';
 import 'package:webtrit_phone/features/call/call.dart';
@@ -54,7 +55,7 @@ class CallBlocHarness {
       presenceInfoRepository: _FakePresenceInfoRepository(),
       dialogInfoRepository: _FakeDialogInfoRepository(),
       presenceSettingsRepository: _FakePresenceSettingsRepository(),
-      queuedTerminationRequestsRepository: _FakeQueuedTerminationRequestsRepository(),
+      queuedTerminationRequestsRepository: terminationQueue,
       resolveOutgoingFromNumber: (from, _) => from,
       onSessionMissedReported: () async {},
       submitNotification: notifications.add,
@@ -75,6 +76,7 @@ class CallBlocHarness {
   late final CallBloc bloc;
   final FakeSignalingModule signaling = FakeSignalingModule();
   final FakeCallkeep callkeep = FakeCallkeep();
+  final FakeQueuedTerminationRequestsRepository terminationQueue = FakeQueuedTerminationRequestsRepository();
   final RecordingCallErrorReporter errors = RecordingCallErrorReporter();
   final PeerConnectionManager peers = PeerConnectionManager();
 
@@ -136,6 +138,7 @@ class CallBlocHarness {
 /// one is set. Events reach the bloc through [emit].
 class FakeSignalingModule extends Fake implements SignalingModule {
   final _events = StreamController<SignalingModuleEvent>.broadcast();
+  final _session = SignalingEventBuffer();
 
   /// Every request the bloc executed, in order.
   final List<Request> requests = [];
@@ -165,7 +168,7 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   }
 
   /// Delivers [event] to the bloc as if the server sent it.
-  void emit(Event event) => _events.add(SignalingProtocolEvent(event: event));
+  void emit(Event event) => _add(SignalingProtocolEvent(event: event));
 
   /// A hangup cancels the call's pending requests; there is no queue here.
   @override
@@ -175,7 +178,17 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   void clearTerminatingMark(String callId) {}
 
   /// Delivers [handshake] to the bloc as if the session had just (re)connected.
-  void emitHandshake(StateHandshake handshake) => _events.add(SignalingHandshakeReceived(handshake: handshake));
+  void emitHandshake(StateHandshake handshake) => _add(SignalingHandshakeReceived(handshake: handshake));
+
+  void _add(SignalingModuleEvent event) {
+    _session.onEvent(event);
+    _events.add(event);
+  }
+
+  /// The session as a real module keeps it: the handshake folded with every
+  /// event delivered since.
+  @override
+  StateHandshake? get sessionHandshake => _session.sessionHandshake;
 
   Future<void> close() => _events.close();
 }
@@ -269,9 +282,18 @@ class _FakeDialogInfoRepository extends Fake implements DialogInfoRepository {
 
 class _FakePresenceSettingsRepository extends Fake implements PresenceSettingsRepository {}
 
-class _FakeQueuedTerminationRequestsRepository extends Fake implements QueuedTerminationRequestsRepository {
+/// Records the termination requests the bloc queues for a later handshake.
+class FakeQueuedTerminationRequestsRepository extends Fake implements QueuedTerminationRequestsRepository {
+  final Map<String, QueuedTerminationRequest> requests = {};
+
   @override
-  Map<String, QueuedTerminationRequest> get getAll => const {};
+  Map<String, QueuedTerminationRequest> get getAll => Map.unmodifiable(requests);
+
+  @override
+  void put(QueuedTerminationRequest request) => requests[request.callId] = request;
+
+  @override
+  void remove(QueuedTerminationRequest request) => requests.remove(request.callId);
 }
 
 /// No native connections: what the plugin reports on iOS, and on Android

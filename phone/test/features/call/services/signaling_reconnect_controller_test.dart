@@ -13,6 +13,9 @@ import 'package:webtrit_phone/features/call/services/signaling_reconnect_control
 // ---------------------------------------------------------------------------
 
 class _FakeSignalingModule implements SignalingModule {
+  @override
+  StateHandshake? get sessionHandshake => null;
+
   final _controller = StreamController<SignalingModuleEvent>.broadcast(sync: true);
 
   int connectCalls = 0;
