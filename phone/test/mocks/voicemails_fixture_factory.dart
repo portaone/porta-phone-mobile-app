@@ -12,6 +12,8 @@ class VoicemailsFixtureFactory {
     int size = 0,
     String type = '',
     String? attachmentPath,
+    bool? saved,
+    String? forwardedBy,
   }) {
     return VoicemailData(
       id: id,
@@ -23,6 +25,8 @@ class VoicemailsFixtureFactory {
       size: size,
       type: type,
       attachmentPath: attachmentPath,
+      saved: saved,
+      forwardedBy: forwardedBy,
     );
   }
 }

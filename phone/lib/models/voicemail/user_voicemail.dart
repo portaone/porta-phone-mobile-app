@@ -23,6 +23,8 @@ class Voicemail {
     required this.size,
     required this.type,
     required this.url,
+    this.saved,
+    this.forwardedBy,
   });
 
   final String id;
@@ -35,4 +37,18 @@ class Voicemail {
   final int size;
   final String type;
   final String? url;
+
+  /// Whether the user is keeping this message.
+  ///
+  /// Null means the mailbox behind this backend cannot hold the flag at all,
+  /// which is not the same as `false`: the control does not apply, so it is
+  /// hidden rather than offered switched off.
+  final bool? saved;
+
+  /// The id of the colleague who forwarded this message on, null unless it
+  /// arrived that way. [sender] stays the original caller either way.
+  final String? forwardedBy;
+
+  /// Whether this message reached the mailbox by being forwarded.
+  bool get isForwarded => forwardedBy != null;
 }
