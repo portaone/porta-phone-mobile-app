@@ -11,6 +11,7 @@ import 'package:_http_client/_http_client.dart';
 import 'exceptions.dart';
 import 'utils/request_utils.dart';
 import 'api_request_options.dart';
+import 'api_failure_rules.dart';
 import 'api_response_options.dart';
 import 'models/models.dart';
 
@@ -69,8 +70,19 @@ class WebtritApiClient {
   // Endpoint optional in the adapter contract, JSON response.
   static const _optionalEndpoint = ResponseOptions(optionalEndpoint: true);
 
-  // Endpoint optional in the adapter contract, binary response.
-  static const _optionalEndpointBytes = ResponseOptions(responseType: ResponseType.bytes, optionalEndpoint: true);
+  // Two endpoints report a missing account as a bare 404 with no code to read,
+  // and mean the account rather than the thing being fetched.
+  static final _userNotFoundOn404 = ResponseOptions(failures: [userNotFoundOn404Rule]);
+
+  // The voicemail endpoints, which are optional like the rest and are also the
+  // only ones that can report the mailbox as unconfigured.
+  static final _voicemailEndpoint = ResponseOptions(optionalEndpoint: true, failures: [voicemailNotConfiguredRule]);
+
+  static final _voicemailEndpointBytes = ResponseOptions(
+    responseType: ResponseType.bytes,
+    optionalEndpoint: true,
+    failures: [voicemailNotConfiguredRule],
+  );
 
   final Uri tenantUrl;
   final http.Client _httpClient;
@@ -198,52 +210,20 @@ class WebtritApiClient {
                 : responseData;
           }
 
-          // Handle session_missing specifically
-          if (httpResponse.statusCode == 401 && error?.code == 'session_missing') {
-            throw SessionMissingException(
-              url: tenantUrl,
-              requestId: xRequestId,
-              statusCode: httpResponse.statusCode,
-              token: token,
-              error: error,
-            );
-          }
-
-          // Map 401 token_invalid to UnauthorizedException so the existing SessionGuard
-          // chain triggers logout when the server invalidates all tokens (e.g. after restart).
-          if (httpResponse.statusCode == 401 && error?.code == 'token_invalid') {
-            throw UnauthorizedException(
-              url: tenantUrl,
-              requestId: xRequestId,
-              statusCode: httpResponse.statusCode,
-              token: token,
-              error: error,
-            );
-          }
-
-          // Map 422 with code="refresh_token_invalid" to UnauthorizedException.
-          // This ensures higher layers can handle expired/invalid sessions in a unified way
-          // (e.g., trigger global logout or token refresh).
-          if (httpResponse.statusCode == 422 && error?.code == 'refresh_token_invalid') {
-            throw UnauthorizedException(
-              url: tenantUrl,
-              requestId: xRequestId,
-              statusCode: httpResponse.statusCode,
-              token: token,
-              error: error,
-            );
-          }
-
-          // A 404 carrying the user_not_found code is a processed rejection:
-          // the user behind the session no longer exists on the backend.
-          if (httpResponse.statusCode == 404 && error?.code == AccountErrorCode.userNotFound.value) {
-            throw UserNotFoundException(url: tenantUrl, requestId: xRequestId, statusCode: httpResponse.statusCode);
-          }
+          final failure = FailureContext(
+            url: tenantUrl,
+            requestId: xRequestId,
+            statusCode: httpResponse.statusCode,
+            token: token,
+            error: error,
+            rawBody: rawErrorBody,
+          );
 
           // For endpoints declared optional in the adapter contract, "not
           // implemented" is a 501 or a 404 without a backend error code (absent
           // route); a 404 carrying an error code is a domain rejection produced
-          // by a live endpoint.
+          // by a live endpoint. This reads the absence of a code rather than a
+          // code, which is why it is a flag rather than one of the rules below.
           if (responseOptions.optionalEndpoint &&
               (httpResponse.statusCode == 501 || (httpResponse.statusCode == 404 && error?.code == null))) {
             throw EndpointNotSupportedException(
@@ -254,37 +234,15 @@ class WebtritApiClient {
             );
           }
 
-          if (error?.code == 'voicemail_not_configured') {
-            throw VoicemailNotConfiguredException(
-              url: tenantUrl,
-              requestId: xRequestId,
-              statusCode: httpResponse.statusCode,
-              token: token,
-              error: error,
-            );
+          // What this one endpoint knows about first, then what holds for every
+          // call. The order is the point: a rule about one endpoint is declared
+          // on it and wins there, instead of being added to a chain that every
+          // other request also walks.
+          for (final rule in [...responseOptions.failures, ...defaultFailureRules]) {
+            if (rule.matches(failure)) throw rule.build(failure);
           }
 
-          // Map password_change_required (self-care password expired, HTTP 403) to a
-          // dedicated exception so callers can surface the "password expired" message
-          // instead of treating it as a generic, unactionable request failure.
-          if (error?.code == AccountErrorCode.passwordChangeRequired.value) {
-            throw PasswordChangeRequiredException(
-              url: tenantUrl,
-              requestId: xRequestId,
-              statusCode: httpResponse.statusCode,
-              token: token,
-              error: error,
-            );
-          }
-
-          throw RequestFailure(
-            url: tenantUrl,
-            statusCode: httpResponse.statusCode,
-            requestId: xRequestId,
-            token: token,
-            error: error,
-            rawBody: rawErrorBody,
-          );
+          throw failure.unrecognised;
         }
       } catch (e) {
         if (e is! VoicemailNotConfiguredException && e is! EndpointNotSupportedException) {
@@ -431,22 +389,16 @@ class WebtritApiClient {
   }) async {
     final requestJson = sessionOtpCredential.toJson();
 
-    try {
-      final responseJson = await _httpClientExecutePost(
-        [..._apiBasePathSegmentsV1, 'session', 'otp-create'],
-        null,
-        null,
-        requestJson,
-        requestOptions: options,
-      );
+    final responseJson = await _httpClientExecutePost(
+      [..._apiBasePathSegmentsV1, 'session', 'otp-create'],
+      null,
+      null,
+      requestJson,
+      requestOptions: options,
+      responseOptions: _userNotFoundOn404,
+    );
 
-      return SessionOtpProvisional.fromJson(responseJson);
-    } on RequestFailure catch (e) {
-      if (e.statusCode == 404) {
-        throw UserNotFoundException(url: e.url, requestId: e.requestId, statusCode: e.statusCode!);
-      }
-      rethrow;
-    }
+    return SessionOtpProvisional.fromJson(responseJson);
   }
 
   Future<SessionToken> verifySessionOtp(
@@ -505,20 +457,15 @@ class WebtritApiClient {
   }
 
   Future<UserInfo> getUserInfo(String token, {RequestOptions options = const RequestOptions()}) async {
-    try {
-      final responseJson = await _httpClientExecuteGet(
-        [..._apiBasePathSegmentsV1, 'user'],
-        null,
-        token,
-        requestOptions: options,
-      );
-      return UserInfo.fromJson(responseJson);
-    } on RequestFailure catch (e) {
-      if (e.statusCode == 404) {
-        throw UserNotFoundException(url: e.url, requestId: e.requestId, statusCode: e.statusCode!);
-      }
-      rethrow;
-    }
+    final responseJson = await _httpClientExecuteGet(
+      [..._apiBasePathSegmentsV1, 'user'],
+      null,
+      token,
+      requestOptions: options,
+      responseOptions: _userNotFoundOn404,
+    );
+
+    return UserInfo.fromJson(responseJson);
   }
 
   /// Retrieves the deployment's own STUN/TURN configuration.
@@ -741,7 +688,7 @@ class WebtritApiClient {
       token,
       queryParameters: folderValue != null ? {'folder': folderValue} : null,
       requestOptions: options,
-      responseOptions: _optionalEndpoint,
+      responseOptions: _voicemailEndpoint,
     );
 
     return UserVoicemailListResponse.fromJson(responseJson);
@@ -758,7 +705,7 @@ class WebtritApiClient {
       locale != null ? {'Accept-Language': locale} : null,
       token,
       requestOptions: options,
-      responseOptions: _optionalEndpoint,
+      responseOptions: _voicemailEndpoint,
     );
 
     return UserVoicemail.fromJson(responseJson);
@@ -786,7 +733,7 @@ class WebtritApiClient {
       token,
       queryParameters: permanent ? {'permanent': 'true'} : null,
       requestOptions: options,
-      responseOptions: _optionalEndpoint,
+      responseOptions: _voicemailEndpoint,
     );
   }
 
@@ -811,7 +758,7 @@ class WebtritApiClient {
       token,
       null,
       requestOptions: options,
-      responseOptions: _optionalEndpoint,
+      responseOptions: _voicemailEndpoint,
     );
   }
 
@@ -837,7 +784,7 @@ class WebtritApiClient {
       locale != null ? {'Accept-Language': locale} : null,
       token,
       requestOptions: options,
-      responseOptions: _optionalEndpoint,
+      responseOptions: _voicemailEndpoint,
     );
   }
 
@@ -872,7 +819,7 @@ class WebtritApiClient {
       token,
       requestJson,
       requestOptions: options,
-      responseOptions: _optionalEndpoint,
+      responseOptions: _voicemailEndpoint,
     );
   }
 
@@ -889,7 +836,7 @@ class WebtritApiClient {
       token,
       queryParameters: fileFormat != null && fileFormat.isNotEmpty ? {'file_format': fileFormat} : null,
       requestOptions: options,
-      responseOptions: _optionalEndpointBytes,
+      responseOptions: _voicemailEndpointBytes,
     );
 
     return responseJson;
