@@ -150,13 +150,23 @@ class WebtritApiClient {
         // bodies (which the backend serves as JSON) go through jsonDecode.
         final logBody =
             responseOptions.responseType == ResponseType.json ||
-            !(httpResponse.statusCode == 200 || httpResponse.statusCode == 204 || httpResponse.statusCode == 304);
+            !(httpResponse.statusCode == 200 ||
+                httpResponse.statusCode == 201 ||
+                httpResponse.statusCode == 204 ||
+                httpResponse.statusCode == 304);
         _logger.info(
           '${method.toUpperCase()} response with status code: ${httpResponse.statusCode} for requestId: $xRequestId'
           '${logBody ? ', response body: ${httpResponse.body}' : ', response bytes: ${httpResponse.bodyBytes.length}'}',
         );
 
-        if (httpResponse.statusCode == 200 || httpResponse.statusCode == 204 || httpResponse.statusCode == 304) {
+        // 201 belongs here with the rest: it is how a backend says it created
+        // something, and voicemail forwarding is the first call in this client to
+        // be answered that way. Without it a created resource arrives as a
+        // RequestFailure carrying a 2xx, which reads as a server fault.
+        if (httpResponse.statusCode == 200 ||
+            httpResponse.statusCode == 201 ||
+            httpResponse.statusCode == 204 ||
+            httpResponse.statusCode == 304) {
           // Return response in the requested format depending on the response type:
           // - JSON-decoded map for API data responses (a malformed body still
           //   throws FormatException: the endpoint promised JSON and broke it)
