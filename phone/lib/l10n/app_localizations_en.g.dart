@@ -3101,6 +3101,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Selected voicemails will be permanently deleted. Do you want to continue?';
 
   @override
+  String get voicemail_Dialog_deleteSelectedPermanentlyContent =>
+      'The selected messages will be removed from your mailbox and cannot be restored.';
+
+  @override
+  String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count) {
+    return 'Delete $count messages permanently?';
+  }
+
+  @override
   String get voicemail_Dialog_deleteSelectedTitle => 'Delete selected voicemails?';
 
   @override
@@ -3190,6 +3199,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voicemail_Label_restore => 'Restore';
+
+  @override
+  String get voicemail_Label_restoreSelected => 'Restore selected';
 
   @override
   String get voicemail_Label_retry => 'Try again';
