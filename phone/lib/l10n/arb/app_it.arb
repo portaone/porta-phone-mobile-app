@@ -2632,6 +2632,19 @@
   "@voicemail_Dialog_deletePermanentlyTitle": {},
   "voicemail_Dialog_deleteSelectedContent": "I messaggi vocali selezionati verranno eliminati definitivamente. Vuoi continuare?",
   "@voicemail_Dialog_deleteSelectedContent": {},
+  "voicemail_Dialog_deleteSelectedPermanentlyContent": "I messaggi selezionati saranno rimossi dalla casella e non potranno essere ripristinati.",
+  "@voicemail_Dialog_deleteSelectedPermanentlyContent": {
+    "description": "Warns that deleting the picked voicemails for good cannot be undone."
+  },
+  "voicemail_Dialog_deleteSelectedPermanentlyTitle": "{count, plural, one{Eliminare il messaggio definitivamente?} other{Eliminare {count} messaggi definitivamente?}}",
+  "@voicemail_Dialog_deleteSelectedPermanentlyTitle": {
+    "description": "Asks before deleting the picked voicemails for good.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "voicemail_Dialog_deleteSelectedTitle": "Eliminare i messaggi vocali selezionati?",
   "@voicemail_Dialog_deleteSelectedTitle": {},
   "voicemail_Dialog_deleteSingleContent": "Questo messaggio vocale verrà eliminato definitivamente. Vuoi continuare?",
@@ -2731,6 +2744,10 @@
   "voicemail_Label_restore": "Ripristina",
   "@voicemail_Label_restore": {
     "description": "Menu action that puts a trashed voicemail back in the mailbox."
+  },
+  "voicemail_Label_restoreSelected": "Ripristina selezionati",
+  "@voicemail_Label_restoreSelected": {
+    "description": "Toolbar action that puts the picked trashed voicemails back."
   },
   "voicemail_Label_retry": "Riprova",
   "@voicemail_Label_retry": {},

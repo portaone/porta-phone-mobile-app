@@ -29,6 +29,7 @@ class VoicemailScreen extends StatelessWidget {
               tooltip: context.l10n.cacheManagement_Widget_screenTitle,
               onPressed: () => _onOpenCacheManagement(context),
             ),
+          const VoicemailRestoreAction(),
           const VoicemailDeleteAction(offersDeleteAll: true),
         ],
         bottom: const VoicemailFilterRow(),

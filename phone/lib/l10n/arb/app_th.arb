@@ -2635,6 +2635,19 @@
   "@voicemail_Dialog_deletePermanentlyTitle": {},
   "voicemail_Dialog_deleteSelectedContent": "ข้อความเสียงที่เลือกจะถูกลบอย่างถาวร คุณต้องการดำเนินการต่อหรือไม่?",
   "@voicemail_Dialog_deleteSelectedContent": {},
+  "voicemail_Dialog_deleteSelectedPermanentlyContent": "ข้อความที่เลือกจะถูกลบออกจากกล่องข้อความและไม่สามารถกู้คืนได้",
+  "@voicemail_Dialog_deleteSelectedPermanentlyContent": {
+    "description": "Warns that deleting the picked voicemails for good cannot be undone."
+  },
+  "voicemail_Dialog_deleteSelectedPermanentlyTitle": "ลบข้อความ {count} รายการถาวรหรือไม่",
+  "@voicemail_Dialog_deleteSelectedPermanentlyTitle": {
+    "description": "Asks before deleting the picked voicemails for good.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "voicemail_Dialog_deleteSelectedTitle": "ลบข้อความเสียงที่เลือกหรือไม่?",
   "@voicemail_Dialog_deleteSelectedTitle": {},
   "voicemail_Dialog_deleteSingleContent": "ข้อความเสียงนี้จะถูกลบอย่างถาวร คุณต้องการดำเนินการต่อหรือไม่?",
@@ -2734,6 +2747,10 @@
   "voicemail_Label_restore": "กู้คืน",
   "@voicemail_Label_restore": {
     "description": "Menu action that puts a trashed voicemail back in the mailbox."
+  },
+  "voicemail_Label_restoreSelected": "กู้คืนรายการที่เลือก",
+  "@voicemail_Label_restoreSelected": {
+    "description": "Toolbar action that puts the picked trashed voicemails back."
   },
   "voicemail_Label_retry": "ลองอีกครั้ง",
   "@voicemail_Label_retry": {},
