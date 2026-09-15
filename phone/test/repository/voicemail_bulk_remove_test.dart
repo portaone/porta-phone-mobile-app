@@ -59,6 +59,7 @@ void main() {
       () => client.deleteUserVoicemail(
         any(),
         any(),
+        permanent: any(named: 'permanent'),
         locale: any(named: 'locale'),
         options: any(named: 'options'),
       ),
@@ -73,6 +74,15 @@ void main() {
 
   api.UnauthorizedException unauthorized() =>
       api.UnauthorizedException(url: Uri(), requestId: 'request', statusCode: 401);
+
+  test('a delete is permanent while the app has no trash controls', () async {
+    await insert(['1']);
+    deleteAnswers({});
+
+    await repository.removeVoicemail('1');
+
+    verify(() => client.deleteUserVoicemail('token', '1', permanent: true, options: any(named: 'options'))).called(1);
+  });
 
   group('removeMultipleVoicemails', () {
     test('deletes locally what the server deleted', () async {
@@ -92,7 +102,14 @@ void main() {
       await expectLater(repository.removeMultipleVoicemails(['1', '2', '3']), throwsA(same(error)));
 
       expect(await storedIds(), ['2']);
-      verify(() => client.deleteUserVoicemail('token', '3', options: any(named: 'options'))).called(1);
+      verify(
+        () => client.deleteUserVoicemail(
+          'token',
+          '3',
+          permanent: any(named: 'permanent'),
+          options: any(named: 'options'),
+        ),
+      ).called(1);
       expect(guard.errors, isEmpty);
     });
 
@@ -115,7 +132,14 @@ void main() {
       await expectLater(repository.removeMultipleVoicemails(['1', '2', '3']), throwsA(same(error)));
 
       expect(await storedIds(), ['2', '3']);
-      verifyNever(() => client.deleteUserVoicemail('token', '3', options: any(named: 'options')));
+      verifyNever(
+        () => client.deleteUserVoicemail(
+          'token',
+          '3',
+          permanent: any(named: 'permanent'),
+          options: any(named: 'options'),
+        ),
+      );
     });
 
     test('voicemail being switched off stops the loop', () async {
@@ -126,7 +150,14 @@ void main() {
       await expectLater(repository.removeMultipleVoicemails(['1', '2', '3']), throwsA(same(error)));
 
       expect(await storedIds(), ['2', '3']);
-      verifyNever(() => client.deleteUserVoicemail('token', '3', options: any(named: 'options')));
+      verifyNever(
+        () => client.deleteUserVoicemail(
+          'token',
+          '3',
+          permanent: any(named: 'permanent'),
+          options: any(named: 'options'),
+        ),
+      );
     });
 
     test('a request that never reached the server stops the loop', () async {
@@ -137,7 +168,14 @@ void main() {
       await expectLater(repository.removeMultipleVoicemails(['1', '2', '3']), throwsA(same(error)));
 
       expect(await storedIds(), ['2', '3']);
-      verifyNever(() => client.deleteUserVoicemail('token', '3', options: any(named: 'options')));
+      verifyNever(
+        () => client.deleteUserVoicemail(
+          'token',
+          '3',
+          permanent: any(named: 'permanent'),
+          options: any(named: 'options'),
+        ),
+      );
     });
 
     test('a 401 stops the loop, reaches the session guard and is rethrown', () async {
@@ -148,7 +186,14 @@ void main() {
       await expectLater(repository.removeMultipleVoicemails(['1', '2', '3']), throwsA(same(error)));
 
       expect(await storedIds(), ['2', '3']);
-      verifyNever(() => client.deleteUserVoicemail('token', '3', options: any(named: 'options')));
+      verifyNever(
+        () => client.deleteUserVoicemail(
+          'token',
+          '3',
+          permanent: any(named: 'permanent'),
+          options: any(named: 'options'),
+        ),
+      );
       expect(guard.errors, [same(error)]);
     });
   });
