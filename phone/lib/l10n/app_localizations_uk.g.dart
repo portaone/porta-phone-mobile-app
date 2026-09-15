@@ -298,6 +298,24 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_CallList_outgoing => 'Вихідний';
 
   @override
+  String get conferenceRefusal_conferenceDisabled => 'Конференції недоступні для цього облікового запису';
+
+  @override
+  String get conferenceRefusal_conferenceAlreadyActive => 'Конференція вже триває';
+
+  @override
+  String get conferenceRefusal_lineAlreadyInConference => 'Цей дзвінок уже в конференції';
+
+  @override
+  String get conferenceRefusal_callsAreGone => 'Ці дзвінки вже не можна обʼєднати';
+
+  @override
+  String get conferenceRefusal_lineNotReady => 'Цей учасник ще приєднується';
+
+  @override
+  String get conferenceRefusal_unavailable => 'Не вдалося обʼєднати дзвінки';
+
+  @override
   String call_CallList_header(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1678,6 +1696,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Налаштування';
+
+  @override
+  String get notifications_messageSnackBar_conferenceFailed => 'Не вдалося створити конференцію';
+
+  @override
+  String get notifications_messageSnackBar_conferenceVideoLeg => 'Відеодзвінок не може приєднатися до конференції';
+
+  @override
+  String get notifications_messageSnackBar_conferenceEnded => 'Конференцію завершено, дзвінки тривають';
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>
