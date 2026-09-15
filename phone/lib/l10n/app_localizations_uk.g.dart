@@ -3218,6 +3218,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Label_forwardChoosing => 'Виберіть, кому переслати';
 
   @override
+  String voicemail_Label_forwardedBy(String name) {
+    return 'Переслав(-ла) $name';
+  }
+
+  @override
   String get voicemail_Label_markAsHeard => 'Позначити як прослухане';
 
   @override

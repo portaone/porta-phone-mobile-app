@@ -18,7 +18,7 @@ import '../../helpers/helpers.dart';
 class _MockPlaybackController extends Mock implements VoicemailPlaybackController {}
 
 void main() {
-  Voicemail message({bool? saved}) => Voicemail(
+  Voicemail message({bool? saved, String? forwardedBy}) => Voicemail(
     id: 'vm-1',
     date: '2026-08-12T08:17:00Z',
     duration: 4.2,
@@ -30,6 +30,7 @@ void main() {
     type: 'voice',
     url: 'https://example.test/vm-1.mp3',
     saved: saved,
+    forwardedBy: forwardedBy,
   );
 
   late _MockPlaybackController controller;
@@ -50,6 +51,7 @@ void main() {
     bool trashSupported = false,
     bool forwardSupported = false,
     bool inTrash = false,
+    String? forwardedByName,
     void Function(Voicemail)? onToggleSavedStatus,
     void Function(Voicemail)? onForwarded,
     void Function(Voicemail)? onRestored,
@@ -86,6 +88,7 @@ void main() {
               trashSupported: trashSupported,
               forwardSupported: forwardSupported,
               inTrash: inTrash,
+              forwardedByName: forwardedByName,
               onCall: (_) {},
               onDeleted: (_) {},
               onToggleSeenStatus: (_) {},
@@ -312,6 +315,28 @@ void main() {
       await openMenu(tester);
 
       expect(find.text('Forward'), findsNothing);
+    });
+  });
+
+  group('a message that was forwarded on', () {
+    testWidgets('says who passed it along, without displacing the caller', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          voicemail: message(forwardedBy: 'user-7'),
+          forwardedByName: 'Iryna Shevchuk',
+        ),
+      );
+
+      // Both names are on the tile and they answer different questions: who
+      // called, and how the recording reached this mailbox.
+      expect(find.text('User 555002'), findsOneWidget);
+      expect(find.text('Forwarded by Iryna Shevchuk'), findsOneWidget);
+    });
+
+    testWidgets('an ordinary message says nothing of the kind', (tester) async {
+      await tester.pumpWidget(wrap());
+
+      expect(find.textContaining('Forwarded by'), findsNothing);
     });
   });
 }
