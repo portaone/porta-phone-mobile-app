@@ -259,6 +259,99 @@
   "@conferenceRefusal_unavailable": {
     "description": "Shown when a merge is refused for a reason the user can do nothing about."
   },
+  "call_CallList_add": "Додати",
+  "@call_CallList_add": {
+    "description": "Label of the button above the calls standing outside a conference that brings them into it."
+  },
+  "call_SemanticsLabel_add": "Додати дзвінки до конференції",
+  "@call_SemanticsLabel_add": {
+    "description": "Accessibility name of the button that brings the calls outside a conference into it."
+  },
+  "call_CallList_outsideHeader": "{count, plural, one{{count} дзвінок поза конференцією} few{{count} дзвінки поза конференцією} other{{count} дзвінків поза конференцією}}",
+  "@call_CallList_outsideHeader": {
+    "description": "Header above the calls that are up while a conference is running but are not part of it.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferencePanel_header": "{count, plural, one{Конференція - {count} учасник} few{Конференція - {count} учасники} other{Конференція - {count} учасників}}",
+  "@call_ConferencePanel_header": {
+    "description": "Header above the conference panel on the call screen; the count is the number of participants, the host not included.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferencePanel_you": "Ви",
+  "@call_ConferencePanel_you": {
+    "description": "Name of the host's own row in the conference panel."
+  },
+  "call_ConferencePanel_hostStatus": "Ведучий",
+  "@call_ConferencePanel_hostStatus": {
+    "description": "Status line of the host's own row in the conference panel."
+  },
+  "call_ConferencePanel_participantStatus": "У конференції",
+  "@call_ConferencePanel_participantStatus": {
+    "description": "Status line of a participant row in the conference panel."
+  },
+  "call_ConferencePanel_participantMuted": "Заглушений для всіх",
+  "@call_ConferencePanel_participantMuted": {
+    "description": "Status line of a participant the host muted for everyone in the room."
+  },
+  "call_ConferencePanel_end": "Завершити",
+  "@call_ConferencePanel_end": {
+    "description": "Label of the button that ends the conference and every call in it."
+  },
+  "call_SemanticsLabel_conferenceSelfMute": "Вимкнути ваш мікрофон",
+  "@call_SemanticsLabel_conferenceSelfMute": {
+    "description": "Accessibility name of the control that mutes the host's microphone towards the conference."
+  },
+  "call_SemanticsLabel_conferenceSelfUnmute": "Увімкнути ваш мікрофон",
+  "@call_SemanticsLabel_conferenceSelfUnmute": {
+    "description": "Accessibility name of the control that unmutes the host's microphone towards the conference."
+  },
+  "call_SemanticsLabel_conferenceParticipantMute": "Заглушити {name} для всіх",
+  "@call_SemanticsLabel_conferenceParticipantMute": {
+    "description": "Accessibility name of the control that mutes one conference participant for everyone; the name identifies which participant.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_SemanticsLabel_conferenceParticipantUnmute": "Увімкнути звук {name} для всіх",
+  "@call_SemanticsLabel_conferenceParticipantUnmute": {
+    "description": "Accessibility name of the control that unmutes one conference participant for everyone; the name identifies which participant.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_SemanticsLabel_conferenceParticipantHangup": "Завершити дзвінок з {name}",
+  "@call_SemanticsLabel_conferenceParticipantHangup": {
+    "description": "Accessibility name of the control that ends one conference participant's call; the name identifies which participant.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_SemanticsLabel_conferenceEnd": "Завершити конференцію і всі дзвінки в ній",
+  "@call_SemanticsLabel_conferenceEnd": {
+    "description": "Accessibility name of the control that ends the conference and every call in it."
+  },
+  "call_CallList_merge": "Обʼєднати",
+  "@call_CallList_merge": {
+    "description": "Label of the button above the call list that merges the calls into a conference."
+  },
+  "call_SemanticsLabel_merge": "Обʼєднати дзвінки в конференцію",
+  "@call_SemanticsLabel_merge": {
+    "description": "Accessibility name of the button that merges the calls into a conference."
+  },
   "call_CallList_header": "{count, plural, one{{count} дзвінок - торкніться, щоб вибрати} few{{count} дзвінки - торкніться, щоб вибрати} many{{count} дзвінків - торкніться, щоб вибрати} other{{count} дзвінка - торкніться, щоб вибрати}}",
   "@call_CallList_header": {
     "description": "Header above the call list on the call screen when more than one call is in progress.",
