@@ -31,9 +31,12 @@ abstract class VoicemailRepository implements Refreshable {
   /// Throws an error if the deletion fails on the remote server.
   Future<void> removeVoicemail(String messageId, {String? localeCode});
 
-  /// Removes all voicemails from both the remote server and the local database.
+  /// Removes every voicemail in the local database from the remote server and,
+  /// as each remote deletion succeeds, from the local database.
   ///
-  /// Any errors that occur during remote deletions are logged but do not interrupt the process.
+  /// Same contract as [removeMultipleVoicemails]: a message the server rejects
+  /// stays, the rest go, and the first rejection is rethrown at the end, while
+  /// a failure that is not about one message stops the loop at once.
   Future<void> removeAllVoicemails();
 
   /// Updates the seen status of the voicemail with the given [messageId].
@@ -53,6 +56,17 @@ abstract class VoicemailRepository implements Refreshable {
   /// If the repository is disabled, an empty stream is returned.
   Stream<List<Voicemail>> watchVoicemails();
 
+  /// Removes the voicemails with the given [messagesIds], each from the remote
+  /// server first and from the local database only once the server confirmed.
+  ///
+  /// The loop is resumable over messages the server itself rejected: such a
+  /// message keeps its local row and the loop carries on, so a retry repeats
+  /// only what is left, and the first rejection is rethrown once the loop is
+  /// done so that a caller learns the list is not what it asked for.
+  ///
+  /// Anything that is not the server deciding about one message ends the loop
+  /// at once - a dead session, voicemail switched off, a request that never
+  /// arrived - because it will hold for every message left.
   Future<void> removeMultipleVoicemails(List<String> messagesIds);
 
   /// Returns `false` once the server has responded with [VoicemailNotConfiguredException]
@@ -208,19 +222,6 @@ class VoicemailRepositoryImpl
     }
   }
 
-  /// Removes all voicemails from both the remote server and the local database.
-  ///
-  /// If a [fetchVoicemails] operation is currently in progress, this method waits for it
-  /// to complete before proceeding to avoid inconsistencies during concurrent data sync.
-  ///
-  /// For each voicemail:
-  /// - Attempts to delete it remotely via [removeVoicemail].
-  /// - Logs a warning if the remote deletion fails.
-  ///
-  /// After attempting remote deletions, forcibly clears all local voicemail records
-  /// regardless of remote operation results.
-  ///
-  /// This approach guarantees that local state is reset even if remote sync is partially successful.
   @override
   Future<void> removeAllVoicemails() async {
     if (_fetching != null) {
@@ -228,16 +229,7 @@ class VoicemailRepositoryImpl
     }
 
     final allVoicemails = await _appDatabase.voicemailDao.getAllVoicemails();
-
-    for (final voicemail in allVoicemails) {
-      try {
-        await removeVoicemail(voicemail.id);
-        await _appDatabase.voicemailDao.deleteVoicemailById(voicemail.id);
-      } catch (e, st) {
-        _logger.warning('Failed to remove voicemail with id ${voicemail.id}', e, st);
-        rethrow;
-      }
-    }
+    await _removeEach(allVoicemails.map((voicemail) => voicemail.id));
   }
 
   /// Updates the `seen` status of a voicemail, ensuring consistency with any ongoing fetch operation.
@@ -247,9 +239,18 @@ class VoicemailRepositoryImpl
   /// between reading/updating local voicemail state during synchronization.
   ///
   /// The update is applied optimistically to the local database first, and then propagated
-  /// to the remote server. If the remote update fails, the local change is reverted to preserve integrity.
+  /// to the remote server. If the remote update fails, the local change is reverted to the
+  /// value the message had before the call, and the failure is rethrown.
   ///
-  /// Throws an error if the remote update fails after the optimistic local update.
+  /// The remote call is awaited, and sent without retries: the revert is only possible
+  /// while its outcome is still known here, and a caller that reports the failure needs it
+  /// to arrive as the result of this future rather than as an unhandled error somewhere
+  /// later.
+  ///
+  /// The revert restores the value read before the optimistic write. A refresh that lands
+  /// inside that window can write the mailbox's own value and have it undone; the flag is
+  /// a boolean, so there is nothing in the row itself to tell the two writers apart, and
+  /// the next refresh settles it.
   ///
   /// [messageId] – the ID of the voicemail to update.
   /// [seen] – the new seen status to apply.
@@ -260,19 +261,31 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    final previous = await _appDatabase.voicemailDao.getVoicemailById((messageId));
+    final previous = await _appDatabase.voicemailDao.getVoicemailById(messageId);
     if (previous == null) return;
 
-    final previousVoicemail = VoicemailDataCompanion(id: Value(previous.id), seen: Value(seen));
-    await _appDatabase.voicemailDao.updateVoicemail(previousVoicemail);
+    final before = VoicemailDataCompanion(id: Value(previous.id), seen: Value(previous.seen));
+    final after = VoicemailDataCompanion(id: Value(previous.id), seen: Value(seen));
+    await _appDatabase.voicemailDao.updateVoicemail(after);
 
     try {
-      unawaited(_webtritApiClient.updateUserVoicemail(_token, messageId, seen: seen, locale: localeCode));
+      await _webtritApiClient.updateUserVoicemail(
+        _token,
+        messageId,
+        seen: seen,
+        locale: localeCode,
+        // Same policy as the delete beside it: someone is waiting on the screen
+        // for this flag to settle, and the default three retries a second apart
+        // would hold the tile in its optimistic state for most of half a minute
+        // before admitting the mailbox never took the change.
+        options: RequestOptions.withNoRetries(),
+      );
     } on UnauthorizedException catch (e) {
+      await _appDatabase.voicemailDao.updateVoicemail(before);
       _sessionGuard.onUnauthorized(e);
       rethrow;
     } catch (e) {
-      await _appDatabase.voicemailDao.updateVoicemail(previousVoicemail);
+      await _appDatabase.voicemailDao.updateVoicemail(before);
       rethrow;
     }
   }
@@ -324,16 +337,55 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    for (final messageId in messagesIds) {
+    await _removeEach(messagesIds);
+  }
+
+  /// Removes [messageIds] one by one through [removeVoicemail], which deletes
+  /// the local row itself once the server has confirmed.
+  ///
+  /// A message the server rejected is logged and skipped so that the rest still
+  /// go, and the first rejection is kept and rethrown once the loop is done.
+  /// Anything else is rethrown where it happened: see [_isMessageRejection].
+  Future<void> _removeEach(Iterable<String> messageIds) async {
+    Object? firstRejection;
+    StackTrace? firstStack;
+
+    for (final messageId in messageIds) {
       try {
         await removeVoicemail(messageId);
-        await _appDatabase.voicemailDao.deleteVoicemailById(messageId);
       } catch (e, st) {
-        _logger.warning('Failed to remove voicemail with id $messageId', e, st);
-        rethrow;
+        if (!_isMessageRejection(e)) rethrow;
+
+        _logger.warning('Voicemail $messageId was not removed', e, st);
+        firstRejection ??= e;
+        firstStack ??= st;
       }
     }
+
+    if (firstRejection != null) {
+      Error.throwWithStackTrace(firstRejection, firstStack!);
+    }
   }
+
+  /// Whether [error] is the server rejecting this one message, rather than a
+  /// condition that will hold for every message left in the loop.
+  ///
+  /// Only a rejection is worth skipping over. Everything else - an expired
+  /// session, an account that is gone, voicemail switched off, an endpoint this
+  /// deployment does not serve - fails identically for every message, so
+  /// carrying on would spend one doomed request per message and report the
+  /// last message's problem instead of the real one. A mailbox of a hundred
+  /// messages makes that minutes of waiting.
+  ///
+  /// The test is deliberately narrow: the client raises a [RequestFailure]
+  /// subclass of its own for every condition it recognises, and none of those
+  /// are about a single message, so what counts as a rejection is a plain
+  /// [RequestFailure] carrying the status the server answered with. A request
+  /// that never arrived - a timeout, a dead socket - is not a [RequestFailure]
+  /// at all, and an exception the client learns to map later will stop the loop
+  /// rather than be mistaken for one message's problem.
+  static bool _isMessageRejection(Object error) =>
+      error is RequestFailure && error.runtimeType == RequestFailure && error.statusCode != null;
 }
 
 /// A no-op implementation of [VoicemailRepository] used when voicemail functionality

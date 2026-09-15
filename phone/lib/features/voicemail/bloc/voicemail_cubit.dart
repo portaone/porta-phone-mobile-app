@@ -38,7 +38,19 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   void _initialize() async {
     _subscription = _repository.watchVoicemails().listen((items) {
       if (state.isFeatureNotSupported) return;
-      _safeEmit(state.copyWith(items: items, error: null, status: VoicemailStatus.loaded));
+      // A selection only means something for messages still in the list: once a
+      // selected message is deleted, its id must leave the set too, or the app
+      // bar stays in selection mode, counting messages nobody can see.
+      final ids = items.map((item) => item.id).toSet();
+      final selectedVoicemailsIds = state.selectedVoicemailsIds.where(ids.contains).toList();
+      _safeEmit(
+        state.copyWith(
+          items: items,
+          selectedVoicemailsIds: selectedVoicemailsIds,
+          error: null,
+          status: VoicemailStatus.loaded,
+        ),
+      );
     });
 
     if (!_repository.isFeatureSupported) {
@@ -118,7 +130,9 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     onCallStarted(voicemail.sender);
   }
 
-  void saveSelectedVoicemail(Voicemail voicemail) {
+  /// Adds [voicemail] to the multi-select set, or removes it when it is
+  /// already there. Selection only: nothing is sent to the server.
+  void toggleSelection(Voicemail voicemail) {
     final selectedVoicemailsIds = List.of(state.selectedVoicemailsIds);
 
     if (selectedVoicemailsIds.contains(voicemail.id)) {

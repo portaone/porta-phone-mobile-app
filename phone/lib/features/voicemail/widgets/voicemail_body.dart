@@ -109,8 +109,8 @@ class VoicemailListView extends StatelessWidget {
           onDeleted: (it) => _onDeleteVoicemail(context, it),
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
           onCall: (it) => cubit.startCall(it),
-          onLongPress: (it) => cubit.saveSelectedVoicemail(it),
-          onTap: isMultipleVoicemailsSelection ? (it) => cubit.saveSelectedVoicemail(it) : null,
+          onLongPress: (it) => cubit.toggleSelection(it),
+          onTap: isMultipleVoicemailsSelection ? (it) => cubit.toggleSelection(it) : null,
         );
       },
     );
