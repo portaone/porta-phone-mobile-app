@@ -150,3 +150,45 @@ final FailureRule userNotFoundOn404Rule = FailureRule(
   status: 404,
   build: (f) => UserNotFoundException(url: f.url, requestId: f.requestId, statusCode: f.statusCode),
 );
+
+/// The three refusals that belong to forwarding a voicemail on.
+///
+/// Forwarding is the one call that writes into another subscriber's storage, so
+/// it is the one with refusals of its own, and each asks something different of
+/// the person: pick someone else, this recording cannot travel, or wait for that
+/// colleague to clear space. The codes are declared here rather than globally
+/// because they mean this only on this route - a generic-sounding
+/// `attachment_too_large` from any other endpoint that grew an attachment would
+/// otherwise start arriving as a forwarding error.
+final List<FailureRule> voicemailForwardRules = [
+  FailureRule(
+    code: 'recipient_not_found',
+    build: (f) => VoicemailForwardRecipientNotFoundException(
+      url: f.url,
+      requestId: f.requestId,
+      statusCode: f.statusCode,
+      token: f.token,
+      error: f.error,
+    ),
+  ),
+  FailureRule(
+    code: 'attachment_too_large',
+    build: (f) => VoicemailForwardAttachmentTooLargeException(
+      url: f.url,
+      requestId: f.requestId,
+      statusCode: f.statusCode,
+      token: f.token,
+      error: f.error,
+    ),
+  ),
+  FailureRule(
+    code: 'recipient_forward_limit_reached',
+    build: (f) => VoicemailForwardLimitReachedException(
+      url: f.url,
+      requestId: f.requestId,
+      statusCode: f.statusCode,
+      token: f.token,
+      error: f.error,
+    ),
+  ),
+];
