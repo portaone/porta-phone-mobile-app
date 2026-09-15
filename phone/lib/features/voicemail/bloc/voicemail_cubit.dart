@@ -22,12 +22,14 @@ final _logger = Logger('VoicemailCubit');
 class VoicemailCubit extends Cubit<VoicemailState> {
   VoicemailCubit({
     required VoicemailRepository repository,
+    required ContactsRepository contactsRepository,
     required this.onCallStarted,
     required this.onSubmitNotification,
     required bool saveSupported,
     required bool trashSupported,
     required bool forwardSupported,
   }) : _repository = repository,
+       _contactsRepository = contactsRepository,
        super(
          VoicemailState(
            forwardSupported: forwardSupported,
@@ -43,6 +45,10 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   }
 
   final VoicemailRepository _repository;
+
+  /// Only for resolving who a message came from into a card that can be
+  /// opened. The mailbox itself knows nothing about the address book.
+  final ContactsRepository _contactsRepository;
   final ValueChanged<String> onCallStarted;
   final ValueChanged<Notification> onSubmitNotification;
 
@@ -221,6 +227,16 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   /// Answers whether the server took it. The caller needs to know because a
   /// move to the trash is offered back afterwards, and offering to undo
   /// something that never happened is worse than saying nothing.
+  /// The card of whoever left [voicemail], or null when the address book no
+  /// longer knows them.
+  ///
+  /// Looked up when it is asked for rather than carried on every message: the
+  /// tile already knows a contact exists, because it is showing that person's
+  /// name, and what it does not have is the row's id. One query on a
+  /// deliberate tap against a column and a mapping on every message ever
+  /// listed.
+  Future<Contact?> callerOf(Voicemail voicemail) => _contactsRepository.getContactByPhoneNumber(voicemail.sender);
+
   Future<bool> removeVoicemail(String messageId) async {
     try {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));

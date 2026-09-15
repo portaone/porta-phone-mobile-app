@@ -3247,6 +3247,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Label_moveToTrash => 'Перемістити в кошик';
 
   @override
+  String get voicemail_Label_openContact => 'Відкрити контакт';
+
+  @override
   String get voicemail_Label_playbackError => 'Помилка відтворення';
 
   @override
@@ -3333,6 +3336,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String voicemail_Snackbar_forwarded(String name) {
     return 'Переслано: $name';
   }
+
+  @override
+  String get voicemail_Snackbar_contactGone => 'Цього контакту вже немає у вашій адресній книзі';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Зверніться до адміністратора, щоб активувати голосову пошту.';
