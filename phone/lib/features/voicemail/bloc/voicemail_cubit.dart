@@ -118,7 +118,9 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     onCallStarted(voicemail.sender);
   }
 
-  void saveSelectedVoicemail(Voicemail voicemail) {
+  /// Adds [voicemail] to the multi-select set, or removes it when it is
+  /// already there. Selection only: nothing is sent to the server.
+  void toggleSelection(Voicemail voicemail) {
     final selectedVoicemailsIds = List.of(state.selectedVoicemailsIds);
 
     if (selectedVoicemailsIds.contains(voicemail.id)) {
