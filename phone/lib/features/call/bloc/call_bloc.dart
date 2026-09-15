@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
@@ -27,6 +28,7 @@ import 'package:webtrit_phone/services/services.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 import 'package:signaling_service/signaling_service.dart';
 
+import '../conference/conference.dart';
 import '../extensions/extensions.dart';
 import '../models/models.dart';
 import '../services/services.dart';
@@ -107,6 +109,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// request, so [_sendMediaState] is suppressed unless it does), and the
   /// capabilities the UI reads. The same value the call screen gets.
   final CallCapabilitiesConfig capabilities;
+
+  /// How long a merge may wait for the room's offer before this client gives
+  /// the calls back; see [_armConferenceAssembly]. Longer than the server's
+  /// own deadline, so its word wins whenever the socket is alive.
+  final Duration conferenceAssemblyTimeout;
+
   final VoidCallback? onCallEnded;
   final OnDiagnosticReportRequested onDiagnosticReportRequested;
 
@@ -146,6 +154,16 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   late final CallPeerConnectionManager _callPeerConnectionManager;
   late final HandshakeProcessor _handshakeProcessor;
 
+  /// The host's connection to the conference room's mixer; idle without a room.
+  late final ConferencePeerConnection _conferencePeerConnection;
+
+  /// Runs while a merge waits for the room's offer; see [_armConferenceAssembly].
+  Timer? _conferenceAssemblyTimer;
+
+  /// Per call, the mute commands this client has sent the platform and has not
+  /// seen reported back, oldest first; see [_consumeAwaitedLegMute].
+  final Map<String, Queue<bool>> _awaitedLegMute = {};
+
   final ConnectivityService _connectivityService;
 
   CallBloc({
@@ -178,6 +196,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     required ConnectivityService connectivityService,
     this.onCallEnded,
     Stream<void>? foregroundCallPushSignal,
+    this.conferenceAssemblyTimeout = const Duration(seconds: 20),
   }) : _onMissedCall = onMissedCall,
        _connectivityService = connectivityService,
        super(const CallState()) {
@@ -185,6 +204,19 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _signalingModule = signalingModule;
     _callPeerConnectionManager = callPeerConnectionManager;
     _handshakeProcessor = HandshakeProcessor(queuedTerminationRequestsRepository: queuedTerminationRequestsRepository);
+    _conferencePeerConnection = ConferencePeerConnection(
+      factory: callPeerConnectionManager.factory,
+      userMediaBuilder: userMediaBuilder,
+      // The room's connection outlives close(): it is torn down after the bloc has
+      // stopped taking events, and a candidate gathered in between has
+      // nowhere to go.
+      onLocalCandidate: (candidate) {
+        if (!isClosed) add(_CallMutationEvent.conferenceLocalCandidate(candidate));
+      },
+      onConnectionLost: () {
+        if (!isClosed) add(const _CallMutationEvent.conferenceLost());
+      },
+    );
 
     _reconnectController = SignalingReconnectController(
       signalingModule: signalingModule,
@@ -277,6 +309,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     _presenceInfoSyncTimer?.cancel();
 
+    _conferenceAssemblyTimer?.cancel();
     _iceRestartDebounce.dispose();
 
     _slowlinkDebounce.dispose();
@@ -291,6 +324,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     await _callPeerConnectionManager.dispose();
 
     await super.close();
+
+    // After the handlers have stopped, not before: super.close() is what
+    // waits for one that is mid-answer, and a teardown racing it would find
+    // nothing to close and leave the microphone captured.
+    await _conferencePeerConnection.teardown();
   }
 
   @override
@@ -679,6 +717,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // Everything is going away, and the per-call teardowns below are droppable -
     // silence the tone once, here, instead of relying on each of them arriving.
     await _ringback.stopAll();
+
+    if (state.conference.isPresent) {
+      await _conferencePeerConnection.teardown();
+      emit(state.copyWith(conference: const ConferenceState()));
+    }
 
     for (var element in state.activeCalls) {
       add(_ResetStateEvent.completeCall(element.callId));
@@ -1539,6 +1582,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallControlEventAttendedTransferSubmitted() => _onCallControlEventAttendedTransferSubmitted(event, emit),
       _CallControlEventAttendedRequestApproved() => _onCallControlEventAttendedRequestApproved(event, emit),
       _CallControlEventAttendedRequestDeclined() => _onCallControlEventAttendedRequestDeclined(event, emit),
+      _CallControlEventMerged() => __onCallControlEventMerged(event, emit),
+      _CallControlEventConferenceAdded() => __onCallControlEventConferenceAdded(event, emit),
+      _CallControlEventConferenceParticipantMuted() => __onCallControlEventConferenceParticipantMuted(event, emit),
+      _CallControlEventConferenceSelfMuted() => __onCallControlEventConferenceSelfMuted(event, emit),
+      _CallControlEventConferenceEnded() => __onCallControlEventConferenceEnded(event, emit),
     };
   }
 
@@ -1665,6 +1713,38 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   Future<void> __onCallControlEventSentDTMF(_CallControlEventSentDTMF event, Emitter<CallState> emit) async {
     add(_CallMutationEvent.controlSendDTMF(event.callId, event.key));
+  }
+
+  Future<void> __onCallControlEventMerged(_CallControlEventMerged event, Emitter<CallState> emit) async {
+    add(_CallMutationEvent.controlMerge(event.callIds));
+  }
+
+  Future<void> __onCallControlEventConferenceAdded(
+    _CallControlEventConferenceAdded event,
+    Emitter<CallState> emit,
+  ) async {
+    add(_CallMutationEvent.controlConferenceAdd(event.callId));
+  }
+
+  Future<void> __onCallControlEventConferenceParticipantMuted(
+    _CallControlEventConferenceParticipantMuted event,
+    Emitter<CallState> emit,
+  ) async {
+    add(_CallMutationEvent.controlConferenceMute(event.callId, event.muted));
+  }
+
+  Future<void> __onCallControlEventConferenceSelfMuted(
+    _CallControlEventConferenceSelfMuted event,
+    Emitter<CallState> emit,
+  ) async {
+    add(_CallMutationEvent.controlConferenceSelfMute(event.muted));
+  }
+
+  Future<void> __onCallControlEventConferenceEnded(
+    _CallControlEventConferenceEnded event,
+    Emitter<CallState> emit,
+  ) async {
+    add(const _CallMutationEvent.controlConferenceEnd());
   }
 
   Future<void> _onCallControlEventCameraSwitched(_CallControlEventCameraSwitched event, Emitter<CallState> emit) async {
@@ -2068,6 +2148,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventSlowlinkCleared() => __onMutationSlowlinkCleared(event, emit),
       _CallMutationEventSlowlinkHidden() => __onMutationSlowlinkHidden(event, emit),
       _CallMutationEventRestoreCall() => __onMutationRestoreCall(event, emit),
+      _CallMutationEventControlMerge() => __onMutationControlMerge(event, emit),
+      _CallMutationEventControlConferenceAdd() => __onMutationControlConferenceAdd(event, emit),
+      _CallMutationEventControlConferenceMute() => __onMutationControlConferenceMute(event, emit),
+      _CallMutationEventControlConferenceSelfMute() => __onMutationControlConferenceSelfMute(event, emit),
+      _CallMutationEventControlConferenceEnd() => __onMutationControlConferenceEnd(event, emit),
+      _CallMutationEventConferenceOffer() => __onMutationConferenceOffer(event, emit),
+      _CallMutationEventConferenceRemoteCandidate() => __onMutationConferenceRemoteCandidate(event, emit),
+      _CallMutationEventConferenceLocalCandidate() => __onMutationConferenceLocalCandidate(event, emit),
+      _CallMutationEventConferenceUpdated() => __onMutationConferenceUpdated(event, emit),
+      _CallMutationEventConferenceFailed() => __onMutationConferenceFailed(event, emit),
+      _CallMutationEventConferenceTerminated() => __onMutationConferenceTerminated(event, emit),
+      _CallMutationEventConferenceLost() => __onMutationConferenceLost(event, emit),
     };
   }
 
@@ -2515,9 +2607,23 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> __onMutationPerformSetMuted(_CallMutationEventPerformSetMuted event, Emitter<CallState> emit) async {
-    // A leg's microphone is already off its own connection for as long as it
-    // is in the room; only the flag is kept, for when the leg is a call again.
-    if (!state.isConferenced(event.callId)) {
+    if (state.isConferenced(event.callId)) {
+      // The leg's own microphone left its connection when it joined the room,
+      // so there is nothing there to silence: what the host speaks into is
+      // the room. A mute for a leg is a mute of the room, and this is the
+      // entrypoint the operating system's own call controls come through.
+      //
+      // Nothing in the notice says whether a person asked for it: the
+      // platform reports a call's mute state for any reason at all, its own
+      // republications and this client's own commands included, and a report
+      // can be overtaken by a later intent while it is still on its way.
+      // What tells them apart is what was asked for and in which order, so a
+      // report that answers the oldest command still outstanding for that
+      // call is that command coming home and nothing more.
+      if (!_consumeAwaitedLegMute(event.callId, event.muted) && event.muted != state.conference.selfMuted) {
+        await _setRoomMuted(event.muted, emit);
+      }
+    } else {
       await _setMicrophoneAttached(event.callId, attached: !event.muted);
     }
 
@@ -2526,36 +2632,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         return activeCall.copyWith(muted: event.muted);
       }),
     );
-  }
-
-  /// Puts the microphone on [callId]'s own connection, or takes it off.
-  ///
-  /// Mute is a property of one connection, not of the microphone: the app
-  /// captures one pooled track and hands the same one to every call, so
-  /// switching that track off would silence all of them at once. Taking it
-  /// off a sender stops only what that connection sends, and the far end
-  /// receives silence rather than nothing - the stream stays up, so no
-  /// gateway sees a call that has gone quiet as one that has gone away.
-  Future<void> _setMicrophoneAttached(String callId, {required bool attached}) async {
-    try {
-      final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
-      if (peerConnection == null) return;
-      final sender = await peerConnection.audioSender();
-      if (sender == null) {
-        _logger.warning('_setMicrophoneAttached: $callId has no audio sender, the microphone is unchanged');
-        return;
-      }
-      if (!attached) {
-        await sender.detachMicrophone();
-        _logger.info('_setMicrophoneAttached: $callId detached');
-        return;
-      }
-      final audioTrack = state.retrieveActiveCall(callId)?.localStream?.getAudioTracks().firstOrNull;
-      if (audioTrack != null) await sender.attachMicrophone(audioTrack);
-      _logger.info('_setMicrophoneAttached: $callId attached (track=${audioTrack?.id})');
-    } catch (e, stackTrace) {
-      callErrorReporter.handle(e, stackTrace, '_setMicrophoneAttached error');
-    }
   }
 
   Future<void> __onMutationPerformSendDTMF(_CallMutationEventPerformSendDTMF event, Emitter<CallState> emit) async {
@@ -4375,6 +4451,16 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       add(
         _CallSignalingEvent.callError(line: event.line, callId: event.callId, code: event.code, reason: event.reason),
       );
+    } else if (event is ConferenceOfferEvent) {
+      add(_CallMutationEvent.conferenceOffer(room: event.room, jsep: event.jsep, participants: event.participants));
+    } else if (event is ConferenceIceTrickleEvent) {
+      add(_CallMutationEvent.conferenceRemoteCandidate(event.candidate));
+    } else if (event is ConferenceUpdatedEvent) {
+      add(_CallMutationEvent.conferenceUpdated(room: event.room, participants: event.participants));
+    } else if (event is ConferenceFailedEvent) {
+      add(_CallMutationEvent.conferenceFailed(room: event.room, reason: event.reason, detail: event.detail));
+    } else if (event is ConferenceTerminatedEvent) {
+      add(_CallMutationEvent.conferenceTerminated(room: event.room));
     } else {
       _logger.warning('unhandled signaling event $event');
     }
@@ -4564,6 +4650,512 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   @override
   void didReset() {
     _logger.warning('didReset');
+  }
+
+  // conference
+  //
+  // The room is the server's: the host asks for it with `merge`, the server
+  // wires the legs and hands over the mixer's offer, and every change of
+  // membership arrives as its participant list. What the client owns is the
+  // record of which calls it put in (state.conference.legs) - the legs are
+  // quiet from the merge's ack, and that record is what a failure undoes.
+  // The wire format and the obligations followed here are in
+  // packages/signaling/docs/conference_protocol.md.
+
+  Future<void> __onMutationControlMerge(_CallMutationEventControlMerge e, Emitter<CallState> emit) async {
+    if (!state.canMerge(isConferenceEnabled: capabilities.isConferenceEnabled)) {
+      _logger.warning('__onMutationControlMerge: nothing to merge now, ignoring');
+      return;
+    }
+    final legs = _mergeableLegs(e.callIds);
+    if (legs.length < 2) {
+      _logger.warning('__onMutationControlMerge: fewer than two mergeable calls in ${e.callIds}, ignoring');
+      return;
+    }
+    final taken = await _executeConferenceRequest(
+      MergeRequest(transaction: WebtritSignalingClient.generateTransactionId(), lines: legs.values.toList()),
+      source: '__onMutationControlMerge',
+      notifyRefusal: true,
+    );
+    if (!taken) return;
+    // From the ack on the legs are the server's: quiet now, not at the offer,
+    // so that a failure between the two undoes exactly what was recorded.
+    legs.removeWhere((callId, _) => state.retrieveActiveCall(callId) == null);
+    await _quietLegs(legs.keys);
+    if (state.conference.isPresent) {
+      _logger.warning('__onMutationControlMerge: a room appeared while this merge was being acknowledged');
+      return;
+    }
+    emit(
+      state.copyWith(
+        conference: ConferenceState(phase: ConferencePhase.assembling, legs: legs),
+      ),
+    );
+    _armConferenceAssembly();
+  }
+
+  Future<void> __onMutationControlConferenceAdd(
+    _CallMutationEventControlConferenceAdd e,
+    Emitter<CallState> emit,
+  ) async {
+    final line = _mergeableLegs([e.callId])[e.callId];
+    if (!state.conference.isPresent || line == null) {
+      _logger.warning('__onMutationControlConferenceAdd: ${e.callId} cannot join now, ignoring');
+      return;
+    }
+    final taken = await _executeConferenceRequest(
+      ConferenceAddRequest(transaction: WebtritSignalingClient.generateTransactionId(), line: line),
+      source: '__onMutationControlConferenceAdd',
+      notifyRefusal: true,
+    );
+    if (!taken || !state.conference.isPresent || state.retrieveActiveCall(e.callId) == null) return;
+    await _quietLegs([e.callId]);
+    if (!state.conference.isPresent) return;
+    emit(state.copyWith(conference: state.conference.copyWith(legs: {...state.conference.legs, e.callId: line})));
+  }
+
+  /// A room-wide mute of one participant. Accepted by the server only once
+  /// it has listed the participant; the outcome comes back as the next list,
+  /// nothing is guessed here.
+  Future<void> __onMutationControlConferenceMute(
+    _CallMutationEventControlConferenceMute e,
+    Emitter<CallState> emit,
+  ) async {
+    final participant = state.conference.participants.firstWhereOrNull((p) => p.callId == e.callId);
+    if (participant == null) {
+      _logger.warning('__onMutationControlConferenceMute: ${e.callId} is not a listed participant, ignoring');
+      return;
+    }
+    await _executeConferenceRequest(
+      ConferenceMuteRequest(
+        transaction: WebtritSignalingClient.generateTransactionId(),
+        line: participant.line,
+        muted: e.muted,
+      ),
+      source: '__onMutationControlConferenceMute',
+    );
+  }
+
+  Future<void> __onMutationControlConferenceSelfMute(
+    _CallMutationEventControlConferenceSelfMute e,
+    Emitter<CallState> emit,
+  ) async {
+    await _setRoomMuted(e.muted, emit);
+  }
+
+  /// Mutes the host towards the room, from whichever control asked.
+  ///
+  /// The room's microphone and what the screen says about it are one thing,
+  /// so they are set in one place: a mute the operating system reports for a
+  /// leg and the room's own control must not be able to disagree.
+  Future<void> _setRoomMuted(bool muted, Emitter<CallState> emit) async {
+    if (!state.conference.isPresent) return;
+    await _conferencePeerConnection.setSelfMuted(muted);
+    emit(state.copyWith(conference: state.conference.copyWith(selfMuted: muted)));
+    await _syncLegMute(state.conference.legIds, muted);
+  }
+
+  /// Tells the operating system that every call in the room carries the room's
+  /// mute.
+  ///
+  /// It keeps its own mute state per call and re-publishes it unasked, so a
+  /// leg left out of step would ask for the opposite of what the host wants
+  /// the moment anything made the platform repeat itself - hanging that
+  /// participant up, or merely changing the audio device.
+  Future<void> _syncLegMute(Iterable<String> callIds, bool muted) async {
+    for (final callId in callIds) {
+      final awaited = _awaitedLegMute[callId] ??= Queue<bool>();
+      awaited.add(muted);
+      final error = await callkeep.setMuted(callId, muted: muted);
+      if (error != null) {
+        // Nothing will come back for a command that was refused; leaving it
+        // outstanding would make this client mistake the next real action for
+        // its own echo.
+        awaited.remove(muted);
+        _logger.warning('_syncLegMute: setMuted error: $error');
+      }
+    }
+  }
+
+  /// Whether this report is the oldest command still outstanding for [callId]
+  /// coming home, rather than something a person just did.
+  ///
+  /// Reports arrive in the order the commands were sent, so the oldest one
+  /// outstanding is the one being answered. Anything else - a report with
+  /// nothing outstanding to answer, or one that does not match - is somebody
+  /// pressing mute.
+  bool _consumeAwaitedLegMute(String callId, bool muted) {
+    final awaited = _awaitedLegMute[callId];
+    if (awaited == null || awaited.isEmpty || awaited.first != muted) return false;
+    awaited.removeFirst();
+    if (awaited.isEmpty) _awaitedLegMute.remove(callId);
+    return true;
+  }
+
+  /// The host ends the conference, and with it every leg: a room is not
+  /// unwound into separate calls. The room is dropped here rather than at
+  /// the server's confirmation, so the legs end as ordinary calls and the
+  /// confirmation, when it comes, finds nothing to bring back.
+  Future<void> __onMutationControlConferenceEnd(
+    _CallMutationEventControlConferenceEnd e,
+    Emitter<CallState> emit,
+  ) async {
+    if (!state.conference.isPresent) return;
+    final legIds = state.conference.legIds.toList();
+    await _leaveRoom(emit, restoreLegs: false);
+    unawaited(
+      _executeConferenceRequest(
+        ConferenceHangupRequest(transaction: WebtritSignalingClient.generateTransactionId()),
+        source: '__onMutationControlConferenceEnd',
+      ),
+    );
+    for (final callId in legIds) {
+      add(CallControlEvent.ended(callId));
+    }
+  }
+
+  /// The mixer's offer: the room is built. The list it carries is the
+  /// membership - a leg the server could not mix is not in it - and the
+  /// answer is what makes the host part of the room.
+  Future<void> __onMutationConferenceOffer(_CallMutationEventConferenceOffer e, Emitter<CallState> emit) async {
+    if (!state.conference.isPresent) {
+      // Nothing here wants it any more: the room was given up while the
+      // server was still building it. Never refused, and it ends the room.
+      _logger.warning('__onMutationConferenceOffer: no room here for ${e.room}, hanging it up');
+      unawaited(
+        _executeConferenceRequest(
+          ConferenceHangupRequest(transaction: WebtritSignalingClient.generateTransactionId()),
+          source: '__onMutationConferenceOffer',
+        ),
+      );
+      return;
+    }
+    // Recorded before anything is awaited: the handshake handler runs outside
+    // every queue and decides what this client holds by the room id in the
+    // state, so a handshake arriving while a participant is being taken off
+    // hold - a native round trip - would hang up the room being joined.
+    emit(state.copyWith(conference: state.conference.copyWith(room: e.room)));
+    await _adoptParticipants(e.participants, emit);
+    try {
+      final answer = await _conferencePeerConnection.answer(room: e.room, offer: e.jsep);
+      await _signalingModule.execute(
+        ConferenceAnswerRequest(transaction: WebtritSignalingClient.generateTransactionId(), jsep: answer.toMap()),
+      );
+    } catch (error, stackTrace) {
+      // Without a way into the room the host would hear nothing of it: give
+      // it up and bring the legs back.
+      callErrorReporter.handle(error, stackTrace, '__onMutationConferenceOffer error');
+      unawaited(
+        _executeConferenceRequest(
+          ConferenceHangupRequest(transaction: WebtritSignalingClient.generateTransactionId()),
+          source: '__onMutationConferenceOffer',
+        ),
+      );
+      await _leaveRoom(emit, restoreLegs: true);
+      submitNotification(const ConferenceFailedNotification(reason: 'answer_failed'));
+      return;
+    }
+    // Read again rather than carried across the awaits above: a session reset
+    // runs on its own event stream and may have dropped the room, and
+    // copyWith on a cleared one would raise it from the dead with no legs.
+    if (!state.conference.isPresent) {
+      _logger.warning('__onMutationConferenceOffer: the room was given up while it was being answered');
+      return;
+    }
+    _conferenceAssemblyTimer?.cancel();
+    emit(state.copyWith(conference: state.conference.copyWith(phase: ConferencePhase.active)));
+    await _groupLegs();
+  }
+
+  Future<void> __onMutationConferenceRemoteCandidate(
+    _CallMutationEventConferenceRemoteCandidate e,
+    Emitter<CallState> emit,
+  ) async {
+    if (!state.conference.isPresent) return;
+    try {
+      await _conferencePeerConnection.addRemoteCandidate(e.candidate);
+    } catch (error, stackTrace) {
+      callErrorReporter.handle(error, stackTrace, '__onMutationConferenceRemoteCandidate error');
+    }
+  }
+
+  Future<void> __onMutationConferenceLocalCandidate(
+    _CallMutationEventConferenceLocalCandidate e,
+    Emitter<CallState> emit,
+  ) async {
+    if (!state.conference.isPresent || !_conferencePeerConnection.isUp) return;
+    await _executeConferenceRequest(
+      ConferenceIceTrickleRequest(
+        transaction: WebtritSignalingClient.generateTransactionId(),
+        candidate: e.candidate?.toMap(),
+      ),
+      source: '__onMutationConferenceLocalCandidate',
+    );
+  }
+
+  Future<void> __onMutationConferenceUpdated(_CallMutationEventConferenceUpdated e, Emitter<CallState> emit) async {
+    if (!state.conference.isPresent) return;
+    if (e.room != state.conference.room) {
+      // Section 5.1: a list for another room describes another room. A late
+      // one from a room already left would otherwise replace this room's
+      // membership and put its legs on hold.
+      _logger.warning('__onMutationConferenceUpdated: room ${e.room} is not the room here (${state.conference.room})');
+      return;
+    }
+    await _adoptParticipants(e.participants, emit);
+    await _groupLegs();
+  }
+
+  /// The room could not be built - a leg turned out to be a video call.
+  /// Terminal: nothing else about this room follows.
+  Future<void> __onMutationConferenceFailed(_CallMutationEventConferenceFailed e, Emitter<CallState> emit) async {
+    if (!state.conference.isPresent) return;
+    _logger.warning('__onMutationConferenceFailed: ${e.reason} ${e.detail ?? ''}');
+    await _leaveRoom(emit, restoreLegs: true);
+    submitNotification(ConferenceFailedNotification(reason: e.reason));
+  }
+
+  /// The room is over, for whichever of its reasons: the host's own hangup
+  /// has already dropped it here and finds nothing; the rest leave the
+  /// calls that are still up as ordinary calls, all active at once on the
+  /// server, so all but the focused one go on hold. After a lost mixer the
+  /// legs have no media and their hangups follow; they are left alone.
+  Future<void> __onMutationConferenceTerminated(
+    _CallMutationEventConferenceTerminated e,
+    Emitter<CallState> emit,
+  ) async {
+    if (!state.conference.isPresent) return;
+    final restored = await _leaveRoom(emit, restoreLegs: true);
+    if (restored.isNotEmpty) submitNotification(const ConferenceEndedNotification());
+  }
+
+  /// The room is gone without the server saying so: its media connection
+  /// failed, or it never finished being built. The calls in it are still
+  /// calls, so they are handed back the way a termination hands them back,
+  /// and the room is ended on the server too in case it still stands.
+  Future<void> __onMutationConferenceLost(_CallMutationEventConferenceLost e, Emitter<CallState> emit) async {
+    if (!state.conference.isPresent) return;
+    _logger.warning('__onMutationConferenceLost: giving up conference room ${state.conference.room}');
+    unawaited(
+      _executeConferenceRequest(
+        ConferenceHangupRequest(transaction: WebtritSignalingClient.generateTransactionId()),
+        source: '__onMutationConferenceLost',
+      ),
+    );
+    await _leaveRoom(emit, restoreLegs: true);
+    submitNotification(const ConferenceEndedNotification());
+  }
+
+  /// Gives the merge a deadline of this client's own.
+  ///
+  /// The legs go quiet at the acknowledgement and stay quiet until the room's
+  /// offer arrives. The server has a deadline of its own and announces it,
+  /// but it announces it as an event, and events are not replayed - so a
+  /// socket that drops in between takes that word with it and would leave
+  /// both calls silent in both directions until it comes back.
+  void _armConferenceAssembly() {
+    _conferenceAssemblyTimer?.cancel();
+    _conferenceAssemblyTimer = Timer(conferenceAssemblyTimeout, () {
+      if (state.conference.phase != ConferencePhase.assembling || isClosed) return;
+      _logger.warning('the conference room never arrived, giving the calls back');
+      add(const _CallMutationEvent.conferenceLost());
+    });
+  }
+
+  /// Sends a conference request and says whether the server took it. A
+  /// refusal is the server's answer and, when [notifyRefusal], the host's to
+  /// see; a transport failure is a request that never got there.
+  Future<bool> _executeConferenceRequest(Request request, {required String source, bool notifyRefusal = false}) async {
+    try {
+      // A module with nowhere to send answers with nothing at all, and an
+      // awaited null completes like an acknowledgement would. Quieting the
+      // legs for a room the server was never asked for would leave two live
+      // calls silent in both directions.
+      final pending = _signalingModule.execute(request);
+      if (pending == null) {
+        _logger.warning('$source: not sent, the session is not connected');
+        return false;
+      }
+      await pending;
+      return true;
+    } on WebtritSignalingErrorException catch (e) {
+      _logger.warning('$source: refused by the server: ${e.reason}');
+      if (notifyRefusal) submitNotification(ConferenceRefusedNotification(e.reason));
+      return false;
+    } on NotConnectedException {
+      _logger.warning('$source: not connected');
+      return false;
+    } on WebtritSignalingTransactionTimeoutException {
+      _logger.warning('$source: transaction timeout');
+      return false;
+    } catch (e, stackTrace) {
+      callErrorReporter.handle(e, stackTrace, '$source error');
+      return false;
+    }
+  }
+
+  /// The calls among [callIds] that can join a room, each with its line -
+  /// the server names a leg by line.
+  Map<String, int> _mergeableLegs(Iterable<String> callIds) => {
+    for (final call in state.activeCalls)
+      if (callIds.contains(call.callId) && state.mergeableCallIds.contains(call.callId))
+        if (call.line case final int line) call.callId: line,
+  };
+
+  /// Silences a leg both ways for the room: the microphone leaves the leg's
+  /// own connection and the far end's audio stops playing.
+  Future<void> _quietLegs(Iterable<String> callIds) async {
+    for (final callId in callIds) {
+      final call = state.retrieveActiveCall(callId);
+      if (call == null) continue;
+      await _setMicrophoneAttached(callId, attached: false);
+      _setInboundAudioEnabled(call, false);
+    }
+    // A call joining a room the host has already muted starts out of step
+    // with it; see [_syncLegMute].
+    if (state.conference.selfMuted) await _syncLegMute(callIds, true);
+  }
+
+  /// Gives a leg its audio back once it is a call again: the far end to the
+  /// speaker, and the microphone to the leg's connection unless the user had
+  /// muted that call. Returns whether there was a call to restore - nothing
+  /// is done for one that is gone or going.
+  Future<bool> _restoreLegAudio(String callId) async {
+    final call = state.retrieveActiveCall(callId);
+    if (call == null || call.wasHungUp || call.processingStatus == CallProcessingStatus.disconnecting) return false;
+    // Hearing the far end again is independent of talking to them: a failure
+    // to re-attach the microphone must not leave the call deaf as well.
+    _setInboundAudioEnabled(call, true);
+    await _setMicrophoneAttached(callId, attached: !call.muted);
+    return true;
+  }
+
+  void _setInboundAudioEnabled(ActiveCall call, bool enabled) {
+    for (final track in call.remoteStream?.getAudioTracks() ?? const <MediaStreamTrack>[]) {
+      track.enabled = enabled;
+    }
+  }
+
+  /// Takes the server's list as the room's membership. A leg not in it that
+  /// is still up is an ordinary call again: audio back and on hold, since
+  /// the room is what the host hears. A listed call is off hold on the
+  /// server's side - it un-holds a leg as it joins, with no event - so the
+  /// local flag and the OS follow. A vanished leg is held only after the
+  /// membership is re-declared, which is what lets it leave the OS group.
+  Future<void> _adoptParticipants(List<ConferenceParticipant> participants, Emitter<CallState> emit) async {
+    final listed = {for (final participant in participants) participant.callId};
+    final vanished = state.conference.legIds.where((callId) => !listed.contains(callId)).toList();
+    final unheld = [
+      for (final call in state.activeCalls)
+        if (listed.contains(call.callId) && call.held) call.callId,
+    ];
+    // The list is the server's account of the room; the legs are this
+    // client's own record, and it records only calls it has. A participant
+    // whose call this client no longer holds would otherwise become a leg
+    // with nothing behind it: a nameless row whose controls do nothing, and
+    // a call id the OS does not know in the group this client declares,
+    // which fails the grouping for every other leg with it.
+    final legs = {
+      for (final entry in state.conference.legs.entries)
+        if (listed.contains(entry.key)) entry.key: entry.value,
+      for (final participant in participants)
+        if (state.retrieveActiveCall(participant.callId) != null) participant.callId: participant.line,
+    };
+    // A leg this client did not record itself: an add whose acknowledgement
+    // was lost or timed out, or a list that arrives after a reconnect. The
+    // server counts it in the mix, so its own connection must go quiet -
+    // membership and where its audio actually goes cannot disagree.
+    final adopted = legs.keys.where((callId) => !state.conference.legs.containsKey(callId)).toList();
+    emit(
+      state
+          .copyWithMappedActiveCalls((call) => unheld.contains(call.callId) ? call.copyWith(held: false) : call)
+          .copyWith(
+            conference: state.conference.copyWith(legs: legs, participants: participants),
+          ),
+    );
+    await _quietLegs(adopted);
+    // Told to the OS here, ahead of the grouping that follows: the plugin
+    // refuses a hold change on a member of a group.
+    for (final callId in unheld) {
+      final error = await callkeep.setHeld(callId, onHold: false);
+      if (error != null) _logger.warning('_adoptParticipants: setHeld error: $error');
+    }
+    for (final callId in vanished) {
+      if (await _restoreLegAudio(callId)) add(CallControlEvent.setHeld(callId, true));
+    }
+  }
+
+  /// Puts the microphone on [callId]'s own connection, or takes it off.
+  ///
+  /// Mute is a property of one connection, not of the microphone: the app
+  /// captures one pooled track and hands the same one to every call and to
+  /// the conference room, so disabling that track would silence all of them
+  /// at once. Detaching it from a sender stops only what that connection
+  /// sends.
+  Future<void> _setMicrophoneAttached(String callId, {required bool attached}) async {
+    try {
+      final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
+      if (peerConnection == null) return;
+      final sender = await peerConnection.audioSender();
+      if (sender == null) {
+        _logger.warning('_setMicrophoneAttached: $callId has no audio sender, the microphone is unchanged');
+        return;
+      }
+      if (!attached) {
+        await sender.detachMicrophone();
+        _logger.info('_setMicrophoneAttached: $callId detached');
+        return;
+      }
+      final audioTrack = state.retrieveActiveCall(callId)?.localStream?.getAudioTracks().firstOrNull;
+      if (audioTrack != null) await sender.attachMicrophone(audioTrack);
+      _logger.info('_setMicrophoneAttached: $callId attached (track=${audioTrack?.id})');
+    } catch (e, stackTrace) {
+      callErrorReporter.handle(e, stackTrace, '_setMicrophoneAttached error');
+    }
+  }
+
+  /// Tells the OS the legs are one grouped call. A platform that cannot
+  /// group answers with an error that is not the app's; it is logged.
+  Future<void> _groupLegs() async {
+    final conference = state.conference;
+    final room = conference.room;
+    if (room == null || conference.legs.isEmpty) return;
+    final error = await callkeep.setCallGroup('room-$room', conference.legIds.toList());
+    if (error != null) _logger.warning('_groupLegs: setCallGroup error: $error');
+  }
+
+  /// Drops the room: its connection, the OS grouping and the state. With
+  /// [restoreLegs] the legs still up become ordinary calls again - audio
+  /// back on each, and all but the focused one on hold, since the server
+  /// leaves them all active. Returns the ids of the legs restored.
+  Future<List<String>> _leaveRoom(Emitter<CallState> emit, {required bool restoreLegs}) async {
+    _conferenceAssemblyTimer?.cancel();
+    // Whatever has not come back concerns a room that is over.
+    _awaitedLegMute.clear();
+    final legIds = state.conference.legIds.toList();
+    final focused = state.focusedCall?.callId;
+    await _conferencePeerConnection.teardown();
+    if (legIds.isNotEmpty) {
+      final error = await callkeep.unsetCallGroup(legIds);
+      if (error != null) _logger.warning('_leaveRoom: unsetCallGroup error: $error');
+    }
+    emit(state.copyWith(conference: const ConferenceState()));
+    if (!restoreLegs) return const [];
+    final restored = <String>[];
+    for (final callId in legIds) {
+      if (await _restoreLegAudio(callId)) restored.add(callId);
+    }
+    if (restored.isEmpty) return restored;
+    // One of them carries on, the rest go on hold. Which one is the focused
+    // call when that is one of these, and otherwise the first: the calls
+    // leave the room all active on the server, so a client that only ever
+    // added holds would leave every one of them held and the user in
+    // silence. A leg merged while it was held is resumed the same way.
+    final live = restored.contains(focused) ? focused! : restored.first;
+    for (final callId in restored) {
+      add(CallControlEvent.setHeld(callId, callId != live));
+    }
+    return restored;
   }
 
   // helpers
