@@ -2737,6 +2737,10 @@
   "@voicemail_Label_moveToTrash": {
     "description": "Menu action that moves a voicemail to the trash, where it can be restored."
   },
+  "voicemail_Label_openContact": "Відкрити контакт",
+  "@voicemail_Label_openContact": {
+    "description": "Menu action that opens the card of whoever left the voicemail."
+  },
   "voicemail_Label_playbackError": "Помилка відтворення",
   "@voicemail_Label_playbackError": {},
   "voicemail_Label_restore": "Відновити",
@@ -2845,6 +2849,10 @@
         "type": "String"
       }
     }
+  },
+  "voicemail_Snackbar_contactGone": "Цього контакту вже немає у вашій адресній книзі",
+  "@voicemail_Snackbar_contactGone": {
+    "description": "Shown when the caller is no longer in the address book by the time their card is asked for."
   },
   "voicemail_Snackbar_notConfigured": "Зверніться до адміністратора, щоб активувати голосову пошту.",
   "@voicemail_Snackbar_notConfigured": {},
