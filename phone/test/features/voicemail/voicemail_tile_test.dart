@@ -47,7 +47,11 @@ void main() {
     VoidCallback? onLongPress,
     Voicemail? voicemail,
     bool saveSupported = false,
+    bool trashSupported = false,
+    bool inTrash = false,
     void Function(Voicemail)? onToggleSavedStatus,
+    void Function(Voicemail)? onRestored,
+    void Function(Voicemail)? onDeletedPermanently,
   }) {
     final item = voicemail ?? message();
     return MaterialApp(
@@ -77,10 +81,14 @@ void main() {
               displayName: 'User 555002',
               selected: false,
               saveSupported: saveSupported,
+              trashSupported: trashSupported,
+              inTrash: inTrash,
               onCall: (_) {},
               onDeleted: (_) {},
               onToggleSeenStatus: (_) {},
               onToggleSavedStatus: (it) => onToggleSavedStatus?.call(it),
+              onRestored: (it) => onRestored?.call(it),
+              onDeletedPermanently: (it) => onDeletedPermanently?.call(it),
               onLongPress: (_) => onLongPress?.call(),
               onTap: (_) {},
             ),
@@ -187,6 +195,82 @@ void main() {
       expect(find.bySemanticsLabel(RegExp(r'\bSaved\b')), findsWidgets);
 
       handle.dispose();
+    });
+  });
+
+  group('the trash', () {
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('without a trash the delete action is named for being final', (tester) async {
+      await tester.pumpWidget(wrap());
+
+      await openMenu(tester);
+
+      expect(find.text('Delete'), findsOneWidget);
+      expect(find.text('Move to trash'), findsNothing);
+    });
+
+    testWidgets('with a trash it is named for where the message goes', (tester) async {
+      // The same gesture, but the message can be had back, and calling both
+      // of them "Delete" would make the reversible one look as final as the
+      // other.
+      await tester.pumpWidget(wrap(trashSupported: true));
+
+      await openMenu(tester);
+
+      expect(find.text('Move to trash'), findsOneWidget);
+      expect(find.text('Delete'), findsNothing);
+    });
+
+    testWidgets('a trashed message answers only to putting it back or finishing the job', (tester) async {
+      await tester.pumpWidget(
+        wrap(trashSupported: true, inTrash: true, saveSupported: true, voicemail: message(saved: true)),
+      );
+
+      await openMenu(tester);
+
+      expect(find.text('Restore'), findsOneWidget);
+      expect(find.text('Delete permanently'), findsOneWidget);
+      // Calling, marking and keeping are about a message someone still has.
+      expect(find.text('Call'), findsNothing);
+      expect(find.text('Unsave'), findsNothing);
+      expect(find.text('Move to trash'), findsNothing);
+    });
+
+    testWidgets('restore and delete permanently report the message', (tester) async {
+      Voicemail? restored;
+      Voicemail? deleted;
+      await tester.pumpWidget(
+        wrap(
+          trashSupported: true,
+          inTrash: true,
+          onRestored: (it) => restored = it,
+          onDeletedPermanently: (it) => deleted = it,
+        ),
+      );
+
+      await openMenu(tester);
+      await tester.tap(find.text('Restore'));
+      await tester.pumpAndSettle();
+      expect(restored?.id, 'vm-1');
+
+      await openMenu(tester);
+      await tester.tap(find.text('Delete permanently'));
+      await tester.pumpAndSettle();
+      expect(deleted?.id, 'vm-1');
+    });
+
+    testWidgets('a trashed message is drawn back', (tester) async {
+      await tester.pumpWidget(wrap(trashSupported: true));
+      expect(find.byType(Opacity), findsNothing);
+
+      await tester.pumpWidget(wrap(trashSupported: true, inTrash: true));
+      await tester.pump();
+
+      expect(tester.widget<Opacity>(find.byType(Opacity)).opacity, 0.6);
     });
   });
 }

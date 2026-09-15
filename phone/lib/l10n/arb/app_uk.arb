@@ -2624,6 +2624,12 @@
   "@voicemail_Cache_title": {},
   "voicemail_Description_notSupported": "Функція голосової пошти не підтримується у вашій системі. Зверніться до адміністратора для отримання додаткової інформації.",
   "@voicemail_Description_notSupported": {},
+  "voicemail_Dialog_deletePermanentlyContent": "Це повідомлення буде вилучено зі скриньки без можливості відновити.",
+  "@voicemail_Dialog_deletePermanentlyContent": {
+    "description": "Warns that deleting a voicemail for good cannot be undone."
+  },
+  "voicemail_Dialog_deletePermanentlyTitle": "Видалити назавжди?",
+  "@voicemail_Dialog_deletePermanentlyTitle": {},
   "voicemail_Dialog_deleteSelectedContent": "Обрані голосові повідомлення будуть остаточно видалені. Чи хочете ви продовжити?",
   "@voicemail_Dialog_deleteSelectedContent": {},
   "voicemail_Dialog_deleteSelectedTitle": "Видалити обрані голосові повідомлення?",
@@ -2656,6 +2662,10 @@
   "@voicemail_Label_deleteAll": {},
   "voicemail_Label_deleteAllDescription": "Цю дію не можна скасувати: всі голосові повідомлення буде остаточно видалено.",
   "@voicemail_Label_deleteAllDescription": {},
+  "voicemail_Label_deletePermanently": "Видалити назавжди",
+  "@voicemail_Label_deletePermanently": {
+    "description": "Menu action that removes a trashed voicemail from the mailbox for good."
+  },
   "voicemail_Label_empty": "Немає голосових повідомлень",
   "@voicemail_Label_empty": {},
   "voicemail_Label_emptySaved": "Немає збережених повідомлень",
@@ -2674,8 +2684,16 @@
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Позначити як нове",
   "@voicemail_Label_markAsNew": {},
+  "voicemail_Label_moveToTrash": "Перемістити в кошик",
+  "@voicemail_Label_moveToTrash": {
+    "description": "Menu action that moves a voicemail to the trash, where it can be restored."
+  },
   "voicemail_Label_playbackError": "Помилка відтворення",
   "@voicemail_Label_playbackError": {},
+  "voicemail_Label_restore": "Відновити",
+  "@voicemail_Label_restore": {
+    "description": "Menu action that puts a trashed voicemail back in the mailbox."
+  },
   "voicemail_Label_retry": "Спробувати ще раз",
   "@voicemail_Label_retry": {},
   "voicemail_Label_save": "Зберегти",
@@ -2685,6 +2703,10 @@
   "voicemail_Label_trashFootnote": "Повідомлення в кошику далі займають місце у скриньці, доки його не очищено.",
   "@voicemail_Label_trashFootnote": {
     "description": "Shown under the trash list: a trashed message still occupies the mailbox."
+  },
+  "voicemail_Label_undo": "Скасувати",
+  "@voicemail_Label_undo": {
+    "description": "Snackbar action that takes back the move to the trash."
   },
   "voicemail_Label_unheardCount": "{count, plural, one{{count} нове} few{{count} нові} many{{count} нових} other{{count} нових}}",
   "@voicemail_Label_unheardCount": {
@@ -2727,6 +2749,14 @@
   "voicemail_SemanticsLabel_saved": "Збережено",
   "@voicemail_SemanticsLabel_saved": {
     "description": "Accessibility name of the mark that says a voicemail is kept."
+  },
+  "voicemail_SemanticsLabel_undoMoveToTrash": "Скасувати переміщення в кошик",
+  "@voicemail_SemanticsLabel_undoMoveToTrash": {
+    "description": "Accessibility name of the snackbar action that takes back the move to the trash."
+  },
+  "voicemail_Snackbar_movedToTrash": "Переміщено в кошик",
+  "@voicemail_Snackbar_movedToTrash": {
+    "description": "Confirms that a voicemail was moved to the trash."
   },
   "voicemail_Snackbar_notConfigured": "Зверніться до адміністратора, щоб активувати голосову пошту.",
   "@voicemail_Snackbar_notConfigured": {},

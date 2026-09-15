@@ -2624,6 +2624,12 @@
   "@voicemail_Cache_title": {},
   "voicemail_Description_notSupported": "La funzione di segreteria telefonica non è supportata nel tuo sistema. Contatta l'amministratore per maggiori informazioni.",
   "@voicemail_Description_notSupported": {},
+  "voicemail_Dialog_deletePermanentlyContent": "Questo messaggio sara rimosso dalla casella e non potra essere ripristinato.",
+  "@voicemail_Dialog_deletePermanentlyContent": {
+    "description": "Warns that deleting a voicemail for good cannot be undone."
+  },
+  "voicemail_Dialog_deletePermanentlyTitle": "Eliminare definitivamente?",
+  "@voicemail_Dialog_deletePermanentlyTitle": {},
   "voicemail_Dialog_deleteSelectedContent": "I messaggi vocali selezionati verranno eliminati definitivamente. Vuoi continuare?",
   "@voicemail_Dialog_deleteSelectedContent": {},
   "voicemail_Dialog_deleteSelectedTitle": "Eliminare i messaggi vocali selezionati?",
@@ -2656,6 +2662,10 @@
   "@voicemail_Label_deleteAll": {},
   "voicemail_Label_deleteAllDescription": "Questa azione eliminerà definitivamente tutti i messaggi vocali. Non potrà essere annullata.",
   "@voicemail_Label_deleteAllDescription": {},
+  "voicemail_Label_deletePermanently": "Elimina definitivamente",
+  "@voicemail_Label_deletePermanently": {
+    "description": "Menu action that removes a trashed voicemail from the mailbox for good."
+  },
   "voicemail_Label_empty": "Nessun messaggio vocale",
   "@voicemail_Label_empty": {},
   "voicemail_Label_emptySaved": "Nessun messaggio salvato",
@@ -2674,8 +2684,16 @@
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Segna come nuovo",
   "@voicemail_Label_markAsNew": {},
+  "voicemail_Label_moveToTrash": "Sposta nel cestino",
+  "@voicemail_Label_moveToTrash": {
+    "description": "Menu action that moves a voicemail to the trash, where it can be restored."
+  },
   "voicemail_Label_playbackError": "Riproduzione non riuscita",
   "@voicemail_Label_playbackError": {},
+  "voicemail_Label_restore": "Ripristina",
+  "@voicemail_Label_restore": {
+    "description": "Menu action that puts a trashed voicemail back in the mailbox."
+  },
   "voicemail_Label_retry": "Riprova",
   "@voicemail_Label_retry": {},
   "voicemail_Label_save": "Salva",
@@ -2685,6 +2703,10 @@
   "voicemail_Label_trashFootnote": "I messaggi nel cestino occupano ancora spazio nella casella finche non viene svuotato.",
   "@voicemail_Label_trashFootnote": {
     "description": "Shown under the trash list: a trashed message still occupies the mailbox."
+  },
+  "voicemail_Label_undo": "Annulla",
+  "@voicemail_Label_undo": {
+    "description": "Snackbar action that takes back the move to the trash."
   },
   "voicemail_Label_unheardCount": "{count, plural, one{{count} nuovo} other{{count} nuovi}}",
   "@voicemail_Label_unheardCount": {
@@ -2727,6 +2749,14 @@
   "voicemail_SemanticsLabel_saved": "Salvato",
   "@voicemail_SemanticsLabel_saved": {
     "description": "Accessibility name of the mark that says a voicemail is kept."
+  },
+  "voicemail_SemanticsLabel_undoMoveToTrash": "Annulla lo spostamento nel cestino",
+  "@voicemail_SemanticsLabel_undoMoveToTrash": {
+    "description": "Accessibility name of the snackbar action that takes back the move to the trash."
+  },
+  "voicemail_Snackbar_movedToTrash": "Spostato nel cestino",
+  "@voicemail_Snackbar_movedToTrash": {
+    "description": "Confirms that a voicemail was moved to the trash."
   },
   "voicemail_Snackbar_notConfigured": "Contatta il tuo amministratore per attivare la segreteria telefonica.",
   "@voicemail_Snackbar_notConfigured": {},

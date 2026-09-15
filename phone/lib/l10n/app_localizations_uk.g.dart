@@ -3126,6 +3126,13 @@ class AppLocalizationsUk extends AppLocalizations {
       'Функція голосової пошти не підтримується у вашій системі. Зверніться до адміністратора для отримання додаткової інформації.';
 
   @override
+  String get voicemail_Dialog_deletePermanentlyContent =>
+      'Це повідомлення буде вилучено зі скриньки без можливості відновити.';
+
+  @override
+  String get voicemail_Dialog_deletePermanentlyTitle => 'Видалити назавжди?';
+
+  @override
   String get voicemail_Dialog_deleteSelectedContent =>
       'Обрані голосові повідомлення будуть остаточно видалені. Чи хочете ви продовжити?';
 
@@ -3165,6 +3172,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Цю дію не можна скасувати: всі голосові повідомлення буде остаточно видалено.';
 
   @override
+  String get voicemail_Label_deletePermanently => 'Видалити назавжди';
+
+  @override
   String get voicemail_Label_empty => 'Немає голосових повідомлень';
 
   @override
@@ -3188,7 +3198,13 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Label_markAsNew => 'Позначити як нове';
 
   @override
+  String get voicemail_Label_moveToTrash => 'Перемістити в кошик';
+
+  @override
   String get voicemail_Label_playbackError => 'Помилка відтворення';
+
+  @override
+  String get voicemail_Label_restore => 'Відновити';
 
   @override
   String get voicemail_Label_retry => 'Спробувати ще раз';
@@ -3199,6 +3215,9 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get voicemail_Label_trashFootnote =>
       'Повідомлення в кошику далі займають місце у скриньці, доки його не очищено.';
+
+  @override
+  String get voicemail_Label_undo => 'Скасувати';
 
   @override
   String voicemail_Label_unheardCount(int count) {
@@ -3235,6 +3254,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_saved => 'Збережено';
+
+  @override
+  String get voicemail_SemanticsLabel_undoMoveToTrash => 'Скасувати переміщення в кошик';
+
+  @override
+  String get voicemail_Snackbar_movedToTrash => 'Переміщено в кошик';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Зверніться до адміністратора, щоб активувати голосову пошту.';

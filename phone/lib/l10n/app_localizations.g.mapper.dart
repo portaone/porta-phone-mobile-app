@@ -1454,6 +1454,10 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Cache_title' => voicemail_Cache_title,
       'voicemail_Description_notSupported' =>
         voicemail_Description_notSupported,
+      'voicemail_Dialog_deletePermanentlyContent' =>
+        voicemail_Dialog_deletePermanentlyContent,
+      'voicemail_Dialog_deletePermanentlyTitle' =>
+        voicemail_Dialog_deletePermanentlyTitle,
       'voicemail_Dialog_deleteSelectedContent' =>
         voicemail_Dialog_deleteSelectedContent,
       'voicemail_Dialog_deleteSelectedTitle' =>
@@ -1471,6 +1475,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Label_deleteAll' => voicemail_Label_deleteAll,
       'voicemail_Label_deleteAllDescription' =>
         voicemail_Label_deleteAllDescription,
+      'voicemail_Label_deletePermanently' => voicemail_Label_deletePermanently,
       'voicemail_Label_empty' => voicemail_Label_empty,
       'voicemail_Label_emptySaved' => voicemail_Label_emptySaved,
       'voicemail_Label_emptySavedHint' => voicemail_Label_emptySavedHint,
@@ -1478,10 +1483,13 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Label_emptyTrashHint' => voicemail_Label_emptyTrashHint,
       'voicemail_Label_markAsHeard' => voicemail_Label_markAsHeard,
       'voicemail_Label_markAsNew' => voicemail_Label_markAsNew,
+      'voicemail_Label_moveToTrash' => voicemail_Label_moveToTrash,
       'voicemail_Label_playbackError' => voicemail_Label_playbackError,
+      'voicemail_Label_restore' => voicemail_Label_restore,
       'voicemail_Label_retry' => voicemail_Label_retry,
       'voicemail_Label_save' => voicemail_Label_save,
       'voicemail_Label_trashFootnote' => voicemail_Label_trashFootnote,
+      'voicemail_Label_undo' => voicemail_Label_undo,
       'voicemail_Label_unsave' => voicemail_Label_unsave,
       'voicemail_SemanticsLabel_loading' => voicemail_SemanticsLabel_loading,
       'voicemail_SemanticsLabel_moreActions' =>
@@ -1489,6 +1497,9 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_SemanticsLabel_pause' => voicemail_SemanticsLabel_pause,
       'voicemail_SemanticsLabel_play' => voicemail_SemanticsLabel_play,
       'voicemail_SemanticsLabel_saved' => voicemail_SemanticsLabel_saved,
+      'voicemail_SemanticsLabel_undoMoveToTrash' =>
+        voicemail_SemanticsLabel_undoMoveToTrash,
+      'voicemail_Snackbar_movedToTrash' => voicemail_Snackbar_movedToTrash,
       'voicemail_Snackbar_notConfigured' => voicemail_Snackbar_notConfigured,
       'voicemail_Title_notSupported' => voicemail_Title_notSupported,
       'voicemail_Widget_screenTitle' => voicemail_Widget_screenTitle,

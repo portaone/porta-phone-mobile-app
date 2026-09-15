@@ -3087,6 +3087,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Voicemail feature are not supported in your core. Please contact your administrator for more information.';
 
   @override
+  String get voicemail_Dialog_deletePermanentlyContent =>
+      'This message will be removed from your mailbox and cannot be restored.';
+
+  @override
+  String get voicemail_Dialog_deletePermanentlyTitle => 'Delete permanently?';
+
+  @override
   String get voicemail_Dialog_deleteSelectedContent =>
       'Selected voicemails will be permanently deleted. Do you want to continue?';
 
@@ -3126,6 +3133,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'This action will permanently delete all your voicemails. This cannot be undone.';
 
   @override
+  String get voicemail_Label_deletePermanently => 'Delete permanently';
+
+  @override
   String get voicemail_Label_empty => 'No voicemails';
 
   @override
@@ -3148,7 +3158,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Label_markAsNew => 'Mark as new';
 
   @override
+  String get voicemail_Label_moveToTrash => 'Move to trash';
+
+  @override
   String get voicemail_Label_playbackError => 'Playback failed';
+
+  @override
+  String get voicemail_Label_restore => 'Restore';
 
   @override
   String get voicemail_Label_retry => 'Try again';
@@ -3159,6 +3175,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get voicemail_Label_trashFootnote =>
       'Messages in the trash still use mailbox space until the trash is emptied.';
+
+  @override
+  String get voicemail_Label_undo => 'Undo';
 
   @override
   String voicemail_Label_unheardCount(int count) {
@@ -3187,6 +3206,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_saved => 'Saved';
+
+  @override
+  String get voicemail_SemanticsLabel_undoMoveToTrash => 'Undo move to trash';
+
+  @override
+  String get voicemail_Snackbar_movedToTrash => 'Moved to trash';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Contact your administrator to activate voicemail';

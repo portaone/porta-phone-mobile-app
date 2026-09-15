@@ -5659,6 +5659,18 @@ abstract class AppLocalizations {
   /// **'Voicemail feature are not supported in your core. Please contact your administrator for more information.'**
   String get voicemail_Description_notSupported;
 
+  /// Warns that deleting a voicemail for good cannot be undone.
+  ///
+  /// In en, this message translates to:
+  /// **'This message will be removed from your mailbox and cannot be restored.'**
+  String get voicemail_Dialog_deletePermanentlyContent;
+
+  /// No description provided for @voicemail_Dialog_deletePermanentlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently?'**
+  String get voicemail_Dialog_deletePermanentlyTitle;
+
   /// No description provided for @voicemail_Dialog_deleteSelectedContent.
   ///
   /// In en, this message translates to:
@@ -5731,6 +5743,12 @@ abstract class AppLocalizations {
   /// **'This action will permanently delete all your voicemails. This cannot be undone.'**
   String get voicemail_Label_deleteAllDescription;
 
+  /// Menu action that removes a trashed voicemail from the mailbox for good.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently'**
+  String get voicemail_Label_deletePermanently;
+
   /// No description provided for @voicemail_Label_empty.
   ///
   /// In en, this message translates to:
@@ -5773,11 +5791,23 @@ abstract class AppLocalizations {
   /// **'Mark as new'**
   String get voicemail_Label_markAsNew;
 
+  /// Menu action that moves a voicemail to the trash, where it can be restored.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to trash'**
+  String get voicemail_Label_moveToTrash;
+
   /// No description provided for @voicemail_Label_playbackError.
   ///
   /// In en, this message translates to:
   /// **'Playback failed'**
   String get voicemail_Label_playbackError;
+
+  /// Menu action that puts a trashed voicemail back in the mailbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get voicemail_Label_restore;
 
   /// No description provided for @voicemail_Label_retry.
   ///
@@ -5796,6 +5826,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages in the trash still use mailbox space until the trash is emptied.'**
   String get voicemail_Label_trashFootnote;
+
+  /// Snackbar action that takes back the move to the trash.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get voicemail_Label_undo;
 
   /// How many messages in the mailbox are still unheard.
   ///
@@ -5844,6 +5880,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved'**
   String get voicemail_SemanticsLabel_saved;
+
+  /// Accessibility name of the snackbar action that takes back the move to the trash.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo move to trash'**
+  String get voicemail_SemanticsLabel_undoMoveToTrash;
+
+  /// Confirms that a voicemail was moved to the trash.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to trash'**
+  String get voicemail_Snackbar_movedToTrash;
 
   /// No description provided for @voicemail_Snackbar_notConfigured.
   ///

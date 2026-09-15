@@ -66,6 +66,14 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   /// rather than carried twice and allowed to disagree.
   bool get saveSupported => filters.contains(VoicemailFilter.saved);
 
+  /// Whether this mailbox has a trash, which is the same fact as the Trash
+  /// view being offered. See [saveSupported].
+  bool get trashSupported => filters.contains(VoicemailFilter.trash);
+
+  /// Whether the screen is showing the trash, where a message answers to a
+  /// different pair of actions than anywhere else.
+  bool get isShowingTrash => filter == VoicemailFilter.trash;
+
   /// How many messages are still unheard, which is counted over the whole
   /// mailbox rather than over the current view - it is what the New filter is
   /// offering, so it has to read the same under every filter.

@@ -2627,6 +2627,12 @@
   "@voicemail_Cache_title": {},
   "voicemail_Description_notSupported": "core ของคุณไม่รองรับฟีเจอร์ข้อความเสียง โปรดติดต่อผู้ดูแลระบบของคุณเพื่อขอข้อมูลเพิ่มเติม",
   "@voicemail_Description_notSupported": {},
+  "voicemail_Dialog_deletePermanentlyContent": "ข้อความนี้จะถูกลบออกจากกล่องข้อความและไม่สามารถกู้คืนได้",
+  "@voicemail_Dialog_deletePermanentlyContent": {
+    "description": "Warns that deleting a voicemail for good cannot be undone."
+  },
+  "voicemail_Dialog_deletePermanentlyTitle": "ลบถาวรหรือไม่",
+  "@voicemail_Dialog_deletePermanentlyTitle": {},
   "voicemail_Dialog_deleteSelectedContent": "ข้อความเสียงที่เลือกจะถูกลบอย่างถาวร คุณต้องการดำเนินการต่อหรือไม่?",
   "@voicemail_Dialog_deleteSelectedContent": {},
   "voicemail_Dialog_deleteSelectedTitle": "ลบข้อความเสียงที่เลือกหรือไม่?",
@@ -2659,6 +2665,10 @@
   "@voicemail_Label_deleteAll": {},
   "voicemail_Label_deleteAllDescription": "การดำเนินการนี้จะลบข้อความเสียงทั้งหมดของคุณอย่างถาวร ไม่สามารถยกเลิกได้",
   "@voicemail_Label_deleteAllDescription": {},
+  "voicemail_Label_deletePermanently": "ลบถาวร",
+  "@voicemail_Label_deletePermanently": {
+    "description": "Menu action that removes a trashed voicemail from the mailbox for good."
+  },
   "voicemail_Label_empty": "ไม่มีข้อความเสียง",
   "@voicemail_Label_empty": {},
   "voicemail_Label_emptySaved": "ไม่มีข้อความที่บันทึกไว้",
@@ -2677,8 +2687,16 @@
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "ทำเครื่องหมายว่าใหม่",
   "@voicemail_Label_markAsNew": {},
+  "voicemail_Label_moveToTrash": "ย้ายไปถังขยะ",
+  "@voicemail_Label_moveToTrash": {
+    "description": "Menu action that moves a voicemail to the trash, where it can be restored."
+  },
   "voicemail_Label_playbackError": "เล่นไม่สำเร็จ",
   "@voicemail_Label_playbackError": {},
+  "voicemail_Label_restore": "กู้คืน",
+  "@voicemail_Label_restore": {
+    "description": "Menu action that puts a trashed voicemail back in the mailbox."
+  },
   "voicemail_Label_retry": "ลองอีกครั้ง",
   "@voicemail_Label_retry": {},
   "voicemail_Label_save": "บันทึก",
@@ -2688,6 +2706,10 @@
   "voicemail_Label_trashFootnote": "ข้อความในถังขยะยังคงใช้พื้นที่กล่องข้อความจนกว่าจะล้าง",
   "@voicemail_Label_trashFootnote": {
     "description": "Shown under the trash list: a trashed message still occupies the mailbox."
+  },
+  "voicemail_Label_undo": "เลิกทำ",
+  "@voicemail_Label_undo": {
+    "description": "Snackbar action that takes back the move to the trash."
   },
   "voicemail_Label_unheardCount": "ใหม่ {count} รายการ",
   "@voicemail_Label_unheardCount": {
@@ -2730,6 +2752,14 @@
   "voicemail_SemanticsLabel_saved": "บันทึกไว้",
   "@voicemail_SemanticsLabel_saved": {
     "description": "Accessibility name of the mark that says a voicemail is kept."
+  },
+  "voicemail_SemanticsLabel_undoMoveToTrash": "เลิกทำการย้ายไปถังขยะ",
+  "@voicemail_SemanticsLabel_undoMoveToTrash": {
+    "description": "Accessibility name of the snackbar action that takes back the move to the trash."
+  },
+  "voicemail_Snackbar_movedToTrash": "ย้ายไปถังขยะแล้ว",
+  "@voicemail_Snackbar_movedToTrash": {
+    "description": "Confirms that a voicemail was moved to the trash."
   },
   "voicemail_Snackbar_notConfigured": "ติดต่อผู้ดูแลระบบของคุณเพื่อเปิดใช้งานข้อความเสียง",
   "@voicemail_Snackbar_notConfigured": {},
