@@ -12,20 +12,23 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 import '../bloc/call_bloc.dart';
 import '../models/models.dart';
 import '../view/call_screen_style.dart';
+import 'call_list_action.dart';
 
 /// The list-of-calls roster for the call screen.
 ///
 /// Renders every active call as a tappable [CallRow] (name + status badge +
-/// timer) and, when more than one call is in progress, a "N calls - tap to
-/// choose" header. Tapping a row reports the call id via [onCallTap] so the
-/// caller can focus it (see [CallControlEvent.callSelected]); the focused row
-/// is highlighted.
+/// timer) under a header that says what the list is, with the one action the
+/// list offers beside it. Tapping a row reports the call id via [onCallTap]
+/// so the caller can focus it (see [CallControlEvent.callSelected]); the
+/// focused row is highlighted.
 class CallList extends StatelessWidget {
   const CallList({
     super.key,
     required this.calls,
     required this.focusedCallId,
     required this.onCallTap,
+    this.header,
+    this.action,
     this.style,
     this.listStyle,
   });
@@ -33,6 +36,15 @@ class CallList extends StatelessWidget {
   final List<ActiveCall> calls;
   final String focusedCallId;
   final ValueChanged<String> onCallTap;
+
+  /// What the list is, when it is something other than the roster of calls to
+  /// choose between - the calls standing outside a conference, say.
+  final String? header;
+
+  /// The action offered beside the header; absent where there is none to
+  /// offer, as on a deployment without conferences.
+  final CallListAction? action;
+
   final CallInfoStyle? style;
   final CallListStyle? listStyle;
 
@@ -41,12 +53,22 @@ class CallList extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (calls.length > 1)
+        // The roster header, and with it the Merge control, belongs to a set
+        // of calls: one call is not a set to choose from and not a set to
+        // merge. A list that says what it is carries its header either way.
+        if (header != null || calls.length > 1)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              context.l10n.call_CallList_header(calls.length).toUpperCase(),
-              style: (style?.callStatus ?? const TextStyle()).copyWith(fontSize: 11, letterSpacing: 1.2),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    (header ?? context.l10n.call_CallList_header(calls.length)).toUpperCase(),
+                    style: (style?.callStatus ?? const TextStyle()).copyWith(fontSize: 11, letterSpacing: 1.2),
+                  ),
+                ),
+                if (action case final action?) CallListActionButton(action: action, style: style),
+              ],
             ),
           ),
         // Each row is one control: the badge, the name and the duration are

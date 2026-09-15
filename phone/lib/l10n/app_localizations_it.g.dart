@@ -301,6 +301,79 @@ class AppLocalizationsIt extends AppLocalizations {
   String get conferenceRefusal_unavailable => 'Impossibile unire le chiamate';
 
   @override
+  String get call_CallList_add => 'Aggiungi';
+
+  @override
+  String get call_SemanticsLabel_add => 'Aggiungi le chiamate alla conferenza';
+
+  @override
+  String call_CallList_outsideHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chiamate fuori dalla conferenza',
+      one: '$count chiamata fuori dalla conferenza',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferencePanel_header(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Conferenza - $count partecipanti',
+      one: 'Conferenza - $count partecipante',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get call_ConferencePanel_you => 'Tu';
+
+  @override
+  String get call_ConferencePanel_hostStatus => 'Organizzatore';
+
+  @override
+  String get call_ConferencePanel_participantStatus => 'In conferenza';
+
+  @override
+  String get call_ConferencePanel_participantMuted => 'Silenziato per tutti';
+
+  @override
+  String get call_ConferencePanel_end => 'Termina';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfMute => 'Disattiva il tuo microfono';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfUnmute => 'Attiva il tuo microfono';
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantMute(String name) {
+    return 'Silenzia $name per tutti';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantUnmute(String name) {
+    return 'Riattiva l\'audio di $name per tutti';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantHangup(String name) {
+    return 'Termina la chiamata con $name';
+  }
+
+  @override
+  String get call_SemanticsLabel_conferenceEnd => 'Termina la conferenza e tutte le chiamate';
+
+  @override
+  String get call_CallList_merge => 'Unisci';
+
+  @override
+  String get call_SemanticsLabel_merge => 'Unisci le chiamate in una conferenza';
+
+  @override
   String call_CallList_header(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
