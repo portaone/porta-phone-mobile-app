@@ -9,8 +9,18 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 
 class _Repository extends Mock implements VoicemailRepository {}
 
-Voicemail _voicemail(String id) =>
-    Voicemail(id, '2026-09-15T10:00:00Z', 1, '101', '101', '102', ReadStatus.unread, 1, 'voice', null);
+Voicemail _voicemail(String id) => Voicemail(
+  id: id,
+  date: '2026-09-15T10:00:00Z',
+  duration: 1,
+  sender: '101',
+  displaySender: '101',
+  receiver: '102',
+  status: ReadStatus.unread,
+  size: 1,
+  type: 'voice',
+  url: null,
+);
 
 void main() {
   late _Repository repository;

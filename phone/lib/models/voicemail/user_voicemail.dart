@@ -12,18 +12,18 @@ enum ReadStatus {
 }
 
 class Voicemail {
-  Voicemail(
-    this.id,
-    this.date,
-    this.duration,
-    this.sender,
-    this.displaySender,
-    this.receiver,
-    this.status,
-    this.size,
-    this.type,
-    this.url,
-  );
+  Voicemail({
+    required this.id,
+    required this.date,
+    required this.duration,
+    required this.sender,
+    required this.displaySender,
+    required this.receiver,
+    required this.status,
+    required this.size,
+    required this.type,
+    required this.url,
+  });
 
   final String id;
   final String date;

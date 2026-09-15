@@ -23,16 +23,16 @@ class _MockVoicemailCubit extends MockCubit<VoicemailState> implements Voicemail
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
 Voicemail _voicemail(String id) => Voicemail(
-  id,
-  '2026-07-06 10:00:00',
-  10.0,
-  '555001',
-  'User 555001',
-  '555002',
-  ReadStatus.read,
-  1024,
-  'voicemail',
-  'https://example.com/vm/$id.mp3',
+  id: id,
+  date: '2026-07-06 10:00:00',
+  duration: 10.0,
+  sender: '555001',
+  displaySender: 'User 555001',
+  receiver: '555002',
+  status: ReadStatus.read,
+  size: 1024,
+  type: 'voicemail',
+  url: 'https://example.com/vm/$id.mp3',
 );
 
 VoicemailState _loadedState(List<Voicemail> items) =>
