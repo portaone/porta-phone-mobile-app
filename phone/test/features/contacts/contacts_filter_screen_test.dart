@@ -36,11 +36,20 @@ class _RememberedSourceType implements ActiveContactSourceTypeRepository {
 
   ContactSourceType _value;
 
+  /// What the chooser was left on, remembered the way the app remembers it.
+  bool favorites = false;
+
   @override
   ContactSourceType getActiveContactSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => _value;
 
   @override
   Future<void> setActiveContactSourceType(ContactSourceType value) async => _value = value;
+
+  @override
+  bool getFavoritesPicked({bool defaultValue = false}) => favorites;
+
+  @override
+  Future<void> setFavoritesPicked(bool value) async => favorites = value;
 
   @override
   Future<void> clear() async {}
@@ -100,12 +109,14 @@ void main() {
     WidgetTester tester, {
     required List<ContactsListSelection> selections,
     ContactSourceType remembered = ContactSourceType.external,
+    bool rememberedFavorites = false,
     List<FavoriteWithContact>? favorites,
   }) async {
     if (favorites != null) {
       when(() => favoritesBloc.state).thenReturn(FavoritesState(favorites: favorites));
     }
-    final contactsBloc = ContactsBloc(activeContactSourceTypeRepository: _RememberedSourceType(remembered));
+    final repository = _RememberedSourceType(remembered)..favorites = rememberedFavorites;
+    final contactsBloc = ContactsBloc(activeContactSourceTypeRepository: repository);
     addTearDown(contactsBloc.close);
 
     await tester.pumpWidget(
@@ -187,6 +198,41 @@ void main() {
 
       expect(find.text('external'), findsOneWidget);
       expect(find.text('favorites'), findsNothing);
+    });
+
+    testWidgets('starts on the favourites when they are what was left picked', (tester) async {
+      // WT-1924: one control asks one question, so all of its answers are
+      // remembered the same way - a person who left the section on their
+      // favourites comes back to them rather than to an address book.
+      await pumpScreen(tester, selections: const [external, favorites], rememberedFavorites: true);
+
+      expect(find.text('favorites'), findsOneWidget);
+      expect(find.text('external'), findsNothing);
+    });
+
+    testWidgets('remembers the favourites the moment they are picked', (tester) async {
+      final contactsBloc = await pumpScreen(tester, selections: const [local, external, favorites]);
+
+      await pick(tester, find.byKey(contactsSourceFavoritesKey));
+
+      final remembered = contactsBloc.activeContactSourceTypeRepository as _RememberedSourceType;
+      expect(remembered.favorites, isTrue);
+    });
+
+    testWidgets('and forgets them again when an address book is picked', (tester) async {
+      // Picking a book is how the favourites are left: the chooser offers one
+      // list at a time, so the next start must not come back to them.
+      final contactsBloc = await pumpScreen(
+        tester,
+        selections: const [local, external, favorites],
+        rememberedFavorites: true,
+      );
+
+      await pick(tester, find.text('Your phone').last);
+
+      final remembered = contactsBloc.activeContactSourceTypeRepository as _RememberedSourceType;
+      expect(remembered.favorites, isFalse);
+      expect(remembered.getActiveContactSourceType(), ContactSourceType.local);
     });
 
     testWidgets('offers favourites as one more entry rather than a control of its own', (tester) async {
@@ -322,6 +368,15 @@ void main() {
   });
 
   group('a deployment that turns favourites off in this section', () {
+    testWidgets('opens on an address book even when favourites were the remembered pick', (tester) async {
+      // The pick outlives a change of configuration, and a section that no
+      // longer carries favourites must not open on a list it does not offer.
+      await pumpScreen(tester, selections: const [local, external], rememberedFavorites: true);
+
+      expect(find.text('local'), findsNothing);
+      expect(find.text('external'), findsOneWidget);
+    });
+
     testWidgets('never offers the entry', (tester) async {
       await pumpScreen(tester, selections: const [local, external]);
 
@@ -546,6 +601,16 @@ void main() {
       expect(find.text('favorites'), findsOneWidget);
       expect(find.text('local'), findsNothing);
       expect(find.text('external'), findsNothing);
+    });
+
+    testWidgets('still offers the rearrange button, though nobody picked the favourites', (tester) async {
+      // The button belongs to the list on screen, and here that list is the
+      // favourites - shown because they are all there is, not because anyone
+      // chose them. Asking the pick instead would leave it unreachable: with a
+      // single entry the chooser is not drawn, so the pick can never be made.
+      await pumpScreen(tester, selections: const [favorites], favorites: [aFavorite(0), aFavorite(1)]);
+
+      expect(find.bySemanticsIdentifier(contactsFavoritesReorderId), findsOneWidget);
     });
 
     testWidgets('and never names an address book it was not given', (tester) async {

@@ -28,11 +28,20 @@ class _RememberedSourceType implements ActiveContactSourceTypeRepository {
 
   ContactSourceType _value;
 
+  /// What the chooser was left on, remembered the way the app remembers it.
+  bool favorites = false;
+
   @override
   ContactSourceType getActiveContactSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => _value;
 
   @override
   Future<void> setActiveContactSourceType(ContactSourceType value) async => _value = value;
+
+  @override
+  bool getFavoritesPicked({bool defaultValue = false}) => favorites;
+
+  @override
+  Future<void> setFavoritesPicked(bool value) async => favorites = value;
 
   @override
   Future<void> clear() async {}
