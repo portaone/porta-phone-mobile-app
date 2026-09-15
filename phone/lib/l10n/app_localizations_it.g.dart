@@ -3132,6 +3132,21 @@ class AppLocalizationsIt extends AppLocalizations {
       'I messaggi vocali selezionati verranno eliminati definitivamente. Vuoi continuare?';
 
   @override
+  String get voicemail_Dialog_deleteSelectedPermanentlyContent =>
+      'I messaggi selezionati saranno rimossi dalla casella e non potranno essere ripristinati.';
+
+  @override
+  String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Eliminare $count messaggi definitivamente?',
+      one: 'Eliminare il messaggio definitivamente?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get voicemail_Dialog_deleteSelectedTitle => 'Eliminare i messaggi vocali selezionati?';
 
   @override
@@ -3227,6 +3242,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voicemail_Label_restore => 'Ripristina';
+
+  @override
+  String get voicemail_Label_restoreSelected => 'Ripristina selezionati';
 
   @override
   String get voicemail_Label_retry => 'Riprova';
