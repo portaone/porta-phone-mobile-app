@@ -20,16 +20,22 @@ import 'package:signaling/signaling.dart';
 ///   as the server orders them, a new call opens its line, and a hangup or a
 ///   missed call frees it - the line keeps its position, since the position is
 ///   the line's number. A call without a line number is the guest call and
-///   lives in the guest slot, which counts as a line for every purpose here.
+///   lives in the guest slot, which counts as a line for every purpose here;
+/// - the conference block: the room a `conference_offer` announced, with the
+///   participants the last list carried, until the room ends. A room that came
+///   and went while nobody was subscribed leaves nothing behind, and one that
+///   is still up is described to the late subscriber exactly as the server
+///   describes it after a reconnect.
 ///
-/// What is not: presence and dialog snapshots, the keepalive interval, the
-/// timestamp and the conference block stay as the handshake reported them.
+/// What is not: presence and dialog snapshots, the keepalive interval and the
+/// timestamp stay as the handshake reported them.
 class SessionSnapshot {
   SessionSnapshot(StateHandshake handshake, {int Function()? now})
     : _base = handshake,
       _registration = handshake.registration,
       _lines = List<Line?>.of(handshake.lines),
       _guestLine = handshake.guestLine,
+      _conference = handshake.conference,
       _now = now ?? (() => DateTime.now().millisecondsSinceEpoch);
 
   final StateHandshake _base;
@@ -37,6 +43,7 @@ class SessionSnapshot {
   Registration _registration;
   final List<Line?> _lines;
   Line? _guestLine;
+  ConferenceInfo? _conference;
 
   /// Whether a call is up on any line, the guest line included. A line the
   /// handshake reported counts even before an event of its call arrives.
@@ -51,7 +58,7 @@ class SessionSnapshot {
     presenceInfos: _base.presenceInfos,
     dialogInfos: _base.dialogInfos,
     guestLine: _guestLine,
-    conference: _base.conference,
+    conference: _conference,
   );
 
   /// Folds [event] into the snapshot. Events that carry no session state are
@@ -68,6 +75,14 @@ class SessionSnapshot {
         _registration = const Registration(status: RegistrationStatus.unregistering);
       case UnregisteredEvent():
         _registration = const Registration(status: RegistrationStatus.unregistered);
+      case ConferenceOfferEvent(:final room, :final participants):
+        _conference = ConferenceInfo(room: room, participants: participants);
+      case ConferenceUpdatedEvent(:final room, :final participants):
+        _conference = ConferenceInfo(room: room, participants: participants);
+      case ConferenceTerminatedEvent():
+      case ConferenceFailedEvent():
+        // Both are terminal for the room; nothing about it follows.
+        _conference = null;
       case CallEvent():
         _applyCallEvent(event);
       default:
