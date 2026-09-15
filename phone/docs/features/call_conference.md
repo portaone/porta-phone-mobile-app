@@ -1,0 +1,161 @@
+# Conference
+
+Merging the calls a person already holds into one room where everybody hears
+everybody. The room is the server's - a Janus AudioBridge the backend builds
+and owns - and this client asks for it, joins it, and follows what it says.
+Last reviewed: 2026-09-17.
+
+The wire format, every refusal reason and the obligations this client is held
+to are in
+[`packages/signaling/docs/conference_protocol.md`](../../packages/signaling/docs/conference_protocol.md).
+This page is the app side: what holds the room's state, what happens to a call
+that joins it, and how it is taken down.
+
+## Where it lives
+
+```
+lib/features/call/
+  conference/
+    conference_peer_connection.dart   the client's own connection to the mixer
+    leg_mute_sync.dart                keeps the platform's mute for each leg in step with the room's
+  models/conference_state.dart        ConferenceState, ConferencePhase
+  bloc/call_bloc.dart                 the handlers, in the "conference" section
+  bloc/call_state.dart                the derivations: mergeableCallIds, mergeableLegs, canMerge, canAdd
+```
+
+## The model
+
+A call in the room is a **leg**. Its own `RTCPeerConnection` stays open for as
+long as the room lasts - closing one makes the server send a SIP BYE and ends
+that call - but it carries no audio in either direction: the server takes the
+far end's audio from the SIP side and mixes it, so the leg is **silenced, not
+closed**.
+
+The host is in the room through **one more connection**, next to the legs:
+`ConferencePeerConnection`, carrying the microphone up and the mix down. It is
+not a call, has no call id, and is not known to the operating system.
+
+```
+this client                                  the server
+  PC per line  ---> line 0 --- SIP ---> far end B    microphone and inbound both off
+               ---> line 1 --- SIP ---> far end C    microphone and inbound both off
+  one more PC  ---> AudioBridge room                 microphone in, the mix out
+```
+
+Nothing is signalled to the far ends. For each of them it stays an ordinary
+one-to-one call; they are told neither that a conference exists nor who else is
+in it.
+
+## The state
+
+`CallState.conference` is a `ConferenceState`:
+
+| field | what it is |
+|---|---|
+| `room` | the number the server assigned, from its offer; `null` before it |
+| `phase` | `none` / `assembling` / `active` |
+| `legs` | this client's own record: the calls it put in, by call id, with the line each is on |
+| `participants` | the server's list as last sent; the host is never in it |
+| `selfMuted` | whether the host's microphone is off towards the room |
+
+`legs` and `participants` are deliberately two fields. `legs` is what this
+client asked for and is filled from the merge's acknowledgement, before any
+room exists; `participants` is what the server says the room contains. Between
+the acknowledgement and the offer they differ, and each question is asked of
+the right one: whether a call is a leg (`isLeg`) of the client's record,
+whether the server will accept a mute for it (`isReady`) of the server's.
+
+Membership is never a flag on `ActiveCall`. The call object is copied in dozens
+of places, and a second source of truth would drift.
+
+## A room's life
+
+```
+merge {lines}
+  -> ack                      phase: assembling, legs recorded, every leg silenced NOW
+     ...the server wires each leg into the mixer and un-holds it...
+  <- conference_offer {room, jsep, participants}
+  -> conference_answer {jsep}  phase: active; the host is in the room
+ <-> conference_ice_trickle    both ways, many
+```
+
+Two details carry most of the correctness:
+
+**The legs are silenced at the acknowledgement, not at the offer.** The
+protocol requires it, and the record of what was silenced is exactly what a
+failure between the two undoes.
+
+**The client keeps a deadline of its own** (`conferenceAssemblyTimeout`,
+20 s). The server has one too - 10 s - but announces its expiry as an *event*,
+and events are not replayed across a dropped socket. Without a local deadline a
+socket that dies in that window would leave two live calls silent in both
+directions forever. The local one is deliberately the longer, so the server's
+word wins whenever the socket is alive.
+
+## Joining and leaving
+
+A call outside the room joins with `conference_add`. **No new offer follows**:
+the mix the host receives does not change shape when a participant is added, so
+the connection to the mixer is untouched. The server announces the new member
+with `conference_updated`, and that list is the membership.
+
+The server's list is authoritative on every update:
+
+- a leg no longer listed but still up becomes an ordinary call again - audio
+  back, and on hold, because the room is what the host is listening to;
+- a listed call is already off hold on the server's side (it un-holds a leg as
+  it joins, with no event), so the local flag and the operating system follow;
+- a listed call this client no longer has does **not** become a leg: a leg with
+  no call behind it is a nameless row with dead controls, and a call id the
+  operating system does not know fails the grouping for every other leg with
+  it;
+- a listed call this client did not record itself - an add whose acknowledgement
+  was lost, or a list arriving after a reconnect - is silenced on adoption:
+  membership and where a call's audio actually goes must not disagree.
+
+There is no way out for the host alone. The room is ended for everybody, or one
+participant is hung up; the protocol offers self-mute instead of stepping out.
+
+## Mute
+
+Two different things share one word, and the code keeps them apart:
+
+| what | where it lives | how it is done |
+|---|---|---|
+| the host towards the room | `conference.selfMuted` | the microphone leaves the **mixer** connection's sender |
+| one participant, for everybody | the server's `participants[].muted` | `conference_mute {line}`; the outcome comes back as the next list, nothing is guessed |
+
+A leg's own microphone left its connection when it joined, so muting *a leg*
+has nothing to silence there - a mute asked for a leg, from any control, is a
+mute of the room.
+
+That matters because the operating system is one of those controls. It keeps a
+mute state per call and re-publishes it unasked - when a participant is hung
+up, when the audio device changes - so every leg is told the room's mute and
+nothing the platform repeats is news. `LegMuteSync` does that, and tells this
+client's own echoes from a person pressing mute: a report matching the **oldest
+command still outstanding** for that call is that command coming home; anything
+else is somebody's intention. The value alone cannot decide, because the
+platform does not wait for the report before the command returns, so a report
+can still be in flight when the host asks for the opposite.
+
+## The operating system
+
+The legs are declared as one group (`setCallGroup('room-<room>', legs)`), which
+becomes a `Conference` on Android and a call group on iOS. A member of a group
+cannot be held or resumed on its own: the plugin answers `callIsGrouped` and
+the server would refuse the hold as `line_in_conference` - so hold and transfer
+are refused for a leg on every path, including the ones that do not come from
+this app's own UI.
+
+## Teardown
+
+| how | what this client does |
+|---|---|
+| the host ends it | drops the room locally first, then asks the server; every leg is hung up - a room is not unwound into separate calls |
+| `conference_terminated` | the calls still up become ordinary calls: all of them are active on the server, so one carries on and the rest go on hold |
+| `conference_failed` | the same, plus a notification naming the reason |
+| the mixer connection dies | the room cannot be asked for again - the server offers it once - so the calls are handed back the same way, and the room is ended on the server in case it still stands |
+
+A room does not survive a Janus restart, and there is exactly one room per
+signalling session.

@@ -235,6 +235,30 @@
   "@call_CallList_outgoing": {
     "description": "Trailing label on a ringing outgoing row in the call list."
   },
+  "conferenceRefusal_conferenceDisabled": "บัญชีนี้ไม่สามารถใช้การประชุมสายได้",
+  "@conferenceRefusal_conferenceDisabled": {
+    "description": "Shown when the deployment does not offer conferences and the server refuses a merge."
+  },
+  "conferenceRefusal_conferenceAlreadyActive": "มีการประชุมสายอยู่แล้ว",
+  "@conferenceRefusal_conferenceAlreadyActive": {
+    "description": "Shown when a merge is refused because this session already hosts a conference."
+  },
+  "conferenceRefusal_lineAlreadyInConference": "สายนั้นอยู่ในการประชุมสายแล้ว",
+  "@conferenceRefusal_lineAlreadyInConference": {
+    "description": "Shown when a call the user asked to add is already part of the conference."
+  },
+  "conferenceRefusal_callsAreGone": "ไม่สามารถรวมสายเหล่านั้นได้อีกต่อไป",
+  "@conferenceRefusal_callsAreGone": {
+    "description": "Shown when a merge is refused because the calls it named are no longer there to merge."
+  },
+  "conferenceRefusal_lineNotReady": "ผู้เข้าร่วมรายนั้นกำลังเข้าร่วม",
+  "@conferenceRefusal_lineNotReady": {
+    "description": "Shown when the server refuses to mute a participant it has not finished adding."
+  },
+  "conferenceRefusal_unavailable": "ไม่สามารถรวมสายได้",
+  "@conferenceRefusal_unavailable": {
+    "description": "Shown when a merge is refused for a reason the user can do nothing about."
+  },
   "call_CallList_header": "{count, plural, one{{count} สาย - แตะเพื่อเลือก} other{{count} สาย - แตะเพื่อเลือก}}",
   "@call_CallList_header": {
     "description": "Header above the call list on the call screen when more than one call is in progress.",
@@ -1453,6 +1477,18 @@
   },
   "notifications_messageSnackBarAction_callVideoDowngraded": "การตั้งค่า",
   "@notifications_messageSnackBarAction_callVideoDowngraded": {},
+  "notifications_messageSnackBar_conferenceFailed": "ไม่สามารถตั้งค่าการประชุมสายได้",
+  "@notifications_messageSnackBar_conferenceFailed": {
+    "description": "Shown when a conference that was being set up failed; the merged calls go on as separate calls."
+  },
+  "notifications_messageSnackBar_conferenceVideoLeg": "สายวิดีโอไม่สามารถเข้าร่วมการประชุมสายได้",
+  "@notifications_messageSnackBar_conferenceVideoLeg": {
+    "description": "Shown when a conference failed because one of the merged calls is a video call, which the audio mixer cannot take."
+  },
+  "notifications_messageSnackBar_conferenceEnded": "การประชุมสายสิ้นสุดแล้ว สายยังคงดำเนินต่อ",
+  "@notifications_messageSnackBar_conferenceEnded": {
+    "description": "Shown when the server ends a conference while its calls are still up; they go on as separate calls."
+  },
   "notifications_errorSnackBar_activeLineBlindTransferWarning": "คุณกำลังอยู่ในสายกับผู้รับที่คุณพยายามโอนสายแบบไม่รอรับอยู่แล้ว",
   "@notifications_errorSnackBar_activeLineBlindTransferWarning": {
     "description": "Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target."

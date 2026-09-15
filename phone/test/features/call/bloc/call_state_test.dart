@@ -637,6 +637,14 @@ void main() {
       expect(s.mergeableCallIds, ['outside', 'another']);
     });
 
+    test('mergeableLegs names each asked-for call by its line, and skips the rest', () {
+      final ringing = _makeCall(callId: 'ringing', line: 4, processingStatus: CallProcessingStatus.incomingFromOffer);
+      final another = _makeCall(callId: 'another', line: 6, acceptedTime: DateTime(2024));
+      final s = state.copyWith(activeCalls: [legA, legB, outside, ringing, another]);
+
+      expect(s.mergeableLegs(['outside', 'another', 'ringing', 'leg-a', 'gone']), {'outside': 2, 'another': 6});
+    });
+
     test('canMerge needs the capability, no room yet, and two mergeable calls', () {
       final two = CallState(activeCalls: [legA, legB]);
 
