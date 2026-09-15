@@ -103,9 +103,16 @@ class WebtritApiClient {
     RequestOptions requestOptions = const RequestOptions(),
     ResponseOptions responseOptions = const ResponseOptions(),
   }) async {
+    // The call's own parameters are merged into whatever the configured base URL
+    // already carries rather than replacing it: `replace` swaps the whole query,
+    // so a deployment whose URL carries something of its own would keep it on
+    // every call that asks for nothing and lose it on every call that does - the
+    // same endpoint behaving two ways depending on a flag.
+    final mergedQueryParameters = {...tenantUrl.queryParameters, ...?queryParameters};
+
     final url = tenantUrl.replace(
       pathSegments: [...tenantUrl.pathSegments.where((segment) => segment.isNotEmpty), ...pathSegments],
-      queryParameters: queryParameters,
+      queryParameters: mergedQueryParameters.isEmpty ? null : mergedQueryParameters,
     );
 
     final xRequestId = requestId ?? RequestUtil.generate();
