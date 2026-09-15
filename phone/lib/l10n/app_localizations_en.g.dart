@@ -281,6 +281,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call_CallList_outgoing => 'Outgoing';
 
   @override
+  String get conferenceRefusal_conferenceDisabled => 'Conferences are not available on this account';
+
+  @override
+  String get conferenceRefusal_conferenceAlreadyActive => 'A conference is already running';
+
+  @override
+  String get conferenceRefusal_lineAlreadyInConference => 'That call is already in the conference';
+
+  @override
+  String get conferenceRefusal_callsAreGone => 'Those calls are no longer available to merge';
+
+  @override
+  String get conferenceRefusal_lineNotReady => 'That participant is still joining';
+
+  @override
+  String get conferenceRefusal_unavailable => 'The calls could not be merged';
+
+  @override
   String call_CallList_header(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1649,6 +1667,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Settings';
+
+  @override
+  String get notifications_messageSnackBar_conferenceFailed => 'The conference could not be set up';
+
+  @override
+  String get notifications_messageSnackBar_conferenceVideoLeg => 'A video call cannot join a conference';
+
+  @override
+  String get notifications_messageSnackBar_conferenceEnded => 'The conference has ended, the calls continue';
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>

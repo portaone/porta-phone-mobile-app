@@ -5,7 +5,8 @@ It implements both `Bloc<CallEvent, CallState>` and `CallkeepDelegate`, making i
 that bridges signaling, native call UI, WebRTC media, and the Flutter UI layer.
 
 The product/UX view lives in [`call_ux.md`](call_ux.md); incoming-call background scenarios with
-diagrams in [`../incoming_call_scenarios.md`](../incoming_call_scenarios.md).
+diagrams in [`../incoming_call_scenarios.md`](../incoming_call_scenarios.md); merging calls into a
+room, and what that does to each of them, in [`call_conference.md`](call_conference.md).
 
 ## Where it lives
 
