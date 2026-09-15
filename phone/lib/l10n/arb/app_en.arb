@@ -2814,6 +2814,10 @@
   "@voicemail_Label_moveToTrash": {
     "description": "Menu action that moves a voicemail to the trash, where it can be restored."
   },
+  "voicemail_Label_openContact": "Open contact",
+  "@voicemail_Label_openContact": {
+    "description": "Menu action that opens the card of whoever left the voicemail."
+  },
   "voicemail_Label_playbackError": "Playback failed",
   "@voicemail_Label_playbackError": {},
   "voicemail_Label_restore": "Restore",
@@ -2934,6 +2938,10 @@
         "type": "String"
       }
     }
+  },
+  "voicemail_Snackbar_contactGone": "That contact is no longer in your address book",
+  "@voicemail_Snackbar_contactGone": {
+    "description": "Shown when the caller is no longer in the address book by the time their card is asked for."
   },
   "voicemail_Snackbar_notConfigured": "Contact your administrator to activate voicemail",
   "@voicemail_Snackbar_notConfigured": {},
