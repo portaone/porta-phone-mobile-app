@@ -2508,18 +2508,43 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> __onMutationPerformSetMuted(_CallMutationEventPerformSetMuted event, Emitter<CallState> emit) async {
-    await state.performOnActiveCall(event.callId, (activeCall) {
-      final audioTrack = activeCall.localStream?.getAudioTracks()[0];
-      if (audioTrack != null) {
-        Helper.setMicrophoneMute(event.muted, audioTrack);
-      }
-    });
+    await _setMicrophoneAttached(event.callId, attached: !event.muted);
 
     emit(
       state.copyWithMappedActiveCall(event.callId, (activeCall) {
         return activeCall.copyWith(muted: event.muted);
       }),
     );
+  }
+
+  /// Puts the microphone on [callId]'s own connection, or takes it off.
+  ///
+  /// Mute is a property of one connection, not of the microphone: the app
+  /// captures one pooled track and hands the same one to every call, so
+  /// switching that track off would silence all of them at once. Taking it
+  /// off a sender stops only what that connection sends, and the far end
+  /// receives silence rather than nothing - the stream stays up, so no
+  /// gateway sees a call that has gone quiet as one that has gone away.
+  Future<void> _setMicrophoneAttached(String callId, {required bool attached}) async {
+    try {
+      final peerConnection = await _peerConnectionManager.retrieve(callId, allowWaiting: false);
+      if (peerConnection == null) return;
+      final sender = await peerConnection.audioSender();
+      if (sender == null) {
+        _logger.warning('_setMicrophoneAttached: $callId has no audio sender, the microphone is unchanged');
+        return;
+      }
+      if (!attached) {
+        await sender.replaceTrack(null);
+        _logger.info('_setMicrophoneAttached: $callId detached');
+        return;
+      }
+      final audioTrack = state.retrieveActiveCall(callId)?.localStream?.getAudioTracks().firstOrNull;
+      if (audioTrack != null && sender.track == null) await sender.replaceTrack(audioTrack);
+      _logger.info('_setMicrophoneAttached: $callId attached (track=${audioTrack?.id})');
+    } catch (e, stackTrace) {
+      callErrorReporter.handle(e, stackTrace, '_setMicrophoneAttached error');
+    }
   }
 
   Future<void> __onMutationPerformSendDTMF(_CallMutationEventPerformSendDTMF event, Emitter<CallState> emit) async {
