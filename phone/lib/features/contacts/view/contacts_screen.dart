@@ -41,11 +41,13 @@ class _ContactsScreenState extends State<ContactsScreen> with SingleTickerProvid
   void initState() {
     super.initState();
 
-    final activeSourceType = context.read<ContactsBloc>().state.sourceType;
-    final initialSourceTypesIndex = widget.sourceTypes.indexOf(activeSourceType);
+    // The same rule the unified arrangement asks: what was remembered may no
+    // longer be on offer, and the first book is what is left in that case.
+    final remembered = context.read<ContactsBloc>().state.sourceType;
+    final shown = widget.sourceTypes.shown(remembered);
 
     _tabController = TabController(
-      initialIndex: initialSourceTypesIndex == -1 ? 0 : initialSourceTypesIndex,
+      initialIndex: shown == null ? 0 : widget.sourceTypes.indexOf(shown),
       length: widget.sourceTypes.length,
       vsync: this,
     );
