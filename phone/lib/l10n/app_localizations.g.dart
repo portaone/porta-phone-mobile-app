@@ -2881,6 +2881,12 @@ abstract class AppLocalizations {
   /// **'is typing...'**
   String get messaging_MessageListView_typingTrail;
 
+  /// Screen reader hint on a message bubble, spoken as 'double-tap and hold to <hint>': what a long press on the message opens.
+  ///
+  /// In en, this message translates to:
+  /// **'open the message actions'**
+  String get messaging_MessageView_actionsHint;
+
   /// No description provided for @messaging_MessageView_delete.
   ///
   /// In en, this message translates to:

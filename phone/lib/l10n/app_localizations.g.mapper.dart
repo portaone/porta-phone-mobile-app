@@ -729,6 +729,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'messaging_MessageField_hint' => messaging_MessageField_hint,
       'messaging_MessageListView_typingTrail' =>
         messaging_MessageListView_typingTrail,
+      'messaging_MessageView_actionsHint' => messaging_MessageView_actionsHint,
       'messaging_MessageView_delete' => messaging_MessageView_delete,
       'messaging_MessageView_deleted' => messaging_MessageView_deleted,
       'messaging_MessageView_edit' => messaging_MessageView_edit,

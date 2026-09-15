@@ -1393,6 +1393,8 @@
   "@messaging_MessageField_hint": {},
   "messaging_MessageListView_typingTrail": "กำลังพิมพ์...",
   "@messaging_MessageListView_typingTrail": {},
+  "messaging_MessageView_actionsHint": "เปิดการดำเนินการกับข้อความ",
+  "@messaging_MessageView_actionsHint": {},
   "messaging_MessageView_delete": "ลบ",
   "@messaging_MessageView_delete": {},
   "messaging_MessageView_deleted": "[ลบแล้ว]",
