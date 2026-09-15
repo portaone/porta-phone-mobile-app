@@ -237,6 +237,7 @@ class _Fixture {
       webtritApiClient: client,
       token: 'token',
       appDatabase: database,
+      trashSupported: true,
       sessionGuard: guard,
     );
   }

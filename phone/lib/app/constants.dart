@@ -89,6 +89,13 @@ const kAutoprovisionRout = '/autoprovision';
 const kSmsMessagingFeatureFlag = 'smsMessaging';
 const kChatMessagingFeatureFlag = 'internalMessaging';
 const kVoicemailFeatureFlag = 'voicemail';
+
+/// The three WT-1878 voicemail functionalities. All hang off
+/// [kVoicemailFeatureFlag] and are withdrawn with it, so a client reads them as
+/// "offer this control", never as "voicemail is on".
+const kVoicemailSaveFeatureFlag = 'voicemailSave';
+const kVoicemailTrashFeatureFlag = 'voicemailTrash';
+const kVoicemailForwardFeatureFlag = 'voicemailForward';
 const kSystemNotificationsFeatureFlag = 'notifications';
 const kSystemNotificationsPushFeatureFlag = 'notificationsPush';
 const kSipPresenceFeatureFlag = 'sipPresence';

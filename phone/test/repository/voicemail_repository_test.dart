@@ -22,6 +22,7 @@ void main() {
       webtritApiClient: apiClient,
       token: 'user_token',
       appDatabase: appDatabase,
+      trashSupported: true,
       sessionGuard: const EmptySessionGuard(),
     );
     // Let the refresh the constructor starts finish before a test seeds or

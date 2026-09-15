@@ -113,4 +113,76 @@ void main() {
       );
     });
   });
+  // The three WT-1878 controls each answer for themselves, and each dies with
+  // voicemail. The trash one carries the heaviest consequence: read as false it
+  // does not merely hide a control, it changes what deleting means.
+  group('the three voicemail controls', () {
+    const voicemailItem = AppConfigSettingsItem(
+      enabled: true,
+      type: 'voicemail',
+      titleL10n: 'settings_ListViewTileTitle_voicemail',
+      icon: '0xe0b7',
+    );
+
+    FeatureAccess access(List<String> flags) {
+      return FeatureAccess.create(
+        AppConfig(
+          settingsConfig: AppConfigSettings(
+            sections: [
+              AppConfigSettingsSection(enabled: true, titleL10n: 'section', items: const [voicemailItem]),
+            ],
+          ),
+        ),
+        [createMockTermsResource()],
+        CoreSupportImpl(flags),
+        null,
+        const FeatureOverrides(),
+      );
+    }
+
+    test('each control follows its own flag', () {
+      final featureAccess = access([kVoicemailFeatureFlag, kVoicemailSaveFeatureFlag, kVoicemailForwardFeatureFlag]);
+
+      expect(featureAccess.voicemailSaveAvailable, isTrue);
+      expect(featureAccess.voicemailForwardAvailable, isTrue);
+      expect(featureAccess.voicemailTrashAvailable, isFalse);
+    });
+
+    test('all three are on when the core offers all three', () {
+      final featureAccess = access([
+        kVoicemailFeatureFlag,
+        kVoicemailSaveFeatureFlag,
+        kVoicemailTrashFeatureFlag,
+        kVoicemailForwardFeatureFlag,
+      ]);
+
+      expect(featureAccess.voicemailSaveAvailable, isTrue);
+      expect(featureAccess.voicemailTrashAvailable, isTrue);
+      expect(featureAccess.voicemailForwardAvailable, isTrue);
+    });
+
+    test('none of them survives voicemail itself being withdrawn', () {
+      // The backend withdraws the three with voicemail, but the client does not
+      // rely on that: a control cannot be offered where the feature does not run.
+      final featureAccess = access([
+        kVoicemailSaveFeatureFlag,
+        kVoicemailTrashFeatureFlag,
+        kVoicemailForwardFeatureFlag,
+      ]);
+
+      expect(featureAccess.voicemailAvailable, isFalse);
+      expect(featureAccess.voicemailSaveAvailable, isFalse);
+      expect(featureAccess.voicemailTrashAvailable, isFalse);
+      expect(featureAccess.voicemailForwardAvailable, isFalse);
+    });
+
+    test('a core that offers voicemail alone offers none of the three', () {
+      final featureAccess = access([kVoicemailFeatureFlag]);
+
+      expect(featureAccess.voicemailAvailable, isTrue);
+      expect(featureAccess.voicemailSaveAvailable, isFalse);
+      expect(featureAccess.voicemailTrashAvailable, isFalse);
+      expect(featureAccess.voicemailForwardAvailable, isFalse);
+    });
+  });
 }

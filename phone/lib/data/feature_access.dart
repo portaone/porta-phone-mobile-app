@@ -109,6 +109,26 @@ class FeatureAccess extends Equatable {
       coreSupport.supportsVoicemail &&
       (settingsConfig.voicemailsEnabled || bottomMenuConfig.getTabEnabled<VoicemailBottomMenuTab>() != null);
 
+  /// Whether keeping a message is offered.
+  ///
+  /// The three below each answer for one control rather than for the feature,
+  /// and each is false wherever voicemail itself does not run: the backend
+  /// withdraws them with voicemail, and a placement that is configured away
+  /// takes its controls with it. A control whose flag is false is absent, not
+  /// shown switched off - the backend does not have the state behind it.
+  bool get voicemailSaveAvailable => voicemailAvailable && coreSupport.supportsVoicemailSave;
+
+  /// Whether deleting means the trash, with a way back from it.
+  ///
+  /// This one is not only about a control. A plain delete means the trash on
+  /// every backend that has one, whether or not the client offers the trash, so
+  /// a client reading this as false must delete permanently instead - or leave
+  /// its user's messages occupying the mailbox with nothing able to reach them.
+  bool get voicemailTrashAvailable => voicemailAvailable && coreSupport.supportsVoicemailTrash;
+
+  /// Whether passing a message on to a colleague is offered.
+  bool get voicemailForwardAvailable => voicemailAvailable && coreSupport.supportsVoicemailForward;
+
   static FeatureAccess create(
     AppConfig appConfig,
     List<EmbeddedResource> embeddedResources,
