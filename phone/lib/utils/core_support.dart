@@ -16,6 +16,17 @@ abstract class CoreSupport {
   /// Check if the voicemail feature is supported by remote system.
   bool get supportsVoicemail;
 
+  /// Whether a voicemail message can be kept, which the backend reports
+  /// separately from voicemail itself.
+  bool get supportsVoicemailSave;
+
+  /// Whether deleting a voicemail means moving it to a trash it can be
+  /// recovered from.
+  bool get supportsVoicemailTrash;
+
+  /// Whether a voicemail can be passed on to another user of the same backend.
+  bool get supportsVoicemailForward;
+
   /// Check if the SMS messaging feature is supported by remote system.
   bool get supportsSms;
 
@@ -57,6 +68,15 @@ class CoreSupportImpl extends Equatable implements CoreSupport {
 
   @override
   bool get supportsVoicemail => _has(kVoicemailFeatureFlag);
+
+  @override
+  bool get supportsVoicemailSave => _has(kVoicemailSaveFeatureFlag);
+
+  @override
+  bool get supportsVoicemailTrash => _has(kVoicemailTrashFeatureFlag);
+
+  @override
+  bool get supportsVoicemailForward => _has(kVoicemailForwardFeatureFlag);
 
   @override
   bool get supportsSms => _has(kSmsMessagingFeatureFlag);
