@@ -187,6 +187,7 @@ class MainShellRepositories extends StatelessWidget {
                 webtritApiClient: context.read<WebtritApiClient>(),
                 token: context.read<AppBloc>().state.session.token!,
                 appDatabase: context.read<AppDatabase>(),
+                trashSupported: featureAccess.voicemailTrashAvailable,
                 sessionGuard: sessionGuard,
               );
             } else {

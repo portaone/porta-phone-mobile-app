@@ -37,6 +37,7 @@ void main() {
       webtritApiClient: client,
       token: 'token',
       appDatabase: appDatabase,
+      trashSupported: true,
       sessionGuard: guard,
     );
     // Let the refresh the constructor starts finish before a test seeds or

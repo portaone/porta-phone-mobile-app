@@ -34,6 +34,7 @@ void main() {
       webtritApiClient: client,
       token: 'token',
       appDatabase: appDatabase,
+      trashSupported: true,
       sessionGuard: const EmptySessionGuard(),
     );
     await pumpEventQueue();

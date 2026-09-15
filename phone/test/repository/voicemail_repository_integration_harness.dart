@@ -22,6 +22,7 @@ class VoicemailRepositoryIntegrationHarness {
       webtritApiClient: client,
       token: 'integration-token',
       appDatabase: database,
+      trashSupported: true,
       sessionGuard: sessionGuard,
     );
   }

@@ -76,6 +76,28 @@ abstract class VoicemailRepository implements Refreshable {
   /// arrived - because it will hold for every message left.
   Future<void> removeMultipleVoicemails(List<String> messagesIds);
 
+  /// Puts a trashed voicemail back where it was.
+  ///
+  /// The message left the stored list when it was trashed, so a successful
+  /// restore refreshes rather than trying to rebuild it from nothing.
+  ///
+  /// A message that is not in the trash - including one that was never there -
+  /// is reported as not found. That is worth treating as "already restored"
+  /// rather than as a failure.
+  Future<void> restoreVoicemail(String messageId, {String? localeCode});
+
+  /// Deletes a voicemail for good, wherever it currently is.
+  ///
+  /// This and emptying the trash are the only things that free the space a
+  /// message occupies in the mailbox; moving one to the trash does not.
+  Future<void> removeVoicemailPermanently(String messageId, {String? localeCode});
+
+  /// Deletes everything in the trash for good.
+  ///
+  /// Resumable on the backend's side: whatever it managed to delete stays
+  /// deleted, so a retry repeats only what is left.
+  Future<void> emptyVoicemailTrash({String? localeCode});
+
   /// Returns `false` once the server has responded with [VoicemailNotConfiguredException]
   /// or [EndpointNotSupportedException], indicating that voicemail is permanently
   /// unavailable for this session.
@@ -87,21 +109,28 @@ final _logger = Logger('VoicemailRepository');
 class VoicemailRepositoryImpl
     with DialogInfoDriftMapper, PresenceInfoDriftMapper, ContactsDriftMapper, VoicemailMapper
     implements VoicemailRepository {
+  /// [trashSupported] is not a display concern and has no default on purpose.
+  /// A plain delete means the trash on every backend that has one, so a caller
+  /// that cannot show a trash has to say so here - otherwise the messages it
+  /// deletes go on occupying the mailbox with nothing able to reach them.
   VoicemailRepositoryImpl({
     required WebtritApiClient webtritApiClient,
     required String token,
     required AppDatabase appDatabase,
+    required bool trashSupported,
     SessionGuard? sessionGuard,
   }) : _sessionGuard = sessionGuard ?? const EmptySessionGuard(),
        _webtritApiClient = webtritApiClient,
        _token = token,
-       _appDatabase = appDatabase {
+       _appDatabase = appDatabase,
+       _trashSupported = trashSupported {
     _initialize();
   }
 
   final WebtritApiClient _webtritApiClient;
   final String _token;
   final AppDatabase _appDatabase;
+  final bool _trashSupported;
   final SessionGuard _sessionGuard;
 
   // If the repository is disabled, the stream controller is not initialized.
@@ -229,15 +258,11 @@ class VoicemailRepositoryImpl
       await _webtritApiClient.deleteUserVoicemail(
         _token,
         messageId,
-        // A plain delete means "to the trash" on a backend that has one, and
-        // the backend does not withhold that from a client which cannot show
-        // the trash. This app cannot yet: there is no trash list, no restore
-        // and no "empty trash", so a message deleted here would leave the
-        // screen, keep occupying the subscriber's mailbox, and be reachable by
-        // nothing. Deleting outright is what the user is being promised by the
-        // button they pressed, and it is what this app did before the backend
-        // grew a trash. Drop this the moment the trash controls exist.
-        permanent: true,
+        // Where there is a trash the message goes there and stays reachable.
+        // Where there is not, the backend still treats a plain delete as "to
+        // the trash" if it has one, so saying permanent is the only way to
+        // keep a deletion from leaving messages nobody can get back to.
+        permanent: !_trashSupported,
         locale: localeCode,
         options: RequestOptions.withNoRetries(),
       );
@@ -315,6 +340,73 @@ class VoicemailRepositoryImpl
       await _appDatabase.voicemailDao.updateVoicemail(before);
       rethrow;
     }
+  }
+
+  @override
+  Future<void> restoreVoicemail(String messageId, {String? localeCode}) async {
+    if (_fetching != null) {
+      await _fetching;
+    }
+
+    try {
+      await _webtritApiClient.restoreUserVoicemail(
+        _token,
+        messageId,
+        locale: localeCode,
+        options: RequestOptions.withNoRetries(),
+      );
+    } on UnauthorizedException catch (e) {
+      _sessionGuard.onUnauthorized(e);
+      rethrow;
+    }
+
+    // The row went when the message was trashed, and what comes back carries
+    // more than a restore answers with, so the mailbox is asked again rather
+    // than the row guessed at. A failure here is the refresh's own.
+    await fetchVoicemails(localeCode: localeCode);
+  }
+
+  @override
+  Future<void> removeVoicemailPermanently(String messageId, {String? localeCode}) async {
+    if (_fetching != null) {
+      await _fetching;
+    }
+
+    try {
+      await _webtritApiClient.deleteUserVoicemail(
+        _token,
+        messageId,
+        permanent: true,
+        locale: localeCode,
+        options: RequestOptions.withNoRetries(),
+      );
+
+      await _appDatabase.voicemailDao.deleteVoicemailById(messageId);
+    } on UnauthorizedException catch (e) {
+      _sessionGuard.onUnauthorized(e);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> emptyVoicemailTrash({String? localeCode}) async {
+    if (_fetching != null) {
+      await _fetching;
+    }
+
+    try {
+      await _webtritApiClient.emptyUserVoicemailTrash(
+        _token,
+        locale: localeCode,
+        options: RequestOptions.withNoRetries(),
+      );
+    } on UnauthorizedException catch (e) {
+      _sessionGuard.onUnauthorized(e);
+      rethrow;
+    }
+
+    // Nothing local to do: what the trash held had already left the stored
+    // list on its way there.
   }
 
   /// Keeps a voicemail, or stops keeping it, the same way the seen flag is set.
@@ -485,6 +577,15 @@ class EmptyVoicemailRepository implements VoicemailRepository {
 
   @override
   Future<void> updateVoicemailSavedStatus(String messageId, bool saved, {String? localeCode}) => Future.value();
+
+  @override
+  Future<void> restoreVoicemail(String messageId, {String? localeCode}) => Future.value();
+
+  @override
+  Future<void> removeVoicemailPermanently(String messageId, {String? localeCode}) => Future.value();
+
+  @override
+  Future<void> emptyVoicemailTrash({String? localeCode}) => Future.value();
 
   @override
   Stream<int> watchUnreadVoicemailsCount() => Stream.value(0);

@@ -37,6 +37,7 @@ void main() {
       webtritApiClient: client,
       token: 'token',
       appDatabase: appDatabase,
+      trashSupported: true,
       sessionGuard: guard,
     );
     // Let the refresh the constructor starts finish before a test seeds or
@@ -80,11 +81,30 @@ void main() {
   api.UnauthorizedException unauthorized() =>
       api.UnauthorizedException(url: Uri(), requestId: 'request', statusCode: 401);
 
-  test('a delete is permanent while the app has no trash controls', () async {
+  test('a delete means the trash where there is one', () async {
     await insert(['1']);
     deleteAnswers({});
 
     await repository.removeVoicemail('1');
+
+    verify(() => client.deleteUserVoicemail('token', '1', permanent: false, options: any(named: 'options'))).called(1);
+  });
+
+  test('a delete is permanent where there is no trash', () async {
+    // Without this the message would go to a trash this client cannot reach,
+    // and go on occupying the mailbox with no way back to it.
+    final withoutTrash = VoicemailRepositoryImpl(
+      webtritApiClient: client,
+      token: 'token',
+      appDatabase: appDatabase,
+      trashSupported: false,
+      sessionGuard: guard,
+    );
+    await pumpEventQueue();
+    await insert(['1']);
+    deleteAnswers({});
+
+    await withoutTrash.removeVoicemail('1');
 
     verify(() => client.deleteUserVoicemail('token', '1', permanent: true, options: any(named: 'options'))).called(1);
   });
