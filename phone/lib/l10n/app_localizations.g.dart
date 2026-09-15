@@ -5785,6 +5785,12 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get voicemail_Label_retry;
 
+  /// Menu action that keeps a voicemail.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get voicemail_Label_save;
+
   /// Shown under the trash list: a trashed message still occupies the mailbox.
   ///
   /// In en, this message translates to:
@@ -5796,6 +5802,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} new'**
   String voicemail_Label_unheardCount(int count);
+
+  /// Menu action that stops keeping a voicemail.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsave'**
+  String get voicemail_Label_unsave;
 
   /// Accessibility name of the voicemail filter control, naming the filter that is on.
   ///
@@ -5826,6 +5838,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Play'**
   String get voicemail_SemanticsLabel_play;
+
+  /// Accessibility name of the mark that says a voicemail is kept.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get voicemail_SemanticsLabel_saved;
 
   /// No description provided for @voicemail_Snackbar_notConfigured.
   ///

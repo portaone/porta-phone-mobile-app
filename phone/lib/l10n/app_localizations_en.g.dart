@@ -3154,6 +3154,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Label_retry => 'Try again';
 
   @override
+  String get voicemail_Label_save => 'Save';
+
+  @override
   String get voicemail_Label_trashFootnote =>
       'Messages in the trash still use mailbox space until the trash is emptied.';
 
@@ -3161,6 +3164,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String voicemail_Label_unheardCount(int count) {
     return '$count new';
   }
+
+  @override
+  String get voicemail_Label_unsave => 'Unsave';
 
   @override
   String voicemail_SemanticsLabel_filter(String filter) {
@@ -3178,6 +3184,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_play => 'Play';
+
+  @override
+  String get voicemail_SemanticsLabel_saved => 'Saved';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Contact your administrator to activate voicemail';

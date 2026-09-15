@@ -3194,6 +3194,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Label_retry => 'Спробувати ще раз';
 
   @override
+  String get voicemail_Label_save => 'Зберегти';
+
+  @override
   String get voicemail_Label_trashFootnote =>
       'Повідомлення в кошику далі займають місце у скриньці, доки його не очищено.';
 
@@ -3211,6 +3214,9 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get voicemail_Label_unsave => 'Не зберігати';
+
+  @override
   String voicemail_SemanticsLabel_filter(String filter) {
     return 'Фільтр, зараз $filter';
   }
@@ -3226,6 +3232,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_play => 'Відтворити';
+
+  @override
+  String get voicemail_SemanticsLabel_saved => 'Збережено';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Зверніться до адміністратора, щоб активувати голосову пошту.';

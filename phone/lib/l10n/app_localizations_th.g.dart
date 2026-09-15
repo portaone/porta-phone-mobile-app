@@ -3138,12 +3138,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Label_retry => 'ลองอีกครั้ง';
 
   @override
+  String get voicemail_Label_save => 'บันทึก';
+
+  @override
   String get voicemail_Label_trashFootnote => 'ข้อความในถังขยะยังคงใช้พื้นที่กล่องข้อความจนกว่าจะล้าง';
 
   @override
   String voicemail_Label_unheardCount(int count) {
     return 'ใหม่ $count รายการ';
   }
+
+  @override
+  String get voicemail_Label_unsave => 'เลิกบันทึก';
 
   @override
   String voicemail_SemanticsLabel_filter(String filter) {
@@ -3161,6 +3167,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_play => 'เล่น';
+
+  @override
+  String get voicemail_SemanticsLabel_saved => 'บันทึกไว้';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'ติดต่อผู้ดูแลระบบของคุณเพื่อเปิดใช้งานข้อความเสียง';

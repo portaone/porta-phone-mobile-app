@@ -175,6 +175,23 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     }
   }
 
+  /// Keeps [voicemail], or stops keeping it.
+  ///
+  /// Independent of whether it has been heard, in both directions: keeping a
+  /// message does not mark it read, and reading one does not stop it being
+  /// kept.
+  void toggleSavedStatus(Voicemail voicemail) async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
+      await _repository.updateVoicemailSavedStatus(voicemail.id, !(voicemail.saved ?? false));
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+    } catch (e, s) {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      _logger.severe('Error toggling saved status for voicemail with id ${voicemail.id}: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.toggleSavedStatus');
+    }
+  }
+
   void startCall(Voicemail voicemail) {
     onCallStarted(voicemail.sender);
   }

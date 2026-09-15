@@ -59,6 +59,13 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
     VoicemailFilter.trash => trashedItems,
   };
 
+  /// Whether this mailbox can keep a message.
+  ///
+  /// The same fact as the Saved view being offered - that view exists because
+  /// the flag does - so it is read off the one place the answer is stored
+  /// rather than carried twice and allowed to disagree.
+  bool get saveSupported => filters.contains(VoicemailFilter.saved);
+
   /// How many messages are still unheard, which is counted over the whole
   /// mailbox rather than over the current view - it is what the New filter is
   /// offering, so it has to read the same under every filter.

@@ -3185,6 +3185,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Label_retry => 'Riprova';
 
   @override
+  String get voicemail_Label_save => 'Salva';
+
+  @override
   String get voicemail_Label_trashFootnote =>
       'I messaggi nel cestino occupano ancora spazio nella casella finche non viene svuotato.';
 
@@ -3193,6 +3196,9 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count nuovi', one: '$count nuovo');
     return '$_temp0';
   }
+
+  @override
+  String get voicemail_Label_unsave => 'Rimuovi dai salvati';
 
   @override
   String voicemail_SemanticsLabel_filter(String filter) {
@@ -3210,6 +3216,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_play => 'Riproduci';
+
+  @override
+  String get voicemail_SemanticsLabel_saved => 'Salvato';
 
   @override
   String get voicemail_Snackbar_notConfigured =>

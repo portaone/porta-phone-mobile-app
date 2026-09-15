@@ -59,6 +59,7 @@ class VoicemailBody extends StatelessWidget {
                         items: state.visibleItems,
                         selectedVoicemailsIds: state.selectedVoicemailsIds,
                         isMultipleVoicemailsSelection: state.isMultipleVoicemailsSelection,
+                        saveSupported: state.saveSupported,
                       ),
                     ),
                     // The one thing about the trash a person cannot see by
@@ -113,11 +114,13 @@ class VoicemailListView extends StatelessWidget {
     required this.items,
     required this.selectedVoicemailsIds,
     required this.isMultipleVoicemailsSelection,
+    this.saveSupported = false,
   });
 
   final List<Voicemail> items;
   final List<String> selectedVoicemailsIds;
   final bool isMultipleVoicemailsSelection;
+  final bool saveSupported;
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +141,9 @@ class VoicemailListView extends StatelessWidget {
           displayName: item.displaySender,
           selected: selectedVoicemailsIds.contains(item.id),
           onDeleted: (it) => _onDeleteVoicemail(context, it),
+          saveSupported: saveSupported,
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
+          onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
           onCall: (it) => cubit.startCall(it),
           onLongPress: (it) => cubit.toggleSelection(it),
           onTap: isMultipleVoicemailsSelection ? (it) => cubit.toggleSelection(it) : null,
