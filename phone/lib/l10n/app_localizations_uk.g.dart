@@ -3140,6 +3140,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Dialog_deleteSingleTitle => 'Видалити голосове повідомлення?';
 
   @override
+  String get voicemail_Filter_all => 'Усі';
+
+  @override
+  String get voicemail_Filter_saved => 'Збережені';
+
+  @override
+  String get voicemail_Filter_trash => 'Кошик';
+
+  @override
+  String get voicemail_Filter_unheard => 'Нові';
+
+  @override
   String get voicemail_Label_call => 'Дзвінок';
 
   @override
@@ -3156,6 +3168,20 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Label_empty => 'Немає голосових повідомлень';
 
   @override
+  String get voicemail_Label_emptySaved => 'Немає збережених повідомлень';
+
+  @override
+  String get voicemail_Label_emptySavedHint =>
+      'Відкрийте меню на повідомленні й виберіть «Зберегти», щоб воно лишилось тут.';
+
+  @override
+  String get voicemail_Label_emptyTrash => 'Кошик порожній';
+
+  @override
+  String get voicemail_Label_emptyTrashHint =>
+      'Повідомлення, які ви сюди переносите, далі займають місце у скриньці, доки кошик не очищено.';
+
+  @override
   String get voicemail_Label_markAsHeard => 'Позначити як прослухане';
 
   @override
@@ -3166,6 +3192,28 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voicemail_Label_retry => 'Спробувати ще раз';
+
+  @override
+  String get voicemail_Label_trashFootnote =>
+      'Повідомлення в кошику далі займають місце у скриньці, доки його не очищено.';
+
+  @override
+  String voicemail_Label_unheardCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count нових',
+      many: '$count нових',
+      few: '$count нові',
+      one: '$count нове',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String voicemail_SemanticsLabel_filter(String filter) {
+    return 'Фільтр, зараз $filter';
+  }
 
   @override
   String get voicemail_SemanticsLabel_loading => 'Завантаження';

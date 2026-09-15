@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
-import 'package:webtrit_phone/models/voicemail/user_voicemail.dart';
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
@@ -26,7 +26,7 @@ class VoicemailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<VoicemailCubit, VoicemailState>(
-      listenWhen: (previous, current) => previous.items != current.items,
+      listenWhen: (previous, current) => previous.visibleItems != current.visibleItems,
       listener: _stopPlaybackOfRemovedVoicemail,
       builder: (context, state) {
         if (state.isFeatureNotSupported) {
@@ -36,7 +36,7 @@ class VoicemailBody extends StatelessWidget {
           return const Center(child: CircularProgressIndicator(strokeWidth: 2));
         }
         if (state.isLoadedWithError) {
-          return FailureRetryView(onRetry: () => context.read<VoicemailCubit>().fetchVoicemails());
+          return FailureRetryView(onRetry: () => context.read<VoicemailCubit>().refresh());
         }
 
         return RefreshIndicator(
@@ -45,18 +45,31 @@ class VoicemailBody extends StatelessWidget {
           // looks like it did nothing. A host that keeps its body below an app
           // bar hands this a top padding of zero, so the one figure serves both.
           edgeOffset: MediaQuery.of(context).padding.top,
-          onRefresh: () => context.read<VoicemailCubit>().fetchVoicemails(),
+          // A refresh means whichever list is on screen: the stored mailbox for
+          // three of the filters, a fresh read of the trash for the fourth.
+          onRefresh: () => context.read<VoicemailCubit>().refresh(),
           child: Stack(
             children: [
               if (state.isRefreshing) const LinearProgressIndicator(minHeight: 1),
               if (state.isVoicemailsExists)
-                VoicemailListView(
-                  items: state.items,
-                  selectedVoicemailsIds: state.selectedVoicemailsIds,
-                  isMultipleVoicemailsSelection: state.isMultipleVoicemailsSelection,
+                Column(
+                  children: [
+                    Expanded(
+                      child: VoicemailListView(
+                        items: state.visibleItems,
+                        selectedVoicemailsIds: state.selectedVoicemailsIds,
+                        isMultipleVoicemailsSelection: state.isMultipleVoicemailsSelection,
+                      ),
+                    ),
+                    // The one thing about the trash a person cannot see by
+                    // looking at it: a message in here is still occupying the
+                    // mailbox, so leaving it here is not the same as deleting
+                    // it.
+                    if (state.filter == VoicemailFilter.trash) const _TrashFootnote(),
+                  ],
                 )
               else
-                const EmptyMailboxView(),
+                EmptyMailboxView(filter: state.filter),
             ],
           ),
         );
@@ -65,14 +78,32 @@ class VoicemailBody extends StatelessWidget {
   }
 
   // The player is screen-scoped and not owned by the tiles, so when the active
-  // voicemail leaves the list (deleted on this device or remotely) nothing else
-  // stops the audio.
+  // voicemail leaves the list (deleted on this device or remotely, or simply
+  // filtered out from under it) nothing else stops the audio.
   void _stopPlaybackOfRemovedVoicemail(BuildContext context, VoicemailState state) {
     final controller = context.read<VoicemailPlaybackController>();
     final activeId = controller.activeId;
-    if (activeId != null && !state.items.any((it) => it.id == activeId)) {
+    if (activeId != null && !state.visibleItems.any((it) => it.id == activeId)) {
       unawaited(controller.stop());
     }
+  }
+}
+
+class _TrashFootnote extends StatelessWidget {
+  const _TrashFootnote();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: Text(
+        context.l10n.voicemail_Label_trashFootnote,
+        textAlign: TextAlign.center,
+        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+      ),
+    );
   }
 }
 

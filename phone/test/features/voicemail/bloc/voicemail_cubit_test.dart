@@ -33,7 +33,13 @@ void main() {
     when(() => repository.isFeatureSupported).thenReturn(true);
     when(() => repository.watchVoicemails()).thenAnswer((_) => voicemails.stream);
     when(() => repository.fetchVoicemails()).thenAnswer((_) async {});
-    cubit = VoicemailCubit(repository: repository, onCallStarted: (_) {}, onSubmitNotification: (_) {});
+    cubit = VoicemailCubit(
+      repository: repository,
+      onCallStarted: (_) {},
+      onSubmitNotification: (_) {},
+      saveSupported: true,
+      trashSupported: true,
+    );
   });
 
   tearDown(() async {

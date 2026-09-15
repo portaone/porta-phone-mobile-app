@@ -3132,6 +3132,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Dialog_deleteSingleTitle => 'Eliminare il messaggio vocale?';
 
   @override
+  String get voicemail_Filter_all => 'Tutti';
+
+  @override
+  String get voicemail_Filter_saved => 'Salvati';
+
+  @override
+  String get voicemail_Filter_trash => 'Cestino';
+
+  @override
+  String get voicemail_Filter_unheard => 'Nuovi';
+
+  @override
   String get voicemail_Label_call => 'Chiama';
 
   @override
@@ -3148,6 +3160,19 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Label_empty => 'Nessun messaggio vocale';
 
   @override
+  String get voicemail_Label_emptySaved => 'Nessun messaggio salvato';
+
+  @override
+  String get voicemail_Label_emptySavedHint => 'Apri il menu su un messaggio e scegli Salva per conservarlo qui.';
+
+  @override
+  String get voicemail_Label_emptyTrash => 'Il cestino e vuoto';
+
+  @override
+  String get voicemail_Label_emptyTrashHint =>
+      'I messaggi che sposti qui occupano ancora spazio nella casella finche il cestino non viene svuotato.';
+
+  @override
   String get voicemail_Label_markAsHeard => 'Segna come ascoltato';
 
   @override
@@ -3158,6 +3183,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voicemail_Label_retry => 'Riprova';
+
+  @override
+  String get voicemail_Label_trashFootnote =>
+      'I messaggi nel cestino occupano ancora spazio nella casella finche non viene svuotato.';
+
+  @override
+  String voicemail_Label_unheardCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count nuovi', one: '$count nuovo');
+    return '$_temp0';
+  }
+
+  @override
+  String voicemail_SemanticsLabel_filter(String filter) {
+    return 'Filtro, attualmente $filter';
+  }
 
   @override
   String get voicemail_SemanticsLabel_loading => 'Caricamento';

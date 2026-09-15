@@ -59,7 +59,7 @@ void main() {
     when(() => player.dispose()).thenAnswer((_) async {});
     when(() => player.positionStream).thenAnswer((_) => Stream.value(Duration.zero));
     when(() => player.duration).thenReturn(const Duration(seconds: 10));
-    when(() => cubit.fetchVoicemails()).thenAnswer((_) async {});
+    when(() => cubit.refresh()).thenAnswer((_) async {});
 
     controller = VoicemailPlaybackController(player: player, setupAudioSession: () async {});
   });
@@ -109,7 +109,7 @@ void main() {
     await tester.pumpWidget(host());
     await pullDown(tester);
 
-    verify(() => cubit.fetchVoicemails()).called(1);
+    verify(() => cubit.refresh()).called(1);
   });
 
   testWidgets('pulling an empty mailbox fetches it again', (tester) async {
@@ -118,6 +118,6 @@ void main() {
     await tester.pumpWidget(host());
     await pullDown(tester);
 
-    verify(() => cubit.fetchVoicemails()).called(1);
+    verify(() => cubit.refresh()).called(1);
   });
 }

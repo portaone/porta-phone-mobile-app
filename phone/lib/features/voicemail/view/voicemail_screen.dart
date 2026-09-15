@@ -31,6 +31,7 @@ class VoicemailScreen extends StatelessWidget {
             ),
           const VoicemailDeleteAction(offersDeleteAll: true),
         ],
+        bottom: const VoicemailFilterRow(),
       ),
       body: const VoicemailBody(),
     );

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$VoicemailState {
 
- VoicemailStatus get status; List<Voicemail> get items; List<String> get selectedVoicemailsIds; Object? get error;
+ VoicemailStatus get status; List<Voicemail> get items; List<Voicemail> get trashedItems; List<String> get selectedVoicemailsIds; VoicemailFilter get filter; List<VoicemailFilter> get filters; Object? get error;
 /// Create a copy of VoicemailState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,12 +25,12 @@ $VoicemailStateCopyWith<VoicemailState> get copyWith => _$VoicemailStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.items, items)&&const DeepCollectionEquality().equals(other.selectedVoicemailsIds, selectedVoicemailsIds)&&const DeepCollectionEquality().equals(other.error, error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.items, items)&&const DeepCollectionEquality().equals(other.trashedItems, trashedItems)&&const DeepCollectionEquality().equals(other.selectedVoicemailsIds, selectedVoicemailsIds)&&(identical(other.filter, filter) || other.filter == filter)&&const DeepCollectionEquality().equals(other.filters, filters)&&const DeepCollectionEquality().equals(other.error, error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),const DeepCollectionEquality().hash(selectedVoicemailsIds),const DeepCollectionEquality().hash(error));
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),const DeepCollectionEquality().hash(trashedItems),const DeepCollectionEquality().hash(selectedVoicemailsIds),filter,const DeepCollectionEquality().hash(filters),const DeepCollectionEquality().hash(error));
 
 
 
@@ -41,7 +41,7 @@ abstract mixin class $VoicemailStateCopyWith<$Res>  {
   factory $VoicemailStateCopyWith(VoicemailState value, $Res Function(VoicemailState) _then) = _$VoicemailStateCopyWithImpl;
 @useResult
 $Res call({
- VoicemailStatus status, List<Voicemail> items, List<String> selectedVoicemailsIds, Object? error
+ VoicemailStatus status, List<Voicemail> items, List<Voicemail> trashedItems, List<String> selectedVoicemailsIds, VoicemailFilter filter, List<VoicemailFilter> filters, Object? error
 });
 
 
@@ -58,12 +58,15 @@ class _$VoicemailStateCopyWithImpl<$Res>
 
 /// Create a copy of VoicemailState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? items = null,Object? selectedVoicemailsIds = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? items = null,Object? trashedItems = null,Object? selectedVoicemailsIds = null,Object? filter = null,Object? filters = null,Object? error = freezed,}) {
   return _then(VoicemailState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as VoicemailStatus,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
+as List<Voicemail>,trashedItems: null == trashedItems ? _self.trashedItems : trashedItems // ignore: cast_nullable_to_non_nullable
 as List<Voicemail>,selectedVoicemailsIds: null == selectedVoicemailsIds ? _self.selectedVoicemailsIds : selectedVoicemailsIds // ignore: cast_nullable_to_non_nullable
-as List<String>,error: freezed == error ? _self.error : error ,
+as List<String>,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
+as VoicemailFilter,filters: null == filters ? _self.filters : filters // ignore: cast_nullable_to_non_nullable
+as List<VoicemailFilter>,error: freezed == error ? _self.error : error ,
   ));
 }
 

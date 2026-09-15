@@ -24,8 +24,19 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     required VoicemailRepository repository,
     required this.onCallStarted,
     required this.onSubmitNotification,
+    required bool saveSupported,
+    required bool trashSupported,
   }) : _repository = repository,
-       super(const VoicemailState()) {
+       super(
+         VoicemailState(
+           filters: [
+             VoicemailFilter.all,
+             VoicemailFilter.unheard,
+             if (saveSupported) VoicemailFilter.saved,
+             if (trashSupported) VoicemailFilter.trash,
+           ],
+         ),
+       ) {
     _initialize();
   }
 
@@ -75,6 +86,44 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _logger.severe('Error fetching voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchVoicemails');
     }
+  }
+
+  /// Reads the trash, which is not stored and so has to be asked for every
+  /// time the screen wants it.
+  Future<void> fetchTrashedVoicemails() async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading, error: null));
+      final trashedItems = await _repository.fetchTrashedVoicemails();
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded, trashedItems: trashedItems));
+    } on EndpointNotSupportedException catch (e) {
+      _safeEmit(state.copyWith(status: VoicemailStatus.featureNotSupported, error: e));
+    } on VoicemailNotConfiguredException catch (e) {
+      _safeEmit(state.copyWith(status: VoicemailStatus.featureNotSupported, error: e));
+    } catch (e, s) {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded, error: e));
+      _logger.severe('Error fetching trashed voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchTrashedVoicemails');
+    }
+  }
+
+  /// Fetches whatever the current filter is showing.
+  ///
+  /// What a pull to refresh and a retry both mean. Three of the four filters
+  /// read the stored mailbox, so they refresh it; the trash is its own fetch.
+  Future<void> refresh() => state.filter.isRemote ? fetchTrashedVoicemails() : fetchVoicemails();
+
+  /// Shows a different view of the mailbox.
+  ///
+  /// Leaving the trash drops the copy that was read, so coming back shows the
+  /// trash as it is now rather than as it was. A stale list here is worse than
+  /// a moment of loading: the trash is the list most likely to have been
+  /// changed from somewhere else since it was last looked at.
+  void setFilter(VoicemailFilter filter) {
+    if (filter == state.filter) return;
+
+    _safeEmit(state.copyWith(filter: filter, trashedItems: const [], selectedVoicemailsIds: const [], error: null));
+
+    if (filter.isRemote) fetchTrashedVoicemails();
   }
 
   void removeAllVoicemails() async {

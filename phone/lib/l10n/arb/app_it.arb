@@ -2632,6 +2632,22 @@
   "@voicemail_Dialog_deleteSingleContent": {},
   "voicemail_Dialog_deleteSingleTitle": "Eliminare il messaggio vocale?",
   "@voicemail_Dialog_deleteSingleTitle": {},
+  "voicemail_Filter_all": "Tutti",
+  "@voicemail_Filter_all": {
+    "description": "Voicemail filter showing every message in the mailbox."
+  },
+  "voicemail_Filter_saved": "Salvati",
+  "@voicemail_Filter_saved": {
+    "description": "Voicemail filter showing only the messages the user has saved."
+  },
+  "voicemail_Filter_trash": "Cestino",
+  "@voicemail_Filter_trash": {
+    "description": "Voicemail filter showing the messages moved to the trash."
+  },
+  "voicemail_Filter_unheard": "Nuovi",
+  "@voicemail_Filter_unheard": {
+    "description": "Voicemail filter showing only the messages not yet heard."
+  },
   "voicemail_Label_call": "Chiama",
   "@voicemail_Label_call": {},
   "voicemail_Label_delete": "Elimina",
@@ -2642,6 +2658,18 @@
   "@voicemail_Label_deleteAllDescription": {},
   "voicemail_Label_empty": "Nessun messaggio vocale",
   "@voicemail_Label_empty": {},
+  "voicemail_Label_emptySaved": "Nessun messaggio salvato",
+  "@voicemail_Label_emptySaved": {},
+  "voicemail_Label_emptySavedHint": "Apri il menu su un messaggio e scegli Salva per conservarlo qui.",
+  "@voicemail_Label_emptySavedHint": {
+    "description": "Tells the user how to put a message in the empty Saved list."
+  },
+  "voicemail_Label_emptyTrash": "Il cestino e vuoto",
+  "@voicemail_Label_emptyTrash": {},
+  "voicemail_Label_emptyTrashHint": "I messaggi che sposti qui occupano ancora spazio nella casella finche il cestino non viene svuotato.",
+  "@voicemail_Label_emptyTrashHint": {
+    "description": "Explains, on an empty trash, what keeping messages there would cost."
+  },
   "voicemail_Label_markAsHeard": "Segna come ascoltato",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Segna come nuovo",
@@ -2650,6 +2678,28 @@
   "@voicemail_Label_playbackError": {},
   "voicemail_Label_retry": "Riprova",
   "@voicemail_Label_retry": {},
+  "voicemail_Label_trashFootnote": "I messaggi nel cestino occupano ancora spazio nella casella finche non viene svuotato.",
+  "@voicemail_Label_trashFootnote": {
+    "description": "Shown under the trash list: a trashed message still occupies the mailbox."
+  },
+  "voicemail_Label_unheardCount": "{count, plural, one{{count} nuovo} other{{count} nuovi}}",
+  "@voicemail_Label_unheardCount": {
+    "description": "How many messages in the mailbox are still unheard.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voicemail_SemanticsLabel_filter": "Filtro, attualmente {filter}",
+  "@voicemail_SemanticsLabel_filter": {
+    "description": "Accessibility name of the voicemail filter control, naming the filter that is on.",
+    "placeholders": {
+      "filter": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_loading": "Caricamento",
   "@voicemail_SemanticsLabel_loading": {
     "description": "Announced while a voicemail is being prepared for playback."

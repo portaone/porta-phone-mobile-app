@@ -30,6 +30,7 @@ class VoicemailScreenHost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final featureAccess = context.read<FeatureAccess>();
     final secureStorage = context.read<SecureStorage>();
     final appTime = context.read<AppTime>();
     final appPath = context.read<AppPath>();
@@ -51,6 +52,12 @@ class VoicemailScreenHost extends StatelessWidget {
             repository: context.read<VoicemailRepository>(),
             onCallStarted: (number) => callBloc.add(CallControlEvent.started(number: number, video: false)),
             onSubmitNotification: (n) => notificationsBloc.add(NotificationsSubmitted(n)),
+            // What the backend supports decides which views are offered at
+            // all. A filter the mailbox cannot serve is absent rather than
+            // shown greyed out, so nothing here promises a list that would
+            // come back empty for a reason the person cannot see.
+            saveSupported: featureAccess.voicemailSaveAvailable,
+            trashSupported: featureAccess.voicemailTrashAvailable,
           ),
         ),
         Provider<VoicemailScreenContext>(create: (_) => screenContext),
