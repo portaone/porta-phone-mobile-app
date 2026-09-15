@@ -79,8 +79,14 @@ void main() {
     when(() => microphoneStatusBloc.state).thenReturn(const MicrophoneStatusState());
   });
 
-  Future<void> pumpScreen(WidgetTester tester, {required List<ContactSourceType> sourceTypes}) async {
-    final contactsBloc = ContactsBloc(activeContactSourceTypeRepository: _RememberedSourceType(sourceTypes.first));
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    required List<ContactSourceType> sourceTypes,
+    ContactSourceType? remembered,
+  }) async {
+    final contactsBloc = ContactsBloc(
+      activeContactSourceTypeRepository: _RememberedSourceType(remembered ?? sourceTypes.first),
+    );
     addTearDown(contactsBloc.close);
 
     await tester.pumpWidget(
@@ -129,6 +135,29 @@ void main() {
     // The bar keeps a status indicator animating, so this never settles.
     await tester.pump(const Duration(milliseconds: 400));
   }
+
+  /// Which tab the screen opened on. The controller is the screen's own and
+  /// private, but the view it drives holds it.
+  int openedOn(WidgetTester tester) => tester.widget<TabBarView>(find.byType(TabBarView)).controller!.index;
+
+  testWidgets('opens on the address book that was left showing', (tester) async {
+    await pumpScreen(
+      tester,
+      sourceTypes: [ContactSourceType.local, ContactSourceType.external],
+      remembered: ContactSourceType.external,
+    );
+
+    expect(openedOn(tester), 1);
+  });
+
+  testWidgets('opens on the first address book when the remembered one is no longer offered', (tester) async {
+    // A deployment can stop offering a book someone was last left on, and the
+    // choice outlives the change. Asking where that book sits answers "it does
+    // not", which is not an index the tabs can open on.
+    await pumpScreen(tester, sourceTypes: [ContactSourceType.external], remembered: ContactSourceType.local);
+
+    expect(openedOn(tester), 0);
+  });
 
   testWidgets('the list keeps the room the shell reserves for its bar', (tester) async {
     // The bar at the bottom belongs to the shell around this screen and floats
