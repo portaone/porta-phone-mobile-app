@@ -92,3 +92,11 @@ extension RTCTrackEventExt on RTCTrackEvent {
 extension MediaDeviceInfoExt on MediaDeviceInfo {
   String get str => 'MediaDeviceInfo(id: $deviceId, kind: $kind, label: $label, groupId: $groupId)';
 }
+
+/// A candidate in the shape signaling carries it, as the object WebRTC takes.
+/// The other direction is `toMap()`, which is what an outgoing request uses.
+/// A session description has [JsepValue] for the same purpose.
+extension IceCandidateJsonExt on Map<String, dynamic> {
+  RTCIceCandidate toIceCandidate() =>
+      RTCIceCandidate(this['candidate'] as String?, this['sdpMid'] as String?, this['sdpMLineIndex'] as int?);
+}

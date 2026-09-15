@@ -1,4 +1,5 @@
 export 'bloc/call_bloc.dart';
+export 'conference/conference.dart';
 export 'controllers/controllers.dart';
 export 'extensions/extensions.dart';
 export 'models/models.dart';
