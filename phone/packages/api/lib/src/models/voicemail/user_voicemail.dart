@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_annotation_target
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'user_voicemail.freezed.dart';
@@ -17,6 +19,8 @@ class UserVoicemail with _$UserVoicemail {
     required this.size,
     required this.type,
     required this.attachments,
+    this.saved,
+    @JsonKey(name: 'forwarded_by') this.forwardedBy,
   });
 
   @override
@@ -45,6 +49,16 @@ class UserVoicemail with _$UserVoicemail {
 
   @override
   final List<UserVoicemailAttachment> attachments;
+
+  /// Whether the user is keeping this message; null when the backend omitted the
+  /// field, which means the control does not apply. See [UserVoicemailItem.saved].
+  @override
+  final bool? saved;
+
+  /// The id of the user who forwarded this message on; null unless it arrived
+  /// that way. See [UserVoicemailItem.forwardedBy].
+  @override
+  final String? forwardedBy;
 
   factory UserVoicemail.fromJson(Map<String, dynamic> json) => _$UserVoicemailFromJson(json);
 

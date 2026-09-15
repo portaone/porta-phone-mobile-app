@@ -202,7 +202,7 @@ case _:
 /// @nodoc
 mixin _$UserVoicemailItem {
 
- String get id; String get date; double get duration; bool get seen; int get size; String get type;
+ String get id; String get date; double get duration; bool get seen; int get size; String get type; bool? get saved; String? get forwardedBy;
 /// Create a copy of UserVoicemailItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -213,16 +213,16 @@ $UserVoicemailItemCopyWith<UserVoicemailItem> get copyWith => _$UserVoicemailIte
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailItem&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.seen, seen) || other.seen == seen)&&(identical(other.size, size) || other.size == size)&&(identical(other.type, type) || other.type == type));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailItem&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.seen, seen) || other.seen == seen)&&(identical(other.size, size) || other.size == size)&&(identical(other.type, type) || other.type == type)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.forwardedBy, forwardedBy) || other.forwardedBy == forwardedBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,date,duration,seen,size,type);
+int get hashCode => Object.hash(runtimeType,id,date,duration,seen,size,type,saved,forwardedBy);
 
 @override
 String toString() {
-  return 'UserVoicemailItem(id: $id, date: $date, duration: $duration, seen: $seen, size: $size, type: $type)';
+  return 'UserVoicemailItem(id: $id, date: $date, duration: $duration, seen: $seen, size: $size, type: $type, saved: $saved, forwardedBy: $forwardedBy)';
 }
 
 
@@ -233,7 +233,7 @@ abstract mixin class $UserVoicemailItemCopyWith<$Res>  {
   factory $UserVoicemailItemCopyWith(UserVoicemailItem value, $Res Function(UserVoicemailItem) _then) = _$UserVoicemailItemCopyWithImpl;
 @useResult
 $Res call({
- String id, String date, double duration, bool seen, int size, String type
+ String id, String date, double duration, bool seen, int size, String type, bool? saved,@JsonKey(name: 'forwarded_by') String? forwardedBy
 });
 
 
@@ -250,7 +250,7 @@ class _$UserVoicemailItemCopyWithImpl<$Res>
 
 /// Create a copy of UserVoicemailItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? duration = null,Object? seen = null,Object? size = null,Object? type = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? duration = null,Object? seen = null,Object? size = null,Object? type = null,Object? saved = freezed,Object? forwardedBy = freezed,}) {
   return _then(UserVoicemailItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
@@ -258,7 +258,9 @@ as String,duration: null == duration ? _self.duration : duration // ignore: cast
 as double,seen: null == seen ? _self.seen : seen // ignore: cast_nullable_to_non_nullable
 as bool,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
 as int,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as String,
+as String,saved: freezed == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
+as bool?,forwardedBy: freezed == forwardedBy ? _self.forwardedBy : forwardedBy // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

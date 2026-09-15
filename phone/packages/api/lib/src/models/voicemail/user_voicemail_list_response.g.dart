@@ -30,6 +30,8 @@ UserVoicemailItem _$UserVoicemailItemFromJson(Map<String, dynamic> json) =>
       seen: json['seen'] as bool,
       size: (json['size'] as num).toInt(),
       type: json['type'] as String,
+      saved: json['saved'] as bool?,
+      forwardedBy: json['forwarded_by'] as String?,
     );
 
 Map<String, dynamic> _$UserVoicemailItemToJson(UserVoicemailItem instance) =>
@@ -40,4 +42,6 @@ Map<String, dynamic> _$UserVoicemailItemToJson(UserVoicemailItem instance) =>
       'seen': instance.seen,
       'size': instance.size,
       'type': instance.type,
+      'saved': instance.saved,
+      'forwarded_by': instance.forwardedBy,
     };

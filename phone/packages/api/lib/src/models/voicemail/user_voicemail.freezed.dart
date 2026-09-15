@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserVoicemail {
 
- String get id; String get date; double get duration; String get sender; String get receiver; bool get seen; int get size; String get type; List<UserVoicemailAttachment> get attachments;
+ String get id; String get date; double get duration; String get sender; String get receiver; bool get seen; int get size; String get type; List<UserVoicemailAttachment> get attachments; bool? get saved; String? get forwardedBy;
 /// Create a copy of UserVoicemail
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +26,16 @@ $UserVoicemailCopyWith<UserVoicemail> get copyWith => _$UserVoicemailCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemail&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.sender, sender) || other.sender == sender)&&(identical(other.receiver, receiver) || other.receiver == receiver)&&(identical(other.seen, seen) || other.seen == seen)&&(identical(other.size, size) || other.size == size)&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.attachments, attachments));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemail&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.sender, sender) || other.sender == sender)&&(identical(other.receiver, receiver) || other.receiver == receiver)&&(identical(other.seen, seen) || other.seen == seen)&&(identical(other.size, size) || other.size == size)&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.attachments, attachments)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.forwardedBy, forwardedBy) || other.forwardedBy == forwardedBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,date,duration,sender,receiver,seen,size,type,const DeepCollectionEquality().hash(attachments));
+int get hashCode => Object.hash(runtimeType,id,date,duration,sender,receiver,seen,size,type,const DeepCollectionEquality().hash(attachments),saved,forwardedBy);
 
 @override
 String toString() {
-  return 'UserVoicemail(id: $id, date: $date, duration: $duration, sender: $sender, receiver: $receiver, seen: $seen, size: $size, type: $type, attachments: $attachments)';
+  return 'UserVoicemail(id: $id, date: $date, duration: $duration, sender: $sender, receiver: $receiver, seen: $seen, size: $size, type: $type, attachments: $attachments, saved: $saved, forwardedBy: $forwardedBy)';
 }
 
 
@@ -46,7 +46,7 @@ abstract mixin class $UserVoicemailCopyWith<$Res>  {
   factory $UserVoicemailCopyWith(UserVoicemail value, $Res Function(UserVoicemail) _then) = _$UserVoicemailCopyWithImpl;
 @useResult
 $Res call({
- String id, String date, double duration, String sender, String receiver, bool seen, int size, String type, List<UserVoicemailAttachment> attachments
+ String id, String date, double duration, String sender, String receiver, bool seen, int size, String type, List<UserVoicemailAttachment> attachments, bool? saved,@JsonKey(name: 'forwarded_by') String? forwardedBy
 });
 
 
@@ -63,7 +63,7 @@ class _$UserVoicemailCopyWithImpl<$Res>
 
 /// Create a copy of UserVoicemail
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? duration = null,Object? sender = null,Object? receiver = null,Object? seen = null,Object? size = null,Object? type = null,Object? attachments = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? duration = null,Object? sender = null,Object? receiver = null,Object? seen = null,Object? size = null,Object? type = null,Object? attachments = null,Object? saved = freezed,Object? forwardedBy = freezed,}) {
   return _then(UserVoicemail(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,9 @@ as String,seen: null == seen ? _self.seen : seen // ignore: cast_nullable_to_non
 as bool,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
 as int,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,attachments: null == attachments ? _self.attachments : attachments // ignore: cast_nullable_to_non_nullable
-as List<UserVoicemailAttachment>,
+as List<UserVoicemailAttachment>,saved: freezed == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
+as bool?,forwardedBy: freezed == forwardedBy ? _self.forwardedBy : forwardedBy // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
