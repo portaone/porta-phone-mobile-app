@@ -21,6 +21,8 @@ UserVoicemail _$UserVoicemailFromJson(Map<String, dynamic> json) =>
             (e) => UserVoicemailAttachment.fromJson(e as Map<String, dynamic>),
           )
           .toList(),
+      saved: json['saved'] as bool?,
+      forwardedBy: json['forwarded_by'] as String?,
     );
 
 Map<String, dynamic> _$UserVoicemailToJson(UserVoicemail instance) =>
@@ -34,6 +36,8 @@ Map<String, dynamic> _$UserVoicemailToJson(UserVoicemail instance) =>
       'size': instance.size,
       'type': instance.type,
       'attachments': instance.attachments.map((e) => e.toJson()).toList(),
+      'saved': instance.saved,
+      'forwarded_by': instance.forwardedBy,
     };
 
 UserVoicemailAttachment _$UserVoicemailAttachmentFromJson(
