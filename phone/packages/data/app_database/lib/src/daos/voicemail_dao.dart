@@ -30,6 +30,20 @@ class VoicemailDao extends DatabaseAccessor<AppDatabase> with _$VoicemailDaoMixi
 
   Future<int> deleteAllVoicemails() => delete(voicemailTable).go();
 
+  /// Deletes every stored voicemail whose id is not in [ids].
+  ///
+  /// This is how a listing that is known to be complete removes what the
+  /// mailbox no longer has - a message deleted from another device, or moved to
+  /// the trash there, since a trashed message leaves the inbox listing
+  /// entirely. An empty [ids] therefore clears the table rather than doing
+  /// nothing: it means the mailbox reported no messages at all.
+  Future<int> deleteVoicemailsNotIn(Iterable<String> ids) {
+    final keep = ids.toList();
+    if (keep.isEmpty) return deleteAllVoicemails();
+
+    return (delete(voicemailTable)..where((tbl) => tbl.id.isNotIn(keep))).go();
+  }
+
   Stream<List<VoicemailData>> watchAllVoicemails() => select(voicemailTable).watch();
 
   /// Watches how many voicemails are still unread.

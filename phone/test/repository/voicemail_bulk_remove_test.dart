@@ -27,7 +27,7 @@ void main() {
     registerFallbackValue(const api.RequestOptions());
   });
 
-  setUp(() {
+  setUp(() async {
     appDatabase = AppDatabase(NativeDatabase.memory());
     client = _Client();
     guard = _Guard();
@@ -39,6 +39,11 @@ void main() {
       appDatabase: appDatabase,
       sessionGuard: guard,
     );
+    // The repository refreshes from its own constructor, and a refresh now makes
+    // the stored list match what the mailbox reported. These tests stub an empty
+    // mailbox, so that first cycle has to be allowed to finish before anything
+    // is seeded - otherwise it lands afterwards and clears the seed.
+    await pumpEventQueue();
   });
 
   tearDown(() async {

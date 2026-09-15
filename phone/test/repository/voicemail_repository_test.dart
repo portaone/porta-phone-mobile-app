@@ -15,7 +15,7 @@ void main() {
   late VoicemailRepositoryImpl repo;
   late MockWebtritApiClient apiClient;
 
-  setUp(() {
+  setUp(() async {
     appDatabase = AppDatabase(NativeDatabase.memory());
     apiClient = MockWebtritApiClient();
     repo = VoicemailRepositoryImpl(
@@ -24,6 +24,11 @@ void main() {
       appDatabase: appDatabase,
       sessionGuard: const EmptySessionGuard(),
     );
+    // The repository refreshes from its own constructor, and a refresh now makes
+    // the stored list match what the mailbox reported. These tests stub an empty
+    // mailbox, so that first cycle has to be allowed to finish before anything
+    // is seeded - otherwise it lands afterwards and clears the seed.
+    await pumpEventQueue();
   });
 
   tearDown(() async {
