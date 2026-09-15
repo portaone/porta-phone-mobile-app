@@ -111,7 +111,7 @@ class _AppState extends State<App> {
         queuedTerminationRequestsRepository: context.read<QueuedTerminationRequestsRepository>(),
         activeMainTabRepository: context.read<ActiveMainTabRepository>(),
         activeRecentsVisibilityFilterRepository: context.read<ActiveRecentsVisibilityFilterRepository>(),
-        activeContactSourceTypeRepository: context.read<ActiveContactSourceTypeRepository>(),
+        activeContactsListRepository: context.read<ActiveContactsListRepository>(),
         audioProcessingSettingsRepository: context.read<AudioProcessingSettingsRepository>(),
         encodingPresetRepository: context.read<EncodingPresetRepository>(),
         iceSettingsRepository: context.read<IceSettingsRepository>(),

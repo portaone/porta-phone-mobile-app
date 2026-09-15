@@ -37,8 +37,7 @@ class ContactsFilterScreenPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) =>
-              ContactsBloc(activeContactSourceTypeRepository: context.read<ActiveContactSourceTypeRepository>()),
+          create: (context) => ContactsBloc(activeContactsListRepository: context.read<ActiveContactsListRepository>()),
         ),
         // Above the screen rather than inside its body: the button that turns
         // rearranging on lives in the scaffold and reads this list too.

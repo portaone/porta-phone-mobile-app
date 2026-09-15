@@ -226,7 +226,7 @@ class _RootAppState extends State<RootApp> {
           final activeMainTabRepository = ActiveMainTabRepositoryPrefsImpl(prefs);
           final userAgreementStatusRepository = UserAgreementStatusRepositoryPrefsImpl(prefs);
           final activeRecentsVisibilityFilterRepository = ActiveRecentsVisibilityFilterRepositoryPrefsImpl(prefs);
-          final activeContactSourceTypeRepository = ActiveContactSourceTypeRepositoryPrefsImpl(prefs);
+          final activeContactsListRepository = ActiveContactsListRepositoryPrefsImpl(prefs);
           final audioProcessingSettingsRepository = AudioProcessingSettingsRepositoryPrefsImpl(prefs);
           final encodingPresetRepository = EncodingPresetRepositoryPrefsImpl(prefs);
           final iceSettingsRepository = IceSettingsRepositoryPrefsImpl(prefs);
@@ -252,7 +252,7 @@ class _RootAppState extends State<RootApp> {
               RepositoryProvider<ActiveRecentsVisibilityFilterRepository>.value(
                 value: activeRecentsVisibilityFilterRepository,
               ),
-              RepositoryProvider<ActiveContactSourceTypeRepository>.value(value: activeContactSourceTypeRepository),
+              RepositoryProvider<ActiveContactsListRepository>.value(value: activeContactsListRepository),
               RepositoryProvider<AudioProcessingSettingsRepository>.value(value: audioProcessingSettingsRepository),
               RepositoryProvider<EncodingPresetRepository>.value(value: encodingPresetRepository),
               RepositoryProvider<IceSettingsRepository>.value(value: iceSettingsRepository),

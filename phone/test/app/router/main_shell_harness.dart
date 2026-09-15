@@ -229,7 +229,7 @@ class MainShellHarness {
   late final queuedTerminationRequestsRepository = QueuedTerminationRequestsRepositoryPrefsImpl(appPreferences);
   late final activeMainTabRepository = ActiveMainTabRepositoryPrefsImpl(appPreferences);
   late final activeRecentsVisibilityFilterRepository = ActiveRecentsVisibilityFilterRepositoryPrefsImpl(appPreferences);
-  late final activeContactSourceTypeRepository = ActiveContactSourceTypeRepositoryPrefsImpl(appPreferences);
+  late final activeContactsListRepository = ActiveContactsListRepositoryPrefsImpl(appPreferences);
   late final audioProcessingSettingsRepository = AudioProcessingSettingsRepositoryPrefsImpl(appPreferences);
   late final encodingPresetRepository = EncodingPresetRepositoryPrefsImpl(appPreferences);
   late final iceSettingsRepository = IceSettingsRepositoryPrefsImpl(appPreferences);
@@ -292,7 +292,7 @@ class MainShellHarness {
         RepositoryProvider<ActiveRecentsVisibilityFilterRepository>.value(
           value: activeRecentsVisibilityFilterRepository,
         ),
-        RepositoryProvider<ActiveContactSourceTypeRepository>.value(value: activeContactSourceTypeRepository),
+        RepositoryProvider<ActiveContactsListRepository>.value(value: activeContactsListRepository),
         RepositoryProvider<AudioProcessingSettingsRepository>.value(value: audioProcessingSettingsRepository),
         RepositoryProvider<EncodingPresetRepository>.value(value: encodingPresetRepository),
         RepositoryProvider<IceSettingsRepository>.value(value: iceSettingsRepository),

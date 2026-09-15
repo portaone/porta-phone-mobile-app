@@ -9,17 +9,17 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 
-class _RememberedSourceType implements ActiveContactSourceTypeRepository {
+class _RememberedSourceType implements ActiveContactsListRepository {
   ContactSourceType _value = ContactSourceType.external;
 
   /// What the chooser was left on, remembered the way the app remembers it.
   bool favorites = false;
 
   @override
-  ContactSourceType getActiveContactSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => _value;
+  ContactSourceType getSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => _value;
 
   @override
-  Future<void> setActiveContactSourceType(ContactSourceType value) async => _value = value;
+  Future<void> setSourceType(ContactSourceType value) async => _value = value;
 
   @override
   bool getFavoritesPicked({bool defaultValue = false}) => favorites;
@@ -33,7 +33,7 @@ class _RememberedSourceType implements ActiveContactSourceTypeRepository {
 
 void main() {
   Future<ContactsBloc> pumpRow(WidgetTester tester) async {
-    final bloc = ContactsBloc(activeContactSourceTypeRepository: _RememberedSourceType());
+    final bloc = ContactsBloc(activeContactsListRepository: _RememberedSourceType());
     addTearDown(bloc.close);
 
     await tester.pumpWidget(

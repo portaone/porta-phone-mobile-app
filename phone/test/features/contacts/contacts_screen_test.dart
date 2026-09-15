@@ -23,7 +23,7 @@ class _MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCub
 class _MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
     implements MicrophoneStatusBloc {}
 
-class _RememberedSourceType implements ActiveContactSourceTypeRepository {
+class _RememberedSourceType implements ActiveContactsListRepository {
   _RememberedSourceType(this._value);
 
   ContactSourceType _value;
@@ -32,10 +32,10 @@ class _RememberedSourceType implements ActiveContactSourceTypeRepository {
   bool favorites = false;
 
   @override
-  ContactSourceType getActiveContactSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => _value;
+  ContactSourceType getSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => _value;
 
   @override
-  Future<void> setActiveContactSourceType(ContactSourceType value) async => _value = value;
+  Future<void> setSourceType(ContactSourceType value) async => _value = value;
 
   @override
   bool getFavoritesPicked({bool defaultValue = false}) => favorites;
@@ -85,7 +85,7 @@ void main() {
     ContactSourceType? remembered,
   }) async {
     final contactsBloc = ContactsBloc(
-      activeContactSourceTypeRepository: _RememberedSourceType(remembered ?? sourceTypes.first),
+      activeContactsListRepository: _RememberedSourceType(remembered ?? sourceTypes.first),
     );
     addTearDown(contactsBloc.close);
 
