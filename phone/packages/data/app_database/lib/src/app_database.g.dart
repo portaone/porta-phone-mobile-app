@@ -11067,6 +11067,29 @@ class $VoicemailTableTable extends VoicemailTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _savedMeta = const VerificationMeta('saved');
+  @override
+  late final GeneratedColumn<bool> saved = GeneratedColumn<bool>(
+    'saved',
+    aliasedName,
+    true,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("saved" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _forwardedByMeta = const VerificationMeta(
+    'forwardedBy',
+  );
+  @override
+  late final GeneratedColumn<String> forwardedBy = GeneratedColumn<String>(
+    'forwarded_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -11078,6 +11101,8 @@ class $VoicemailTableTable extends VoicemailTable
     size,
     type,
     attachmentPath,
+    saved,
+    forwardedBy,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -11159,6 +11184,21 @@ class $VoicemailTableTable extends VoicemailTable
         ),
       );
     }
+    if (data.containsKey('saved')) {
+      context.handle(
+        _savedMeta,
+        saved.isAcceptableOrUnknown(data['saved']!, _savedMeta),
+      );
+    }
+    if (data.containsKey('forwarded_by')) {
+      context.handle(
+        _forwardedByMeta,
+        forwardedBy.isAcceptableOrUnknown(
+          data['forwarded_by']!,
+          _forwardedByMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -11204,6 +11244,14 @@ class $VoicemailTableTable extends VoicemailTable
         DriftSqlType.string,
         data['${effectivePrefix}attachment_path'],
       ),
+      saved: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}saved'],
+      ),
+      forwardedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}forwarded_by'],
+      ),
     );
   }
 
@@ -11223,6 +11271,18 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
   final int size;
   final String type;
   final String? attachmentPath;
+
+  /// Whether the user is keeping this message.
+  ///
+  /// Nullable because the backend omits the field when the mailbox behind it
+  /// cannot persist the flag, and that is not the same as `false`: it means the
+  /// control does not apply to this message at all.
+  final bool? saved;
+
+  /// The id of the user who forwarded this message on; null unless it arrived
+  /// that way. The sender stays the original caller, so this is the only thing
+  /// naming the colleague who passed it along.
+  final String? forwardedBy;
   const VoicemailData({
     required this.id,
     required this.date,
@@ -11233,6 +11293,8 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
     required this.size,
     required this.type,
     this.attachmentPath,
+    this.saved,
+    this.forwardedBy,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -11247,6 +11309,12 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
     map['type'] = Variable<String>(type);
     if (!nullToAbsent || attachmentPath != null) {
       map['attachment_path'] = Variable<String>(attachmentPath);
+    }
+    if (!nullToAbsent || saved != null) {
+      map['saved'] = Variable<bool>(saved);
+    }
+    if (!nullToAbsent || forwardedBy != null) {
+      map['forwarded_by'] = Variable<String>(forwardedBy);
     }
     return map;
   }
@@ -11264,6 +11332,12 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
       attachmentPath: attachmentPath == null && nullToAbsent
           ? const Value.absent()
           : Value(attachmentPath),
+      saved: saved == null && nullToAbsent
+          ? const Value.absent()
+          : Value(saved),
+      forwardedBy: forwardedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(forwardedBy),
     );
   }
 
@@ -11282,6 +11356,8 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
       size: serializer.fromJson<int>(json['size']),
       type: serializer.fromJson<String>(json['type']),
       attachmentPath: serializer.fromJson<String?>(json['attachmentPath']),
+      saved: serializer.fromJson<bool?>(json['saved']),
+      forwardedBy: serializer.fromJson<String?>(json['forwardedBy']),
     );
   }
   @override
@@ -11297,6 +11373,8 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
       'size': serializer.toJson<int>(size),
       'type': serializer.toJson<String>(type),
       'attachmentPath': serializer.toJson<String?>(attachmentPath),
+      'saved': serializer.toJson<bool?>(saved),
+      'forwardedBy': serializer.toJson<String?>(forwardedBy),
     };
   }
 
@@ -11310,6 +11388,8 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
     int? size,
     String? type,
     Value<String?> attachmentPath = const Value.absent(),
+    Value<bool?> saved = const Value.absent(),
+    Value<String?> forwardedBy = const Value.absent(),
   }) => VoicemailData(
     id: id ?? this.id,
     date: date ?? this.date,
@@ -11322,6 +11402,8 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
     attachmentPath: attachmentPath.present
         ? attachmentPath.value
         : this.attachmentPath,
+    saved: saved.present ? saved.value : this.saved,
+    forwardedBy: forwardedBy.present ? forwardedBy.value : this.forwardedBy,
   );
   VoicemailData copyWithCompanion(VoicemailDataCompanion data) {
     return VoicemailData(
@@ -11336,6 +11418,10 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
       attachmentPath: data.attachmentPath.present
           ? data.attachmentPath.value
           : this.attachmentPath,
+      saved: data.saved.present ? data.saved.value : this.saved,
+      forwardedBy: data.forwardedBy.present
+          ? data.forwardedBy.value
+          : this.forwardedBy,
     );
   }
 
@@ -11350,7 +11436,9 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
           ..write('seen: $seen, ')
           ..write('size: $size, ')
           ..write('type: $type, ')
-          ..write('attachmentPath: $attachmentPath')
+          ..write('attachmentPath: $attachmentPath, ')
+          ..write('saved: $saved, ')
+          ..write('forwardedBy: $forwardedBy')
           ..write(')'))
         .toString();
   }
@@ -11366,6 +11454,8 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
     size,
     type,
     attachmentPath,
+    saved,
+    forwardedBy,
   );
   @override
   bool operator ==(Object other) =>
@@ -11379,7 +11469,9 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
           other.seen == this.seen &&
           other.size == this.size &&
           other.type == this.type &&
-          other.attachmentPath == this.attachmentPath);
+          other.attachmentPath == this.attachmentPath &&
+          other.saved == this.saved &&
+          other.forwardedBy == this.forwardedBy);
 }
 
 class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
@@ -11392,6 +11484,8 @@ class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
   final Value<int> size;
   final Value<String> type;
   final Value<String?> attachmentPath;
+  final Value<bool?> saved;
+  final Value<String?> forwardedBy;
   final Value<int> rowid;
   const VoicemailDataCompanion({
     this.id = const Value.absent(),
@@ -11403,6 +11497,8 @@ class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
     this.size = const Value.absent(),
     this.type = const Value.absent(),
     this.attachmentPath = const Value.absent(),
+    this.saved = const Value.absent(),
+    this.forwardedBy = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   VoicemailDataCompanion.insert({
@@ -11415,6 +11511,8 @@ class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
     required int size,
     required String type,
     this.attachmentPath = const Value.absent(),
+    this.saved = const Value.absent(),
+    this.forwardedBy = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        date = Value(date),
@@ -11433,6 +11531,8 @@ class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
     Expression<int>? size,
     Expression<String>? type,
     Expression<String>? attachmentPath,
+    Expression<bool>? saved,
+    Expression<String>? forwardedBy,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -11445,6 +11545,8 @@ class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
       if (size != null) 'size': size,
       if (type != null) 'type': type,
       if (attachmentPath != null) 'attachment_path': attachmentPath,
+      if (saved != null) 'saved': saved,
+      if (forwardedBy != null) 'forwarded_by': forwardedBy,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -11459,6 +11561,8 @@ class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
     Value<int>? size,
     Value<String>? type,
     Value<String?>? attachmentPath,
+    Value<bool?>? saved,
+    Value<String?>? forwardedBy,
     Value<int>? rowid,
   }) {
     return VoicemailDataCompanion(
@@ -11471,6 +11575,8 @@ class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
       size: size ?? this.size,
       type: type ?? this.type,
       attachmentPath: attachmentPath ?? this.attachmentPath,
+      saved: saved ?? this.saved,
+      forwardedBy: forwardedBy ?? this.forwardedBy,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -11505,6 +11611,12 @@ class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
     if (attachmentPath.present) {
       map['attachment_path'] = Variable<String>(attachmentPath.value);
     }
+    if (saved.present) {
+      map['saved'] = Variable<bool>(saved.value);
+    }
+    if (forwardedBy.present) {
+      map['forwarded_by'] = Variable<String>(forwardedBy.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -11523,6 +11635,8 @@ class VoicemailDataCompanion extends UpdateCompanion<VoicemailData> {
           ..write('size: $size, ')
           ..write('type: $type, ')
           ..write('attachmentPath: $attachmentPath, ')
+          ..write('saved: $saved, ')
+          ..write('forwardedBy: $forwardedBy, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -25343,6 +25457,8 @@ typedef $$VoicemailTableTableCreateCompanionBuilder =
       required int size,
       required String type,
       Value<String?> attachmentPath,
+      Value<bool?> saved,
+      Value<String?> forwardedBy,
       Value<int> rowid,
     });
 typedef $$VoicemailTableTableUpdateCompanionBuilder =
@@ -25356,6 +25472,8 @@ typedef $$VoicemailTableTableUpdateCompanionBuilder =
       Value<int> size,
       Value<String> type,
       Value<String?> attachmentPath,
+      Value<bool?> saved,
+      Value<String?> forwardedBy,
       Value<int> rowid,
     });
 
@@ -25410,6 +25528,16 @@ class $$VoicemailTableTableFilterComposer
 
   ColumnFilters<String> get attachmentPath => $composableBuilder(
     column: $table.attachmentPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get saved => $composableBuilder(
+    column: $table.saved,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get forwardedBy => $composableBuilder(
+    column: $table.forwardedBy,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -25467,6 +25595,16 @@ class $$VoicemailTableTableOrderingComposer
     column: $table.attachmentPath,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get saved => $composableBuilder(
+    column: $table.saved,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get forwardedBy => $composableBuilder(
+    column: $table.forwardedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VoicemailTableTableAnnotationComposer
@@ -25504,6 +25642,14 @@ class $$VoicemailTableTableAnnotationComposer
 
   GeneratedColumn<String> get attachmentPath => $composableBuilder(
     column: $table.attachmentPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get saved =>
+      $composableBuilder(column: $table.saved, builder: (column) => column);
+
+  GeneratedColumn<String> get forwardedBy => $composableBuilder(
+    column: $table.forwardedBy,
     builder: (column) => column,
   );
 }
@@ -25550,6 +25696,8 @@ class $$VoicemailTableTableTableManager
                 Value<int> size = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<String?> attachmentPath = const Value.absent(),
+                Value<bool?> saved = const Value.absent(),
+                Value<String?> forwardedBy = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VoicemailDataCompanion(
                 id: id,
@@ -25561,6 +25709,8 @@ class $$VoicemailTableTableTableManager
                 size: size,
                 type: type,
                 attachmentPath: attachmentPath,
+                saved: saved,
+                forwardedBy: forwardedBy,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -25574,6 +25724,8 @@ class $$VoicemailTableTableTableManager
                 required int size,
                 required String type,
                 Value<String?> attachmentPath = const Value.absent(),
+                Value<bool?> saved = const Value.absent(),
+                Value<String?> forwardedBy = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VoicemailDataCompanion.insert(
                 id: id,
@@ -25585,6 +25737,8 @@ class $$VoicemailTableTableTableManager
                 size: size,
                 type: type,
                 attachmentPath: attachmentPath,
+                saved: saved,
+                forwardedBy: forwardedBy,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
