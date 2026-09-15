@@ -3241,6 +3241,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Label_moveToTrash => 'Sposta nel cestino';
 
   @override
+  String get voicemail_Label_openContact => 'Apri contatto';
+
+  @override
   String get voicemail_Label_playbackError => 'Riproduzione non riuscita';
 
   @override
@@ -3325,6 +3328,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String voicemail_Snackbar_forwarded(String name) {
     return 'Inoltrato a $name';
   }
+
+  @override
+  String get voicemail_Snackbar_contactGone => 'Questo contatto non e piu nella rubrica';
 
   @override
   String get voicemail_Snackbar_notConfigured =>

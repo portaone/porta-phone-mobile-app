@@ -18,12 +18,12 @@ import '../../helpers/helpers.dart';
 class _MockPlaybackController extends Mock implements VoicemailPlaybackController {}
 
 void main() {
-  Voicemail message({bool? saved, String? forwardedBy}) => Voicemail(
+  Voicemail message({bool? saved, String? forwardedBy, String displaySender = 'User 555002'}) => Voicemail(
     id: 'vm-1',
     date: '2026-08-12T08:17:00Z',
     duration: 4.2,
     sender: '555002',
-    displaySender: 'User 555002',
+    displaySender: displaySender,
     receiver: '555001',
     status: ReadStatus.read,
     size: 17,
@@ -52,6 +52,7 @@ void main() {
     bool forwardSupported = false,
     bool inTrash = false,
     String? forwardedByName,
+    void Function(Voicemail)? onOpenContact,
     void Function(Voicemail)? onToggleSavedStatus,
     void Function(Voicemail)? onForwarded,
     void Function(Voicemail)? onRestored,
@@ -94,6 +95,7 @@ void main() {
               onToggleSeenStatus: (_) {},
               onToggleSavedStatus: (it) => onToggleSavedStatus?.call(it),
               onForwarded: (it) => onForwarded?.call(it),
+              onOpenContact: (it) => onOpenContact?.call(it),
               onRestored: (it) => onRestored?.call(it),
               onDeletedPermanently: (it) => onDeletedPermanently?.call(it),
               onLongPress: (_) => onLongPress?.call(),
@@ -337,6 +339,34 @@ void main() {
       await tester.pumpWidget(wrap());
 
       expect(find.textContaining('Forwarded by'), findsNothing);
+    });
+  });
+
+  group('opening the caller', () {
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a caller the address book knows can be opened', (tester) async {
+      Voicemail? opened;
+      await tester.pumpWidget(wrap(onOpenContact: (it) => opened = it));
+
+      await openMenu(tester);
+      await tester.tap(find.text('Open contact'));
+      await tester.pumpAndSettle();
+
+      expect(opened?.id, 'vm-1');
+    });
+
+    testWidgets('a stranger cannot', (tester) async {
+      // The tile shows the number because no contact was found for it, and
+      // offering the action anyway would lead to an empty screen.
+      await tester.pumpWidget(wrap(voicemail: message(displaySender: '555002')));
+
+      await openMenu(tester);
+
+      expect(find.text('Open contact'), findsNothing);
     });
   });
 }
