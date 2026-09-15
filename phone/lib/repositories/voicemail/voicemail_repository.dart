@@ -211,6 +211,15 @@ class VoicemailRepositoryImpl
       await _webtritApiClient.deleteUserVoicemail(
         _token,
         messageId,
+        // A plain delete means "to the trash" on a backend that has one, and
+        // the backend does not withhold that from a client which cannot show
+        // the trash. This app cannot yet: there is no trash list, no restore
+        // and no "empty trash", so a message deleted here would leave the
+        // screen, keep occupying the subscriber's mailbox, and be reachable by
+        // nothing. Deleting outright is what the user is being promised by the
+        // button they pressed, and it is what this app did before the backend
+        // grew a trash. Drop this the moment the trash controls exist.
+        permanent: true,
         locale: localeCode,
         options: RequestOptions.withNoRetries(),
       );
