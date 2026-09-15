@@ -46,6 +46,12 @@ class CallActionArea extends StatelessWidget {
     final focusedIsRinging = focusedCall.isIncomingRinging;
     final focusedTransfer = focusedCall.transfer;
 
+    // A leg of the room is not a call the grid can act on: the server refuses
+    // a hold or a transfer of one, and the microphone it would mute is the
+    // room's - one track shared by every call - so muting it there would
+    // silence the whole conference. The grid acts on the room instead.
+    final focusedIsLeg = params.conference.isLeg(focusedCall.callId);
+
     if (!focusedIsRinging) {
       return ActiveCallActions(
         style: style?.actions,
@@ -61,17 +67,21 @@ class CallActionArea extends StatelessWidget {
         cameraPermissionDenied: callConfig.isVideoCallEnabled && focusedCall.videoPermissionDenied,
         onCameraPermissionDeniedPressed: params.onCameraPermissionDeniedPressed,
         onCameraChanged: callConfig.isVideoCallEnabled ? params.onCameraChanged : null,
-        mutedValue: focusedCall.muted,
+        // What it shows is the room's mute; what it does is the ordinary
+        // mute of the focused call, which the bloc routes to the room for a
+        // leg. That keeps the operating system's own mute state in step with
+        // the room instead of leaving the two to disagree.
+        mutedValue: focusedIsLeg ? params.conference.selfMuted : focusedCall.muted,
         onMutedChanged: params.onMutedChanged,
         audioDevice: params.audioDevice,
         availableAudioDevices: params.availableAudioDevices,
         onAudioDeviceChanged: params.onAudioDeviceChanged,
         transferableCalls: heldCalls,
-        onBlindTransferInitiated: callConfig.isBlindTransferEnabled
+        onBlindTransferInitiated: callConfig.isBlindTransferEnabled && !focusedIsLeg
             ? (!focusedCall.wasAccepted || focusedTransfer != null ? null : params.onBlindTransferInitiated)
             : null,
         // TODO (Serdun): Simplify complex condition in the widget tree.
-        onAttendedTransferInitiated: callConfig.isAttendedTransferEnabled
+        onAttendedTransferInitiated: callConfig.isAttendedTransferEnabled && !focusedIsLeg
             ? (!focusedCall.wasAccepted || focusedTransfer != null ? null : params.onAttendedTransferInitiated)
             : null,
         // TODO (Serdun): Simplify complex condition in the widget tree.
@@ -99,7 +109,7 @@ class CallActionArea extends StatelessWidget {
         // back as the only live one (the other live calls are
         // put on hold first). Switching lines = focus the other
         // row and press Resume - there is no separate swap.
-        onHeldChanged: params.onHeldChanged,
+        onHeldChanged: focusedIsLeg ? null : params.onHeldChanged,
         onHangupPressed: params.onHangup,
 
         onKeyPressed: params.onKeyPressed,
