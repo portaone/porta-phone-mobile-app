@@ -2784,6 +2784,15 @@
   "@voicemail_Label_forwardSearchHint": {
     "description": "Placeholder of the search field in the forward picker."
   },
+  "voicemail_Label_forwardedBy": "Forwarded by {name}",
+  "@voicemail_Label_forwardedBy": {
+    "description": "Says who passed a voicemail along; the sender stays the original caller.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_Label_markAsHeard": "Mark as heard",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Mark as new",

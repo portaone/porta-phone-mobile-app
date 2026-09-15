@@ -3212,6 +3212,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Label_forwardSearchHint => 'Cerca colleghi';
 
   @override
+  String voicemail_Label_forwardedBy(String name) {
+    return 'Inoltrato da $name';
+  }
+
+  @override
   String get voicemail_Label_markAsHeard => 'Segna come ascoltato';
 
   @override

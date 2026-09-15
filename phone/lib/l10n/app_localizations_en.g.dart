@@ -3175,6 +3175,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Label_forwardSearchHint => 'Search colleagues';
 
   @override
+  String voicemail_Label_forwardedBy(String name) {
+    return 'Forwarded by $name';
+  }
+
+  @override
   String get voicemail_Label_markAsHeard => 'Mark as heard';
 
   @override
