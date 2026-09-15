@@ -757,14 +757,30 @@ class WebtritApiClient {
     );
   }
 
+  /// Changes attributes of a voicemail message.
+  ///
+  /// Only the attributes given are sent, and only those are changed: `seen` and
+  /// `saved` are independent flags set by separate calls, so saving a message
+  /// does not mark it read and marking it read does not unsave it. An attribute
+  /// left out is not sent at all rather than sent as null, which the backend
+  /// would read as "not given" anyway but which would put a value in the body
+  /// that nobody asked to change.
+  ///
+  /// Passing neither is refused rather than sent. The backend answers such a
+  /// patch without doing anything, so a call that reaches here with nothing to
+  /// change is a mistake at the call site and is worth hearing about there.
   Future<void> updateUserVoicemail(
     String token,
     String messageId, {
-    required bool seen,
+    bool? seen,
+    bool? saved,
     String? locale,
     RequestOptions options = const RequestOptions(),
   }) async {
-    final requestJson = {'seen': seen};
+    final requestJson = {'seen': ?seen, 'saved': ?saved};
+    if (requestJson.isEmpty) {
+      throw ArgumentError('updateUserVoicemail needs at least one of seen or saved to change');
+    }
 
     await _httpClientExecutePatch(
       [..._apiBasePathSegmentsV1, 'user', 'voicemails', messageId],

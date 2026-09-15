@@ -24,7 +24,8 @@ class MockWebtritApiClient extends Mock implements api.WebtritApiClient {
   Future<void> updateUserVoicemail(
     String token,
     String messageId, {
-    required bool seen,
+    bool? seen,
+    bool? saved,
     String? locale,
     api.RequestOptions options = const api.RequestOptions(),
   }) async {}
