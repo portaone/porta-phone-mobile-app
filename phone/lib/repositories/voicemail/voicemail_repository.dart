@@ -45,6 +45,13 @@ abstract class VoicemailRepository implements Refreshable {
   /// If [localeCode] is provided, it will be used for the API request.
   Future<void> updateVoicemailSeenStatus(String messageId, bool seen, {String? localeCode});
 
+  /// Keeps the voicemail with the given [messageId], or stops keeping it.
+  ///
+  /// Independent of the seen flag in both directions: keeping a message does
+  /// not mark it read, and reading one does not stop it being kept. Unsaving is
+  /// this same call with [saved] false rather than an operation of its own.
+  Future<void> updateVoicemailSavedStatus(String messageId, bool saved, {String? localeCode});
+
   /// Watches the count of unread voicemails in the local database.
   ///
   /// Emits a new value whenever the underlying data changes.
@@ -310,6 +317,46 @@ class VoicemailRepositoryImpl
     }
   }
 
+  /// Keeps a voicemail, or stops keeping it, the same way the seen flag is set.
+  ///
+  /// The two are separate flags on the backend, set by separate calls, so this
+  /// sends `saved` alone and leaves `seen` untouched.
+  ///
+  /// A message the mailbox cannot hold the flag for reports no `saved` at all,
+  /// and a caller is expected not to offer the control there; asking anyway is
+  /// left to the backend to refuse rather than guessed at here, since the local
+  /// row only says what the last refresh reported.
+  @override
+  Future<void> updateVoicemailSavedStatus(String messageId, bool saved, {String? localeCode}) async {
+    if (_fetching != null) {
+      await _fetching;
+    }
+
+    final previous = await _appDatabase.voicemailDao.getVoicemailById(messageId);
+    if (previous == null) return;
+
+    final before = VoicemailDataCompanion(id: Value(previous.id), saved: Value(previous.saved));
+    final after = VoicemailDataCompanion(id: Value(previous.id), saved: Value(saved));
+    await _appDatabase.voicemailDao.updateVoicemail(after);
+
+    try {
+      await _webtritApiClient.updateUserVoicemail(
+        _token,
+        messageId,
+        saved: saved,
+        locale: localeCode,
+        options: RequestOptions.withNoRetries(),
+      );
+    } on UnauthorizedException catch (e) {
+      await _appDatabase.voicemailDao.updateVoicemail(before);
+      _sessionGuard.onUnauthorized(e);
+      rethrow;
+    } catch (_) {
+      await _appDatabase.voicemailDao.updateVoicemail(before);
+      rethrow;
+    }
+  }
+
   /// Watches the number of voicemails that are currently marked as unread.
   ///
   /// Emits a new value whenever a voicemail is added, removed, or has its seen
@@ -435,6 +482,9 @@ class EmptyVoicemailRepository implements VoicemailRepository {
 
   @override
   Future<void> updateVoicemailSeenStatus(String messageId, bool seen, {String? localeCode}) => Future.value();
+
+  @override
+  Future<void> updateVoicemailSavedStatus(String messageId, bool saved, {String? localeCode}) => Future.value();
 
   @override
   Stream<int> watchUnreadVoicemailsCount() => Stream.value(0);
