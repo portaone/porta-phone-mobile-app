@@ -4145,6 +4145,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       connections: connections,
       lineConnections: lineConnections,
       conference: session.conference,
+      localConference: state.conference,
     );
 
     _logger.warning(
@@ -4234,6 +4235,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
                   (e, s) => callErrorReporter.handle(e, s, '_handleHandshakeReceived conferenceHangup error'),
                 ),
           );
+
+        case ForgetConferenceAction():
+          // The room this client held is over, whatever ended it: the same
+          // thing to do as for the server's own word that it is.
+          _logger.info('_handleHandshakeReceived: the conference room ${state.conference.room} is gone');
+          add(const _CallMutationEvent.conferenceTerminated());
+
+        case AdoptConferenceAction():
+          // The room stands and so does the connection to its mixer; only the
+          // membership is the server's to state, as an update states it.
+          _logger.info('_handleHandshakeReceived: keeping conference room ${action.room}');
+          add(_CallMutationEvent.conferenceUpdated(room: action.room, participants: action.participants));
       }
     }
   }
