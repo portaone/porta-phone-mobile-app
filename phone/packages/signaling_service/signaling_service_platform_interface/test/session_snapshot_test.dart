@@ -177,6 +177,43 @@ void main() {
     });
   });
 
+  group('the conference block', () {
+    const participants = [ConferenceParticipant(line: 0, callId: 'a', muted: true)];
+
+    test('a room built while nobody was subscribed is described to a late one', () {
+      final snapshot = snapshotOf(_handshake());
+      snapshot.apply(
+        const ConferenceOfferEvent(room: 7, jsep: {'type': 'offer', 'sdp': 'v=0'}, participants: participants),
+      );
+
+      final conference = snapshot.toHandshake().conference;
+      expect(conference?.room, 7);
+      expect(conference?.participants, participants);
+    });
+
+    test('the membership is the last list, not the first', () {
+      final snapshot = snapshotOf(_handshake(conference: const ConferenceInfo(room: 7, participants: participants)));
+      snapshot.apply(const ConferenceUpdatedEvent(room: 7, participants: []));
+
+      expect(snapshot.toHandshake().conference?.participants, isEmpty);
+    });
+
+    test('a room that ended leaves nothing behind', () {
+      final snapshot = snapshotOf(_handshake(conference: const ConferenceInfo(room: 7)));
+      snapshot.apply(const ConferenceTerminatedEvent(room: 7));
+
+      expect(snapshot.toHandshake().conference, isNull);
+    });
+
+    test('a room that could not be built leaves nothing behind', () {
+      final snapshot = snapshotOf(_handshake());
+      snapshot.apply(const ConferenceOfferEvent(room: 7, jsep: {}, participants: participants));
+      snapshot.apply(const ConferenceFailedEvent(room: 7, reason: 'video_not_supported'));
+
+      expect(snapshot.toHandshake().conference, isNull);
+    });
+  });
+
   test('what the handshake reported and no event changes is rendered as it was', () {
     final handshake = _handshake(conference: const ConferenceInfo(room: 7));
     final snapshot = snapshotOf(handshake);
@@ -194,7 +231,7 @@ void main() {
     final snapshot = snapshotOf(_handshake(lines: [null]));
     final before = snapshot.toHandshake();
 
-    snapshot.apply(const ConferenceTerminatedEvent(room: 1));
+    snapshot.apply(const ConferenceIceTrickleEvent(candidate: {'candidate': 'candidate:1'}));
 
     expect(snapshot.toHandshake(), before);
   });

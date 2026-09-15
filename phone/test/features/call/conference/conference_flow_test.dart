@@ -680,6 +680,84 @@ void main() {
     expect(h.bloc.state.conference.selfMuted, isFalse);
   });
 
+  test('a handshake arriving while the offer is answered keeps the room', () async {
+    final h = _harness();
+    addTearDown(h.close);
+    h.seedEstablishedCall('a', line: 0);
+    h.seedEstablishedCall('b', line: 1);
+    await _merge(h, ['a', 'b']);
+
+    final gate = Completer<void>();
+    h.signaling.gate = gate;
+    h.signaling.emit(
+      ConferenceOfferEvent(room: 7, jsep: _offer, participants: [_participant('a', 0), _participant('b', 1)]),
+    );
+    await pumpEventQueue();
+
+    // The handshake handler runs outside every queue and decides what this
+    // client holds from the room id in the state.
+    h.signaling.emitHandshake(
+      StateHandshake(
+        keepaliveInterval: const Duration(seconds: 30),
+        timestamp: 0,
+        registration: const Registration(status: RegistrationStatus.registered),
+        lines: const [],
+        presenceInfos: const [],
+        dialogInfos: const [],
+        guestLine: null,
+        conference: const ConferenceInfo(room: 7),
+      ),
+    );
+    gate.complete();
+    await pumpEventQueue();
+
+    expect(
+      h.signaling.requests.whereType<ConferenceHangupRequest>(),
+      isEmpty,
+      reason: 'the client would have hung up the room it was joining',
+    );
+    expect(h.bloc.state.conference.room, 7);
+  });
+
+  test('a handshake arriving while a leg is taken off hold keeps the room', () async {
+    // Taking a participant off hold is a native round trip, and the handshake
+    // handler runs outside every queue: it decides what this client holds by
+    // the room id in the state.
+    final h = _harness();
+    addTearDown(h.close);
+    h.seedEstablishedCall('a', line: 0);
+    h.seedEstablishedCall('b', line: 1, held: true);
+    await _merge(h, ['a', 'b']);
+
+    final gate = Completer<void>();
+    h.callkeep.holdGate = gate;
+    h.signaling.emit(
+      ConferenceOfferEvent(room: 7, jsep: _offer, participants: [_participant('a', 0), _participant('b', 1)]),
+    );
+    await pumpEventQueue();
+
+    h.signaling.emitHandshake(
+      StateHandshake(
+        keepaliveInterval: const Duration(seconds: 30),
+        timestamp: 0,
+        registration: const Registration(status: RegistrationStatus.registered),
+        lines: const [],
+        presenceInfos: const [],
+        dialogInfos: const [],
+        guestLine: null,
+        conference: const ConferenceInfo(room: 7),
+      ),
+    );
+    // Let the handshake be planned and acted on while the hold is still in
+    // flight; that window is the whole point of this test.
+    await pumpEventQueue();
+    gate.complete();
+    await pumpEventQueue();
+
+    expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), isEmpty);
+    expect(h.bloc.state.conference.room, 7);
+  });
+
   test('a participant list for another room is not adopted', () async {
     final h = _harness();
     addTearDown(h.close);
