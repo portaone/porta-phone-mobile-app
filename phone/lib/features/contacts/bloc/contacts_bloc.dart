@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'package:webtrit_phone/models/models.dart';
-import 'package:webtrit_phone/repositories/active_contact_source_type/active_contact_source_type_repository.dart';
+import 'package:webtrit_phone/repositories/active_contacts_list/active_contacts_list_repository.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
 part 'contacts_bloc.freezed.dart';
@@ -14,11 +14,11 @@ part 'contacts_event.dart';
 part 'contacts_state.dart';
 
 class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
-  ContactsBloc({required this.activeContactSourceTypeRepository})
+  ContactsBloc({required this.activeContactsListRepository})
     : super(
         ContactsState(
-          sourceType: activeContactSourceTypeRepository.getActiveContactSourceType(),
-          favorites: activeContactSourceTypeRepository.getFavoritesPicked(),
+          sourceType: activeContactsListRepository.getSourceType(),
+          favorites: activeContactsListRepository.getFavoritesPicked(),
         ),
       ) {
     on<ContactsSourceTypeChanged>(_onSourceTypeChanged, transformer: debounce());
@@ -31,12 +31,12 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
     on<ContactsSearchSubmitted>(_onSearchSubmitted, transformer: sequential());
   }
 
-  final ActiveContactSourceTypeRepository activeContactSourceTypeRepository;
+  final ActiveContactsListRepository activeContactsListRepository;
 
   /// The arrangement that keeps favourites elsewhere: an address book is all
   /// this event ever states, so it leaves the favourites pick alone.
   Future<void> _onSourceTypeChanged(ContactsSourceTypeChanged event, Emitter<ContactsState> emit) async {
-    await activeContactSourceTypeRepository.setActiveContactSourceType(event.sourceType);
+    await activeContactsListRepository.setSourceType(event.sourceType);
 
     emit(state.copyWith(sourceType: event.sourceType));
   }
@@ -54,8 +54,8 @@ class ContactsBloc extends Bloc<ContactsEvent, ContactsState> {
 
     emit(state.copyWith(sourceType: sourceType, favorites: favorites));
 
-    await activeContactSourceTypeRepository.setFavoritesPicked(favorites);
-    if (!favorites) await activeContactSourceTypeRepository.setActiveContactSourceType(sourceType);
+    await activeContactsListRepository.setFavoritesPicked(favorites);
+    if (!favorites) await activeContactsListRepository.setSourceType(sourceType);
   }
 
   Future<void> _onSearchChanged(ContactsSearchChanged event, Emitter<ContactsState> emit) async {

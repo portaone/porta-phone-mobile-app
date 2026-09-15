@@ -8,10 +8,10 @@ import 'package:webtrit_phone/models/contact_source_type.dart';
 /// Two values rather than one, because they answer different questions and
 /// both are needed at once: leaving the favourites has to land on the book
 /// that was left behind rather than on a default.
-abstract interface class ActiveContactSourceTypeRepository {
-  ContactSourceType getActiveContactSourceType({ContactSourceType defaultValue});
+abstract interface class ActiveContactsListRepository {
+  ContactSourceType getSourceType({ContactSourceType defaultValue});
 
-  Future<void> setActiveContactSourceType(ContactSourceType value);
+  Future<void> setSourceType(ContactSourceType value);
 
   /// Whether the favourites entry of the chooser was the one picked.
   bool getFavoritesPicked({bool defaultValue});
@@ -21,24 +21,26 @@ abstract interface class ActiveContactSourceTypeRepository {
   Future<void> clear();
 }
 
-class ActiveContactSourceTypeRepositoryPrefsImpl implements ActiveContactSourceTypeRepository {
-  ActiveContactSourceTypeRepositoryPrefsImpl(this._appPreferences);
+class ActiveContactsListRepositoryPrefsImpl implements ActiveContactsListRepository {
+  ActiveContactsListRepositoryPrefsImpl(this._appPreferences);
 
   final AppPreferences _appPreferences;
   // Both strings are what already sits on people's devices, not names to be
   // tidied: the older one says "source type" and the newer one says
-  // "contacts" because they shipped years apart. Renaming either reads as a
+  // "contacts" because they shipped years apart, and the first no longer
+  // matches the name of the class that reads it. Renaming either reads as a
   // rename and behaves as a wipe - everyone would quietly lose what they had
-  // chosen, because nothing would look under the old name again.
+  // chosen, because nothing would look under the old name again. Identifiers
+  // are ours to rename; these two are the storage's.
   final _prefsKey = 'active-contact-source-type';
   final _favoritesPrefsKey = 'active-contacts-favorites-picked';
 
   @override
-  ContactSourceType getActiveContactSourceType({ContactSourceType defaultValue = ContactSourceType.external}) {
-    final activeContactSourceTypeString = _appPreferences.getString(_prefsKey);
-    if (activeContactSourceTypeString != null) {
+  ContactSourceType getSourceType({ContactSourceType defaultValue = ContactSourceType.external}) {
+    final sourceTypeString = _appPreferences.getString(_prefsKey);
+    if (sourceTypeString != null) {
       try {
-        return ContactSourceType.values.byName(activeContactSourceTypeString);
+        return ContactSourceType.values.byName(sourceTypeString);
       } catch (_) {
         return defaultValue;
       }
@@ -48,7 +50,7 @@ class ActiveContactSourceTypeRepositoryPrefsImpl implements ActiveContactSourceT
   }
 
   @override
-  Future<void> setActiveContactSourceType(ContactSourceType value) => _appPreferences.setString(_prefsKey, value.name);
+  Future<void> setSourceType(ContactSourceType value) => _appPreferences.setString(_prefsKey, value.name);
 
   @override
   bool getFavoritesPicked({bool defaultValue = false}) => _appPreferences.getBool(_favoritesPrefsKey) ?? defaultValue;

@@ -6,7 +6,7 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 
 /// The preferences the app keeps about what the contacts section was left
 /// showing, with nothing behind them.
-class _Remembered implements ActiveContactSourceTypeRepository {
+class _Remembered implements ActiveContactsListRepository {
   _Remembered({this.sourceType = ContactSourceType.external, this.favorites = false});
 
   ContactSourceType sourceType;
@@ -14,11 +14,10 @@ class _Remembered implements ActiveContactSourceTypeRepository {
   bool cleared = false;
 
   @override
-  ContactSourceType getActiveContactSourceType({ContactSourceType defaultValue = ContactSourceType.external}) =>
-      sourceType;
+  ContactSourceType getSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => sourceType;
 
   @override
-  Future<void> setActiveContactSourceType(ContactSourceType value) async => sourceType = value;
+  Future<void> setSourceType(ContactSourceType value) async => sourceType = value;
 
   @override
   bool getFavoritesPicked({bool defaultValue = false}) => favorites;
@@ -35,7 +34,7 @@ void main() {
     test('starts on what was remembered, the address book and the pick alike', () {
       final remembered = _Remembered(sourceType: ContactSourceType.local, favorites: true);
 
-      final bloc = ContactsBloc(activeContactSourceTypeRepository: remembered);
+      final bloc = ContactsBloc(activeContactsListRepository: remembered);
       addTearDown(bloc.close);
 
       expect(bloc.state.sourceType, ContactSourceType.local);
@@ -43,7 +42,7 @@ void main() {
     });
 
     test('a section nobody has chosen anything in starts on an address book', () {
-      final bloc = ContactsBloc(activeContactSourceTypeRepository: _Remembered());
+      final bloc = ContactsBloc(activeContactsListRepository: _Remembered());
       addTearDown(bloc.close);
 
       expect(bloc.state.favorites, isFalse);
@@ -51,7 +50,7 @@ void main() {
 
     test('picking the favourites is remembered', () async {
       final remembered = _Remembered();
-      final bloc = ContactsBloc(activeContactSourceTypeRepository: remembered);
+      final bloc = ContactsBloc(activeContactsListRepository: remembered);
       addTearDown(bloc.close);
 
       bloc.add(const ContactsListSelectionChanged(ContactsFavoritesSelection()));
@@ -65,7 +64,7 @@ void main() {
       // favourites cannot both be the answer - and the next start must open
       // on the book.
       final remembered = _Remembered(favorites: true);
-      final bloc = ContactsBloc(activeContactSourceTypeRepository: remembered);
+      final bloc = ContactsBloc(activeContactsListRepository: remembered);
       addTearDown(bloc.close);
 
       bloc.add(const ContactsListSelectionChanged(ContactsSourceSelection(ContactSourceType.local)));
@@ -80,7 +79,7 @@ void main() {
 
     test('picking the favourites keeps the address book to come back to', () async {
       final remembered = _Remembered(sourceType: ContactSourceType.local);
-      final bloc = ContactsBloc(activeContactSourceTypeRepository: remembered);
+      final bloc = ContactsBloc(activeContactsListRepository: remembered);
       addTearDown(bloc.close);
 
       bloc.add(const ContactsListSelectionChanged(ContactsFavoritesSelection()));
@@ -93,7 +92,7 @@ void main() {
     test('the pick is shown before it is written down, not after', () {
       // A menu entry is a tap, not typing: the list under a chooser that has
       // already closed must not wait on the device's storage.
-      final bloc = ContactsBloc(activeContactSourceTypeRepository: _Remembered());
+      final bloc = ContactsBloc(activeContactsListRepository: _Remembered());
       addTearDown(bloc.close);
 
       bloc.add(const ContactsListSelectionChanged(ContactsFavoritesSelection()));
@@ -108,7 +107,7 @@ void main() {
       // The tabbed screen has no favourites entry to pick, so its own event
       // states an address book and nothing more.
       final remembered = _Remembered(favorites: true);
-      final bloc = ContactsBloc(activeContactSourceTypeRepository: remembered);
+      final bloc = ContactsBloc(activeContactsListRepository: remembered);
       addTearDown(bloc.close);
 
       bloc.add(const ContactsSourceTypeChanged(ContactSourceType.local));

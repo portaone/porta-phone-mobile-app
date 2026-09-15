@@ -31,7 +31,7 @@ class _MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCub
 class _MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
     implements MicrophoneStatusBloc {}
 
-class _RememberedSourceType implements ActiveContactSourceTypeRepository {
+class _RememberedSourceType implements ActiveContactsListRepository {
   _RememberedSourceType(this._value);
 
   ContactSourceType _value;
@@ -40,10 +40,10 @@ class _RememberedSourceType implements ActiveContactSourceTypeRepository {
   bool favorites = false;
 
   @override
-  ContactSourceType getActiveContactSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => _value;
+  ContactSourceType getSourceType({ContactSourceType defaultValue = ContactSourceType.external}) => _value;
 
   @override
-  Future<void> setActiveContactSourceType(ContactSourceType value) async => _value = value;
+  Future<void> setSourceType(ContactSourceType value) async => _value = value;
 
   @override
   bool getFavoritesPicked({bool defaultValue = false}) => favorites;
@@ -116,7 +116,7 @@ void main() {
       when(() => favoritesBloc.state).thenReturn(FavoritesState(favorites: favorites));
     }
     final repository = _RememberedSourceType(remembered)..favorites = rememberedFavorites;
-    final contactsBloc = ContactsBloc(activeContactSourceTypeRepository: repository);
+    final contactsBloc = ContactsBloc(activeContactsListRepository: repository);
     addTearDown(contactsBloc.close);
 
     await tester.pumpWidget(
@@ -215,7 +215,7 @@ void main() {
 
       await pick(tester, find.byKey(contactsSourceFavoritesKey));
 
-      final remembered = contactsBloc.activeContactSourceTypeRepository as _RememberedSourceType;
+      final remembered = contactsBloc.activeContactsListRepository as _RememberedSourceType;
       expect(remembered.favorites, isTrue);
     });
 
@@ -230,9 +230,9 @@ void main() {
 
       await pick(tester, find.text('Your phone').last);
 
-      final remembered = contactsBloc.activeContactSourceTypeRepository as _RememberedSourceType;
+      final remembered = contactsBloc.activeContactsListRepository as _RememberedSourceType;
       expect(remembered.favorites, isFalse);
-      expect(remembered.getActiveContactSourceType(), ContactSourceType.local);
+      expect(remembered.getSourceType(), ContactSourceType.local);
     });
 
     testWidgets('offers favourites as one more entry rather than a control of its own', (tester) async {

@@ -32,8 +32,7 @@ class ContactsScreenPage extends StatelessWidget {
       sourceTypeWidgetBuilder: contactSourceTypeWidgetBuilder,
     );
     final provider = BlocProvider(
-      create: (context) =>
-          ContactsBloc(activeContactSourceTypeRepository: context.read<ActiveContactSourceTypeRepository>()),
+      create: (context) => ContactsBloc(activeContactsListRepository: context.read<ActiveContactsListRepository>()),
       child: widget,
     );
     return provider;

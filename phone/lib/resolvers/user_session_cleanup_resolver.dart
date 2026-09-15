@@ -22,7 +22,7 @@ class RepositoryUserSessionCleanupResolver implements UserSessionCleanupResolver
     required this.queuedTerminationRequestsRepository,
     required this.activeMainTabRepository,
     required this.activeRecentsVisibilityFilterRepository,
-    required this.activeContactSourceTypeRepository,
+    required this.activeContactsListRepository,
     required this.audioProcessingSettingsRepository,
     required this.encodingPresetRepository,
     required this.iceSettingsRepository,
@@ -42,7 +42,7 @@ class RepositoryUserSessionCleanupResolver implements UserSessionCleanupResolver
   final QueuedTerminationRequestsRepository queuedTerminationRequestsRepository;
   final ActiveMainTabRepository activeMainTabRepository;
   final ActiveRecentsVisibilityFilterRepository activeRecentsVisibilityFilterRepository;
-  final ActiveContactSourceTypeRepository activeContactSourceTypeRepository;
+  final ActiveContactsListRepository activeContactsListRepository;
   final AudioProcessingSettingsRepository audioProcessingSettingsRepository;
   final EncodingPresetRepository encodingPresetRepository;
   final IceSettingsRepository iceSettingsRepository;
@@ -68,7 +68,7 @@ class RepositoryUserSessionCleanupResolver implements UserSessionCleanupResolver
       queuedTerminationRequestsRepository.clear().suppressError('queuedTerminationRequestsRepository'),
       activeMainTabRepository.clear().suppressError('activeMainTabRepository'),
       activeRecentsVisibilityFilterRepository.clear().suppressError('activeRecentsVisibilityFilterRepository'),
-      activeContactSourceTypeRepository.clear().suppressError('activeContactSourceTypeRepository'),
+      activeContactsListRepository.clear().suppressError('activeContactsListRepository'),
       audioProcessingSettingsRepository.clear().suppressError('audioProcessingSettingsRepository'),
       encodingPresetRepository.clear().suppressError('encodingPresetRepository'),
       iceSettingsRepository.clear().suppressError('iceSettingsRepository'),

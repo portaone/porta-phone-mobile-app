@@ -1,4 +1,4 @@
-export 'active_contact_source_type/active_contact_source_type_repository.dart';
+export 'active_contacts_list/active_contacts_list_repository.dart';
 export 'active_main_tab/active_main_tab_repository.dart';
 export 'active_recents_visibility_filter/active_recents_visibility_filter_repository.dart';
 export 'app/app_repository.dart';
