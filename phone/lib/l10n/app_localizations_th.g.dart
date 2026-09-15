@@ -1299,6 +1299,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get logRecordsConsole_PopupMenuItem_clear => 'ล้าง';
 
   @override
+  String get main_Button_cancelPicking => 'ยกเลิก';
+
+  @override
   String get main_BottomNavigationBarItemLabel_chats => 'แชท';
 
   @override
@@ -3146,6 +3149,12 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Label_emptyTrashHint => 'ข้อความที่ย้ายมาที่นี่ยังคงใช้พื้นที่กล่องข้อความจนกว่าจะล้างถังขยะ';
 
   @override
+  String get voicemail_Label_forward => 'ส่งต่อ';
+
+  @override
+  String get voicemail_Label_forwardChoosing => 'เลือกผู้รับการส่งต่อ';
+
+  @override
   String get voicemail_Label_markAsHeard => 'ทำเครื่องหมายว่าฟังแล้ว';
 
   @override
@@ -3186,6 +3195,11 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String voicemail_SemanticsLabel_forwardTo(String name) {
+    return 'ส่งต่อถึง $name';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_loading => 'กำลังโหลด';
 
   @override
@@ -3205,6 +3219,25 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get voicemail_Snackbar_movedToTrash => 'ย้ายไปถังขยะแล้ว';
+
+  @override
+  String get voicemail_Snackbar_forwardFailed => 'ส่งต่อไม่สำเร็จ';
+
+  @override
+  String voicemail_Snackbar_forwardRecipientFull(String name) {
+    return '$name ไม่สามารถรับข้อความที่ส่งต่อได้อีก';
+  }
+
+  @override
+  String get voicemail_Snackbar_forwardTooLarge => 'ข้อความใหญ่เกินกว่าจะส่งต่อได้';
+
+  @override
+  String get voicemail_Snackbar_forwardUnavailable => 'ไม่สามารถส่งต่อได้';
+
+  @override
+  String voicemail_Snackbar_forwarded(String name) {
+    return 'ส่งต่อถึง $name แล้ว';
+  }
 
   @override
   String get voicemail_Snackbar_notConfigured => 'ติดต่อผู้ดูแลระบบของคุณเพื่อเปิดใช้งานข้อความเสียง';

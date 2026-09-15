@@ -29,13 +29,15 @@ void main() {
     await mailbox.close();
   });
 
-  VoicemailCubit build({bool saveSupported = true, bool trashSupported = true}) => VoicemailCubit(
-    repository: repository,
-    onCallStarted: (_) {},
-    onSubmitNotification: (_) {},
-    saveSupported: saveSupported,
-    trashSupported: trashSupported,
-  );
+  VoicemailCubit build({bool saveSupported = true, bool trashSupported = true, bool forwardSupported = true}) =>
+      VoicemailCubit(
+        repository: repository,
+        onCallStarted: (_) {},
+        onSubmitNotification: (_) {},
+        saveSupported: saveSupported,
+        trashSupported: trashSupported,
+        forwardSupported: forwardSupported,
+      );
 
   Future<void> deliver(VoicemailCubit cubit, List<Voicemail> items) async {
     mailbox.add(items);

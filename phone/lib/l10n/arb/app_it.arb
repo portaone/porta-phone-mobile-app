@@ -1168,6 +1168,10 @@
   "@logRecordsConsole_PopupMenuItem_info": {},
   "logRecordsConsole_PopupMenuItem_clear": "Cancella",
   "@logRecordsConsole_PopupMenuItem_clear": {},
+  "main_Button_cancelPicking": "Annulla",
+  "@main_Button_cancelPicking": {
+    "description": "Leaves the banner asking the person to choose somebody, giving up on whatever asked for one."
+  },
   "main_BottomNavigationBarItemLabel_chats": "Le chat",
   "@main_BottomNavigationBarItemLabel_chats": {},
   "main_Text_blindTransferInitiated": "Trasferimento senza vedere",
@@ -2695,6 +2699,14 @@
   "@voicemail_Label_emptyTrashHint": {
     "description": "Explains, on an empty trash, what keeping messages there would cost."
   },
+  "voicemail_Label_forward": "Inoltra",
+  "@voicemail_Label_forward": {
+    "description": "Menu action that passes a voicemail on to a colleague."
+  },
+  "voicemail_Label_forwardChoosing": "Scegli a chi inoltrare",
+  "@voicemail_Label_forwardChoosing": {
+    "description": "Banner shown while the user is browsing the address book for somebody to forward a voicemail to."
+  },
   "voicemail_Label_markAsHeard": "Segna come ascoltato",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Segna come nuovo",
@@ -2745,6 +2757,15 @@
       }
     }
   },
+  "voicemail_SemanticsLabel_forwardTo": "Inoltra a {name}",
+  "@voicemail_SemanticsLabel_forwardTo": {
+    "description": "Accessibility name of a row in the forward picker.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_loading": "Caricamento",
   "@voicemail_SemanticsLabel_loading": {
     "description": "Announced while a voicemail is being prepared for playback."
@@ -2772,6 +2793,32 @@
   "voicemail_Snackbar_movedToTrash": "Spostato nel cestino",
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."
+  },
+  "voicemail_Snackbar_forwardFailed": "Impossibile inoltrare",
+  "@voicemail_Snackbar_forwardFailed": {
+    "description": "Shown when forwarding failed for a reason the person cannot act on."
+  },
+  "voicemail_Snackbar_forwardRecipientFull": "{name} non puo ricevere altri messaggi inoltrati",
+  "@voicemail_Snackbar_forwardRecipientFull": {
+    "description": "Shown when the colleague has as many forwarded messages as they are allowed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "voicemail_Snackbar_forwardTooLarge": "Messaggio troppo grande per essere inoltrato",
+  "@voicemail_Snackbar_forwardTooLarge": {},
+  "voicemail_Snackbar_forwardUnavailable": "Inoltro non disponibile",
+  "@voicemail_Snackbar_forwardUnavailable": {},
+  "voicemail_Snackbar_forwarded": "Inoltrato a {name}",
+  "@voicemail_Snackbar_forwarded": {
+    "description": "Confirms that a copy of the voicemail reached a colleague.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "voicemail_Snackbar_notConfigured": "Contatta il tuo amministratore per attivare la segreteria telefonica.",
   "@voicemail_Snackbar_notConfigured": {},
