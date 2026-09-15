@@ -525,6 +525,21 @@ void main() {
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
+    testWidgets('changes the key the scaffold sees, so the button is animated in', (tester) async {
+      // The scaffold compares the key of what sits in the slot and does
+      // nothing when it has not changed. The key has to reach the slot
+      // itself: held one level down, inside a builder that is the same
+      // keyless widget either way, it says nothing to the scaffold and the
+      // button appears with no animation at all.
+      Key? fabKey() => tester.widget<Scaffold>(find.byType(Scaffold)).floatingActionButton?.key;
+
+      await pumpScreen(tester, selections: const [local, favorites], favorites: [aFavorite(1), aFavorite(2)]);
+      expect(fabKey(), const ValueKey('contacts-no-reorder'));
+
+      await pick(tester, find.byKey(contactsSourceFavoritesKey));
+      expect(fabKey(), const ValueKey('contacts-reorder'));
+    });
+
     testWidgets('is not offered for a list too short to rearrange', (tester) async {
       // Swapping a pair is the one case where rearranging IS the whole task,
       // so one favourite is the floor, not two.
