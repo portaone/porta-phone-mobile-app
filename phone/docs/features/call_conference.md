@@ -159,6 +159,32 @@ the server would refuse the hold as `line_in_conference` - so hold and transfer
 are refused for a leg on every path, including the ones that do not come from
 this app's own UI.
 
+## Reconnect and restart
+
+A room lives on the media server and outlives the signalling socket, so every
+handshake carries two accounts of it - the server's `conference` block and this
+client's own state - and all four combinations mean something:
+
+| the server | this client | what happens |
+|---|---|---|
+| a room | the same room | kept; the handshake's participant list is the membership, as an update would be |
+| a room | nothing | ended on the server: nobody here is connected to its mixer |
+| a room | a different room | the server's is ended and this one is dropped, legs back to ordinary calls |
+| nothing | a room | dropped here, legs back to ordinary calls |
+
+What "this client's room" means is the room id, and it is recorded **before**
+the offer is answered. The handshake handler runs outside every queue, so one
+landing mid-answer would otherwise find a client with no room and hang up the
+room it was in the middle of joining. A merge still assembling has no id yet,
+and the server sends one offer per room - there is nothing to come back to, so
+it is ended.
+
+The session snapshot the foreground-service hub replays carries the conference
+block too. Protocol events are never replayed, so a room built while the app
+isolate was detached would be invisible to whoever attached afterwards; the
+snapshot is how that subscriber learns of a room it is not connected to and
+must end.
+
 ## Teardown
 
 | how | what this client does |
