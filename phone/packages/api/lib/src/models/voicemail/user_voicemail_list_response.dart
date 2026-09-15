@@ -13,17 +13,23 @@ class UserVoicemailListResponse with _$UserVoicemailListResponse {
   final bool hasNewMessages;
 
   @override
-  final List<UserVoicemailItem> items;
+  final List<UserVoicemailSummary> items;
 
   factory UserVoicemailListResponse.fromJson(Map<String, dynamic> json) => _$UserVoicemailListResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserVoicemailListResponseToJson(this);
 }
 
+/// One message as the LIST reports it, which is less than the message has.
+///
+/// There is no sender, no receiver and no attachment description here, so
+/// anything needing those asks for the message itself - see [UserVoicemail].
+/// The two are separate types rather than one with optional fields precisely so
+/// that a sender read off [UserVoicemail] is known to be there.
 @freezed
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
-class UserVoicemailItem with _$UserVoicemailItem {
-  const UserVoicemailItem({
+class UserVoicemailSummary with _$UserVoicemailSummary {
+  const UserVoicemailSummary({
     required this.id,
     required this.date,
     required this.duration,
@@ -50,7 +56,7 @@ class UserVoicemailItem with _$UserVoicemailItem {
   @override
   final String type;
 
-  factory UserVoicemailItem.fromJson(Map<String, dynamic> json) => _$UserVoicemailItemFromJson(json);
+  factory UserVoicemailSummary.fromJson(Map<String, dynamic> json) => _$UserVoicemailSummaryFromJson(json);
 
-  Map<String, dynamic> toJson() => _$UserVoicemailItemToJson(this);
+  Map<String, dynamic> toJson() => _$UserVoicemailSummaryToJson(this);
 }

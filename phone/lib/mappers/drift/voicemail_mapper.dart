@@ -5,7 +5,7 @@ import 'package:webtrit_phone/models/models.dart';
 
 mixin VoicemailMapper {
   VoicemailData voicemailToDrift(
-    UserVoicemailItem userVoicemailItem,
+    UserVoicemailSummary userVoicemailItem,
     UserVoicemail userVoicemailDetails,
     String attachmentUrl,
   ) {
