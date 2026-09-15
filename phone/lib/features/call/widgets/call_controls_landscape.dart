@@ -156,7 +156,9 @@ class _InfoZone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (params.activeCalls.length > 1) {
+    // A room can stand with a single call left in it, and it is still a room
+    // rather than one call's info beside an avatar.
+    if (params.activeCalls.length > 1 || params.conference.isPresent) {
       return Center(child: SingleChildScrollView(child: _buildInfoBlock(context)));
     }
 
@@ -177,6 +179,13 @@ class _InfoZone extends StatelessWidget {
           activeCalls: params.activeCalls,
           focusedCall: params.focusedCall,
           onCallSelected: params.onCallSelected,
+          mergeSupported: params.callConfig.isConferenceEnabled,
+          onMergePressed: params.onMerge,
+          conference: params.conference,
+          onSelfMutedChanged: params.onConferenceSelfMuted,
+          onParticipantMutedChanged: params.onConferenceParticipantMuted,
+          onParticipantHangup: params.onConferenceParticipantHangup,
+          onAddPressed: params.onConferenceAdd,
           textAlign: TextAlign.start,
         ),
         if (params.keypadShown)

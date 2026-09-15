@@ -42,6 +42,12 @@ class CallControlsParams {
     required this.onHangup,
     required this.onAccept,
     required this.dtmfInput,
+    this.conference = const ConferenceState(),
+    this.onMerge,
+    this.onConferenceAdd,
+    this.onConferenceSelfMuted,
+    this.onConferenceParticipantMuted,
+    this.onConferenceParticipantHangup,
     this.audioDevice,
     this.contactResolver,
     this.keypadShown = false,
@@ -81,6 +87,26 @@ class CallControlsParams {
   final ValueChanged<String> onKeyPressed;
   final VoidCallback onHangup;
   final VoidCallback onAccept;
+
+  /// Merges the calls into a conference, or `null` while this set cannot be
+  /// merged - which shows the control disabled rather than hiding it.
+  /// Whether it is offered at all is [CallCapabilitiesConfig.isConferenceEnabled]
+  /// of [callConfig].
+  final VoidCallback? onMerge;
+
+  /// The room, when there is one. While it stands the panel takes the
+  /// roster's place and the controls that act on a single call act on the
+  /// room instead - the microphone above all, which belongs to the room and
+  /// not to any one leg.
+  final ConferenceState conference;
+
+  /// Brings the calls outside the room into it; `null` while none of them
+  /// can join, which shows the control disabled rather than hiding it.
+  final VoidCallback? onConferenceAdd;
+
+  final ValueChanged<bool>? onConferenceSelfMuted;
+  final void Function(String callId, bool muted)? onConferenceParticipantMuted;
+  final ValueChanged<String>? onConferenceParticipantHangup;
 
   final CallAudioDevice? audioDevice;
 

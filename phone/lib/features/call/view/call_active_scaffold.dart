@@ -25,6 +25,9 @@ class CallActiveScaffold extends StatefulWidget {
     required this.audioDevice,
     required this.availableAudioDevices,
     required this.callConfig,
+    required this.canMerge,
+    required this.canAdd,
+    required this.conference,
     required this.localePlaceholderBuilder,
     required this.remotePlaceholderBuilder,
     required this.keepControlsVisible,
@@ -40,6 +43,20 @@ class CallActiveScaffold extends StatefulWidget {
   final CallAudioDevice? audioDevice;
   final List<CallAudioDevice> availableAudioDevices;
   final CallCapabilitiesConfig callConfig;
+
+  /// Whether the calls at hand can be merged into a conference right now (see
+  /// [CallState.canMerge]). The Merge control is shown disabled when they
+  /// cannot, and absent where the deployment offers no conferences at all.
+  final bool canMerge;
+
+  /// Whether a call standing outside the room can be brought into it now (see
+  /// [CallState.canAdd]).
+  final bool canAdd;
+
+  /// The conference room, when this session hosts one: the panel renders it
+  /// and the control grid acts on it instead of on the focused leg.
+  final ConferenceState conference;
+
   final WidgetBuilder? localePlaceholderBuilder;
   final WidgetBuilder? remotePlaceholderBuilder;
 
@@ -271,7 +288,15 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   }
 
   void _hangupFocused() {
-    _callBloc.add(CallControlEvent.ended(widget.focusedCall.callId));
+    // The grid acts on the room whenever the focused call is a leg - its
+    // microphone does, its hold does - and so does the hangup: a room is not
+    // ended by picking one of its participants. Dropping a single
+    // participant is the panel's own control, on that participant's row.
+    if (widget.conference.isLeg(widget.focusedCall.callId)) {
+      _callBloc.add(const CallControlEvent.conferenceEnded());
+    } else {
+      _callBloc.add(CallControlEvent.ended(widget.focusedCall.callId));
+    }
     dispatchInteractionDebounce();
   }
 
@@ -407,6 +432,13 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                       onKeyPressed: _sendDtmfKey,
                       onHangup: _hangupFocused,
                       onAccept: _answerFocused,
+                      onMerge: widget.canMerge ? _mergeCalls : null,
+                      onConferenceAdd: widget.canAdd ? _addToConference : null,
+                      conference: widget.conference,
+                      onConferenceSelfMuted: (muted) => _callBloc.add(CallControlEvent.conferenceSelfMuted(muted)),
+                      onConferenceParticipantMuted: (callId, muted) =>
+                          _callBloc.add(CallControlEvent.conferenceParticipantMuted(callId, muted)),
+                      onConferenceParticipantHangup: (callId) => _callBloc.add(CallControlEvent.ended(callId)),
                     ),
                   ),
                 ),
@@ -416,6 +448,21 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
         ),
       ),
     );
+  }
+
+  /// Merges every call that can join a room. The set is read at the moment
+  /// the button is pressed rather than captured with the callback: a call may
+  /// have ended or been answered since the frame was built.
+  void _mergeCalls() => _callBloc.add(CallControlEvent.merged(_callBloc.state.mergeableCallIds));
+
+  /// Brings every call that can join the standing room into it, one request
+  /// per call as the protocol takes them. The set is read at the moment the
+  /// button is pressed, and while a room is up it is exactly the calls
+  /// outside it that can join.
+  void _addToConference() {
+    for (final callId in _callBloc.state.mergeableCallIds) {
+      _callBloc.add(CallControlEvent.conferenceAdded(callId));
+    }
   }
 
   /// Generates the list of menu items for the call options popup.
