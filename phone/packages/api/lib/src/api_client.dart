@@ -361,6 +361,7 @@ class WebtritApiClient {
     List<String> pathSegments,
     Map<String, String>? headers,
     String? token, {
+    Map<String, String>? queryParameters,
     RequestOptions requestOptions = const RequestOptions(),
     ResponseOptions responseOptions = const ResponseOptions(),
   }) {
@@ -370,6 +371,7 @@ class WebtritApiClient {
       token,
       null,
       headers: headers,
+      queryParameters: queryParameters,
       requestOptions: requestOptions,
       responseOptions: responseOptions,
     );
@@ -709,15 +711,25 @@ class WebtritApiClient {
     return ExternalPageAccessToken.fromJson(responseJson);
   }
 
+  /// The user's voicemail messages: the mailbox merged with everything other
+  /// users forwarded to them, newest first.
+  ///
+  /// [folder] picks which side of the trash to list and defaults to the inbox.
+  /// `has_new_messages` is computed over what the answer actually contains, so a
+  /// trash listing never reports new messages.
   Future<UserVoicemailListResponse> getUserVoicemailList(
     String token, {
+    VoicemailFolder folder = VoicemailFolder.inbox,
     String? locale,
     RequestOptions options = const RequestOptions(),
   }) async {
+    final folderValue = folder.queryValue;
+
     final responseJson = await _httpClientExecuteGet(
       [..._apiBasePathSegmentsV1, 'user', 'voicemails'],
       locale != null ? {'Accept-Language': locale} : null,
       token,
+      queryParameters: folderValue != null ? {'folder': folderValue} : null,
       requestOptions: options,
       responseOptions: _optionalEndpoint,
     );
@@ -742,14 +754,76 @@ class WebtritApiClient {
     return UserVoicemail.fromJson(responseJson);
   }
 
+  /// Moves a voicemail message to the trash, or deletes it outright when
+  /// [permanent] is set.
+  ///
+  /// A plain delete always means "to the trash", on every backend that has one,
+  /// and the backend does not gate that on the trash being advertised. A client
+  /// that does not offer the trash controls must therefore pass [permanent], or
+  /// it leaves its user's messages occupying the mailbox for good - space is
+  /// freed only by a permanent delete or by emptying the trash, and nothing
+  /// expires on its own.
   Future<void> deleteUserVoicemail(
     String token,
     String messageId, {
+    bool permanent = false,
     String? locale,
     RequestOptions options = const RequestOptions(),
   }) async {
     await _httpClientExecuteDelete(
       [..._apiBasePathSegmentsV1, 'user', 'voicemails', messageId],
+      locale != null ? {'Accept-Language': locale} : null,
+      token,
+      queryParameters: permanent ? {'permanent': 'true'} : null,
+      requestOptions: options,
+      responseOptions: _optionalEndpoint,
+    );
+  }
+
+  /// Puts a trashed voicemail message back in the inbox.
+  ///
+  /// Answers 404 when nothing with that id is in this user's trash, including a
+  /// message that exists but was never trashed. That is worth treating as
+  /// "already restored" rather than as a failure, but the decision is the
+  /// caller's: this call reports it as an ordinary [RequestFailure] like any
+  /// other rejection. A backend with no trash at all has no such route and
+  /// answers 404 without an error code, which surfaces as
+  /// [EndpointNotSupportedException] instead.
+  Future<void> restoreUserVoicemail(
+    String token,
+    String messageId, {
+    String? locale,
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    await _httpClientExecutePost(
+      [..._apiBasePathSegmentsV1, 'user', 'voicemails', messageId, 'restore'],
+      locale != null ? {'Accept-Language': locale} : null,
+      token,
+      null,
+      requestOptions: options,
+      responseOptions: _optionalEndpoint,
+    );
+  }
+
+  /// Deletes every message in the user's trash for good.
+  ///
+  /// This is the operation that frees mailbox space; a message sitting in the
+  /// trash still occupies it. Emptying is resumable: whatever could be deleted
+  /// stays deleted, so a retry repeats only what is left.
+  ///
+  /// Unlike [restoreUserVoicemail], a backend without a trash does not report
+  /// this call as an absent route: `voicemails/trash` is shaped like a message
+  /// id, so the plain delete route answers it, and the refusal comes back as an
+  /// ordinary message-not-found rejection. There is nothing to read from that,
+  /// which is why the caller must gate this call on the trash being advertised
+  /// rather than probe for it.
+  Future<void> emptyUserVoicemailTrash(
+    String token, {
+    String? locale,
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    await _httpClientExecuteDelete(
+      [..._apiBasePathSegmentsV1, 'user', 'voicemails', 'trash'],
       locale != null ? {'Accept-Language': locale} : null,
       token,
       requestOptions: options,
