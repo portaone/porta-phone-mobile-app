@@ -124,3 +124,56 @@ class PasswordChangeRequiredException extends RequestFailure {
     super.error,
   });
 }
+
+/// The recipient named for a forward is not a user of this tenant.
+///
+/// The backend checks `to_user_id` against the contacts it serves, and that
+/// lookup is the only thing binding a recipient to the sender's tenant, so this
+/// is a rejection rather than a lookup miss worth retrying.
+class VoicemailForwardRecipientNotFoundException extends RequestFailure {
+  VoicemailForwardRecipientNotFoundException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.token,
+    super.error,
+  });
+
+  @override
+  String toString() => 'VoicemailForwardRecipientNotFoundException(requestId: $requestId, url: $url)';
+}
+
+/// The recording is larger than this deployment copies when forwarding.
+///
+/// Forwarding stores a copy rather than a reference, so the ceiling is on the
+/// bytes actually kept; the message itself is untouched and can still be played.
+class VoicemailForwardAttachmentTooLargeException extends RequestFailure {
+  VoicemailForwardAttachmentTooLargeException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.token,
+    super.error,
+  });
+
+  @override
+  String toString() => 'VoicemailForwardAttachmentTooLargeException(requestId: $requestId, url: $url)';
+}
+
+/// The recipient already holds as many forwarded messages as this deployment
+/// allows, so nothing more can be sent to them.
+///
+/// The count includes what is in their trash, so the way out is theirs and not
+/// the sender's: they empty it or delete some.
+class VoicemailForwardLimitReachedException extends RequestFailure {
+  VoicemailForwardLimitReachedException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.token,
+    super.error,
+  });
+
+  @override
+  String toString() => 'VoicemailForwardLimitReachedException(requestId: $requestId, url: $url)';
+}
