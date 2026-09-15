@@ -27,7 +27,7 @@ void main() {
     registerFallbackValue(const api.RequestOptions());
   });
 
-  setUp(() {
+  setUp(() async {
     appDatabase = AppDatabase(NativeDatabase.memory());
     client = _Client();
     guard = _Guard();
@@ -39,6 +39,11 @@ void main() {
       appDatabase: appDatabase,
       sessionGuard: guard,
     );
+    // Let the refresh the constructor starts finish before a test seeds or
+    // asserts. It is detached (`.ignore()`), so without this a test races the
+    // very cycle it is exercising: what it observes depends on which of the two
+    // reaches the database first.
+    await pumpEventQueue();
   });
 
   tearDown(() async {
