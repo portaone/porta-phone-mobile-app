@@ -229,6 +229,9 @@ class _Fixture {
   _Fixture() {
     when(() => database.voicemailDao).thenReturn(dao);
     when(() => dao.getVoicemailsWithContacts()).thenAnswer((_) async => []);
+    // A completed refresh now makes the stored list match what the mailbox
+    // reported; these tests care about the refresh contract, not the store.
+    when(() => dao.deleteVoicemailsNotIn(any())).thenAnswer((_) async => 0);
     when(() => client.getUserVoicemailList(any())).thenAnswer((_) async => _empty);
     repository = VoicemailRepositoryImpl(
       webtritApiClient: client,
