@@ -19,6 +19,10 @@ mixin VoicemailMapper {
       size: userVoicemailItem.size,
       type: userVoicemailItem.type,
       attachmentPath: attachmentUrl,
+      // Read off the list item rather than the details: both carry them, and
+      // the list is the half a refresh always has.
+      saved: userVoicemailItem.saved,
+      forwardedBy: userVoicemailItem.forwardedBy,
     );
 
     return voicemail;
@@ -37,6 +41,8 @@ mixin VoicemailMapper {
       size: voicemailData.size,
       type: voicemailData.type,
       url: voicemailData.attachmentPath,
+      saved: voicemailData.saved,
+      forwardedBy: voicemailData.forwardedBy,
     );
   }
 }
