@@ -126,16 +126,21 @@ class _CallActionMenuButtonState<T> extends State<CallActionMenuButton<T>> {
 /// hangup zone so its key, automation id, spoken name, glyph and themed style
 /// can never drift between the orientations.
 class CallHangupButton extends StatelessWidget {
-  const CallHangupButton({super.key = callActionsHangupKey, required this.onPressed, this.style});
+  const CallHangupButton({super.key = callActionsHangupKey, required this.onPressed, this.style, this.label});
 
   final VoidCallback? onPressed;
   final ButtonStyle? style;
+
+  /// What the button ends, where that is not just this call: while a room
+  /// stands it ends the room, and a screen reader saying "hang up" would not
+  /// say that.
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
     return CallActionButton(
       identifier: callActionsHangupId,
-      label: context.l10n.call_CallActionsTooltip_hangup,
+      label: label ?? context.l10n.call_CallActionsTooltip_hangup,
       onPressed: onPressed,
       style: style,
       child: Icon(Icons.call_end, size: Theme.of(context).textTheme.headlineMedium!.fontSize),

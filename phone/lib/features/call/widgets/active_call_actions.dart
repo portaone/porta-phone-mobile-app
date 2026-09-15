@@ -33,6 +33,7 @@ class ActiveCallActions extends StatefulWidget {
     required this.heldValue,
     this.onHeldChanged,
     this.onHangupPressed,
+    this.hangupLabel,
     this.onKeyPressed,
     this.keypadShown = false,
     required this.dtmfInput,
@@ -66,6 +67,10 @@ class ActiveCallActions extends StatefulWidget {
   final bool heldValue;
   final ValueChanged<bool>? onHeldChanged;
   final void Function()? onHangupPressed;
+
+  /// What the hangup ends, where that is not just this call - the room, while
+  /// one stands. `null` leaves the ordinary wording.
+  final String? hangupLabel;
   final void Function(String value)? onKeyPressed;
 
   /// Whether the in-call keypad is shown. The state is owned by the parent:
@@ -432,7 +437,7 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
         // hangup row
         if (widget.hangupRowShown) ...[
           const SizedBox(),
-          CallHangupButton(onPressed: onHangupPressed, style: widget.style?.hangup),
+          CallHangupButton(onPressed: onHangupPressed, style: widget.style?.hangup, label: widget.hangupLabel),
           widget.keypadShown
               ? CallHideKeypadButton(onPressed: _hideKeypad, style: widget.style?.key)
               : const SizedBox(),
