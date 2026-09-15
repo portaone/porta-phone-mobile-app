@@ -3200,6 +3200,18 @@ class AppLocalizationsIt extends AppLocalizations {
       'I messaggi che sposti qui occupano ancora spazio nella casella finche il cestino non viene svuotato.';
 
   @override
+  String get voicemail_Label_forward => 'Inoltra';
+
+  @override
+  String get voicemail_Label_forwardNoColleagues => 'Nessun collega trovato';
+
+  @override
+  String get voicemail_Label_forwardNoColleaguesHint => 'Controlla il nome o l\'interno.';
+
+  @override
+  String get voicemail_Label_forwardSearchHint => 'Cerca colleghi';
+
+  @override
   String get voicemail_Label_markAsHeard => 'Segna come ascoltato';
 
   @override
@@ -3242,6 +3254,16 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String voicemail_SemanticsLabel_forwardTo(String name) {
+    return 'Inoltra a $name';
+  }
+
+  @override
+  String voicemail_SemanticsLabel_forwardToExtension(String name, String extension) {
+    return 'Inoltra a $name, interno $extension';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_loading => 'Caricamento';
 
   @override
@@ -3263,11 +3285,33 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Snackbar_movedToTrash => 'Spostato nel cestino';
 
   @override
+  String get voicemail_Snackbar_forwardFailed => 'Impossibile inoltrare';
+
+  @override
+  String voicemail_Snackbar_forwardRecipientFull(String name) {
+    return '$name non puo ricevere altri messaggi inoltrati';
+  }
+
+  @override
+  String get voicemail_Snackbar_forwardTooLarge => 'Messaggio troppo grande per essere inoltrato';
+
+  @override
+  String get voicemail_Snackbar_forwardUnavailable => 'Inoltro non disponibile';
+
+  @override
+  String voicemail_Snackbar_forwarded(String name) {
+    return 'Inoltrato a $name';
+  }
+
+  @override
   String get voicemail_Snackbar_notConfigured =>
       'Contatta il tuo amministratore per attivare la segreteria telefonica.';
 
   @override
   String get voicemail_Title_notSupported => 'Funzionalità non supportata';
+
+  @override
+  String get voicemail_Widget_forwardSheetTitle => 'Inoltra a';
 
   @override
   String get voicemail_Widget_screenTitle => 'Segreteria telefonica';

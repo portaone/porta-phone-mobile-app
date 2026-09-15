@@ -38,6 +38,21 @@ class ExternalContact extends Equatable {
   final List<String>? smsNumbers;
   final String? email;
 
+  /// What a [safeSourceId] starts with when the server gave no id of its own.
+  ///
+  /// Stored verbatim in the contacts table, so this is the only thing telling a
+  /// real server id from one this app made up - and anything that needs a real
+  /// one, such as addressing a user on the backend, has to ask.
+  static const syntheticSourceIdPrefixes = ['number_', 'email_', 'hash_'];
+
+  /// Whether [sourceId] was invented here rather than issued by the server.
+  ///
+  /// A prefix match is all there is to go on: nothing records which branch of
+  /// [safeSourceId] produced a value. A server id that genuinely began with one
+  /// of these prefixes would be misread as synthetic, which errs towards not
+  /// offering an action rather than towards addressing the wrong user.
+  static bool isSyntheticSourceId(String sourceId) => syntheticSourceIdPrefixes.any(sourceId.startsWith);
+
   /// Returns a stable, non-null sourceId for synchronization and deduplication purposes.
   /// Priority:
   ///   1. `id` (API-provided unique identifier)

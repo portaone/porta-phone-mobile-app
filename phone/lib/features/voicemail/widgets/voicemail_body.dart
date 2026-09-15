@@ -10,9 +10,11 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
+import '../models/models.dart';
 import 'empty_mailbox_view.dart';
 import 'failure_retry_view.dart';
 import 'feature_not_supported_view.dart';
+import 'voicemail_forward_sheet.dart';
 import 'voicemail_tile.dart';
 
 /// The list of voicemails and everything it shows in place of one: the feature
@@ -62,6 +64,7 @@ class VoicemailBody extends StatelessWidget {
                         isMultipleVoicemailsSelection: state.isMultipleVoicemailsSelection,
                         saveSupported: state.saveSupported,
                         trashSupported: state.trashSupported,
+                        forwardSupported: state.forwardSupported,
                         inTrash: state.isShowingTrash,
                       ),
                     ),
@@ -119,6 +122,7 @@ class VoicemailListView extends StatelessWidget {
     required this.isMultipleVoicemailsSelection,
     this.saveSupported = false,
     this.trashSupported = false,
+    this.forwardSupported = false,
     this.inTrash = false,
   });
 
@@ -127,6 +131,7 @@ class VoicemailListView extends StatelessWidget {
   final bool isMultipleVoicemailsSelection;
   final bool saveSupported;
   final bool trashSupported;
+  final bool forwardSupported;
   final bool inTrash;
 
   @override
@@ -150,9 +155,11 @@ class VoicemailListView extends StatelessWidget {
           onDeleted: (it) => _onDeleteVoicemail(context, it),
           saveSupported: saveSupported,
           trashSupported: trashSupported,
+          forwardSupported: forwardSupported,
           inTrash: inTrash,
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
           onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
+          onForwarded: (it) => _onForwardVoicemail(context, it),
           onRestored: (it) => cubit.restoreVoicemail(it.id),
           onDeletedPermanently: (it) => _onDeletePermanently(context, it),
           onCall: (it) => cubit.startCall(it),
@@ -194,6 +201,64 @@ class VoicemailListView extends StatelessWidget {
       l10n.voicemail_Snackbar_movedToTrash,
       action: SnackBarAction(label: l10n.voicemail_Label_undo, onPressed: () => cubit.restoreVoicemail(voicemail.id)),
     );
+  }
+
+  /// Passes a message on to a colleague, and says what came of it.
+  ///
+  /// Nothing in the list changes either way - the copy lands in someone else's
+  /// mailbox - so the message on screen is the only thing that reports this.
+  void _onForwardVoicemail(BuildContext context, Voicemail voicemail) async {
+    final cubit = context.read<VoicemailCubit>();
+    final recipient = await showVoicemailForwardSheet(context);
+    if (recipient == null || !context.mounted) return;
+
+    final outcome = await cubit.forwardVoicemail(voicemail.id, toUserId: recipient.sourceId!);
+    if (!context.mounted) return;
+
+    _reportForwardOutcome(context, outcome, recipient: recipient, voicemail: voicemail);
+  }
+
+  void _reportForwardOutcome(
+    BuildContext context,
+    VoicemailForwardOutcome outcome, {
+    required Contact recipient,
+    required Voicemail voicemail,
+  }) {
+    final l10n = context.l10n;
+    final name = recipient.displayTitle;
+
+    if (outcome == VoicemailForwardOutcome.sent) {
+      context.showSnackBar(l10n.voicemail_Snackbar_forwarded(name));
+      return;
+    }
+
+    final message = switch (outcome) {
+      VoicemailForwardOutcome.tooLarge => l10n.voicemail_Snackbar_forwardTooLarge,
+      VoicemailForwardOutcome.recipientFull => l10n.voicemail_Snackbar_forwardRecipientFull(name),
+      VoicemailForwardOutcome.unavailable => l10n.voicemail_Snackbar_forwardUnavailable,
+      _ => l10n.voicemail_Snackbar_forwardFailed,
+    };
+
+    context.showErrorSnackBar(
+      message,
+      // Offered only where trying again could end differently. A recording that
+      // is too big stays too big, and a colleague who is full stays full, so a
+      // button there would only spend a person's attention on a second no.
+      action: outcome.isRetryable
+          ? SnackBarAction(
+              label: l10n.voicemail_Label_retry,
+              onPressed: () => _retryForward(context, voicemail, recipient),
+            )
+          : null,
+    );
+  }
+
+  void _retryForward(BuildContext context, Voicemail voicemail, Contact recipient) async {
+    final cubit = context.read<VoicemailCubit>();
+    final outcome = await cubit.forwardVoicemail(voicemail.id, toUserId: recipient.sourceId!);
+    if (!context.mounted) return;
+
+    _reportForwardOutcome(context, outcome, recipient: recipient, voicemail: voicemail);
   }
 
   void _onDeletePermanently(BuildContext context, Voicemail voicemail) async {

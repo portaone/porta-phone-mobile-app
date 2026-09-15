@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:api/api.dart' as api;
+
 import 'package:webtrit_phone/features/voicemail/bloc/voicemail_cubit.dart';
+import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -40,6 +43,7 @@ void main() {
       onSubmitNotification: (_) {},
       saveSupported: true,
       trashSupported: true,
+      forwardSupported: true,
     );
   });
 
@@ -172,6 +176,97 @@ void main() {
       when(() => repository.removeVoicemail(any())).thenAnswer((_) async {});
 
       expect(await cubit.removeVoicemail('1'), isTrue);
+    });
+  });
+
+  group('forwarding', () {
+    void forwardFails(Object error) {
+      when(() => repository.forwardVoicemail(any(), toUserId: any(named: 'toUserId')))
+          .thenAnswer((_) => Future.error(error));
+    }
+
+    api.RequestFailure failure(Type type) => switch (type) {
+      const (api.VoicemailForwardAttachmentTooLargeException) => api.VoicemailForwardAttachmentTooLargeException(
+        url: Uri(),
+        requestId: 'r',
+        statusCode: 413,
+      ),
+      const (api.VoicemailForwardLimitReachedException) => api.VoicemailForwardLimitReachedException(
+        url: Uri(),
+        requestId: 'r',
+        statusCode: 422,
+      ),
+      const (api.VoicemailForwardRecipientNotFoundException) => api.VoicemailForwardRecipientNotFoundException(
+        url: Uri(),
+        requestId: 'r',
+        statusCode: 404,
+      ),
+      _ => api.EndpointNotSupportedException(
+        url: Uri(),
+        requestId: 'r',
+        statusCode: 501,
+        recognizedNotSupportedCodes: const [],
+      ),
+    };
+
+    test('a copy that reached the colleague is reported as sent', () async {
+      when(() => repository.forwardVoicemail(any(), toUserId: any(named: 'toUserId'))).thenAnswer((_) async => 'fwd_1');
+
+      expect(await cubit.forwardVoicemail('1', toUserId: 'user-7'), VoicemailForwardOutcome.sent);
+      verify(() => repository.forwardVoicemail('1', toUserId: 'user-7')).called(1);
+    });
+
+    test('a recording too big to forward says so', () async {
+      forwardFails(failure(api.VoicemailForwardAttachmentTooLargeException));
+
+      final outcome = await cubit.forwardVoicemail('1', toUserId: 'user-7');
+
+      expect(outcome, VoicemailForwardOutcome.tooLarge);
+      // Retrying sends the same recording, so there is nothing to offer.
+      expect(outcome.isRetryable, isFalse);
+    });
+
+    test('a colleague who cannot take another one says so', () async {
+      forwardFails(failure(api.VoicemailForwardLimitReachedException));
+
+      final outcome = await cubit.forwardVoicemail('1', toUserId: 'user-7');
+
+      expect(outcome, VoicemailForwardOutcome.recipientFull);
+      expect(outcome.isRetryable, isFalse);
+    });
+
+    test('a backend that does not forward at all says so, and is worth retrying', () async {
+      forwardFails(failure(api.EndpointNotSupportedException));
+
+      final outcome = await cubit.forwardVoicemail('1', toUserId: 'user-7');
+
+      expect(outcome, VoicemailForwardOutcome.unavailable);
+      expect(outcome.isRetryable, isTrue);
+    });
+
+    test('a recipient who is no longer there falls under the one general answer', () async {
+      // Past the three specific cases the difference does not change what the
+      // person can do about it, so it is not spelled out.
+      forwardFails(failure(api.VoicemailForwardRecipientNotFoundException));
+
+      expect(await cubit.forwardVoicemail('1', toUserId: 'user-7'), VoicemailForwardOutcome.failed);
+    });
+
+    test('anything else does too', () async {
+      forwardFails(Exception('no route to host'));
+
+      final outcome = await cubit.forwardVoicemail('1', toUserId: 'user-7');
+
+      expect(outcome, VoicemailForwardOutcome.failed);
+      expect(outcome.isRetryable, isTrue);
+    });
+
+    test('a failed forward leaves the screen usable', () async {
+      forwardFails(Exception('refused'));
+
+      await cubit.forwardVoicemail('1', toUserId: 'user-7');
+
+      expect(cubit.state.status, VoicemailStatus.loaded);
     });
   });
 }
