@@ -815,6 +815,78 @@ class WebtritApiClient {
     );
   }
 
+  /// Passes a voicemail message on to another user of the same backend, and
+  /// answers with the id the message now has in the RECIPIENT's list.
+  ///
+  /// That id is of little use to the sender: the forwarded message does not
+  /// appear in their own list, and their copy of the original is untouched.
+  ///
+  /// [toUserId] is a user id as the contacts endpoint reports it, not a phone
+  /// number - the backend checks it against that endpoint, and the check is what
+  /// authorises writing a recording into someone else's storage.
+  ///
+  /// [idempotencyKey] is required here even though the backend treats it as
+  /// optional, because this client retries a request that failed below the HTTP
+  /// layer. A forward that timed out may well have been delivered, so retrying
+  /// without a key is how one message becomes several; retrying with the same
+  /// key returns the original result instead. Use a fresh key for each
+  /// deliberate forward and reuse it when retrying that one.
+  Future<String> forwardUserVoicemail(
+    String token,
+    String messageId, {
+    required String toUserId,
+    required String idempotencyKey,
+    String? locale,
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    try {
+      final responseJson = await _httpClientExecutePost(
+        [..._apiBasePathSegmentsV1, 'user', 'voicemails', messageId, 'forward'],
+        locale != null ? {'Accept-Language': locale} : null,
+        token,
+        {'to_user_id': toUserId, 'idempotency_key': idempotencyKey},
+        requestOptions: options,
+        responseOptions: _optionalEndpoint,
+      );
+
+      return responseJson['id'] as String;
+    } on RequestFailure catch (e) {
+      throw _asForwardFailure(e);
+    }
+  }
+
+  /// Names the three refusals that are specific to forwarding, leaving every
+  /// other failure exactly as it arrived.
+  ///
+  /// The mapping lives here rather than with the shared status handling on
+  /// purpose. These codes mean what they mean only on this one route: read
+  /// globally, a generic-sounding `attachment_too_large` from any other endpoint
+  /// that grows an attachment would start arriving as a forwarding error.
+  RequestFailure _asForwardFailure(RequestFailure failure) => switch (failure.error?.code) {
+    'recipient_not_found' => VoicemailForwardRecipientNotFoundException(
+      url: failure.url,
+      requestId: failure.requestId,
+      statusCode: failure.statusCode,
+      token: failure.token,
+      error: failure.error,
+    ),
+    'attachment_too_large' => VoicemailForwardAttachmentTooLargeException(
+      url: failure.url,
+      requestId: failure.requestId,
+      statusCode: failure.statusCode,
+      token: failure.token,
+      error: failure.error,
+    ),
+    'recipient_forward_limit_reached' => VoicemailForwardLimitReachedException(
+      url: failure.url,
+      requestId: failure.requestId,
+      statusCode: failure.statusCode,
+      token: failure.token,
+      error: failure.error,
+    ),
+    _ => failure,
+  };
+
   /// Deletes every message in the user's trash for good.
   ///
   /// This is the operation that frees mailbox space; a message sitting in the
