@@ -3140,6 +3140,21 @@ class AppLocalizationsUk extends AppLocalizations {
       'Обрані голосові повідомлення будуть остаточно видалені. Чи хочете ви продовжити?';
 
   @override
+  String get voicemail_Dialog_deleteSelectedPermanentlyContent =>
+      'Вибрані повідомлення буде вилучено зі скриньки без можливості відновити.';
+
+  @override
+  String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Видалити $count повідомлень назавжди?',
+      one: 'Видалити повідомлення назавжди?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get voicemail_Dialog_deleteSelectedTitle => 'Видалити обрані голосові повідомлення?';
 
   @override
@@ -3236,6 +3251,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voicemail_Label_restore => 'Відновити';
+
+  @override
+  String get voicemail_Label_restoreSelected => 'Відновити вибрані';
 
   @override
   String get voicemail_Label_retry => 'Спробувати ще раз';

@@ -28,7 +28,7 @@ class VoicemailTabScreen extends StatelessWidget {
         title: Text(EnvironmentConfig.APP_NAME),
         context: context,
         flexibleSpace: BlurredSurface.adaptive(context),
-        actions: const [VoicemailDeleteAction(offersDeleteAll: false)],
+        actions: const [VoicemailRestoreAction(), VoicemailDeleteAction(offersDeleteAll: false)],
         bottom: const VoicemailFilterRow(),
       ),
       // No inset of its own: the body runs behind the bar and Scaffold already
