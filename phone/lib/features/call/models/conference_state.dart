@@ -57,6 +57,14 @@ class ConferenceState with _$ConferenceState {
   /// A room exists, whether still assembling or already active.
   bool get isPresent => phase != ConferencePhase.none;
 
+  /// Whether an event naming [room] is about the room this client holds.
+  ///
+  /// Before the offer this room has no id of its own, and the server's
+  /// terminal events for a room it never named carry none either, so
+  /// anything unnamed is taken as this one. A named one that differs
+  /// describes a room this client is not in.
+  bool concerns(int? room) => room == null || this.room == null || room == this.room;
+
   /// Whether [callId] is one of the room's legs.
   bool isLeg(String callId) => legs.containsKey(callId);
 

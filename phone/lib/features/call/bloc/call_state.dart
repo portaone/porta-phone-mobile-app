@@ -69,6 +69,14 @@ class CallState with _$CallState {
         call.callId,
   ];
 
+  /// The calls among [callIds] that can join a room, each with its line -
+  /// the server names a leg by line.
+  Map<String, int> mergeableLegs(Iterable<String> callIds) => {
+    for (final call in activeCalls)
+      if (callIds.contains(call.callId) && mergeableCallIds.contains(call.callId))
+        if (call.line case final int line) call.callId: line,
+  };
+
   /// Whether the Merge control is available: the server supports rooms
   /// ([isConferenceEnabled]), none is up yet, and at least two calls can be
   /// merged. The server accepts a merge of a single line; the app asks for two.
