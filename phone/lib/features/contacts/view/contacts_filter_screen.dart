@@ -64,44 +64,10 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
     super.dispose();
   }
 
-  /// Whether this deployment carries the favourites entry at all.
-  bool get _offersFavorites => widget.selections.any((selection) => selection is ContactsFavoritesSelection);
-
-  /// The address book the list is drawn from, or null where this deployment
-  /// offers none.
-  ///
-  /// What [ContactsBloc] remembered is not always on offer: the choice
-  /// outlives a change of configuration, and it starts out as a default nobody
-  /// made.
-  ContactSourceType? _shownSource(ContactSourceType remembered) {
-    if (widget.selections.contains(ContactsSourceSelection(remembered))) return remembered;
-
-    // The first address book rather than the first entry: favourites hold only
-    // the people someone has starred, so opening on them when nothing was
-    // chosen would greet a new account with an empty screen.
-    for (final selection in widget.selections) {
-      if (selection is ContactsSourceSelection) return selection.sourceType;
-    }
-    return null;
-  }
-
-  /// The list actually shown.
-  ///
-  /// The favourites are checked against what this deployment offers, not only
-  /// against what was remembered: the pick outlives a change of configuration,
-  /// and a section that no longer carries favourites falls back to an address
-  /// book rather than showing a list it does not offer.
-  ContactsListSelection _shown(ContactsState state) {
-    if (state.favorites && _offersFavorites) return const ContactsFavoritesSelection();
-
-    final sourceType = _shownSource(state.sourceType);
-    if (sourceType != null) return ContactsSourceSelection(sourceType);
-
-    // Favourites are all that is left. A tab configured with no lists at all
-    // lands here too and shows an empty screen, exactly as the tabbed
-    // arrangement does with no address books.
-    return const ContactsFavoritesSelection();
-  }
+  /// The list actually shown. The rule is stated once, beside the entries it
+  /// reads, and the tabbed arrangement asks the same question of it.
+  ContactsListSelection _shown(ContactsState state) =>
+      widget.selections.shown(remembered: state.sourceType, favorites: state.favorites);
 
   void _onSelected(ContactsListSelection selection) {
     // Rearranging belongs to the favourites list; picking another one ends it
@@ -140,7 +106,7 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
         applyToAppBar: effectiveStyle?.applyToAppBar ?? true,
         appBarTheme: effectiveStyle?.appBarTheme,
         extendBodyBehindAppBar: true,
-        floatingActionButton: !_offersFavorites
+        floatingActionButton: !widget.selections.offersFavorites
             ? null
             // Outside the two builders below, so it asks the same question
             // again: the button belongs to the favourites list and appears

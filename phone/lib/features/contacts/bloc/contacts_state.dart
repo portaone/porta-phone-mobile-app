@@ -20,7 +20,8 @@ class ContactsState with _$ContactsState {
   ///
   /// Not a default, though: a section nobody has chosen anything in still
   /// opens on an address book, since favourites hold only what someone has
-  /// starred (see `ContactsFilterScreen._shownSource`).
+  /// starred (see `ContactsListSelectionsShown.shown`, which states that rule
+  /// once for both arrangements).
   @override
   final bool favorites;
 }
