@@ -1168,6 +1168,10 @@
   "@logRecordsConsole_PopupMenuItem_info": {},
   "logRecordsConsole_PopupMenuItem_clear": "Очистити",
   "@logRecordsConsole_PopupMenuItem_clear": {},
+  "main_Button_cancelPicking": "Скасувати",
+  "@main_Button_cancelPicking": {
+    "description": "Leaves the banner asking the person to choose somebody, giving up on whatever asked for one."
+  },
   "main_BottomNavigationBarItemLabel_chats": "Чати",
   "@main_BottomNavigationBarItemLabel_chats": {},
   "main_Text_blindTransferInitiated": "Безумовне переведення дзвінка",
@@ -2695,6 +2699,14 @@
   "@voicemail_Label_emptyTrashHint": {
     "description": "Explains, on an empty trash, what keeping messages there would cost."
   },
+  "voicemail_Label_forward": "Переслати",
+  "@voicemail_Label_forward": {
+    "description": "Menu action that passes a voicemail on to a colleague."
+  },
+  "voicemail_Label_forwardChoosing": "Виберіть, кому переслати",
+  "@voicemail_Label_forwardChoosing": {
+    "description": "Banner shown while the user is browsing the address book for somebody to forward a voicemail to."
+  },
   "voicemail_Label_markAsHeard": "Позначити як прослухане",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Позначити як нове",
@@ -2745,6 +2757,15 @@
       }
     }
   },
+  "voicemail_SemanticsLabel_forwardTo": "Переслати: {name}",
+  "@voicemail_SemanticsLabel_forwardTo": {
+    "description": "Accessibility name of a row in the forward picker.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_loading": "Завантаження",
   "@voicemail_SemanticsLabel_loading": {
     "description": "Announced while a voicemail is being prepared for playback."
@@ -2772,6 +2793,32 @@
   "voicemail_Snackbar_movedToTrash": "Переміщено в кошик",
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."
+  },
+  "voicemail_Snackbar_forwardFailed": "Не вдалося переслати",
+  "@voicemail_Snackbar_forwardFailed": {
+    "description": "Shown when forwarding failed for a reason the person cannot act on."
+  },
+  "voicemail_Snackbar_forwardRecipientFull": "{name} більше не може приймати переслані повідомлення",
+  "@voicemail_Snackbar_forwardRecipientFull": {
+    "description": "Shown when the colleague has as many forwarded messages as they are allowed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "voicemail_Snackbar_forwardTooLarge": "Повідомлення завелике, щоб його переслати",
+  "@voicemail_Snackbar_forwardTooLarge": {},
+  "voicemail_Snackbar_forwardUnavailable": "Пересилання недоступне",
+  "@voicemail_Snackbar_forwardUnavailable": {},
+  "voicemail_Snackbar_forwarded": "Переслано: {name}",
+  "@voicemail_Snackbar_forwarded": {
+    "description": "Confirms that a copy of the voicemail reached a colleague.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "voicemail_Snackbar_notConfigured": "Зверніться до адміністратора, щоб активувати голосову пошту.",
   "@voicemail_Snackbar_notConfigured": {},

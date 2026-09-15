@@ -258,6 +258,12 @@ class MainShellBlocs extends StatelessWidget {
         // counting only once someone opens the screen it sits on is of no use
         // there. The messaging counter beside it is read by the navigation bar
         // on the first frame, so it is eager in effect already.
+        // Outlives the voicemail screen: the colleague is chosen in the address
+        // book, and the message has to still be known when that choice comes
+        // back.
+        BlocProvider<VoicemailForwardingCubit>(
+          create: (context) => VoicemailForwardingCubit(repository: context.read<VoicemailRepository>()),
+        ),
         BlocProvider<VoicemailUnreadCubit>(
           lazy: false,
           create: (context) => VoicemailUnreadCubit(repository: context.read<VoicemailRepository>())..init(),

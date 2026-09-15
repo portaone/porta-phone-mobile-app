@@ -8,8 +8,8 @@ import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
-import 'package:webtrit_phone/features/voicemail/widgets/voicemail_flavor_overlay.dart';
-import 'package:webtrit_phone/l10n/l10n.dart';
+import 'package:webtrit_phone/features/voicemail/models/models.dart';
+import 'package:webtrit_phone/features/voicemail/widgets/widgets.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/utils.dart';
@@ -80,19 +80,23 @@ class _MainScreenPageState extends State<MainScreenPage> {
         // by the previews, which have nothing to be choosing for. This is the
         // one place that decides what is being picked, which is what keeps the
         // lists below from each knowing about the features that ask.
-        final pickPurpose = context.select<CallBloc, bool>((bloc) => bloc.state.isBlingTransferInitiated)
-            ? BlindTransferPurpose(
-                announcement: context.l10n.main_Text_blindTransferInitiated,
-                pickLabel: context.l10n.contact_SemanticsLabel_transfer,
-                controller: CallControllerScope.of(context),
-              )
-            : null;
+        //
+        // Only one at a time, and a call in hand comes first: somebody holding
+        // a call they are trying to hand on cannot wait while a message finds
+        // a recipient. Each feature answers for itself; this is the order in
+        // which they are asked.
+        //
+        // Typed, because to inference the two share nothing but `Object`.
+        final DestinationPickPurpose? pickPurpose =
+            BlindTransferPurpose.maybeOf(context) ?? ForwardVoicemailPurpose.maybeOf(context);
 
         return MainScreen(
           // Above the sections, so every list they build can ask whether a
           // choice is being made without reaching into the feature that wants
           // one.
-          body: DestinationPicking(purpose: pickPurpose, child: child),
+          body: VoicemailForwardReporter(
+            child: DestinationPicking(purpose: pickPurpose, child: child),
+          ),
           tabs: tabs,
           pickPurpose: pickPurpose,
           // The shell above provides the unread state this reads.

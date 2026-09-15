@@ -104,6 +104,9 @@ class _Purpose implements DestinationPickPurpose {
   }
 
   @override
+  VoidCallback? get onCancel => null;
+
+  @override
   IconData get pickIcon => Icons.phone_forwarded;
 
   @override

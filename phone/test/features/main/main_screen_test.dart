@@ -135,6 +135,32 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('offers a way out where whoever is asking has one', (tester) async {
+      // A handover is left by going back to the call; a message looking for a
+      // recipient has nowhere else to go, so the way out has to live on the
+      // one strip that follows the person across the sections.
+      var cancelled = 0;
+      await pumpShell(
+        tester,
+        tabs: tabs,
+        currentIndex: 0,
+        purpose: _FakePurpose(onCancel: () => cancelled++),
+      );
+
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+
+      expect(cancelled, 1);
+    });
+
+    testWidgets('says nothing about cancelling where there is nothing to cancel', (tester) async {
+      await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose());
+
+      expect(
+        find.descendant(of: find.byType(TransferBottomNavigationBar), matching: find.byType(TextButton)),
+        findsNothing,
+      );
+    });
+
     testWidgets('is still said where a one-section menu draws no bar', (tester) async {
       await pumpShell(tester, tabs: [tabs.first], currentIndex: 0, purpose: _FakePurpose());
 
@@ -198,6 +224,8 @@ void main() {
 /// A purpose that offers everything except a page of conversations, which is
 /// what the real ones do and all this screen needs to know about them.
 class _FakePurpose implements DestinationPickPurpose {
+  _FakePurpose({this.onCancel});
+
   @override
   String get announcement => 'Pick somebody';
 
@@ -206,6 +234,9 @@ class _FakePurpose implements DestinationPickPurpose {
 
   @override
   bool accepts(DestinationCandidate candidate) => true;
+
+  @override
+  final VoidCallback? onCancel;
 
   @override
   IconData get pickIcon => Icons.phone_forwarded;

@@ -14,6 +14,7 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
     this.selectedVoicemailsIds = const [],
     this.filter = VoicemailFilter.all,
     this.filters = const [VoicemailFilter.all, VoicemailFilter.unheard],
+    this.forwardSupported = false,
     this.error,
   });
 
@@ -47,6 +48,14 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   /// disabled, so nothing offers to show a list that cannot exist.
   @override
   final List<VoicemailFilter> filters;
+
+  /// Whether a message can be passed on to a colleague.
+  ///
+  /// Carried rather than derived: unlike keeping and the trash, forwarding
+  /// adds no view of its own, so there is no filter whose presence could
+  /// stand in for it.
+  @override
+  final bool forwardSupported;
 
   @override
   final Object? error;

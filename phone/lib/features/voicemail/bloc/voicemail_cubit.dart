@@ -26,9 +26,11 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     required this.onSubmitNotification,
     required bool saveSupported,
     required bool trashSupported,
+    required bool forwardSupported,
   }) : _repository = repository,
        super(
          VoicemailState(
+           forwardSupported: forwardSupported,
            filters: [
              VoicemailFilter.all,
              VoicemailFilter.unheard,

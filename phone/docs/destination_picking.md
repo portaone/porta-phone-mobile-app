@@ -24,6 +24,7 @@ abstract interface class DestinationPickPurpose {
   String get announcement;                        // what the banner says
   bool offeredBy(MainFlavor flavor);              // which sections can answer
   bool accepts(DestinationCandidate candidate);   // which rows are answers
+  VoidCallback? get onCancel;                     // the way out, where there is one
   IconData get pickIcon;                          // the mark it carries
   String pickLabel(DestinationCandidate c);       // what the control is called
   void submit(DestinationCandidate candidate);    // what to do with one
@@ -59,11 +60,14 @@ One class, and one line where the active purpose is decided. No list changes.
 
 ```dart
 class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpose {
-  const ForwardVoicemailPurpose({required this.announcement, required this.messageId});
+  const ForwardVoicemailPurpose({required this.announcement, required this.messageId, required this.onCancel});
 
   @override
   final String announcement;
   final String messageId;
+
+  @override
+  final VoidCallback? onCancel;
 
   @override
   bool offeredBy(MainFlavor flavor) => flavor == MainFlavor.contacts;
@@ -85,7 +89,7 @@ class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpos
 }
 ```
 
-Three things to get right:
+What to get right:
 
 - **Value equality.** The scope is rebuilt with the shell. A purpose compared by
   identity alone would notify every row on the screen on every frame.
@@ -96,14 +100,29 @@ Three things to get right:
 - **`pickLabel` and `pickIcon` are how the control presents itself.** Left to the
   screen it can only say and draw one purpose's gesture, and it would be the
   wrong one for every other: handing a call on is not passing a message along.
+- **`onCancel` is null only where the person already has a way out.** A transfer
+  is abandoned by returning to the call, which clears the flag that built the
+  purpose; a message looking for a recipient has no such screen to go back to,
+  so without a button the only way to stop is to send it to somebody.
 
-Then say when it is in force. That decision lives in one place,
-`lib/features/main/view/main_screen_page.dart`:
+Then say when it is in force. The feature answers that itself, in a static on
+the purpose, so the shell never learns what the feature is for:
 
 ```dart
-final pickPurpose = <the feature's own state says a choice is being made>
-    ? SomePurpose(announcement: context.l10n.some_key, ...)
-    : null;
+static SomePurpose? maybeOf(BuildContext context) {
+  final asking = context.select<SomeCubit, Something?>((cubit) => cubit.state.pending);
+  if (asking == null) return null;
+
+  return SomePurpose(announcement: context.l10n.some_key, ...);
+}
+```
+
+The shell asks each feature in turn, and that line is the whole of what it
+knows - `lib/features/main/view/main_screen_page.dart`:
+
+```dart
+final DestinationPickPurpose? pickPurpose =
+    BlindTransferPurpose.maybeOf(context) ?? ForwardVoicemailPurpose.maybeOf(context);
 
 return MainScreen(
   body: DestinationPicking(purpose: pickPurpose, child: child),
@@ -113,7 +132,8 @@ return MainScreen(
 ```
 
 Only one purpose can be in force: somebody cannot be choosing for two things at
-once. With a second purpose, that expression is where the two are arbitrated.
+once. The order of that `??` is the arbitration, and a call in hand comes
+first.
 
 ## The row contract
 
@@ -184,27 +204,45 @@ screen floats over, where nobody sees it. It appears only on a section the
 purpose says can answer: told on a page of conversations it would announce a
 choice that cannot be made there.
 
-## Blind transfer, the only purpose today
+## The purposes
 
-`lib/features/call/models/blind_transfer_purpose.dart`. It accepts anything with
-a number, is offered by favourites, recents, contacts and the keypad, and
-submits through `CallController.submitTransfer`.
+**Handing a call over** - `lib/features/call/models/blind_transfer_purpose.dart`.
+Accepts anything with a number, is offered by favourites, recents, contacts and
+the keypad, and submits through `CallController.submitTransfer`.
 
-**Its state did not move here.** Whether a transfer is under way is still a
-field on the call (`Transfer.blindTransferInitiated` on `ActiveCall`), cleared
-by returning to the call screen, by the call ending, and by a signalling
-failure. The shell reads that flag and builds the purpose from it. So the call
-owns the mode, and this owns only what the lists do about it.
+Its state did not move here. Whether a transfer is under way is still a field
+on the call (`Transfer.blindTransferInitiated` on `ActiveCall`), cleared by
+returning to the call screen, by the call ending, and by a signalling failure.
+The shell reads that flag and builds the purpose from it. So the call owns the
+mode, and this owns only what the lists do about it.
+
+**Passing a voice message on** -
+`lib/features/voicemail/models/forward_voicemail_purpose.dart`. Narrower: it
+takes only a contact that came from the backend with an id of its own and is
+not the person forwarding, because a forward addresses an account rather than
+dialling a number. That also keeps it off the keypad, where nothing typed could
+be one.
+
+Its state is `VoicemailForwardingCubit`, provided with the shell so it outlives
+the voicemail screen - the colleague is chosen two sections away, and the answer
+has to come back to something that still knows which message it was. That cubit
+also says what came of the send, which `VoicemailForwardReporter` turns into a
+line at the bottom of whatever screen the person ended up on - a widget of the
+feature's own, mounted by the shell above the sections.
+
+Only one purpose is in force at a time, and a call in hand comes first: somebody
+holding a call they are trying to hand on cannot wait while a message finds a
+recipient. That precedence is one expression in
+`lib/features/main/view/main_screen_page.dart`.
 
 ## Known gaps
 
-- **No cancel.** The banner is a live region with no button. The way out is to
-  return to the call, which clears the flag.
 - **Nothing is said on a section that cannot answer.** The user is still
   choosing there and is not told so.
 
-Both predate this mechanism. Closing either is now one place rather than eight:
-the banner, at `main_screen.dart`.
+It predates this mechanism. Closing it is now one place rather than eight: the
+banner, at `main_screen.dart` - which is where the way out went when the second
+purpose needed one.
 
 ## Tests
 
@@ -217,3 +255,6 @@ the banner, at `main_screen.dart`.
 | `test/features/contact/widgets/contact_phone_tile_adapter_test.dart` | The card's control: shown only for an accepted number, ungated by transfer, and no other route out while picking |
 | `test/features/keypad/keypad_picking_test.dart` | The pad following the typed value, and not needing transfer switched on |
 | `test/widgets/call_tile_picking_test.dart` | A list row: the purpose's mark, and no menu left behind it |
+| `test/features/voicemail/forward_voicemail_purpose_test.dart` | The second purpose, and how much narrower it is |
+| `test/features/voicemail/cubits/voicemail_forwarding_cubit_test.dart` | The message that waits while the address book is browsed |
+| `test/features/voicemail/widgets/voicemail_forward_reporter_test.dart` | What the person is told once a forward is over, and when a retry is offered |

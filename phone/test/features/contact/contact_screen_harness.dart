@@ -161,6 +161,9 @@ class _AnyNumberPurpose implements DestinationPickPurpose {
   bool accepts(DestinationCandidate candidate) => candidate.number != null;
 
   @override
+  VoidCallback? get onCancel => null;
+
+  @override
   IconData get pickIcon => Icons.phone_forwarded;
 
   @override

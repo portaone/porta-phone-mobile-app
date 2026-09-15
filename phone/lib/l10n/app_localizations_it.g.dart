@@ -1315,6 +1315,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get logRecordsConsole_PopupMenuItem_clear => 'Cancella';
 
   @override
+  String get main_Button_cancelPicking => 'Annulla';
+
+  @override
   String get main_BottomNavigationBarItemLabel_chats => 'Le chat';
 
   @override
@@ -3200,6 +3203,12 @@ class AppLocalizationsIt extends AppLocalizations {
       'I messaggi che sposti qui occupano ancora spazio nella casella finche il cestino non viene svuotato.';
 
   @override
+  String get voicemail_Label_forward => 'Inoltra';
+
+  @override
+  String get voicemail_Label_forwardChoosing => 'Scegli a chi inoltrare';
+
+  @override
   String get voicemail_Label_markAsHeard => 'Segna come ascoltato';
 
   @override
@@ -3242,6 +3251,11 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String voicemail_SemanticsLabel_forwardTo(String name) {
+    return 'Inoltra a $name';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_loading => 'Caricamento';
 
   @override
@@ -3261,6 +3275,25 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voicemail_Snackbar_movedToTrash => 'Spostato nel cestino';
+
+  @override
+  String get voicemail_Snackbar_forwardFailed => 'Impossibile inoltrare';
+
+  @override
+  String voicemail_Snackbar_forwardRecipientFull(String name) {
+    return '$name non puo ricevere altri messaggi inoltrati';
+  }
+
+  @override
+  String get voicemail_Snackbar_forwardTooLarge => 'Messaggio troppo grande per essere inoltrato';
+
+  @override
+  String get voicemail_Snackbar_forwardUnavailable => 'Inoltro non disponibile';
+
+  @override
+  String voicemail_Snackbar_forwarded(String name) {
+    return 'Inoltrato a $name';
+  }
 
   @override
   String get voicemail_Snackbar_notConfigured =>
