@@ -19,6 +19,10 @@ mixin VoicemailMapper {
       size: userVoicemailItem.size,
       type: userVoicemailItem.type,
       attachmentPath: attachmentUrl,
+      // Read off the list item rather than the details: both carry them, and
+      // the list is the half a refresh always has.
+      saved: userVoicemailItem.saved,
+      forwardedBy: userVoicemailItem.forwardedBy,
     );
 
     return voicemail;
@@ -27,16 +31,18 @@ mixin VoicemailMapper {
   Voicemail voicemailFromDrift(VoicemailData voicemailData, String? contactName, {ReadStatus? readStatus}) {
     final currentReadStatus = readStatus ?? (voicemailData.seen ? ReadStatus.read : ReadStatus.unread);
     return Voicemail(
-      voicemailData.id,
-      voicemailData.date,
-      voicemailData.duration,
-      voicemailData.sender,
-      contactName ?? voicemailData.sender,
-      voicemailData.receiver,
-      currentReadStatus,
-      voicemailData.size,
-      voicemailData.type,
-      voicemailData.attachmentPath,
+      id: voicemailData.id,
+      date: voicemailData.date,
+      duration: voicemailData.duration,
+      sender: voicemailData.sender,
+      displaySender: contactName ?? voicemailData.sender,
+      receiver: voicemailData.receiver,
+      status: currentReadStatus,
+      size: voicemailData.size,
+      type: voicemailData.type,
+      url: voicemailData.attachmentPath,
+      saved: voicemailData.saved,
+      forwardedBy: voicemailData.forwardedBy,
     );
   }
 }

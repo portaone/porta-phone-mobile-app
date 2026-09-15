@@ -159,6 +159,17 @@ class VoicemailRepositoryImpl
           voicemailToDrift(item, details, _webtritApiClient.getVoicemailAttachmentUrl(item.id)),
         );
       }
+
+      // Only once every message above was stored, so the listing is known to be
+      // complete: whatever is still here and was not in it is gone from the
+      // mailbox. That is how a message deleted from another device stops
+      // showing, and since a trashed message leaves this listing entirely, it
+      // is also how one thrown away elsewhere does.
+      //
+      // The position matters as much as the call. A failure anywhere above
+      // leaves the loop through the catch below without reaching this line, so
+      // a refresh that only half happened never decides that the rest is gone.
+      await _appDatabase.voicemailDao.deleteVoicemailsNotIn(remoteItems.items.map((item) => item.id));
     } on UnauthorizedException catch (e) {
       _sessionGuard.onUnauthorized(e);
       rethrow;

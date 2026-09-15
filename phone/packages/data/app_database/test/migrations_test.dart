@@ -15,6 +15,7 @@ import 'package:app_database/src/migrations/generated/schema_v22.dart' as v22;
 import 'package:app_database/src/migrations/generated/schema_v23.dart' as v23;
 import 'package:app_database/src/migrations/generated/schema_v24.dart' as v24;
 import 'package:app_database/src/migrations/generated/schema_v25.dart' as v25;
+import 'package:app_database/src/migrations/generated/schema_v26.dart' as v26;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -431,6 +432,71 @@ void main() {
         final checkDb = v25.DatabaseAtV25(schema.newConnection());
         final rows = await checkDb.customSelect('SELECT id FROM cdr_sync_cursors').get();
         expect(rows, isEmpty);
+        await checkDb.close();
+      } finally {
+        schema.close();
+      }
+    });
+  });
+  group('migration v26 data integrity', () {
+    test('keeps stored voicemails and leaves both new flags null', () async {
+      final schema = await verifier.schemaAt(25);
+      try {
+        final oldDb = v25.DatabaseAtV25(schema.newConnection());
+        await oldDb.customStatement("""
+          INSERT INTO voicemails (id, date, duration, sender, receiver, seen, size, type)
+          VALUES ('vm-1', '2026-09-15T10:00:00Z', 3.45, '123010', '123009', 1, 5, 'voice')
+        """);
+        await oldDb.close();
+
+        final appDatabase = AppDatabase(schema.newConnection());
+        await verifier.migrateAndValidate(appDatabase, 26);
+        await appDatabase.close();
+
+        final checkDb = v26.DatabaseAtV26(schema.newConnection());
+        final rows = await checkDb.customSelect('SELECT id, seen, saved, forwarded_by FROM voicemails').get();
+        expect(rows, hasLength(1));
+        expect(rows.single.read<String>('id'), 'vm-1');
+        // What the mailbox already said is kept.
+        expect(rows.single.read<int>('seen'), 1);
+        // The new flags describe what the backend reports, so a migrated row
+        // carries neither until the next refresh says. A `saved` backfilled as
+        // false would claim the control applies to a message the backend may
+        // say nothing about.
+        // (matcher's `isNull` clashes with drift's SQL `isNull`, so compare to the literal.)
+        expect(rows.single.data['saved'], null);
+        expect(rows.single.data['forwarded_by'], null);
+
+        await checkDb.close();
+      } finally {
+        schema.close();
+      }
+    });
+
+    test('saved accepts null, 0 and 1 and rejects anything else', () async {
+      final schema = await verifier.schemaAt(25);
+      try {
+        final appDatabase = AppDatabase(schema.newConnection());
+        await verifier.migrateAndValidate(appDatabase, 26);
+        await appDatabase.close();
+
+        final checkDb = v26.DatabaseAtV26(schema.newConnection());
+
+        Future<void> insert(String id, String saved) => checkDb.customStatement("""
+          INSERT INTO voicemails (id, date, duration, sender, receiver, seen, size, type, saved)
+          VALUES ('$id', '2026-09-15T10:00:00Z', 1.0, '1', '2', 0, 1, 'voice', $saved)
+        """);
+
+        await insert('vm-null', 'NULL');
+        await insert('vm-false', '0');
+        await insert('vm-true', '1');
+
+        // The column is a boolean, and drift writes the check that says so.
+        await expectLater(insert('vm-bad', '2'), throwsA(anything));
+
+        final rows = await checkDb.customSelect('SELECT id FROM voicemails ORDER BY id').get();
+        expect(rows.map((r) => r.read<String>('id')), ['vm-false', 'vm-null', 'vm-true']);
+
         await checkDb.close();
       } finally {
         schema.close();

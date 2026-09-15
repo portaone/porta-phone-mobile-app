@@ -60,4 +60,37 @@ void main() {
       expect(rows.single.contact?.sourceType, ContactSourceTypeEnum.external);
     });
   });
+  group('deleteVoicemailsNotIn', () {
+    Future<void> seed(List<String> ids) async {
+      for (final id in ids) {
+        await db.voicemailDao.insertOrUpdateVoicemail(createVoicemail(id: id));
+      }
+    }
+
+    Future<List<String>> storedIds() async => (await db.voicemailDao.getAllVoicemails()).map((v) => v.id).toList();
+
+    test('keeps what the listing still has and drops the rest', () async {
+      await seed(['1', '2', '3']);
+
+      await db.voicemailDao.deleteVoicemailsNotIn(['1', '3']);
+
+      expect(await storedIds(), ['1', '3']);
+    });
+
+    test('an id the listing has but the table does not is simply not there', () async {
+      await seed(['1']);
+
+      await db.voicemailDao.deleteVoicemailsNotIn(['1', 'never-stored']);
+
+      expect(await storedIds(), ['1']);
+    });
+
+    test('an empty listing empties the table, rather than meaning nothing', () async {
+      await seed(['1', '2']);
+
+      await db.voicemailDao.deleteVoicemailsNotIn(const []);
+
+      expect(await storedIds(), isEmpty);
+    });
+  });
 }

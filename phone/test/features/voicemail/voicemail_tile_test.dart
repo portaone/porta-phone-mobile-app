@@ -19,16 +19,16 @@ class _MockPlaybackController extends Mock implements VoicemailPlaybackControlle
 
 void main() {
   final voicemail = Voicemail(
-    'vm-1',
-    '2026-08-12T08:17:00Z',
-    4.2,
-    '555002',
-    'User 555002',
-    '555001',
-    ReadStatus.read,
-    17,
-    'voice',
-    'https://example.test/vm-1.mp3',
+    id: 'vm-1',
+    date: '2026-08-12T08:17:00Z',
+    duration: 4.2,
+    sender: '555002',
+    displaySender: 'User 555002',
+    receiver: '555001',
+    status: ReadStatus.read,
+    size: 17,
+    type: 'voice',
+    url: 'https://example.test/vm-1.mp3',
   );
 
   late _MockPlaybackController controller;
