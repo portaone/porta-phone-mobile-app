@@ -236,6 +236,7 @@ const String statusIconPickerSearchCloseId = 'statusIconPickerSearchClose';
 const String statusIconPickerSearchInputId = 'statusIconPickerSearchInput';
 const String systemNotificationsBadgeId = 'systemNotificationsBadge';
 const String voicemailFilterPickerId = 'voicemailFilterPicker';
+const String voicemailForwardSearchId = 'voicemailForwardSearch';
 const voicemailFilterPickerKey = Key(voicemailFilterPickerId);
 const String voicemailMenuId = 'voicemailMenu';
 const String voicemailPlaybackId = 'voicemailPlayback';

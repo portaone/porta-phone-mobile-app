@@ -13,6 +13,8 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/crashlytics_utils.dart';
 
+import '../models/models.dart';
+
 part 'voicemail_state.dart';
 
 part 'voicemail_cubit.freezed.dart';
@@ -26,9 +28,11 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     required this.onSubmitNotification,
     required bool saveSupported,
     required bool trashSupported,
+    required bool forwardSupported,
   }) : _repository = repository,
        super(
          VoicemailState(
+           forwardSupported: forwardSupported,
            filters: [
              VoicemailFilter.all,
              VoicemailFilter.unheard,
@@ -260,6 +264,39 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.toggleSavedStatus');
     }
   }
+
+  /// Sends a copy of the message to a colleague, and says what came of it.
+  ///
+  /// Nothing local changes. The copy lands in their mailbox rather than this
+  /// one, and the original is untouched - which is why this reports an outcome
+  /// instead of leaving the screen to notice a difference in the list.
+  Future<VoicemailForwardOutcome> forwardVoicemail(String messageId, {required String toUserId}) async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
+      await _repository.forwardVoicemail(messageId, toUserId: toUserId);
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      return VoicemailForwardOutcome.sent;
+    } catch (e, s) {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      final outcome = _forwardOutcomeOf(e);
+      // A message too large and a recipient who is full are answers, not
+      // faults: the request reached the backend and it said no for a reason
+      // the screen is about to explain. Only the rest is worth recording.
+      if (outcome == VoicemailForwardOutcome.failed || outcome == VoicemailForwardOutcome.unavailable) {
+        _logger.severe('Error forwarding voicemail with id $messageId: $e', e, s);
+        CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.forwardVoicemail');
+      }
+      return outcome;
+    }
+  }
+
+  VoicemailForwardOutcome _forwardOutcomeOf(Object error) => switch (error) {
+    VoicemailForwardAttachmentTooLargeException() => VoicemailForwardOutcome.tooLarge,
+    VoicemailForwardLimitReachedException() => VoicemailForwardOutcome.recipientFull,
+    EndpointNotSupportedException() => VoicemailForwardOutcome.unavailable,
+    VoicemailNotConfiguredException() => VoicemailForwardOutcome.unavailable,
+    _ => VoicemailForwardOutcome.failed,
+  };
 
   void startCall(Voicemail voicemail) {
     onCallStarted(voicemail.sender);

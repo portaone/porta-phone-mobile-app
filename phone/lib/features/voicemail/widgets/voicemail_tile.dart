@@ -26,12 +26,14 @@ class VoicemailTile extends StatelessWidget {
     required this.onDeleted,
     required this.onToggleSeenStatus,
     required this.onToggleSavedStatus,
+    required this.onForwarded,
     required this.onRestored,
     required this.onDeletedPermanently,
     required this.onLongPress,
     required this.onTap,
     this.saveSupported = false,
     this.trashSupported = false,
+    this.forwardSupported = false,
     this.inTrash = false,
     this.thumbnail,
     this.thumbnailUrl,
@@ -55,6 +57,9 @@ class VoicemailTile extends StatelessWidget {
   /// one it is final, which is why it asks first and this does not.
   final bool trashSupported;
 
+  /// Whether a message can be passed on to a colleague on the same backend.
+  final bool forwardSupported;
+
   /// Whether this message is being shown as part of the trash.
   ///
   /// It answers to a different pair of actions there - put it back, or finish
@@ -69,6 +74,7 @@ class VoicemailTile extends StatelessWidget {
   final void Function(Voicemail) onDeleted;
   final void Function(Voicemail) onToggleSeenStatus;
   final void Function(Voicemail) onToggleSavedStatus;
+  final void Function(Voicemail) onForwarded;
   final void Function(Voicemail) onRestored;
   final void Function(Voicemail) onDeletedPermanently;
   final void Function(Voicemail) onLongPress;
@@ -191,6 +197,14 @@ class VoicemailTile extends StatelessWidget {
           title: Text(_saved ? context.l10n.voicemail_Label_unsave : context.l10n.voicemail_Label_save),
         ),
       ),
+    if (forwardSupported)
+      PopupMenuItem(
+        value: _VoicemailMenuAction.forward,
+        child: ListTile(
+          leading: const Icon(Icons.forward_to_inbox_outlined),
+          title: Text(context.l10n.voicemail_Label_forward),
+        ),
+      ),
     PopupMenuItem(
       value: _VoicemailMenuAction.delete,
       child: ListTile(
@@ -221,6 +235,9 @@ class VoicemailTile extends StatelessWidget {
         break;
       case _VoicemailMenuAction.delete:
         onDeleted(voicemail);
+        break;
+      case _VoicemailMenuAction.forward:
+        onForwarded(voicemail);
         break;
       case _VoicemailMenuAction.restore:
         onRestored(voicemail);
@@ -278,4 +295,4 @@ class _VoicemailSubtitle extends StatelessWidget {
   }
 }
 
-enum _VoicemailMenuAction { call, toggleSeenStatus, toggleSavedStatus, delete, restore, deletePermanently }
+enum _VoicemailMenuAction { call, toggleSeenStatus, toggleSavedStatus, forward, delete, restore, deletePermanently }

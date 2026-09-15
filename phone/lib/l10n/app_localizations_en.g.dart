@@ -3163,6 +3163,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Messages you move here still use mailbox space until the trash is emptied.';
 
   @override
+  String get voicemail_Label_forward => 'Forward';
+
+  @override
+  String get voicemail_Label_forwardNoColleagues => 'No colleagues found';
+
+  @override
+  String get voicemail_Label_forwardNoColleaguesHint => 'Check the name or the extension.';
+
+  @override
+  String get voicemail_Label_forwardSearchHint => 'Search colleagues';
+
+  @override
   String get voicemail_Label_markAsHeard => 'Mark as heard';
 
   @override
@@ -3204,6 +3216,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String voicemail_SemanticsLabel_forwardTo(String name) {
+    return 'Forward to $name';
+  }
+
+  @override
+  String voicemail_SemanticsLabel_forwardToExtension(String name, String extension) {
+    return 'Forward to $name, extension $extension';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_loading => 'Loading';
 
   @override
@@ -3225,10 +3247,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Snackbar_movedToTrash => 'Moved to trash';
 
   @override
+  String get voicemail_Snackbar_forwardFailed => 'Could not forward';
+
+  @override
+  String voicemail_Snackbar_forwardRecipientFull(String name) {
+    return '$name cannot receive more forwarded messages';
+  }
+
+  @override
+  String get voicemail_Snackbar_forwardTooLarge => 'Message too large to forward';
+
+  @override
+  String get voicemail_Snackbar_forwardUnavailable => 'Forwarding is not available';
+
+  @override
+  String voicemail_Snackbar_forwarded(String name) {
+    return 'Forwarded to $name';
+  }
+
+  @override
   String get voicemail_Snackbar_notConfigured => 'Contact your administrator to activate voicemail';
 
   @override
   String get voicemail_Title_notSupported => 'Feature not supported';
+
+  @override
+  String get voicemail_Widget_forwardSheetTitle => 'Forward to';
 
   @override
   String get voicemail_Widget_screenTitle => 'Voicemail';
