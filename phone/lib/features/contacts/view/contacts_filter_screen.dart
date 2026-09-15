@@ -54,13 +54,6 @@ class ContactsFilterScreen extends StatefulWidget {
 }
 
 class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
-  /// Whether the favourites entry is the one picked.
-  ///
-  /// Kept here rather than in [ContactsBloc]: that bloc remembers the address
-  /// book across restarts, and favourites are not one - the star this replaced
-  /// was a choice of the moment too.
-  bool _favorites = false;
-
   bool _searching = false;
 
   final _reorder = FavoritesReorderController();
@@ -93,10 +86,15 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
   }
 
   /// The list actually shown.
-  ContactsListSelection _shown(ContactSourceType remembered) {
-    if (_favorites && _offersFavorites) return const ContactsFavoritesSelection();
+  ///
+  /// The favourites are checked against what this deployment offers, not only
+  /// against what was remembered: the pick outlives a change of configuration,
+  /// and a section that no longer carries favourites falls back to an address
+  /// book rather than showing a list it does not offer.
+  ContactsListSelection _shown(ContactsState state) {
+    if (state.favorites && _offersFavorites) return const ContactsFavoritesSelection();
 
-    final sourceType = _shownSource(remembered);
+    final sourceType = _shownSource(state.sourceType);
     if (sourceType != null) return ContactsSourceSelection(sourceType);
 
     // Favourites are all that is left. A tab configured with no lists at all
@@ -106,18 +104,14 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
   }
 
   void _onSelected(ContactsListSelection selection) {
-    setState(() {
-      _favorites = selection is ContactsFavoritesSelection;
-      // Rearranging belongs to the favourites list; picking another one ends it
-      // rather than leaving a mode on a list that cannot use it.
-      if (!_favorites) _reorder.stop();
-    });
+    // Rearranging belongs to the favourites list; picking another one ends it
+    // rather than leaving a mode on a list that cannot use it.
+    if (selection is! ContactsFavoritesSelection) _reorder.stop();
 
-    // Only an address book is worth remembering, and only when one was picked:
-    // a hop through favourites and back must land on the book left behind.
-    if (selection is ContactsSourceSelection) {
-      context.read<ContactsBloc>().add(ContactsSourceTypeChanged(selection.sourceType));
-    }
+    // The whole answer in one event, and the bloc is what remembers it:
+    // picking a book also leaves the favourites, and the book it names is
+    // kept so that leaving the favourites lands on the one left behind.
+    context.read<ContactsBloc>().add(ContactsListSelectionChanged(selection));
   }
 
   @override
@@ -146,19 +140,36 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
         applyToAppBar: effectiveStyle?.applyToAppBar ?? true,
         appBarTheme: effectiveStyle?.appBarTheme,
         extendBodyBehindAppBar: true,
-        floatingActionButton: _favorites && _offersFavorites
-            ? BlocBuilder<CallBloc, CallState>(
-                buildWhen: (previous, current) => previous.isBlingTransferInitiated != current.isBlingTransferInitiated,
-                // A transfer turns every row into a destination to pick, and
-                // the bar announcing it takes the bottom of the screen.
-                builder: (context, callState) => FavoritesReorderButton(
-                  controller: _reorder,
-                  identifier: contactsFavoritesReorderId,
-                  bottomPadding: mediaQueryData.padding.bottom,
-                  hidden: callState.isBlingTransferInitiated,
-                ),
-              )
-            : null,
+        floatingActionButton: !_offersFavorites
+            ? null
+            // Outside the two builders below, so it asks the same question
+            // again: the button belongs to the favourites list and appears
+            // with it. Against the list SHOWN rather than against the pick -
+            // a section left with nothing but favourites shows them without
+            // anyone having picked them, and the button belongs there too.
+            //
+            // Both branches carry a key of their own, or the scaffold takes
+            // one non-null child for the other and skips the animation that
+            // brings the button in.
+            : BlocBuilder<ContactsBloc, ContactsState>(
+                buildWhen: (previous, current) =>
+                    previous.sourceType != current.sourceType || previous.favorites != current.favorites,
+                builder: (context, contactsState) => _shown(contactsState) is! ContactsFavoritesSelection
+                    ? const SizedBox.shrink(key: ValueKey('contacts-no-reorder'))
+                    : BlocBuilder<CallBloc, CallState>(
+                        key: const ValueKey('contacts-reorder'),
+                        buildWhen: (previous, current) =>
+                            previous.isBlingTransferInitiated != current.isBlingTransferInitiated,
+                        // A transfer turns every row into a destination to pick, and
+                        // the bar announcing it takes the bottom of the screen.
+                        builder: (context, callState) => FavoritesReorderButton(
+                          controller: _reorder,
+                          identifier: contactsFavoritesReorderId,
+                          bottomPadding: mediaQueryData.padding.bottom,
+                          hidden: callState.isBlingTransferInitiated,
+                        ),
+                      ),
+              ),
         appBar: MainAppBar(
           title: widget.title,
           context: context,
@@ -166,9 +177,10 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(ContactsSearchRow.height),
             child: BlocBuilder<ContactsBloc, ContactsState>(
-              buildWhen: (previous, current) => previous.sourceType != current.sourceType,
+              buildWhen: (previous, current) =>
+                  previous.sourceType != current.sourceType || previous.favorites != current.favorites,
               builder: (context, state) {
-                final selection = _shown(state.sourceType);
+                final selection = _shown(state);
 
                 return ContactsSearchRow(
                   inset: titleInset,
@@ -214,12 +226,13 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
         // control would tear a list down, build the other from nothing and
         // flash a spinner where a list already stood.
         body: BlocBuilder<ContactsBloc, ContactsState>(
-          buildWhen: (previous, current) => previous.sourceType != current.sourceType,
+          buildWhen: (previous, current) =>
+              previous.sourceType != current.sourceType || previous.favorites != current.favorites,
           builder: (context, state) {
             // A tab can be configured with nothing to show at all.
             if (widget.selections.isEmpty) return const SizedBox.shrink();
 
-            final shown = _shown(state.sourceType);
+            final shown = _shown(state);
 
             // A slot per list, not one per kind of list. Sharing a slot
             // between the address books tears one down and builds the other
