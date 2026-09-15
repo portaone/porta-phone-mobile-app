@@ -79,6 +79,9 @@ class _CallScreenState extends State<CallScreen> with AutoRouteAwareStateMixin {
               audioDevice: state.audioDevice,
               availableAudioDevices: state.availableAudioDevices,
               callConfig: widget.callConfig,
+              canMerge: state.canMerge(isConferenceEnabled: widget.callConfig.isConferenceEnabled),
+              canAdd: state.canAdd(isConferenceEnabled: widget.callConfig.isConferenceEnabled),
+              conference: state.conference,
               localePlaceholderBuilder: widget.localePlaceholderBuilder,
               remotePlaceholderBuilder: widget.remotePlaceholderBuilder,
               // The controls have to stay while a screen reader is in use:

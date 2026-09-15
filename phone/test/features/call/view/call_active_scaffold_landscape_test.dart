@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
@@ -31,6 +32,72 @@ void main() {
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
   }
+
+  group('CallActiveScaffold - landscape, a conference', () {
+    testWidgets('the room stands in the info zone, and nothing overflows', (tester) async {
+      setLandscapePhoneSurface(tester);
+      final legA = makeCall(callId: 'a', acceptedTime: DateTime(2024), displayName: 'Anna Marchenko');
+      final legB = makeCall(callId: 'b', acceptedTime: DateTime(2024), displayName: 'Boris Klein');
+      final outside = makeCall(callId: 'outside', acceptedTime: DateTime(2024), displayName: 'Dana Ruiz');
+
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [legA, legB, outside],
+          focusedCall: legA,
+          conference: const ConferenceState(room: 7, phase: ConferencePhase.active, legs: {'a': 0, 'b': 1}),
+        ),
+      );
+
+      // A phone lying down has little height, and the room can hold more
+      // rows than fits: the zone scrolls rather than painting over its edge.
+      expect(find.byType(ConferencePanel), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('the hangup zone ends the room when the room is what is focused', (tester) async {
+      setLandscapePhoneSurface(tester);
+      final legA = makeCall(callId: 'a', acceptedTime: DateTime(2024), displayName: 'Anna Marchenko');
+      final legB = makeCall(callId: 'b', acceptedTime: DateTime(2024), displayName: 'Boris Klein');
+
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [legA, legB],
+          focusedCall: legA,
+          conference: const ConferenceState(room: 7, phase: ConferencePhase.active, legs: {'a': 0, 'b': 1}),
+        ),
+      );
+
+      // Landscape sets the hangup apart in a zone of its own; it is the same
+      // intent and must reach the same place.
+      await tester.tap(find.byKey(const Key(callActionsHangupId)));
+      verify(() => callBloc.add(const CallControlEvent.conferenceEnded())).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a room down to one leg is still shown as a room', (tester) async {
+      setLandscapePhoneSurface(tester);
+      final legA = makeCall(callId: 'a', acceptedTime: DateTime(2024), displayName: 'Anna Marchenko');
+
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [legA],
+          focusedCall: legA,
+          conference: const ConferenceState(room: 7, phase: ConferencePhase.active, legs: {'a': 0}),
+        ),
+      );
+
+      // One call left in a room is not one call: the zone that lays out a
+      // single call squeezes the panel in beside the avatar.
+      expect(find.byType(ConferencePanel), findsOneWidget);
+      expect(find.byType(CallInfo), findsNothing);
+      expect(tester.takeException(), isNull);
+      await teardownCallScaffold(tester);
+    });
+  });
 
   group('CallActiveScaffold - landscape, single live call', () {
     testWidgets('info, grid and hangup stand in one row, in that order', (tester) async {
