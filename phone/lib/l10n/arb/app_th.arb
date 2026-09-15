@@ -2712,6 +2712,15 @@
   "@voicemail_Label_forwardSearchHint": {
     "description": "Placeholder of the search field in the forward picker."
   },
+  "voicemail_Label_forwardedBy": "ส่งต่อโดย {name}",
+  "@voicemail_Label_forwardedBy": {
+    "description": "Says who passed a voicemail along; the sender stays the original caller.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_Label_markAsHeard": "ทำเครื่องหมายว่าฟังแล้ว",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "ทำเครื่องหมายว่าใหม่",

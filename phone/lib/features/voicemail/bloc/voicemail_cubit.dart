@@ -66,6 +66,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
           status: VoicemailStatus.loaded,
         ),
       );
+      unawaited(_resolveForwarders(items));
     });
 
     if (!_repository.isFeatureSupported) {
@@ -89,6 +90,32 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded, error: e));
       _logger.severe('Error fetching voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchVoicemails');
+    }
+  }
+
+  /// Puts a name to whoever forwarded each of these messages on.
+  ///
+  /// Detached from the list arriving rather than awaited before it: a message
+  /// is worth showing at once, and the line naming the forwarder appears a
+  /// moment later. Only ids not already known are looked up, so a list that
+  /// changes for other reasons costs nothing.
+  Future<void> _resolveForwarders(List<Voicemail> items) async {
+    final unknown = items
+        .map((item) => item.forwardedBy)
+        .nonNulls
+        .where((userId) => !state.forwarderNames.containsKey(userId))
+        .toSet();
+    if (unknown.isEmpty) return;
+
+    try {
+      final resolved = await _repository.resolveForwarderNames(unknown);
+      if (resolved.isEmpty) return;
+
+      _safeEmit(state.copyWith(forwarderNames: {...state.forwarderNames, ...resolved}));
+    } catch (e, s) {
+      // A name that could not be looked up is not worth failing a list over;
+      // the tile falls back to the id and the message still reads correctly.
+      _logger.warning('Error resolving voicemail forwarder names: $e', e, s);
     }
   }
 
