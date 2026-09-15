@@ -135,6 +135,33 @@ final class HangupStaleConferenceAction extends HandshakeAction {
   final int room;
 }
 
+/// Drop the conference the client still holds: the session the server
+/// describes has none, or has a different one.
+///
+/// The room is gone whatever became of it - it ended while the socket was
+/// down, or the server started a new one - and the calls that were in it are
+/// ordinary calls again, so the client restores their audio and holds all but
+/// the one in focus, exactly as it does for a `conference_terminated`.
+/// Emitted after [HangupStaleConferenceAction], so a room that is both stale
+/// on the server and held here is ended there before being dropped here.
+final class ForgetConferenceAction extends HandshakeAction {
+  const ForgetConferenceAction();
+}
+
+/// Take the server's account of the room the client is still connected to.
+///
+/// A room outlives a signaling drop: the media server keeps mixing while the
+/// socket is down, so a client that comes back with its own connection to the
+/// mixer intact simply carries on. What it cannot assume is the membership -
+/// a leg may have hung up meanwhile - so the handshake's list is adopted the
+/// same way a `conference_updated` is: it replaces the local one.
+final class AdoptConferenceAction extends HandshakeAction {
+  const AdoptConferenceAction({required this.room, required this.participants});
+
+  final int room;
+  final List<ConferenceParticipant> participants;
+}
+
 /// Processes a [StateHandshake] and returns the list of [HandshakeAction]s the
 /// BLoC should execute.
 ///
@@ -165,11 +192,22 @@ final class HangupStaleConferenceAction extends HandshakeAction {
 /// - For each local Callkeep connection whose call ID is absent from the handshake
 ///   lines -> [EndLocalCallAction].
 ///
-/// **The conference block:**
-/// - A [conference] the server reports is one the client cannot rejoin, so it
-///   -> [HangupStaleConferenceAction], ahead of everything else. The client keeps
-///   no conference of its own yet; once it does, a room it still holds is
-///   adopted or forgotten instead (`docs/conference_protocol.md`, section 7).
+/// **The conference block** (`docs/conference_protocol.md`, section 7), ahead
+/// of everything else, from the room the server reports ([conference]) and the
+/// one the client holds ([localConference]):
+/// - the same room on both sides -> [AdoptConferenceAction]: the room survived
+///   the drop, only its membership is the server's to state;
+/// - a room only the server has -> [HangupStaleConferenceAction]: it cannot be
+///   rejoined, and left standing it refuses every later merge;
+/// - a room only the client has -> [ForgetConferenceAction]: it is over, and
+///   its legs are calls again;
+/// - different rooms on the two sides -> both, in that order.
+///
+/// [ConferenceState.room] is the whole test of what the client holds: the id
+/// arrives with the room's offer, which is what the client answers to connect
+/// to the mixer. A merge that was still assembling when the socket dropped has
+/// none, and the server sends one offer per room, so there is nothing to come
+/// back to - it is dropped like any other room the server does not report.
 ///
 /// When queued terminations exist in the repository, they are emitted first as
 /// regular [HangupSignalingAction]/[DeclineSignalingAction] entries and
@@ -198,8 +236,9 @@ class HandshakeProcessor {
     List<CallkeepConnection> connections = const [],
     Map<String, CallkeepConnection?> lineConnections = const {},
     ConferenceInfo? conference,
+    ConferenceState localConference = const ConferenceState(),
   }) {
-    final actions = <HandshakeAction>[if (conference != null) HangupStaleConferenceAction(room: conference.room)];
+    final actions = <HandshakeAction>[..._conferenceActions(conference, localConference)];
     final activeCallIds = activeCalls.map((call) => call.callId).toSet();
     final callIdsAwaitingOffer = activeCalls.where((call) => call.awaitsOffer).map((call) => call.callId).toSet();
     // Kept apart from [actions]: an early return above leaves them out, as an
@@ -361,5 +400,17 @@ class HandshakeProcessor {
     }
 
     return [...actions, ...offerActions];
+  }
+
+  /// What the two accounts of the room come to. Nothing when neither side has
+  /// one, which is every handshake of a session that never conferenced.
+  List<HandshakeAction> _conferenceActions(ConferenceInfo? conference, ConferenceState localConference) {
+    if (conference != null && conference.room == localConference.room) {
+      return [AdoptConferenceAction(room: conference.room, participants: conference.participants)];
+    }
+    return [
+      if (conference != null) HangupStaleConferenceAction(room: conference.room),
+      if (localConference.isPresent) const ForgetConferenceAction(),
+    ];
   }
 }
