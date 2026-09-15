@@ -33,10 +33,27 @@ class CallControlsPortrait extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          CallInfoBlock(
-            activeCalls: params.activeCalls,
-            focusedCall: params.focusedCall,
-            onCallSelected: params.onCallSelected,
+          // A room can hold more than the screen does - several participants
+          // and a call waiting outside - so while one stands the block takes
+          // all the height the action area leaves and scrolls within it
+          // instead of pushing the controls off the screen. Only one child of
+          // this column can be the flexible one, and with a room it is this:
+          // the avatar below is the other, and it has nobody to show anyway.
+          _Flexed(
+            flexed: params.conference.isPresent,
+            child: CallInfoBlock(
+              activeCalls: params.activeCalls,
+              focusedCall: params.focusedCall,
+              onCallSelected: params.onCallSelected,
+              mergeSupported: params.callConfig.isConferenceEnabled,
+              onMergePressed: params.onMerge,
+              conference: params.conference,
+              onSelfMutedChanged: params.onConferenceSelfMuted,
+              onParticipantMutedChanged: params.onConferenceParticipantMuted,
+              onParticipantHangup: params.onConferenceParticipantHangup,
+              onConferenceEndPressed: params.onConferenceEnd,
+              onAddPressed: params.onConferenceAdd,
+            ),
           ),
           // Nothing to render in the video area (audio-only call,
           // remote camera off, or a held call): the remote party's
@@ -45,7 +62,7 @@ class CallControlsPortrait extends StatelessWidget {
           // by the info block and the action area and scales itself
           // down into it - so growing content (e.g. the open in-call
           // keypad) shrinks the avatar, never the controls.
-          if (!params.remotePictureShown && !params.keypadShown)
+          if (!params.conference.isPresent && !params.remotePictureShown && !params.keypadShown)
             Flexible(
               child: Center(
                 child: FittedBox(
@@ -65,5 +82,24 @@ class CallControlsPortrait extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Puts [child] in the column's flexible slot, scrolling within it, or leaves
+/// it at its natural size.
+///
+/// Two flexible children would divide the free space between them by their
+/// flex factors rather than one taking what it needs and the other the rest,
+/// so the column has exactly one at a time.
+class _Flexed extends StatelessWidget {
+  const _Flexed({required this.flexed, required this.child});
+
+  final bool flexed;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!flexed) return child;
+    return Flexible(child: SingleChildScrollView(child: child));
   }
 }

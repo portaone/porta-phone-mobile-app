@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -39,12 +40,27 @@ Widget _buildSubject({
   required List<ActiveCall> calls,
   required String focusedCallId,
   required ValueChanged<String> onCallTap,
+  bool mergeSupported = false,
+  VoidCallback? onMergePressed,
 }) {
   return MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
-      body: CallList(calls: calls, focusedCallId: focusedCallId, onCallTap: onCallTap),
+      body: CallList(
+        calls: calls,
+        focusedCallId: focusedCallId,
+        onCallTap: onCallTap,
+        action: mergeSupported
+            ? CallListAction(
+                label: 'Merge',
+                semanticsLabel: 'Merge the calls into a conference',
+                identifier: callMergeButtonId,
+                icon: Icons.groups_outlined,
+                onPressed: onMergePressed,
+              )
+            : null,
+      ),
     ),
   );
 }
@@ -106,6 +122,64 @@ void main() {
       await tester.pumpWidget(_buildSubject(calls: [ringing, onCall], focusedCallId: 'ringing', onCallTap: (_) {}));
       final multiHeader = context.l10n.call_CallList_header(2).toUpperCase();
       expect(find.text(multiHeader), findsOneWidget);
+    });
+
+    testWidgets('offers Merge beside the header, and only there', (tester) async {
+      // One call is not a set to choose from and not a set to merge: the
+      // header carries the control, so both appear and disappear together.
+      await tester.pumpWidget(
+        _buildSubject(
+          calls: [onCall],
+          focusedCallId: 'on-call',
+          onCallTap: (_) {},
+          mergeSupported: true,
+          onMergePressed: () {},
+        ),
+      );
+      expect(find.text('Merge'), findsNothing);
+
+      await tester.pumpWidget(
+        _buildSubject(
+          calls: [onCall, held],
+          focusedCallId: 'on-call',
+          onCallTap: (_) {},
+          mergeSupported: true,
+          onMergePressed: () {},
+        ),
+      );
+      expect(find.text('Merge'), findsOneWidget);
+    });
+
+    testWidgets('a deployment without conferences has no Merge control at all', (tester) async {
+      await tester.pumpWidget(
+        _buildSubject(calls: [onCall, held], focusedCallId: 'on-call', onCallTap: (_) {}, onMergePressed: () {}),
+      );
+      expect(find.text('Merge'), findsNothing);
+    });
+
+    testWidgets('Merge is disabled while these calls cannot be merged', (tester) async {
+      await tester.pumpWidget(
+        _buildSubject(calls: [ringing, onCall], focusedCallId: 'ringing', onCallTap: (_) {}, mergeSupported: true),
+      );
+      // Visible, so the control does not appear and vanish between frames,
+      // but not pressable: one of these calls is still ringing.
+      expect(find.text('Merge'), findsOneWidget);
+      expect(tester.widget<TextButton>(find.byType(TextButton)).onPressed, isNull);
+    });
+
+    testWidgets('pressing Merge asks for the conference once', (tester) async {
+      var merges = 0;
+      await tester.pumpWidget(
+        _buildSubject(
+          calls: [onCall, held],
+          focusedCallId: 'on-call',
+          onCallTap: (_) {},
+          mergeSupported: true,
+          onMergePressed: () => merges++,
+        ),
+      );
+      await tester.tap(find.text('Merge'));
+      expect(merges, 1);
     });
 
     testWidgets('tapping a row reports its call id', (tester) async {

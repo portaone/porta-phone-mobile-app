@@ -106,6 +106,12 @@ const callFrontCameraPreviewKey = Key(callFrontCameraPreviewId);
 const String callActiveThumbnailId = 'callActiveThumbnail';
 const String callControlsToggleId = 'callControlsToggle';
 const String callRowId = 'callRow';
+const String callMergeButtonId = 'callMergeButton';
+const String callAddToConferenceButtonId = 'callAddToConferenceButton';
+const String conferenceSelfMuteId = 'conferenceSelfMute';
+const String conferenceParticipantMuteId = 'conferenceParticipantMute';
+const String conferenceParticipantHangupId = 'conferenceParticipantHangup';
+const String conferenceEndId = 'conferenceEnd';
 
 // Bottom navigation of the main screen: which tabs are there and what they are
 // called both come from the server-side menu configuration, so the entry is
