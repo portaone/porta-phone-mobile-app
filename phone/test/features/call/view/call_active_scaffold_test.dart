@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:signaling/signaling.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/data/data.dart';
@@ -133,6 +134,164 @@ void main() {
       expect(find.byIcon(Icons.swap_calls), findsNothing);
       await tester.tap(find.byIcon(Icons.play_arrow));
       verify(() => callBloc.add(const CallControlEvent.resumedHoldingOthers('held'))).called(1);
+      await teardownCallScaffold(tester);
+    });
+  });
+
+  group('CallActiveScaffold - merging the calls', () {
+    final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
+    const conferencing = CallCapabilitiesConfig(isConferenceEnabled: true);
+
+    testWidgets('Merge asks for a conference of the calls that can join one', (tester) async {
+      // The set is the bloc's to name at the moment of the press, not the
+      // screen's to capture when the frame was built - and it is the calls
+      // that can join a room, not every call on the screen.
+      final ringing = makeCall(callId: 'ringing', processingStatus: CallProcessingStatus.incomingFromOffer);
+      when(() => callBloc.state).thenReturn(CallState(activeCalls: [held, active, ringing]));
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [held, active, ringing],
+          focusedCall: active,
+          callConfig: conferencing,
+          canMerge: true,
+        ),
+      );
+
+      await tester.tap(find.bySemanticsIdentifier(callMergeButtonId));
+      verify(() => callBloc.add(const CallControlEvent.merged(['held', 'active']))).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('the control is absent where the deployment offers no conferences', (tester) async {
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: active, canMerge: true),
+      );
+
+      expect(find.bySemanticsIdentifier(callMergeButtonId), findsNothing);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a single call offers nothing to merge', (tester) async {
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active, callConfig: conferencing),
+      );
+
+      expect(find.bySemanticsIdentifier(callMergeButtonId), findsNothing);
+      await teardownCallScaffold(tester);
+    });
+  });
+
+  group('CallActiveScaffold - the room in place of the focused leg', () {
+    final legA = makeCall(callId: 'a', acceptedTime: DateTime(2024), displayName: 'Anna Marchenko');
+    final legB = makeCall(callId: 'b', acceptedTime: DateTime(2024), displayName: 'Boris Klein');
+    const room = ConferenceState(
+      room: 7,
+      phase: ConferencePhase.active,
+      legs: {'a': 0, 'b': 1},
+      participants: [
+        ConferenceParticipant(line: 0, callId: 'a'),
+        ConferenceParticipant(line: 1, callId: 'b'),
+      ],
+    );
+
+    testWidgets('the microphone mutes the room, not the leg', (tester) async {
+      // The microphone track is one for every call, the room's included, so
+      // muting it as a leg's would silence the whole conference.
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
+      );
+
+      // The panel carries a microphone per row, so the grid's own control is
+      // addressed by its id rather than by its glyph. It sends the ordinary
+      // mute of the focused call, which goes through the operating system and
+      // comes back to the bloc, where a leg's mute becomes the room's.
+      await tester.tap(find.byKey(const Key(callActionsMuteId)));
+      verify(() => callBloc.add(const CallControlEvent.setMuted('a', true))).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a leg is not held or transferred on its own', (tester) async {
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
+      );
+
+      // The server refuses a hold of a leg, and the plugin answers a hold of
+      // a grouped call itself: the control is not offered in the first place.
+      expect(tester.widget<CallActionButton>(find.byKey(const Key(callActionsHoldId))).onPressed, isNull);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('the main hangup ends the room, not one of its participants', (tester) async {
+      // The grid acts on the room whenever the focused call is a leg; a room
+      // is not ended by silently picking one participant.
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
+      );
+
+      await tester.tap(find.byKey(const Key(callActionsHangupId)));
+      verify(() => callBloc.add(const CallControlEvent.conferenceEnded())).called(1);
+      verifyNever(() => callBloc.add(const CallControlEvent.ended('a')));
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('the main hangup still ends a call standing outside the room', (tester) async {
+      final outside = makeCall(callId: 'outside', acceptedTime: DateTime(2024), displayName: 'Dana Ruiz');
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [legA, legB, outside], focusedCall: outside, conference: room),
+      );
+
+      await tester.tap(find.byKey(const Key(callActionsHangupId)));
+      verify(() => callBloc.add(const CallControlEvent.ended('outside'))).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('the room is ended from its own control', (tester) async {
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
+      );
+
+      await tester.tap(find.bySemanticsIdentifier(conferenceEndId));
+      verify(() => callBloc.add(const CallControlEvent.conferenceEnded())).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a participant is dropped by ending their call', (tester) async {
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
+      );
+
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)));
+      verify(() => callBloc.add(const CallControlEvent.ended('b'))).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a call outside the room is brought into it, one request per call', (tester) async {
+      final outside = makeCall(callId: 'outside', acceptedTime: DateTime(2024), displayName: 'Dana Ruiz');
+      when(() => callBloc.state).thenReturn(CallState(activeCalls: [legA, legB, outside], conference: room));
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [legA, legB, outside],
+          focusedCall: legA,
+          conference: room,
+          canAdd: true,
+        ),
+      );
+
+      await tester.tap(find.bySemanticsIdentifier(callAddToConferenceButtonId));
+      // The legs never qualify, so the set is exactly what stands outside.
+      verify(() => callBloc.add(const CallControlEvent.conferenceAdded('outside'))).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a participant is muted for everyone', (tester) async {
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [legA, legB], focusedCall: legA, conference: room),
+      );
+
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantMuteId, 1)));
+      verify(() => callBloc.add(const CallControlEvent.conferenceParticipantMuted('b', true))).called(1);
       await teardownCallScaffold(tester);
     });
   });
