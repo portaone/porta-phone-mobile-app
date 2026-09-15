@@ -9,7 +9,7 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 
 class _Repository extends Mock implements VoicemailRepository {}
 
-Voicemail _voicemail(String id, {bool? saved}) => Voicemail(
+Voicemail _voicemail(String id, {bool? saved, String? forwardedBy}) => Voicemail(
   id: id,
   date: '2026-09-15T10:00:00Z',
   duration: 1,
@@ -21,6 +21,7 @@ Voicemail _voicemail(String id, {bool? saved}) => Voicemail(
   type: 'voice',
   url: null,
   saved: saved,
+  forwardedBy: forwardedBy,
 );
 
 void main() {
@@ -173,6 +174,53 @@ void main() {
       when(() => repository.removeVoicemail(any())).thenAnswer((_) async {});
 
       expect(await cubit.removeVoicemail('1'), isTrue);
+    });
+  });
+
+  group('who forwarded a message on', () {
+    test('a name is looked up once and then reused', () async {
+      when(() => repository.resolveForwarderNames(any())).thenAnswer((_) async => {'user-7': 'Iryna Shevchuk'});
+
+      voicemails.add([_voicemail('1', forwardedBy: 'user-7')]);
+      await pumpEventQueue();
+
+      expect(cubit.state.forwarderOf(_voicemail('1', forwardedBy: 'user-7')), 'Iryna Shevchuk');
+
+      // The same list arriving again, or another message from the same
+      // colleague, costs no second lookup.
+      voicemails.add([_voicemail('1', forwardedBy: 'user-7'), _voicemail('2', forwardedBy: 'user-7')]);
+      await pumpEventQueue();
+
+      verify(() => repository.resolveForwarderNames(any())).called(1);
+    });
+
+    test('a colleague the address book does not know falls back to their id', () async {
+      when(() => repository.resolveForwarderNames(any())).thenAnswer((_) async => const {});
+
+      voicemails.add([_voicemail('1', forwardedBy: 'user-9')]);
+      await pumpEventQueue();
+
+      // A poor name but a true one. Saying nothing would hide that the message
+      // was forwarded at all.
+      expect(cubit.state.forwarderOf(_voicemail('1', forwardedBy: 'user-9')), 'user-9');
+    });
+
+    test('a list with nothing forwarded asks nobody', () async {
+      voicemails.add([_voicemail('1')]);
+      await pumpEventQueue();
+
+      verifyNever(() => repository.resolveForwarderNames(any()));
+      expect(cubit.state.forwarderOf(_voicemail('1')), isNull);
+    });
+
+    test('a lookup that fails leaves the list alone', () async {
+      when(() => repository.resolveForwarderNames(any())).thenThrow(Exception('offline'));
+
+      voicemails.add([_voicemail('1', forwardedBy: 'user-7')]);
+      await pumpEventQueue();
+
+      expect(cubit.state.items.map((item) => item.id), ['1']);
+      expect(cubit.state.forwarderOf(_voicemail('1', forwardedBy: 'user-7')), 'user-7');
     });
   });
 }
