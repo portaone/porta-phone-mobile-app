@@ -66,6 +66,7 @@ class VoicemailBody extends StatelessWidget {
                         trashSupported: state.trashSupported,
                         forwardSupported: state.forwardSupported,
                         inTrash: state.isShowingTrash,
+                        forwarderOf: state.forwarderOf,
                       ),
                     ),
                     // The one thing about the trash a person cannot see by
@@ -124,6 +125,7 @@ class VoicemailListView extends StatelessWidget {
     this.trashSupported = false,
     this.forwardSupported = false,
     this.inTrash = false,
+    this.forwarderOf,
   });
 
   final List<Voicemail> items;
@@ -133,6 +135,9 @@ class VoicemailListView extends StatelessWidget {
   final bool trashSupported;
   final bool forwardSupported;
   final bool inTrash;
+
+  /// Who passed a given message along, or null when nobody did.
+  final String? Function(Voicemail)? forwarderOf;
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +162,7 @@ class VoicemailListView extends StatelessWidget {
           trashSupported: trashSupported,
           forwardSupported: forwardSupported,
           inTrash: inTrash,
+          forwardedByName: forwarderOf?.call(item),
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
           onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
           onForwarded: (it) => _onForwardVoicemail(context, it),

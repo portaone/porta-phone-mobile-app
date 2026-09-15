@@ -3158,6 +3158,11 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Label_forwardSearchHint => 'ค้นหาเพื่อนร่วมงาน';
 
   @override
+  String voicemail_Label_forwardedBy(String name) {
+    return 'ส่งต่อโดย $name';
+  }
+
+  @override
   String get voicemail_Label_markAsHeard => 'ทำเครื่องหมายว่าฟังแล้ว';
 
   @override
