@@ -74,6 +74,13 @@ class WebtritApiClient {
   // and mean the account rather than the thing being fetched.
   static final _userNotFoundOn404 = ResponseOptions(failures: [userNotFoundOn404Rule]);
 
+  // Forwarding: a voicemail endpoint like the others, plus the three refusals
+  // that only this route can produce.
+  static final _voicemailForwardEndpoint = ResponseOptions(
+    optionalEndpoint: true,
+    failures: [voicemailNotConfiguredRule, ...voicemailForwardRules],
+  );
+
   // The voicemail endpoints, which are optional like the rest and are also the
   // only ones that can report the mailbox as unconfigured.
   static final _voicemailEndpoint = ResponseOptions(optionalEndpoint: true, failures: [voicemailNotConfiguredRule]);
@@ -760,6 +767,42 @@ class WebtritApiClient {
       requestOptions: options,
       responseOptions: _voicemailEndpoint,
     );
+  }
+
+  /// Passes a voicemail message on to another user of the same backend, and
+  /// answers with the id the message now has in the RECIPIENT's list.
+  ///
+  /// That id is of little use to the sender: the forwarded message does not
+  /// appear in their own list, and their copy of the original is untouched.
+  ///
+  /// [toUserId] is a user id as the contacts endpoint reports it, not a phone
+  /// number - the backend checks it against that endpoint, and the check is what
+  /// authorises writing a recording into someone else's storage.
+  ///
+  /// [idempotencyKey] is required here even though the backend treats it as
+  /// optional, because this client retries a request that failed below the HTTP
+  /// layer. A forward that timed out may well have been delivered, so retrying
+  /// without a key is how one message becomes several; retrying with the same
+  /// key returns the original result instead. Use a fresh key for each
+  /// deliberate forward and reuse it when retrying that one.
+  Future<String> forwardUserVoicemail(
+    String token,
+    String messageId, {
+    required String toUserId,
+    required String idempotencyKey,
+    String? locale,
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    final responseJson = await _httpClientExecutePost(
+      [..._apiBasePathSegmentsV1, 'user', 'voicemails', messageId, 'forward'],
+      locale != null ? {'Accept-Language': locale} : null,
+      token,
+      {'to_user_id': toUserId, 'idempotency_key': idempotencyKey},
+      requestOptions: options,
+      responseOptions: _voicemailForwardEndpoint,
+    );
+
+    return responseJson['id'] as String;
   }
 
   /// Deletes every message in the user's trash for good.
