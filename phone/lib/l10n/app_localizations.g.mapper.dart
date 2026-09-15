@@ -1483,6 +1483,12 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Label_emptyTrash' => voicemail_Label_emptyTrash,
       'voicemail_Label_emptyTrashAction' => voicemail_Label_emptyTrashAction,
       'voicemail_Label_emptyTrashHint' => voicemail_Label_emptyTrashHint,
+      'voicemail_Label_forward' => voicemail_Label_forward,
+      'voicemail_Label_forwardNoColleagues' =>
+        voicemail_Label_forwardNoColleagues,
+      'voicemail_Label_forwardNoColleaguesHint' =>
+        voicemail_Label_forwardNoColleaguesHint,
+      'voicemail_Label_forwardSearchHint' => voicemail_Label_forwardSearchHint,
       'voicemail_Label_markAsHeard' => voicemail_Label_markAsHeard,
       'voicemail_Label_markAsNew' => voicemail_Label_markAsNew,
       'voicemail_Label_moveToTrash' => voicemail_Label_moveToTrash,
@@ -1502,8 +1508,15 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_SemanticsLabel_undoMoveToTrash' =>
         voicemail_SemanticsLabel_undoMoveToTrash,
       'voicemail_Snackbar_movedToTrash' => voicemail_Snackbar_movedToTrash,
+      'voicemail_Snackbar_forwardFailed' => voicemail_Snackbar_forwardFailed,
+      'voicemail_Snackbar_forwardTooLarge' =>
+        voicemail_Snackbar_forwardTooLarge,
+      'voicemail_Snackbar_forwardUnavailable' =>
+        voicemail_Snackbar_forwardUnavailable,
       'voicemail_Snackbar_notConfigured' => voicemail_Snackbar_notConfigured,
       'voicemail_Title_notSupported' => voicemail_Title_notSupported,
+      'voicemail_Widget_forwardSheetTitle' =>
+        voicemail_Widget_forwardSheetTitle,
       'voicemail_Widget_screenTitle' => voicemail_Widget_screenTitle,
       'webRegistration_ErrorAcknowledgeDialogActions_retry' =>
         webRegistration_ErrorAcknowledgeDialogActions_retry,
@@ -2133,6 +2146,31 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final String filter] => voicemail_SemanticsLabel_filter(filter),
         _ => throw ArgumentError(
           'voicemail_SemanticsLabel_filter requires 1 arguments',
+        ),
+      },
+      'voicemail_SemanticsLabel_forwardTo' => switch (args) {
+        [final String name] => voicemail_SemanticsLabel_forwardTo(name),
+        _ => throw ArgumentError(
+          'voicemail_SemanticsLabel_forwardTo requires 1 arguments',
+        ),
+      },
+      'voicemail_SemanticsLabel_forwardToExtension' => switch (args) {
+        [final String name, final String extension] =>
+          voicemail_SemanticsLabel_forwardToExtension(name, extension),
+        _ => throw ArgumentError(
+          'voicemail_SemanticsLabel_forwardToExtension requires 2 arguments',
+        ),
+      },
+      'voicemail_Snackbar_forwardRecipientFull' => switch (args) {
+        [final String name] => voicemail_Snackbar_forwardRecipientFull(name),
+        _ => throw ArgumentError(
+          'voicemail_Snackbar_forwardRecipientFull requires 1 arguments',
+        ),
+      },
+      'voicemail_Snackbar_forwarded' => switch (args) {
+        [final String name] => voicemail_Snackbar_forwarded(name),
+        _ => throw ArgumentError(
+          'voicemail_Snackbar_forwarded requires 1 arguments',
         ),
       },
       'webview_defaultError_details' => switch (args) {

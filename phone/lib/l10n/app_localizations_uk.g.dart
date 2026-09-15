@@ -3209,6 +3209,18 @@ class AppLocalizationsUk extends AppLocalizations {
       'Повідомлення, які ви сюди переносите, далі займають місце у скриньці, доки кошик не очищено.';
 
   @override
+  String get voicemail_Label_forward => 'Переслати';
+
+  @override
+  String get voicemail_Label_forwardNoColleagues => 'Колег не знайдено';
+
+  @override
+  String get voicemail_Label_forwardNoColleaguesHint => 'Перевірте імʼя або номер.';
+
+  @override
+  String get voicemail_Label_forwardSearchHint => 'Пошук колег';
+
+  @override
   String get voicemail_Label_markAsHeard => 'Позначити як прослухане';
 
   @override
@@ -3258,6 +3270,16 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String voicemail_SemanticsLabel_forwardTo(String name) {
+    return 'Переслати: $name';
+  }
+
+  @override
+  String voicemail_SemanticsLabel_forwardToExtension(String name, String extension) {
+    return 'Переслати: $name, номер $extension';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_loading => 'Завантаження';
 
   @override
@@ -3279,10 +3301,32 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Snackbar_movedToTrash => 'Переміщено в кошик';
 
   @override
+  String get voicemail_Snackbar_forwardFailed => 'Не вдалося переслати';
+
+  @override
+  String voicemail_Snackbar_forwardRecipientFull(String name) {
+    return '$name більше не може приймати переслані повідомлення';
+  }
+
+  @override
+  String get voicemail_Snackbar_forwardTooLarge => 'Повідомлення завелике, щоб його переслати';
+
+  @override
+  String get voicemail_Snackbar_forwardUnavailable => 'Пересилання недоступне';
+
+  @override
+  String voicemail_Snackbar_forwarded(String name) {
+    return 'Переслано: $name';
+  }
+
+  @override
   String get voicemail_Snackbar_notConfigured => 'Зверніться до адміністратора, щоб активувати голосову пошту.';
 
   @override
   String get voicemail_Title_notSupported => 'Функція не підтримується';
+
+  @override
+  String get voicemail_Widget_forwardSheetTitle => 'Переслати';
 
   @override
   String get voicemail_Widget_screenTitle => 'Голосова пошта';

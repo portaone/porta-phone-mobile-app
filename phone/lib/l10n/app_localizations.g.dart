@@ -5797,6 +5797,30 @@ abstract class AppLocalizations {
   /// **'Messages you move here still use mailbox space until the trash is emptied.'**
   String get voicemail_Label_emptyTrashHint;
 
+  /// Menu action that passes a voicemail on to a colleague.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward'**
+  String get voicemail_Label_forward;
+
+  /// No description provided for @voicemail_Label_forwardNoColleagues.
+  ///
+  /// In en, this message translates to:
+  /// **'No colleagues found'**
+  String get voicemail_Label_forwardNoColleagues;
+
+  /// Shown when nobody in the address book can be forwarded to.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the name or the extension.'**
+  String get voicemail_Label_forwardNoColleaguesHint;
+
+  /// Placeholder of the search field in the forward picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Search colleagues'**
+  String get voicemail_Label_forwardSearchHint;
+
   /// No description provided for @voicemail_Label_markAsHeard.
   ///
   /// In en, this message translates to:
@@ -5869,6 +5893,18 @@ abstract class AppLocalizations {
   /// **'Filter, currently {filter}'**
   String voicemail_SemanticsLabel_filter(String filter);
 
+  /// Accessibility name of a row in the forward picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward to {name}'**
+  String voicemail_SemanticsLabel_forwardTo(String name);
+
+  /// Accessibility name of a row in the forward picker, for a colleague who has an extension.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward to {name}, extension {extension}'**
+  String voicemail_SemanticsLabel_forwardToExtension(String name, String extension);
+
   /// Announced while a voicemail is being prepared for playback.
   ///
   /// In en, this message translates to:
@@ -5911,6 +5947,36 @@ abstract class AppLocalizations {
   /// **'Moved to trash'**
   String get voicemail_Snackbar_movedToTrash;
 
+  /// Shown when forwarding failed for a reason the person cannot act on.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not forward'**
+  String get voicemail_Snackbar_forwardFailed;
+
+  /// Shown when the colleague has as many forwarded messages as they are allowed.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} cannot receive more forwarded messages'**
+  String voicemail_Snackbar_forwardRecipientFull(String name);
+
+  /// No description provided for @voicemail_Snackbar_forwardTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Message too large to forward'**
+  String get voicemail_Snackbar_forwardTooLarge;
+
+  /// No description provided for @voicemail_Snackbar_forwardUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwarding is not available'**
+  String get voicemail_Snackbar_forwardUnavailable;
+
+  /// Confirms that a copy of the voicemail reached a colleague.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwarded to {name}'**
+  String voicemail_Snackbar_forwarded(String name);
+
   /// No description provided for @voicemail_Snackbar_notConfigured.
   ///
   /// In en, this message translates to:
@@ -5922,6 +5988,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Feature not supported'**
   String get voicemail_Title_notSupported;
+
+  /// Title of the sheet that picks who a voicemail is forwarded to.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward to'**
+  String get voicemail_Widget_forwardSheetTitle;
 
   /// No description provided for @voicemail_Widget_screenTitle.
   ///

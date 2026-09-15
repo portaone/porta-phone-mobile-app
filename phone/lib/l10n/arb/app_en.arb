@@ -2770,6 +2770,20 @@
   "@voicemail_Label_emptyTrashHint": {
     "description": "Explains, on an empty trash, what keeping messages there would cost."
   },
+  "voicemail_Label_forward": "Forward",
+  "@voicemail_Label_forward": {
+    "description": "Menu action that passes a voicemail on to a colleague."
+  },
+  "voicemail_Label_forwardNoColleagues": "No colleagues found",
+  "@voicemail_Label_forwardNoColleagues": {},
+  "voicemail_Label_forwardNoColleaguesHint": "Check the name or the extension.",
+  "@voicemail_Label_forwardNoColleaguesHint": {
+    "description": "Shown when nobody in the address book can be forwarded to."
+  },
+  "voicemail_Label_forwardSearchHint": "Search colleagues",
+  "@voicemail_Label_forwardSearchHint": {
+    "description": "Placeholder of the search field in the forward picker."
+  },
   "voicemail_Label_markAsHeard": "Mark as heard",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Mark as new",
@@ -2820,6 +2834,27 @@
       }
     }
   },
+  "voicemail_SemanticsLabel_forwardTo": "Forward to {name}",
+  "@voicemail_SemanticsLabel_forwardTo": {
+    "description": "Accessibility name of a row in the forward picker.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "voicemail_SemanticsLabel_forwardToExtension": "Forward to {name}, extension {extension}",
+  "@voicemail_SemanticsLabel_forwardToExtension": {
+    "description": "Accessibility name of a row in the forward picker, for a colleague who has an extension.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "extension": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_loading": "Loading",
   "@voicemail_SemanticsLabel_loading": {
     "description": "Announced while a voicemail is being prepared for playback."
@@ -2848,10 +2883,40 @@
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."
   },
+  "voicemail_Snackbar_forwardFailed": "Could not forward",
+  "@voicemail_Snackbar_forwardFailed": {
+    "description": "Shown when forwarding failed for a reason the person cannot act on."
+  },
+  "voicemail_Snackbar_forwardRecipientFull": "{name} cannot receive more forwarded messages",
+  "@voicemail_Snackbar_forwardRecipientFull": {
+    "description": "Shown when the colleague has as many forwarded messages as they are allowed.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "voicemail_Snackbar_forwardTooLarge": "Message too large to forward",
+  "@voicemail_Snackbar_forwardTooLarge": {},
+  "voicemail_Snackbar_forwardUnavailable": "Forwarding is not available",
+  "@voicemail_Snackbar_forwardUnavailable": {},
+  "voicemail_Snackbar_forwarded": "Forwarded to {name}",
+  "@voicemail_Snackbar_forwarded": {
+    "description": "Confirms that a copy of the voicemail reached a colleague.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_Snackbar_notConfigured": "Contact your administrator to activate voicemail",
   "@voicemail_Snackbar_notConfigured": {},
   "voicemail_Title_notSupported": "Feature not supported",
   "@voicemail_Title_notSupported": {},
+  "voicemail_Widget_forwardSheetTitle": "Forward to",
+  "@voicemail_Widget_forwardSheetTitle": {
+    "description": "Title of the sheet that picks who a voicemail is forwarded to."
+  },
   "voicemail_Widget_screenTitle": "Voicemail",
   "@voicemail_Widget_screenTitle": {},
   "webRegistration_ErrorAcknowledgeDialogActions_retry": "Retry",
