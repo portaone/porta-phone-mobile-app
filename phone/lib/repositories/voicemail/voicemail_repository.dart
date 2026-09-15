@@ -247,9 +247,18 @@ class VoicemailRepositoryImpl
   /// between reading/updating local voicemail state during synchronization.
   ///
   /// The update is applied optimistically to the local database first, and then propagated
-  /// to the remote server. If the remote update fails, the local change is reverted to preserve integrity.
+  /// to the remote server. If the remote update fails, the local change is reverted to the
+  /// value the message had before the call, and the failure is rethrown.
   ///
-  /// Throws an error if the remote update fails after the optimistic local update.
+  /// The remote call is awaited, and sent without retries: the revert is only possible
+  /// while its outcome is still known here, and a caller that reports the failure needs it
+  /// to arrive as the result of this future rather than as an unhandled error somewhere
+  /// later.
+  ///
+  /// The revert restores the value read before the optimistic write. A refresh that lands
+  /// inside that window can write the mailbox's own value and have it undone; the flag is
+  /// a boolean, so there is nothing in the row itself to tell the two writers apart, and
+  /// the next refresh settles it.
   ///
   /// [messageId] – the ID of the voicemail to update.
   /// [seen] – the new seen status to apply.
@@ -260,19 +269,31 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    final previous = await _appDatabase.voicemailDao.getVoicemailById((messageId));
+    final previous = await _appDatabase.voicemailDao.getVoicemailById(messageId);
     if (previous == null) return;
 
-    final previousVoicemail = VoicemailDataCompanion(id: Value(previous.id), seen: Value(seen));
-    await _appDatabase.voicemailDao.updateVoicemail(previousVoicemail);
+    final before = VoicemailDataCompanion(id: Value(previous.id), seen: Value(previous.seen));
+    final after = VoicemailDataCompanion(id: Value(previous.id), seen: Value(seen));
+    await _appDatabase.voicemailDao.updateVoicemail(after);
 
     try {
-      unawaited(_webtritApiClient.updateUserVoicemail(_token, messageId, seen: seen, locale: localeCode));
+      await _webtritApiClient.updateUserVoicemail(
+        _token,
+        messageId,
+        seen: seen,
+        locale: localeCode,
+        // Same policy as the delete beside it: someone is waiting on the screen
+        // for this flag to settle, and the default three retries a second apart
+        // would hold the tile in its optimistic state for most of half a minute
+        // before admitting the mailbox never took the change.
+        options: RequestOptions.withNoRetries(),
+      );
     } on UnauthorizedException catch (e) {
+      await _appDatabase.voicemailDao.updateVoicemail(before);
       _sessionGuard.onUnauthorized(e);
       rethrow;
     } catch (e) {
-      await _appDatabase.voicemailDao.updateVoicemail(previousVoicemail);
+      await _appDatabase.voicemailDao.updateVoicemail(before);
       rethrow;
     }
   }
