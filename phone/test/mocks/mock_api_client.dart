@@ -6,6 +6,7 @@ class MockWebtritApiClient extends Mock implements api.WebtritApiClient {
   @override
   Future<api.UserVoicemailListResponse> getUserVoicemailList(
     String token, {
+    api.VoicemailFolder folder = api.VoicemailFolder.inbox,
     String? locale,
     api.RequestOptions options = const api.RequestOptions(),
   }) async {
@@ -16,6 +17,22 @@ class MockWebtritApiClient extends Mock implements api.WebtritApiClient {
   Future<void> deleteUserVoicemail(
     String token,
     String messageId, {
+    bool permanent = false,
+    String? locale,
+    api.RequestOptions options = const api.RequestOptions(),
+  }) async {}
+
+  @override
+  Future<void> restoreUserVoicemail(
+    String token,
+    String messageId, {
+    String? locale,
+    api.RequestOptions options = const api.RequestOptions(),
+  }) async {}
+
+  @override
+  Future<void> emptyUserVoicemailTrash(
+    String token, {
     String? locale,
     api.RequestOptions options = const api.RequestOptions(),
   }) async {}
