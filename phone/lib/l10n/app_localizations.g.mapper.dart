@@ -120,6 +120,15 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_CallActionsTooltip_unmute' => call_CallActionsTooltip_unmute,
       'call_CallList_incoming' => call_CallList_incoming,
       'call_CallList_outgoing' => call_CallList_outgoing,
+      'conferenceRefusal_conferenceDisabled' =>
+        conferenceRefusal_conferenceDisabled,
+      'conferenceRefusal_conferenceAlreadyActive' =>
+        conferenceRefusal_conferenceAlreadyActive,
+      'conferenceRefusal_lineAlreadyInConference' =>
+        conferenceRefusal_lineAlreadyInConference,
+      'conferenceRefusal_callsAreGone' => conferenceRefusal_callsAreGone,
+      'conferenceRefusal_lineNotReady' => conferenceRefusal_lineNotReady,
+      'conferenceRefusal_unavailable' => conferenceRefusal_unavailable,
       'call_CallList_statusOnCall' => call_CallList_statusOnCall,
       'call_ToolbarStatus_connecting' => call_ToolbarStatus_connecting,
       'call_ToolbarStatus_reconnecting' => call_ToolbarStatus_reconnecting,
@@ -759,6 +768,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         notifications_messageSnackBar_callVideoDowngraded,
       'notifications_messageSnackBarAction_callVideoDowngraded' =>
         notifications_messageSnackBarAction_callVideoDowngraded,
+      'notifications_messageSnackBar_conferenceFailed' =>
+        notifications_messageSnackBar_conferenceFailed,
+      'notifications_messageSnackBar_conferenceVideoLeg' =>
+        notifications_messageSnackBar_conferenceVideoLeg,
+      'notifications_messageSnackBar_conferenceEnded' =>
+        notifications_messageSnackBar_conferenceEnded,
       'notifications_errorSnackBar_activeLineBlindTransferWarning' =>
         notifications_errorSnackBar_activeLineBlindTransferWarning,
       'notifications_errorSnackBar_blindTransferFailed' =>

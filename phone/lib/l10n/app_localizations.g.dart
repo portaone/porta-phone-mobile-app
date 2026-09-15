@@ -526,6 +526,42 @@ abstract class AppLocalizations {
   /// **'Outgoing'**
   String get call_CallList_outgoing;
 
+  /// Shown when the deployment does not offer conferences and the server refuses a merge.
+  ///
+  /// In en, this message translates to:
+  /// **'Conferences are not available on this account'**
+  String get conferenceRefusal_conferenceDisabled;
+
+  /// Shown when a merge is refused because this session already hosts a conference.
+  ///
+  /// In en, this message translates to:
+  /// **'A conference is already running'**
+  String get conferenceRefusal_conferenceAlreadyActive;
+
+  /// Shown when a call the user asked to add is already part of the conference.
+  ///
+  /// In en, this message translates to:
+  /// **'That call is already in the conference'**
+  String get conferenceRefusal_lineAlreadyInConference;
+
+  /// Shown when a merge is refused because the calls it named are no longer there to merge.
+  ///
+  /// In en, this message translates to:
+  /// **'Those calls are no longer available to merge'**
+  String get conferenceRefusal_callsAreGone;
+
+  /// Shown when the server refuses to mute a participant it has not finished adding.
+  ///
+  /// In en, this message translates to:
+  /// **'That participant is still joining'**
+  String get conferenceRefusal_lineNotReady;
+
+  /// Shown when a merge is refused for a reason the user can do nothing about.
+  ///
+  /// In en, this message translates to:
+  /// **'The calls could not be merged'**
+  String get conferenceRefusal_unavailable;
+
   /// Header above the call list on the call screen when more than one call is in progress.
   ///
   /// In en, this message translates to:
@@ -3024,6 +3060,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get notifications_messageSnackBarAction_callVideoDowngraded;
+
+  /// Shown when a conference that was being set up failed; the merged calls go on as separate calls.
+  ///
+  /// In en, this message translates to:
+  /// **'The conference could not be set up'**
+  String get notifications_messageSnackBar_conferenceFailed;
+
+  /// Shown when a conference failed because one of the merged calls is a video call, which the audio mixer cannot take.
+  ///
+  /// In en, this message translates to:
+  /// **'A video call cannot join a conference'**
+  String get notifications_messageSnackBar_conferenceVideoLeg;
+
+  /// Shown when the server ends a conference while its calls are still up; they go on as separate calls.
+  ///
+  /// In en, this message translates to:
+  /// **'The conference has ended, the calls continue'**
+  String get notifications_messageSnackBar_conferenceEnded;
 
   /// Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target.
   ///
