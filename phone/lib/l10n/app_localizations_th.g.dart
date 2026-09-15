@@ -281,6 +281,24 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_CallList_outgoing => 'โทรออก';
 
   @override
+  String get conferenceRefusal_conferenceDisabled => 'บัญชีนี้ไม่สามารถใช้การประชุมสายได้';
+
+  @override
+  String get conferenceRefusal_conferenceAlreadyActive => 'มีการประชุมสายอยู่แล้ว';
+
+  @override
+  String get conferenceRefusal_lineAlreadyInConference => 'สายนั้นอยู่ในการประชุมสายแล้ว';
+
+  @override
+  String get conferenceRefusal_callsAreGone => 'ไม่สามารถรวมสายเหล่านั้นได้อีกต่อไป';
+
+  @override
+  String get conferenceRefusal_lineNotReady => 'ผู้เข้าร่วมรายนั้นกำลังเข้าร่วม';
+
+  @override
+  String get conferenceRefusal_unavailable => 'ไม่สามารถรวมสายได้';
+
+  @override
   String call_CallList_header(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1645,6 +1663,15 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'การตั้งค่า';
+
+  @override
+  String get notifications_messageSnackBar_conferenceFailed => 'ไม่สามารถตั้งค่าการประชุมสายได้';
+
+  @override
+  String get notifications_messageSnackBar_conferenceVideoLeg => 'สายวิดีโอไม่สามารถเข้าร่วมการประชุมสายได้';
+
+  @override
+  String get notifications_messageSnackBar_conferenceEnded => 'การประชุมสายสิ้นสุดแล้ว สายยังคงดำเนินต่อ';
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>

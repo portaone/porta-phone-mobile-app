@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -45,6 +46,7 @@ class CallBlocHarness {
     UserMediaBuilder? userMediaBuilder,
     CallkeepConnections? callkeepConnections,
     CallCapabilitiesConfig capabilities = const CallCapabilitiesConfig(),
+    Duration conferenceAssemblyTimeout = const Duration(seconds: 20),
   }) {
     TestWidgetsFlutterBinding.ensureInitialized();
     installPlatformStubs();
@@ -70,6 +72,7 @@ class CallBlocHarness {
       signalingModule: signaling,
       callPeerConnectionManager: peers,
       connectivityService: _FakeConnectivityService(),
+      conferenceAssemblyTimeout: conferenceAssemblyTimeout,
     );
   }
 
@@ -236,17 +239,58 @@ class FakeCallkeep extends Fake implements Callkeep {
   }) async {}
 
   final List<String> ended = [];
+
+  /// What the OS was told about each call's microphone, in order.
+  final List<({String callId, bool muted})> muted = [];
   final List<String> endCalls = [];
   final List<({String callId, bool onHold})> held = [];
   final List<({String groupId, List<String> callIds})> groups = [];
   final List<List<String>> ungroups = [];
 
+  CallkeepDelegate? _delegate;
+
   @override
-  void setDelegate(CallkeepDelegate? delegate) {}
+  void setDelegate(CallkeepDelegate? delegate) => _delegate = delegate;
 
   @override
   Future<void> reportEndCall(String callId, String displayName, CallkeepEndCallReason reason) async {
     ended.add(callId);
+  }
+
+  /// While true the reports are held back instead of being delivered, so a
+  /// test can let a command be overtaken by a later one. The command itself
+  /// still completes, as it does on the platform, which does not wait for the
+  /// report either.
+  bool deferMuteReports = false;
+
+  final _heldMuteReports = Queue<({String callId, bool muted})>();
+
+  /// How many reports are still waiting to be delivered.
+  int get heldMuteReports => _heldMuteReports.length;
+
+  /// Delivers the held reports in the order they were produced, which is the
+  /// order the platform delivers them in.
+  Future<void> flushMuteReports({int? count}) async {
+    final many = count ?? _heldMuteReports.length;
+    for (var i = 0; i < many && _heldMuteReports.isNotEmpty; i++) {
+      final report = _heldMuteReports.removeFirst();
+      await _delegate?.performSetMuted(report.callId, report.muted);
+      await pumpEventQueue();
+    }
+  }
+
+  /// Records the request and reports the new state back, the way the platform
+  /// does: it keeps a mute state per call and publishes every change of it to
+  /// the application, including the ones the application asked for.
+  @override
+  Future<CallkeepCallRequestError?> setMuted(String callId, {required bool muted}) async {
+    this.muted.add((callId: callId, muted: muted));
+    if (deferMuteReports) {
+      _heldMuteReports.add((callId: callId, muted: muted));
+    } else {
+      unawaited(_delegate?.performSetMuted(callId, muted));
+    }
+    return null;
   }
 
   @override
@@ -255,9 +299,14 @@ class FakeCallkeep extends Fake implements Callkeep {
     return null;
   }
 
+  /// While set, a hold waits for this before answering - the native round
+  /// trip a handshake can land inside.
+  Completer<void>? holdGate;
+
   @override
   Future<CallkeepCallRequestError?> setHeld(String callId, {required bool onHold}) async {
     held.add((callId: callId, onHold: onHold));
+    await holdGate?.future;
     return null;
   }
 
