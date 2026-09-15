@@ -100,55 +100,57 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
     // place rather than a header that grows and shrinks under them.
 
     return Unfocuser(
-      child: ThemedScaffold(
-        background: effectiveStyle?.background,
-        contentThemeOverride: effectiveStyle?.contentThemeOverride ?? ThemeMode.system,
-        applyToAppBar: effectiveStyle?.applyToAppBar ?? true,
-        appBarTheme: effectiveStyle?.appBarTheme,
-        extendBodyBehindAppBar: true,
-        floatingActionButton: !widget.selections.offersFavorites
-            ? null
-            // Outside the two builders below, so it asks the same question
-            // again: the button belongs to the favourites list and appears
-            // with it. Against the list SHOWN rather than against the pick -
-            // a section left with nothing but favourites shows them without
+      // One builder for the whole screen, so the question "which list is
+      // shown" is asked once and every part of the screen is given the same
+      // answer. Three builders with the same condition is how the rearrange
+      // button came to ask about the pick while the body drew what was shown,
+      // and a fourth thing depending on the list would have had to remember a
+      // fourth builder.
+      child: BlocBuilder<ContactsBloc, ContactsState>(
+        buildWhen: (previous, current) =>
+            previous.sourceType != current.sourceType || previous.favorites != current.favorites,
+        builder: (context, state) {
+          final shown = _shown(state);
+          final showingFavorites = shown is ContactsFavoritesSelection;
+
+          return ThemedScaffold(
+            background: effectiveStyle?.background,
+            contentThemeOverride: effectiveStyle?.contentThemeOverride ?? ThemeMode.system,
+            applyToAppBar: effectiveStyle?.applyToAppBar ?? true,
+            appBarTheme: effectiveStyle?.appBarTheme,
+            extendBodyBehindAppBar: true,
+            // Asked against the list SHOWN rather than against the pick - a
+            // section left with nothing but favourites shows them without
             // anyone having picked them, and the button belongs there too.
             //
-            // Both branches carry a key of their own, or the scaffold takes
-            // one non-null child for the other and skips the animation that
-            // brings the button in.
-            : BlocBuilder<ContactsBloc, ContactsState>(
-                buildWhen: (previous, current) =>
-                    previous.sourceType != current.sourceType || previous.favorites != current.favorites,
-                builder: (context, contactsState) => _shown(contactsState) is! ContactsFavoritesSelection
-                    ? const SizedBox.shrink(key: ValueKey('contacts-no-reorder'))
-                    : BlocBuilder<CallBloc, CallState>(
-                        key: const ValueKey('contacts-reorder'),
-                        buildWhen: (previous, current) =>
-                            previous.isBlingTransferInitiated != current.isBlingTransferInitiated,
-                        // A transfer turns every row into a destination to pick, and
-                        // the bar announcing it takes the bottom of the screen.
-                        builder: (context, callState) => FavoritesReorderButton(
-                          controller: _reorder,
-                          identifier: contactsFavoritesReorderId,
-                          bottomPadding: mediaQueryData.padding.bottom,
-                          hidden: callState.isBlingTransferInitiated,
-                        ),
-                      ),
-              ),
-        appBar: MainAppBar(
-          title: widget.title,
-          context: context,
-          flexibleSpace: BlurredSurface.fromStyle(effectiveStyle?.appBarBlurredSurface),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(ContactsSearchRow.height),
-            child: BlocBuilder<ContactsBloc, ContactsState>(
-              buildWhen: (previous, current) =>
-                  previous.sourceType != current.sourceType || previous.favorites != current.favorites,
-              builder: (context, state) {
-                final selection = _shown(state);
-
-                return ContactsSearchRow(
+            // Both branches carry a key of their own, and the key now reaches
+            // the scaffold itself: the slot used to hold one keyless builder
+            // for both, which is how the scaffold saw no change and skipped
+            // the animation that brings the button in.
+            floatingActionButton: !widget.selections.offersFavorites
+                ? null
+                : !showingFavorites
+                ? const SizedBox.shrink(key: ValueKey('contacts-no-reorder'))
+                : BlocBuilder<CallBloc, CallState>(
+                    key: const ValueKey('contacts-reorder'),
+                    buildWhen: (previous, current) =>
+                        previous.isBlingTransferInitiated != current.isBlingTransferInitiated,
+                    // A transfer turns every row into a destination to pick, and
+                    // the bar announcing it takes the bottom of the screen.
+                    builder: (context, callState) => FavoritesReorderButton(
+                      controller: _reorder,
+                      identifier: contactsFavoritesReorderId,
+                      bottomPadding: mediaQueryData.padding.bottom,
+                      hidden: callState.isBlingTransferInitiated,
+                    ),
+                  ),
+            appBar: MainAppBar(
+              title: widget.title,
+              context: context,
+              flexibleSpace: BlurredSurface.fromStyle(effectiveStyle?.appBarBlurredSurface),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(ContactsSearchRow.height),
+                child: ContactsSearchRow(
                   inset: titleInset,
                   // Half the gap above, half below: the row is the whole
                   // header here, and its controls would otherwise sit against
@@ -157,82 +159,72 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
                   searching: _searching,
                   // The favourites section has never offered a search, and a
                   // box that takes text and changes nothing is worse than none.
-                  searchable: selection is! ContactsFavoritesSelection,
+                  searchable: !showingFavorites,
                   onSearchOpened: () => setState(() => _searching = true),
                   onSearchClosed: () => setState(() => _searching = false),
                   // With one list there is nothing to pick, so the search box
                   // takes the whole line, exactly as on the tabbed screen.
                   leading: widget.selections.length <= 1
                       ? null
-                      : ContactsSourcePicker(
-                          selections: widget.selections,
-                          selected: selection,
-                          onSelected: _onSelected,
-                        ),
-                );
-              },
+                      : ContactsSourcePicker(selections: widget.selections, selected: shown, onSelected: _onSelected),
+                ),
+              ),
             ),
-          ),
-        ),
-        // No inset of its own: the body runs behind the bar, and Scaffold
-        // already hands it a MediaQuery whose top padding is the bar plus the
-        // status bar. A list with no padding of its own takes that figure, and
-        // so does the refresh indicator. Computing it here a second time is
-        // what let the two disagree - it read kToolbarHeight where MainAppBar
-        // is built from kMinInteractiveDimension, eight points apart.
-        //
-        // Favourites are not this screen's list narrowed down - they are the
-        // favourites section's own list, drawn by the widget that section
-        // draws it with. Deriving them a second time from the contacts table
-        // is what made two answers to one question, and they disagree the
-        // moment either side changes.
-        //
-        // Both are kept alive and only one is shown, because each is watched
-        // by a bloc of its own: swapped in and out instead, every tap of the
-        // control would tear a list down, build the other from nothing and
-        // flash a spinner where a list already stood.
-        body: BlocBuilder<ContactsBloc, ContactsState>(
-          buildWhen: (previous, current) =>
-              previous.sourceType != current.sourceType || previous.favorites != current.favorites,
-          builder: (context, state) {
+            // No inset of its own: the body runs behind the bar, and Scaffold
+            // already hands it a MediaQuery whose top padding is the bar plus
+            // the status bar. A list with no padding of its own takes that
+            // figure, and so does the refresh indicator. Computing it here a
+            // second time is what let the two disagree - it read kToolbarHeight
+            // where MainAppBar is built from kMinInteractiveDimension, eight
+            // points apart.
+            //
+            // Favourites are not this screen's list narrowed down - they are
+            // the favourites section's own list, drawn by the widget that
+            // section draws it with. Deriving them a second time from the
+            // contacts table is what made two answers to one question, and they
+            // disagree the moment either side changes.
+            //
+            // Both are kept alive and only one is shown, because each is
+            // watched by a bloc of its own: swapped in and out instead, every
+            // tap of the control would tear a list down, build the other from
+            // nothing and flash a spinner where a list already stood.
+            //
             // A tab can be configured with nothing to show at all.
-            if (widget.selections.isEmpty) return const SizedBox.shrink();
-
-            final shown = _shown(state);
-
-            // A slot per list, not one per kind of list. Sharing a slot
-            // between the address books tears one down and builds the other
-            // from nothing whenever someone changes book: a spinner where a
-            // list already stood, and the place they had in it lost.
-            return IndexedStack(
-              index: widget.selections.indexOf(shown).clamp(0, widget.selections.length - 1),
-              sizing: StackFit.expand,
-              children: [
-                for (final selection in widget.selections)
-                  switch (selection) {
-                    ContactsSourceSelection(:final sourceType) => widget.sourceTypeWidgetBuilder(
-                      context,
-                      sourceType,
-                      markFavorites: true,
-                    ),
-                    // Listened to here as well as by the button: the two sit
-                    // in different parts of the tree, and a button that
-                    // changes its icon while the rows stay put is the whole
-                    // thing not working.
-                    ContactsFavoritesSelection() => ListenableBuilder(
-                      listenable: _reorder,
-                      builder: (context, _) => widget.favoritesWidgetBuilder(
-                        context,
-                        reorderMode: _reorder.active,
-                        onReorderStart: _reorder.dragStarted,
-                        onReorderEnd: _reorder.dragEnded,
-                      ),
-                    ),
-                  },
-              ],
-            );
-          },
-        ),
+            body: widget.selections.isEmpty
+                ? const SizedBox.shrink()
+                // A slot per list, not one per kind of list. Sharing a slot
+                // between the address books tears one down and builds the other
+                // from nothing whenever someone changes book: a spinner where a
+                // list already stood, and the place they had in it lost.
+                : IndexedStack(
+                    index: widget.selections.indexOf(shown).clamp(0, widget.selections.length - 1),
+                    sizing: StackFit.expand,
+                    children: [
+                      for (final selection in widget.selections)
+                        switch (selection) {
+                          ContactsSourceSelection(:final sourceType) => widget.sourceTypeWidgetBuilder(
+                            context,
+                            sourceType,
+                            markFavorites: true,
+                          ),
+                          // Listened to here as well as by the button: the two
+                          // sit in different parts of the tree, and a button
+                          // that changes its icon while the rows stay put is
+                          // the whole thing not working.
+                          ContactsFavoritesSelection() => ListenableBuilder(
+                            listenable: _reorder,
+                            builder: (context, _) => widget.favoritesWidgetBuilder(
+                              context,
+                              reorderMode: _reorder.active,
+                              onReorderStart: _reorder.dragStarted,
+                              onReorderEnd: _reorder.dragEnded,
+                            ),
+                          ),
+                        },
+                    ],
+                  ),
+          );
+        },
       ),
     );
   }
