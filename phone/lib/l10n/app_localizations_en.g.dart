@@ -3172,6 +3172,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Label_forwardChoosing => 'Choose who to forward to';
 
   @override
+  String voicemail_Label_forwardedBy(String name) {
+    return 'Forwarded by $name';
+  }
+
+  @override
   String get voicemail_Label_markAsHeard => 'Mark as heard';
 
   @override
