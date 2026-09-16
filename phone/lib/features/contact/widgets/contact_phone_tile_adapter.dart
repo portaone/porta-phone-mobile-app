@@ -20,7 +20,10 @@ class ContactPhoneTileAdapter extends StatelessWidget {
     required this.enableTileTransfer,
     required this.enableTileCallLog,
     required this.hasActiveCall,
-    required this.isBlingTransferInitiated,
+    required this.isPickingDestination,
+    required this.onPickPressed,
+    required this.pickLabel,
+    required this.pickIcon,
     required this.onFavoriteChanged,
     required this.onAudioPressed,
     required this.onVideoPressed,
@@ -55,7 +58,24 @@ class ContactPhoneTileAdapter extends StatelessWidget {
   final bool enableTileTransfer;
   final bool enableTileCallLog;
   final bool hasActiveCall;
-  final bool isBlingTransferInitiated;
+
+  /// Whether a choice is being made at all, which is not the same as this row
+  /// being an answer to it.
+  ///
+  /// While one is, the row stops offering to call, to start a video call and
+  /// to hand a call over - those act on a number the person is not here to
+  /// act on - whether or not this particular number can be chosen.
+  final bool isPickingDestination;
+
+  /// Offers this number as the answer, and is null when the purpose will not
+  /// take it. A number it refuses leaves the row visible and inert.
+  final VoidCallback? onPickPressed;
+
+  /// What that offer is called, which belongs to whatever is asking.
+  final String? pickLabel;
+
+  /// The mark it carries, likewise.
+  final IconData? pickIcon;
 
   final void Function(bool) onFavoriteChanged;
   final VoidCallback onAudioPressed;
@@ -68,11 +88,19 @@ class ContactPhoneTileAdapter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // While a choice is being made the ordinary actions are withdrawn, the way
+    // the lists withdraw theirs. Left in place they offer to call somebody the
+    // person came here to choose, and on a row the purpose refuses they were
+    // the only thing on offer - which is how a refused row still ended up
+    // acting.
+    final picking = isPickingDestination;
     final favoriteCallback = enableTileFavorite ? onFavoriteChanged : null;
-    final audioCallback = enableTileVoiceCall ? onAudioPressed : null;
-    final videoCallback = enableTileVideoCall ? onVideoPressed : null;
-    final transferCallback = enableTileTransfer && hasActiveCall ? onTransferPressed : null;
-    final initiatedTransferCallback = enableTileTransfer && isBlingTransferInitiated ? onTransferPressed : null;
+    final audioCallback = !picking && enableTileVoiceCall ? onAudioPressed : null;
+    final videoCallback = !picking && enableTileVideoCall ? onVideoPressed : null;
+    final transferCallback = !picking && enableTileTransfer && hasActiveCall ? onTransferPressed : null;
+    // Not gated on the transfer configuration: that is permission to hand a
+    // call over, not permission to answer whatever is being asked.
+    final pickCallback = onPickPressed;
     final smsCallback = isSmsEnabled ? onSmsPressed : null;
     final messageCallback = isMessageEnabled ? onMessagePressed : null;
     final callLogCallback = enableTileCallLog ? onCallLogPressed : null;
@@ -90,7 +118,9 @@ class ContactPhoneTileAdapter extends StatelessWidget {
         onAudioPressed: audioCallback,
         onVideoPressed: videoCallback,
         onTransferPressed: transferCallback,
-        onInitiatedTransferPressed: initiatedTransferCallback,
+        onPickPressed: pickCallback,
+        pickLabel: pickLabel,
+        pickIcon: pickIcon,
         onSendSmsPressed: smsCallback,
         onMessagePressed: messageCallback,
         onCallLogPressed: callLogCallback,

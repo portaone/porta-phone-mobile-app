@@ -16,6 +16,8 @@ import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/features/keypad/keypad.dart';
 import 'package:webtrit_phone/features/keypad/view/keypad_view.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.dart';
+import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 class MockContactResolver extends Mock implements ContactResolver {}
 
@@ -56,7 +58,10 @@ class KeypadHarness {
     );
   }
 
-  Widget build() {
+  /// [purpose] puts the pad inside a choice being made; [transferEnabled] is
+  /// the call-transfer configuration, which must not decide whether a choice
+  /// can be answered.
+  Widget build({DestinationPickPurpose? purpose, bool transferEnabled = false}) {
     return MaterialApp(
       locale: const Locale('en'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -70,7 +75,10 @@ class KeypadHarness {
               BlocProvider<CallBloc>.value(value: callBloc),
               BlocProvider<CallRoutingCubit>.value(value: routingCubit),
             ],
-            child: const KeypadView(videoEnabled: true, transferEnabled: false, style: null),
+            child: DestinationPicking(
+              purpose: purpose,
+              child: KeypadView(videoEnabled: true, transferEnabled: transferEnabled, style: null),
+            ),
           ),
         ),
       ),

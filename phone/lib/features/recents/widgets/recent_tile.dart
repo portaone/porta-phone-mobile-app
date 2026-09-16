@@ -18,6 +18,7 @@ class RecentTile extends StatelessWidget {
     this.onTap,
     this.expanded = false,
     this.onDialPressed,
+    this.pick,
     this.onAudioCallPressed,
     this.onVideoCallPressed,
     this.onTransferPressed,
@@ -36,6 +37,9 @@ class RecentTile extends StatelessWidget {
   final Function()? onTap;
   final bool expanded;
   final Function()? onDialPressed;
+
+  /// What this row offers while somebody is being chosen; see [TilePick].
+  final TilePick? pick;
   final Function()? onAudioCallPressed;
   final Function()? onVideoCallPressed;
   final Function()? onTransferPressed;
@@ -104,6 +108,7 @@ class RecentTile extends StatelessWidget {
       onTap: onTap,
       expanded: expanded,
       onDialPressed: onDialPressed,
+      pick: pick,
       dialIcon: (callLogEntry.video && videoEnabled) ? Icons.videocam : Icons.call,
       dialIsVideo: callLogEntry.video && videoEnabled,
       callNumbers: callNumbers,

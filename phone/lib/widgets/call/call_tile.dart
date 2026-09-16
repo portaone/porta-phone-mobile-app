@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 class TileMenuButton extends StatelessWidget {
@@ -107,6 +108,7 @@ class CallTile extends StatefulWidget {
     this.onTap,
     this.expanded = false,
     this.onDialPressed,
+    this.pick,
     this.dialIcon,
     this.dialIsVideo = false,
     this.gesturesEnabled = true,
@@ -144,6 +146,16 @@ class CallTile extends StatefulWidget {
   final VoidCallback? onTap;
   final bool expanded;
   final VoidCallback? onDialPressed;
+
+  /// What this row offers while somebody is being chosen, or null when nobody
+  /// is.
+  ///
+  /// While one is, this replaces the trailing control entirely: not the dial
+  /// shortcut, and not the menu behind it either. Left in place that menu
+  /// still offered to call, to message and to hand a call over - on a row the
+  /// person is here to choose, and on one the purpose refuses it was the only
+  /// thing left to press.
+  final TilePick? pick;
   final IconData? dialIcon;
 
   /// Whether the trailing dial shortcut places a video call; drives both the
@@ -332,7 +344,18 @@ class _CallTileState extends State<CallTile> {
                       ),
                     const SizedBox(width: 4),
                     if (widget.gesturesEnabled)
-                      if (widget.onDialPressed != null)
+                      if (widget.pick != null)
+                        ?(widget.pick!.isAnswer
+                            ? SemanticAction(
+                                label: widget.pick!.label,
+                                identifier: callTileDialId,
+                                child: IconButton(
+                                  onPressed: widget.pick!.onPressed,
+                                  icon: Icon(widget.pick!.icon, color: colorScheme.primary),
+                                ),
+                              )
+                            : null)
+                      else if (widget.onDialPressed != null)
                         SemanticAction(
                           label: widget.dialIsVideo
                               ? context.l10n.callTile_SemanticsLabel_videoCall(widget.name)

@@ -26,7 +26,7 @@ void main() {
     WidgetTester tester, {
     required List<BottomMenuTab> tabs,
     required int currentIndex,
-    bool transferInProgress = false,
+    DestinationPickPurpose? purpose,
   }) {
     return tester.pumpWidget(
       MaterialApp(
@@ -37,7 +37,7 @@ void main() {
           body: const Scaffold(body: SizedBox.expand()),
           tabs: tabs,
           currentIndex: currentIndex,
-          transferInProgress: transferInProgress,
+          pickPurpose: purpose,
         ),
       ),
     );
@@ -60,7 +60,7 @@ void main() {
     testWidgets('is shown on a section that has a destination to offer', (tester) async {
       // The keypad included: a number can be dialled there and handed over,
       // and until now it was the one such section that never said so.
-      await pumpShell(tester, tabs: tabs, currentIndex: 0, transferInProgress: true);
+      await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose());
 
       expect(tabs[0].flavor, MainFlavor.keypad);
       expect(find.byType(TransferBottomNavigationBar), findsOneWidget);
@@ -69,7 +69,7 @@ void main() {
     testWidgets('is not shown on a section that has none', (tester) async {
       // A page of conversations has nobody to hand the call to, so announcing
       // the choice there offers something that cannot be done.
-      await pumpShell(tester, tabs: const [...tabs, messagingTab], currentIndex: 2, transferInProgress: true);
+      await pumpShell(tester, tabs: const [...tabs, messagingTab], currentIndex: 2, purpose: _FakePurpose());
 
       expect(find.byType(TransferBottomNavigationBar), findsNothing);
     });
@@ -77,7 +77,7 @@ void main() {
     testWidgets('sits above the tab bar rather than behind it', (tester) async {
       // The whole reason it moved here: drawn by a section, it landed beneath
       // the bar this screen floats over the page, and nobody ever saw it.
-      await pumpShell(tester, tabs: tabs, currentIndex: 0, transferInProgress: true);
+      await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose());
 
       final banner = tester.getRect(find.byType(TransferBottomNavigationBar));
       final bar = tester.getRect(find.byType(MainBottomNavigationBar));
@@ -89,7 +89,7 @@ void main() {
       // A Column gives a child only the width it asks for, and the banner is a
       // box around a line of text - left alone it shrinks to the words and
       // centres, reading as a label rather than as the state of the screen.
-      await pumpShell(tester, tabs: tabs, currentIndex: 0, transferInProgress: true);
+      await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose());
 
       final banner = tester.getRect(find.byType(TransferBottomNavigationBar));
       final bar = tester.getRect(find.byType(MainBottomNavigationBar));
@@ -98,7 +98,7 @@ void main() {
     });
 
     testWidgets('is frosted like the bar, not a solid strip pasted over it', (tester) async {
-      await pumpShell(tester, tabs: tabs, currentIndex: 0, transferInProgress: true);
+      await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose());
 
       // Under the same backdrop filter as the bar, so both sample one backdrop
       // and there is no seam between them.
@@ -123,17 +123,20 @@ void main() {
       // that simply appears; without this, someone listening picks a
       // destination with no idea a transfer is under way.
       final handle = tester.ensureSemantics();
-      await pumpShell(tester, tabs: tabs, currentIndex: 0, transferInProgress: true);
+      await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose());
 
+      // The wording comes from whatever is asking, not from this screen: the
+      // fake here announces something no string file contains, and it is what
+      // the banner reads out.
       expect(
         tester.getSemantics(find.byType(TransferBottomNavigationBar)),
-        matchesSemantics(isLiveRegion: true, label: 'Performing blind transfer'),
+        matchesSemantics(isLiveRegion: true, label: 'Pick somebody'),
       );
       handle.dispose();
     });
 
     testWidgets('is still said where a one-section menu draws no bar', (tester) async {
-      await pumpShell(tester, tabs: [tabs.first], currentIndex: 0, transferInProgress: true);
+      await pumpShell(tester, tabs: [tabs.first], currentIndex: 0, purpose: _FakePurpose());
 
       expect(find.byType(MainBottomNavigationBar), findsNothing);
       expect(find.byType(TransferBottomNavigationBar), findsOneWidget);
@@ -190,4 +193,26 @@ void main() {
 
     expect(find.byType(MainBottomNavigationBar), findsOneWidget);
   });
+}
+
+/// A purpose that offers everything except a page of conversations, which is
+/// what the real ones do and all this screen needs to know about them.
+class _FakePurpose implements DestinationPickPurpose {
+  @override
+  String get announcement => 'Pick somebody';
+
+  @override
+  bool offeredBy(MainFlavor flavor) => flavor != MainFlavor.messaging;
+
+  @override
+  bool accepts(DestinationCandidate candidate) => true;
+
+  @override
+  IconData get pickIcon => Icons.phone_forwarded;
+
+  @override
+  String pickLabel(DestinationCandidate candidate) => 'Transfer current call to ${candidate.number}';
+
+  @override
+  void submit(DestinationCandidate candidate) {}
 }
