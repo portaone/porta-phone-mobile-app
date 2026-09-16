@@ -3120,6 +3120,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Filter_unheard => 'New';
 
   @override
+  String voicemail_Dialog_emptyTrashContent(int count) {
+    return 'All $count messages in the trash will be removed and the space they use will be freed.';
+  }
+
+  @override
+  String get voicemail_Dialog_emptyTrashTitle => 'Empty trash?';
+
+  @override
   String get voicemail_Label_call => 'Call';
 
   @override
@@ -3146,6 +3154,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voicemail_Label_emptyTrash => 'Trash is empty';
+
+  @override
+  String get voicemail_Label_emptyTrashAction => 'Empty trash';
 
   @override
   String get voicemail_Label_emptyTrashHint =>

@@ -1470,6 +1470,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Filter_saved' => voicemail_Filter_saved,
       'voicemail_Filter_trash' => voicemail_Filter_trash,
       'voicemail_Filter_unheard' => voicemail_Filter_unheard,
+      'voicemail_Dialog_emptyTrashTitle' => voicemail_Dialog_emptyTrashTitle,
       'voicemail_Label_call' => voicemail_Label_call,
       'voicemail_Label_delete' => voicemail_Label_delete,
       'voicemail_Label_deleteAll' => voicemail_Label_deleteAll,
@@ -1480,6 +1481,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Label_emptySaved' => voicemail_Label_emptySaved,
       'voicemail_Label_emptySavedHint' => voicemail_Label_emptySavedHint,
       'voicemail_Label_emptyTrash' => voicemail_Label_emptyTrash,
+      'voicemail_Label_emptyTrashAction' => voicemail_Label_emptyTrashAction,
       'voicemail_Label_emptyTrashHint' => voicemail_Label_emptyTrashHint,
       'voicemail_Label_markAsHeard' => voicemail_Label_markAsHeard,
       'voicemail_Label_markAsNew' => voicemail_Label_markAsNew,
@@ -2113,6 +2115,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final Object appName] => user_agreement_description(appName),
         _ => throw ArgumentError(
           'user_agreement_description requires 1 arguments',
+        ),
+      },
+      'voicemail_Dialog_emptyTrashContent' => switch (args) {
+        [final int count] => voicemail_Dialog_emptyTrashContent(count),
+        _ => throw ArgumentError(
+          'voicemail_Dialog_emptyTrashContent requires 1 arguments',
         ),
       },
       'voicemail_Label_unheardCount' => switch (args) {

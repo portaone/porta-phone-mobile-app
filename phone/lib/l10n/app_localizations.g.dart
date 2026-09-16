@@ -5719,6 +5719,18 @@ abstract class AppLocalizations {
   /// **'New'**
   String get voicemail_Filter_unheard;
 
+  /// Warns how much emptying the trash removes and that it frees that space.
+  ///
+  /// In en, this message translates to:
+  /// **'All {count} messages in the trash will be removed and the space they use will be freed.'**
+  String voicemail_Dialog_emptyTrashContent(int count);
+
+  /// No description provided for @voicemail_Dialog_emptyTrashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty trash?'**
+  String get voicemail_Dialog_emptyTrashTitle;
+
   /// No description provided for @voicemail_Label_call.
   ///
   /// In en, this message translates to:
@@ -5772,6 +5784,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trash is empty'**
   String get voicemail_Label_emptyTrash;
+
+  /// Toolbar action that deletes everything in the trash for good.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty trash'**
+  String get voicemail_Label_emptyTrashAction;
 
   /// Explains, on an empty trash, what keeping messages there would cost.
   ///

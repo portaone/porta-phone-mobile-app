@@ -2654,6 +2654,17 @@
   "@voicemail_Filter_unheard": {
     "description": "Voicemail filter showing only the messages not yet heard."
   },
+  "voicemail_Dialog_emptyTrashContent": "{count, plural, one{Il messaggio nel cestino sara rimosso e lo spazio che occupa sara liberato.} other{Tutti i {count} messaggi nel cestino saranno rimossi e lo spazio che occupano sara liberato.}}",
+  "@voicemail_Dialog_emptyTrashContent": {
+    "description": "Warns how much emptying the trash removes and that it frees that space.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voicemail_Dialog_emptyTrashTitle": "Svuotare il cestino?",
+  "@voicemail_Dialog_emptyTrashTitle": {},
   "voicemail_Label_call": "Chiama",
   "@voicemail_Label_call": {},
   "voicemail_Label_delete": "Elimina",
@@ -2676,6 +2687,10 @@
   },
   "voicemail_Label_emptyTrash": "Il cestino e vuoto",
   "@voicemail_Label_emptyTrash": {},
+  "voicemail_Label_emptyTrashAction": "Svuota cestino",
+  "@voicemail_Label_emptyTrashAction": {
+    "description": "Toolbar action that deletes everything in the trash for good."
+  },
   "voicemail_Label_emptyTrashHint": "I messaggi che sposti qui occupano ancora spazio nella casella finche il cestino non viene svuotato.",
   "@voicemail_Label_emptyTrashHint": {
     "description": "Explains, on an empty trash, what keeping messages there would cost."

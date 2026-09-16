@@ -213,6 +213,24 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     }
   }
 
+  /// Deletes everything in the trash for good.
+  ///
+  /// Along with deleting one message permanently, the only thing that frees
+  /// the space the trash occupies.
+  Future<void> emptyVoicemailTrash() async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
+      await _repository.emptyVoicemailTrash();
+      // Re-read rather than assume empty: the backend deletes what it can and
+      // a partial pass leaves the rest, which the screen has to show.
+      await fetchTrashedVoicemails();
+    } catch (e, s) {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      _logger.severe('Error emptying the voicemail trash: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.emptyVoicemailTrash');
+    }
+  }
+
   void toggleSeenStatus(Voicemail voicemail) async {
     try {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));

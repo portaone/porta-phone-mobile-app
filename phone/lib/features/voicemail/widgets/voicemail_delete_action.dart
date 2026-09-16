@@ -7,8 +7,12 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
 
-/// The header's delete control: what is picked, or - where the header offers it
-/// - the whole mailbox.
+/// The header's destructive control: what is picked, the trash, or - where the
+/// header offers it - the whole mailbox.
+///
+/// Which of the three it is depends on where the screen is. That is deliberate:
+/// one bulk destructive action per screen is enough, and two of them side by
+/// side is how the wrong one gets pressed.
 class VoicemailDeleteAction extends StatefulWidget {
   const VoicemailDeleteAction({super.key, required this.offersDeleteAll});
 
@@ -17,6 +21,10 @@ class VoicemailDeleteAction extends StatefulWidget {
   /// Emptying the mailbox belongs where the feature is managed, so a header
   /// that does not offer it shows this control only while something is picked:
   /// with nothing picked it would have nothing to do.
+  ///
+  /// Emptying the TRASH is offered by both headers regardless. It is where a
+  /// person goes to get rid of things, so refusing to finish the job in one of
+  /// the two places the trash is shown would be arbitrary.
   final bool offersDeleteAll;
 
   @override
@@ -29,7 +37,16 @@ class _VoicemailDeleteActionState extends State<VoicemailDeleteAction> {
     return BlocBuilder<VoicemailCubit, VoicemailState>(
       builder: (context, state) {
         final selecting = state.isMultipleVoicemailsSelection;
-        if (!widget.offersDeleteAll && !selecting) return const SizedBox.shrink();
+
+        if (!selecting && state.isShowingTrash) {
+          return _EmptyTrashAction(count: state.trashedItems.length);
+        }
+
+        // Where there is a trash, deleting every message is not offered. The
+        // trash already carries the one bulk action that ends in messages being
+        // gone, and multi-select covers anything narrower; a second sweep next
+        // to it would differ only in which of them can be taken back.
+        if (!selecting && (!widget.offersDeleteAll || state.trashSupported)) return const SizedBox.shrink();
 
         // The button names itself, so while selecting it says how much it would
         // delete as part of that name - a count of its own would become a
@@ -45,7 +62,9 @@ class _VoicemailDeleteActionState extends State<VoicemailDeleteAction> {
             children: [
               IconButton(
                 icon: const Icon(Icons.delete),
-                onPressed: state.items.isNotEmpty ? () => selecting ? _onDeleteSelected() : _onDeleteAll() : null,
+                onPressed: state.visibleItems.isNotEmpty
+                    ? () => selecting ? _onDeleteSelected() : _onDeleteAll()
+                    : null,
               ),
               if (selecting)
                 CountBadge(
@@ -88,6 +107,47 @@ class _VoicemailDeleteActionState extends State<VoicemailDeleteAction> {
 
     if (confirmed && mounted) {
       context.read<VoicemailCubit>().removeSelectedVoicemails();
+    }
+  }
+}
+
+/// Finishes what the trash started, for everything in it at once.
+class _EmptyTrashAction extends StatefulWidget {
+  const _EmptyTrashAction({required this.count});
+
+  final int count;
+
+  @override
+  State<_EmptyTrashAction> createState() => _EmptyTrashActionState();
+}
+
+class _EmptyTrashActionState extends State<_EmptyTrashAction> {
+  @override
+  Widget build(BuildContext context) {
+    return SemanticAction(
+      label: context.l10n.voicemail_Label_emptyTrashAction,
+      child: IconButton(
+        icon: const Icon(Icons.delete_sweep),
+        // Nothing to empty is not an error worth a dialog; the control simply
+        // has nothing to do, which is what a disabled button says.
+        onPressed: widget.count > 0 ? _onEmptyTrash : null,
+      ),
+    );
+  }
+
+  void _onEmptyTrash() async {
+    final confirmed =
+        (await ConfirmDialog.showDangerous(
+          context,
+          title: context.l10n.voicemail_Dialog_emptyTrashTitle,
+          // The count is in the question because it is the part a person
+          // cannot check once the dialog is covering the list.
+          content: context.l10n.voicemail_Dialog_emptyTrashContent(widget.count),
+        )) ??
+        false;
+
+    if (confirmed && mounted) {
+      context.read<VoicemailCubit>().emptyVoicemailTrash();
     }
   }
 }
