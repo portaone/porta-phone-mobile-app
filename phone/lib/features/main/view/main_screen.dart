@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:webtrit_phone/features/main/extensions/extensions.dart';
 import 'package:webtrit_phone/features/main/widgets/widgets.dart';
-import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -14,7 +12,7 @@ class MainScreen extends StatelessWidget {
     required this.currentIndex,
     this.onTabSelected,
     this.decorateTabIcon,
-    this.transferInProgress = false,
+    this.pickPurpose,
   }) : super(key: key ?? const ValueKey<String>('MainScreen'));
 
   final Widget body;
@@ -33,12 +31,13 @@ class MainScreen extends StatelessWidget {
   /// Null draws icons bare; see [TabIconDecorator].
   final TabIconDecorator? decorateTabIcon;
 
-  /// Whether a call is waiting for somewhere to be transferred to.
+  /// What somebody is being sent to the sections to choose, or null when
+  /// nothing is.
   ///
   /// Said here rather than by each section, because the bottom of the screen
   /// belongs to this screen: a section drawing its own banner draws it beneath
   /// the bar this one floats over, where nobody sees it.
-  final bool transferInProgress;
+  final DestinationPickPurpose? pickPurpose;
 
   @override
   Widget build(BuildContext context) {
@@ -47,12 +46,13 @@ class MainScreen extends StatelessWidget {
     // there. Looked up softly for the same one-frame window the host clamps
     // for: a configuration reload can shrink the tab set while the index still
     // points past it.
-    final announcesTransfer =
-        transferInProgress && (tabs.elementAtOrNull(currentIndex)?.flavor.offersTransferDestination ?? false);
+    final flavor = tabs.elementAtOrNull(currentIndex)?.flavor;
+    final announces = pickPurpose != null && flavor != null && pickPurpose!.offeredBy(flavor);
 
-    final transferBanner = announcesTransfer
-        ? TransferBottomNavigationBar(context.l10n.main_Text_blindTransferInitiated)
-        : null;
+    // The wording belongs to whatever is doing the asking, not to this screen:
+    // the bar is the same bar whether a call is being handed on or a message
+    // is being passed to a colleague.
+    final transferBanner = announces ? TransferBottomNavigationBar(pickPurpose!.announcement) : null;
 
     // The screen is the one home of the bar-visibility rule for every host,
     // the previews included: a menu of one section shows no bar - there is

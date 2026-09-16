@@ -11,6 +11,7 @@ import 'package:webtrit_phone/features/contact/contact.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
 class MockContactBloc extends MockBloc<ContactEvent, ContactState> implements ContactBloc {}
@@ -66,7 +67,12 @@ class ContactScreenHarness {
 
   /// Puts a call on the line with a blind transfer already started, which is
   /// what turns the call buttons of a row into the transfer shortcut.
+  /// Whether the card is being shown to somebody who is choosing a
+  /// destination, which is what turns its rows into the choice.
+  DestinationPickPurpose? pickPurpose;
+
   void withBlindTransferUnderWay() {
+    pickPurpose = _AnyNumberPurpose();
     final call = ActiveCall(
       callId: 'call-1',
       direction: CallDirection.outgoing,
@@ -114,21 +120,24 @@ class ContactScreenHarness {
           ],
           child: CallControllerScope(
             controller: CallController(callBloc: callBloc),
-            child: PresenceViewParams(
-              hybridPresenceSupport: presenceViaSip || dialogsViaSip,
-              blfViaSipSupport: dialogsViaSip,
-              presenceViaSipSupport: presenceViaSip,
-              child: ContactScreen(
-                enableAppBarChat: true,
-                enableTileFavorite: true,
-                enableTileVoiceCall: true,
-                enableTileVideoCall: true,
-                enableTileSms: enableTileSms,
-                enableTileChat: true,
-                enableTileTransfer: enableTileTransfer,
-                enableTileCallLog: true,
-                enableTileEmail: enableTileEmail,
-                useCdrsForHistory: false,
+            child: DestinationPicking(
+              purpose: pickPurpose,
+              child: PresenceViewParams(
+                hybridPresenceSupport: presenceViaSip || dialogsViaSip,
+                blfViaSipSupport: dialogsViaSip,
+                presenceViaSipSupport: presenceViaSip,
+                child: ContactScreen(
+                  enableAppBarChat: true,
+                  enableTileFavorite: true,
+                  enableTileVoiceCall: true,
+                  enableTileVideoCall: true,
+                  enableTileSms: enableTileSms,
+                  enableTileChat: true,
+                  enableTileTransfer: enableTileTransfer,
+                  enableTileCallLog: true,
+                  enableTileEmail: enableTileEmail,
+                  useCdrsForHistory: false,
+                ),
               ),
             ),
           ),
@@ -137,4 +146,20 @@ class ContactScreenHarness {
     );
     await tester.pump();
   }
+}
+
+/// Stands in for whatever is asking. Any number will do, which is what handing
+/// a call on needs and the loosest a purpose can be.
+class _AnyNumberPurpose implements DestinationPickPurpose {
+  @override
+  String get announcement => 'Pick somebody';
+
+  @override
+  bool offeredBy(MainFlavor flavor) => true;
+
+  @override
+  bool accepts(DestinationCandidate candidate) => candidate.number != null;
+
+  @override
+  void submit(DestinationCandidate candidate) {}
 }
