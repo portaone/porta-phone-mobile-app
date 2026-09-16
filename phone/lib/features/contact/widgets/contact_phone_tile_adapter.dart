@@ -20,7 +20,7 @@ class ContactPhoneTileAdapter extends StatelessWidget {
     required this.enableTileTransfer,
     required this.enableTileCallLog,
     required this.hasActiveCall,
-    required this.isBlingTransferInitiated,
+    required this.isPickingDestination,
     required this.onFavoriteChanged,
     required this.onAudioPressed,
     required this.onVideoPressed,
@@ -55,7 +55,13 @@ class ContactPhoneTileAdapter extends StatelessWidget {
   final bool enableTileTransfer;
   final bool enableTileCallLog;
   final bool hasActiveCall;
-  final bool isBlingTransferInitiated;
+
+  /// Whether this number is what somebody is currently being asked to choose.
+  ///
+  /// The row then offers the choice in place of the call controls, which is
+  /// why it is a separate flag from [hasActiveCall]: one says a hand-off can
+  /// be started, the other that one is being finished.
+  final bool isPickingDestination;
 
   final void Function(bool) onFavoriteChanged;
   final VoidCallback onAudioPressed;
@@ -72,7 +78,7 @@ class ContactPhoneTileAdapter extends StatelessWidget {
     final audioCallback = enableTileVoiceCall ? onAudioPressed : null;
     final videoCallback = enableTileVideoCall ? onVideoPressed : null;
     final transferCallback = enableTileTransfer && hasActiveCall ? onTransferPressed : null;
-    final initiatedTransferCallback = enableTileTransfer && isBlingTransferInitiated ? onTransferPressed : null;
+    final initiatedTransferCallback = enableTileTransfer && isPickingDestination ? onTransferPressed : null;
     final smsCallback = isSmsEnabled ? onSmsPressed : null;
     final messageCallback = isMessageEnabled ? onMessagePressed : null;
     final callLogCallback = enableTileCallLog ? onCallLogPressed : null;

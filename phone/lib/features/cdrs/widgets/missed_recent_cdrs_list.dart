@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'cdr_tile.dart';
@@ -132,12 +133,11 @@ class _MissedRecentCdrsListState extends State<MissedRecentCdrsList> {
           builder: (context, userInfoState) {
             final userSmsNumbers = userInfoState.userInfo?.numbers.sms ?? [];
 
+            final purpose = context.pickPurpose;
+
             return BlocBuilder<CallBloc, CallState>(
-              buildWhen: (previous, current) =>
-                  previous.isBlingTransferInitiated != current.isBlingTransferInitiated ||
-                  previous.activeCalls != current.activeCalls,
+              buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
               builder: (context, callState) {
-                final transfer = callState.isBlingTransferInitiated;
                 final hasActiveCall = callState.activeCalls.isNotEmpty;
 
                 return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
@@ -174,18 +174,18 @@ class _MissedRecentCdrsListState extends State<MissedRecentCdrsList> {
                                   final contactSourceId = contact?.sourceId;
                                   final contactSmsNumbers = contact?.smsNumbers ?? [];
                                   final canSendSms = contactSmsNumbers.contains(participantNumber);
+                                  final candidate = DestinationCandidate(number: participantNumber, contact: contact);
+                                  final picks = purpose != null && purpose.accepts(candidate);
 
                                   return CdrTile(
                                     cdr: cdr,
                                     contact: contact,
                                     callNumbers: callNumbers,
-                                    onTap: transfer
-                                        ? (participantNumber != null
-                                              ? () => submitTransfer(destination: participantNumber)
-                                              : null)
+                                    onTap: purpose != null
+                                        ? (picks ? () => pickDestination(context, purpose, candidate) : null)
                                         : () => _toggleExpanded(cdr.callId),
-                                    expanded: !transfer && _expandedCallId == cdr.callId,
-                                    onDialPressed: !transfer && participantNumber != null
+                                    expanded: purpose == null && _expandedCallId == cdr.callId,
+                                    onDialPressed: purpose == null && participantNumber != null
                                         ? () => _callController.createCall(
                                             destination: participantNumber,
                                             displayName: contact?.maybeName,

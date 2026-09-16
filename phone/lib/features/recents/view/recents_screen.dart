@@ -191,12 +191,11 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                 builder: (context, userInfoState) {
                   final userSmsNumbers = userInfoState.userInfo?.numbers.sms ?? [];
 
+                  final purpose = context.pickPurpose;
+
                   return BlocBuilder<CallBloc, CallState>(
-                    buildWhen: (previous, current) =>
-                        previous.isBlingTransferInitiated != current.isBlingTransferInitiated ||
-                        previous.activeCalls != current.activeCalls,
+                    buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
                     builder: (context, callState) {
-                      final transfer = callState.isBlingTransferInitiated;
                       final hasActiveCall = callState.activeCalls.isNotEmpty;
 
                       return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
@@ -211,6 +210,11 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                               final contactSourceId = contact?.sourceId;
                               final contactSmsNumbers = contact?.smsNumbers ?? [];
                               final canSendSms = contactSmsNumbers.contains(callLogEntry.number);
+                              // A call-history row knows a number, and knows
+                              // the person behind it only when the address
+                              // book does.
+                              final candidate = DestinationCandidate(number: callLogEntry.number, contact: contact);
+                              final picks = purpose != null && purpose.accepts(candidate);
 
                               return SizedBox(
                                 key: ValueKey(recent),
@@ -219,11 +223,11 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                                   videoEnabled: widget.videoEnabled,
                                   callNumbers: callRoutingState?.allNumbers ?? [],
                                   dateFormat: context.read<RecentsBloc>().dateFormat,
-                                  onTap: transfer
-                                      ? () => submitTransfer(destination: callLogEntry.number)
+                                  onTap: purpose != null
+                                      ? (picks ? () => pickDestination(context, purpose, candidate) : null)
                                       : () => _toggleExpanded(callLogEntry.id),
-                                  expanded: !transfer && _expandedRecentId == callLogEntry.id,
-                                  onDialPressed: transfer
+                                  expanded: purpose == null && _expandedRecentId == callLogEntry.id,
+                                  onDialPressed: purpose != null
                                       ? null
                                       : () {
                                           _callController.createCall(

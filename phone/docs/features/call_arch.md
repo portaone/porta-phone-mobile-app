@@ -226,7 +226,10 @@ replaying the original offer/answer exchange.
 
 **Blind transfer** — `CallControlEvent.blindTransferInitiated` creates a new outgoing
 `ActiveCall` with status `outgoingCreatedFromRefer`, linked to the original call via `fromReferId`.
-The transfer target follows the normal outgoing flow from that status onward.
+The transfer target follows the normal outgoing flow from that status onward. Picking that target
+sends the user to the contacts, recents, favourites and keypad lists; what those lists do while a
+choice is being made, and how another feature can ask for one, is
+[`../destination_picking.md`](../destination_picking.md).
 
 **iOS audio reset** — on the first and last call, the BLoC forces audio to earpiece via
 `AppleNativeAudioManagement` to work around a platform bug where speaker stays active across

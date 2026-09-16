@@ -9,9 +9,11 @@ import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/features/voicemail/widgets/voicemail_flavor_overlay.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/utils.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 /// Every badge the bottom menu can carry, each drawn by the feature it belongs
 /// to and silent where its section is not configured or its state not provided.
@@ -74,12 +76,24 @@ class _MainScreenPageState extends State<MainScreenPage> {
         // Tabs are guaranteed to be non-empty due to validation during the bootstrap phase.
         // The screen itself decides whether a bar is drawn at all - the
         // single-section rule lives there, shared with the previews.
+        // Built here rather than inside the screen: the screen is also built
+        // by the previews, which have nothing to be choosing for. This is the
+        // one place that decides what is being picked, which is what keeps the
+        // lists below from each knowing about the features that ask.
+        final pickPurpose = context.select<CallBloc, bool>((bloc) => bloc.state.isBlingTransferInitiated)
+            ? BlindTransferPurpose(
+                announcement: context.l10n.main_Text_blindTransferInitiated,
+                controller: CallControllerScope.of(context),
+              )
+            : null;
+
         return MainScreen(
-          body: child,
+          // Above the sections, so every list they build can ask whether a
+          // choice is being made without reaching into the feature that wants
+          // one.
+          body: DestinationPicking(purpose: pickPurpose, child: child),
           tabs: tabs,
-          // Read here rather than inside the screen: the screen is also built
-          // by the previews, which have no call to be transferring.
-          transferInProgress: context.select<CallBloc, bool>((bloc) => bloc.state.isBlingTransferInitiated),
+          pickPurpose: pickPurpose,
           // The shell above provides the unread state this reads.
           decorateTabIcon: _decorateTabIcon,
           // Be aware to use activeIndex from tabsRouter, not from bottomMenuManager

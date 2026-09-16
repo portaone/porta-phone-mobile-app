@@ -80,14 +80,13 @@ class _ContactScreenState extends State<ContactScreen> {
             bool canSendSmsTo(String number) =>
                 widget.enableTileSms && userSmsNumbers.isNotEmpty && contactSmsNumbers.contains(number);
 
+            final purpose = context.pickPurpose;
+
             return BlocBuilder<CallBloc, CallState>(
-              buildWhen: (previous, current) =>
-                  previous.isBlingTransferInitiated != current.isBlingTransferInitiated ||
-                  previous.activeCalls != current.activeCalls,
+              buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
               builder: (context, callState) {
                 final email = contact.emails.firstOrNull?.address;
                 final hasActiveCall = callState.activeCalls.isNotEmpty;
-                final isBlingTransferInitiated = callState.isBlingTransferInitiated;
 
                 return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
                   builder: (context, callRoutingState) {
@@ -167,11 +166,13 @@ class _ContactScreenState extends State<ContactScreen> {
                                 enableTileTransfer: widget.enableTileTransfer,
                                 enableTileCallLog: widget.enableTileCallLog,
                                 hasActiveCall: hasActiveCall,
-                                isBlingTransferInitiated: isBlingTransferInitiated,
+                                isPickingDestination:
+                                    purpose != null &&
+                                    purpose.accepts(DestinationCandidate(number: entry.phone.number, contact: contact)),
                                 onFavoriteChanged: (isFavorite) => _onFavoriteChanged(isFavorite, entry.phone, contact),
                                 onAudioPressed: () => _onAudioPressed(entry.phone, contact),
                                 onVideoPressed: () => _onVideoPressed(entry.phone, contact),
-                                onTransferPressed: () => _onTransferPressed(entry.phone),
+                                onTransferPressed: () => _onTransferPressed(entry.phone, contact),
                                 onSmsPressed: () => _onSendSmsPressed(entry.phone, contactSourceId, userSmsNumbers),
                                 onCallLogPressed: () => _onCallLogPressed(entry.phone.number),
                                 onMessagePressed: () => _navigateToChatConversation(contact),
@@ -259,7 +260,15 @@ class _ContactScreenState extends State<ContactScreen> {
     _callController.createCall(destination: phone.number, displayName: contact.maybeName, video: true);
   }
 
-  void _onTransferPressed(ContactPhone phone) {
+  /// Finishes a choice where one is being made, and otherwise starts a
+  /// hand-off outright - the two the same row offers at different times.
+  void _onTransferPressed(ContactPhone phone, Contact contact) {
+    final purpose = context.pickPurpose;
+    if (purpose != null) {
+      pickDestination(context, purpose, DestinationCandidate(number: phone.number, contact: contact));
+      return;
+    }
+
     _callController.submitTransfer(phone.number);
     context.router.maybePop();
   }
