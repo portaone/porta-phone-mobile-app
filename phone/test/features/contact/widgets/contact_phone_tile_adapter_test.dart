@@ -28,7 +28,7 @@ void main() {
     bool enableTileTransfer = false,
     bool enableTileCallLog = false,
     bool hasActiveCall = false,
-    bool isBlingTransferInitiated = false,
+    bool isPickingDestination = false,
     void Function(bool)? onFavoriteChanged,
     VoidCallback? onAudioPressed,
     VoidCallback? onVideoPressed,
@@ -51,7 +51,7 @@ void main() {
       enableTileTransfer: enableTileTransfer,
       enableTileCallLog: enableTileCallLog,
       hasActiveCall: hasActiveCall,
-      isBlingTransferInitiated: isBlingTransferInitiated,
+      isPickingDestination: isPickingDestination,
       onFavoriteChanged: onFavoriteChanged ?? (_) {},
       onAudioPressed: onAudioPressed ?? () {},
       onVideoPressed: onVideoPressed ?? () {},
@@ -190,26 +190,26 @@ void main() {
     });
 
     group('initiated transfer icon', () {
-      testWidgets('shown when enableTileTransfer and isBlingTransferInitiated are true', (tester) async {
-        await tester.pumpWidget(buildTestable(buildAdapter(enableTileTransfer: true, isBlingTransferInitiated: true)));
+      testWidgets('shown when enableTileTransfer and isPickingDestination are true', (tester) async {
+        await tester.pumpWidget(buildTestable(buildAdapter(enableTileTransfer: true, isPickingDestination: true)));
 
         expect(find.byIcon(Icons.phone_forwarded), findsOneWidget);
       });
 
-      testWidgets('hidden when enableTileTransfer is false even if isBlingTransferInitiated is true', (tester) async {
-        await tester.pumpWidget(buildTestable(buildAdapter(enableTileTransfer: false, isBlingTransferInitiated: true)));
+      testWidgets('hidden when enableTileTransfer is false even if isPickingDestination is true', (tester) async {
+        await tester.pumpWidget(buildTestable(buildAdapter(enableTileTransfer: false, isPickingDestination: true)));
 
         expect(find.byIcon(Icons.phone_forwarded), findsNothing);
       });
 
-      testWidgets('audio and video icons hidden when isBlingTransferInitiated shows transfer icon', (tester) async {
+      testWidgets('audio and video icons hidden when isPickingDestination shows transfer icon', (tester) async {
         await tester.pumpWidget(
           buildTestable(
             buildAdapter(
               enableTileVoiceCall: true,
               enableTileVideoCall: true,
               enableTileTransfer: true,
-              isBlingTransferInitiated: true,
+              isPickingDestination: true,
             ),
           ),
         );
@@ -223,11 +223,7 @@ void main() {
         var called = false;
         await tester.pumpWidget(
           buildTestable(
-            buildAdapter(
-              enableTileTransfer: true,
-              isBlingTransferInitiated: true,
-              onTransferPressed: () => called = true,
-            ),
+            buildAdapter(enableTileTransfer: true, isPickingDestination: true, onTransferPressed: () => called = true),
           ),
         );
 

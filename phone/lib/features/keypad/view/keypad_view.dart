@@ -8,6 +8,8 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
+import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/utils/debounce.dart';
 
@@ -159,12 +161,17 @@ class KeypadViewState extends State<KeypadView> {
               return p.noValue != c.noValue;
             },
             builder: (context, keypadState) {
+              // The keypad has no rows, so it cannot ask whether one is
+              // acceptable - it asks whether this section can answer the
+              // purpose at all. Somewhere to forward a message to, for
+              // instance, cannot be typed.
+              final purpose = context.pickPurpose;
+              final picksHere = purpose != null && purpose.offeredBy(MainFlavor.keypad);
+
               return BlocBuilder<CallBloc, CallState>(
-                buildWhen: (p, c) =>
-                    p.isBlingTransferInitiated != c.isBlingTransferInitiated || p.activeCalls != c.activeCalls,
+                buildWhen: (p, c) => p.activeCalls != c.activeCalls,
                 builder: (context, callState) {
                   final activeCalls = callState.activeCalls;
-                  final transferInitiated = callState.isBlingTransferInitiated;
 
                   return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
                     builder: (context, callRoutingState) {
@@ -179,7 +186,9 @@ class KeypadViewState extends State<KeypadView> {
                             ? () => _callController.createCall(destination: _popNumber(), video: true)
                             : null,
                         onTransferPressed: widget.transferEnabled && activeCalls.isNotEmpty ? _transferCall : null,
-                        onInitiatedTransferPressed: widget.transferEnabled && transferInitiated ? _transferCall : null,
+                        onInitiatedTransferPressed: widget.transferEnabled && picksHere
+                            ? () => _pickTyped(purpose)
+                            : null,
                         callNumbers: callRoutingState?.allNumbers ?? [],
                         onCallFrom: (number) =>
                             _callController.createCall(destination: _popNumber(), fromNumber: number),
@@ -264,6 +273,15 @@ class KeypadViewState extends State<KeypadView> {
   void _transferCall() {
     _focusNode.unfocus();
     _callController.submitTransfer(_popNumber());
+  }
+
+  /// Hands over what was typed.
+  ///
+  /// No pop afterwards, unlike a list: the keypad is where somebody already
+  /// was, not somewhere they were sent, so there is nothing to come back from.
+  void _pickTyped(DestinationPickPurpose purpose) {
+    _focusNode.unfocus();
+    purpose.submit(DestinationCandidate(number: _popNumber()));
   }
 
   void _addChar(String keyText) {

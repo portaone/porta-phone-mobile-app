@@ -10,7 +10,7 @@ import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dar
 import 'package:webtrit_phone/features/messaging/extensions/contact.dart';
 import 'package:webtrit_phone/features/user_info/cubit/user_info_cubit.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
-import 'package:webtrit_phone/models/favorite.dart';
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../favorites.dart';
@@ -147,12 +147,11 @@ class _FavoritesListState extends State<FavoritesList> {
           builder: (context, userInfoState) {
             final userSmsNumbers = userInfoState.userInfo?.numbers.sms ?? [];
 
+            final purpose = context.pickPurpose;
+
             return BlocBuilder<CallBloc, CallState>(
-              buildWhen: (previous, current) =>
-                  previous.isBlingTransferInitiated != current.isBlingTransferInitiated ||
-                  previous.activeCalls != current.activeCalls,
+              buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
               builder: (context, callState) {
-                final blingTransferInitiated = callState.isBlingTransferInitiated;
                 final hasActiveCall = callState.activeCalls.isNotEmpty;
 
                 return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
@@ -175,6 +174,8 @@ class _FavoritesListState extends State<FavoritesList> {
                           final contactSourceId = contact?.sourceId;
                           final contactSmsNumbers = contact?.smsNumbers ?? [];
                           final canSendSms = contactSmsNumbers.contains(favorite.number);
+                          final candidate = DestinationCandidate(number: favorite.number, contact: contact);
+                          final picks = purpose != null && purpose.accepts(candidate);
 
                           return ReorderableDragStartListener(
                             key: ValueKey('${favorite.number}_${favorite.sourceType.name}_$index'),
@@ -189,14 +190,14 @@ class _FavoritesListState extends State<FavoritesList> {
                                     favorite: favorite,
                                     contact: contact,
                                     callNumbers: callRoutingState?.allNumbers ?? [],
-                                    onTap: blingTransferInitiated
-                                        ? () => submitTransfer(destination: favorite.number)
+                                    onTap: purpose != null
+                                        ? (picks ? () => pickDestination(context, purpose, candidate) : null)
                                         : () => _toggleExpanded('${favorite.number}_${favorite.sourceType.name}'),
                                     expanded:
-                                        !blingTransferInitiated &&
+                                        purpose == null &&
                                         !widget.reorderMode &&
                                         _expandedFavoriteId == '${favorite.number}_${favorite.sourceType.name}',
-                                    onDialPressed: blingTransferInitiated
+                                    onDialPressed: purpose != null
                                         ? null
                                         : () {
                                             _callController.createCall(
