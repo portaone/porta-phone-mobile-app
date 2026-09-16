@@ -1329,6 +1329,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get logRecordsConsole_PopupMenuItem_clear => 'Очистити';
 
   @override
+  String get main_Button_cancelPicking => 'Скасувати';
+
+  @override
   String get main_BottomNavigationBarItemLabel_chats => 'Чати';
 
   @override

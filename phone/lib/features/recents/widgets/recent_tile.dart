@@ -38,8 +38,8 @@ class RecentTile extends StatelessWidget {
   final bool expanded;
   final Function()? onDialPressed;
 
-  /// What this row offers while somebody is being chosen; see [TilePick].
-  final TilePick? pick;
+  /// What this row offers while somebody is being chosen; see [DestinationPickOffer].
+  final DestinationPickOffer? pick;
   final Function()? onAudioCallPressed;
   final Function()? onVideoCallPressed;
   final Function()? onTransferPressed;

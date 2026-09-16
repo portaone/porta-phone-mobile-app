@@ -48,8 +48,8 @@ class ContactTile extends StatelessWidget {
   final bool expanded;
   final VoidCallback? onDialPressed;
 
-  /// What this row offers while somebody is being chosen; see [TilePick].
-  final TilePick? pick;
+  /// What this row offers while somebody is being chosen; see [DestinationPickOffer].
+  final DestinationPickOffer? pick;
   final List<PresenceInfo>? presenceInfo;
   final List<DialogInfo>? dialogInfo;
 

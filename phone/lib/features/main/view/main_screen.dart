@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:webtrit_phone/features/main/widgets/widgets.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -13,6 +14,7 @@ class MainScreen extends StatelessWidget {
     this.onTabSelected,
     this.decorateTabIcon,
     this.pickPurpose,
+    this.onCancelPick,
   }) : super(key: key ?? const ValueKey<String>('MainScreen'));
 
   final Widget body;
@@ -39,6 +41,10 @@ class MainScreen extends StatelessWidget {
   /// the bar this one floats over, where nobody sees it.
   final DestinationPickPurpose? pickPurpose;
 
+  /// Gives up on whatever [pickPurpose] is asking for, where it says a person
+  /// can give up on it at all. Null in a preview, which has nothing to give up.
+  final VoidCallback? onCancelPick;
+
   @override
   Widget build(BuildContext context) {
     // Only where the open section has a destination to offer. Told on a page
@@ -52,7 +58,17 @@ class MainScreen extends StatelessWidget {
     // The wording belongs to whatever is doing the asking, not to this screen:
     // the bar is the same bar whether a call is being handed on or a message
     // is being passed to a colleague.
-    final transferBanner = announces ? TransferBottomNavigationBar(pickPurpose!.announcement) : null;
+    // A way out is offered only where the purpose says the person needs one:
+    // a transfer is left by returning to the call, a message looking for a
+    // recipient has no such screen behind it.
+    final cancels = pickPurpose?.cancellable ?? false;
+    final pickingBanner = announces
+        ? DestinationPickingBanner(
+            pickPurpose!.announcement,
+            onCancel: cancels ? onCancelPick : null,
+            cancelLabel: context.l10n.main_Button_cancelPicking,
+          )
+        : null;
 
     // The screen is the one home of the bar-visibility rule for every host,
     // the previews included: a menu of one section shows no bar - there is
@@ -60,10 +76,10 @@ class MainScreen extends StatelessWidget {
     // screen. The banner still has to be said, and with no bar of ours to
     // float over it there is nothing to keep it clear of.
     if (tabs.length < 2) {
-      if (transferBanner == null) return body;
+      if (pickingBanner == null) return body;
       return Scaffold(
         body: body,
-        bottomNavigationBar: BlurredSurface(sigmaX: 10.0, sigmaY: 10.0, child: transferBanner),
+        bottomNavigationBar: BlurredSurface(sigmaX: 10.0, sigmaY: 10.0, child: pickingBanner),
       );
     }
 
@@ -86,7 +102,7 @@ class MainScreen extends StatelessWidget {
           // the screen.
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ?transferBanner,
+            ?pickingBanner,
             MainBottomNavigationBar(
               tabs: tabs,
               currentIndex: currentIndex,

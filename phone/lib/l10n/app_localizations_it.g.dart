@@ -1315,6 +1315,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get logRecordsConsole_PopupMenuItem_clear => 'Cancella';
 
   @override
+  String get main_Button_cancelPicking => 'Annulla';
+
+  @override
   String get main_BottomNavigationBarItemLabel_chats => 'Le chat';
 
   @override

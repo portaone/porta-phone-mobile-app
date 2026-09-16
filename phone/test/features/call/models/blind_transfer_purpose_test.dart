@@ -90,4 +90,12 @@ void main() {
 
     expect(purpose, other);
   });
+
+  test('it is not over because a number was handed to it', () {
+    // The switch may refuse the REFER, and the call is then still looking for
+    // a target. Whoever owns that state takes the request back; the mechanism
+    // closing it on the tap would leave the lists normal and the person with
+    // no way to choose again.
+    expect(purpose.closedByChoice, isFalse);
+  });
 }
