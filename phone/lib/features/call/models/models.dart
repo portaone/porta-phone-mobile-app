@@ -1,6 +1,7 @@
 export 'package:flutter_webrtc/flutter_webrtc.dart' show RTCVideoRenderer;
 
 export 'active_call.dart';
+export 'blind_transfer_purpose.dart';
 export 'call_audio_device.dart';
 export 'call_display.dart';
 export 'call_network_quality.dart';

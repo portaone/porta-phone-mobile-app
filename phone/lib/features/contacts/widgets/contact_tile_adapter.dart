@@ -9,13 +9,15 @@ import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dart';
 import 'package:webtrit_phone/features/messaging/extensions/contact.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'contact_tile.dart';
 
 /// Wires a contacts-list [ContactTile] to the call/chat/history actions so the
 /// local and external tabs share one behavior: tap expands the quick-actions
-/// bar, the trailing phone icon dials, and blind-transfer mode turns tap into
-/// the transfer submission (same semantics as the recents and favorites lists).
+/// bar, the trailing phone icon dials, and while somebody is being chosen the
+/// row stops doing either and becomes the choice itself (same semantics as the
+/// recents and favorites lists).
 class ContactTileAdapter extends StatelessWidget {
   const ContactTileAdapter({
     super.key,
@@ -47,11 +49,6 @@ class ContactTileAdapter extends StatelessWidget {
     final number =
         contact.extension ?? contact.mobileNumber ?? (contact.phones.isNotEmpty ? contact.phones.first.number : null);
 
-    void submitTransfer(String destination) {
-      callController.submitTransfer(destination);
-      context.router.maybePop();
-    }
-
     void openCallLog(String number) {
       if (cdrsEnabled == true) {
         context.router.navigate(NumberCdrsScreenPageRoute(number: number));
@@ -60,12 +57,23 @@ class ContactTileAdapter extends StatelessWidget {
       }
     }
 
+    // Whoever is asking, and whether this row is an answer. Both are needed
+    // and they are not the same: while a choice is being made no row does what
+    // it normally does, but only a row the purpose accepts can be chosen.
+    final purpose = context.pickPurpose;
+    final candidate = DestinationCandidate(number: number, contact: contact);
+    final picks = purpose != null && purpose.accepts(candidate);
+    final pick = purpose == null
+        ? null
+        : TilePick(
+            icon: purpose.pickIcon,
+            label: purpose.pickLabel(candidate),
+            onPressed: picks ? () => pickDestination(context, purpose, candidate) : null,
+          );
+
     return BlocBuilder<CallBloc, CallState>(
-      buildWhen: (previous, current) =>
-          previous.isBlingTransferInitiated != current.isBlingTransferInitiated ||
-          previous.activeCalls != current.activeCalls,
+      buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
       builder: (context, callState) {
-        final transfer = callState.isBlingTransferInitiated;
         final hasActiveCall = callState.activeCalls.isNotEmpty;
 
         return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
@@ -80,9 +88,12 @@ class ContactTileAdapter extends StatelessWidget {
               registered: contact.registered,
               presenceInfo: contact.presenceInfo,
               dialogInfo: contact.dialogInfo,
-              onTap: transfer ? (number != null ? () => submitTransfer(number) : null) : onToggleExpanded,
-              expanded: expanded && !transfer,
-              onDialPressed: !transfer && number != null
+              pick: pick,
+              onTap: purpose != null
+                  ? (picks ? () => pickDestination(context, purpose, candidate) : null)
+                  : onToggleExpanded,
+              expanded: expanded && purpose == null,
+              onDialPressed: purpose == null && number != null
                   ? () => callController.createCall(destination: number, displayName: contact.maybeName, video: false)
                   : null,
               callNumbers: callRoutingState?.allNumbers ?? [],
@@ -92,8 +103,14 @@ class ContactTileAdapter extends StatelessWidget {
               onVideoCallPressed: number != null && videoEnabled
                   ? () => callController.createCall(destination: number, displayName: contact.maybeName, video: true)
                   : null,
+              // Not part of choosing: this sits in the overflow menu whenever
+              // a call is up, and starts the hand-off rather than finishing
+              // one.
               onTransferPressed: number != null && transferEnabled && hasActiveCall
-                  ? () => submitTransfer(number)
+                  ? () {
+                      callController.submitTransfer(number);
+                      context.router.maybePop();
+                    }
                   : null,
               onChatPressed: chatsEnabled && contact.canMessage
                   ? () => context.router.navigate(ChatConversationScreenPageRoute(participantId: contact.sourceId!))

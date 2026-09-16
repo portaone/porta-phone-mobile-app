@@ -80,14 +80,13 @@ class _ContactScreenState extends State<ContactScreen> {
             bool canSendSmsTo(String number) =>
                 widget.enableTileSms && userSmsNumbers.isNotEmpty && contactSmsNumbers.contains(number);
 
+            final purpose = context.pickPurpose;
+
             return BlocBuilder<CallBloc, CallState>(
-              buildWhen: (previous, current) =>
-                  previous.isBlingTransferInitiated != current.isBlingTransferInitiated ||
-                  previous.activeCalls != current.activeCalls,
+              buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
               builder: (context, callState) {
                 final email = contact.emails.firstOrNull?.address;
                 final hasActiveCall = callState.activeCalls.isNotEmpty;
-                final isBlingTransferInitiated = callState.isBlingTransferInitiated;
 
                 return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
                   builder: (context, callRoutingState) {
@@ -167,7 +166,10 @@ class _ContactScreenState extends State<ContactScreen> {
                                 enableTileTransfer: widget.enableTileTransfer,
                                 enableTileCallLog: widget.enableTileCallLog,
                                 hasActiveCall: hasActiveCall,
-                                isBlingTransferInitiated: isBlingTransferInitiated,
+                                isPickingDestination: purpose != null,
+                                onPickPressed: _pickCallback(purpose, entry.phone, contact),
+                                pickLabel: purpose?.pickLabel(_candidate(entry.phone, contact)),
+                                pickIcon: purpose?.pickIcon,
                                 onFavoriteChanged: (isFavorite) => _onFavoriteChanged(isFavorite, entry.phone, contact),
                                 onAudioPressed: () => _onAudioPressed(entry.phone, contact),
                                 onVideoPressed: () => _onVideoPressed(entry.phone, contact),
@@ -259,6 +261,25 @@ class _ContactScreenState extends State<ContactScreen> {
     _callController.createCall(destination: phone.number, displayName: contact.maybeName, video: true);
   }
 
+  DestinationCandidate _candidate(ContactPhone phone, Contact contact) =>
+      DestinationCandidate(number: phone.number, contact: contact);
+
+  /// Offers this number as the answer, or nothing when the purpose refuses it.
+  ///
+  /// Built here rather than decided inside the row so that a refusal has one
+  /// shape: no callback. A row that kept a callback and left the submission to
+  /// refuse it is a row that looks pickable and is not.
+  VoidCallback? _pickCallback(DestinationPickPurpose? purpose, ContactPhone phone, Contact contact) {
+    if (purpose == null) return null;
+
+    final candidate = _candidate(phone, contact);
+    if (!purpose.accepts(candidate)) return null;
+
+    return () => pickDestination(context, purpose, candidate);
+  }
+
+  /// Hands the current call over to this number outright, from the menu that
+  /// offers it while a call is up. Nothing to do with choosing.
   void _onTransferPressed(ContactPhone phone) {
     _callController.submitTransfer(phone.number);
     context.router.maybePop();

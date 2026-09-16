@@ -22,6 +22,7 @@ class ContactTile extends StatelessWidget {
     this.onTap,
     this.expanded = false,
     this.onDialPressed,
+    this.pick,
     this.presenceInfo,
     this.dialogInfo,
     this.callNumbers = const [],
@@ -46,6 +47,9 @@ class ContactTile extends StatelessWidget {
   final GestureTapCallback? onTap;
   final bool expanded;
   final VoidCallback? onDialPressed;
+
+  /// What this row offers while somebody is being chosen; see [TilePick].
+  final TilePick? pick;
   final List<PresenceInfo>? presenceInfo;
   final List<DialogInfo>? dialogInfo;
 
@@ -122,6 +126,7 @@ class ContactTile extends StatelessWidget {
       onTap: onTap,
       expanded: expanded,
       onDialPressed: onDialPressed,
+      pick: pick,
       callNumbers: callNumbers,
       onAudioCallPressed: onAudioCallPressed,
       onVideoCallPressed: onVideoCallPressed,

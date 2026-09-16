@@ -15,6 +15,7 @@ class CdrTile extends StatelessWidget {
     this.onTap,
     this.expanded = false,
     this.onDialPressed,
+    this.pick,
     this.onAudioCallPressed,
     this.onVideoCallPressed,
     this.onTransferPressed,
@@ -31,6 +32,9 @@ class CdrTile extends StatelessWidget {
   final Function()? onTap;
   final bool expanded;
   final Function()? onDialPressed;
+
+  /// What this row offers while somebody is being chosen; see [TilePick].
+  final TilePick? pick;
   final Function()? onAudioCallPressed;
   final Function()? onVideoCallPressed;
   final Function()? onTransferPressed;
@@ -91,6 +95,7 @@ class CdrTile extends StatelessWidget {
       onTap: onTap,
       expanded: expanded,
       onDialPressed: onDialPressed,
+      pick: pick,
       callNumbers: callNumbers,
       onAudioCallPressed: onAudioCallPressed,
       onVideoCallPressed: onVideoCallPressed,

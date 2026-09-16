@@ -8,6 +8,8 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
+import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/utils/debounce.dart';
 
@@ -155,16 +157,23 @@ class KeypadViewState extends State<KeypadView> {
         SizedBox(height: scaledInset),
         RepaintBoundary(
           child: BlocBuilder<KeypadCubit, KeypadState>(
-            buildWhen: (p, c) {
-              return p.noValue != c.noValue;
-            },
+            // The whole value, not just whether there is one: what is typed
+            // decides whether it can be chosen, so two different nonempty
+            // numbers are not the same state.
+            buildWhen: (p, c) => p.value != c.value,
             builder: (context, keypadState) {
+              // Two questions, as everywhere else. Whether this section can
+              // answer the purpose at all - somewhere to forward a message to
+              // cannot be typed - and whether what is typed right now is an
+              // answer it would take.
+              final purpose = context.pickPurpose;
+              final typed = DestinationCandidate(number: _sanitized(keypadState.value));
+              final picksTyped = purpose != null && purpose.offeredBy(MainFlavor.keypad) && purpose.accepts(typed);
+
               return BlocBuilder<CallBloc, CallState>(
-                buildWhen: (p, c) =>
-                    p.isBlingTransferInitiated != c.isBlingTransferInitiated || p.activeCalls != c.activeCalls,
+                buildWhen: (p, c) => p.activeCalls != c.activeCalls,
                 builder: (context, callState) {
                   final activeCalls = callState.activeCalls;
-                  final transferInitiated = callState.isBlingTransferInitiated;
 
                   return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
                     builder: (context, callRoutingState) {
@@ -179,7 +188,10 @@ class KeypadViewState extends State<KeypadView> {
                             ? () => _callController.createCall(destination: _popNumber(), video: true)
                             : null,
                         onTransferPressed: widget.transferEnabled && activeCalls.isNotEmpty ? _transferCall : null,
-                        onInitiatedTransferPressed: widget.transferEnabled && transferInitiated ? _transferCall : null,
+                        // Not gated on the transfer configuration: that is
+                        // permission to hand a call over, not permission to
+                        // answer whatever is being asked.
+                        onInitiatedTransferPressed: picksTyped ? () => _pickTyped(purpose) : null,
                         callNumbers: callRoutingState?.allNumbers ?? [],
                         onCallFrom: (number) =>
                             _callController.createCall(destination: _popNumber(), fromNumber: number),
@@ -254,6 +266,14 @@ class KeypadViewState extends State<KeypadView> {
     }
   }
 
+  /// What is typed, in the form anything downstream would use it in.
+  static String? _sanitized(String? value) {
+    if (value == null || value.isEmpty) return null;
+
+    final number = PhoneNormalizingFormatter.sanitize(value);
+    return number.isEmpty ? null : number;
+  }
+
   String _popNumber() {
     final number = PhoneNormalizingFormatter.sanitize(_textController.text);
     _textController.clear();
@@ -264,6 +284,22 @@ class KeypadViewState extends State<KeypadView> {
   void _transferCall() {
     _focusNode.unfocus();
     _callController.submitTransfer(_popNumber());
+  }
+
+  /// Hands over what was typed, if the purpose will take it.
+  ///
+  /// The input is cleared only once it has been taken: a number the purpose
+  /// refuses is still the number the person typed, and wiping it would make a
+  /// refusal look like a successful send.
+  ///
+  /// No pop afterwards, unlike a list: the keypad is where somebody already
+  /// was, not somewhere they were sent, so there is nothing to come back from.
+  void _pickTyped(DestinationPickPurpose purpose) {
+    final candidate = DestinationCandidate(number: _sanitized(_textController.text));
+    if (!submitDestination(purpose, candidate)) return;
+
+    _focusNode.unfocus();
+    _popNumber();
   }
 
   void _addChar(String keyText) {
