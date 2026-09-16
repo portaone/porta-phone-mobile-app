@@ -26,9 +26,13 @@ class VoicemailTile extends StatelessWidget {
     required this.onDeleted,
     required this.onToggleSeenStatus,
     required this.onToggleSavedStatus,
+    required this.onRestored,
+    required this.onDeletedPermanently,
     required this.onLongPress,
     required this.onTap,
     this.saveSupported = false,
+    this.trashSupported = false,
+    this.inTrash = false,
     this.thumbnail,
     this.thumbnailUrl,
   });
@@ -45,6 +49,19 @@ class VoicemailTile extends StatelessWidget {
   /// offering to save it would promise something that will not stay.
   final bool saveSupported;
 
+  /// Whether this mailbox has a trash, which decides what deleting means.
+  ///
+  /// With one, a delete moves the message there and can be taken back. Without
+  /// one it is final, which is why it asks first and this does not.
+  final bool trashSupported;
+
+  /// Whether this message is being shown as part of the trash.
+  ///
+  /// It answers to a different pair of actions there - put it back, or finish
+  /// deleting it - and none of the others apply to a message that is on its
+  /// way out.
+  final bool inTrash;
+
   final Uint8List? thumbnail;
   final Uri? thumbnailUrl;
 
@@ -52,6 +69,8 @@ class VoicemailTile extends StatelessWidget {
   final void Function(Voicemail) onDeleted;
   final void Function(Voicemail) onToggleSeenStatus;
   final void Function(Voicemail) onToggleSavedStatus;
+  final void Function(Voicemail) onRestored;
+  final void Function(Voicemail) onDeletedPermanently;
   final void Function(Voicemail) onLongPress;
   final void Function(Voicemail)? onTap;
 
@@ -63,7 +82,7 @@ class VoicemailTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final dateFormat = context.read<VoicemailScreenContext>().dateFormat;
 
-    return GestureDetector(
+    final tile = GestureDetector(
       behavior: HitTestBehavior.opaque,
       onLongPress: () => onLongPress(voicemail),
       onTap: onTap != null ? () => onTap!(voicemail) : null,
@@ -116,9 +135,37 @@ class VoicemailTile extends StatelessWidget {
         ),
       ),
     );
+
+    // A trashed message is drawn back rather than differently: it is still the
+    // same message, and the one thing that changed is that the mailbox is done
+    // with it. Opacity says that without a second style to keep in step.
+    return inTrash ? Opacity(opacity: 0.6, child: tile) : tile;
   }
 
-  List<PopupMenuEntry<_VoicemailMenuAction>> _buildMenuItems(BuildContext context, ColorScheme colorScheme) => [
+  List<PopupMenuEntry<_VoicemailMenuAction>> _buildMenuItems(BuildContext context, ColorScheme colorScheme) =>
+      inTrash ? _trashMenuItems(context, colorScheme) : _mailboxMenuItems(context, colorScheme);
+
+  /// What a message on its way out answers to: put it back, or finish the job.
+  ///
+  /// Calling, marking and keeping are left out rather than disabled. They are
+  /// about a message someone still has; this one is already gone as far as the
+  /// mailbox is concerned, and the only question left is whether that stands.
+  List<PopupMenuEntry<_VoicemailMenuAction>> _trashMenuItems(BuildContext context, ColorScheme colorScheme) => [
+    PopupMenuItem(
+      value: _VoicemailMenuAction.restore,
+      child: ListTile(leading: const Icon(Icons.restore_from_trash), title: Text(context.l10n.voicemail_Label_restore)),
+    ),
+    const PopupMenuDivider(),
+    PopupMenuItem(
+      value: _VoicemailMenuAction.deletePermanently,
+      child: ListTile(
+        leading: Icon(Icons.delete_forever, color: colorScheme.error),
+        title: Text(context.l10n.voicemail_Label_deletePermanently),
+      ),
+    ),
+  ];
+
+  List<PopupMenuEntry<_VoicemailMenuAction>> _mailboxMenuItems(BuildContext context, ColorScheme colorScheme) => [
     PopupMenuItem(
       value: _VoicemailMenuAction.call,
       child: ListTile(leading: const Icon(Icons.call), title: Text(context.l10n.voicemail_Label_call)),
@@ -147,8 +194,12 @@ class VoicemailTile extends StatelessWidget {
     PopupMenuItem(
       value: _VoicemailMenuAction.delete,
       child: ListTile(
-        leading: Icon(Icons.delete, color: colorScheme.error),
-        title: Text(context.l10n.voicemail_Label_delete),
+        leading: Icon(trashSupported ? Icons.delete_outline : Icons.delete, color: colorScheme.error),
+        // Named for what it does rather than for the icon it carries. Where
+        // there is a trash the message can be had back; where there is not it
+        // cannot, and saying "Delete" in both places would make the reversible
+        // one look as final as the other.
+        title: Text(trashSupported ? context.l10n.voicemail_Label_moveToTrash : context.l10n.voicemail_Label_delete),
       ),
     ),
   ];
@@ -170,6 +221,12 @@ class VoicemailTile extends StatelessWidget {
         break;
       case _VoicemailMenuAction.delete:
         onDeleted(voicemail);
+        break;
+      case _VoicemailMenuAction.restore:
+        onRestored(voicemail);
+        break;
+      case _VoicemailMenuAction.deletePermanently:
+        onDeletedPermanently(voicemail);
         break;
     }
   }
@@ -221,4 +278,4 @@ class _VoicemailSubtitle extends StatelessWidget {
   }
 }
 
-enum _VoicemailMenuAction { call, toggleSeenStatus, toggleSavedStatus, delete }
+enum _VoicemailMenuAction { call, toggleSeenStatus, toggleSavedStatus, delete, restore, deletePermanently }

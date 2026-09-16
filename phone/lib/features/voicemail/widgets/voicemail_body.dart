@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
@@ -60,6 +61,8 @@ class VoicemailBody extends StatelessWidget {
                         selectedVoicemailsIds: state.selectedVoicemailsIds,
                         isMultipleVoicemailsSelection: state.isMultipleVoicemailsSelection,
                         saveSupported: state.saveSupported,
+                        trashSupported: state.trashSupported,
+                        inTrash: state.isShowingTrash,
                       ),
                     ),
                     // The one thing about the trash a person cannot see by
@@ -115,12 +118,16 @@ class VoicemailListView extends StatelessWidget {
     required this.selectedVoicemailsIds,
     required this.isMultipleVoicemailsSelection,
     this.saveSupported = false,
+    this.trashSupported = false,
+    this.inTrash = false,
   });
 
   final List<Voicemail> items;
   final List<String> selectedVoicemailsIds;
   final bool isMultipleVoicemailsSelection;
   final bool saveSupported;
+  final bool trashSupported;
+  final bool inTrash;
 
   @override
   Widget build(BuildContext context) {
@@ -142,8 +149,12 @@ class VoicemailListView extends StatelessWidget {
           selected: selectedVoicemailsIds.contains(item.id),
           onDeleted: (it) => _onDeleteVoicemail(context, it),
           saveSupported: saveSupported,
+          trashSupported: trashSupported,
+          inTrash: inTrash,
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
           onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
+          onRestored: (it) => cubit.restoreVoicemail(it.id),
+          onDeletedPermanently: (it) => _onDeletePermanently(context, it),
           onCall: (it) => cubit.startCall(it),
           onLongPress: (it) => cubit.toggleSelection(it),
           onTap: isMultipleVoicemailsSelection ? (it) => cubit.toggleSelection(it) : null,
@@ -152,19 +163,50 @@ class VoicemailListView extends StatelessWidget {
     );
   }
 
+  /// Deleting a message, which is two different things.
+  ///
+  /// Where there is a trash the message can be had back, so it goes without
+  /// asking and the way back is offered afterwards - a question before every
+  /// delete trains people to dismiss it, and this one has nothing to warn
+  /// about. Where there is no trash the same gesture is final, so it asks
+  /// first and there is nothing to offer after.
   void _onDeleteVoicemail(BuildContext context, Voicemail voicemail) async {
+    final cubit = context.read<VoicemailCubit>();
+
+    if (!trashSupported) {
+      final confirmed =
+          (await ConfirmDialog.showDangerous(
+            context,
+            title: context.l10n.voicemail_Dialog_deleteSingleTitle,
+            content: context.l10n.voicemail_Dialog_deleteSingleContent,
+          )) ??
+          false;
+
+      if (confirmed) cubit.removeVoicemail(voicemail.id);
+      return;
+    }
+
+    final l10n = context.l10n;
+    final moved = await cubit.removeVoicemail(voicemail.id);
+    if (!moved || !context.mounted) return;
+
+    context.showSnackBar(
+      l10n.voicemail_Snackbar_movedToTrash,
+      action: SnackBarAction(label: l10n.voicemail_Label_undo, onPressed: () => cubit.restoreVoicemail(voicemail.id)),
+    );
+  }
+
+  void _onDeletePermanently(BuildContext context, Voicemail voicemail) async {
     final cubit = context.read<VoicemailCubit>();
 
     final confirmed =
         (await ConfirmDialog.showDangerous(
           context,
-          title: context.l10n.voicemail_Dialog_deleteSingleTitle,
-          content: context.l10n.voicemail_Dialog_deleteSingleContent,
+          title: context.l10n.voicemail_Dialog_deletePermanentlyTitle,
+          content: context.l10n.voicemail_Dialog_deletePermanentlyContent,
         )) ??
         false;
 
-    if (confirmed) {
-      cubit.removeVoicemail(voicemail.id.toString());
-    }
+    if (confirmed) cubit.removeVoicemailPermanently(voicemail.id);
   }
 }

@@ -150,15 +150,66 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     }
   }
 
-  void removeVoicemail(String messageId) async {
+  /// Deletes a message, which means the trash where there is one.
+  ///
+  /// Answers whether the server took it. The caller needs to know because a
+  /// move to the trash is offered back afterwards, and offering to undo
+  /// something that never happened is worse than saying nothing.
+  Future<bool> removeVoicemail(String messageId) async {
     try {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));
       await _repository.removeVoicemail(messageId);
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      return true;
     } catch (e, s) {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       _logger.severe('Error removing voicemail with id $messageId: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeVoicemail');
+      return false;
+    }
+  }
+
+  /// Puts a trashed message back where it was.
+  ///
+  /// Also what undoing a move to the trash does, because it is the same thing:
+  /// the message is in the trash either way, and the only difference is how
+  /// long it has been there.
+  Future<void> restoreVoicemail(String messageId) async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
+      await _repository.restoreVoicemail(messageId);
+      // The restored message is gone from the trash and back in the mailbox.
+      // The mailbox refreshes itself through the repository; the trash has no
+      // stored copy to update, so it is re-read when it is what is on screen.
+      if (state.filter.isRemote) {
+        await fetchTrashedVoicemails();
+      } else {
+        _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      }
+    } catch (e, s) {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      _logger.severe('Error restoring voicemail with id $messageId: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.restoreVoicemail');
+    }
+  }
+
+  /// Deletes a message for good, wherever it is.
+  ///
+  /// The only per-message action that frees the space it occupies; moving one
+  /// to the trash does not.
+  Future<void> removeVoicemailPermanently(String messageId) async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
+      await _repository.removeVoicemailPermanently(messageId);
+      if (state.filter.isRemote) {
+        await fetchTrashedVoicemails();
+      } else {
+        _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      }
+    } catch (e, s) {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      _logger.severe('Error permanently removing voicemail with id $messageId: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeVoicemailPermanently');
     }
   }
 

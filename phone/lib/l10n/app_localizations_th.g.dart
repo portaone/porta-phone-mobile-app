@@ -3073,6 +3073,12 @@ class AppLocalizationsTh extends AppLocalizations {
       'core ของคุณไม่รองรับฟีเจอร์ข้อความเสียง โปรดติดต่อผู้ดูแลระบบของคุณเพื่อขอข้อมูลเพิ่มเติม';
 
   @override
+  String get voicemail_Dialog_deletePermanentlyContent => 'ข้อความนี้จะถูกลบออกจากกล่องข้อความและไม่สามารถกู้คืนได้';
+
+  @override
+  String get voicemail_Dialog_deletePermanentlyTitle => 'ลบถาวรหรือไม่';
+
+  @override
   String get voicemail_Dialog_deleteSelectedContent =>
       'ข้อความเสียงที่เลือกจะถูกลบอย่างถาวร คุณต้องการดำเนินการต่อหรือไม่?';
 
@@ -3111,6 +3117,9 @@ class AppLocalizationsTh extends AppLocalizations {
       'การดำเนินการนี้จะลบข้อความเสียงทั้งหมดของคุณอย่างถาวร ไม่สามารถยกเลิกได้';
 
   @override
+  String get voicemail_Label_deletePermanently => 'ลบถาวร';
+
+  @override
   String get voicemail_Label_empty => 'ไม่มีข้อความเสียง';
 
   @override
@@ -3132,7 +3141,13 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Label_markAsNew => 'ทำเครื่องหมายว่าใหม่';
 
   @override
+  String get voicemail_Label_moveToTrash => 'ย้ายไปถังขยะ';
+
+  @override
   String get voicemail_Label_playbackError => 'เล่นไม่สำเร็จ';
+
+  @override
+  String get voicemail_Label_restore => 'กู้คืน';
 
   @override
   String get voicemail_Label_retry => 'ลองอีกครั้ง';
@@ -3142,6 +3157,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get voicemail_Label_trashFootnote => 'ข้อความในถังขยะยังคงใช้พื้นที่กล่องข้อความจนกว่าจะล้าง';
+
+  @override
+  String get voicemail_Label_undo => 'เลิกทำ';
 
   @override
   String voicemail_Label_unheardCount(int count) {
@@ -3170,6 +3188,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_saved => 'บันทึกไว้';
+
+  @override
+  String get voicemail_SemanticsLabel_undoMoveToTrash => 'เลิกทำการย้ายไปถังขยะ';
+
+  @override
+  String get voicemail_Snackbar_movedToTrash => 'ย้ายไปถังขยะแล้ว';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'ติดต่อผู้ดูแลระบบของคุณเพื่อเปิดใช้งานข้อความเสียง';

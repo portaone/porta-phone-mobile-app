@@ -3118,6 +3118,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'La funzione di segreteria telefonica non è supportata nel tuo sistema. Contatta l\'amministratore per maggiori informazioni.';
 
   @override
+  String get voicemail_Dialog_deletePermanentlyContent =>
+      'Questo messaggio sara rimosso dalla casella e non potra essere ripristinato.';
+
+  @override
+  String get voicemail_Dialog_deletePermanentlyTitle => 'Eliminare definitivamente?';
+
+  @override
   String get voicemail_Dialog_deleteSelectedContent =>
       'I messaggi vocali selezionati verranno eliminati definitivamente. Vuoi continuare?';
 
@@ -3157,6 +3164,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Questa azione eliminerà definitivamente tutti i messaggi vocali. Non potrà essere annullata.';
 
   @override
+  String get voicemail_Label_deletePermanently => 'Elimina definitivamente';
+
+  @override
   String get voicemail_Label_empty => 'Nessun messaggio vocale';
 
   @override
@@ -3179,7 +3189,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Label_markAsNew => 'Segna come nuovo';
 
   @override
+  String get voicemail_Label_moveToTrash => 'Sposta nel cestino';
+
+  @override
   String get voicemail_Label_playbackError => 'Riproduzione non riuscita';
+
+  @override
+  String get voicemail_Label_restore => 'Ripristina';
 
   @override
   String get voicemail_Label_retry => 'Riprova';
@@ -3190,6 +3206,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get voicemail_Label_trashFootnote =>
       'I messaggi nel cestino occupano ancora spazio nella casella finche non viene svuotato.';
+
+  @override
+  String get voicemail_Label_undo => 'Annulla';
 
   @override
   String voicemail_Label_unheardCount(int count) {
@@ -3219,6 +3238,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_saved => 'Salvato';
+
+  @override
+  String get voicemail_SemanticsLabel_undoMoveToTrash => 'Annulla lo spostamento nel cestino';
+
+  @override
+  String get voicemail_Snackbar_movedToTrash => 'Spostato nel cestino';
 
   @override
   String get voicemail_Snackbar_notConfigured =>

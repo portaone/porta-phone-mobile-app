@@ -121,4 +121,57 @@ void main() {
       expect(cubit.state.status, VoicemailStatus.loaded);
     });
   });
+
+  group('the trash', () {
+    setUp(() {
+      when(() => repository.restoreVoicemail(any())).thenAnswer((_) async {});
+      when(() => repository.removeVoicemailPermanently(any())).thenAnswer((_) async {});
+      when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) async => const []);
+    });
+
+    test('restoring while the trash is on screen re-reads the trash', () async {
+      cubit.setFilter(VoicemailFilter.trash);
+      await pumpEventQueue();
+      clearInteractions(repository);
+
+      await cubit.restoreVoicemail('1');
+
+      // The restored message is no longer in the trash, and the trash has no
+      // stored copy that could be corrected in place.
+      verify(() => repository.restoreVoicemail('1')).called(1);
+      verify(() => repository.fetchTrashedVoicemails()).called(1);
+    });
+
+    test('restoring from the mailbox does not read the trash', () async {
+      // Undoing a move to the trash happens on the mailbox view, where there
+      // is no trash on screen to correct.
+      await cubit.restoreVoicemail('1');
+
+      verify(() => repository.restoreVoicemail('1')).called(1);
+      verifyNever(() => repository.fetchTrashedVoicemails());
+    });
+
+    test('deleting for good while the trash is on screen re-reads the trash', () async {
+      cubit.setFilter(VoicemailFilter.trash);
+      await pumpEventQueue();
+      clearInteractions(repository);
+
+      await cubit.removeVoicemailPermanently('1');
+
+      verify(() => repository.removeVoicemailPermanently('1')).called(1);
+      verify(() => repository.fetchTrashedVoicemails()).called(1);
+    });
+
+    test('a delete the server refused is reported as not done', () async {
+      when(() => repository.removeVoicemail(any())).thenThrow(Exception('refused'));
+
+      expect(await cubit.removeVoicemail('1'), isFalse);
+    });
+
+    test('a delete the server took is reported as done', () async {
+      when(() => repository.removeVoicemail(any())).thenAnswer((_) async {});
+
+      expect(await cubit.removeVoicemail('1'), isTrue);
+    });
+  });
 }

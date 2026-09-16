@@ -2699,6 +2699,12 @@
   "@voicemail_Cache_title": {},
   "voicemail_Description_notSupported": "Voicemail feature are not supported in your core. Please contact your administrator for more information.",
   "@voicemail_Description_notSupported": {},
+  "voicemail_Dialog_deletePermanentlyContent": "This message will be removed from your mailbox and cannot be restored.",
+  "@voicemail_Dialog_deletePermanentlyContent": {
+    "description": "Warns that deleting a voicemail for good cannot be undone."
+  },
+  "voicemail_Dialog_deletePermanentlyTitle": "Delete permanently?",
+  "@voicemail_Dialog_deletePermanentlyTitle": {},
   "voicemail_Dialog_deleteSelectedContent": "Selected voicemails will be permanently deleted. Do you want to continue?",
   "@voicemail_Dialog_deleteSelectedContent": {},
   "voicemail_Dialog_deleteSelectedTitle": "Delete selected voicemails?",
@@ -2731,6 +2737,10 @@
   "@voicemail_Label_deleteAll": {},
   "voicemail_Label_deleteAllDescription": "This action will permanently delete all your voicemails. This cannot be undone.",
   "@voicemail_Label_deleteAllDescription": {},
+  "voicemail_Label_deletePermanently": "Delete permanently",
+  "@voicemail_Label_deletePermanently": {
+    "description": "Menu action that removes a trashed voicemail from the mailbox for good."
+  },
   "voicemail_Label_empty": "No voicemails",
   "@voicemail_Label_empty": {},
   "voicemail_Label_emptySaved": "No saved messages",
@@ -2749,8 +2759,16 @@
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Mark as new",
   "@voicemail_Label_markAsNew": {},
+  "voicemail_Label_moveToTrash": "Move to trash",
+  "@voicemail_Label_moveToTrash": {
+    "description": "Menu action that moves a voicemail to the trash, where it can be restored."
+  },
   "voicemail_Label_playbackError": "Playback failed",
   "@voicemail_Label_playbackError": {},
+  "voicemail_Label_restore": "Restore",
+  "@voicemail_Label_restore": {
+    "description": "Menu action that puts a trashed voicemail back in the mailbox."
+  },
   "voicemail_Label_retry": "Try again",
   "@voicemail_Label_retry": {},
   "voicemail_Label_save": "Save",
@@ -2760,6 +2778,10 @@
   "voicemail_Label_trashFootnote": "Messages in the trash still use mailbox space until the trash is emptied.",
   "@voicemail_Label_trashFootnote": {
     "description": "Shown under the trash list: a trashed message still occupies the mailbox."
+  },
+  "voicemail_Label_undo": "Undo",
+  "@voicemail_Label_undo": {
+    "description": "Snackbar action that takes back the move to the trash."
   },
   "voicemail_Label_unheardCount": "{count} new",
   "@voicemail_Label_unheardCount": {
@@ -2802,6 +2824,14 @@
   "voicemail_SemanticsLabel_saved": "Saved",
   "@voicemail_SemanticsLabel_saved": {
     "description": "Accessibility name of the mark that says a voicemail is kept."
+  },
+  "voicemail_SemanticsLabel_undoMoveToTrash": "Undo move to trash",
+  "@voicemail_SemanticsLabel_undoMoveToTrash": {
+    "description": "Accessibility name of the snackbar action that takes back the move to the trash."
+  },
+  "voicemail_Snackbar_movedToTrash": "Moved to trash",
+  "@voicemail_Snackbar_movedToTrash": {
+    "description": "Confirms that a voicemail was moved to the trash."
   },
   "voicemail_Snackbar_notConfigured": "Contact your administrator to activate voicemail",
   "@voicemail_Snackbar_notConfigured": {},
