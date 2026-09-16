@@ -3086,6 +3086,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Dialog_deleteSingleTitle => 'ลบข้อความเสียง?';
 
   @override
+  String get voicemail_Filter_all => 'ทั้งหมด';
+
+  @override
+  String get voicemail_Filter_saved => 'บันทึกไว้';
+
+  @override
+  String get voicemail_Filter_trash => 'ถังขยะ';
+
+  @override
+  String get voicemail_Filter_unheard => 'ใหม่';
+
+  @override
   String get voicemail_Label_call => 'โทร';
 
   @override
@@ -3102,6 +3114,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Label_empty => 'ไม่มีข้อความเสียง';
 
   @override
+  String get voicemail_Label_emptySaved => 'ไม่มีข้อความที่บันทึกไว้';
+
+  @override
+  String get voicemail_Label_emptySavedHint => 'เปิดเมนูบนข้อความแล้วเลือกบันทึกเพื่อเก็บไว้ที่นี่';
+
+  @override
+  String get voicemail_Label_emptyTrash => 'ถังขยะว่างเปล่า';
+
+  @override
+  String get voicemail_Label_emptyTrashHint => 'ข้อความที่ย้ายมาที่นี่ยังคงใช้พื้นที่กล่องข้อความจนกว่าจะล้างถังขยะ';
+
+  @override
   String get voicemail_Label_markAsHeard => 'ทำเครื่องหมายว่าฟังแล้ว';
 
   @override
@@ -3114,6 +3138,25 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Label_retry => 'ลองอีกครั้ง';
 
   @override
+  String get voicemail_Label_save => 'บันทึก';
+
+  @override
+  String get voicemail_Label_trashFootnote => 'ข้อความในถังขยะยังคงใช้พื้นที่กล่องข้อความจนกว่าจะล้าง';
+
+  @override
+  String voicemail_Label_unheardCount(int count) {
+    return 'ใหม่ $count รายการ';
+  }
+
+  @override
+  String get voicemail_Label_unsave => 'เลิกบันทึก';
+
+  @override
+  String voicemail_SemanticsLabel_filter(String filter) {
+    return 'ตัวกรอง ปัจจุบันคือ $filter';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_loading => 'กำลังโหลด';
 
   @override
@@ -3124,6 +3167,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_play => 'เล่น';
+
+  @override
+  String get voicemail_SemanticsLabel_saved => 'บันทึกไว้';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'ติดต่อผู้ดูแลระบบของคุณเพื่อเปิดใช้งานข้อความเสียง';

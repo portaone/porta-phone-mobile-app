@@ -9,7 +9,7 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 
 class _Repository extends Mock implements VoicemailRepository {}
 
-Voicemail _voicemail(String id) => Voicemail(
+Voicemail _voicemail(String id, {bool? saved}) => Voicemail(
   id: id,
   date: '2026-09-15T10:00:00Z',
   duration: 1,
@@ -20,6 +20,7 @@ Voicemail _voicemail(String id) => Voicemail(
   size: 1,
   type: 'voice',
   url: null,
+  saved: saved,
 );
 
 void main() {
@@ -33,7 +34,13 @@ void main() {
     when(() => repository.isFeatureSupported).thenReturn(true);
     when(() => repository.watchVoicemails()).thenAnswer((_) => voicemails.stream);
     when(() => repository.fetchVoicemails()).thenAnswer((_) async {});
-    cubit = VoicemailCubit(repository: repository, onCallStarted: (_) {}, onSubmitNotification: (_) {});
+    cubit = VoicemailCubit(
+      repository: repository,
+      onCallStarted: (_) {},
+      onSubmitNotification: (_) {},
+      saveSupported: true,
+      trashSupported: true,
+    );
   });
 
   tearDown(() async {
@@ -81,6 +88,37 @@ void main() {
       verify(() => repository.removeMultipleVoicemails(['1', '2'])).called(1);
       expect(cubit.state.selectedVoicemailsIds, isEmpty);
       expect(cubit.state.isMultipleVoicemailsSelection, isFalse);
+    });
+  });
+
+  group('keeping a message', () {
+    setUp(() {
+      when(() => repository.updateVoicemailSavedStatus(any(), any())).thenAnswer((_) async {});
+    });
+
+    test('an unkept message is asked to be kept', () async {
+      cubit.toggleSavedStatus(_voicemail('1', saved: false));
+      await pumpEventQueue();
+
+      verify(() => repository.updateVoicemailSavedStatus('1', true)).called(1);
+    });
+
+    test('a kept message is asked to stop being kept', () async {
+      cubit.toggleSavedStatus(_voicemail('1', saved: true));
+      await pumpEventQueue();
+
+      verify(() => repository.updateVoicemailSavedStatus('1', false)).called(1);
+    });
+
+    test('a failure leaves the screen loaded rather than stuck', () async {
+      when(() => repository.updateVoicemailSavedStatus(any(), any())).thenThrow(Exception('refused'));
+
+      cubit.toggleSavedStatus(_voicemail('1', saved: false));
+      await pumpEventQueue();
+
+      // The list is still there and still usable; what did not happen is the
+      // one message's flag, which the next refresh reports either way.
+      expect(cubit.state.status, VoicemailStatus.loaded);
     });
   });
 }

@@ -2632,6 +2632,22 @@
   "@voicemail_Dialog_deleteSingleContent": {},
   "voicemail_Dialog_deleteSingleTitle": "Видалити голосове повідомлення?",
   "@voicemail_Dialog_deleteSingleTitle": {},
+  "voicemail_Filter_all": "Усі",
+  "@voicemail_Filter_all": {
+    "description": "Voicemail filter showing every message in the mailbox."
+  },
+  "voicemail_Filter_saved": "Збережені",
+  "@voicemail_Filter_saved": {
+    "description": "Voicemail filter showing only the messages the user has saved."
+  },
+  "voicemail_Filter_trash": "Кошик",
+  "@voicemail_Filter_trash": {
+    "description": "Voicemail filter showing the messages moved to the trash."
+  },
+  "voicemail_Filter_unheard": "Нові",
+  "@voicemail_Filter_unheard": {
+    "description": "Voicemail filter showing only the messages not yet heard."
+  },
   "voicemail_Label_call": "Дзвінок",
   "@voicemail_Label_call": {},
   "voicemail_Label_delete": "Видалити",
@@ -2642,6 +2658,18 @@
   "@voicemail_Label_deleteAllDescription": {},
   "voicemail_Label_empty": "Немає голосових повідомлень",
   "@voicemail_Label_empty": {},
+  "voicemail_Label_emptySaved": "Немає збережених повідомлень",
+  "@voicemail_Label_emptySaved": {},
+  "voicemail_Label_emptySavedHint": "Відкрийте меню на повідомленні й виберіть «Зберегти», щоб воно лишилось тут.",
+  "@voicemail_Label_emptySavedHint": {
+    "description": "Tells the user how to put a message in the empty Saved list."
+  },
+  "voicemail_Label_emptyTrash": "Кошик порожній",
+  "@voicemail_Label_emptyTrash": {},
+  "voicemail_Label_emptyTrashHint": "Повідомлення, які ви сюди переносите, далі займають місце у скриньці, доки кошик не очищено.",
+  "@voicemail_Label_emptyTrashHint": {
+    "description": "Explains, on an empty trash, what keeping messages there would cost."
+  },
   "voicemail_Label_markAsHeard": "Позначити як прослухане",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Позначити як нове",
@@ -2650,6 +2678,36 @@
   "@voicemail_Label_playbackError": {},
   "voicemail_Label_retry": "Спробувати ще раз",
   "@voicemail_Label_retry": {},
+  "voicemail_Label_save": "Зберегти",
+  "@voicemail_Label_save": {
+    "description": "Menu action that keeps a voicemail."
+  },
+  "voicemail_Label_trashFootnote": "Повідомлення в кошику далі займають місце у скриньці, доки його не очищено.",
+  "@voicemail_Label_trashFootnote": {
+    "description": "Shown under the trash list: a trashed message still occupies the mailbox."
+  },
+  "voicemail_Label_unheardCount": "{count, plural, one{{count} нове} few{{count} нові} many{{count} нових} other{{count} нових}}",
+  "@voicemail_Label_unheardCount": {
+    "description": "How many messages in the mailbox are still unheard.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voicemail_Label_unsave": "Не зберігати",
+  "@voicemail_Label_unsave": {
+    "description": "Menu action that stops keeping a voicemail."
+  },
+  "voicemail_SemanticsLabel_filter": "Фільтр, зараз {filter}",
+  "@voicemail_SemanticsLabel_filter": {
+    "description": "Accessibility name of the voicemail filter control, naming the filter that is on.",
+    "placeholders": {
+      "filter": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_loading": "Завантаження",
   "@voicemail_SemanticsLabel_loading": {
     "description": "Announced while a voicemail is being prepared for playback."
@@ -2665,6 +2723,10 @@
   "voicemail_SemanticsLabel_play": "Відтворити",
   "@voicemail_SemanticsLabel_play": {
     "description": "Accessibility name of the button that starts or resumes voicemail playback."
+  },
+  "voicemail_SemanticsLabel_saved": "Збережено",
+  "@voicemail_SemanticsLabel_saved": {
+    "description": "Accessibility name of the mark that says a voicemail is kept."
   },
   "voicemail_Snackbar_notConfigured": "Зверніться до адміністратора, щоб активувати голосову пошту.",
   "@voicemail_Snackbar_notConfigured": {},

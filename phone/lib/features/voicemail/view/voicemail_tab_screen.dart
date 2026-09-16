@@ -29,6 +29,7 @@ class VoicemailTabScreen extends StatelessWidget {
         context: context,
         flexibleSpace: BlurredSurface.adaptive(context),
         actions: const [VoicemailDeleteAction(offersDeleteAll: false)],
+        bottom: const VoicemailFilterRow(),
       ),
       // No inset of its own: the body runs behind the bar and Scaffold already
       // hands it a MediaQuery whose top padding is the bar plus the status bar,

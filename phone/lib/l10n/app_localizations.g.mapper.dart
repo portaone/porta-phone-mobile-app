@@ -1462,21 +1462,33 @@ extension AppLocalizationsExtension on AppLocalizations {
         voicemail_Dialog_deleteSingleContent,
       'voicemail_Dialog_deleteSingleTitle' =>
         voicemail_Dialog_deleteSingleTitle,
+      'voicemail_Filter_all' => voicemail_Filter_all,
+      'voicemail_Filter_saved' => voicemail_Filter_saved,
+      'voicemail_Filter_trash' => voicemail_Filter_trash,
+      'voicemail_Filter_unheard' => voicemail_Filter_unheard,
       'voicemail_Label_call' => voicemail_Label_call,
       'voicemail_Label_delete' => voicemail_Label_delete,
       'voicemail_Label_deleteAll' => voicemail_Label_deleteAll,
       'voicemail_Label_deleteAllDescription' =>
         voicemail_Label_deleteAllDescription,
       'voicemail_Label_empty' => voicemail_Label_empty,
+      'voicemail_Label_emptySaved' => voicemail_Label_emptySaved,
+      'voicemail_Label_emptySavedHint' => voicemail_Label_emptySavedHint,
+      'voicemail_Label_emptyTrash' => voicemail_Label_emptyTrash,
+      'voicemail_Label_emptyTrashHint' => voicemail_Label_emptyTrashHint,
       'voicemail_Label_markAsHeard' => voicemail_Label_markAsHeard,
       'voicemail_Label_markAsNew' => voicemail_Label_markAsNew,
       'voicemail_Label_playbackError' => voicemail_Label_playbackError,
       'voicemail_Label_retry' => voicemail_Label_retry,
+      'voicemail_Label_save' => voicemail_Label_save,
+      'voicemail_Label_trashFootnote' => voicemail_Label_trashFootnote,
+      'voicemail_Label_unsave' => voicemail_Label_unsave,
       'voicemail_SemanticsLabel_loading' => voicemail_SemanticsLabel_loading,
       'voicemail_SemanticsLabel_moreActions' =>
         voicemail_SemanticsLabel_moreActions,
       'voicemail_SemanticsLabel_pause' => voicemail_SemanticsLabel_pause,
       'voicemail_SemanticsLabel_play' => voicemail_SemanticsLabel_play,
+      'voicemail_SemanticsLabel_saved' => voicemail_SemanticsLabel_saved,
       'voicemail_Snackbar_notConfigured' => voicemail_Snackbar_notConfigured,
       'voicemail_Title_notSupported' => voicemail_Title_notSupported,
       'voicemail_Widget_screenTitle' => voicemail_Widget_screenTitle,
@@ -2090,6 +2102,18 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final Object appName] => user_agreement_description(appName),
         _ => throw ArgumentError(
           'user_agreement_description requires 1 arguments',
+        ),
+      },
+      'voicemail_Label_unheardCount' => switch (args) {
+        [final int count] => voicemail_Label_unheardCount(count),
+        _ => throw ArgumentError(
+          'voicemail_Label_unheardCount requires 1 arguments',
+        ),
+      },
+      'voicemail_SemanticsLabel_filter' => switch (args) {
+        [final String filter] => voicemail_SemanticsLabel_filter(filter),
+        _ => throw ArgumentError(
+          'voicemail_SemanticsLabel_filter requires 1 arguments',
         ),
       },
       'webview_defaultError_details' => switch (args) {

@@ -3101,6 +3101,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Dialog_deleteSingleTitle => 'Delete voicemail?';
 
   @override
+  String get voicemail_Filter_all => 'All';
+
+  @override
+  String get voicemail_Filter_saved => 'Saved';
+
+  @override
+  String get voicemail_Filter_trash => 'Trash';
+
+  @override
+  String get voicemail_Filter_unheard => 'New';
+
+  @override
   String get voicemail_Label_call => 'Call';
 
   @override
@@ -3117,6 +3129,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Label_empty => 'No voicemails';
 
   @override
+  String get voicemail_Label_emptySaved => 'No saved messages';
+
+  @override
+  String get voicemail_Label_emptySavedHint => 'Open the menu on a message and choose Save to keep it here.';
+
+  @override
+  String get voicemail_Label_emptyTrash => 'Trash is empty';
+
+  @override
+  String get voicemail_Label_emptyTrashHint =>
+      'Messages you move here still use mailbox space until the trash is emptied.';
+
+  @override
   String get voicemail_Label_markAsHeard => 'Mark as heard';
 
   @override
@@ -3129,6 +3154,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Label_retry => 'Try again';
 
   @override
+  String get voicemail_Label_save => 'Save';
+
+  @override
+  String get voicemail_Label_trashFootnote =>
+      'Messages in the trash still use mailbox space until the trash is emptied.';
+
+  @override
+  String voicemail_Label_unheardCount(int count) {
+    return '$count new';
+  }
+
+  @override
+  String get voicemail_Label_unsave => 'Unsave';
+
+  @override
+  String voicemail_SemanticsLabel_filter(String filter) {
+    return 'Filter, currently $filter';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_loading => 'Loading';
 
   @override
@@ -3139,6 +3184,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voicemail_SemanticsLabel_play => 'Play';
+
+  @override
+  String get voicemail_SemanticsLabel_saved => 'Saved';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Contact your administrator to activate voicemail';

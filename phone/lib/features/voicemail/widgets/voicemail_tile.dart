@@ -25,8 +25,10 @@ class VoicemailTile extends StatelessWidget {
     required this.onCall,
     required this.onDeleted,
     required this.onToggleSeenStatus,
+    required this.onToggleSavedStatus,
     required this.onLongPress,
     required this.onTap,
+    this.saveSupported = false,
     this.thumbnail,
     this.thumbnailUrl,
   });
@@ -34,14 +36,27 @@ class VoicemailTile extends StatelessWidget {
   final Voicemail voicemail;
   final String displayName;
   final bool selected;
+
+  /// Whether this mailbox can keep a message at all.
+  ///
+  /// Two things have to be true before the control is offered: the backend has
+  /// to support keeping, and this particular message has to report the flag.
+  /// A message reporting no flag sits in a mailbox that cannot hold one, so
+  /// offering to save it would promise something that will not stay.
+  final bool saveSupported;
+
   final Uint8List? thumbnail;
   final Uri? thumbnailUrl;
 
   final void Function(Voicemail) onCall;
   final void Function(Voicemail) onDeleted;
   final void Function(Voicemail) onToggleSeenStatus;
+  final void Function(Voicemail) onToggleSavedStatus;
   final void Function(Voicemail) onLongPress;
   final void Function(Voicemail)? onTap;
+
+  bool get _savingOffered => saveSupported && voicemail.saved != null;
+  bool get _saved => voicemail.saved == true;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +73,24 @@ class VoicemailTile extends StatelessWidget {
         selectedTileColor: colorScheme.primaryContainer.withValues(alpha: .5),
         crossAxisAlignment: CrossAxisAlignment.start,
         leading: LeadingAvatar(username: displayName, thumbnail: thumbnail, thumbnailUrl: thumbnailUrl),
-        title: Text(voicemail.displaySender),
+        title: Row(
+          spacing: 6,
+          children: [
+            Flexible(child: Text(voicemail.displaySender, overflow: TextOverflow.ellipsis)),
+            if (_saved)
+              Icon(
+                Icons.bookmark,
+                size: 16,
+                color: colorScheme.primary,
+                // Named rather than decorative. The design leaves the mark
+                // silent because it writes the whole tile's name itself; this
+                // tile does not, so without a name here the one difference
+                // between a kept message and any other is invisible to a
+                // reader.
+                semanticLabel: context.l10n.voicemail_SemanticsLabel_saved,
+              ),
+          ],
+        ),
         subtitle: _VoicemailSubtitle(voicemail: voicemail, dateFormat: dateFormat),
         bottom: AudioView(path: voicemail.url!, cacheKey: voicemail.id, onPlaybackStarted: _onPlaybackStarted),
         trailing: SemanticAction(
@@ -104,6 +136,14 @@ class VoicemailTile extends StatelessWidget {
         ),
       ),
     ),
+    if (_savingOffered)
+      PopupMenuItem(
+        value: _VoicemailMenuAction.toggleSavedStatus,
+        child: ListTile(
+          leading: Icon(_saved ? Icons.bookmark_remove : Icons.bookmark_add_outlined),
+          title: Text(_saved ? context.l10n.voicemail_Label_unsave : context.l10n.voicemail_Label_save),
+        ),
+      ),
     PopupMenuItem(
       value: _VoicemailMenuAction.delete,
       child: ListTile(
@@ -124,6 +164,9 @@ class VoicemailTile extends StatelessWidget {
         break;
       case _VoicemailMenuAction.toggleSeenStatus:
         onToggleSeenStatus(voicemail);
+        break;
+      case _VoicemailMenuAction.toggleSavedStatus:
+        onToggleSavedStatus(voicemail);
         break;
       case _VoicemailMenuAction.delete:
         onDeleted(voicemail);
@@ -178,4 +221,4 @@ class _VoicemailSubtitle extends StatelessWidget {
   }
 }
 
-enum _VoicemailMenuAction { call, toggleSeenStatus, delete }
+enum _VoicemailMenuAction { call, toggleSeenStatus, toggleSavedStatus, delete }

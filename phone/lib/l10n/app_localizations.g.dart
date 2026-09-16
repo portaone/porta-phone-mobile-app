@@ -5683,6 +5683,30 @@ abstract class AppLocalizations {
   /// **'Delete voicemail?'**
   String get voicemail_Dialog_deleteSingleTitle;
 
+  /// Voicemail filter showing every message in the mailbox.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get voicemail_Filter_all;
+
+  /// Voicemail filter showing only the messages the user has saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get voicemail_Filter_saved;
+
+  /// Voicemail filter showing the messages moved to the trash.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash'**
+  String get voicemail_Filter_trash;
+
+  /// Voicemail filter showing only the messages not yet heard.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get voicemail_Filter_unheard;
+
   /// No description provided for @voicemail_Label_call.
   ///
   /// In en, this message translates to:
@@ -5713,6 +5737,30 @@ abstract class AppLocalizations {
   /// **'No voicemails'**
   String get voicemail_Label_empty;
 
+  /// No description provided for @voicemail_Label_emptySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved messages'**
+  String get voicemail_Label_emptySaved;
+
+  /// Tells the user how to put a message in the empty Saved list.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the menu on a message and choose Save to keep it here.'**
+  String get voicemail_Label_emptySavedHint;
+
+  /// No description provided for @voicemail_Label_emptyTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Trash is empty'**
+  String get voicemail_Label_emptyTrash;
+
+  /// Explains, on an empty trash, what keeping messages there would cost.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages you move here still use mailbox space until the trash is emptied.'**
+  String get voicemail_Label_emptyTrashHint;
+
   /// No description provided for @voicemail_Label_markAsHeard.
   ///
   /// In en, this message translates to:
@@ -5737,6 +5785,36 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get voicemail_Label_retry;
 
+  /// Menu action that keeps a voicemail.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get voicemail_Label_save;
+
+  /// Shown under the trash list: a trashed message still occupies the mailbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages in the trash still use mailbox space until the trash is emptied.'**
+  String get voicemail_Label_trashFootnote;
+
+  /// How many messages in the mailbox are still unheard.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new'**
+  String voicemail_Label_unheardCount(int count);
+
+  /// Menu action that stops keeping a voicemail.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsave'**
+  String get voicemail_Label_unsave;
+
+  /// Accessibility name of the voicemail filter control, naming the filter that is on.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter, currently {filter}'**
+  String voicemail_SemanticsLabel_filter(String filter);
+
   /// Announced while a voicemail is being prepared for playback.
   ///
   /// In en, this message translates to:
@@ -5760,6 +5838,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Play'**
   String get voicemail_SemanticsLabel_play;
+
+  /// Accessibility name of the mark that says a voicemail is kept.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get voicemail_SemanticsLabel_saved;
 
   /// No description provided for @voicemail_Snackbar_notConfigured.
   ///

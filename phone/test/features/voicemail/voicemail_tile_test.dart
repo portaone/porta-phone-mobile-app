@@ -18,7 +18,7 @@ import '../../helpers/helpers.dart';
 class _MockPlaybackController extends Mock implements VoicemailPlaybackController {}
 
 void main() {
-  final voicemail = Voicemail(
+  Voicemail message({bool? saved}) => Voicemail(
     id: 'vm-1',
     date: '2026-08-12T08:17:00Z',
     duration: 4.2,
@@ -29,6 +29,7 @@ void main() {
     size: 17,
     type: 'voice',
     url: 'https://example.test/vm-1.mp3',
+    saved: saved,
   );
 
   late _MockPlaybackController controller;
@@ -42,7 +43,13 @@ void main() {
     when(() => controller.removeListener(any())).thenReturn(null);
   });
 
-  Widget wrap({VoidCallback? onLongPress}) {
+  Widget wrap({
+    VoidCallback? onLongPress,
+    Voicemail? voicemail,
+    bool saveSupported = false,
+    void Function(Voicemail)? onToggleSavedStatus,
+  }) {
+    final item = voicemail ?? message();
     return MaterialApp(
       locale: const Locale('en'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -66,12 +73,14 @@ void main() {
               ),
             ],
             child: VoicemailTile(
-              voicemail: voicemail,
+              voicemail: item,
               displayName: 'User 555002',
               selected: false,
+              saveSupported: saveSupported,
               onCall: (_) {},
               onDeleted: (_) {},
               onToggleSeenStatus: (_) {},
+              onToggleSavedStatus: (it) => onToggleSavedStatus?.call(it),
               onLongPress: (_) => onLongPress?.call(),
               onTap: (_) {},
             ),
@@ -109,5 +118,75 @@ void main() {
     expect(find.text('More'), findsOneWidget);
 
     await tester.pumpAndSettle();
+  });
+
+  group('keeping a message', () {
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a mailbox that cannot keep anything does not offer to', (tester) async {
+      await tester.pumpWidget(wrap(voicemail: message(saved: false)));
+
+      await openMenu(tester);
+
+      expect(find.text('Save'), findsNothing);
+      expect(find.text('Unsave'), findsNothing);
+    });
+
+    testWidgets('a message that reports no flag does not offer it either', (tester) async {
+      // No flag means the mailbox behind this message cannot hold one, which
+      // is not the same as the message not being kept: offering to save it
+      // would promise something that does not stay.
+      await tester.pumpWidget(wrap(saveSupported: true, voicemail: message()));
+
+      await openMenu(tester);
+
+      expect(find.text('Save'), findsNothing);
+      expect(find.text('Unsave'), findsNothing);
+    });
+
+    testWidgets('an unkept message offers Save, and reports it', (tester) async {
+      Voicemail? toggled;
+      await tester.pumpWidget(
+        wrap(saveSupported: true, voicemail: message(saved: false), onToggleSavedStatus: (it) => toggled = it),
+      );
+
+      await openMenu(tester);
+      expect(find.text('Unsave'), findsNothing);
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(toggled?.id, 'vm-1');
+    });
+
+    testWidgets('a kept message offers Unsave instead', (tester) async {
+      await tester.pumpWidget(wrap(saveSupported: true, voicemail: message(saved: true)));
+
+      await openMenu(tester);
+
+      expect(find.text('Save'), findsNothing);
+      expect(find.text('Unsave'), findsOneWidget);
+    });
+
+    testWidgets('the mark is shown only on a kept message, and it is named', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(wrap(saveSupported: true, voicemail: message(saved: false)));
+
+      expect(find.byIcon(Icons.bookmark), findsNothing);
+
+      await tester.pumpWidget(wrap(saveSupported: true, voicemail: message(saved: true)));
+      await tester.pump();
+
+      // The mark is the only difference between a kept message and any other,
+      // so a reader that cannot hear it cannot tell them apart. The row merges
+      // its parts into one node, so the word is looked for inside that node's
+      // name rather than as a name of its own.
+      expect(find.byIcon(Icons.bookmark), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp(r'\bSaved\b')), findsWidgets);
+
+      handle.dispose();
+    });
   });
 }
