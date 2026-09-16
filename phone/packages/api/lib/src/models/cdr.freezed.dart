@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CdrRecord {
 
- String get callId; String get callee; String get caller; DateTime get connectTime; String get direction; String get disconnectReason; DateTime get disconnectTime; int get duration; dynamic get recordingId; String get status;
+ String get callId; String get callee; String get caller; DateTime get connectTime; CdrDirection get direction; String get disconnectReason; DateTime get disconnectTime; int get duration; dynamic get recordingId; CdrStatus get status;
 /// Create a copy of CdrRecord
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -46,7 +46,7 @@ abstract mixin class $CdrRecordCopyWith<$Res>  {
   factory $CdrRecordCopyWith(CdrRecord value, $Res Function(CdrRecord) _then) = _$CdrRecordCopyWithImpl;
 @useResult
 $Res call({
- String callId, String callee, String caller, DateTime connectTime, String direction, String disconnectReason, DateTime disconnectTime, int duration, dynamic recordingId, String status
+ String callId, String callee, String caller, DateTime connectTime, CdrDirection direction, String disconnectReason, DateTime disconnectTime, int duration, dynamic recordingId, CdrStatus status
 });
 
 
@@ -70,12 +70,12 @@ as String,callee: null == callee ? _self.callee : callee // ignore: cast_nullabl
 as String,caller: null == caller ? _self.caller : caller // ignore: cast_nullable_to_non_nullable
 as String,connectTime: null == connectTime ? _self.connectTime : connectTime // ignore: cast_nullable_to_non_nullable
 as DateTime,direction: null == direction ? _self.direction : direction // ignore: cast_nullable_to_non_nullable
-as String,disconnectReason: null == disconnectReason ? _self.disconnectReason : disconnectReason // ignore: cast_nullable_to_non_nullable
+as CdrDirection,disconnectReason: null == disconnectReason ? _self.disconnectReason : disconnectReason // ignore: cast_nullable_to_non_nullable
 as String,disconnectTime: null == disconnectTime ? _self.disconnectTime : disconnectTime // ignore: cast_nullable_to_non_nullable
 as DateTime,duration: null == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
 as int,recordingId: freezed == recordingId ? _self.recordingId : recordingId // ignore: cast_nullable_to_non_nullable
 as dynamic,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as String,
+as CdrStatus,
   ));
 }
 
