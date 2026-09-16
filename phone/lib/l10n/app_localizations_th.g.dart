@@ -1299,6 +1299,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get logRecordsConsole_PopupMenuItem_clear => 'ล้าง';
 
   @override
+  String get main_Button_cancelPicking => 'ยกเลิก';
+
+  @override
   String get main_BottomNavigationBarItemLabel_chats => 'แชท';
 
   @override

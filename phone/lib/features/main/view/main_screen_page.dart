@@ -9,7 +9,6 @@ import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/features/voicemail/widgets/voicemail_flavor_overlay.dart';
-import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/utils.dart';
@@ -76,25 +75,27 @@ class _MainScreenPageState extends State<MainScreenPage> {
         // Tabs are guaranteed to be non-empty due to validation during the bootstrap phase.
         // The screen itself decides whether a bar is drawn at all - the
         // single-section rule lives there, shared with the previews.
-        // Built here rather than inside the screen: the screen is also built
-        // by the previews, which have nothing to be choosing for. This is the
-        // one place that decides what is being picked, which is what keeps the
-        // lists below from each knowing about the features that ask.
-        final pickPurpose = context.select<CallBloc, bool>((bloc) => bloc.state.isBlingTransferInitiated)
-            ? BlindTransferPurpose(
-                announcement: context.l10n.main_Text_blindTransferInitiated,
-                pickLabel: context.l10n.contact_SemanticsLabel_transfer,
-                controller: CallControllerScope.of(context),
-              )
-            : null;
+        //
+        // Read rather than decided: a feature that wants somebody chosen
+        // leaves its request here, and this screen never learns which features
+        // those are. It is also why the purpose is not built here - the
+        // previews build the same screen and have nothing to be choosing for.
+        final pickPurpose = context.select<DestinationPickingCubit, DestinationPickPurpose?>(
+          (cubit) => cubit.state.purpose,
+        );
 
         return MainScreen(
           // Above the sections, so every list they build can ask whether a
           // choice is being made without reaching into the feature that wants
-          // one.
-          body: DestinationPicking(purpose: pickPurpose, child: child),
+          // one. The presenter is the other end of the same arrangement: what
+          // a feature has to say about a finished choice reaches the person
+          // wherever the lists left them.
+          body: DestinationPickReportPresenter(
+            child: DestinationPicking(purpose: pickPurpose, child: child),
+          ),
           tabs: tabs,
           pickPurpose: pickPurpose,
+          onCancelPick: context.read<DestinationPickingCubit>().cancel,
           // The shell above provides the unread state this reads.
           decorateTabIcon: _decorateTabIcon,
           // Be aware to use activeIndex from tabsRouter, not from bottomMenuManager

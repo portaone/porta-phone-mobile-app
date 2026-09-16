@@ -178,7 +178,7 @@ class _FavoritesListState extends State<FavoritesList> {
                           final picks = purpose != null && purpose.accepts(candidate);
                           final pick = purpose == null
                               ? null
-                              : TilePick(
+                              : DestinationPickOffer(
                                   icon: purpose.pickIcon,
                                   label: purpose.pickLabel(candidate),
                                   onPressed: picks ? () => pickDestination(context, purpose, candidate) : null,

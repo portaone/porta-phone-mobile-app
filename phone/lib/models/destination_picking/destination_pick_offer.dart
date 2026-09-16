@@ -6,8 +6,8 @@ import 'package:flutter/widgets.dart';
 /// [onPressed] of null then means this row is not an answer to it. A row in
 /// that state offers nothing - not the choice, and not the ordinary actions
 /// either, which act on a number the person did not come here to act on.
-class TilePick {
-  const TilePick({required this.icon, required this.label, this.onPressed});
+class DestinationPickOffer {
+  const DestinationPickOffer({required this.icon, required this.label, this.onPressed});
 
   /// The mark the control carries. It belongs to whatever is asking: handing a
   /// call on and passing a message along are not the same gesture and should

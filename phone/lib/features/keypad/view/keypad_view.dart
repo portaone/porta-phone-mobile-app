@@ -296,7 +296,7 @@ class KeypadViewState extends State<KeypadView> {
   /// was, not somewhere they were sent, so there is nothing to come back from.
   void _pickTyped(DestinationPickPurpose purpose) {
     final candidate = DestinationCandidate(number: _sanitized(_textController.text));
-    if (!submitDestination(purpose, candidate)) return;
+    if (!submitDestination(context, purpose, candidate)) return;
 
     _focusNode.unfocus();
     _popNumber();
