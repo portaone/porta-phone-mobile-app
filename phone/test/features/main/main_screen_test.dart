@@ -27,6 +27,7 @@ void main() {
     required List<BottomMenuTab> tabs,
     required int currentIndex,
     DestinationPickPurpose? purpose,
+    VoidCallback? onCancelPick,
   }) {
     return tester.pumpWidget(
       MaterialApp(
@@ -38,6 +39,7 @@ void main() {
           tabs: tabs,
           currentIndex: currentIndex,
           pickPurpose: purpose,
+          onCancelPick: onCancelPick,
         ),
       ),
     );
@@ -54,7 +56,7 @@ void main() {
     testWidgets('is not shown while nothing is being transferred', (tester) async {
       await pumpShell(tester, tabs: tabs, currentIndex: 0);
 
-      expect(find.byType(TransferBottomNavigationBar), findsNothing);
+      expect(find.byType(DestinationPickingBanner), findsNothing);
     });
 
     testWidgets('is shown on a section that has a destination to offer', (tester) async {
@@ -63,7 +65,7 @@ void main() {
       await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose());
 
       expect(tabs[0].flavor, MainFlavor.keypad);
-      expect(find.byType(TransferBottomNavigationBar), findsOneWidget);
+      expect(find.byType(DestinationPickingBanner), findsOneWidget);
     });
 
     testWidgets('is not shown on a section that has none', (tester) async {
@@ -71,7 +73,7 @@ void main() {
       // the choice there offers something that cannot be done.
       await pumpShell(tester, tabs: const [...tabs, messagingTab], currentIndex: 2, purpose: _FakePurpose());
 
-      expect(find.byType(TransferBottomNavigationBar), findsNothing);
+      expect(find.byType(DestinationPickingBanner), findsNothing);
     });
 
     testWidgets('sits above the tab bar rather than behind it', (tester) async {
@@ -79,7 +81,7 @@ void main() {
       // the bar this screen floats over the page, and nobody ever saw it.
       await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose());
 
-      final banner = tester.getRect(find.byType(TransferBottomNavigationBar));
+      final banner = tester.getRect(find.byType(DestinationPickingBanner));
       final bar = tester.getRect(find.byType(MainBottomNavigationBar));
 
       expect(banner.bottom, lessThanOrEqualTo(bar.top));
@@ -91,7 +93,7 @@ void main() {
       // centres, reading as a label rather than as the state of the screen.
       await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose());
 
-      final banner = tester.getRect(find.byType(TransferBottomNavigationBar));
+      final banner = tester.getRect(find.byType(DestinationPickingBanner));
       final bar = tester.getRect(find.byType(MainBottomNavigationBar));
 
       expect(banner.width, bar.width);
@@ -103,7 +105,7 @@ void main() {
       // Under the same backdrop filter as the bar, so both sample one backdrop
       // and there is no seam between them.
       expect(
-        find.ancestor(of: find.byType(TransferBottomNavigationBar), matching: find.byType(BackdropFilter)),
+        find.ancestor(of: find.byType(DestinationPickingBanner), matching: find.byType(BackdropFilter)),
         findsOneWidget,
       );
       expect(
@@ -113,7 +115,7 @@ void main() {
 
       // And it lets that blur through rather than covering it.
       final fill = tester.widget<Container>(
-        find.descendant(of: find.byType(TransferBottomNavigationBar), matching: find.byType(Container)).first,
+        find.descendant(of: find.byType(DestinationPickingBanner), matching: find.byType(Container)).first,
       );
       expect((fill.color ?? (fill.decoration as BoxDecoration).color)!.a, lessThan(1.0));
     });
@@ -129,17 +131,44 @@ void main() {
       // fake here announces something no string file contains, and it is what
       // the banner reads out.
       expect(
-        tester.getSemantics(find.byType(TransferBottomNavigationBar)),
+        tester.getSemantics(find.byType(DestinationPickingBanner)),
         matchesSemantics(isLiveRegion: true, label: 'Pick somebody'),
       );
       handle.dispose();
+    });
+
+    testWidgets('offers a way out where whoever is asking has one', (tester) async {
+      // A handover is left by going back to the call; a message looking for a
+      // recipient has nowhere else to go, so the way out has to live on the
+      // one strip that follows the person across the sections.
+      var cancelled = 0;
+      await pumpShell(
+        tester,
+        tabs: tabs,
+        currentIndex: 0,
+        purpose: _FakePurpose(cancellable: true),
+        onCancelPick: () => cancelled++,
+      );
+
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+
+      expect(cancelled, 1);
+    });
+
+    testWidgets('says nothing about cancelling where the purpose offers no way out', (tester) async {
+      await pumpShell(tester, tabs: tabs, currentIndex: 0, purpose: _FakePurpose(), onCancelPick: () {});
+
+      expect(
+        find.descendant(of: find.byType(DestinationPickingBanner), matching: find.byType(TextButton)),
+        findsNothing,
+      );
     });
 
     testWidgets('is still said where a one-section menu draws no bar', (tester) async {
       await pumpShell(tester, tabs: [tabs.first], currentIndex: 0, purpose: _FakePurpose());
 
       expect(find.byType(MainBottomNavigationBar), findsNothing);
-      expect(find.byType(TransferBottomNavigationBar), findsOneWidget);
+      expect(find.byType(DestinationPickingBanner), findsOneWidget);
     });
   });
 
@@ -198,6 +227,8 @@ void main() {
 /// A purpose that offers everything except a page of conversations, which is
 /// what the real ones do and all this screen needs to know about them.
 class _FakePurpose implements DestinationPickPurpose {
+  _FakePurpose({this.cancellable = false});
+
   @override
   String get announcement => 'Pick somebody';
 
@@ -206,6 +237,15 @@ class _FakePurpose implements DestinationPickPurpose {
 
   @override
   bool accepts(DestinationCandidate candidate) => true;
+
+  @override
+  bool get closedByChoice => true;
+
+  @override
+  DestinationPickPrecedence get precedence => DestinationPickPrecedence.ordinary;
+
+  @override
+  final bool cancellable;
 
   @override
   IconData get pickIcon => Icons.phone_forwarded;

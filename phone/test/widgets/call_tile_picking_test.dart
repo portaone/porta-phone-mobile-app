@@ -17,7 +17,7 @@ void main() {
     home: Scaffold(body: child),
   );
 
-  CallTile tile({TilePick? pick, VoidCallback? onDialPressed}) => CallTile(
+  CallTile tile({DestinationPickOffer? pick, VoidCallback? onDialPressed}) => CallTile(
     leading: const SizedBox.square(dimension: 40),
     name: 'Iryna Shevchuk',
     callNumbers: const [],
@@ -48,7 +48,7 @@ void main() {
     await tester.pumpWidget(
       wrap(
         tile(
-          pick: TilePick(icon: Icons.forward_to_inbox, label: 'Forward to Iryna', onPressed: () {}),
+          pick: DestinationPickOffer(icon: Icons.forward_to_inbox, label: 'Forward to Iryna', onPressed: () {}),
         ),
       ),
     );
@@ -64,7 +64,7 @@ void main() {
     await tester.pumpWidget(
       wrap(
         tile(
-          pick: const TilePick(icon: Icons.forward_to_inbox, label: 'Forward to Iryna'),
+          pick: const DestinationPickOffer(icon: Icons.forward_to_inbox, label: 'Forward to Iryna'),
         ),
       ),
     );
@@ -79,7 +79,7 @@ void main() {
     await tester.pumpWidget(
       wrap(
         tile(
-          pick: TilePick(icon: Icons.forward_to_inbox, label: 'Forward to Iryna', onPressed: () {}),
+          pick: DestinationPickOffer(icon: Icons.forward_to_inbox, label: 'Forward to Iryna', onPressed: () {}),
         ),
       ),
     );
@@ -97,7 +97,11 @@ void main() {
     await tester.pumpWidget(
       wrap(
         tile(
-          pick: TilePick(icon: Icons.forward_to_inbox, label: 'Forward to Iryna', onPressed: () => called = true),
+          pick: DestinationPickOffer(
+            icon: Icons.forward_to_inbox,
+            label: 'Forward to Iryna',
+            onPressed: () => called = true,
+          ),
         ),
       ),
     );

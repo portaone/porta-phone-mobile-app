@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 /// Announces to every list below it that somebody is being chosen, and why.
@@ -31,10 +33,24 @@ class DestinationPicking extends InheritedWidget {
 /// picked from. A screen that forgets it is exactly the failure this mechanism
 /// exists to remove - the purpose's own rule silently not applying on one of
 /// them - and a screen cannot forget a check it does not perform.
-bool submitDestination(DestinationPickPurpose purpose, DestinationCandidate candidate) {
+///
+/// Closing the request is the other half, and for the same reason: the feature
+/// that asked is by now waiting on a backend somewhere, and a request left
+/// standing would keep every list in picking mode with nothing left to pick
+/// for. Only where the choice is what ends it - a purpose mirroring a mode it
+/// does not own here says so, and is closed by whoever does own it.
+bool submitDestination(BuildContext context, DestinationPickPurpose purpose, DestinationCandidate candidate) {
+  final picking = context.read<DestinationPickingCubit>();
+
+  // A row built for a request that no longer holds the floor is no answer to
+  // the one that does. A live request can take over between a row being built
+  // and a tap landing on it, and the tap must not act for whoever has since
+  // been pushed aside - nor close the request that replaced them.
+  if (picking.state.purpose != purpose) return false;
   if (!purpose.accepts(candidate)) return false;
 
   purpose.submit(candidate);
+  if (purpose.closedByChoice) picking.finish(purpose);
   return true;
 }
 
@@ -46,7 +62,7 @@ bool submitDestination(DestinationPickPurpose purpose, DestinationCandidate cand
 /// refuses leaves the screen where it is: nothing happened, so there is
 /// nothing to come back from.
 bool pickDestination(BuildContext context, DestinationPickPurpose purpose, DestinationCandidate candidate) {
-  if (!submitDestination(purpose, candidate)) return false;
+  if (!submitDestination(context, purpose, candidate)) return false;
 
   context.router.maybePop();
   return true;
