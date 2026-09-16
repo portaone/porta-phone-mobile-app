@@ -7,8 +7,54 @@ part 'cdrs_dao.g.dart';
 class CdrsDao extends DatabaseAccessor<AppDatabase> with _$CdrsDaoMixin {
   CdrsDao(super.db);
 
+  /// Directions that name no direction. A record carrying one of these says the
+  /// call could not be attributed (`unknown`, straight from the API) or that
+  /// this build is older than the contract (`unrecognized`).
+  ///
+  /// The column is a textEnum, so what is stored - and what a comparison has to
+  /// match - is the value's name.
+  static final _unattributedDirectionNames = [
+    CallDirectionData.unknown,
+    CallDirectionData.unrecognized,
+  ].map((direction) => direction.name).toList();
+
+  /// Upserts by `callId`, refusing to replace an attributed direction with an
+  /// unattributed one.
+  ///
+  /// The backend can report one call TWICE under the same `callId` - an IVR
+  /// call comes back as an outgoing leg and as the leg the IVR created onward,
+  /// which carries no direction at all. Only one of them can survive a primary
+  /// key, and without this clause the survivor is whichever the batch wrote
+  /// last: the sync worker reverses the page for unrelated reasons (events must
+  /// run oldest to newest), so today the attributed copy happens to win. That is
+  /// an accident of ordering, and it also does not hold when the two legs arrive
+  /// in different pages. The rule makes it a rule (WT-1983).
   Future<void> upsertCdrs(List<CdrRecordData> cdrs) {
-    return batch((batch) => batch.insertAllOnConflictUpdate(cdrTable, cdrs));
+    return batch(
+      (batch) => batch.insertAll(
+        cdrTable,
+        cdrs,
+        onConflict: DoUpdate<CdrTable, CdrRecordData>.withExcluded(
+          (old, excluded) => CdrRecordDataCompanion.custom(
+            direction: excluded.direction,
+            status: excluded.status,
+            callee: excluded.callee,
+            calleeNumber: excluded.calleeNumber,
+            caller: excluded.caller,
+            callerNumber: excluded.callerNumber,
+            connectTimeUsec: excluded.connectTimeUsec,
+            disconnectTimeUsec: excluded.disconnectTimeUsec,
+            disconnectReason: excluded.disconnectReason,
+            durationSeconds: excluded.durationSeconds,
+            recordingId: excluded.recordingId,
+          ),
+          // Keep the stored row when the incoming one knows less: an
+          // unattributed direction may only overwrite another unattributed one.
+          where: (old, excluded) =>
+              excluded.direction.isNotIn(_unattributedDirectionNames) | old.direction.isIn(_unattributedDirectionNames),
+        ),
+      ),
+    );
   }
 
   Future<List<CdrRecordData>> getHistory({
