@@ -16,7 +16,8 @@ class ContactPhoneTile extends StatelessWidget {
     this.onAudioPressed,
     this.onVideoPressed,
     this.onTransferPressed,
-    this.onInitiatedTransferPressed,
+    this.onPickPressed,
+    this.pickLabel,
     this.onMessagePressed,
     this.onSendSmsPressed,
     this.onCallLogPressed,
@@ -37,7 +38,14 @@ class ContactPhoneTile extends StatelessWidget {
   final VoidCallback? onAudioPressed;
   final VoidCallback? onVideoPressed;
   final VoidCallback? onTransferPressed;
-  final VoidCallback? onInitiatedTransferPressed;
+
+  /// Offers this number as the answer to whatever is being chosen, and is
+  /// null when it is not an answer.
+  final VoidCallback? onPickPressed;
+
+  /// What that offer is called. Falls back to the transfer wording, which is
+  /// what it was before anything else could ask.
+  final String? pickLabel;
   final GestureTapCallback? onMessagePressed;
   final VoidCallback? onSendSmsPressed;
   final VoidCallback? onCallLogPressed;
@@ -77,16 +85,12 @@ class ContactPhoneTile extends StatelessWidget {
       );
     }
 
-    if (onInitiatedTransferPressed != null) {
+    if (onPickPressed != null) {
       icons.add(
         SemanticAction(
-          label: l10n.contact_SemanticsLabel_transfer(number),
+          label: pickLabel ?? l10n.contact_SemanticsLabel_transfer(number),
           identifier: numberedId(contactPhoneTransferId, index),
-          child: IconButton(
-            splashRadius: 24,
-            icon: const Icon(Icons.phone_forwarded),
-            onPressed: onInitiatedTransferPressed,
-          ),
+          child: IconButton(splashRadius: 24, icon: const Icon(Icons.phone_forwarded), onPressed: onPickPressed),
         ),
       );
     } else {

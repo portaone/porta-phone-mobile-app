@@ -7,7 +7,6 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
-import '../../call/call.dart';
 import '../../favorites/favorites.dart';
 import '../contacts.dart';
 
@@ -131,18 +130,14 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
                 ? null
                 : !showingFavorites
                 ? const SizedBox.shrink(key: ValueKey('contacts-no-reorder'))
-                : BlocBuilder<CallBloc, CallState>(
+                // While somebody is being chosen every row is a choice, and the
+                // bar announcing it takes the bottom of the screen.
+                : FavoritesReorderButton(
                     key: const ValueKey('contacts-reorder'),
-                    buildWhen: (previous, current) =>
-                        previous.isBlingTransferInitiated != current.isBlingTransferInitiated,
-                    // A transfer turns every row into a destination to pick, and
-                    // the bar announcing it takes the bottom of the screen.
-                    builder: (context, callState) => FavoritesReorderButton(
-                      controller: _reorder,
-                      identifier: contactsFavoritesReorderId,
-                      bottomPadding: mediaQueryData.padding.bottom,
-                      hidden: callState.isBlingTransferInitiated,
-                    ),
+                    controller: _reorder,
+                    identifier: contactsFavoritesReorderId,
+                    bottomPadding: mediaQueryData.padding.bottom,
+                    hidden: context.isPickingDestination,
                   ),
             appBar: MainAppBar(
               title: widget.title,
