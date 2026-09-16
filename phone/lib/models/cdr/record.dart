@@ -3,7 +3,13 @@ import 'package:equatable/equatable.dart';
 import 'package:webtrit_phone/extensions/iterable.dart';
 import 'package:webtrit_phone/models/models.dart';
 
-enum CdrStatus { accepted, declined, missed, error }
+/// Call status of a record, mirroring `api.CdrStatus`.
+///
+/// [error] is a status of its own and never a catch-all: what this build does
+/// not model becomes [unrecognized]. [failed] and [completedElsewhere] were
+/// reported as [error] until WT-1983, because the enum stopped short of the
+/// contract and the fallback swallowed the difference.
+enum CdrStatus { accepted, declined, missed, failed, completedElsewhere, error, unrecognized }
 
 class CdrRecord extends Equatable {
   CdrRecord({

@@ -1,5 +1,3 @@
-import 'package:collection/collection.dart';
-
 import 'package:api/api.dart' as api;
 
 import 'package:webtrit_phone/extensions/string.dart';
@@ -9,8 +7,8 @@ mixin CdrApiMapper {
   CdrRecord cdrFromApi(api.CdrRecord cdrRecord) {
     return CdrRecord(
       callId: cdrRecord.callId,
-      direction: CallDirection.values.byName(cdrRecord.direction),
-      status: CdrStatus.values.firstWhereOrNull((s) => s.name == cdrRecord.status) ?? CdrStatus.error,
+      direction: _directionFromApi(cdrRecord.direction),
+      status: _statusFromApi(cdrRecord.status),
       callee: cdrRecord.callee,
       calleeNumber: cdrRecord.callee.extractNumber,
       caller: cdrRecord.caller,
@@ -22,4 +20,28 @@ mixin CdrApiMapper {
       recordingId: cdrRecord.recordingId,
     );
   }
+
+  // Both translations are exhaustive switches on purpose. The api package
+  // already absorbed whatever the wire carried, so nothing here can throw; what
+  // these guard instead is the next value the contract grows - it lands as a
+  // compile error in this file rather than as a silent fallback nobody notices,
+  // which is how `failed` and `completed_elsewhere` spent years reported as
+  // `error` (WT-1983).
+  CallDirection _directionFromApi(api.CdrDirection direction) => switch (direction) {
+    api.CdrDirection.incoming => CallDirection.incoming,
+    api.CdrDirection.outgoing => CallDirection.outgoing,
+    api.CdrDirection.forwarded => CallDirection.forwarded,
+    api.CdrDirection.unknown => CallDirection.unknown,
+    api.CdrDirection.unrecognized => CallDirection.unrecognized,
+  };
+
+  CdrStatus _statusFromApi(api.CdrStatus status) => switch (status) {
+    api.CdrStatus.accepted => CdrStatus.accepted,
+    api.CdrStatus.declined => CdrStatus.declined,
+    api.CdrStatus.missed => CdrStatus.missed,
+    api.CdrStatus.failed => CdrStatus.failed,
+    api.CdrStatus.completedElsewhere => CdrStatus.completedElsewhere,
+    api.CdrStatus.error => CdrStatus.error,
+    api.CdrStatus.unrecognized => CdrStatus.unrecognized,
+  };
 }
