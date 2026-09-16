@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:webtrit_phone/models/main_flavor.dart';
 
 import 'destination_candidate.dart';
+import 'destination_pick_precedence.dart';
 
 /// Why somebody is being sent to the app's own lists to choose a person, and
 /// what happens once they have.
@@ -18,6 +19,20 @@ abstract interface class DestinationPickPurpose {
   /// localized: this is built where a context is at hand, so the lists that
   /// show it need no strings of their own.
   String get announcement;
+
+  /// What happens if another feature asks while this one is already asking.
+  ///
+  /// Declared here so the rule stays with the thing it is true of: a transfer
+  /// says a person is on the line, and nothing the shell knows about features
+  /// has to say it for them.
+  DestinationPickPrecedence get precedence;
+
+  /// Whether the person can give this up from the banner.
+  ///
+  /// False where they already have a way out: a transfer is abandoned by
+  /// returning to the call. True where the request would otherwise have no
+  /// end but going through with it.
+  bool get cancellable;
 
   /// Whether this section can supply a destination for this purpose.
   ///

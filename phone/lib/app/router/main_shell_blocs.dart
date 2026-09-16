@@ -308,6 +308,10 @@ class MainShellBlocs extends StatelessWidget {
                   callPullVideoStrategy: featureAccess.callConfig.capabilities.callPullVideoStrategy,
                 )..init(),
               ),
+              // Where a feature leaves a request for somebody to be chosen.
+              // Nothing here knows which features do that; they find it the
+              // same way every other shell-long state is found.
+              BlocProvider<DestinationPickingCubit>(create: (_) => DestinationPickingCubit()),
               BlocProvider<CallRoutingCubit>(
                 lazy: false,
                 create: (_) => CallRoutingCubit(

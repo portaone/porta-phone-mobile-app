@@ -29,7 +29,15 @@ class _CallShellState extends State<CallShell> {
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
-      listeners: [_callDisplayListener(), _callScreenDisplayListener(), _callVideoListener()],
+      listeners: [
+        _callDisplayListener(),
+        _callScreenDisplayListener(),
+        _callVideoListener(),
+        // Not about showing a call, but about the same bloc and the same
+        // lifetime: while one is being handed over, the lists elsewhere in the
+        // app are what the person is choosing from.
+        BlindTransferPicking(controller: CallControllerScope.of(context)),
+      ],
       child: widget.child,
     );
   }

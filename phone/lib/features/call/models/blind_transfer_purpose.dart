@@ -38,6 +38,17 @@ class BlindTransferPurpose extends Equatable implements DestinationPickPurpose {
   @override
   bool accepts(DestinationCandidate candidate) => candidate.number != null;
 
+  /// Somebody is holding a line while this destination is being chosen, so
+  /// nothing that can wait takes the floor from it.
+  @override
+  DestinationPickPrecedence get precedence => DestinationPickPrecedence.live;
+
+  /// The way out is the call itself: going back to it drops the transfer, and
+  /// a second way to abandon it on the banner would be a second thing to keep
+  /// in step with the call's own state.
+  @override
+  bool get cancellable => false;
+
   @override
   IconData get pickIcon => Icons.phone_forwarded;
 

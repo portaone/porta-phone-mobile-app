@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/destination_picking.dart';
 
@@ -44,18 +47,57 @@ void main() {
     // The check lives here rather than at each place a person can be picked
     // from, because a screen that forgets it is exactly the failure this
     // mechanism exists to remove. Two screens did forget it.
-    test('a candidate the purpose takes is submitted', () {
-      final purpose = _Purpose();
+    late DestinationPickingCubit picking;
+    late BuildContext pickingContext;
 
-      expect(submitDestination(purpose, const DestinationCandidate(number: '1001')), isTrue);
+    Future<void> pumpPicking(WidgetTester tester) async {
+      picking = DestinationPickingCubit();
+      await tester.pumpWidget(
+        BlocProvider<DestinationPickingCubit>.value(
+          value: picking,
+          child: Builder(
+            builder: (context) {
+              pickingContext = context;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+    }
+
+    testWidgets('a candidate the purpose takes is submitted', (tester) async {
+      final purpose = _Purpose();
+      await pumpPicking(tester);
+      picking.ask(purpose);
+
+      expect(submitDestination(pickingContext, purpose, const DestinationCandidate(number: '1001')), isTrue);
+
       expect(purpose.submitted.single.number, '1001');
     });
 
-    test('a candidate it refuses is not, and says so', () {
-      final purpose = _Purpose(takes: false);
+    testWidgets('and the request it answered is closed with it', (tester) async {
+      // Closed here rather than by the feature: by now it is waiting on a
+      // backend somewhere, and a request left standing keeps every list in
+      // picking mode with nothing left to pick for.
+      final purpose = _Purpose();
+      await pumpPicking(tester);
+      picking.ask(purpose);
 
-      expect(submitDestination(purpose, const DestinationCandidate(number: '1001')), isFalse);
+      submitDestination(pickingContext, purpose, const DestinationCandidate(number: '1001'));
+
+      expect(picking.state.purpose, isNull);
+    });
+
+    testWidgets('a candidate it refuses is not, and says so', (tester) async {
+      final purpose = _Purpose(takes: false);
+      await pumpPicking(tester);
+      picking.ask(purpose);
+
+      expect(submitDestination(pickingContext, purpose, const DestinationCandidate(number: '1001')), isFalse);
+
       expect(purpose.submitted, isEmpty);
+      // Nothing happened, so the person is still choosing.
+      expect(picking.state.purpose, same(purpose));
     });
   });
 
@@ -96,6 +138,12 @@ class _Purpose implements DestinationPickPurpose {
   bool accepts(DestinationCandidate candidate) => takes;
 
   @override
+  DestinationPickPrecedence get precedence => DestinationPickPrecedence.ordinary;
+
+  @override
+  bool get cancellable => false;
+
+  @override
   IconData get pickIcon => Icons.phone_forwarded;
 
   @override
@@ -117,6 +165,12 @@ class _EqualPurpose implements DestinationPickPurpose {
 
   @override
   bool accepts(DestinationCandidate candidate) => true;
+
+  @override
+  DestinationPickPrecedence get precedence => DestinationPickPrecedence.ordinary;
+
+  @override
+  bool get cancellable => false;
 
   @override
   IconData get pickIcon => Icons.phone_forwarded;

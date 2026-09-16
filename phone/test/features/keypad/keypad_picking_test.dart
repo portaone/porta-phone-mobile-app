@@ -104,6 +104,12 @@ class _Purpose implements DestinationPickPurpose {
   }
 
   @override
+  DestinationPickPrecedence get precedence => DestinationPickPrecedence.ordinary;
+
+  @override
+  bool get cancellable => false;
+
+  @override
   IconData get pickIcon => Icons.phone_forwarded;
 
   @override

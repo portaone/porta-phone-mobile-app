@@ -2362,6 +2362,12 @@ abstract class AppLocalizations {
   /// **'Clear'**
   String get logRecordsConsole_PopupMenuItem_clear;
 
+  /// Leaves the banner asking the person to choose somebody, giving up on whatever asked for one.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get main_Button_cancelPicking;
+
   /// No description provided for @main_BottomNavigationBarItemLabel_chats.
   ///
   /// In en, this message translates to:

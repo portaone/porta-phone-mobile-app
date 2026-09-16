@@ -155,7 +155,7 @@ class CallTile extends StatefulWidget {
   /// still offered to call, to message and to hand a call over - on a row the
   /// person is here to choose, and on one the purpose refuses it was the only
   /// thing left to press.
-  final TilePick? pick;
+  final DestinationPickOffer? pick;
   final IconData? dialIcon;
 
   /// Whether the trailing dial shortcut places a video call; drives both the

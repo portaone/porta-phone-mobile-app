@@ -231,6 +231,13 @@ sends the user to the contacts, recents, favourites and keypad lists; what those
 choice is being made, and how another feature can ask for one, is
 [`../destination_picking.md`](../destination_picking.md).
 
+The bloc takes no part in that mechanism and holds no state for it. `Transfer.blindTransferInitiated`
+on `ActiveCall` stays the only truth about a transfer looking for a target, and
+`features/call/widgets/blind_transfer_picking.dart` reflects that one slice into the picking request,
+in one direction. Every path that clears `transfer` - a signalling failure, the call ending, an
+attended-transfer branch - therefore takes the banner off the lists with it, without any of them
+knowing there is a banner.
+
 **iOS audio reset** — on the first and last call, the BLoC forces audio to earpiece via
 `AppleNativeAudioManagement` to work around a platform bug where speaker stays active across
 calls.

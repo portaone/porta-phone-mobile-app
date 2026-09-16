@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 /// Announces to every list below it that somebody is being chosen, and why.
@@ -31,10 +33,16 @@ class DestinationPicking extends InheritedWidget {
 /// picked from. A screen that forgets it is exactly the failure this mechanism
 /// exists to remove - the purpose's own rule silently not applying on one of
 /// them - and a screen cannot forget a check it does not perform.
-bool submitDestination(DestinationPickPurpose purpose, DestinationCandidate candidate) {
+///
+/// Closing the request is the other half, and for the same reason: the feature
+/// that asked is by now waiting on a backend somewhere, and a request left
+/// standing would keep every list in picking mode with nothing left to pick
+/// for.
+bool submitDestination(BuildContext context, DestinationPickPurpose purpose, DestinationCandidate candidate) {
   if (!purpose.accepts(candidate)) return false;
 
   purpose.submit(candidate);
+  context.read<DestinationPickingCubit>().finish();
   return true;
 }
 
@@ -46,7 +54,7 @@ bool submitDestination(DestinationPickPurpose purpose, DestinationCandidate cand
 /// refuses leaves the screen where it is: nothing happened, so there is
 /// nothing to come back from.
 bool pickDestination(BuildContext context, DestinationPickPurpose purpose, DestinationCandidate candidate) {
-  if (!submitDestination(purpose, candidate)) return false;
+  if (!submitDestination(context, purpose, candidate)) return false;
 
   context.router.maybePop();
   return true;
