@@ -1,8 +1,12 @@
 import 'package:drift/drift.dart';
 
-enum CdrStatusData { accepted, declined, missed, error }
+// Both mirror the domain enums in `webtrit_phone/models`, value for value: the
+// mappers translate by name, so a value missing here fails at write time.
+// The columns are textEnum, so adding a value stores a new name and needs no
+// migration.
+enum CdrStatusData { accepted, declined, missed, failed, completedElsewhere, error, unrecognized }
 
-enum CallDirectionData { incoming, outgoing, forwarded }
+enum CallDirectionData { incoming, outgoing, forwarded, unknown, unrecognized }
 
 @DataClassName('CdrRecordData')
 class CdrTable extends Table {
