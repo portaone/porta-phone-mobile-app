@@ -12,6 +12,11 @@ extension DirectionConverting on CallDirection {
         return isComplete ? Icons.call_made : Icons.call_missed_outgoing;
       case CallDirection.forwarded:
         return isComplete ? Icons.call_merge : Icons.call_split;
+      // Neither value knows a direction, so neither may borrow an arrow from
+      // one: an unattributed leg must not read as an incoming or outgoing call.
+      case CallDirection.unknown:
+      case CallDirection.unrecognized:
+        return isComplete ? Icons.call : Icons.call_end;
     }
   }
 }
