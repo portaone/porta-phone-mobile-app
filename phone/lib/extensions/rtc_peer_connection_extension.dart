@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 /// Extension on [RTCPeerConnection] to safely add a track.
@@ -11,5 +12,36 @@ extension RTCPeerConnectionSafeAddTrack on RTCPeerConnection {
       return addTrack(track, stream);
     }
     return null;
+  }
+}
+
+/// Finds the sender that carries this connection's microphone.
+///
+/// The transceiver's own media decides, not the track currently on the
+/// sender: a muted connection has no track there to recognise it by. Before
+/// a remote description arrives the transceiver has no receiver track either,
+/// and then the sender's own track is all there is to go by.
+extension RTCPeerConnectionAudioSender on RTCPeerConnection {
+  Future<RTCRtpSender?> audioSender() async {
+    final transceivers = await getTransceivers();
+    final audio = transceivers.firstWhereOrNull((transceiver) => transceiver.receiver.track?.kind == 'audio');
+    if (audio != null) return audio.sender;
+    final senders = await getSenders();
+    return senders.firstWhereOrNull((sender) => sender.track?.kind == 'audio');
+  }
+}
+
+/// Mutes one connection without touching the microphone behind it.
+///
+/// The app captures one track and lends the same one to every call, so the
+/// track itself must keep running: only what a sender carries may change.
+extension RTCRtpSenderMicrophone on RTCRtpSender {
+  /// Stops this connection from sending. The stream stays up and carries
+  /// silence, so the far end hears nothing rather than falling away.
+  Future<void> detachMicrophone() => replaceTrack(null);
+
+  /// Puts [microphone] back, unless this sender already carries a track.
+  Future<void> attachMicrophone(MediaStreamTrack microphone) async {
+    if (track == null) await replaceTrack(microphone);
   }
 }
