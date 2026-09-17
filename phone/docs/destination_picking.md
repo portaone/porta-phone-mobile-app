@@ -18,15 +18,20 @@ The lists know nothing about the features that ask. They know one thing: a
 | `DestinationPickPurpose` | `lib/models/destination_picking/destination_pick_purpose.dart` | Why somebody is being chosen, and what happens once they are |
 | `DestinationCandidate` | `lib/models/destination_picking/destination_candidate.dart` | What one row can hand over |
 | `DestinationPicking` | `lib/widgets/destination_picking.dart` | The scope above the sections; what a list asks |
+| `DestinationPickingCubit` | `lib/blocs/destination_picking/destination_picking_cubit.dart` | Where a feature leaves its request, and what it has to say afterwards |
+| `DestinationPickReport` | `lib/models/destination_picking/destination_pick_report.dart` | What came of a choice, in the feature's own words |
 
 ```dart
 abstract interface class DestinationPickPurpose {
-  String get announcement;                        // what the banner says
-  bool offeredBy(MainFlavor flavor);              // which sections can answer
-  bool accepts(DestinationCandidate candidate);   // which rows are answers
-  IconData get pickIcon;                          // the mark it carries
-  String pickLabel(DestinationCandidate c);       // what the control is called
-  void submit(DestinationCandidate candidate);    // what to do with one
+  String get announcement;                       // what the banner says
+  DestinationPickPrecedence get precedence;      // who wins if two features ask
+  bool get closedByChoice;                       // does a choice end it, or the feature
+  bool get cancellable;                          // whether the banner offers a way out
+  bool offeredBy(MainFlavor flavor);             // which sections can answer
+  bool accepts(DestinationCandidate candidate);  // which rows are answers
+  IconData get pickIcon;                         // the mark it carries
+  String pickLabel(DestinationCandidate c);      // what the control is called
+  void submit(DestinationCandidate candidate);   // what to do with one
 }
 ```
 
@@ -35,6 +40,14 @@ rather than promised: `submitDestination` in `lib/widgets/destination_picking.da
 asks first and answers whether it went through. Screens do not perform the check
 themselves, because a screen that forgets it is the failure this mechanism
 exists to remove - and two of them did forget.
+
+Two more things happen there, and for the same reason. A row built for a request
+that no longer holds the floor is refused: a live request can take over between
+the row being drawn and the tap landing on it, and that tap must not act for
+whoever was pushed aside. And the request is closed by the choice only where the
+purpose says a choice is what ends it - otherwise by whoever owns the mode. A
+transfer does not end when a number is handed to it: the switch may refuse the
+REFER, and the call is still looking for a target.
 
 ## The candidate's two halves
 
@@ -65,6 +78,15 @@ class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpos
   final String announcement;
   final String messageId;
 
+  /// Nobody is on the line waiting for this, so it stands aside for a call.
+  @override
+  DestinationPickPrecedence get precedence => DestinationPickPrecedence.ordinary;
+
+  /// There is no other way out of it: the screen that started this is two
+  /// sections away by now.
+  @override
+  bool get cancellable => true;
+
   @override
   bool offeredBy(MainFlavor flavor) => flavor == MainFlavor.contacts;
 
@@ -85,7 +107,7 @@ class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpos
 }
 ```
 
-Three things to get right:
+What to get right:
 
 - **Value equality.** The scope is rebuilt with the shell. A purpose compared by
   identity alone would notify every row on the screen on every frame.
@@ -96,24 +118,57 @@ Three things to get right:
 - **`pickLabel` and `pickIcon` are how the control presents itself.** Left to the
   screen it can only say and draw one purpose's gesture, and it would be the
   wrong one for every other: handing a call on is not passing a message along.
+- **`precedence` is the feature's own statement**, not the shell's knowledge of
+  which features exist: a transfer says somebody is on the line, and that is
+  why it cannot be pushed aside.
+- **`closedByChoice` says who decides when it is over.** True where the feature
+  owns the request outright - it asked, the choice answers it, done. False where
+  the request mirrors a mode kept elsewhere, and the answer may still be
+  refused; then whoever owns that mode takes the request back.
 
-Then say when it is in force. That decision lives in one place,
-`lib/features/main/view/main_screen_page.dart`:
+Then ask, wherever the feature decides it wants somebody, and send the person to
+the lists yourself:
 
 ```dart
-final pickPurpose = <the feature's own state says a choice is being made>
-    ? SomePurpose(announcement: context.l10n.some_key, ...)
-    : null;
+final asked = context.read<DestinationPickingCubit>().ask(
+  SomePurpose(announcement: context.l10n.some_key, ...),
+);
+if (!asked) return;      // somebody is already choosing for something that outranks this
 
-return MainScreen(
-  body: DestinationPicking(purpose: pickPurpose, child: child),
-  pickPurpose: pickPurpose,
-  ...
+context.router.navigate(<wherever the person should choose>);
+```
+
+Nothing is added to the shell. It reads the one state and never learns which
+features put anything in it:
+
+```dart
+final pickPurpose = context.select<DestinationPickingCubit, DestinationPickPurpose?>(
+  (cubit) => cubit.state.purpose,
 );
 ```
 
 Only one purpose can be in force: somebody cannot be choosing for two things at
-once. With a second purpose, that expression is where the two are arbitrated.
+once. `ask` answers `false` rather than queueing, and `precedence` decides which
+of the two it is - equal ranks leave the first one standing.
+
+## Saying what came of it
+
+By the time a forward has an answer the person is wherever the lists left them,
+so the feature cannot say it on the screen that asked. It announces instead, in
+its own words:
+
+```dart
+picking.announce(DestinationPickReport(
+  message: l10n.voicemail_Snackbar_forwardTooLarge,
+  isFailure: true,
+  retryLabel: l10n.voicemail_Label_retry,   // only where trying again could end differently
+  onRetry: () => _send(message, recipient),
+));
+```
+
+`DestinationPickReportPresenter`, mounted once above the sections, puts it on screen. What
+a backend refusal means is the feature's business; which snackbar it becomes is
+not the feature's problem.
 
 ## The row contract
 
@@ -143,7 +198,7 @@ onDialPressed: purpose == null && number != null ? () => call(number) : null,
 A refusal has exactly one shape: no callback. A row that keeps a callback and
 leaves the submission to refuse it is a row that looks pickable and is not.
 
-In the lists this is one object, `TilePick`, handed to the row. Its presence is
+In the lists this is one object, `DestinationPickOffer`, handed to the row. Its presence is
 what says a choice is being made; its `onPressed` says whether this row answers
 it. The row then draws the purpose's mark, or nothing at all - not the dial
 shortcut, and not the overflow menu behind it, which went on offering to call,
@@ -190,21 +245,32 @@ choice that cannot be made there.
 a number, is offered by favourites, recents, contacts and the keypad, and
 submits through `CallController.submitTransfer`.
 
-**Its state did not move here.** Whether a transfer is under way is still a
-field on the call (`Transfer.blindTransferInitiated` on `ActiveCall`), cleared
-by returning to the call screen, by the call ending, and by a signalling
-failure. The shell reads that flag and builds the purpose from it. So the call
-owns the mode, and this owns only what the lists do about it.
+**Its state did not move here, and a bridge is why.** Whether a transfer is
+looking for a target is one of six `Transfer` states on `ActiveCall`, set in one
+place inside `CallBloc` and cleared in ten - signalling failures, the call
+ending, the attended-transfer branches. Asking the call to `ask` and `withdraw`
+by hand from each of those would be a second copy of that state machine, one
+forgotten edge away from a banner nothing can take off the screen.
+
+So the call publishes what it always did, and
+`lib/features/call/widgets/blind_transfer_picking.dart` reflects one slice of
+it - "is a transfer looking for somebody" - into the request, in one direction.
+It is mounted once, in `main_shell_blocs.dart`, where every feature's
+dependencies are already listed. The mechanism learns nothing about calls; the
+call learns nothing about the mechanism.
+
+A bridge is not what a feature normally needs. It is for a mode that already
+lives in somebody else's bloc and is driven from there. A feature that decides
+for itself - passing a voice message on, say - calls `ask` where the person asks
+for it, and nothing is mounted anywhere.
 
 ## Known gaps
 
-- **No cancel.** The banner is a live region with no button. The way out is to
-  return to the call, which clears the flag.
 - **Nothing is said on a section that cannot answer.** The user is still
   choosing there and is not told so.
 
-Both predate this mechanism. Closing either is now one place rather than eight:
-the banner, at `main_screen.dart`.
+It predates this mechanism. Closing it is now one place rather than eight: the
+banner, at `main_screen.dart`.
 
 ## Tests
 
@@ -217,3 +283,6 @@ the banner, at `main_screen.dart`.
 | `test/features/contact/widgets/contact_phone_tile_adapter_test.dart` | The card's control: shown only for an accepted number, ungated by transfer, and no other route out while picking |
 | `test/features/keypad/keypad_picking_test.dart` | The pad following the typed value, and not needing transfer switched on |
 | `test/widgets/call_tile_picking_test.dart` | A list row: the purpose's mark, and no menu left behind it |
+| `test/blocs/destination_picking_cubit_test.dart` | The request itself: who wins when two features ask, and that a report outlives the request |
+| `test/features/call/widgets/blind_transfer_picking_test.dart` | The bridge, including a transfer that ends without taking somebody else's request with it |
+| `test/widgets/pick_report_presenter_test.dart` | What a feature has to say, and the retry offered only where one can change the answer |
