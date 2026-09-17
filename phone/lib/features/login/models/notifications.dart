@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+
+import 'package:auto_route/auto_route.dart';
 
 import 'package:api/api.dart';
 
 import 'package:webtrit_phone/app/notifications/models/notification.dart';
+import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 
 import '../extensions/otp_signin_identifier.dart';
@@ -107,6 +113,44 @@ final class LoginIncorrectCredentialsNotification extends MessageNotification {
   @override
   String l10n(BuildContext context) {
     return context.l10n.login_RequestFailureIncorrectCredentialsError;
+  }
+}
+
+/// The login failure the app has no particular wording for.
+///
+/// It exists so that an attempt never ends in silence: a form that merely stops
+/// spinning leaves the person retyping a password that was never the problem.
+/// [defaultErrorL10n] turns transport failures and bare HTTP statuses into
+/// something readable, which is all that can honestly be said about a failure
+/// the backend did not name.
+final class LoginUnexpectedErrorNotification extends MessageNotification {
+  const LoginUnexpectedErrorNotification(this.error);
+
+  final Object error;
+
+  @override
+  String l10n(BuildContext context) => defaultErrorL10n(context, error);
+
+  /// The snackbar can only name the kind of failure; behind this action are the
+  /// fields support actually asks for - status, request id, the backend's own
+  /// message - on a screen that copies and shares them. Offered only for the
+  /// errors that carry such fields: on anything else the action would open a
+  /// screen with nothing on it.
+  @override
+  SnackBarAction? action(BuildContext context) {
+    final error = this.error;
+    final fields = switch (error) {
+      RequestFailure() => error.errorFields(context),
+      SocketException() => error.errorFields(context),
+      _ => null,
+    };
+    if (fields == null) return null;
+
+    final title = l10n(context);
+    return SnackBarAction(
+      label: context.l10n.default_ErrorDetails,
+      onPressed: () => context.router.push(ErrorDetailsScreenPageRoute(title: title, fields: fields)),
+    );
   }
 }
 

@@ -666,9 +666,24 @@ class LoginCubit extends Cubit<LoginState> {
         notificationsBloc.add(NotificationsSubmitted(readableNotification));
         return;
       }
+
+      // Read after the codes so a backend that does name the refusal keeps its
+      // own wording; this one covers the adapters that answer a wrong login or
+      // password with a bare 401 and no code at all. A mistyped password is the
+      // person's own doing, so it is worth telling them and not worth a
+      // Crashlytics record.
+      if (error is IncorrectCredentialsException) {
+        _logger.warning('Known login error occurred: $error', error);
+        notificationsBloc.add(NotificationsSubmitted(const LoginIncorrectCredentialsNotification()));
+        return;
+      }
     }
 
+    // Anything left is unexpected, and is still reported as such - but it also
+    // reaches the user, because a sign-in that fails in silence sends them
+    // retyping credentials that were never the problem.
     _logger.severe('Unexpected error during login process', error, stackTrace);
     CrashlyticsUtils.recordError(error, stack: stackTrace, reason: context);
+    notificationsBloc.add(NotificationsSubmitted(LoginUnexpectedErrorNotification(error)));
   }
 }
