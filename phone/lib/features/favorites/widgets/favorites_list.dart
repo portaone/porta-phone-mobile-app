@@ -147,8 +147,6 @@ class _FavoritesListState extends State<FavoritesList> {
           builder: (context, userInfoState) {
             final userSmsNumbers = userInfoState.userInfo?.numbers.sms ?? [];
 
-            final purpose = context.pickPurpose;
-
             return BlocBuilder<CallBloc, CallState>(
               buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
               builder: (context, callState) {
@@ -174,15 +172,9 @@ class _FavoritesListState extends State<FavoritesList> {
                           final contactSourceId = contact?.sourceId;
                           final contactSmsNumbers = contact?.smsNumbers ?? [];
                           final canSendSms = contactSmsNumbers.contains(favorite.number);
-                          final candidate = DestinationCandidate(number: favorite.number, contact: contact);
-                          final picks = purpose != null && purpose.accepts(candidate);
-                          final pick = purpose == null
-                              ? null
-                              : DestinationPickOffer(
-                                  icon: purpose.pickIcon,
-                                  label: purpose.pickLabel(candidate),
-                                  onPressed: picks ? () => pickDestination(context, purpose, candidate) : null,
-                                );
+                          final pick = context.pickOfferFor(
+                            DestinationCandidate(number: favorite.number, contact: contact),
+                          );
 
                           return ReorderableDragStartListener(
                             key: ValueKey('${favorite.number}_${favorite.sourceType.name}_$index'),
@@ -198,14 +190,14 @@ class _FavoritesListState extends State<FavoritesList> {
                                     contact: contact,
                                     callNumbers: callRoutingState?.allNumbers ?? [],
                                     pick: pick,
-                                    onTap: purpose != null
-                                        ? (picks ? () => pickDestination(context, purpose, candidate) : null)
+                                    onTap: pick != null
+                                        ? pick.onPressed
                                         : () => _toggleExpanded('${favorite.number}_${favorite.sourceType.name}'),
                                     expanded:
-                                        purpose == null &&
+                                        pick == null &&
                                         !widget.reorderMode &&
                                         _expandedFavoriteId == '${favorite.number}_${favorite.sourceType.name}',
-                                    onDialPressed: purpose != null
+                                    onDialPressed: pick != null
                                         ? null
                                         : () {
                                             _callController.createCall(
