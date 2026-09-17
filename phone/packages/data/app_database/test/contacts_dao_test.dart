@@ -833,7 +833,6 @@ void main() {
       'getContactByPhoneNumber': () => database.contactsDao.getContactByPhoneNumber('4'),
       'watchContactByPhoneNumber': () => database.contactsDao.watchContactByPhoneNumber('4').first,
       'getContactByPhoneMatchedEnding': () => database.contactsDao.getContactByPhoneMatchedEnding('4'),
-      'watchContactByPhoneMatchedEnding': () => database.contactsDao.watchContactByPhoneMatchedEnding('4').first,
     };
 
     for (final entry in lookups.entries) {

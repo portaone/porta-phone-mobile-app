@@ -217,15 +217,6 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
     return query.get().then(_gatherSingleContact);
   }
 
-  Stream<FullContactData?> watchContactByPhoneMatchedEnding(String number) {
-    final query = _joinFullData(select(contactsTable));
-    query.where(contactPhonesTable.number.regexp('.*${_escapeRegExp(number)}', caseSensitive: false));
-    query.orderBy(contactsTable.sourcePriorityOrder());
-    query.limit(1);
-
-    return query.watch().map((data) => _gatherMultipleContacts(data).firstOrNull);
-  }
-
   Future<List<FullContactData>> getAllContacts(
     ContactSourceTypeEnum? sourceType, {
     ContactKindTypeEnum kind = ContactKindTypeEnum.visible,
