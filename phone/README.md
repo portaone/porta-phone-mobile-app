@@ -40,6 +40,7 @@ The application offers extensive customization options:
  - **Accessibility**: See the [Accessibility Guide](docs/accessibility.md) for what every interactive control must expose to screen readers and UI automation, and how to verify it.
  - **Startup time**: See [Where cold start time goes](docs/startup.md) for the measured breakdown of a cold start and the candidates worth optimising next.
  - **Background polling**: See [Background Polling](docs/polling.md) for scheduler behavior and [Polling Worker Pattern](docs/polling_workers.md) for feature worker boundaries, ownership, and migration rules.
+ - **Contact lookup by number**: See [Finding the contact a phone number belongs to](packages/data/app_database/docs/contact_lookup_by_number.md) for the exact-then-ending lookup, the two invariants that keep it from naming the wrong person, and what it deliberately does not do.
 
 # Testing
 

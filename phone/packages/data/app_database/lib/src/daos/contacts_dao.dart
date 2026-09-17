@@ -61,16 +61,37 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
     String sourceId,
   ) => (select(contactsTable)..where((t) => t.sourceType.equalsValue(sourceType) & t.sourceId.equals(sourceId)));
 
-  // Returns a subquery that resolves a phone number to a single winning contact ID,
-  // respecting external-over-local source priority.
-  BaseSelectStatement _contactIdSubqueryByPhone(String number) {
+  /// The stored number IS [number].
+  Expression<bool> _phoneIs(String number) => contactPhonesTable.number.equals(number);
+
+  /// The stored number ENDS WITH [number]: its last characters are exactly it.
+  ///
+  /// Deliberately not a regular expression. A pattern here is evaluated with
+  /// `RegExp.hasMatch`, which SEARCHES, so an unanchored one silently means
+  /// "contains" - and under a `<main number> + <extension>` numbering plan an
+  /// employee's number contains the company main number as a prefix, which is
+  /// how the main number came to be labelled with a colleague's name.
+  Expression<bool> _phoneEndsWith(String number) => contactPhonesTable.number.substr(-number.length).equals(number);
+
+  /// Resolves [phoneMatch] to the single winning contact id, respecting
+  /// external-over-local source priority.
+  ///
+  /// The limit belongs here, on the contact, and never on the outer joined
+  /// query: SQL LIMIT counts ROWS, and the outer query has one row per phone,
+  /// email and favorite of the contact, so a row limit would hand back a
+  /// contact truncated to a single phone and a single email.
+  BaseSelectStatement _winningContactId(Expression<bool> phoneMatch) {
     return selectOnly(contactsTable)
       ..addColumns([contactsTable.id])
       ..join([innerJoin(contactPhonesTable, contactPhonesTable.contactId.equalsExp(contactsTable.id))])
-      ..where(contactPhonesTable.number.equals(number))
+      ..where(phoneMatch)
       ..orderBy(contactsTable.sourcePriorityOrder())
       ..limit(1);
   }
+
+  /// The full data of the one contact [phoneMatch] resolves to.
+  JoinedSelectStatement _selectWinningContact(Expression<bool> phoneMatch) =>
+      _joinFullData(select(contactsTable))..where(contactsTable.id.isInQuery(_winningContactId(phoneMatch)));
 
   FullContactData? _gatherSingleContact(List<TypedResult> rows) {
     if (rows.isEmpty) return null;
@@ -180,11 +201,8 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
     ]);
   }
 
-  Future<FullContactData?> getContactByPhoneNumber(String number) {
-    final query = _joinFullData(select(contactsTable))
-      ..where(contactsTable.id.isInQuery(_contactIdSubqueryByPhone(number)));
-    return query.get().then(_gatherSingleContact);
-  }
+  Future<FullContactData?> getContactByPhoneNumber(String number) =>
+      _selectWinningContact(_phoneIs(number)).get().then(_gatherSingleContact);
 
   Stream<FullContactData?> watchContact(int id, {bool includeSipSubscriptions = false}) {
     final s = (select(contactsTable)..where((t) => t.id.equals(id)));
@@ -202,29 +220,11 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
     return query.watch().map(_gatherSingleContact);
   }
 
-  Stream<FullContactData?> watchContactByPhoneNumber(String number) {
-    final query = _joinFullData(select(contactsTable))
-      ..where(contactsTable.id.isInQuery(_contactIdSubqueryByPhone(number)));
-    return query.watch().map(_gatherSingleContact);
-  }
+  Stream<FullContactData?> watchContactByPhoneNumber(String number) =>
+      _selectWinningContact(_phoneIs(number)).watch().map(_gatherSingleContact);
 
-  Future<FullContactData?> getContactByPhoneMatchedEnding(String number) {
-    final query = _joinFullData(select(contactsTable));
-    query.where(contactPhonesTable.number.regexp('.*${_escapeRegExp(number)}', caseSensitive: false));
-    query.orderBy(contactsTable.sourcePriorityOrder());
-    query.limit(1);
-
-    return query.get().then(_gatherSingleContact);
-  }
-
-  Stream<FullContactData?> watchContactByPhoneMatchedEnding(String number) {
-    final query = _joinFullData(select(contactsTable));
-    query.where(contactPhonesTable.number.regexp('.*${_escapeRegExp(number)}', caseSensitive: false));
-    query.orderBy(contactsTable.sourcePriorityOrder());
-    query.limit(1);
-
-    return query.watch().map((data) => _gatherMultipleContacts(data).firstOrNull);
-  }
+  Future<FullContactData?> getContactByPhoneMatchedEnding(String number) =>
+      _selectWinningContact(_phoneEndsWith(number)).get().then(_gatherSingleContact);
 
   Future<List<FullContactData>> getAllContacts(
     ContactSourceTypeEnum? sourceType, {
