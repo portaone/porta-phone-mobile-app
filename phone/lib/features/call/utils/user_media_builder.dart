@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import 'package:webtrit_phone/utils/utils.dart';
+
 import 'audio_constraints_builder.dart';
 import 'video_constraints_builder.dart';
 
@@ -50,13 +52,7 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
   final Map<String, _BorrowedStreamLease> _borrowedStreams = {};
   _PooledTrack? _audioTrack;
   _PooledTrack? _videoTrack;
-  Future<void> _poolMutationQueue = Future<void>.value();
-
-  Future<T> _runPoolMutation<T>(Future<T> Function() action) {
-    final result = _poolMutationQueue.then((_) => action());
-    _poolMutationQueue = result.then((_) {}, onError: (_, _) {});
-    return result;
-  }
+  final SerialQueue _poolMutations = SerialQueue();
 
   /// Requests access to the user's media input devices (camera and/or microphone).
   ///
@@ -76,7 +72,7 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
   /// https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia
   @override
   Future<MediaStream> build({required bool video, bool? frontCamera, bool allowAudioFallback = false}) async {
-    return _runPoolMutation(() async {
+    return _poolMutations.run(() async {
       final resolvedVideo = video && (!allowAudioFallback || await _isCameraAvailable());
 
       try {
@@ -90,7 +86,7 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
 
   @override
   Future<MediaStreamTrack?> ensureVideoTrack(MediaStream stream, {bool? frontCamera}) async {
-    return _runPoolMutation(() async {
+    return _poolMutations.run(() async {
       final existingTrack = stream.getVideoTracks().firstOrNull;
       if (existingTrack != null) return existingTrack;
 
@@ -115,7 +111,7 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
 
   @override
   Future<void> release(MediaStream stream) async {
-    await _runPoolMutation(() async {
+    await _poolMutations.run(() async {
       final lease = _borrowedStreams.remove(stream.id);
 
       if (lease != null) {
