@@ -257,20 +257,84 @@ void main() {
     });
   });
 
-  group('getContactByPhoneMatchedEnding regex escaping', () {
+  group('getContactByPhoneMatchedEnding', () {
     // Both seed contacts share phone "1234567890".
-    test('a metacharacter-bearing number does not throw and matches nothing', () async {
-      // Unescaped, "+99" makes the pattern '.*+99' which Dart RegExp rejects.
-      final contact = await database.contactsDao.getContactByPhoneMatchedEnding('+99');
-
-      expect(contact, isNull);
-    });
-
-    test('a plain ending still matches', () async {
+    test('a plain ending matches', () async {
       final contact = await database.contactsDao.getContactByPhoneMatchedEnding('7890');
 
       expect(contact, isNotNull);
       expect(contact!.phones.first.number, '1234567890');
+    });
+
+    test('a whole number is its own ending', () async {
+      expect(await database.contactsDao.getContactByPhoneMatchedEnding('1234567890'), isNotNull);
+    });
+
+    test('an ending that is not at the end does not match', () async {
+      // WT-1818. "1234" IS in the stored number, at its start - and matching
+      // by inclusion is what labelled a company main number with the name of
+      // an employee whose extension was appended to it.
+      expect(await database.contactsDao.getContactByPhoneMatchedEnding('1234'), isNull);
+      expect(await database.contactsDao.getContactByPhoneMatchedEnding('4567'), isNull);
+    });
+
+    test('an ending longer than the stored number does not match', () async {
+      expect(await database.contactsDao.getContactByPhoneMatchedEnding('001234567890'), isNull);
+    });
+
+    test('a number carrying non-digit characters matches nothing and does not throw', () async {
+      expect(await database.contactsDao.getContactByPhoneMatchedEnding('+99'), isNull);
+      expect(await database.contactsDao.getContactByPhoneMatchedEnding('.*7890'), isNull);
+    });
+
+    test('the national significant number of a full number still matches', () async {
+      // The case this lookup exists for: the PBX prefixes a country code the
+      // local phonebook entry does not carry, so the CDR number is
+      // "+380507259336" while the contact is saved as "0507259336" - the
+      // repository extracts the NSN "507259336" and asks for that ending.
+      await database.contactsDao.insertOnUniqueConflictUpdateContact(
+        ContactDataCompanion(
+          sourceType: Value(ContactSourceTypeEnum.local),
+          sourceId: Value('kyiv'),
+          lastName: Value('Kyiv Local'),
+        ),
+      );
+      await database.contactPhonesDao.insertOnUniqueConflictUpdateContactPhone(
+        ContactPhoneDataCompanion(contactId: Value(3), number: Value('0507259336'), label: Value('Mobile')),
+      );
+
+      final contact = await database.contactsDao.getContactByPhoneMatchedEnding('507259336');
+
+      expect(contact, isNotNull);
+      expect(contact!.contact.lastName, 'Kyiv Local');
+    });
+
+    test('the matched contact comes back whole, not truncated to one row', () async {
+      // The lookup limits the CONTACT, never the joined rows: a row limit would
+      // leave the contact with a single phone and a single email.
+      await database.contactsDao.insertOnUniqueConflictUpdateContact(
+        ContactDataCompanion(
+          sourceType: Value(ContactSourceTypeEnum.external),
+          sourceId: Value('multi'),
+          lastName: Value('Multi Phone'),
+        ),
+      );
+      for (final number in ['5550001', '5550002']) {
+        await database.contactPhonesDao.insertOnUniqueConflictUpdateContactPhone(
+          ContactPhoneDataCompanion(contactId: Value(3), number: Value(number), label: Value('Work')),
+        );
+      }
+      for (final address in ['multi.a@example.com', 'multi.b@example.com']) {
+        await database.contactEmailsDao.insertOnUniqueConflictUpdateContactEmail(
+          ContactEmailDataCompanion(contactId: Value(3), address: Value(address), label: Value('Work')),
+        );
+      }
+
+      final contact = await database.contactsDao.getContactByPhoneMatchedEnding('5550001');
+
+      expect(contact, isNotNull);
+      expect(contact!.phones.map((p) => p.number), containsAll(['5550001', '5550002']));
+      expect(contact.emails.length, 2);
     });
   });
 

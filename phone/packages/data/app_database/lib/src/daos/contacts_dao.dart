@@ -64,9 +64,14 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
   /// The stored number IS [number].
   Expression<bool> _phoneIs(String number) => contactPhonesTable.number.equals(number);
 
-  /// The stored number ENDS WITH [number].
-  Expression<bool> _phoneEndsWith(String number) =>
-      contactPhonesTable.number.regexp('.*${_escapeRegExp(number)}', caseSensitive: false);
+  /// The stored number ENDS WITH [number]: its last characters are exactly it.
+  ///
+  /// Deliberately not a regular expression. A pattern here is evaluated with
+  /// `RegExp.hasMatch`, which SEARCHES, so an unanchored one silently means
+  /// "contains" - and under a `<main number> + <extension>` numbering plan an
+  /// employee's number contains the company main number as a prefix, which is
+  /// how the main number came to be labelled with a colleague's name.
+  Expression<bool> _phoneEndsWith(String number) => contactPhonesTable.number.substr(-number.length).equals(number);
 
   /// Resolves [phoneMatch] to the single winning contact id, respecting
   /// external-over-local source priority.
