@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pub_semver/pub_semver.dart';
@@ -86,5 +88,41 @@ void main() {
     await pumpEventQueue();
 
     expect(notificationsBloc.state.lastNotification, isA<LoginEmptyEmailNotification>());
+  });
+
+  test('names refused credentials even though the backend sent no code', () async {
+    final cubit = buildCubit();
+
+    cubit.handleError(
+      IncorrectCredentialsException(
+        url: Uri.parse('https://demo.example.com/api/v1/session'),
+        requestId: 'test-request-id',
+        statusCode: 401,
+        error: const ErrorResponse(message: 'User authentication error'),
+      ),
+      StackTrace.current,
+      'test',
+    );
+    await pumpEventQueue();
+
+    expect(notificationsBloc.state.lastNotification, isA<LoginIncorrectCredentialsNotification>());
+  });
+
+  test('a failure with no wording of its own still reaches the user', () async {
+    final cubit = buildCubit();
+
+    cubit.handleError(_requestFailure('something_the_app_never_heard_of'), StackTrace.current, 'test');
+    await pumpEventQueue();
+
+    expect(notificationsBloc.state.lastNotification, isA<LoginUnexpectedErrorNotification>());
+  });
+
+  test('a transport failure reaches the user as well', () async {
+    final cubit = buildCubit();
+
+    cubit.handleError(const SocketException('no route to host'), StackTrace.current, 'test');
+    await pumpEventQueue();
+
+    expect(notificationsBloc.state.lastNotification, isA<LoginUnexpectedErrorNotification>());
   });
 }

@@ -102,6 +102,19 @@ class UnauthorizedException extends RequestFailure {
   }
 }
 
+/// The login and password sent to create a session were refused.
+///
+/// The adapters disagree on how to name it - some send an
+/// `incorrect_credentials` code, the PortaSwitch one sends only a message - so
+/// on the session-create route the status itself is what identifies it, which
+/// is why this is built by a rule declared on that endpoint.
+class IncorrectCredentialsException extends RequestFailure {
+  IncorrectCredentialsException({required super.url, required super.requestId, required super.statusCode, super.error});
+
+  @override
+  String toString() => 'IncorrectCredentialsException(statusCode: $statusCode, requestId: $requestId, url: $url)';
+}
+
 class SessionMissingException extends RequestFailure {
   SessionMissingException({
     required super.url,

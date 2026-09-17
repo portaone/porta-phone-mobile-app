@@ -91,6 +91,31 @@ void main() {
       );
     });
 
+    test('creating a session reads a 401 as refused credentials', () async {
+      // The shape the PortaSwitch adapter actually answers with: a message and
+      // a reason, and no code for a rule to key on.
+      final apiClient = clientAnswering(401, {
+        'message': 'User authentication error',
+        'details': {'path': null, 'reason': 'User authentication error'},
+      });
+
+      await expectLater(
+        apiClient.createSession(
+          SessionLoginCredential(type: AppType.android, identifier: 'identifier', login: 'login', password: 'password'),
+        ),
+        throwsA(isA<IncorrectCredentialsException>()),
+      );
+    });
+
+    test('a 401 elsewhere is about the session, not the credentials', () async {
+      final apiClient = clientAnswering(401, {'code': 'token_invalid'});
+
+      await expectLater(
+        apiClient.getUserContactList(token),
+        throwsA(allOf(isA<UnauthorizedException>(), isNot(isA<IncorrectCredentialsException>()))),
+      );
+    });
+
     test('an optional endpoint still reads a bare 404 as absent', () async {
       final apiClient = clientAnswering(404, null);
 

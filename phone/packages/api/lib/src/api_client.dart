@@ -70,6 +70,10 @@ class WebtritApiClient {
   // Endpoint optional in the adapter contract, JSON response.
   static const _optionalEndpoint = ResponseOptions(optionalEndpoint: true);
 
+  // The one call made without a session, so a 401 on it is about the
+  // credentials just sent rather than about a session that has gone.
+  static final _sessionCreateEndpoint = ResponseOptions(failures: [incorrectCredentialsOn401Rule]);
+
   // Two endpoints report a missing account as a bare 404 with no code to read,
   // and mean the account rather than the thing being fetched.
   static final _userNotFoundOn404 = ResponseOptions(failures: [userNotFoundOn404Rule]);
@@ -444,6 +448,7 @@ class WebtritApiClient {
       null,
       requestJson,
       requestOptions: options,
+      responseOptions: _sessionCreateEndpoint,
     );
 
     return SessionToken.fromJson(responseJson);

@@ -142,6 +142,20 @@ final FailureRule voicemailNotConfiguredRule = FailureRule(
   ),
 );
 
+/// Creating a session was refused because the credentials are wrong.
+///
+/// Declared on that endpoint rather than globally: everywhere else a 401 is
+/// about the session that carried the request, and this is the one call made
+/// without a session, so the status can only mean the login and password were
+/// refused. It reads the status alone because the adapters disagree on the code
+/// and the PortaSwitch one sends none - and a failure no rule recognises is a
+/// failure nobody can word for the user.
+final FailureRule incorrectCredentialsOn401Rule = FailureRule(
+  status: 401,
+  build: (f) =>
+      IncorrectCredentialsException(url: f.url, requestId: f.requestId, statusCode: f.statusCode, error: f.error),
+);
+
 /// This endpoint reports a missing subject as a plain 404, with no code to read.
 ///
 /// Two endpoints answer that way, and both mean the account rather than the
