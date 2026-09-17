@@ -2,7 +2,7 @@
 
 How a feature asks the user to pick somebody out of the contacts, recents,
 favourites and keypad, and what those lists do while the choice is being made.
-Last reviewed: 2026-09-16.
+Last reviewed: 2026-09-17.
 
 ## The three pieces
 
@@ -68,7 +68,9 @@ to a colleague, say - reads the contact and ignores the number.
 
 ## Adding a purpose
 
-One class, and one line where the active purpose is decided. No list changes.
+One class, and one place where the feature asks. No list changes. The example
+below is the real one, shortened -
+`lib/features/voicemail/models/forward_voicemail_purpose.dart`.
 
 ```dart
 class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpose {
@@ -239,30 +241,50 @@ screen floats over, where nobody sees it. It appears only on a section the
 purpose says can answer: told on a page of conversations it would announce a
 choice that cannot be made there.
 
-## Blind transfer, the only purpose today
+## The purposes
 
-`lib/features/call/models/blind_transfer_purpose.dart`. It accepts anything with
-a number, is offered by favourites, recents, contacts and the keypad, and
-submits through `CallController.submitTransfer`.
+**Handing a call over** - `lib/features/call/models/blind_transfer_purpose.dart`.
+Accepts anything with a number, is offered by favourites, recents, contacts and
+the keypad, and submits through `CallController.submitTransfer`.
 
-**Its state did not move here, and a bridge is why.** Whether a transfer is
-looking for a target is one of six `Transfer` states on `ActiveCall`, set in one
-place inside `CallBloc` and cleared in ten - signalling failures, the call
-ending, the attended-transfer branches. Asking the call to `ask` and `withdraw`
-by hand from each of those would be a second copy of that state machine, one
-forgotten edge away from a banner nothing can take off the screen.
+**Passing a voice message on** -
+`lib/features/voicemail/models/forward_voicemail_purpose.dart`. Narrower: it
+takes only a contact that came from the backend with an id of its own and is
+not the person forwarding, because a forward addresses an account rather than
+dialling a number. That also keeps it off the keypad, where nothing typed could
+be one. It asks in `voicemail_body.dart` and sends the person to the address
+book itself; the sending and what came of it are
+`lib/features/voicemail/utils/voicemail_forwarding.dart`, which announces a
+report rather than holding any state of its own.
+
+### Who owns the mode, and the bridge that follows from it
+
+The forward owns its request outright - it asked, the choice answers it - so
+`closedByChoice` is true and the mechanism closes it where the choice is taken.
+
+A transfer does not. Whether one is looking for a target is one of six
+`Transfer` states on `ActiveCall`, set in one place inside `CallBloc` and
+cleared in ten - signalling failures, the call ending, the attended-transfer
+branches. Asking the call to `ask` and `withdraw` by hand from each of those
+would be a second copy of that state machine, one forgotten edge away from a
+banner nothing can take off the screen. And a switch that refuses the REFER
+leaves the call still looking for a target, so a choice is not the end of it
+either: `closedByChoice` is false there, and the request goes when the call
+says so.
 
 So the call publishes what it always did, and
 `lib/features/call/widgets/blind_transfer_picking.dart` reflects one slice of
 it - "is a transfer looking for somebody" - into the request, in one direction.
-It is mounted once, in `main_shell_blocs.dart`, where every feature's
-dependencies are already listed. The mechanism learns nothing about calls; the
-call learns nothing about the mechanism.
+It is a `BlocListener`, mounted among the call's own in
+`lib/features/call/view/call_shell.dart`, which is where the call's
+collaborators already live and where the `CallControllerScope` it needs is in
+scope. The mechanism learns nothing about calls; the call learns nothing about
+the mechanism.
 
 A bridge is not what a feature normally needs. It is for a mode that already
 lives in somebody else's bloc and is driven from there. A feature that decides
-for itself - passing a voice message on, say - calls `ask` where the person asks
-for it, and nothing is mounted anywhere.
+for itself - passing a voice message on - calls `ask` where the person asks for
+it, and mounts nothing.
 
 ## Known gaps
 
@@ -285,4 +307,6 @@ banner, at `main_screen.dart`.
 | `test/widgets/call_tile_picking_test.dart` | A list row: the purpose's mark, and no menu left behind it |
 | `test/blocs/destination_picking_cubit_test.dart` | The request itself: who wins when two features ask, and that a report outlives the request |
 | `test/features/call/widgets/blind_transfer_picking_test.dart` | The bridge, including a transfer that ends without taking somebody else's request with it |
-| `test/widgets/pick_report_presenter_test.dart` | What a feature has to say, and the retry offered only where one can change the answer |
+| `test/widgets/destination_pick_report_presenter_test.dart` | What a feature has to say, the retry offered only where one can change the answer, and a report that was waiting before the presenter arrived |
+| `test/features/voicemail/forward_voicemail_purpose_test.dart` | The second purpose, and how much narrower it is |
+| `test/features/voicemail/utils/voicemail_forwarding_test.dart` | The message being sent, and each of the backend's refusals turned into a sentence |
