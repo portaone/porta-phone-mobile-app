@@ -309,6 +309,39 @@ void main() {
       expect(contact!.contact.lastName, 'Kyiv Local');
     });
 
+    test('the reported scenario: a main number matches no extension holder', () async {
+      // WT-1818 / PortaOne-32807 verbatim. The numbering plan is
+      // <main number> + <extension>, so EVERY employee's number contains the
+      // company main number 18667478647 - and the one that used to win was
+      // whichever sorted first. The repository asks for the national
+      // significant number, 8667478647.
+      const extensions = {'186674786477003': 'Lowest Extension', '186674786477619': 'Other Extension'};
+      var id = 2;
+      for (final entry in extensions.entries) {
+        id++;
+        await database.contactsDao.insertOnUniqueConflictUpdateContact(
+          ContactDataCompanion(
+            sourceType: Value(ContactSourceTypeEnum.external),
+            sourceId: Value(entry.key),
+            lastName: Value(entry.value),
+          ),
+        );
+        await database.contactPhonesDao.insertOnUniqueConflictUpdateContactPhone(
+          ContactPhoneDataCompanion(contactId: Value(id), number: Value(entry.key), label: Value('Work')),
+        );
+      }
+
+      expect(await database.contactsDao.getContactByPhoneMatchedEnding('8667478647'), isNull);
+      expect(await database.contactsDao.getContactByPhoneMatchedEnding('18667478647'), isNull);
+
+      // Each extension holder is still reachable by their own number, so the
+      // fix narrowed the match rather than disabling it.
+      for (final entry in extensions.entries) {
+        final contact = await database.contactsDao.getContactByPhoneMatchedEnding(entry.key);
+        expect(contact?.contact.lastName, entry.value);
+      }
+    });
+
     test('the matched contact comes back whole, not truncated to one row', () async {
       // The lookup limits the CONTACT, never the joined rows: a row limit would
       // leave the contact with a single phone and a single email.
