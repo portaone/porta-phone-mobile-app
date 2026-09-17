@@ -248,7 +248,8 @@ Accepts anything with a number, is offered by favourites, recents, contacts and
 the keypad, and submits through `CallController.submitTransfer`.
 
 **Passing a voice message on** -
-`lib/features/voicemail/models/forward_voicemail_purpose.dart`. Narrower: it
+`lib/features/voicemail/models/forward_voicemail_purpose.dart`, and the feature
+around it in [`features/voicemail.md`](features/voicemail.md). Narrower: it
 takes only a contact that came from the backend with an id of its own and is
 not the person forwarding, because a forward addresses an account rather than
 dialling a number. That also keeps it off the keypad, where nothing typed could
