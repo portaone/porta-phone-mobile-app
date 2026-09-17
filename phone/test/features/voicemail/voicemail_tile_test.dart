@@ -48,8 +48,10 @@ void main() {
     Voicemail? voicemail,
     bool saveSupported = false,
     bool trashSupported = false,
+    bool forwardSupported = false,
     bool inTrash = false,
     void Function(Voicemail)? onToggleSavedStatus,
+    void Function(Voicemail)? onForwarded,
     void Function(Voicemail)? onRestored,
     void Function(Voicemail)? onDeletedPermanently,
   }) {
@@ -82,11 +84,13 @@ void main() {
               selected: false,
               saveSupported: saveSupported,
               trashSupported: trashSupported,
+              forwardSupported: forwardSupported,
               inTrash: inTrash,
               onCall: (_) {},
               onDeleted: (_) {},
               onToggleSeenStatus: (_) {},
               onToggleSavedStatus: (it) => onToggleSavedStatus?.call(it),
+              onForwarded: (it) => onForwarded?.call(it),
               onRestored: (it) => onRestored?.call(it),
               onDeletedPermanently: (it) => onDeletedPermanently?.call(it),
               onLongPress: (_) => onLongPress?.call(),
@@ -271,6 +275,43 @@ void main() {
       await tester.pump();
 
       expect(tester.widget<Opacity>(find.byType(Opacity)).opacity, 0.6);
+    });
+  });
+
+  group('forwarding', () {
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a backend without forwarding does not offer it', (tester) async {
+      await tester.pumpWidget(wrap());
+
+      await openMenu(tester);
+
+      expect(find.text('Forward'), findsNothing);
+    });
+
+    testWidgets('a backend with forwarding offers it and reports the message', (tester) async {
+      Voicemail? forwarded;
+      await tester.pumpWidget(wrap(forwardSupported: true, onForwarded: (it) => forwarded = it));
+
+      await openMenu(tester);
+      await tester.tap(find.text('Forward'));
+      await tester.pumpAndSettle();
+
+      expect(forwarded?.id, 'vm-1');
+    });
+
+    testWidgets('a trashed message is not forwarded', (tester) async {
+      // It is on its way out of the mailbox; passing a copy of it on would be
+      // a decision about a message the person has already made a decision
+      // about.
+      await tester.pumpWidget(wrap(forwardSupported: true, trashSupported: true, inTrash: true));
+
+      await openMenu(tester);
+
+      expect(find.text('Forward'), findsNothing);
     });
   });
 }

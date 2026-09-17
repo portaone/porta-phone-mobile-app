@@ -2,14 +2,21 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/blocs/blocs.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
+import '../models/models.dart';
+import '../utils/utils.dart';
 import 'empty_mailbox_view.dart';
 import 'failure_retry_view.dart';
 import 'feature_not_supported_view.dart';
@@ -62,6 +69,7 @@ class VoicemailBody extends StatelessWidget {
                         isMultipleVoicemailsSelection: state.isMultipleVoicemailsSelection,
                         saveSupported: state.saveSupported,
                         trashSupported: state.trashSupported,
+                        forwardSupported: state.forwardSupported,
                         inTrash: state.isShowingTrash,
                       ),
                     ),
@@ -119,6 +127,7 @@ class VoicemailListView extends StatelessWidget {
     required this.isMultipleVoicemailsSelection,
     this.saveSupported = false,
     this.trashSupported = false,
+    this.forwardSupported = false,
     this.inTrash = false,
   });
 
@@ -127,6 +136,7 @@ class VoicemailListView extends StatelessWidget {
   final bool isMultipleVoicemailsSelection;
   final bool saveSupported;
   final bool trashSupported;
+  final bool forwardSupported;
   final bool inTrash;
 
   @override
@@ -150,9 +160,11 @@ class VoicemailListView extends StatelessWidget {
           onDeleted: (it) => _onDeleteVoicemail(context, it),
           saveSupported: saveSupported,
           trashSupported: trashSupported,
+          forwardSupported: forwardSupported,
           inTrash: inTrash,
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
           onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
+          onForwarded: (it) => _onForwardVoicemail(context, it),
           onRestored: (it) => cubit.restoreVoicemail(it.id),
           onDeletedPermanently: (it) => _onDeletePermanently(context, it),
           onCall: (it) => cubit.startCall(it),
@@ -194,6 +206,38 @@ class VoicemailListView extends StatelessWidget {
       l10n.voicemail_Snackbar_movedToTrash,
       action: SnackBarAction(label: l10n.voicemail_Label_undo, onPressed: () => cubit.restoreVoicemail(voicemail.id)),
     );
+  }
+
+  /// Sends the person to the address book to choose a colleague.
+  ///
+  /// The request outlives this screen, which is the point: the colleague is
+  /// chosen two sections away, and by the time the backend answers, this
+  /// screen is long gone. Refused where somebody is already choosing for a
+  /// call in hand - then the person stays where they are rather than being
+  /// sent to a list that would be picking for something else.
+  void _onForwardVoicemail(BuildContext context, Voicemail voicemail) {
+    final contacts = context.read<FeatureAccess>().bottomMenuConfig.getTabEnabled<ContactsBottomMenuTab>();
+    if (contacts == null) return;
+
+    final l10n = context.l10n;
+    final picking = context.read<DestinationPickingCubit>();
+    final forwarding = VoicemailForwarding(
+      repository: context.read<VoicemailRepository>(),
+      picking: picking,
+      l10n: l10n,
+    );
+
+    final asked = picking.ask(
+      ForwardVoicemailPurpose(
+        announcement: l10n.voicemail_Label_forwardChoosing,
+        pickLabel: l10n.voicemail_SemanticsLabel_forwardTo,
+        messageId: voicemail.id,
+        onPicked: (recipient) => forwarding.send(voicemail, recipient),
+      ),
+    );
+    if (!asked) return;
+
+    context.router.navigate(MainScreenPageRoute(children: [contactsRouteOf(contacts)]));
   }
 
   void _onDeletePermanently(BuildContext context, Voicemail voicemail) async {

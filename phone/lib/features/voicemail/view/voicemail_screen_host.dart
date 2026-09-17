@@ -58,6 +58,7 @@ class VoicemailScreenHost extends StatelessWidget {
             // come back empty for a reason the person cannot see.
             saveSupported: featureAccess.voicemailSaveAvailable,
             trashSupported: featureAccess.voicemailTrashAvailable,
+            forwardSupported: featureAccess.voicemailForwardAvailable,
           ),
         ),
         Provider<VoicemailScreenContext>(create: (_) => screenContext),
