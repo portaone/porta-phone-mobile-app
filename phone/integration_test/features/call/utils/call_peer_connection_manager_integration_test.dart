@@ -27,10 +27,10 @@ void main() {
     await logSubscription.cancel();
   });
 
-  late PeerConnectionManager manager;
+  late CallPeerConnectionManager manager;
 
   setUp(() {
-    manager = PeerConnectionManager(
+    manager = CallPeerConnectionManager(
       factory: const DefaultPeerConnectionFactory(),
       retrieveTimeout: const Duration(seconds: 5),
     );
@@ -42,7 +42,7 @@ void main() {
     await Future.delayed(const Duration(milliseconds: 100));
   });
 
-  group('PeerConnectionManager Integration (Real WebRTC)', () {
+  group('CallPeerConnectionManager Integration (Real WebRTC)', () {
     testWidgets('establishes a loopback connection between two peers', (tester) async {
       const callerId = 'caller-uuid';
       const calleeId = 'callee-uuid';
@@ -149,7 +149,7 @@ void main() {
     });
   });
 
-  group('PeerConnectionManager Integration (Bloc Scenarios)', () {
+  group('CallPeerConnectionManager Integration (Bloc Scenarios)', () {
     testWidgets('Scenario: Full outgoing call lifecycle (Happy Path)', (tester) async {
       const callId = 'outgoing-call-uuid';
 
@@ -256,7 +256,7 @@ void main() {
     });
   });
 
-  group('PeerConnectionManager Integration (Advanced Concurrency & Error Handling)', () {
+  group('CallPeerConnectionManager Integration (Advanced Concurrency & Error Handling)', () {
     testWidgets('Scenario: Concurrent Calls (Line 1 & Line 2 isolation)', (tester) async {
       const callId1 = 'line-1-uuid';
       const callId2 = 'line-2-uuid';
@@ -288,7 +288,7 @@ void main() {
 
     testWidgets('Scenario: Retrieve Timeout (Deadlock prevention)', (tester) async {
       const callId = 'timeout-uuid';
-      final fastManager = PeerConnectionManager(
+      final fastManager = CallPeerConnectionManager(
         factory: const DefaultPeerConnectionFactory(),
         retrieveTimeout: const Duration(milliseconds: 200),
       );
@@ -360,7 +360,7 @@ void main() {
     });
   });
 
-  group('PeerConnectionManager Integration (Edge Cases)', () {
+  group('CallPeerConnectionManager Integration (Edge Cases)', () {
     testWidgets('Scenario: Late Completion (Zombie PC Cleanup)', (tester) async {
       const callId = 'zombie-uuid';
       manager.add(callId);

@@ -22,7 +22,7 @@ diagrams in [`../incoming_call_scenarios.md`](../incoming_call_scenarios.md).
 - Manages all active calls (`List<ActiveCall>` in state)
 - Owns the `SignalingModule` lifecycle (connect → handshake → events → disconnect → dispose)
 - Implements `CallkeepDelegate` — native platform calls directly into the BLoC
-- Creates and disposes `RTCPeerConnection` per call via `PeerConnectionManager`
+- Creates and disposes `RTCPeerConnection` per call via `CallPeerConnectionManager`
 - Persists finished calls to `CallLogsRepository`
 - Keeps `LinesStateRepository` in sync for the UI
 
@@ -205,7 +205,7 @@ so a deployment's bundled coturn and its short-lived TURN credentials are picked
 rebuilding the BLoC. The renewal rule and the public-STUN fallback:
 [`../ice_servers.md`](../ice_servers.md).
 
-**Disposal barrier** — `PeerConnectionManager` tracks pending disposal futures. Creating a new
+**Disposal barrier** — `CallPeerConnectionManager` tracks pending disposal futures. Creating a new
 `RTCPeerConnection` for a call ID waits until the previous one is fully disposed, preventing
 resource races on rapid call sequences.
 

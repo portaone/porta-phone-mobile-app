@@ -11,7 +11,7 @@ class MockPeerConnectionFactory extends Mock implements PeerConnectionFactory {}
 class MockRTCPeerConnection extends Mock implements RTCPeerConnection {}
 
 void main() {
-  late PeerConnectionManager manager;
+  late CallPeerConnectionManager manager;
   late MockPeerConnectionFactory mockFactory;
   late MockRTCPeerConnection mockPC;
 
@@ -29,10 +29,10 @@ void main() {
     when(() => mockFactory.create()).thenAnswer((_) async => mockPC);
     when(() => mockPC.close()).thenAnswer((_) async {});
 
-    manager = PeerConnectionManager(factory: mockFactory, retrieveTimeout: kShortTimeout);
+    manager = CallPeerConnectionManager(factory: mockFactory, retrieveTimeout: kShortTimeout);
   });
 
-  group('PeerConnectionManager (Basic)', () {
+  group('CallPeerConnectionManager (Basic)', () {
     test('add() creates a completer but does not complete it yet', () async {
       manager.add(kTestUuid);
       final result = await manager.retrieve(kTestUuid, allowWaiting: false);

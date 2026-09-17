@@ -158,7 +158,7 @@ class MainShellBlocs extends StatelessWidget {
             final cdrsSync = context.readOrNull<CdrsSync>();
             final userInfoSync = context.read<UserInfoSync>();
 
-            final peerConnectionManager = PeerConnectionManager(
+            final callPeerConnectionManager = CallPeerConnectionManager(
               // The deployment's own STUN/TURN servers, resolved per connection so
               // a renewed TURN credential is picked up without rebuilding the bloc.
               factory: DefaultPeerConnectionFactory(
@@ -222,7 +222,7 @@ class MainShellBlocs extends StatelessWidget {
                 extras: {'callId': id, 'error': error.name},
               ),
               signalingModule: signalingModule,
-              peerConnectionManager: peerConnectionManager,
+              callPeerConnectionManager: callPeerConnectionManager,
               connectivityService: context.read<ConnectivityService>(),
               foregroundCallPushSignal: RemotePushBroker.pendingCallForegroundPushs,
             )..add(const CallStarted());
