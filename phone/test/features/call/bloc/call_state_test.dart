@@ -571,6 +571,98 @@ void main() {
     });
   });
 
+  group('CallState with a conference room', () {
+    // Scenario: two calls merged into a room, a third call held outside it.
+    // The legs are what the user is in: no plan holds or resumes them.
+    final legA = _makeCall(callId: 'leg-a', line: 0, acceptedTime: DateTime(2024));
+    final legB = _makeCall(callId: 'leg-b', line: 1, acceptedTime: DateTime(2024));
+    final outside = _makeCall(callId: 'outside', line: 2, held: true, acceptedTime: DateTime(2024));
+    const room = ConferenceState(room: 7, phase: ConferencePhase.active, legs: {'leg-a': 0, 'leg-b': 1});
+    final state = CallState(activeCalls: [legA, legB, outside], conference: room);
+
+    test('membership is derived from the room, not the call', () {
+      expect(state.isConferenced('leg-a'), isTrue);
+      expect(state.isConferenced('outside'), isFalse);
+      expect(state.conferencedCallIds, ['leg-a', 'leg-b']);
+    });
+
+    test('otherCallIds leaves the legs out', () {
+      final incoming = _makeCall(callId: 'incoming', line: 3, processingStatus: CallProcessingStatus.incomingFromOffer);
+      final withIncoming = state.copyWith(activeCalls: [legA, legB, outside, incoming]);
+
+      expect(withIncoming.otherCallIds('incoming'), ['outside']);
+    });
+
+    test('otherCallIdsToHold leaves the legs out', () {
+      final resumed = state.copyWith(activeCalls: [legA, legB, outside.copyWith(held: false)]);
+
+      expect(resumed.otherCallIdsToHold('outside'), isEmpty, reason: 'the legs are live but not to be held');
+    });
+
+    test('callIdsToHoldBeforeOutgoing leaves the legs out', () {
+      final live = state.copyWith(activeCalls: [legA, legB, outside.copyWith(held: false)]);
+
+      expect(live.callIdsToHoldBeforeOutgoing, ['outside']);
+      expect(CallState(activeCalls: [legA, legB]).callIdsToHoldBeforeOutgoing, ['leg-a', 'leg-b'], reason: 'no room');
+    });
+
+    test('focusedCall is the first leg by line unless a call was selected', () {
+      // The first leg by line is deliberately NOT what `current` would pick:
+      // that is the last call not held, which here is the outside one. The
+      // room is what the screen acts on while it stands.
+      final legs = state.copyWith(activeCalls: [legB, legA, outside.copyWith(held: false)]);
+
+      expect(legs.focusedCall?.callId, 'leg-a');
+      expect(legs.activeCalls.current.callId, 'outside', reason: 'without a room this is what would be focused');
+      expect(legs.copyWith(selectedCallId: 'outside').focusedCall?.callId, 'outside');
+      expect(
+        CallState(activeCalls: [legB, legA, outside.copyWith(held: false)]).focusedCall?.callId,
+        'outside',
+        reason: 'no room: current = last not held',
+      );
+    });
+
+    test('mergeableCallIds takes answered audio calls outside the room and not in transfer', () {
+      final video = _makeCall(callId: 'video', line: 3, video: true, acceptedTime: DateTime(2024));
+      final ringing = _makeCall(callId: 'ringing', line: 4, processingStatus: CallProcessingStatus.incomingFromOffer);
+      final transferring = _makeCall(
+        callId: 'transferring',
+        line: 5,
+        acceptedTime: DateTime(2024),
+        transfer: const Transfer.blindTransferInitiated(),
+      );
+      final another = _makeCall(callId: 'another', line: 6, acceptedTime: DateTime(2024));
+      final s = state.copyWith(activeCalls: [legA, legB, outside, video, ringing, transferring, another]);
+
+      expect(s.mergeableCallIds, ['outside', 'another']);
+    });
+
+    test('canMerge needs the capability, no room yet, and two mergeable calls', () {
+      final two = CallState(activeCalls: [legA, legB]);
+
+      expect(two.canMerge(isConferenceEnabled: true), isTrue);
+      expect(two.canMerge(isConferenceEnabled: false), isFalse);
+      expect(CallState(activeCalls: [legA]).canMerge(isConferenceEnabled: true), isFalse);
+      expect(state.canMerge(isConferenceEnabled: true), isFalse, reason: 'a room is already up');
+    });
+
+    test('canAdd needs an established room and a call outside it that can join', () {
+      expect(state.canAdd(isConferenceEnabled: true), isTrue, reason: 'the held call outside the room can join');
+      expect(state.canAdd(isConferenceEnabled: false), isFalse);
+
+      // The offer has not arrived, so the room is not this client's to add to.
+      final assembling = state.copyWith(
+        conference: const ConferenceState(phase: ConferencePhase.assembling, legs: {'leg-a': 0, 'leg-b': 1}),
+      );
+      expect(assembling.canAdd(isConferenceEnabled: true), isFalse);
+
+      // Nothing outside the room: the legs themselves never qualify.
+      final closed = CallState(activeCalls: [legA, legB], conference: room);
+      expect(closed.canAdd(isConferenceEnabled: true), isFalse);
+      expect(CallState(activeCalls: [legA, legB]).canAdd(isConferenceEnabled: true), isFalse, reason: 'no room');
+    });
+  });
+
   group('CallControlEvent.answerEndingOthersPlan', () {
     test('ends every other call (in given order), then answers the target', () {
       expect(CallControlEvent.answerEndingOthersPlan('incoming', ['held', 'active']), const [
