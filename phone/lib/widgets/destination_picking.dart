@@ -79,4 +79,21 @@ extension DestinationPickingContext on BuildContext {
 
   /// Whether a choice is being made at all.
   bool get isPickingDestination => DestinationPicking.of(this) != null;
+
+  /// What this row offers while somebody is being chosen, and null when nobody
+  /// is.
+  ///
+  /// Both questions answered in one place. Written out by hand it is four
+  /// lines, and it was written out five times - once per list - each copy a
+  /// place to ask one of the two and forget the other.
+  DestinationPickOffer? pickOfferFor(DestinationCandidate candidate) {
+    final purpose = pickPurpose;
+    if (purpose == null) return null;
+
+    return DestinationPickOffer(
+      icon: purpose.pickIcon,
+      label: purpose.pickLabel(candidate),
+      onPressed: purpose.accepts(candidate) ? () => pickDestination(this, purpose, candidate) : null,
+    );
+  }
 }

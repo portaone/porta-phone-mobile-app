@@ -191,8 +191,6 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                 builder: (context, userInfoState) {
                   final userSmsNumbers = userInfoState.userInfo?.numbers.sms ?? [];
 
-                  final purpose = context.pickPurpose;
-
                   return BlocBuilder<CallBloc, CallState>(
                     buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
                     builder: (context, callState) {
@@ -213,15 +211,9 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                               // A call-history row knows a number, and knows
                               // the person behind it only when the address
                               // book does.
-                              final candidate = DestinationCandidate(number: callLogEntry.number, contact: contact);
-                              final picks = purpose != null && purpose.accepts(candidate);
-                              final pick = purpose == null
-                                  ? null
-                                  : DestinationPickOffer(
-                                      icon: purpose.pickIcon,
-                                      label: purpose.pickLabel(candidate),
-                                      onPressed: picks ? () => pickDestination(context, purpose, candidate) : null,
-                                    );
+                              final pick = context.pickOfferFor(
+                                DestinationCandidate(number: callLogEntry.number, contact: contact),
+                              );
 
                               return SizedBox(
                                 key: ValueKey(recent),
@@ -231,11 +223,9 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                                   callNumbers: callRoutingState?.allNumbers ?? [],
                                   dateFormat: context.read<RecentsBloc>().dateFormat,
                                   pick: pick,
-                                  onTap: purpose != null
-                                      ? (picks ? () => pickDestination(context, purpose, candidate) : null)
-                                      : () => _toggleExpanded(callLogEntry.id),
-                                  expanded: purpose == null && _expandedRecentId == callLogEntry.id,
-                                  onDialPressed: purpose != null
+                                  onTap: pick != null ? pick.onPressed : () => _toggleExpanded(callLogEntry.id),
+                                  expanded: pick == null && _expandedRecentId == callLogEntry.id,
+                                  onDialPressed: pick != null
                                       ? null
                                       : () {
                                           _callController.createCall(

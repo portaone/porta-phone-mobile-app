@@ -60,16 +60,7 @@ class ContactTileAdapter extends StatelessWidget {
     // Whoever is asking, and whether this row is an answer. Both are needed
     // and they are not the same: while a choice is being made no row does what
     // it normally does, but only a row the purpose accepts can be chosen.
-    final purpose = context.pickPurpose;
-    final candidate = DestinationCandidate(number: number, contact: contact);
-    final picks = purpose != null && purpose.accepts(candidate);
-    final pick = purpose == null
-        ? null
-        : DestinationPickOffer(
-            icon: purpose.pickIcon,
-            label: purpose.pickLabel(candidate),
-            onPressed: picks ? () => pickDestination(context, purpose, candidate) : null,
-          );
+    final pick = context.pickOfferFor(DestinationCandidate(number: number, contact: contact));
 
     return BlocBuilder<CallBloc, CallState>(
       buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
@@ -89,11 +80,9 @@ class ContactTileAdapter extends StatelessWidget {
               presenceInfo: contact.presenceInfo,
               dialogInfo: contact.dialogInfo,
               pick: pick,
-              onTap: purpose != null
-                  ? (picks ? () => pickDestination(context, purpose, candidate) : null)
-                  : onToggleExpanded,
-              expanded: expanded && purpose == null,
-              onDialPressed: purpose == null && number != null
+              onTap: pick != null ? pick.onPressed : onToggleExpanded,
+              expanded: expanded && pick == null,
+              onDialPressed: pick == null && number != null
                   ? () => callController.createCall(destination: number, displayName: contact.maybeName, video: false)
                   : null,
               callNumbers: callRoutingState?.allNumbers ?? [],
