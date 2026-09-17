@@ -14,3 +14,4 @@ under "Documentation".
 | Presence                           | [Overview](presence.md)                         | Active - badge redesign under discussion         |
 | Session tracking                   | [Overview](session_tracking.md)                 | Active - requires core >=0.35.0                  |
 | System notifications               | [Overview](system_notifications.md)             | Active - both directions on the polling service  |
+| Voicemail                          | [Overview](voicemail.md)                        | Active - save, trash and forward per capability  |

@@ -1,0 +1,144 @@
+# Voicemail
+
+The mailbox: what the backend recorded for this account, and everything the
+person can do with one message - hear it, keep it, throw it away, call back,
+open the caller's card, pass it to a colleague.
+Last reviewed: 2026-09-17.
+
+## Where it lives
+
+```
+lib/features/voicemail/
+  bloc/        VoicemailCubit + VoicemailState, VoicemailPlaybackController
+  cubits/      VoicemailUnreadCubit (the badge on the tab)
+  models/      ForwardVoicemailPurpose, VoicemailForwardOutcome, VoicemailScreenContext
+  utils/       VoicemailForwarding (sending a message on), media headers
+  view/        the router page, the two hosts, the screen
+  widgets/     the list body, a tile, playback, filters, header actions
+lib/repositories/voicemail/   VoicemailRepository - the only thing that talks to the backend and the database
+```
+
+## Two hosts, one screen
+
+The same list is reached two ways, and each brings its own chrome:
+
+| Host | File | Where it appears |
+|---|---|---|
+| A section of the bottom menu | `view/voicemail_tab_page.dart` -> `voicemail_tab_screen.dart` | when the brand's `app.config.json` configures a voicemail tab |
+| A sub-screen of settings | `view/voicemail_screen_host.dart` | always, under Settings |
+
+Both wrap `VoicemailScreen` in `VoicemailScreenHost`, which builds
+`VoicemailCubit`, the playback controller and `VoicemailScreenContext` (the
+media cache path, the date format and the headers an authenticated media
+request needs).
+
+The tab is a **router**, not the screen (`view/voicemail_router_page.dart`): a
+message names the person who left it, and opening that person's card is a
+screen of its own. A route lives in exactly one place in the tree, so every tab
+that can reach a contact declares that route as its own child - otherwise
+opening a card would carry the person into somebody else's tab.
+
+## Capabilities the deployment declares
+
+Nothing here is assumed. `FeatureAccess` reads the adapter's capabilities and
+the screen offers only what is there (`lib/data/feature_access.dart`):
+
+| Capability | What it adds |
+|---|---|
+| `voicemail` | the section itself |
+| `voicemailSave` | the Keep action and the Saved filter |
+| `voicemailTrash` | the Trash filter, Move to trash, Restore, Delete for good |
+| `voicemailForward` | the Forward action |
+
+A filter the mailbox cannot serve is absent rather than greyed out: nothing
+promises a list that would come back empty for a reason the person cannot see.
+Without the trash, a delete is final and the dialog says so.
+
+## The list and its filters
+
+`VoicemailCubit` holds the mailbox as it is stored plus what the trash returned,
+and the screen shows one filtered view of it (`VoicemailFilter`):
+
+- **all** and **unheard** - local, over the stored mailbox;
+- **saved** - local, the kept ones;
+- **trash** - remote: the trash is asked for when the filter is chosen, not
+  carried with the mailbox.
+
+`refresh()` therefore means different things per filter, which is why it asks
+the filter rather than the caller.
+
+## One message, and several at once
+
+| Action | Where | Note |
+|---|---|---|
+| Play | `VoicemailPlaybackController` + `widgets/audio_view.dart` | one player for the whole list; the file is cached under `mediaCacheBasePath` |
+| Mark heard / new | `toggleSeenStatus` | the patch is awaited and reverted if the backend refuses |
+| Keep / stop keeping | `toggleSavedStatus` | `voicemailSave` only |
+| Call back | `startCall` | dials the number that left the message |
+| Open contact | `callerOf` + `widgets/voicemail_body.dart` | the card is looked up on the tap rather than carried on every message; a caller who has left the address book says so |
+| Move to trash, restore, delete for good | `removeVoicemail`, `restoreVoicemail`, `removeVoicemailPermanently` | |
+| Forward | see below | `voicemailForward` only |
+
+Several messages are selected in the list and acted on from the header
+(`widgets/voicemail_delete_action.dart`): in the trash that means restoring them
+or deleting them for good, everywhere else moving them to the trash. The three
+bulk paths share one loop and one policy - a message the server refuses does not
+stop the rest, the first refusal is what the caller is told about, and a
+condition that will hold for every message stops the loop rather than being
+asked a hundred times.
+
+## The forwarder's name on a tile
+
+A forwarded message arrives with the id of whoever passed it along and nothing
+else about them. The cubit resolves those ids against the address book, matched
+on the id the backend issued rather than on a number, keeps each answer, and the
+tile shows the name on a line of its own under the date. It is not a
+replacement for the sender: both names matter and they answer different
+questions - who left the recording, and how it got here. A colleague the
+address book does not know falls back to their id, which is a poor name but a
+true one.
+
+## Passing a message to a colleague
+
+Forwarding has no picker of its own. The person is sent to the address book -
+the app's own, with its presence, its sources and its favourites - through the
+destination-picking mechanism: [`../destination_picking.md`](../destination_picking.md).
+
+```
+menu -> Forward
+  voicemail_body.dart          picking.ask(ForwardVoicemailPurpose(...)) + navigate to contacts
+  forward_voicemail_purpose    who may be chosen: a contact from the backend, with the
+                               server's own id, and not the person forwarding
+  a row is tapped              submit -> VoicemailForwarding.send(message, recipient)
+  voicemail_forwarding.dart    POST /user/voicemails/{id}/forward, then announce a report
+  the shell's presenter        the sentence, and a retry where one could end differently
+```
+
+Nothing of this is kept between forwards: the message and the colleague are
+arguments, the sentences are resolved when the person asks for the forward, and
+the answer goes to the one thing still on screen by the time it arrives.
+
+What each refusal means is `extensions/request_failure.dart` ->
+`VoicemailForwardOutcome`: a recording too large and a colleague who is full are
+answers, not faults, and are not worth another try; a backend that does not
+forward at all, or a request that never got there, is.
+
+## The badge on the tab
+
+`VoicemailUnreadCubit` counts unheard messages for the tab icon
+(`widgets/voicemail_flavor_overlay.dart`). It is eager: a badge that starts
+counting only once somebody opens the screen it sits on is of no use there.
+
+## Tests
+
+| File | What it pins |
+|---|---|
+| `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup |
+| `test/features/voicemail/voicemail_filter_test.dart` | which filters a deployment offers, and what each one shows |
+| `test/features/voicemail/voicemail_tile_test.dart` | what one row offers, including the actions a capability removes |
+| `test/features/voicemail/view/voicemail_selection_test.dart` | the header over the trash: restore, delete for good, and the count in the dialog |
+| `test/features/voicemail/view/voicemail_forward_test.dart` | the screen leaving a request and sending the person to the address book |
+| `test/features/voicemail/view/voicemail_open_contact_test.dart` | opening the caller, and a caller who is no longer there |
+| `test/features/voicemail/utils/voicemail_forwarding_test.dart` | the send itself and every refusal turned into a sentence |
+| `test/features/voicemail/forward_voicemail_purpose_test.dart` | who may be chosen, and how much narrower this is than a transfer |
+| `test/repository/voicemail_bulk_remove_test.dart` | the shared bulk loop and its policy |
