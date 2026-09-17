@@ -174,53 +174,28 @@ not the feature's problem.
 
 ## The row contract
 
-Two questions, and they are not the same one.
+One question, asked once per row:
 
 ```dart
-final purpose = context.pickPurpose;                        // null when no choice is being made
-final candidate = DestinationCandidate(number: number, contact: contact);
-final picks = purpose != null && purpose.accepts(candidate);
+final pick = context.pickOfferFor(DestinationCandidate(number: number, contact: contact));
 
-onTap: purpose != null
-    ? (picks ? () => pickDestination(context, purpose, candidate) : null)
-    : onToggleExpanded,
-expanded: expanded && purpose == null,
-onDialPressed: purpose == null && number != null ? () => call(number) : null,
+onTap: pick != null ? pick.onPressed : onToggleExpanded,
+expanded: expanded && pick == null,
+onDialPressed: pick == null && number != null ? () => call(number) : null,
 ```
 
-- **While a choice is being made, no row does what it normally does** - expanding,
-  dialling, offering to hand a call over - whether or not it can be chosen. A
-  row that kept those was how a refused destination still ended up being acted
-  on, through a menu entry nobody thought of as part of choosing.
-- **Only a row the purpose accepts becomes tappable.** One it does not stays
-  visible and inert rather than vanishing: somebody looking for a colleague who
-  is not eligible should see that they are there and cannot be chosen, not
-  wonder where they went.
+`pickOfferFor` answers both halves of the contract and the row reads them off
+the one object:
 
-A refusal has exactly one shape: no callback. A row that keeps a callback and
-leaves the submission to refuse it is a row that looks pickable and is not.
+- **its presence** means a choice is being made, so no row does what it
+  normally does - expanding, dialling, offering to hand a call over - whether or
+  not it can be chosen;
+- **`onPressed`** is null on a row the purpose refuses, which stays in the list,
+  inert. A person looking for somebody not eligible should see that they are
+  there and not pickable, rather than wonder where they went.
 
-In the lists this is one object, `DestinationPickOffer`, handed to the row. Its presence is
-what says a choice is being made; its `onPressed` says whether this row answers
-it. The row then draws the purpose's mark, or nothing at all - not the dial
-shortcut, and not the overflow menu behind it, which went on offering to call,
-to message and to hand a call over until this replaced it.
-
-Nothing about this is gated on the call-transfer configuration. That setting is
-permission to hand a call over, not permission to answer whatever is being
-asked; a purpose of its own must work where transfers are switched off.
-
-`pickDestination` submits and then pops, because the choice was made on a list
-the person was sent to and there is nothing left to do there. The keypad is the
-exception - it is where they already were, so it calls `purpose.submit` directly
-(`lib/features/keypad/view/keypad_view.dart`).
-
-The keypad has no rows, so it asks both questions of what is typed: whether the
-section can answer at all (`offeredBy`), and whether the current value is an
-answer (`accepts`). Offering the section is not acceptance of everything typed
-into it. It also watches the whole value rather than whether there is one -
-two different numbers are not the same state - and clears the field only once
-the purpose has taken it, so a refusal does not look like a successful send.
+Written out by hand this is four lines, and it was written out once per list -
+five copies, each a place to ask one half and forget the other.
 
 ## Call sites
 

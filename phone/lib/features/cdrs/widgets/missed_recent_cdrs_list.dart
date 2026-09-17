@@ -133,8 +133,6 @@ class _MissedRecentCdrsListState extends State<MissedRecentCdrsList> {
           builder: (context, userInfoState) {
             final userSmsNumbers = userInfoState.userInfo?.numbers.sms ?? [];
 
-            final purpose = context.pickPurpose;
-
             return BlocBuilder<CallBloc, CallState>(
               buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
               builder: (context, callState) {
@@ -174,26 +172,18 @@ class _MissedRecentCdrsListState extends State<MissedRecentCdrsList> {
                                   final contactSourceId = contact?.sourceId;
                                   final contactSmsNumbers = contact?.smsNumbers ?? [];
                                   final canSendSms = contactSmsNumbers.contains(participantNumber);
-                                  final candidate = DestinationCandidate(number: participantNumber, contact: contact);
-                                  final picks = purpose != null && purpose.accepts(candidate);
-                                  final pick = purpose == null
-                                      ? null
-                                      : DestinationPickOffer(
-                                          icon: purpose.pickIcon,
-                                          label: purpose.pickLabel(candidate),
-                                          onPressed: picks ? () => pickDestination(context, purpose, candidate) : null,
-                                        );
+                                  final pick = context.pickOfferFor(
+                                    DestinationCandidate(number: participantNumber, contact: contact),
+                                  );
 
                                   return CdrTile(
                                     cdr: cdr,
                                     contact: contact,
                                     callNumbers: callNumbers,
                                     pick: pick,
-                                    onTap: purpose != null
-                                        ? (picks ? () => pickDestination(context, purpose, candidate) : null)
-                                        : () => _toggleExpanded(cdr.callId),
-                                    expanded: purpose == null && _expandedCallId == cdr.callId,
-                                    onDialPressed: purpose == null && participantNumber != null
+                                    onTap: pick != null ? pick.onPressed : () => _toggleExpanded(cdr.callId),
+                                    expanded: pick == null && _expandedCallId == cdr.callId,
+                                    onDialPressed: pick == null && participantNumber != null
                                         ? () => _callController.createCall(
                                             destination: participantNumber,
                                             displayName: contact?.maybeName,

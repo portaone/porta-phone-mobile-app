@@ -133,6 +133,48 @@ void main() {
     });
   });
 
+  group('what one row is offered', () {
+    // Every list asks the same two questions of the same purpose. Answered by
+    // hand they were four lines written out five times, and a copy that asks
+    // one of them and forgets the other is exactly how a row ends up dialling
+    // somebody the person was only trying to choose.
+    Future<DestinationPickOffer?> offerIn(WidgetTester tester, DestinationPickPurpose? purpose) async {
+      DestinationPickOffer? offer;
+      await tester.pumpWidget(
+        DestinationPicking(
+          purpose: purpose,
+          child: Builder(
+            builder: (context) {
+              offer = context.pickOfferFor(const DestinationCandidate(number: '1001'));
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+      return offer;
+    }
+
+    testWidgets('nothing at all while nobody is being chosen', (tester) async {
+      expect(await offerIn(tester, null), isNull);
+    });
+
+    testWidgets('the mark and the wording of whoever is asking', (tester) async {
+      final offer = await offerIn(tester, _Purpose());
+
+      expect(offer!.icon, Icons.phone_forwarded);
+      expect(offer.label, 'Choose 1001');
+    });
+
+    testWidgets('a row the purpose refuses is offered but not pressable', (tester) async {
+      // Offered, because the person is looking at a list and a row that
+      // disappeared would read as somebody having left it.
+      final offer = await offerIn(tester, _Purpose(takes: false));
+
+      expect(offer, isNotNull);
+      expect(offer!.isAnswer, isFalse);
+    });
+  });
+
   test('an unchanged purpose does not notify the lists', () {
     // The scope sits above every section and is rebuilt with the shell. A
     // purpose compared by identity would notify every row on the screen on
