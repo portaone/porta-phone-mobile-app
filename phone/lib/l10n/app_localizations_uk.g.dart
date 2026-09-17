@@ -3140,6 +3140,21 @@ class AppLocalizationsUk extends AppLocalizations {
       'Обрані голосові повідомлення будуть остаточно видалені. Чи хочете ви продовжити?';
 
   @override
+  String get voicemail_Dialog_deleteSelectedPermanentlyContent =>
+      'Вибрані повідомлення буде вилучено зі скриньки без можливості відновити.';
+
+  @override
+  String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Видалити $count повідомлень назавжди?',
+      one: 'Видалити повідомлення назавжди?',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get voicemail_Dialog_deleteSelectedTitle => 'Видалити обрані голосові повідомлення?';
 
   @override
@@ -3218,6 +3233,11 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Label_forwardChoosing => 'Виберіть, кому переслати';
 
   @override
+  String voicemail_Label_forwardedBy(String name) {
+    return 'Переслав(-ла) $name';
+  }
+
+  @override
   String get voicemail_Label_markAsHeard => 'Позначити як прослухане';
 
   @override
@@ -3227,10 +3247,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Label_moveToTrash => 'Перемістити в кошик';
 
   @override
+  String get voicemail_Label_openContact => 'Відкрити контакт';
+
+  @override
   String get voicemail_Label_playbackError => 'Помилка відтворення';
 
   @override
   String get voicemail_Label_restore => 'Відновити';
+
+  @override
+  String get voicemail_Label_restoreSelected => 'Відновити вибрані';
 
   @override
   String get voicemail_Label_retry => 'Спробувати ще раз';
@@ -3310,6 +3336,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String voicemail_Snackbar_forwarded(String name) {
     return 'Переслано: $name';
   }
+
+  @override
+  String get voicemail_Snackbar_contactGone => 'Цього контакту вже немає у вашій адресній книзі';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Зверніться до адміністратора, щоб активувати голосову пошту.';

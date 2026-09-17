@@ -71,6 +71,7 @@ class VoicemailBody extends StatelessWidget {
                         trashSupported: state.trashSupported,
                         forwardSupported: state.forwardSupported,
                         inTrash: state.isShowingTrash,
+                        forwarderOf: state.forwarderOf,
                       ),
                     ),
                     // The one thing about the trash a person cannot see by
@@ -129,6 +130,7 @@ class VoicemailListView extends StatelessWidget {
     this.trashSupported = false,
     this.forwardSupported = false,
     this.inTrash = false,
+    this.forwarderOf,
   });
 
   final List<Voicemail> items;
@@ -138,6 +140,9 @@ class VoicemailListView extends StatelessWidget {
   final bool trashSupported;
   final bool forwardSupported;
   final bool inTrash;
+
+  /// Who passed a given message along, or null when nobody did.
+  final String? Function(Voicemail)? forwarderOf;
 
   @override
   Widget build(BuildContext context) {
@@ -162,9 +167,11 @@ class VoicemailListView extends StatelessWidget {
           trashSupported: trashSupported,
           forwardSupported: forwardSupported,
           inTrash: inTrash,
+          forwardedByName: forwarderOf?.call(item),
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
           onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
           onForwarded: (it) => _onForwardVoicemail(context, it),
+          onOpenContact: (it) => _onOpenContact(context, it),
           onRestored: (it) => cubit.restoreVoicemail(it.id),
           onDeletedPermanently: (it) => _onDeletePermanently(context, it),
           onCall: (it) => cubit.startCall(it),
@@ -206,6 +213,25 @@ class VoicemailListView extends StatelessWidget {
       l10n.voicemail_Snackbar_movedToTrash,
       action: SnackBarAction(label: l10n.voicemail_Label_undo, onPressed: () => cubit.restoreVoicemail(voicemail.id)),
     );
+  }
+
+  /// Opens the card of whoever left the message.
+  ///
+  /// Who that is belongs to the mailbox, which knows the number and can ask
+  /// the address book; this only decides where the person lands.
+  void _onOpenContact(BuildContext context, Voicemail voicemail) async {
+    final l10n = context.l10n;
+    final contact = await context.read<VoicemailCubit>().callerOf(voicemail);
+    if (!context.mounted) return;
+
+    // The address book can have moved on since the list was drawn - a contact
+    // deleted on another device, a sync that dropped them.
+    if (contact == null) {
+      context.showSnackBar(l10n.voicemail_Snackbar_contactGone);
+      return;
+    }
+
+    context.router.navigate(ContactScreenPageRoute(contactId: contact.id));
   }
 
   /// Sends the person to the address book to choose a colleague.

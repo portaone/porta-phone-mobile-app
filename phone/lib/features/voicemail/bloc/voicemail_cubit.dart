@@ -22,12 +22,14 @@ final _logger = Logger('VoicemailCubit');
 class VoicemailCubit extends Cubit<VoicemailState> {
   VoicemailCubit({
     required VoicemailRepository repository,
+    required ContactsRepository contactsRepository,
     required this.onCallStarted,
     required this.onSubmitNotification,
     required bool saveSupported,
     required bool trashSupported,
     required bool forwardSupported,
   }) : _repository = repository,
+       _contactsRepository = contactsRepository,
        super(
          VoicemailState(
            forwardSupported: forwardSupported,
@@ -43,6 +45,10 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   }
 
   final VoicemailRepository _repository;
+
+  /// Only for resolving who a message came from into a card that can be
+  /// opened. The mailbox itself knows nothing about the address book.
+  final ContactsRepository _contactsRepository;
   final ValueChanged<String> onCallStarted;
   final ValueChanged<Notification> onSubmitNotification;
 
@@ -64,6 +70,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
           status: VoicemailStatus.loaded,
         ),
       );
+      unawaited(_resolveForwarders(items));
     });
 
     if (!_repository.isFeatureSupported) {
@@ -87,6 +94,32 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded, error: e));
       _logger.severe('Error fetching voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchVoicemails');
+    }
+  }
+
+  /// Puts a name to whoever forwarded each of these messages on.
+  ///
+  /// Detached from the list arriving rather than awaited before it: a message
+  /// is worth showing at once, and the line naming the forwarder appears a
+  /// moment later. Only ids not already known are looked up, so a list that
+  /// changes for other reasons costs nothing.
+  Future<void> _resolveForwarders(List<Voicemail> items) async {
+    final unknown = items
+        .map((item) => item.forwardedBy)
+        .nonNulls
+        .where((userId) => !state.forwarderNames.containsKey(userId))
+        .toSet();
+    if (unknown.isEmpty) return;
+
+    try {
+      final resolved = await _repository.resolveForwarderNames(unknown);
+      if (resolved.isEmpty) return;
+
+      _safeEmit(state.copyWith(forwarderNames: {...state.forwarderNames, ...resolved}));
+    } catch (e, s) {
+      // A name that could not be looked up is not worth failing a list over;
+      // the tile falls back to the id and the message still reads correctly.
+      _logger.warning('Error resolving voicemail forwarder names: $e', e, s);
     }
   }
 
@@ -152,11 +185,58 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     }
   }
 
+  /// Puts everything picked back where it was.
+  void restoreSelectedVoicemails() async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
+      await _repository.restoreMultipleVoicemails(state.selectedVoicemailsIds);
+    } catch (e, s) {
+      _logger.severe('Error restoring selected voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.restoreSelectedVoicemails');
+    } finally {
+      // Whatever happened, some of them may have moved, so the list on screen
+      // is re-read rather than guessed at.
+      await _afterTrashChange();
+    }
+  }
+
+  /// Deletes everything picked for good.
+  void removeSelectedVoicemailsPermanently() async {
+    try {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
+      await _repository.removeMultipleVoicemailsPermanently(state.selectedVoicemailsIds);
+    } catch (e, s) {
+      _logger.severe('Error permanently removing selected voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeSelectedVoicemailsPermanently');
+    } finally {
+      await _afterTrashChange();
+    }
+  }
+
+  /// Leaves selection and re-reads whichever list is on screen.
+  ///
+  /// The selection was made over the trash, which is not stored, so nothing
+  /// else would notice that it is no longer what it was.
+  Future<void> _afterTrashChange() async {
+    _safeEmit(state.copyWith(selectedVoicemailsIds: const [], status: VoicemailStatus.loaded));
+    if (state.filter.isRemote) await fetchTrashedVoicemails();
+  }
+
   /// Deletes a message, which means the trash where there is one.
   ///
   /// Answers whether the server took it. The caller needs to know because a
   /// move to the trash is offered back afterwards, and offering to undo
   /// something that never happened is worse than saying nothing.
+  /// The card of whoever left [voicemail], or null when the address book no
+  /// longer knows them.
+  ///
+  /// Looked up when it is asked for rather than carried on every message: the
+  /// tile already knows a contact exists, because it is showing that person's
+  /// name, and what it does not have is the row's id. One query on a
+  /// deliberate tap against a column and a mapping on every message ever
+  /// listed.
+  Future<Contact?> callerOf(Voicemail voicemail) => _contactsRepository.getContactByPhoneNumber(voicemail.sender);
+
   Future<bool> removeVoicemail(String messageId) async {
     try {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));

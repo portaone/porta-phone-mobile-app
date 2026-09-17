@@ -3086,6 +3086,15 @@ class AppLocalizationsTh extends AppLocalizations {
       'ข้อความเสียงที่เลือกจะถูกลบอย่างถาวร คุณต้องการดำเนินการต่อหรือไม่?';
 
   @override
+  String get voicemail_Dialog_deleteSelectedPermanentlyContent =>
+      'ข้อความที่เลือกจะถูกลบออกจากกล่องข้อความและไม่สามารถกู้คืนได้';
+
+  @override
+  String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count) {
+    return 'ลบข้อความ $count รายการถาวรหรือไม่';
+  }
+
+  @override
   String get voicemail_Dialog_deleteSelectedTitle => 'ลบข้อความเสียงที่เลือกหรือไม่?';
 
   @override
@@ -3155,6 +3164,11 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Label_forwardChoosing => 'เลือกผู้รับการส่งต่อ';
 
   @override
+  String voicemail_Label_forwardedBy(String name) {
+    return 'ส่งต่อโดย $name';
+  }
+
+  @override
   String get voicemail_Label_markAsHeard => 'ทำเครื่องหมายว่าฟังแล้ว';
 
   @override
@@ -3164,10 +3178,16 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Label_moveToTrash => 'ย้ายไปถังขยะ';
 
   @override
+  String get voicemail_Label_openContact => 'เปิดรายชื่อติดต่อ';
+
+  @override
   String get voicemail_Label_playbackError => 'เล่นไม่สำเร็จ';
 
   @override
   String get voicemail_Label_restore => 'กู้คืน';
+
+  @override
+  String get voicemail_Label_restoreSelected => 'กู้คืนรายการที่เลือก';
 
   @override
   String get voicemail_Label_retry => 'ลองอีกครั้ง';
@@ -3238,6 +3258,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String voicemail_Snackbar_forwarded(String name) {
     return 'ส่งต่อถึง $name แล้ว';
   }
+
+  @override
+  String get voicemail_Snackbar_contactGone => 'ไม่มีรายชื่อติดต่อนี้ในสมุดที่อยู่ของคุณแล้ว';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'ติดต่อผู้ดูแลระบบของคุณเพื่อเปิดใช้งานข้อความเสียง';

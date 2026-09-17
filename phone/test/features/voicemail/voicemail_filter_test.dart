@@ -32,6 +32,7 @@ void main() {
   VoicemailCubit build({bool saveSupported = true, bool trashSupported = true, bool forwardSupported = true}) =>
       VoicemailCubit(
         repository: repository,
+        contactsRepository: _Contacts(),
         onCallStarted: (_) {},
         onSubmitNotification: (_) {},
         saveSupported: saveSupported,
@@ -216,3 +217,5 @@ Voicemail _voicemail(String id, {ReadStatus status = ReadStatus.read, bool? save
 );
 
 class _Repository extends Mock implements VoicemailRepository {}
+
+class _Contacts extends Mock implements ContactsRepository {}

@@ -3101,6 +3101,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Selected voicemails will be permanently deleted. Do you want to continue?';
 
   @override
+  String get voicemail_Dialog_deleteSelectedPermanentlyContent =>
+      'The selected messages will be removed from your mailbox and cannot be restored.';
+
+  @override
+  String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count) {
+    return 'Delete $count messages permanently?';
+  }
+
+  @override
   String get voicemail_Dialog_deleteSelectedTitle => 'Delete selected voicemails?';
 
   @override
@@ -3172,6 +3181,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Label_forwardChoosing => 'Choose who to forward to';
 
   @override
+  String voicemail_Label_forwardedBy(String name) {
+    return 'Forwarded by $name';
+  }
+
+  @override
   String get voicemail_Label_markAsHeard => 'Mark as heard';
 
   @override
@@ -3181,10 +3195,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_Label_moveToTrash => 'Move to trash';
 
   @override
+  String get voicemail_Label_openContact => 'Open contact';
+
+  @override
   String get voicemail_Label_playbackError => 'Playback failed';
 
   @override
   String get voicemail_Label_restore => 'Restore';
+
+  @override
+  String get voicemail_Label_restoreSelected => 'Restore selected';
 
   @override
   String get voicemail_Label_retry => 'Try again';
@@ -3256,6 +3276,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String voicemail_Snackbar_forwarded(String name) {
     return 'Forwarded to $name';
   }
+
+  @override
+  String get voicemail_Snackbar_contactGone => 'That contact is no longer in your address book';
 
   @override
   String get voicemail_Snackbar_notConfigured => 'Contact your administrator to activate voicemail';

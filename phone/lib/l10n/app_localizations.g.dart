@@ -5683,6 +5683,18 @@ abstract class AppLocalizations {
   /// **'Selected voicemails will be permanently deleted. Do you want to continue?'**
   String get voicemail_Dialog_deleteSelectedContent;
 
+  /// Warns that deleting the picked voicemails for good cannot be undone.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected messages will be removed from your mailbox and cannot be restored.'**
+  String get voicemail_Dialog_deleteSelectedPermanentlyContent;
+
+  /// Asks before deleting the picked voicemails for good.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} messages permanently?'**
+  String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count);
+
   /// No description provided for @voicemail_Dialog_deleteSelectedTitle.
   ///
   /// In en, this message translates to:
@@ -5815,6 +5827,12 @@ abstract class AppLocalizations {
   /// **'Choose who to forward to'**
   String get voicemail_Label_forwardChoosing;
 
+  /// Says who passed a voicemail along; the sender stays the original caller.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwarded by {name}'**
+  String voicemail_Label_forwardedBy(String name);
+
   /// No description provided for @voicemail_Label_markAsHeard.
   ///
   /// In en, this message translates to:
@@ -5833,6 +5851,12 @@ abstract class AppLocalizations {
   /// **'Move to trash'**
   String get voicemail_Label_moveToTrash;
 
+  /// Menu action that opens the card of whoever left the voicemail.
+  ///
+  /// In en, this message translates to:
+  /// **'Open contact'**
+  String get voicemail_Label_openContact;
+
   /// No description provided for @voicemail_Label_playbackError.
   ///
   /// In en, this message translates to:
@@ -5844,6 +5868,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore'**
   String get voicemail_Label_restore;
+
+  /// Toolbar action that puts the picked trashed voicemails back.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore selected'**
+  String get voicemail_Label_restoreSelected;
 
   /// No description provided for @voicemail_Label_retry.
   ///
@@ -5964,6 +5994,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Forwarded to {name}'**
   String voicemail_Snackbar_forwarded(String name);
+
+  /// Shown when the caller is no longer in the address book by the time their card is asked for.
+  ///
+  /// In en, this message translates to:
+  /// **'That contact is no longer in your address book'**
+  String get voicemail_Snackbar_contactGone;
 
   /// No description provided for @voicemail_Snackbar_notConfigured.
   ///

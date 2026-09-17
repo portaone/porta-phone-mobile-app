@@ -2711,6 +2711,19 @@
   "@voicemail_Dialog_deletePermanentlyTitle": {},
   "voicemail_Dialog_deleteSelectedContent": "Selected voicemails will be permanently deleted. Do you want to continue?",
   "@voicemail_Dialog_deleteSelectedContent": {},
+  "voicemail_Dialog_deleteSelectedPermanentlyContent": "The selected messages will be removed from your mailbox and cannot be restored.",
+  "@voicemail_Dialog_deleteSelectedPermanentlyContent": {
+    "description": "Warns that deleting the picked voicemails for good cannot be undone."
+  },
+  "voicemail_Dialog_deleteSelectedPermanentlyTitle": "Delete {count} messages permanently?",
+  "@voicemail_Dialog_deleteSelectedPermanentlyTitle": {
+    "description": "Asks before deleting the picked voicemails for good.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "voicemail_Dialog_deleteSelectedTitle": "Delete selected voicemails?",
   "@voicemail_Dialog_deleteSelectedTitle": {},
   "voicemail_Dialog_deleteSingleContent": "This voicemail will be permanently deleted. Do you want to continue?",
@@ -2782,6 +2795,15 @@
   "@voicemail_Label_forwardChoosing": {
     "description": "Banner shown while the user is browsing the address book for somebody to forward a voicemail to."
   },
+  "voicemail_Label_forwardedBy": "Forwarded by {name}",
+  "@voicemail_Label_forwardedBy": {
+    "description": "Says who passed a voicemail along; the sender stays the original caller.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_Label_markAsHeard": "Mark as heard",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Mark as new",
@@ -2790,11 +2812,19 @@
   "@voicemail_Label_moveToTrash": {
     "description": "Menu action that moves a voicemail to the trash, where it can be restored."
   },
+  "voicemail_Label_openContact": "Open contact",
+  "@voicemail_Label_openContact": {
+    "description": "Menu action that opens the card of whoever left the voicemail."
+  },
   "voicemail_Label_playbackError": "Playback failed",
   "@voicemail_Label_playbackError": {},
   "voicemail_Label_restore": "Restore",
   "@voicemail_Label_restore": {
     "description": "Menu action that puts a trashed voicemail back in the mailbox."
+  },
+  "voicemail_Label_restoreSelected": "Restore selected",
+  "@voicemail_Label_restoreSelected": {
+    "description": "Toolbar action that puts the picked trashed voicemails back."
   },
   "voicemail_Label_retry": "Try again",
   "@voicemail_Label_retry": {},
@@ -2894,6 +2924,10 @@
         "type": "String"
       }
     }
+  },
+  "voicemail_Snackbar_contactGone": "That contact is no longer in your address book",
+  "@voicemail_Snackbar_contactGone": {
+    "description": "Shown when the caller is no longer in the address book by the time their card is asked for."
   },
   "voicemail_Snackbar_notConfigured": "Contact your administrator to activate voicemail",
   "@voicemail_Snackbar_notConfigured": {},

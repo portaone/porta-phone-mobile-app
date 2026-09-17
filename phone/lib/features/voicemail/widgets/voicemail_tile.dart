@@ -27,10 +27,12 @@ class VoicemailTile extends StatelessWidget {
     required this.onToggleSeenStatus,
     required this.onToggleSavedStatus,
     required this.onForwarded,
+    required this.onOpenContact,
     required this.onRestored,
     required this.onDeletedPermanently,
     required this.onLongPress,
     required this.onTap,
+    this.forwardedByName,
     this.saveSupported = false,
     this.trashSupported = false,
     this.forwardSupported = false,
@@ -50,6 +52,13 @@ class VoicemailTile extends StatelessWidget {
   /// A message reporting no flag sits in a mailbox that cannot hold one, so
   /// offering to save it would promise something that will not stay.
   final bool saveSupported;
+
+  /// Who passed this message along, or null when nobody did.
+  ///
+  /// Shown as a line of its own rather than in place of the sender, because
+  /// the sender is still the person who left the recording. Both names matter
+  /// and they answer different questions: who called, and how it got here.
+  final String? forwardedByName;
 
   /// Whether this mailbox has a trash, which decides what deleting means.
   ///
@@ -75,12 +84,21 @@ class VoicemailTile extends StatelessWidget {
   final void Function(Voicemail) onToggleSeenStatus;
   final void Function(Voicemail) onToggleSavedStatus;
   final void Function(Voicemail) onForwarded;
+  final void Function(Voicemail) onOpenContact;
   final void Function(Voicemail) onRestored;
   final void Function(Voicemail) onDeletedPermanently;
   final void Function(Voicemail) onLongPress;
   final void Function(Voicemail)? onTap;
 
   bool get _savingOffered => saveSupported && voicemail.saved != null;
+
+  /// Whether the caller is somebody the address book already knows.
+  ///
+  /// The name shown on the tile is the answer: it is the caller's number
+  /// unless a contact was found for it, so a name that differs from the number
+  /// means there is a card to open. Offering the action for a stranger would
+  /// lead to an empty screen.
+  bool get _contactKnown => voicemail.displaySender != voicemail.sender;
   bool get _saved => voicemail.saved == true;
 
   @override
@@ -116,7 +134,7 @@ class VoicemailTile extends StatelessWidget {
               ),
           ],
         ),
-        subtitle: _VoicemailSubtitle(voicemail: voicemail, dateFormat: dateFormat),
+        subtitle: _VoicemailSubtitle(voicemail: voicemail, dateFormat: dateFormat, forwardedByName: forwardedByName),
         bottom: AudioView(path: voicemail.url!, cacheKey: voicemail.id, onPlaybackStarted: _onPlaybackStarted),
         trailing: SemanticAction(
           label: context.l10n.voicemail_SemanticsLabel_moreActions,
@@ -197,6 +215,14 @@ class VoicemailTile extends StatelessWidget {
           title: Text(_saved ? context.l10n.voicemail_Label_unsave : context.l10n.voicemail_Label_save),
         ),
       ),
+    if (_contactKnown)
+      PopupMenuItem(
+        value: _VoicemailMenuAction.openContact,
+        child: ListTile(
+          leading: const Icon(Icons.person_outline),
+          title: Text(context.l10n.voicemail_Label_openContact),
+        ),
+      ),
     if (forwardSupported)
       PopupMenuItem(
         value: _VoicemailMenuAction.forward,
@@ -236,6 +262,9 @@ class VoicemailTile extends StatelessWidget {
       case _VoicemailMenuAction.delete:
         onDeleted(voicemail);
         break;
+      case _VoicemailMenuAction.openContact:
+        onOpenContact(voicemail);
+        break;
       case _VoicemailMenuAction.forward:
         onForwarded(voicemail);
         break;
@@ -253,15 +282,44 @@ class VoicemailTile extends StatelessWidget {
 /// It uses an [AnimatedSwitcher] to transition between an empty state, a loading indicator
 /// for unknown statuses, and a solid circle for unread messages
 class _VoicemailSubtitle extends StatelessWidget {
-  const _VoicemailSubtitle({required this.voicemail, required this.dateFormat});
+  const _VoicemailSubtitle({required this.voicemail, required this.dateFormat, this.forwardedByName});
 
   final Voicemail voicemail;
   final DateFormat dateFormat;
+  final String? forwardedByName;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final forwardedByName = this.forwardedByName;
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _dateRow(context, colorScheme),
+        if (forwardedByName != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Row(
+              spacing: 4,
+              children: [
+                Icon(Icons.forward_to_inbox_outlined, size: 14, color: colorScheme.onSurfaceVariant),
+                Flexible(
+                  child: Text(
+                    context.l10n.voicemail_Label_forwardedBy(forwardedByName),
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _dateRow(BuildContext context, ColorScheme colorScheme) {
     return Row(
       children: [
         AnimatedSwitcher(
@@ -295,4 +353,13 @@ class _VoicemailSubtitle extends StatelessWidget {
   }
 }
 
-enum _VoicemailMenuAction { call, toggleSeenStatus, toggleSavedStatus, forward, delete, restore, deletePermanently }
+enum _VoicemailMenuAction {
+  call,
+  toggleSeenStatus,
+  toggleSavedStatus,
+  openContact,
+  forward,
+  delete,
+  restore,
+  deletePermanently,
+}

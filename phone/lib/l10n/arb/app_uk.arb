@@ -2636,6 +2636,19 @@
   "@voicemail_Dialog_deletePermanentlyTitle": {},
   "voicemail_Dialog_deleteSelectedContent": "Обрані голосові повідомлення будуть остаточно видалені. Чи хочете ви продовжити?",
   "@voicemail_Dialog_deleteSelectedContent": {},
+  "voicemail_Dialog_deleteSelectedPermanentlyContent": "Вибрані повідомлення буде вилучено зі скриньки без можливості відновити.",
+  "@voicemail_Dialog_deleteSelectedPermanentlyContent": {
+    "description": "Warns that deleting the picked voicemails for good cannot be undone."
+  },
+  "voicemail_Dialog_deleteSelectedPermanentlyTitle": "{count, plural, one{Видалити повідомлення назавжди?} other{Видалити {count} повідомлень назавжди?}}",
+  "@voicemail_Dialog_deleteSelectedPermanentlyTitle": {
+    "description": "Asks before deleting the picked voicemails for good.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "voicemail_Dialog_deleteSelectedTitle": "Видалити обрані голосові повідомлення?",
   "@voicemail_Dialog_deleteSelectedTitle": {},
   "voicemail_Dialog_deleteSingleContent": "Це голосове повідомлення буде остаточно видалено. Бажаєте продовжити?",
@@ -2707,6 +2720,15 @@
   "@voicemail_Label_forwardChoosing": {
     "description": "Banner shown while the user is browsing the address book for somebody to forward a voicemail to."
   },
+  "voicemail_Label_forwardedBy": "Переслав(-ла) {name}",
+  "@voicemail_Label_forwardedBy": {
+    "description": "Says who passed a voicemail along; the sender stays the original caller.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_Label_markAsHeard": "Позначити як прослухане",
   "@voicemail_Label_markAsHeard": {},
   "voicemail_Label_markAsNew": "Позначити як нове",
@@ -2715,11 +2737,19 @@
   "@voicemail_Label_moveToTrash": {
     "description": "Menu action that moves a voicemail to the trash, where it can be restored."
   },
+  "voicemail_Label_openContact": "Відкрити контакт",
+  "@voicemail_Label_openContact": {
+    "description": "Menu action that opens the card of whoever left the voicemail."
+  },
   "voicemail_Label_playbackError": "Помилка відтворення",
   "@voicemail_Label_playbackError": {},
   "voicemail_Label_restore": "Відновити",
   "@voicemail_Label_restore": {
     "description": "Menu action that puts a trashed voicemail back in the mailbox."
+  },
+  "voicemail_Label_restoreSelected": "Відновити вибрані",
+  "@voicemail_Label_restoreSelected": {
+    "description": "Toolbar action that puts the picked trashed voicemails back."
   },
   "voicemail_Label_retry": "Спробувати ще раз",
   "@voicemail_Label_retry": {},
@@ -2819,6 +2849,10 @@
         "type": "String"
       }
     }
+  },
+  "voicemail_Snackbar_contactGone": "Цього контакту вже немає у вашій адресній книзі",
+  "@voicemail_Snackbar_contactGone": {
+    "description": "Shown when the caller is no longer in the address book by the time their card is asked for."
   },
   "voicemail_Snackbar_notConfigured": "Зверніться до адміністратора, щоб активувати голосову пошту.",
   "@voicemail_Snackbar_notConfigured": {},

@@ -102,6 +102,24 @@ abstract class VoicemailRepository implements Refreshable {
   /// asked; it does not reach [watchVoicemails].
   Future<List<Voicemail>> fetchTrashedVoicemails({String? localeCode});
 
+  /// Puts several trashed messages back at once.
+  ///
+  /// Same policy as [removeMultipleVoicemails]: one the server refuses does
+  /// not stop the rest, and the first refusal is what the caller is told about.
+  Future<void> restoreMultipleVoicemails(List<String> messagesIds);
+
+  /// Deletes several messages for good at once, wherever they are.
+  Future<void> removeMultipleVoicemailsPermanently(List<String> messagesIds);
+
+  /// Names for the colleagues who forwarded messages on, by their user id.
+  ///
+  /// A forwarded message carries the id of whoever passed it along and nothing
+  /// else about them, so a screen showing "forwarded by" has to ask. Ids with
+  /// nobody behind them are simply absent from the answer: a colleague who has
+  /// left the address book is still a fact about the message, and their id is a
+  /// poor but honest stand-in for their name.
+  Future<Map<String, String>> resolveForwarderNames(Iterable<String> userIds);
+
   /// Passes a voicemail on to another user of the same backend, and answers
   /// with the id it now has in the RECIPIENT's list.
   ///
@@ -303,7 +321,7 @@ class VoicemailRepositoryImpl
     }
 
     final allVoicemails = await _appDatabase.voicemailDao.getAllVoicemails();
-    await _removeEach(allVoicemails.map((voicemail) => voicemail.id));
+    await _applyToEach(allVoicemails.map((voicemail) => voicemail.id), removeVoicemail);
   }
 
   /// Updates the `seen` status of a voicemail, ensuring consistency with any ongoing fetch operation.
@@ -438,6 +456,21 @@ class VoicemailRepositoryImpl
       _sessionGuard.onUnauthorized(e);
       rethrow;
     }
+  }
+
+  @override
+  Future<Map<String, String>> resolveForwarderNames(Iterable<String> userIds) async {
+    final names = <String, String>{};
+
+    for (final userId in userIds.toSet()) {
+      // Matched on the id the backend issued, not on a number: a forward names
+      // a user, and the same person may answer on several numbers or none.
+      final contact = await _appDatabase.contactsDao.getContactBySource(ContactSourceTypeEnum.external, userId);
+      final name = contact == null ? null : contactFromDrift(contact.contact).maybeName;
+      if (name != null) names[userId] = name;
+    }
+
+    return names;
   }
 
   /// The name to show for a number, or the number itself.
@@ -586,26 +619,49 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    await _removeEach(messagesIds);
+    await _applyToEach(messagesIds, removeVoicemail);
   }
 
-  /// Removes [messageIds] one by one through [removeVoicemail], which deletes
-  /// the local row itself once the server has confirmed.
+  @override
+  Future<void> restoreMultipleVoicemails(List<String> messagesIds) async {
+    if (_fetching != null) {
+      await _fetching;
+    }
+
+    await _applyToEach(messagesIds, restoreVoicemail);
+  }
+
+  @override
+  Future<void> removeMultipleVoicemailsPermanently(List<String> messagesIds) async {
+    if (_fetching != null) {
+      await _fetching;
+    }
+
+    await _applyToEach(messagesIds, removeVoicemailPermanently);
+  }
+
+  /// Runs [apply] over [messageIds] one at a time, in order.
   ///
-  /// A message the server rejected is logged and skipped so that the rest still
-  /// go, and the first rejection is kept and rethrown once the loop is done.
-  /// Anything else is rethrown where it happened: see [_isMessageRejection].
-  Future<void> _removeEach(Iterable<String> messageIds) async {
+  /// A message the server rejected is logged and skipped so that the rest are
+  /// still tried, and the first rejection is kept and rethrown once the loop is
+  /// done. Anything else is rethrown where it happened: see
+  /// [_isMessageRejection].
+  ///
+  /// One policy for every bulk action, because the reasoning is the same
+  /// whichever it is - one message the server will not touch is no reason to
+  /// leave the other ninety-nine alone, and a condition that holds for all of
+  /// them is no reason to ask a hundred times.
+  Future<void> _applyToEach(Iterable<String> messageIds, Future<void> Function(String messageId) apply) async {
     Object? firstRejection;
     StackTrace? firstStack;
 
     for (final messageId in messageIds) {
       try {
-        await removeVoicemail(messageId);
+        await apply(messageId);
       } catch (e, st) {
         if (!_isMessageRejection(e)) rethrow;
 
-        _logger.warning('Voicemail $messageId was not removed', e, st);
+        _logger.warning('Voicemail $messageId was refused', e, st);
         firstRejection ??= e;
         firstStack ??= st;
       }
@@ -676,6 +732,15 @@ class EmptyVoicemailRepository implements VoicemailRepository {
 
   @override
   Future<void> emptyVoicemailTrash({String? localeCode}) => Future.value();
+
+  @override
+  Future<void> restoreMultipleVoicemails(List<String> messagesIds) => Future.value();
+
+  @override
+  Future<void> removeMultipleVoicemailsPermanently(List<String> messagesIds) => Future.value();
+
+  @override
+  Future<Map<String, String>> resolveForwarderNames(Iterable<String> userIds) => Future.value(const {});
 
   @override
   Future<String> forwardVoicemail(String messageId, {required String toUserId, String? localeCode}) => Future.value('');

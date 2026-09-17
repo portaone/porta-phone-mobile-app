@@ -1461,6 +1461,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         voicemail_Dialog_deletePermanentlyTitle,
       'voicemail_Dialog_deleteSelectedContent' =>
         voicemail_Dialog_deleteSelectedContent,
+      'voicemail_Dialog_deleteSelectedPermanentlyContent' =>
+        voicemail_Dialog_deleteSelectedPermanentlyContent,
       'voicemail_Dialog_deleteSelectedTitle' =>
         voicemail_Dialog_deleteSelectedTitle,
       'voicemail_Dialog_deleteSingleContent' =>
@@ -1489,8 +1491,10 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Label_markAsHeard' => voicemail_Label_markAsHeard,
       'voicemail_Label_markAsNew' => voicemail_Label_markAsNew,
       'voicemail_Label_moveToTrash' => voicemail_Label_moveToTrash,
+      'voicemail_Label_openContact' => voicemail_Label_openContact,
       'voicemail_Label_playbackError' => voicemail_Label_playbackError,
       'voicemail_Label_restore' => voicemail_Label_restore,
+      'voicemail_Label_restoreSelected' => voicemail_Label_restoreSelected,
       'voicemail_Label_retry' => voicemail_Label_retry,
       'voicemail_Label_save' => voicemail_Label_save,
       'voicemail_Label_trashFootnote' => voicemail_Label_trashFootnote,
@@ -1510,6 +1514,7 @@ extension AppLocalizationsExtension on AppLocalizations {
         voicemail_Snackbar_forwardTooLarge,
       'voicemail_Snackbar_forwardUnavailable' =>
         voicemail_Snackbar_forwardUnavailable,
+      'voicemail_Snackbar_contactGone' => voicemail_Snackbar_contactGone,
       'voicemail_Snackbar_notConfigured' => voicemail_Snackbar_notConfigured,
       'voicemail_Title_notSupported' => voicemail_Title_notSupported,
       'voicemail_Widget_screenTitle' => voicemail_Widget_screenTitle,
@@ -2125,10 +2130,24 @@ extension AppLocalizationsExtension on AppLocalizations {
           'user_agreement_description requires 1 arguments',
         ),
       },
+      'voicemail_Dialog_deleteSelectedPermanentlyTitle' => switch (args) {
+        [final int count] => voicemail_Dialog_deleteSelectedPermanentlyTitle(
+          count,
+        ),
+        _ => throw ArgumentError(
+          'voicemail_Dialog_deleteSelectedPermanentlyTitle requires 1 arguments',
+        ),
+      },
       'voicemail_Dialog_emptyTrashContent' => switch (args) {
         [final int count] => voicemail_Dialog_emptyTrashContent(count),
         _ => throw ArgumentError(
           'voicemail_Dialog_emptyTrashContent requires 1 arguments',
+        ),
+      },
+      'voicemail_Label_forwardedBy' => switch (args) {
+        [final String name] => voicemail_Label_forwardedBy(name),
+        _ => throw ArgumentError(
+          'voicemail_Label_forwardedBy requires 1 arguments',
         ),
       },
       'voicemail_Label_unheardCount' => switch (args) {
