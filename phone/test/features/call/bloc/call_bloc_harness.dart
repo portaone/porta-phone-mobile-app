@@ -68,7 +68,7 @@ class CallBlocHarness {
       capabilities: capabilities,
       onDiagnosticReportRequested: (_, _) {},
       signalingModule: signaling,
-      peerConnectionManager: peers,
+      callPeerConnectionManager: peers,
       connectivityService: _FakeConnectivityService(),
     );
   }
@@ -80,7 +80,7 @@ class CallBlocHarness {
   final RecordingCallErrorReporter errors = RecordingCallErrorReporter();
   final FakePeerConnectionFactory peerFactory = FakePeerConnectionFactory();
   final FakeUserMediaBuilder media = FakeUserMediaBuilder();
-  late final PeerConnectionManager peers = PeerConnectionManager(factory: peerFactory);
+  late final CallPeerConnectionManager peers = CallPeerConnectionManager(factory: peerFactory);
 
   /// Everything the bloc asked the user to see, in order.
   final List<Notification> notifications = [];

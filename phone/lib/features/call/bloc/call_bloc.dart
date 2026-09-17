@@ -143,7 +143,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   late final SignalingReconnectController _reconnectController;
   Timer? _presenceInfoSyncTimer;
 
-  late final PeerConnectionManager _peerConnectionManager;
+  late final CallPeerConnectionManager _callPeerConnectionManager;
   late final HandshakeProcessor _handshakeProcessor;
 
   final ConnectivityService _connectivityService;
@@ -174,7 +174,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     this.iceFilter,
     this.peerConnectionPolicyApplier,
     required SignalingModule signalingModule,
-    required PeerConnectionManager peerConnectionManager,
+    required CallPeerConnectionManager callPeerConnectionManager,
     required ConnectivityService connectivityService,
     this.onCallEnded,
     Stream<void>? foregroundCallPushSignal,
@@ -183,7 +183,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
        super(const CallState()) {
     _mediaManager = CallMediaManager(callkeep: callkeep);
     _signalingModule = signalingModule;
-    _peerConnectionManager = peerConnectionManager;
+    _callPeerConnectionManager = callPeerConnectionManager;
     _handshakeProcessor = HandshakeProcessor(queuedTerminationRequestsRepository: queuedTerminationRequestsRepository);
 
     _reconnectController = SignalingReconnectController(
@@ -288,7 +288,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       await _releaseLocalStream(activeCall.localStream);
     }
 
-    await _peerConnectionManager.dispose();
+    await _callPeerConnectionManager.dispose();
 
     await super.close();
   }
@@ -340,16 +340,16 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     for (final removeUuid in currentActiveCallUuids.difference(nextActiveCallUuids)) {
       // Disposal is intentionally not awaited to avoid blocking the Bloc processing loop.
-      // The PeerConnectionManager implements an internal "disposal barrier" (via _pendingDisposals)
+      // The CallPeerConnectionManager implements an internal "disposal barrier" (via _pendingDisposals)
       // which guarantees that any subsequent createPeerConnection() for this CallId will
       // automatically wait for this disposal to finish before proceeding.
-      _peerConnectionManager.disposePeerConnection(removeUuid).catchError((error, stackTrace) {
+      _callPeerConnectionManager.disposePeerConnection(removeUuid).catchError((error, stackTrace) {
         _logger.warning('Error disposing peer connection for $removeUuid', error, stackTrace);
       });
     }
 
     for (final addUuid in nextActiveCallUuids.difference(currentActiveCallUuids)) {
-      _peerConnectionManager.add(addUuid);
+      _callPeerConnectionManager.add(addUuid);
     }
 
     final currentProcessingStatuses = Set.from(
@@ -705,7 +705,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         // (e.g. UserMediaError in the answer path), disposePeerConnection may throw.
         // Wrap it so that callkeep notification and stream release always run.
         try {
-          await _peerConnectionManager.disposePeerConnection(activeCall.callId);
+          await _callPeerConnectionManager.disposePeerConnection(activeCall.callId);
         } catch (e) {
           _logger.warning('__onResetStateEventCompleteCall: disposePeerConnection error $e');
         }
@@ -1200,7 +1200,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     final jsep = event.jsep;
     if (jsep != null) {
-      final peerConnection = await _peerConnectionManager.retrieve(event.callId);
+      final peerConnection = await _callPeerConnectionManager.retrieve(event.callId);
       if (peerConnection == null) {
         _logger.warning('__onCallSignalingEventProgress: peerConnection is null - most likely some permissions issue');
         _ringback.ringing(event.callId);
@@ -2097,7 +2097,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       await _onVideoStreamReady(event.callId);
     } catch (e, stackTrace) {
       _logger.warning('__onMutationPerformStart _getUserMedia', e, stackTrace);
-      _peerConnectionManager.completeError(event.callId, e, stackTrace);
+      _callPeerConnectionManager.completeError(event.callId, e, stackTrace);
       add(_ResetStateEvent.completeCall(event.callId, endReason: CallkeepEndCallReason.failed));
       if (e is UserMediaTrackSetupError) {
         submitNotification(const CallMediaTrackSetupErrorNotification());
@@ -2161,7 +2161,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
       // In other cases setLocalDescription is called first; here it's delayed to avoid ICE race
       await peerConnection.setLocalDescription(localDescription);
-      _peerConnectionManager.complete(event.callId, peerConnection);
+      _callPeerConnectionManager.complete(event.callId, peerConnection);
       await callkeep.reportConnectingOutgoingCall(event.callId);
 
       emit(
@@ -2174,7 +2174,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // The specific error "Error setting ICE locally" indicates an issue with ICE (Interactive Connectivity Establishment) negotiation in the WebRTC signaling process.
       callErrorReporter.handle(e, stackTrace, '__onMutationPerformStart error:');
       await _ringback.stop(event.callId);
-      _peerConnectionManager.completeError(event.callId, e, stackTrace);
+      _callPeerConnectionManager.completeError(event.callId, e, stackTrace);
       add(_ResetStateEvent.completeCall(event.callId));
     }
   }
@@ -2298,7 +2298,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // Sending accept on an already-terminated line results in a 4610 disconnect.
       if (state.retrieveActiveCall(event.callId) == null) {
         _logger.info('__onMutationPerformAnswer: call terminated during SDP setup, skipping AcceptRequest');
-        _peerConnectionManager.completeError(
+        _callPeerConnectionManager.completeError(
           event.callId,
           Exception('call terminated during SDP setup'),
           StackTrace.current,
@@ -2328,7 +2328,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       );
 
       _logger.info('__onMutationPerformAnswer: AcceptRequest sent, completing peer connection');
-      _peerConnectionManager.complete(event.callId, peerConnection);
+      _callPeerConnectionManager.complete(event.callId, peerConnection);
     } catch (e, stackTrace) {
       _logger.warning(
         '__onMutationPerformAnswer: failed callId=${event.callId} error=$e code:${e is WebtritSignalingErrorException ? e.code : 'N/A'}, reason=${e is WebtritSignalingErrorException ? e.reason : 'N/A'}',
@@ -2338,7 +2338,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // If call gone right before answer, consider it as normal flow and avoid showing error notification
       // TODO: implement signaling request response mechanism and handle request specific result instead of catching global errors
       if (e is WebtritSignalingErrorException && e.code == _callGoneErrorCode) {
-        _peerConnectionManager.completeError(event.callId, e, stackTrace);
+        _callPeerConnectionManager.completeError(event.callId, e, stackTrace);
         add(_ResetStateEvent.completeCall(event.callId));
         _addToRecents(call!);
         return;
@@ -2350,13 +2350,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // receive 4610 again, disconnect again, and reconnect indefinitely.
       if (e is WebtritSignalingTransactionTerminateByDisconnectException &&
           e.closeCode == SignalingDisconnectCode.requestCallIdError.code) {
-        _peerConnectionManager.completeError(event.callId, e, stackTrace);
+        _callPeerConnectionManager.completeError(event.callId, e, stackTrace);
         _addToRecents(call!);
         add(_ResetStateEvent.completeCall(event.callId, endReason: CallkeepEndCallReason.unanswered));
         return;
       }
 
-      _peerConnectionManager.completeError(event.callId, e, stackTrace);
+      _callPeerConnectionManager.completeError(event.callId, e, stackTrace);
       _addToRecents(call!);
       add(_ResetStateEvent.completeCall(event.callId, endReason: CallkeepEndCallReason.unanswered));
 
@@ -2437,7 +2437,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         // Need to close peer connection after the signaling request (decline/hangup) has been sent,
         // or after skipping it for blind transfer, to prevent "Simulate a 'hangup' coming from the
         // application" triggered by "No WebRTC media anymore".
-        await _peerConnectionManager.disposePeerConnection(activeCall.callId);
+        await _callPeerConnectionManager.disposePeerConnection(activeCall.callId);
         await _releaseLocalStream(activeCall.localStream);
       });
 
@@ -2510,7 +2510,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   void _endCallAfterFailedHold(String callId, Object error, StackTrace stackTrace) {
     callErrorReporter.handle(error, stackTrace, '__onMutationPerformSetHeld error');
-    _peerConnectionManager.completeError(callId, error, stackTrace);
+    _callPeerConnectionManager.completeError(callId, error, stackTrace);
     add(_ResetStateEvent.completeCall(callId));
   }
 
@@ -2538,7 +2538,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// gateway sees a call that has gone quiet as one that has gone away.
   Future<void> _setMicrophoneAttached(String callId, {required bool attached}) async {
     try {
-      final peerConnection = await _peerConnectionManager.retrieve(callId, allowWaiting: false);
+      final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
       if (peerConnection == null) return;
       final sender = await peerConnection.audioSender();
       if (sender == null) {
@@ -2560,7 +2560,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   Future<void> __onMutationPerformSendDTMF(_CallMutationEventPerformSendDTMF event, Emitter<CallState> emit) async {
     await state.performOnActiveCall(event.callId, (activeCall) async {
-      final peerConnection = await _peerConnectionManager.retrieve(event.callId);
+      final peerConnection = await _callPeerConnectionManager.retrieve(event.callId);
       if (peerConnection == null) {
         _logger.warning('__onMutationPerformSendDTMF: peerConnection is null');
       } else {
@@ -2778,7 +2778,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     if (activeCall.held == true) return;
 
-    final peerConnection = await _peerConnectionManager.retrieve(e.callId);
+    final peerConnection = await _callPeerConnectionManager.retrieve(e.callId);
     if (peerConnection == null) return;
 
     // Randomize a little bit to avoid double upgrade collisions
@@ -3148,7 +3148,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     emit(state.copyWithMappedActiveCall(event.callId, (_) => call!));
 
-    final peerConnection = await _peerConnectionManager.retrieve(event.callId);
+    final peerConnection = await _callPeerConnectionManager.retrieve(event.callId);
     if (jsep != null && peerConnection != null) {
       final remoteDescription = jsep.toDescription();
       sdpSanitizer?.apply(remoteDescription);
@@ -3230,7 +3230,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     await _releaseLocalStream(call.localStream).catchError((e) {
       _logger.warning('__onMutationSignalingHangup: _releaseLocalStream error $e');
     });
-    await _peerConnectionManager.disposePeerConnection(event.callId).catchError((e) {
+    await _callPeerConnectionManager.disposePeerConnection(event.callId).catchError((e) {
       _logger.warning('__onMutationSignalingHangup: disposePeerConnection error $e');
     });
 
@@ -3263,7 +3263,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         sdpSanitizer?.apply(remoteDescription);
         _logger.infoPretty(remoteDescription.sdp, tag: '__onMutationSignalingCallUpdating received new offer SDP');
         await state.performOnActiveCall(event.callId, (activeCall) async {
-          final peerConnection = await _peerConnectionManager.retrieve(event.callId);
+          final peerConnection = await _callPeerConnectionManager.retrieve(event.callId);
           if (peerConnection == null) {
             _logger.warning('__onMutationSignalingCallUpdating: peerConnection is null - most likely some state issue');
           } else {
@@ -3378,7 +3378,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       }
     } catch (e, s) {
       callErrorReporter.handle(e, s, '__onMutationSignalingCallUpdating && jsep error:');
-      _peerConnectionManager.completeError(event.callId, e);
+      _callPeerConnectionManager.completeError(event.callId, e);
       add(_ResetStateEvent.completeCall(event.callId));
     }
   }
@@ -3395,7 +3395,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   ///   (of something unexpected happens with RTP stream, will be good to try to recorer it with renegotiation)
   /// - you name it..
   Future<void> __onMutationRenegotiate(_CallMutationEventRenegotiate e, Emitter<CallState> emit) async {
-    final pc = await _peerConnectionManager.retrieve(e.callId);
+    final pc = await _callPeerConnectionManager.retrieve(e.callId);
     if (pc == null) {
       _logger.info('__onMutationRenegotiate: pc disposed, skipping renegotiation');
       return;
@@ -3433,7 +3433,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // Note: prepare all asychronous info before checking synchrounous state below
     // to avoid races as possible,
     // for example:
-    // - while [await _peerConnectionManager.retrieve, await pc.createOffer], activeCall.updating or signalingConnected can be changed
+    // - while [await _callPeerConnectionManager.retrieve, await pc.createOffer], activeCall.updating or signalingConnected can be changed
 
     final activeCall = state.retrieveActiveCall(e.callId);
     if (activeCall == null) {
@@ -3525,7 +3525,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       }
     } catch (er, st) {
       callErrorReporter.handle(er, st, '__onMutationRenegotiate failed for callId=${e.callId}');
-      _peerConnectionManager.completeError(activeCall.callId, er, st);
+      _callPeerConnectionManager.completeError(activeCall.callId, er, st);
       add(_ResetStateEvent.completeCall(activeCall.callId));
     }
   }
@@ -3550,7 +3550,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _logger.warning('__onMutationTrickleIce: transaction timeout, let call survive');
     } catch (e, stackTrace) {
       callErrorReporter.handle(e, stackTrace, '__onMutationTrickleIce error');
-      _peerConnectionManager.completeError(callId, e, stackTrace);
+      _callPeerConnectionManager.completeError(callId, e, stackTrace);
       add(_ResetStateEvent.completeCall(callId));
     }
   }
@@ -3577,7 +3577,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _logger.warning('__onMutationIceGatheringComplete: transaction timeout, let call survive');
     } catch (e, stackTrace) {
       callErrorReporter.handle(e, stackTrace, '__onMutationIceGatheringComplete error');
-      _peerConnectionManager.completeError(callId, e, stackTrace);
+      _callPeerConnectionManager.completeError(callId, e, stackTrace);
       add(_ResetStateEvent.completeCall(callId));
     }
   }
@@ -3591,7 +3591,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (activeCall == null) return;
       if (activeCall.wasHungUp) return;
 
-      final peerConnection = await _peerConnectionManager.retrieve(event.callId);
+      final peerConnection = await _callPeerConnectionManager.retrieve(event.callId);
       if (peerConnection == null) return;
       final pcState = peerConnection.signalingState;
       _logger.warning('__onMutationIceConnectionFailed: ICE failed, pcState: $pcState');
@@ -3617,7 +3617,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       return;
     }
 
-    final pc = await _peerConnectionManager.retrieve(event.callId);
+    final pc = await _callPeerConnectionManager.retrieve(event.callId);
     if (pc == null) {
       _logger.warning('__onMutationRestartIce: peer connection not found, skipping ICE restart');
       return;
@@ -3749,7 +3749,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       await _onVideoStreamReady(event.callId);
       localStream = null;
 
-      _peerConnectionManager.complete(event.callId, peerConnection);
+      _callPeerConnectionManager.complete(event.callId, peerConnection);
       peerConnection = null;
 
       add(_PeerConnectionEvent.renegotiationNeeded(event.callId, event.line));
@@ -3757,7 +3757,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       localStream?.getTracks().forEach((t) => t.stop());
       await _releaseLocalStream(localStream);
       await peerConnection?.dispose();
-      _peerConnectionManager.completeError(event.callId, e, stackTrace);
+      _callPeerConnectionManager.completeError(event.callId, e, stackTrace);
       add(_ResetStateEvent.completeCall(event.callId));
       callErrorReporter.handle(e, stackTrace, '__onMutationRestoreCall error:');
     }
@@ -3997,8 +3997,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   void _onConfigEvent(CallConfigEvent event, Emitter<CallState> emit) {
     switch (event) {
       case _CallConfigEventUpdated(monitorCheckInterval: final interval):
-        _logger.info('Updating PeerConnectionManager configuration: monitorCheckInterval=$interval');
-        _peerConnectionManager.updateConfig(monitorCheckInterval: interval);
+        _logger.info('Updating CallPeerConnectionManager configuration: monitorCheckInterval=$interval');
+        _callPeerConnectionManager.updateConfig(monitorCheckInterval: interval);
     }
   }
 
@@ -4025,7 +4025,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _logger.info('_handleHandshakeReceived: activeLineCallIds=$activeLineCallIds');
 
     for (final activeCall in state.callsToTerminate(activeLineCallIds)) {
-      _peerConnectionManager.conditionalCompleteError(activeCall.callId, 'Active call Request Terminated');
+      _callPeerConnectionManager.conditionalCompleteError(activeCall.callId, 'Active call Request Terminated');
       add(
         _CallSignalingEvent.hangup(
           line: activeCall.line,
@@ -4574,7 +4574,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<RTCPeerConnection> _createPeerConnection(String callId, int? lineId) {
-    return _peerConnectionManager.createPeerConnection(
+    return _callPeerConnectionManager.createPeerConnection(
       callId,
       observer: PeerConnectionObserver(
         onSignalingState: (state) => add(_PeerConnectionEvent.signalingStateChanged(callId, state)),

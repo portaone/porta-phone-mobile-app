@@ -9,7 +9,7 @@ import 'package:webtrit_phone/features/call/extensions/extensions.dart';
 import 'peer_connection_factory.dart';
 import 'rtp_traffic_monitor.dart';
 
-const _logNamespace = 'PeerConnectionManager';
+const _logNamespace = 'CallPeerConnectionManager';
 final _logger = Logger('$_logNamespace.Manager');
 final _invalidLoggerSegmentChars = RegExp(r'[^A-Za-z0-9_-]+');
 final _duplicateUnderscores = RegExp(r'_+');
@@ -30,7 +30,7 @@ class _ConnectionState {
 
   /// Direct reference to the connection.
   ///
-  /// Populated only when [PeerConnectionManager.complete] is called.
+  /// Populated only when [CallPeerConnectionManager.complete] is called.
   /// Allows [dispose] to close the connection synchronously without waiting
   /// for the [completer] if it is pending.
   RTCPeerConnection? connection;
@@ -48,8 +48,8 @@ class _ConnectionState {
 /// Manages the lifecycle of [RTCPeerConnection] instances.
 ///
 /// Handles async creation barriers and safe disposal to prevent race conditions.
-final class PeerConnectionManager {
-  PeerConnectionManager({
+final class CallPeerConnectionManager {
+  CallPeerConnectionManager({
     this.factory = const DefaultPeerConnectionFactory(),
     this.monitorDelegatesFactory,
     Duration retrieveTimeout = const Duration(seconds: 5),

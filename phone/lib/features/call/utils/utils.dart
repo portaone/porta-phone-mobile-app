@@ -10,7 +10,7 @@ export 'ice_filter.dart';
 export 'logging_rtp_traffic_monitor_delegate.dart';
 export 'outgoing_ringback_controller.dart';
 export 'peer_connection_factory.dart';
-export 'peer_connection_manager.dart';
+export 'call_peer_connection_manager.dart';
 export 'peer_connection_policy_applier.dart';
 export 'remote_frame_probe.dart';
 export 'rtp_traffic_monitor.dart';
