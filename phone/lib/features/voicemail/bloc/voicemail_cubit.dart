@@ -13,6 +13,9 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/crashlytics_utils.dart';
 
+import '../extensions/extensions.dart';
+import '../models/models.dart';
+
 part 'voicemail_state.dart';
 
 part 'voicemail_cubit.freezed.dart';
@@ -237,18 +240,52 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   /// listed.
   Future<Contact?> callerOf(Voicemail voicemail) => _contactsRepository.getContactByPhoneNumber(voicemail.sender);
 
-  Future<bool> removeVoicemail(String messageId) async {
+  Future<VoicemailActionOutcome> removeVoicemail(String messageId) =>
+      _apply(VoicemailAction.remove, _repository.removeVoicemail(messageId));
+
+  /// One action over one message: what the screen shows while it runs, and
+  /// what it may conclude from how it ended.
+  ///
+  /// Written once because every one of them is the same shape, and because the
+  /// conclusion is the part worth getting right in a single place. A message
+  /// the backend no longer has is the one refusal that says anything about the
+  /// state - the list is behind, so it is read again and the row goes with it.
+  /// A backend that blamed itself, or a request that never arrived, says
+  /// nothing: whether the write happened is as unknown as before the call, so
+  /// nothing here is touched.
+  ///
+  /// What differs between the five is declared on [VoicemailAction] rather
+  /// than spelled out at each call.
+  Future<VoicemailActionOutcome> _apply(VoicemailAction action, Future<void> request) async {
+    final reason = 'VoicemailCubit.${action.name}';
+
     try {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));
-      await _repository.removeVoicemail(messageId);
-      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-      return true;
+      await request;
     } catch (e, s) {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-      _logger.severe('Error removing voicemail with id $messageId: $e', e, s);
-      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeVoicemail');
-      return false;
+
+      if (e is RequestFailure && e.isVoicemailGone) {
+        _logger.warning('$reason: the message was already gone: $e', e, s);
+        await refresh();
+        return VoicemailActionOutcome.gone;
+      }
+
+      _logger.severe('$reason: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: reason);
+      return VoicemailActionOutcome.failed;
     }
+
+    // Past this line the backend has done what was asked, and nothing that
+    // follows can change that. The re-read is a read like any other: it says
+    // so itself when it fails, and it does not turn a write that happened into
+    // one that did not.
+    if (action.rereadsTrash && state.filter.isRemote) {
+      await fetchTrashedVoicemails();
+    } else {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+    }
+    return VoicemailActionOutcome.done;
   }
 
   /// Puts a trashed message back where it was.
@@ -256,44 +293,15 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   /// Also what undoing a move to the trash does, because it is the same thing:
   /// the message is in the trash either way, and the only difference is how
   /// long it has been there.
-  Future<void> restoreVoicemail(String messageId) async {
-    try {
-      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
-      await _repository.restoreVoicemail(messageId);
-      // The restored message is gone from the trash and back in the mailbox.
-      // The mailbox refreshes itself through the repository; the trash has no
-      // stored copy to update, so it is re-read when it is what is on screen.
-      if (state.filter.isRemote) {
-        await fetchTrashedVoicemails();
-      } else {
-        _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-      }
-    } catch (e, s) {
-      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-      _logger.severe('Error restoring voicemail with id $messageId: $e', e, s);
-      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.restoreVoicemail');
-    }
-  }
+  Future<VoicemailActionOutcome> restoreVoicemail(String messageId) =>
+      _apply(VoicemailAction.restore, _repository.restoreVoicemail(messageId));
 
   /// Deletes a message for good, wherever it is.
   ///
   /// The only per-message action that frees the space it occupies; moving one
   /// to the trash does not.
-  Future<void> removeVoicemailPermanently(String messageId) async {
-    try {
-      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
-      await _repository.removeVoicemailPermanently(messageId);
-      if (state.filter.isRemote) {
-        await fetchTrashedVoicemails();
-      } else {
-        _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-      }
-    } catch (e, s) {
-      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-      _logger.severe('Error permanently removing voicemail with id $messageId: $e', e, s);
-      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeVoicemailPermanently');
-    }
-  }
+  Future<VoicemailActionOutcome> removeVoicemailPermanently(String messageId) =>
+      _apply(VoicemailAction.removePermanently, _repository.removeVoicemailPermanently(messageId));
 
   /// Deletes everything in the trash for good.
   ///
@@ -313,35 +321,18 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     }
   }
 
-  void toggleSeenStatus(Voicemail voicemail) async {
-    try {
-      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
-      final markAsSeen = !voicemail.status.isRead;
-      await _repository.updateVoicemailSeenStatus(voicemail.id, markAsSeen);
-      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-    } catch (e, s) {
-      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-      _logger.severe('Error toggling seen status for voicemail with id ${voicemail.id}: $e', e, s);
-      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.toggleSeenStatus');
-    }
-  }
+  Future<VoicemailActionOutcome> toggleSeenStatus(Voicemail voicemail) =>
+      _apply(VoicemailAction.toggleSeen, _repository.updateVoicemailSeenStatus(voicemail.id, !voicemail.status.isRead));
 
   /// Keeps [voicemail], or stops keeping it.
   ///
   /// Independent of whether it has been heard, in both directions: keeping a
   /// message does not mark it read, and reading one does not stop it being
   /// kept.
-  void toggleSavedStatus(Voicemail voicemail) async {
-    try {
-      _safeEmit(state.copyWith(status: VoicemailStatus.loading));
-      await _repository.updateVoicemailSavedStatus(voicemail.id, !(voicemail.saved ?? false));
-      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-    } catch (e, s) {
-      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-      _logger.severe('Error toggling saved status for voicemail with id ${voicemail.id}: $e', e, s);
-      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.toggleSavedStatus');
-    }
-  }
+  Future<VoicemailActionOutcome> toggleSavedStatus(Voicemail voicemail) => _apply(
+    VoicemailAction.toggleSaved,
+    _repository.updateVoicemailSavedStatus(voicemail.id, !(voicemail.saved ?? false)),
+  );
 
   void startCall(Voicemail voicemail) {
     onCallStarted(voicemail.sender);
