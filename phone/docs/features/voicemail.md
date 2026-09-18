@@ -127,7 +127,46 @@ A backend that broke needs no exclusion there: the api names that case itself.
 Any 5xx no rule claimed arrives as `ServerFailureException`, which is a name for
 "nothing follows from this" rather than a status for a feature to read.
 
-Failures other than `gone` are still silent - that is the next change.
+## Saying that something did not happen
+
+Every refusal other than `gone` used to be logged, recorded and never
+mentioned: the message stayed on screen exactly as it was, so a tap that came
+to nothing looked like a tap that was never made. They now go to the app's
+notifications bloc through `onSubmitNotification`, which the shell turns into a
+snackbar (`app/router/app_shell.dart`).
+
+| What did not happen | What is said |
+|---|---|
+| a delete, one message or a selection | the message(s) could not be deleted |
+| a restore out of the trash | the message(s) could not be restored |
+| marking read/unread, keeping/unkeeping | the message could not be updated |
+| emptying the trash | the trash could not be emptied |
+| a read that left a list on screen | the list could not be refreshed |
+
+An answer is about the write and nothing else. Some of these actions are
+followed by a read - the trash keeps no stored copy, so it is asked for again -
+and that read is not part of the answer: a restore that happened followed by a
+list that would not load is a restore that happened, and the read says the rest
+in its own words. Reporting it the other way told the person the opposite of
+what the backend did, and offered to put back a message that was already back.
+
+Two deliberate silences. A message the backend no longer has has a sentence of
+its own, said the same way - the list is already right, and saying it twice in
+two wordings is worse than saying it once. And a read that failed with nothing
+to show is answered by the retry view standing in place of the list.
+
+The sentences say what did not happen, not what went wrong: the reason is a
+status code and a word from another system, and putting it in the sentence
+would trade a clear statement for an unreadable one. It is still worth being
+able to ask, so each of them carries what the backend answered - a
+`RequestFailure`, or nothing where the request never arrived - behind a
+`Details` action onto the existing error screen (`app/notifications/view/error_details_screen.dart`) with the status, the
+backend's own code and the request id - what a support ticket needs and what
+nobody can recover once the snackbar has gone. A failure with no such answer to
+show - the network never got there - offers no action. Which
+sentence goes with which action is declared on `models/voicemail_action.dart`
+alongside the rest of the per-action configuration; the sentences themselves are
+`models/notifications.dart`.
 
 ## The forwarder's name on a tile
 
