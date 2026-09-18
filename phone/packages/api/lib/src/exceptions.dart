@@ -40,6 +40,16 @@ class RequestFailure implements Exception {
   /// The backend-produced error code from the response body, if any.
   String? get errorCode => error?.code;
 
+  /// Whether the backend refused the request because of [parameter] rather than
+  /// because of anything it was asked to do.
+  ///
+  /// What a backend answers when it is sent a word it does not declare. Worth
+  /// telling apart from every other refusal: the request was never considered,
+  /// so asking again without that word is a different question rather than a
+  /// retry of the same one.
+  bool refusedParameter(String parameter) =>
+      errorCode == 'parameters_validate_issue' && error?.details?.path == parameter;
+
   @override
   String toString() {
     final buffer = StringBuffer()
