@@ -737,12 +737,22 @@ class WebtritApiClient {
   /// Moves a voicemail message to the trash, or deletes it outright when
   /// [permanent] is set.
   ///
-  /// A plain delete always means "to the trash", on every backend that has one,
-  /// and the backend does not gate that on the trash being advertised. A client
-  /// that does not offer the trash controls must therefore pass [permanent], or
-  /// it leaves its user's messages occupying the mailbox for good - space is
-  /// freed only by a permanent delete or by emptying the trash, and nothing
-  /// expires on its own.
+  /// Space is freed only by a permanent delete or by emptying the trash;
+  /// nothing in there expires on its own.
+  ///
+  /// Which way a plain delete goes is the thing the backend changed. It used to
+  /// mean "to the trash" wherever there was one, and is becoming permanent, so
+  /// that a client built before the trash existed goes on deleting rather than
+  /// quietly filling a mailbox nobody empties. A move to the trash therefore
+  /// asks for the trash by name.
+  ///
+  /// A backend that has not made that change yet does not ignore the new word:
+  /// it validates what it is sent against what it declares and refuses the
+  /// whole request with `parameters_validate_issue`. So the word is said once,
+  /// and a refusal of that one word is answered by saying it the old way -
+  /// where a plain delete still means the trash. One extra round trip, on the
+  /// backends that have not moved yet, and nothing to coordinate between the
+  /// two releases.
   Future<void> deleteUserVoicemail(
     String token,
     String messageId, {
@@ -750,14 +760,27 @@ class WebtritApiClient {
     String? locale,
     RequestOptions options = const RequestOptions(),
   }) async {
-    await _httpClientExecuteDelete(
-      [..._apiBasePathSegmentsV1, 'user', 'voicemails', messageId],
-      locale != null ? {'Accept-Language': locale} : null,
-      token,
-      queryParameters: permanent ? {'permanent': 'true'} : null,
-      requestOptions: options,
-      responseOptions: _voicemailEndpoint,
-    );
+    Future<void> delete(Map<String, String>? queryParameters) async {
+      await _httpClientExecuteDelete(
+        [..._apiBasePathSegmentsV1, 'user', 'voicemails', messageId],
+        locale != null ? {'Accept-Language': locale} : null,
+        token,
+        queryParameters: queryParameters,
+        requestOptions: options,
+        responseOptions: _voicemailEndpoint,
+      );
+    }
+
+    if (permanent) return delete({'permanent': 'true'});
+
+    try {
+      await delete({'trash': 'true'});
+    } on RequestFailure catch (e) {
+      if (!e.refusedParameter('trash')) rethrow;
+
+      _logger.info('deleteUserVoicemail: the backend does not take `trash` yet, asking the way it used to be asked');
+      await delete(null);
+    }
   }
 
   /// Puts a trashed voicemail message back in the inbox.

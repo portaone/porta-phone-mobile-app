@@ -299,9 +299,9 @@ class VoicemailRepositoryImpl
         _token,
         messageId,
         // Where there is a trash the message goes there and stays reachable.
-        // Where there is not, the backend still treats a plain delete as "to
-        // the trash" if it has one, so saying permanent is the only way to
-        // keep a deletion from leaving messages nobody can get back to.
+        // Where there is not, the deletion has to be final: a message left in
+        // a trash this build offers no way into is one nobody can get back to
+        // and nobody can empty.
         permanent: !_trashSupported,
         locale: localeCode,
         options: RequestOptions.withNoRetries(),
