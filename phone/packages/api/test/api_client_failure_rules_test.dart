@@ -128,6 +128,54 @@ void main() {
     });
   });
 
+  group('an error body in a shape of its own', () {
+    // Two shapes are in the wild, and neither may cost the caller the status
+    // code: the whole point of reading the body is to say more about a failure,
+    // never to turn one into something else.
+    test('Core lists what it refused, and the first of them is read', () async {
+      final apiClient = clientAnswering(422, {
+        'code': 'parameters_validate_issue',
+        'details': [
+          {'reason': 'unexpected_field', 'path': 'trash'},
+        ],
+      });
+
+      await expectLater(
+        apiClient.deleteUserVoicemail(token, 'vm-1'),
+        throwsA(
+          isA<RequestFailure>()
+              .having((e) => e.statusCode, 'statusCode', 422)
+              .having((e) => e.errorCode, 'errorCode', 'parameters_validate_issue')
+              .having((e) => e.error?.details?.path, 'details.path', 'trash')
+              .having((e) => e.error?.details?.reason, 'details.reason', 'unexpected_field'),
+        ),
+      );
+    });
+
+    test('an adaptee sends one detail rather than a list, and it reads the same', () async {
+      final apiClient = clientAnswering(422, {
+        'code': 'validation_error',
+        'details': {'reason': 'too_long', 'path': 'name'},
+      });
+
+      await expectLater(
+        apiClient.getUserContactList(token),
+        throwsA(isA<RequestFailure>().having((e) => e.error?.details?.reason, 'details.reason', 'too_long')),
+      );
+    });
+
+    test('a shape nobody expected still answers with the status it came with', () async {
+      // This used to throw a cast error out of the parse, so the caller was
+      // handed a TypeError and never learned there had been a 422 at all.
+      final apiClient = clientAnswering(422, {'code': 'odd', 'details': 42});
+
+      await expectLater(
+        apiClient.deleteUserVoicemail(token, 'vm-1'),
+        throwsA(isA<RequestFailure>().having((e) => e.statusCode, 'statusCode', 422)),
+      );
+    });
+  });
+
   group('a backend that failed on its own side', () {
     test('is named rather than left as a bare failure', () async {
       final apiClient = clientAnswering(500, {'code': 'external_api_issue'});

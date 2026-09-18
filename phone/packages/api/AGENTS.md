@@ -67,6 +67,12 @@ body, and classification getters: `isClientError` (4xx), `isServerError` (5xx),
 | `VoicemailNotConfiguredException` | `voicemail_not_configured` |
 | `PasswordChangeRequiredException` | `password_change_required` |
 
+An error body is read for what it can add and never for permission to fail:
+`details` arrives as one object from an adaptee and as a list from Core (one
+entry per field it refused), both read the same, and a body in any other shape
+leaves `error` null with the text kept in `rawBody`. A failure always surfaces
+as `RequestFailure` carrying the status the backend sent.
+
 Failure log level: client errors (4xx) log as `warning`; `severe` is reserved
 for server-side (5xx) and transport failures. `EndpointNotSupportedException`
 and `VoicemailNotConfiguredException` are not logged.

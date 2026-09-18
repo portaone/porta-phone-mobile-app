@@ -10,9 +10,7 @@ ErrorResponse _$ErrorResponseFromJson(Map<String, dynamic> json) =>
     ErrorResponse(
       code: json['code'] as String?,
       message: json['message'] as String?,
-      details: json['details'] == null
-          ? null
-          : ErrorDetail.fromJson(json['details'] as Map<String, dynamic>),
+      details: _detailFromJson(json['details']),
     );
 
 Map<String, dynamic> _$ErrorResponseToJson(ErrorResponse instance) =>

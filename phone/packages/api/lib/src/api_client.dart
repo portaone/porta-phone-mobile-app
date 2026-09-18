@@ -222,7 +222,11 @@ class WebtritApiClient {
               {'errors': {'detail': _}} => null,
               _ => ErrorResponse.fromJson(responseDataJson),
             };
-          } on FormatException {
+            // Anything at all: a body in a shape this does not know must not
+            // take the failure with it. The status code is the part the caller
+            // acts on, and it is already known here - throwing instead hands
+            // them a cast error from inside a parse and no status at all.
+          } catch (_) {
             rawErrorBody = responseData.length > _rawErrorBodyLimit
                 ? '${responseData.substring(0, _rawErrorBodyLimit)}...'
                 : responseData;
