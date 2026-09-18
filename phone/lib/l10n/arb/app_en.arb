@@ -2895,6 +2895,36 @@
   "@voicemail_SemanticsLabel_undoMoveToTrash": {
     "description": "Accessibility name of the snackbar action that takes back the move to the trash."
   },
+  "voicemail_Snackbar_deleteFailed": "{count, plural, one{The message could not be deleted} other{The messages could not be deleted}}",
+  "@voicemail_Snackbar_deleteFailed": {
+    "description": "Shown when a delete was refused for a reason that says nothing about the message.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voicemail_Snackbar_restoreFailed": "{count, plural, one{The message could not be restored} other{The messages could not be restored}}",
+  "@voicemail_Snackbar_restoreFailed": {
+    "description": "Shown when restoring from the trash was refused.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "voicemail_Snackbar_updateFailed": "The message could not be updated",
+  "@voicemail_Snackbar_updateFailed": {
+    "description": "Shown when marking a message read or kept was refused."
+  },
+  "voicemail_Snackbar_emptyTrashFailed": "The trash could not be emptied",
+  "@voicemail_Snackbar_emptyTrashFailed": {
+    "description": "Shown when emptying the trash was refused."
+  },
+  "voicemail_Snackbar_refreshFailed": "The list could not be refreshed",
+  "@voicemail_Snackbar_refreshFailed": {
+    "description": "Shown when a read failed while a list was still on screen and so stayed out of date."
+  },
   "voicemail_Snackbar_messageGone": "That message is no longer there",
   "@voicemail_Snackbar_messageGone": {
     "description": "Shown when an action over one message finds that the backend no longer has it."

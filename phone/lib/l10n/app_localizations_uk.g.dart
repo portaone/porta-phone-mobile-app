@@ -3316,6 +3316,37 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_SemanticsLabel_undoMoveToTrash => 'Скасувати переміщення в кошик';
 
   @override
+  String voicemail_Snackbar_deleteFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Не вдалося видалити повідомлення',
+      one: 'Не вдалося видалити повідомлення',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String voicemail_Snackbar_restoreFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Не вдалося відновити повідомлення',
+      one: 'Не вдалося відновити повідомлення',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voicemail_Snackbar_updateFailed => 'Не вдалося оновити повідомлення';
+
+  @override
+  String get voicemail_Snackbar_emptyTrashFailed => 'Не вдалося очистити кошик';
+
+  @override
+  String get voicemail_Snackbar_refreshFailed => 'Не вдалося оновити список';
+
+  @override
   String get voicemail_Snackbar_messageGone => 'Цього повідомлення вже немає';
 
   @override
