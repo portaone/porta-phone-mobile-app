@@ -77,7 +77,7 @@ Called by Telecom when the call ends (hang-up from either side).
 
 Telecom-driven hook fired on every connection state transition.
 
-- Maps the raw Telecom `state` int via `CallConnectionState.fromTelecomState(state)`.
+- Maps the raw Telecom `state` int via `telecomConnectionState(state)`.
 - On `STATE_DISCONNECTED`, a member leaves its call group, which is taken apart once fewer than
   two calls remain in it.
 - For live states (RINGING/DIALING/ACTIVE/HOLDING) dispatches `ConnectionStateChanged`,
@@ -131,3 +131,9 @@ Outgoing: DIALING -> (setActive) ACTIVE -> (onDisconnect) DISCONNECTED
 - [phone-connection-service.md](phone-connection-service.md) — creates and owns this object
 - [connection-manager.md](connection-manager.md) — stores this object
 - [ipc-broadcasting.md](ipc-broadcasting.md) — events dispatched from callbacks here
+
+## Shared state
+
+`PhoneConnection` owns the backend-independent `CallConnection`; metadata, answer and mute
+state live there. Framework state stays on Android `Connection`. See
+[Shared call connection and group](call-connection.md) for the ownership and hold boundary.

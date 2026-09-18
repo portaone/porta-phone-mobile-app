@@ -19,6 +19,7 @@ import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.TelephonyUtils
 import com.webtrit.callkeep.models.CallConnectionState
+import com.webtrit.callkeep.models.CallGroup
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailureMetadata
 import com.webtrit.callkeep.models.InvalidCallMetadataException
@@ -181,23 +182,22 @@ class PhoneConnectionService : ConnectionService() {
         action: ServiceAction,
         callIds: List<String>,
     ) {
+        // An empty list names no group: a caller that computes no members must not
+        // accidentally dissolve the current group.
+        if (callIds.isEmpty()) return
         val named = callIds.mapNotNull { connectionManager.getConnection(it) }.map { it.callId }
         Log.i(TAG, "handleCallGroup: action=$action requested=$callIds resolved=${named.size}")
-        // There is one group at a time, so it is read off every connection, not only the listed
-        // ones: a membership naming none of its members still means it is over.
-        val current = currentCallGroup()
+        // "telecom" is only a placeholder for membership calculations, not group identity.
+        // This adapter consumes members only; MainProcessConnectionTracker owns the real id.
+        val current = CallGroup.of("telecom", currentCallGroup())
         val next =
-            when {
-                action == ServiceAction.UnsetCallGroup -> current - callIds.toSet()
-
-                // An empty list names no group at all and changes nothing, so a caller that
-                // computes the membership and comes up empty cannot take a group apart by
-                // accident.
-                callIds.isEmpty() -> current
-
-                else -> named.toSet()
+            if (action == ServiceAction.UnsetCallGroup) {
+                current.without(callIds)
+            } else {
+                // A non-empty declaration with no resolved calls ends the current group.
+                if (named.isEmpty()) CallGroup.empty else current.declare(named) { "telecom" }
             }
-        applyCallGroup(next)
+        applyCallGroup(next.members)
     }
 
     /**
@@ -538,8 +538,7 @@ class PhoneConnectionService : ConnectionService() {
             // markAnswered() is a guard only since the state-mirror refactor, so AnswerCall below no
             // longer repopulates connectionStates; this does. Live states only (DISCONNECTED stays
             // on the cause-carrying termination events).
-            CallConnectionState
-                .fromTelecomState(connection.state)
+            telecomConnectionState(connection.state)
                 ?.takeIf { it != CallConnectionState.DISCONNECTED }
                 ?.let { performEventHandle(CallLifecycleEvent.ConnectionStateChanged, connection.currentMetadata.copy(connectionState = it)) }
 
@@ -643,7 +642,8 @@ class PhoneConnectionService : ConnectionService() {
          * ends.
          */
         fun applyCallGroup(members: Set<String>) {
-            val settled = if (members.size < 2) emptySet() else members
+            // Normalize membership only; the placeholder id has no identity semantics here.
+            val settled = CallGroup.of("telecom", members).members
             connectionManager.getConnections().forEach { connection ->
                 val belongs = connection.callId in settled
                 if (connection.isGrouped == belongs) return@forEach

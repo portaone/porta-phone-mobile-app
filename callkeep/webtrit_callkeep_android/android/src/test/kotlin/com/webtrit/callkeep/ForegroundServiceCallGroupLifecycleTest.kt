@@ -6,6 +6,8 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.webtrit.callkeep.common.CallDataConst
 import com.webtrit.callkeep.common.ContextHolder
+import com.webtrit.callkeep.models.CallConnection
+import com.webtrit.callkeep.models.CallGroup
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.core.CallkeepCore
@@ -88,15 +90,14 @@ class ForegroundServiceCallGroupLifecycleTest {
             // The activity detached; the standalone backend keeps running and A ends there.
             // Nobody is listening, so the core itself has to take A out of its group, or the
             // next bridge would refuse to hold B for a group that no longer exists.
-            StandaloneCallService.callMetadataMap.clear()
-            StandaloneCallService.callGroupIds.clear()
-            StandaloneCallService.answeredCallIds.clear()
+            StandaloneCallService.connections.clear()
+            StandaloneCallService.callGroup = CallGroup.empty
             StandaloneCallService.ringingIncomingCallIds.clear()
             StandaloneCallService.pendingAnswers.clear()
             val backend = Robolectric.buildService(StandaloneCallService::class.java).create().get()
             for (id in listOf("A", "B")) {
-                StandaloneCallService.callMetadataMap[id] = CallMetadata(callId = id, displayName = id)
-                StandaloneCallService.answeredCallIds.add(id)
+                StandaloneCallService.connections[id] = CallConnection(CallMetadata(callId = id, displayName = id))
+                StandaloneCallService.connections.getValue(id).answer()
             }
             assertNull(service.setCallGroup("room", listOf("A", "B")))
             backend.onStartCommand(
@@ -130,15 +131,14 @@ class ForegroundServiceCallGroupLifecycleTest {
             // must not switch off the core's own handling of A's end, or the next bridge would
             // refuse to hold B for a group that no longer exists.
             val incoming = Robolectric.buildService(IncomingCallService::class.java).create().get()
-            StandaloneCallService.callMetadataMap.clear()
-            StandaloneCallService.callGroupIds.clear()
-            StandaloneCallService.answeredCallIds.clear()
+            StandaloneCallService.connections.clear()
+            StandaloneCallService.callGroup = CallGroup.empty
             StandaloneCallService.ringingIncomingCallIds.clear()
             StandaloneCallService.pendingAnswers.clear()
             val backend = Robolectric.buildService(StandaloneCallService::class.java).create().get()
             for (id in listOf("A", "B")) {
-                StandaloneCallService.callMetadataMap[id] = CallMetadata(callId = id, displayName = id)
-                StandaloneCallService.answeredCallIds.add(id)
+                StandaloneCallService.connections[id] = CallConnection(CallMetadata(callId = id, displayName = id))
+                StandaloneCallService.connections.getValue(id).answer()
             }
             assertNull(service.setCallGroup("room", listOf("A", "B")))
             service.onDestroy()
