@@ -3,7 +3,7 @@
 The mailbox: what the backend recorded for this account, and everything the
 person can do with one message - hear it, keep it, throw it away, call back,
 open the caller's card, pass it to a colleague.
-Last reviewed: 2026-09-17.
+Last reviewed: 2026-09-18.
 
 ## Where it lives
 
@@ -87,6 +87,49 @@ stop the rest, the first refusal is what the caller is told about, and a
 condition that will hold for every message stops the loop rather than being
 asked a hundred times.
 
+## A message that is not where the list has it
+
+The list is drawn from what was true when it was read, and a mailbox moves on:
+deleted from another device or from the IVR, emptied out of the trash, acted on
+twice. An action over one message therefore answers with a
+`VoicemailActionOutcome` rather than a bool:
+
+| Answer | What the backend said | What happens here |
+|---|---|---|
+| `done` | it did what was asked | the screen says what it normally says |
+| `gone` | 404/410 over the message - it is not there any more | the list is re-read and the row goes, and the screen says why |
+| `failed` | anything else | nothing here is touched |
+
+Nothing of this is decided on screen. The row that was tapped is usually gone by
+the time there is anything to say - the list has been re-read and the message is
+no longer in it - so the mailbox says it through the app's notifications channel
+(`models/notifications.dart`), which is also where the way back after a move to
+the trash is offered. The list only asks.
+
+The line between the last two is the point. A refusal that names the message
+tells us something about the state and the list can be put right. A server that
+broke tells us nothing - the write did not happen, and what is on the server now
+is exactly as unknown as it was before the call - so re-reading would be
+inventing an answer the backend did not give.
+
+Which refusal is which is not read here at all: the api names it. A
+`message_not_found` from the voicemail endpoints arrives as
+`VoicemailMessageGoneException`, declared as a rule on those endpoints and keyed
+on the code rather than the status - these calls are optional, so a bare 404 is
+how a deployment says it has no such route, and a mailbox that was never
+configured has a name of its own too.
+
+The five per-message actions share one body in the cubit (`_apply`), and what
+differs between them - the name a crash report is filed under, and whether the
+action changes what the trash holds - is declared on `models/voicemail_action.dart`
+rather than spelled out at each call.
+
+A backend that broke needs no exclusion there: the api names that case itself.
+Any 5xx no rule claimed arrives as `ServerFailureException`, which is a name for
+"nothing follows from this" rather than a status for a feature to read.
+
+Failures other than `gone` are still silent - that is the next change.
+
 ## The forwarder's name on a tile
 
 A forwarded message arrives with the id of whoever passed it along and nothing
@@ -133,7 +176,8 @@ counting only once somebody opens the screen it sits on is of no use there.
 
 | File | What it pins |
 |---|---|
-| `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup |
+| `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup, and which refusal re-reads the list |
+| `test/features/voicemail/extensions/request_failure_test.dart` | which refusals mean the message is gone, and which only look like it |
 | `test/features/voicemail/voicemail_filter_test.dart` | which filters a deployment offers, and what each one shows |
 | `test/features/voicemail/voicemail_tile_test.dart` | what one row offers, including the actions a capability removes |
 | `test/features/voicemail/view/voicemail_selection_test.dart` | the header over the trash: restore, delete for good, and the count in the dialog |

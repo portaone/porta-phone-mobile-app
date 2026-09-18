@@ -156,7 +156,7 @@ class VoicemailListView extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: items.length,
       separatorBuilder: (_, _) => Divider(color: colorScheme.surfaceContainerHigh, height: 1),
-      itemBuilder: (context, index) {
+      itemBuilder: (_, index) {
         final item = items[index];
         return VoicemailTile(
           voicemail: item,
@@ -185,34 +185,26 @@ class VoicemailListView extends StatelessWidget {
   /// Deleting a message, which is two different things.
   ///
   /// Where there is a trash the message can be had back, so it goes without
-  /// asking and the way back is offered afterwards - a question before every
-  /// delete trains people to dismiss it, and this one has nothing to warn
-  /// about. Where there is no trash the same gesture is final, so it asks
-  /// first and there is nothing to offer after.
+  /// asking - a question before every delete trains people to dismiss it, and
+  /// this one has nothing to warn about. Where there is no trash the same
+  /// gesture is final, so it asks first. What is said afterwards, and whether
+  /// the way back is offered, belongs to the mailbox rather than to this row.
   void _onDeleteVoicemail(BuildContext context, Voicemail voicemail) async {
     final cubit = context.read<VoicemailCubit>();
 
-    if (!trashSupported) {
-      final confirmed =
-          (await ConfirmDialog.showDangerous(
-            context,
-            title: context.l10n.voicemail_Dialog_deleteSingleTitle,
-            content: context.l10n.voicemail_Dialog_deleteSingleContent,
-          )) ??
-          false;
+    if (trashSupported) return cubit.removeVoicemail(voicemail.id);
 
-      if (confirmed) cubit.removeVoicemail(voicemail.id);
-      return;
-    }
+    final confirmed =
+        (await ConfirmDialog.showDangerous(
+          context,
+          title: context.l10n.voicemail_Dialog_deleteSingleTitle,
+          content: context.l10n.voicemail_Dialog_deleteSingleContent,
+        )) ??
+        false;
 
-    final l10n = context.l10n;
-    final moved = await cubit.removeVoicemail(voicemail.id);
-    if (!moved || !context.mounted) return;
+    if (!confirmed) return;
 
-    context.showSnackBar(
-      l10n.voicemail_Snackbar_movedToTrash,
-      action: SnackBarAction(label: l10n.voicemail_Label_undo, onPressed: () => cubit.restoreVoicemail(voicemail.id)),
-    );
+    await cubit.removeVoicemail(voicemail.id);
   }
 
   /// Opens the card of whoever left the message.
@@ -277,6 +269,8 @@ class VoicemailListView extends StatelessWidget {
         )) ??
         false;
 
-    if (confirmed) cubit.removeVoicemailPermanently(voicemail.id);
+    if (!confirmed) return;
+
+    await cubit.removeVoicemailPermanently(voicemail.id);
   }
 }
