@@ -114,6 +114,19 @@ class CallControlsParams {
   /// the video.
   final ContactResolver? contactResolver;
 
+  /// Whether a large picture of the far end has anybody to be of.
+  ///
+  /// One picture can only be of one person: with several calls the roster
+  /// rows carry a picture each, and a large one of whichever row happens to
+  /// be focused would say less while taking the room they need. A live remote
+  /// picture is already showing that person, so the avatar stands down for it.
+  ///
+  /// Each layout adds what is true of itself alone - portrait gives the space
+  /// to the open keypad, landscape needs the width - but the part that is
+  /// about the calls is decided once, or a new condition reaches one layout
+  /// and not the other.
+  bool get largeAvatarHasSubject => activeCalls.length < 2 && !remotePictureShown;
+
   final bool keypadShown;
 
   /// The digits typed on the open keypad. One buffer for both orientations:

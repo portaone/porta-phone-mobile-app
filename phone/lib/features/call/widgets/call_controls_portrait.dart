@@ -39,22 +39,7 @@ class CallControlsPortrait extends StatelessWidget {
           // instead of pushing the controls off the screen. Only one child of
           // this column can be the flexible one, and with a room it is this:
           // the avatar below is the other, and it has nobody to show anyway.
-          _Flexed(
-            flexed: params.conference.isPresent,
-            child: CallInfoBlock(
-              activeCalls: params.activeCalls,
-              focusedCall: params.focusedCall,
-              onCallSelected: params.onCallSelected,
-              mergeSupported: params.callConfig.isConferenceEnabled,
-              onMergePressed: params.onMerge,
-              conference: params.conference,
-              onSelfMutedChanged: params.onConferenceSelfMuted,
-              onParticipantMutedChanged: params.onConferenceParticipantMuted,
-              onParticipantHangup: params.onConferenceParticipantHangup,
-              onAddPressed: params.onConferenceAdd,
-              contactResolver: params.contactResolver,
-            ),
-          ),
+          _Flexed(flexed: params.conference.isPresent, child: CallInfoBlock.fromParams(params)),
           // Nothing to render in the video area (audio-only call,
           // remote camera off, or a held call): the remote party's
           // avatar takes its place, between the info block and the
@@ -63,14 +48,9 @@ class CallControlsPortrait extends StatelessWidget {
           // down into it - so growing content (e.g. the open in-call
           // keypad) shrinks the avatar, never the controls.
           //
-          // One picture can only be of one person, so it is shown for one
-          // call. With several the roster rows carry a picture each, and a
-          // large one of whichever row happens to be focused would say less
-          // than they do while taking the room they need.
-          if (params.activeCalls.length < 2 &&
-              !params.conference.isPresent &&
-              !params.remotePictureShown &&
-              !params.keypadShown)
+          // Portrait gives the space to the open keypad and to a room's panel
+          // instead; who the picture could be of is decided on the params.
+          if (params.largeAvatarHasSubject && !params.conference.isPresent && !params.keypadShown)
             Flexible(
               child: Center(
                 child: FittedBox(

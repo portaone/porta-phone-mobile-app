@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../utils/contact_resolver.dart';
 import '../view/call_screen_style.dart';
+import 'call_duration.dart';
+import 'call_list_action.dart';
 import 'call_remote_avatar.dart';
 
 /// The shape every row on the call screen has: who it is about on the left,
@@ -17,8 +19,10 @@ class CallRowFrame extends StatelessWidget {
   const CallRowFrame({
     super.key,
     required this.name,
-    required this.status,
     required this.trailing,
+    this.status,
+    this.statusBuilder,
+    this.since,
     this.leading,
     this.onTap,
     this.focused = false,
@@ -27,7 +31,17 @@ class CallRowFrame extends StatelessWidget {
   });
 
   final String name;
-  final String status;
+
+  /// The state above the name, where it does not change with time.
+  final String? status;
+
+  /// The state above the name, where it counts the call's elapsed time with
+  /// it; given `null` until the call is answered. Use one of this and
+  /// [status].
+  final String Function(BuildContext context, Duration? elapsed)? statusBuilder;
+
+  /// When the call was answered, for [statusBuilder] to count from.
+  final DateTime? since;
 
   /// The controls or labels at the end of the row.
   final List<Widget> trailing;
@@ -88,7 +102,16 @@ class CallRowFrame extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(status, style: statusStyle.copyWith(fontSize: 10, letterSpacing: 1.1)),
+                if (statusBuilder case final statusBuilder?)
+                  CallDuration(
+                    since: since,
+                    builder: (context, elapsed) => Text(
+                      statusBuilder(context, elapsed),
+                      style: statusStyle.copyWith(fontSize: 10, letterSpacing: 1.1),
+                    ),
+                  )
+                else
+                  Text(status ?? '', style: statusStyle.copyWith(fontSize: 10, letterSpacing: 1.1)),
                 Text(name, style: nameStyle.copyWith(fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
@@ -180,6 +203,41 @@ class CallRowSelfAvatar extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(shape: BoxShape.circle, color: color.withValues(alpha: 0.18)),
         child: Icon(Icons.person, size: CallRowAvatar.radius, color: color),
+      ),
+    );
+  }
+}
+
+/// What a list of rows is, above the rows, with whatever that list offers
+/// beside it.
+///
+/// The roster and the conference panel head their lists the same way, and
+/// this is the one place that says how: the panel's header went without an
+/// action slot for as long as the two were written separately.
+class CallRowHeader extends StatelessWidget {
+  const CallRowHeader({super.key, required this.label, this.action, this.style});
+
+  final String label;
+
+  /// The control offered beside the label; absent where the list offers none.
+  final CallListAction? action;
+
+  final CallInfoStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label.toUpperCase(),
+              style: (style?.callStatus ?? const TextStyle()).copyWith(fontSize: 11, letterSpacing: 1.2),
+            ),
+          ),
+          if (action case final action?) CallListActionButton(action: action, style: style),
+        ],
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import '../models/models.dart';
 import '../view/call_screen_styles.dart';
 import '../utils/contact_resolver.dart';
+import 'call_controls.dart';
 import 'call_info.dart';
 import 'call_list.dart';
 import 'call_list_action.dart';
@@ -34,6 +35,22 @@ class CallInfoBlock extends StatelessWidget {
     this.contactResolver,
     this.textAlign = TextAlign.center,
   });
+
+  /// The block as every layout wants it: one bundle, so a control added to it
+  /// reaches both orientations. Written out twice, a new callback reaches
+  /// whichever file was edited and silently goes missing from the other.
+  CallInfoBlock.fromParams(CallControlsParams params, {super.key, this.textAlign = TextAlign.center})
+    : activeCalls = params.activeCalls,
+      focusedCall = params.focusedCall,
+      onCallSelected = params.onCallSelected,
+      conference = params.conference,
+      onSelfMutedChanged = params.onConferenceSelfMuted,
+      onParticipantMutedChanged = params.onConferenceParticipantMuted,
+      onParticipantHangup = params.onConferenceParticipantHangup,
+      onAddPressed = params.onConferenceAdd,
+      mergeSupported = params.callConfig.isConferenceEnabled,
+      onMergePressed = params.onMerge,
+      contactResolver = params.contactResolver;
 
   final List<ActiveCall> activeCalls;
 
