@@ -400,6 +400,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_description_held => 'พักสาย';
 
   @override
+  String get call_description_peerReportsMuted => 'อีกฝ่ายแจ้งว่าคุณถูกปิดเสียง';
+
+  @override
   String get call_description_incoming => 'สายเรียกเข้า';
 
   @override

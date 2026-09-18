@@ -24,6 +24,25 @@ void main() {
     expect(CallRequest.fromJson(request.toJson()), equals(request));
   });
 
+  test('ConferenceMutePeerMessageRequest: toJson', () {
+    const request = ConferenceMutePeerMessageRequest(transaction: 't-1', line: 1, callId: 'qwerty', muted: true);
+
+    expect(request.toJson(), {
+      Request.typeKey: 'peer_message',
+      'transaction': 't-1',
+      'line': 1,
+      'call_id': 'qwerty',
+      'type': 'conference_mute_state',
+      'data': {'muted': true},
+    });
+  });
+
+  test('ConferenceMutePeerMessageRequest: fromJson round trip via PeerMessageRequest', () {
+    const request = ConferenceMutePeerMessageRequest(transaction: 't-1', line: 1, callId: 'qwerty', muted: false);
+
+    expect(PeerMessageRequest.fromJson(request.toJson()), request);
+  });
+
   test('PeerMessageRequest: unknown type throws', () {
     expect(
       () => PeerMessageRequest.fromJson({

@@ -152,6 +152,39 @@ else is somebody's intention. The value alone cannot decide, because the
 platform does not wait for the report before the command returns, so a report
 can still be in flight when the host asks for the opposite.
 
+## Telling the muted participant
+
+The server tells a muted participant nothing: every conference message is
+addressed to the host's session, and §14 of the protocol states that far ends
+get no indication a conference exists at all. Their own phone therefore shows a
+live microphone while nobody hears them.
+
+The host says it instead, over `peer_message` - the app-to-app envelope the
+server relays inside one call, already used for the remote camera state. A
+`conference_mute_state {muted}` goes to a leg whenever the server's list says
+that leg's mute changed, and a `false` goes out when the leg leaves the room or
+the room ends.
+
+It is a **claim, not a fact**, and the receiving side treats it as one:
+
+- only the other party of that very call can send it, because that is how the
+  relay is scoped - but nothing on the receiving side can check that a room
+  exists or that the mute was really applied;
+- it is recorded on that call (`ActiveCall.peerReportedConferenceMute`) and ends
+  with it; no room is invented from it;
+- it is shown as somebody's word - "the other side says you are muted" - and
+  nothing functional hangs on it: no microphone is switched, no control
+  changes;
+- it is not replayed. A participant whose socket was down for it learns
+  nothing, and the host re-sends only on a change;
+- it is skipped entirely where the core does not advertise `peer_message`: an
+  older one closes the signalling socket with 4600 on a request it does not
+  know, and a hint is not worth the session the room lives in.
+
+A far end that is not this app gets nothing, and cannot. The authoritative fix
+is an event from the core into the muted subscriber's own session; this is what
+can be done without one.
+
 ## On the screen
 
 The way in is the roster header - the strip that appears when there is more
