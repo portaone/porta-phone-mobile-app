@@ -149,6 +149,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_ToolbarStatus_connecting' => call_ToolbarStatus_connecting,
       'call_ToolbarStatus_reconnecting' => call_ToolbarStatus_reconnecting,
       'call_description_held' => call_description_held,
+      'call_description_peerReportsMuted' => call_description_peerReportsMuted,
       'call_description_incoming' => call_description_incoming,
       'call_description_inviteToAttendedTransfer' =>
         call_description_inviteToAttendedTransfer,

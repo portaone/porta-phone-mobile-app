@@ -40,6 +40,7 @@ class ActiveCall with _$ActiveCall implements CallEntry {
     this.localStream,
     this.remoteStream,
     this.remoteCameraEnabled,
+    this.peerReportedConferenceMute,
     this.speakerOnBeforeMinimize,
     this.iceCandidates = const [],
     this.iceConnectionIssue,
@@ -133,6 +134,16 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// can.
   @override
   final bool? remoteCameraEnabled;
+
+  /// What the other party of this call last said about a room-wide mute they
+  /// have applied to it, over `peer_message`. `null` until they say anything.
+  ///
+  /// A claim about this call, not this client's own state: a conference is
+  /// the host's alone and the server tells a muted participant nothing, so
+  /// there is nothing here to check it against. It is shown and it ends with
+  /// the call; nothing functional hangs on it.
+  @override
+  final bool? peerReportedConferenceMute;
 
   @override
   final bool? speakerOnBeforeMinimize;

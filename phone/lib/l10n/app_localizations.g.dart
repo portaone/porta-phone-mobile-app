@@ -712,6 +712,12 @@ abstract class AppLocalizations {
   /// **'On hold'**
   String get call_description_held;
 
+  /// No description provided for @call_description_peerReportsMuted.
+  ///
+  /// In en, this message translates to:
+  /// **'The other side says you are muted'**
+  String get call_description_peerReportsMuted;
+
   /// No description provided for @call_description_incoming.
   ///
   /// In en, this message translates to:

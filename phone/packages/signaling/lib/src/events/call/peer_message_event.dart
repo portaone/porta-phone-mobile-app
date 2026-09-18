@@ -24,6 +24,8 @@ sealed class PeerMessageEvent extends CallEvent {
     return switch (json['type']) {
       MediaStatePeerMessageEvent.messageType when data is Map<String, dynamic> && data['video'] is bool =>
         MediaStatePeerMessageEvent.fromJson(json),
+      ConferenceMutePeerMessageEvent.messageType when data is Map<String, dynamic> && data['muted'] is bool =>
+        ConferenceMutePeerMessageEvent.fromJson(json),
       _ => UnknownPeerMessageEvent.fromJson(json),
     };
   }
@@ -63,6 +65,52 @@ final class MediaStatePeerMessageEvent extends PeerMessageEvent {
       callId: json['call_id'],
       sender: json['sender'],
       video: json['data']['video'],
+    );
+  }
+}
+
+/// What the other party of this call says about a room-wide mute they have
+/// applied to it (`data: {muted: bool}`).
+///
+/// A conference is the host's alone: the server tells the muted side nothing,
+/// and a participant's own client has no room state to read. This is the host
+/// saying so over the one channel the two of them share.
+///
+/// It is a claim, not a fact. Only the other party of this very call can send
+/// it - the server relays a peer_message within one call - but nothing here
+/// can check that a room exists or that the mute was really applied, so it
+/// belongs to this call, ends with it, and nothing functional hangs on it.
+final class ConferenceMutePeerMessageEvent extends PeerMessageEvent {
+  const ConferenceMutePeerMessageEvent({
+    super.transaction,
+    required super.line,
+    required super.callId,
+    super.sender,
+    required this.muted,
+  });
+
+  static const messageType = 'conference_mute_state';
+
+  final bool muted;
+
+  @override
+  List<Object?> get props => [...super.props, sender, muted];
+
+  @override
+  Map<String, dynamic> toJson() => {
+    ...callBaseJson(PeerMessageEvent.typeValue),
+    'type': messageType,
+    'data': {'muted': muted},
+    if (sender != null) 'sender': sender,
+  };
+
+  factory ConferenceMutePeerMessageEvent.fromJson(Map<String, dynamic> json) {
+    return ConferenceMutePeerMessageEvent(
+      transaction: json['transaction'],
+      line: json['line'],
+      callId: json['call_id'],
+      sender: json['sender'],
+      muted: json['data']['muted'],
     );
   }
 }
