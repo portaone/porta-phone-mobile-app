@@ -6121,6 +6121,12 @@ abstract class AppLocalizations {
   /// **'Undo move to trash'**
   String get voicemail_SemanticsLabel_undoMoveToTrash;
 
+  /// Shown when an action over one message finds that the backend no longer has it.
+  ///
+  /// In en, this message translates to:
+  /// **'That message is no longer there'**
+  String get voicemail_Snackbar_messageGone;
+
   /// Confirms that a voicemail was moved to the trash.
   ///
   /// In en, this message translates to:

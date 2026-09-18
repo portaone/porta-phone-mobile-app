@@ -1540,6 +1540,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_SemanticsLabel_saved' => voicemail_SemanticsLabel_saved,
       'voicemail_SemanticsLabel_undoMoveToTrash' =>
         voicemail_SemanticsLabel_undoMoveToTrash,
+      'voicemail_Snackbar_messageGone' => voicemail_Snackbar_messageGone,
       'voicemail_Snackbar_movedToTrash' => voicemail_Snackbar_movedToTrash,
       'voicemail_Snackbar_forwardFailed' => voicemail_Snackbar_forwardFailed,
       'voicemail_Snackbar_forwardTooLarge' =>

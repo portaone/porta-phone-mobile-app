@@ -3421,6 +3421,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_SemanticsLabel_undoMoveToTrash => 'Скасувати переміщення в кошик';
 
   @override
+  String get voicemail_Snackbar_messageGone => 'Цього повідомлення вже немає';
+
+  @override
   String get voicemail_Snackbar_movedToTrash => 'Переміщено в кошик';
 
   @override
