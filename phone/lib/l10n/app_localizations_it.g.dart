@@ -3300,6 +3300,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_SemanticsLabel_undoMoveToTrash => 'Annulla lo spostamento nel cestino';
 
   @override
+  String get voicemail_Snackbar_messageGone => 'Quel messaggio non è più disponibile';
+
+  @override
   String get voicemail_Snackbar_movedToTrash => 'Spostato nel cestino';
 
   @override
