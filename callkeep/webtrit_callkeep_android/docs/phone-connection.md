@@ -12,6 +12,32 @@
 per call and is owned by `ConnectionManager`. It handles all Telecom-driven callbacks for that
 call and dispatches corresponding events to the main process.
 
+### Capabilities and properties
+
+Declared once in `init`: `PROPERTY_SELF_MANAGED`, `audioModeIsVoip`, and the capabilities
+`CAPABILITY_MUTE`, `CAPABILITY_SUPPORT_HOLD` and `CAPABILITY_HOLD`.
+
+The last two answer different questions and both are needed. `CAPABILITY_SUPPORT_HOLD` says the
+call supports being held at all; `CAPABILITY_HOLD` says it can be held **right now**, which is true
+here - `onHold` is implemented and answers with `setOnHold` at any point of the call.
+
+Telecom arbitrates a new call against the active one along two paths, and they read the flags
+differently:
+
+- **legacy** (`CallsManager.holdActiveCallForNewCall`, still taken by OEM builds such as a Xiaomi
+  on Android 15) asks `CallsManager.canHold`, which a `ConnectionService` call passes only on
+  `CAPABILITY_HOLD` - a transactional call gets by on `CAPABILITY_SUPPORT_HOLD`, and these
+  connections are not transactional. On false the same-source branch runs, and it does not swap the
+  two calls: it **disconnects** the first held call of this application;
+- **sequencing** (`CallSequencingController.holdActiveCallForNewCallWithSequencing`, Android 15 and
+  newer) never consults `canHold`. It requests the hold and disconnects the call only if the hold
+  does not arrive - which for these connections it always does.
+
+So the capability is not what keeps a call alive in the ordinary case: an incoming cellular call
+answered over an active one holds that call either way. What it does is keep the statement true and
+the legacy path's lethal branch out of reach, which matters as soon as anything makes a held
+connection active while another one is active - the way a call group used to.
+
 ## State
 
 | Field            | Type           | Description                                       |
