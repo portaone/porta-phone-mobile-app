@@ -23,6 +23,7 @@ class CallInfo extends StatefulWidget {
     required this.inviteToAttendedTransfer,
     required this.isIncoming,
     required this.held,
+    this.peerReportedConferenceMute,
     required this.number,
     this.username,
     this.acceptedTime,
@@ -36,6 +37,10 @@ class CallInfo extends StatefulWidget {
   final bool inviteToAttendedTransfer;
   final bool isIncoming;
   final bool held;
+
+  /// What the other party says about a room-wide mute of this call, if they
+  /// have said anything. A claim of theirs, shown as one.
+  final bool? peerReportedConferenceMute;
   final String number;
   final String? username;
   final DateTime? acceptedTime;
@@ -180,6 +185,10 @@ class _CallInfoState extends State<CallInfo> {
       return context.l10n.call_description_transferProcessing;
     } else if (widget.held) {
       return context.l10n.call_description_held;
+    } else if (widget.peerReportedConferenceMute ?? false) {
+      // Above the duration, because a person who cannot be heard needs to
+      // know that before they need to know how long they have been talking.
+      return context.l10n.call_description_peerReportsMuted;
     } else {
       return duration.format();
     }

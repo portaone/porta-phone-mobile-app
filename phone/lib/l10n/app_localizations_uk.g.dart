@@ -298,6 +298,99 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_CallList_outgoing => 'Вихідний';
 
   @override
+  String get conferenceRefusal_conferenceDisabled => 'Конференції недоступні для цього облікового запису';
+
+  @override
+  String get conferenceRefusal_conferenceAlreadyActive => 'Конференція вже триває';
+
+  @override
+  String get conferenceRefusal_lineAlreadyInConference => 'Цей дзвінок уже в конференції';
+
+  @override
+  String get conferenceRefusal_callsAreGone => 'Ці дзвінки вже не можна обʼєднати';
+
+  @override
+  String get conferenceRefusal_lineNotReady => 'Цей учасник ще приєднується';
+
+  @override
+  String get conferenceRefusal_unavailable => 'Не вдалося обʼєднати дзвінки';
+
+  @override
+  String get call_CallList_add => 'Додати';
+
+  @override
+  String get call_SemanticsLabel_add => 'Додати дзвінки до конференції';
+
+  @override
+  String call_CallList_outsideHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count дзвінків поза конференцією',
+      few: '$count дзвінки поза конференцією',
+      one: '$count дзвінок поза конференцією',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferencePanel_header(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Конференція - $count учасників',
+      few: 'Конференція - $count учасники',
+      one: 'Конференція - $count учасник',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get call_ConferencePanel_you => 'Ви';
+
+  @override
+  String get call_ConferencePanel_hostStatus => 'Ведучий';
+
+  @override
+  String get call_ConferencePanel_participantStatus => 'У конференції';
+
+  @override
+  String get call_ConferencePanel_participantMuted => 'Заглушений для всіх';
+
+  @override
+  String get call_ConferencePanel_end => 'Завершити';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfMute => 'Вимкнути ваш мікрофон';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfUnmute => 'Увімкнути ваш мікрофон';
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantMute(String name) {
+    return 'Заглушити $name для всіх';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantUnmute(String name) {
+    return 'Увімкнути звук $name для всіх';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantHangup(String name) {
+    return 'Завершити дзвінок з $name';
+  }
+
+  @override
+  String get call_SemanticsLabel_conferenceEnd => 'Завершити конференцію і всі дзвінки в ній';
+
+  @override
+  String get call_CallList_merge => 'Обʼєднати';
+
+  @override
+  String get call_SemanticsLabel_merge => 'Обʼєднати дзвінки в конференцію';
+
+  @override
   String call_CallList_header(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -336,6 +429,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get call_description_held => 'На утриманні';
+
+  @override
+  String get call_description_peerReportsMuted => 'Співрозмовник повідомив, що вас заглушено';
 
   @override
   String get call_description_incoming => 'Вхідний дзвінок';
@@ -1678,6 +1774,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Налаштування';
+
+  @override
+  String get notifications_messageSnackBar_conferenceFailed => 'Не вдалося створити конференцію';
+
+  @override
+  String get notifications_messageSnackBar_conferenceVideoLeg => 'Відеодзвінок не може приєднатися до конференції';
+
+  @override
+  String get notifications_messageSnackBar_conferenceEnded => 'Конференцію завершено, дзвінки тривають';
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>

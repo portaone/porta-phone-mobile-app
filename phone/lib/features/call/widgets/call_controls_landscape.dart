@@ -156,7 +156,9 @@ class _InfoZone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (params.activeCalls.length > 1) {
+    // A room can stand with a single call left in it, and it is still a room
+    // rather than one call's info beside an avatar.
+    if (params.activeCalls.length > 1 || params.conference.isPresent) {
       return Center(child: SingleChildScrollView(child: _buildInfoBlock(context)));
     }
 
@@ -173,12 +175,7 @@ class _InfoZone extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CallInfoBlock(
-          activeCalls: params.activeCalls,
-          focusedCall: params.focusedCall,
-          onCallSelected: params.onCallSelected,
-          textAlign: TextAlign.start,
-        ),
+        CallInfoBlock.fromParams(params, textAlign: TextAlign.start),
         if (params.keypadShown)
           ValueListenableBuilder<String>(
             valueListenable: params.dtmfInput,
@@ -200,7 +197,9 @@ class _InfoZone extends StatelessWidget {
     // too narrow for the picture and the gap beside it. The lines saying
     // who the call is with matter more than the portrait, so the avatar
     // gives way rather than overflow.
-    final avatarShown = !params.remotePictureShown && constraints.maxWidth >= avatarRadius * 2 + 24 + 48;
+    // Landscape adds its own term - the picture needs the width to stand
+    // beside the info zone; who it could be of is decided on the params.
+    final avatarShown = params.largeAvatarHasSubject && constraints.maxWidth >= avatarRadius * 2 + 24 + 48;
     if (!avatarShown) {
       // No picture beside the lines (a live video already fills the screen,
       // or the zone is too narrow for the portrait) - the lines still stand

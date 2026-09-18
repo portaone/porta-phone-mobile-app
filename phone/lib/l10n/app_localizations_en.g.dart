@@ -281,6 +281,97 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call_CallList_outgoing => 'Outgoing';
 
   @override
+  String get conferenceRefusal_conferenceDisabled => 'Conferences are not available on this account';
+
+  @override
+  String get conferenceRefusal_conferenceAlreadyActive => 'A conference is already running';
+
+  @override
+  String get conferenceRefusal_lineAlreadyInConference => 'That call is already in the conference';
+
+  @override
+  String get conferenceRefusal_callsAreGone => 'Those calls are no longer available to merge';
+
+  @override
+  String get conferenceRefusal_lineNotReady => 'That participant is still joining';
+
+  @override
+  String get conferenceRefusal_unavailable => 'The calls could not be merged';
+
+  @override
+  String get call_CallList_add => 'Add';
+
+  @override
+  String get call_SemanticsLabel_add => 'Add the calls to the conference';
+
+  @override
+  String call_CallList_outsideHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count calls outside the conference',
+      one: '$count call outside the conference',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferencePanel_header(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Conference - $count participants',
+      one: 'Conference - $count participant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get call_ConferencePanel_you => 'You';
+
+  @override
+  String get call_ConferencePanel_hostStatus => 'Host';
+
+  @override
+  String get call_ConferencePanel_participantStatus => 'In the conference';
+
+  @override
+  String get call_ConferencePanel_participantMuted => 'Muted for everyone';
+
+  @override
+  String get call_ConferencePanel_end => 'End';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfMute => 'Mute your microphone';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfUnmute => 'Unmute your microphone';
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantMute(String name) {
+    return 'Mute $name for everyone';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantUnmute(String name) {
+    return 'Unmute $name for everyone';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantHangup(String name) {
+    return 'End the call with $name';
+  }
+
+  @override
+  String get call_SemanticsLabel_conferenceEnd => 'End the conference and every call in it';
+
+  @override
+  String get call_CallList_merge => 'Merge';
+
+  @override
+  String get call_SemanticsLabel_merge => 'Merge the calls into a conference';
+
+  @override
   String call_CallList_header(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -317,6 +408,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get call_description_held => 'On hold';
+
+  @override
+  String get call_description_peerReportsMuted => 'The other side says you are muted';
 
   @override
   String get call_description_incoming => 'Incoming call';
@@ -1649,6 +1743,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'Settings';
+
+  @override
+  String get notifications_messageSnackBar_conferenceFailed => 'The conference could not be set up';
+
+  @override
+  String get notifications_messageSnackBar_conferenceVideoLeg => 'A video call cannot join a conference';
+
+  @override
+  String get notifications_messageSnackBar_conferenceEnded => 'The conference has ended, the calls continue';
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>

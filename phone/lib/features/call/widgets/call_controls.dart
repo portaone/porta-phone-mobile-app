@@ -42,6 +42,12 @@ class CallControlsParams {
     required this.onHangup,
     required this.onAccept,
     required this.dtmfInput,
+    this.conference = const ConferenceState(),
+    this.onMerge,
+    this.onConferenceAdd,
+    this.onConferenceSelfMuted,
+    this.onConferenceParticipantMuted,
+    this.onConferenceParticipantHangup,
     this.audioDevice,
     this.contactResolver,
     this.keypadShown = false,
@@ -82,11 +88,44 @@ class CallControlsParams {
   final VoidCallback onHangup;
   final VoidCallback onAccept;
 
+  /// Merges the calls into a conference, or `null` while this set cannot be
+  /// merged - which shows the control disabled rather than hiding it.
+  /// Whether it is offered at all is [CallCapabilitiesConfig.isConferenceEnabled]
+  /// of [callConfig].
+  final VoidCallback? onMerge;
+
+  /// The room, when there is one. While it stands the panel takes the
+  /// roster's place and the controls that act on a single call act on the
+  /// room instead - the microphone above all, which belongs to the room and
+  /// not to any one leg.
+  final ConferenceState conference;
+
+  /// Brings the calls outside the room into it; `null` while none of them
+  /// can join, which shows the control disabled rather than hiding it.
+  final VoidCallback? onConferenceAdd;
+
+  final ValueChanged<bool>? onConferenceSelfMuted;
+  final void Function(String callId, bool muted)? onConferenceParticipantMuted;
+  final ValueChanged<String>? onConferenceParticipantHangup;
+
   final CallAudioDevice? audioDevice;
 
   /// Resolves the remote number to a contact for the avatar shown in place of
   /// the video.
   final ContactResolver? contactResolver;
+
+  /// Whether a large picture of the far end has anybody to be of.
+  ///
+  /// One picture can only be of one person: with several calls the roster
+  /// rows carry a picture each, and a large one of whichever row happens to
+  /// be focused would say less while taking the room they need. A live remote
+  /// picture is already showing that person, so the avatar stands down for it.
+  ///
+  /// Each layout adds what is true of itself alone - portrait gives the space
+  /// to the open keypad, landscape needs the width - but the part that is
+  /// about the calls is decided once, or a new condition reaches one layout
+  /// and not the other.
+  bool get largeAvatarHasSubject => activeCalls.length < 2 && !remotePictureShown;
 
   final bool keypadShown;
 

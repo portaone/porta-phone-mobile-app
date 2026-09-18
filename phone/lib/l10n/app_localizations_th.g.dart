@@ -281,6 +281,87 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_CallList_outgoing => 'โทรออก';
 
   @override
+  String get conferenceRefusal_conferenceDisabled => 'บัญชีนี้ไม่สามารถใช้การประชุมสายได้';
+
+  @override
+  String get conferenceRefusal_conferenceAlreadyActive => 'มีการประชุมสายอยู่แล้ว';
+
+  @override
+  String get conferenceRefusal_lineAlreadyInConference => 'สายนั้นอยู่ในการประชุมสายแล้ว';
+
+  @override
+  String get conferenceRefusal_callsAreGone => 'ไม่สามารถรวมสายเหล่านั้นได้อีกต่อไป';
+
+  @override
+  String get conferenceRefusal_lineNotReady => 'ผู้เข้าร่วมรายนั้นกำลังเข้าร่วม';
+
+  @override
+  String get conferenceRefusal_unavailable => 'ไม่สามารถรวมสายได้';
+
+  @override
+  String get call_CallList_add => 'เพิ่ม';
+
+  @override
+  String get call_SemanticsLabel_add => 'เพิ่มสายเข้าการประชุมสาย';
+
+  @override
+  String call_CallList_outsideHeader(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$count สายนอกการประชุมสาย');
+    return '$_temp0';
+  }
+
+  @override
+  String call_ConferencePanel_header(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'การประชุมสาย - ผู้เข้าร่วม $count คน');
+    return '$_temp0';
+  }
+
+  @override
+  String get call_ConferencePanel_you => 'คุณ';
+
+  @override
+  String get call_ConferencePanel_hostStatus => 'ผู้ดำเนินการ';
+
+  @override
+  String get call_ConferencePanel_participantStatus => 'อยู่ในการประชุมสาย';
+
+  @override
+  String get call_ConferencePanel_participantMuted => 'ปิดเสียงสำหรับทุกคน';
+
+  @override
+  String get call_ConferencePanel_end => 'สิ้นสุด';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfMute => 'ปิดไมโครโฟนของคุณ';
+
+  @override
+  String get call_SemanticsLabel_conferenceSelfUnmute => 'เปิดไมโครโฟนของคุณ';
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantMute(String name) {
+    return 'ปิดเสียง $name สำหรับทุกคน';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantUnmute(String name) {
+    return 'เปิดเสียง $name สำหรับทุกคน';
+  }
+
+  @override
+  String call_SemanticsLabel_conferenceParticipantHangup(String name) {
+    return 'วางสายกับ $name';
+  }
+
+  @override
+  String get call_SemanticsLabel_conferenceEnd => 'สิ้นสุดการประชุมสายและสายทั้งหมด';
+
+  @override
+  String get call_CallList_merge => 'รวมสาย';
+
+  @override
+  String get call_SemanticsLabel_merge => 'รวมสายเข้าเป็นการประชุมสาย';
+
+  @override
   String call_CallList_header(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -317,6 +398,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get call_description_held => 'พักสาย';
+
+  @override
+  String get call_description_peerReportsMuted => 'อีกฝ่ายแจ้งว่าคุณถูกปิดเสียง';
 
   @override
   String get call_description_incoming => 'สายเรียกเข้า';
@@ -1645,6 +1729,15 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get notifications_messageSnackBarAction_callVideoDowngraded => 'การตั้งค่า';
+
+  @override
+  String get notifications_messageSnackBar_conferenceFailed => 'ไม่สามารถตั้งค่าการประชุมสายได้';
+
+  @override
+  String get notifications_messageSnackBar_conferenceVideoLeg => 'สายวิดีโอไม่สามารถเข้าร่วมการประชุมสายได้';
+
+  @override
+  String get notifications_messageSnackBar_conferenceEnded => 'การประชุมสายสิ้นสุดแล้ว สายยังคงดำเนินต่อ';
 
   @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>

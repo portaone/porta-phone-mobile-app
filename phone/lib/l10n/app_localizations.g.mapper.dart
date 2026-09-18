@@ -120,10 +120,36 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_CallActionsTooltip_unmute' => call_CallActionsTooltip_unmute,
       'call_CallList_incoming' => call_CallList_incoming,
       'call_CallList_outgoing' => call_CallList_outgoing,
+      'conferenceRefusal_conferenceDisabled' =>
+        conferenceRefusal_conferenceDisabled,
+      'conferenceRefusal_conferenceAlreadyActive' =>
+        conferenceRefusal_conferenceAlreadyActive,
+      'conferenceRefusal_lineAlreadyInConference' =>
+        conferenceRefusal_lineAlreadyInConference,
+      'conferenceRefusal_callsAreGone' => conferenceRefusal_callsAreGone,
+      'conferenceRefusal_lineNotReady' => conferenceRefusal_lineNotReady,
+      'conferenceRefusal_unavailable' => conferenceRefusal_unavailable,
+      'call_CallList_add' => call_CallList_add,
+      'call_SemanticsLabel_add' => call_SemanticsLabel_add,
+      'call_ConferencePanel_you' => call_ConferencePanel_you,
+      'call_ConferencePanel_hostStatus' => call_ConferencePanel_hostStatus,
+      'call_ConferencePanel_participantStatus' =>
+        call_ConferencePanel_participantStatus,
+      'call_ConferencePanel_participantMuted' =>
+        call_ConferencePanel_participantMuted,
+      'call_ConferencePanel_end' => call_ConferencePanel_end,
+      'call_SemanticsLabel_conferenceSelfMute' =>
+        call_SemanticsLabel_conferenceSelfMute,
+      'call_SemanticsLabel_conferenceSelfUnmute' =>
+        call_SemanticsLabel_conferenceSelfUnmute,
+      'call_SemanticsLabel_conferenceEnd' => call_SemanticsLabel_conferenceEnd,
+      'call_CallList_merge' => call_CallList_merge,
+      'call_SemanticsLabel_merge' => call_SemanticsLabel_merge,
       'call_CallList_statusOnCall' => call_CallList_statusOnCall,
       'call_ToolbarStatus_connecting' => call_ToolbarStatus_connecting,
       'call_ToolbarStatus_reconnecting' => call_ToolbarStatus_reconnecting,
       'call_description_held' => call_description_held,
+      'call_description_peerReportsMuted' => call_description_peerReportsMuted,
       'call_description_incoming' => call_description_incoming,
       'call_description_inviteToAttendedTransfer' =>
         call_description_inviteToAttendedTransfer,
@@ -759,6 +785,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         notifications_messageSnackBar_callVideoDowngraded,
       'notifications_messageSnackBarAction_callVideoDowngraded' =>
         notifications_messageSnackBarAction_callVideoDowngraded,
+      'notifications_messageSnackBar_conferenceFailed' =>
+        notifications_messageSnackBar_conferenceFailed,
+      'notifications_messageSnackBar_conferenceVideoLeg' =>
+        notifications_messageSnackBar_conferenceVideoLeg,
+      'notifications_messageSnackBar_conferenceEnded' =>
+        notifications_messageSnackBar_conferenceEnded,
       'notifications_errorSnackBar_activeLineBlindTransferWarning' =>
         notifications_errorSnackBar_activeLineBlindTransferWarning,
       'notifications_errorSnackBar_blindTransferFailed' =>
@@ -1840,6 +1872,42 @@ extension AppLocalizationsExtension on AppLocalizations {
           callerId_SemanticsLabel_matchRule(dialCode, number),
         _ => throw ArgumentError(
           'callerId_SemanticsLabel_matchRule requires 2 arguments',
+        ),
+      },
+      'call_CallList_outsideHeader' => switch (args) {
+        [final int count] => call_CallList_outsideHeader(count),
+        _ => throw ArgumentError(
+          'call_CallList_outsideHeader requires 1 arguments',
+        ),
+      },
+      'call_ConferencePanel_header' => switch (args) {
+        [final int count] => call_ConferencePanel_header(count),
+        _ => throw ArgumentError(
+          'call_ConferencePanel_header requires 1 arguments',
+        ),
+      },
+      'call_SemanticsLabel_conferenceParticipantMute' => switch (args) {
+        [final String name] => call_SemanticsLabel_conferenceParticipantMute(
+          name,
+        ),
+        _ => throw ArgumentError(
+          'call_SemanticsLabel_conferenceParticipantMute requires 1 arguments',
+        ),
+      },
+      'call_SemanticsLabel_conferenceParticipantUnmute' => switch (args) {
+        [final String name] => call_SemanticsLabel_conferenceParticipantUnmute(
+          name,
+        ),
+        _ => throw ArgumentError(
+          'call_SemanticsLabel_conferenceParticipantUnmute requires 1 arguments',
+        ),
+      },
+      'call_SemanticsLabel_conferenceParticipantHangup' => switch (args) {
+        [final String name] => call_SemanticsLabel_conferenceParticipantHangup(
+          name,
+        ),
+        _ => throw ArgumentError(
+          'call_SemanticsLabel_conferenceParticipantHangup requires 1 arguments',
         ),
       },
       'call_CallList_header' => switch (args) {

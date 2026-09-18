@@ -526,6 +526,144 @@ abstract class AppLocalizations {
   /// **'Outgoing'**
   String get call_CallList_outgoing;
 
+  /// Shown when the deployment does not offer conferences and the server refuses a merge.
+  ///
+  /// In en, this message translates to:
+  /// **'Conferences are not available on this account'**
+  String get conferenceRefusal_conferenceDisabled;
+
+  /// Shown when a merge is refused because this session already hosts a conference.
+  ///
+  /// In en, this message translates to:
+  /// **'A conference is already running'**
+  String get conferenceRefusal_conferenceAlreadyActive;
+
+  /// Shown when a call the user asked to add is already part of the conference.
+  ///
+  /// In en, this message translates to:
+  /// **'That call is already in the conference'**
+  String get conferenceRefusal_lineAlreadyInConference;
+
+  /// Shown when a merge is refused because the calls it named are no longer there to merge.
+  ///
+  /// In en, this message translates to:
+  /// **'Those calls are no longer available to merge'**
+  String get conferenceRefusal_callsAreGone;
+
+  /// Shown when the server refuses to mute a participant it has not finished adding.
+  ///
+  /// In en, this message translates to:
+  /// **'That participant is still joining'**
+  String get conferenceRefusal_lineNotReady;
+
+  /// Shown when a merge is refused for a reason the user can do nothing about.
+  ///
+  /// In en, this message translates to:
+  /// **'The calls could not be merged'**
+  String get conferenceRefusal_unavailable;
+
+  /// Label of the button above the calls standing outside a conference that brings them into it.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get call_CallList_add;
+
+  /// Accessibility name of the button that brings the calls outside a conference into it.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the calls to the conference'**
+  String get call_SemanticsLabel_add;
+
+  /// Header above the calls that are up while a conference is running but are not part of it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} call outside the conference} other{{count} calls outside the conference}}'**
+  String call_CallList_outsideHeader(int count);
+
+  /// Header above the conference panel on the call screen; the count is the number of participants, the host not included.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Conference - {count} participant} other{Conference - {count} participants}}'**
+  String call_ConferencePanel_header(int count);
+
+  /// Name of the host's own row in the conference panel.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get call_ConferencePanel_you;
+
+  /// Status line of the host's own row in the conference panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get call_ConferencePanel_hostStatus;
+
+  /// Status line of a participant row in the conference panel.
+  ///
+  /// In en, this message translates to:
+  /// **'In the conference'**
+  String get call_ConferencePanel_participantStatus;
+
+  /// Status line of a participant the host muted for everyone in the room.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted for everyone'**
+  String get call_ConferencePanel_participantMuted;
+
+  /// Label of the button that ends the conference and every call in it.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get call_ConferencePanel_end;
+
+  /// Accessibility name of the control that mutes the host's microphone towards the conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute your microphone'**
+  String get call_SemanticsLabel_conferenceSelfMute;
+
+  /// Accessibility name of the control that unmutes the host's microphone towards the conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute your microphone'**
+  String get call_SemanticsLabel_conferenceSelfUnmute;
+
+  /// Accessibility name of the control that mutes one conference participant for everyone; the name identifies which participant.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute {name} for everyone'**
+  String call_SemanticsLabel_conferenceParticipantMute(String name);
+
+  /// Accessibility name of the control that unmutes one conference participant for everyone; the name identifies which participant.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute {name} for everyone'**
+  String call_SemanticsLabel_conferenceParticipantUnmute(String name);
+
+  /// Accessibility name of the control that ends one conference participant's call; the name identifies which participant.
+  ///
+  /// In en, this message translates to:
+  /// **'End the call with {name}'**
+  String call_SemanticsLabel_conferenceParticipantHangup(String name);
+
+  /// Accessibility name of the control that ends the conference and every call in it.
+  ///
+  /// In en, this message translates to:
+  /// **'End the conference and every call in it'**
+  String get call_SemanticsLabel_conferenceEnd;
+
+  /// Label of the button above the call list that merges the calls into a conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get call_CallList_merge;
+
+  /// Accessibility name of the button that merges the calls into a conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge the calls into a conference'**
+  String get call_SemanticsLabel_merge;
+
   /// Header above the call list on the call screen when more than one call is in progress.
   ///
   /// In en, this message translates to:
@@ -573,6 +711,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On hold'**
   String get call_description_held;
+
+  /// No description provided for @call_description_peerReportsMuted.
+  ///
+  /// In en, this message translates to:
+  /// **'The other side says you are muted'**
+  String get call_description_peerReportsMuted;
 
   /// No description provided for @call_description_incoming.
   ///
@@ -3024,6 +3168,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get notifications_messageSnackBarAction_callVideoDowngraded;
+
+  /// Shown when a conference that was being set up failed; the merged calls go on as separate calls.
+  ///
+  /// In en, this message translates to:
+  /// **'The conference could not be set up'**
+  String get notifications_messageSnackBar_conferenceFailed;
+
+  /// Shown when a conference failed because one of the merged calls is a video call, which the audio mixer cannot take.
+  ///
+  /// In en, this message translates to:
+  /// **'A video call cannot join a conference'**
+  String get notifications_messageSnackBar_conferenceVideoLeg;
+
+  /// Shown when the server ends a conference while its calls are still up; they go on as separate calls.
+  ///
+  /// In en, this message translates to:
+  /// **'The conference has ended, the calls continue'**
+  String get notifications_messageSnackBar_conferenceEnded;
 
   /// Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target.
   ///

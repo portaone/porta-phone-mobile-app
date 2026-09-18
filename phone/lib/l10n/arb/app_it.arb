@@ -235,6 +235,123 @@
   "@call_CallList_outgoing": {
     "description": "Trailing label on a ringing outgoing row in the call list."
   },
+  "conferenceRefusal_conferenceDisabled": "Le conferenze non sono disponibili per questo account",
+  "@conferenceRefusal_conferenceDisabled": {
+    "description": "Shown when the deployment does not offer conferences and the server refuses a merge."
+  },
+  "conferenceRefusal_conferenceAlreadyActive": "Una conferenza è già in corso",
+  "@conferenceRefusal_conferenceAlreadyActive": {
+    "description": "Shown when a merge is refused because this session already hosts a conference."
+  },
+  "conferenceRefusal_lineAlreadyInConference": "Quella chiamata è già in conferenza",
+  "@conferenceRefusal_lineAlreadyInConference": {
+    "description": "Shown when a call the user asked to add is already part of the conference."
+  },
+  "conferenceRefusal_callsAreGone": "Quelle chiamate non sono più unibili",
+  "@conferenceRefusal_callsAreGone": {
+    "description": "Shown when a merge is refused because the calls it named are no longer there to merge."
+  },
+  "conferenceRefusal_lineNotReady": "Quel partecipante si sta ancora unendo",
+  "@conferenceRefusal_lineNotReady": {
+    "description": "Shown when the server refuses to mute a participant it has not finished adding."
+  },
+  "conferenceRefusal_unavailable": "Impossibile unire le chiamate",
+  "@conferenceRefusal_unavailable": {
+    "description": "Shown when a merge is refused for a reason the user can do nothing about."
+  },
+  "call_CallList_add": "Aggiungi",
+  "@call_CallList_add": {
+    "description": "Label of the button above the calls standing outside a conference that brings them into it."
+  },
+  "call_SemanticsLabel_add": "Aggiungi le chiamate alla conferenza",
+  "@call_SemanticsLabel_add": {
+    "description": "Accessibility name of the button that brings the calls outside a conference into it."
+  },
+  "call_CallList_outsideHeader": "{count, plural, one{{count} chiamata fuori dalla conferenza} other{{count} chiamate fuori dalla conferenza}}",
+  "@call_CallList_outsideHeader": {
+    "description": "Header above the calls that are up while a conference is running but are not part of it.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferencePanel_header": "{count, plural, one{Conferenza - {count} partecipante} other{Conferenza - {count} partecipanti}}",
+  "@call_ConferencePanel_header": {
+    "description": "Header above the conference panel on the call screen; the count is the number of participants, the host not included.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "call_ConferencePanel_you": "Tu",
+  "@call_ConferencePanel_you": {
+    "description": "Name of the host's own row in the conference panel."
+  },
+  "call_ConferencePanel_hostStatus": "Organizzatore",
+  "@call_ConferencePanel_hostStatus": {
+    "description": "Status line of the host's own row in the conference panel."
+  },
+  "call_ConferencePanel_participantStatus": "In conferenza",
+  "@call_ConferencePanel_participantStatus": {
+    "description": "Status line of a participant row in the conference panel."
+  },
+  "call_ConferencePanel_participantMuted": "Silenziato per tutti",
+  "@call_ConferencePanel_participantMuted": {
+    "description": "Status line of a participant the host muted for everyone in the room."
+  },
+  "call_ConferencePanel_end": "Termina",
+  "@call_ConferencePanel_end": {
+    "description": "Label of the button that ends the conference and every call in it."
+  },
+  "call_SemanticsLabel_conferenceSelfMute": "Disattiva il tuo microfono",
+  "@call_SemanticsLabel_conferenceSelfMute": {
+    "description": "Accessibility name of the control that mutes the host's microphone towards the conference."
+  },
+  "call_SemanticsLabel_conferenceSelfUnmute": "Attiva il tuo microfono",
+  "@call_SemanticsLabel_conferenceSelfUnmute": {
+    "description": "Accessibility name of the control that unmutes the host's microphone towards the conference."
+  },
+  "call_SemanticsLabel_conferenceParticipantMute": "Silenzia {name} per tutti",
+  "@call_SemanticsLabel_conferenceParticipantMute": {
+    "description": "Accessibility name of the control that mutes one conference participant for everyone; the name identifies which participant.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_SemanticsLabel_conferenceParticipantUnmute": "Riattiva l'audio di {name} per tutti",
+  "@call_SemanticsLabel_conferenceParticipantUnmute": {
+    "description": "Accessibility name of the control that unmutes one conference participant for everyone; the name identifies which participant.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_SemanticsLabel_conferenceParticipantHangup": "Termina la chiamata con {name}",
+  "@call_SemanticsLabel_conferenceParticipantHangup": {
+    "description": "Accessibility name of the control that ends one conference participant's call; the name identifies which participant.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "call_SemanticsLabel_conferenceEnd": "Termina la conferenza e tutte le chiamate",
+  "@call_SemanticsLabel_conferenceEnd": {
+    "description": "Accessibility name of the control that ends the conference and every call in it."
+  },
+  "call_CallList_merge": "Unisci",
+  "@call_CallList_merge": {
+    "description": "Label of the button above the call list that merges the calls into a conference."
+  },
+  "call_SemanticsLabel_merge": "Unisci le chiamate in una conferenza",
+  "@call_SemanticsLabel_merge": {
+    "description": "Accessibility name of the button that merges the calls into a conference."
+  },
   "call_CallList_header": "{count, plural, one{{count} chiamata - tocca per scegliere} other{{count} chiamate - tocca per scegliere}}",
   "@call_CallList_header": {
     "description": "Header above the call list on the call screen when more than one call is in progress.",
@@ -285,6 +402,8 @@
   },
   "call_description_held": "In attesa",
   "@call_description_held": {},
+  "call_description_peerReportsMuted": "L'altra parte dice che sei disattivato",
+  "@call_description_peerReportsMuted": {},
   "call_description_incoming": "Chiamata in arrivo",
   "@call_description_incoming": {},
   "call_description_inviteToAttendedTransfer": "Sei stato invitato a unirti a una chiamata di trasferimento assistito",
@@ -1453,6 +1572,18 @@
   },
   "notifications_messageSnackBarAction_callVideoDowngraded": "Impostazioni",
   "@notifications_messageSnackBarAction_callVideoDowngraded": {},
+  "notifications_messageSnackBar_conferenceFailed": "Impossibile avviare la conferenza",
+  "@notifications_messageSnackBar_conferenceFailed": {
+    "description": "Shown when a conference that was being set up failed; the merged calls go on as separate calls."
+  },
+  "notifications_messageSnackBar_conferenceVideoLeg": "Una videochiamata non può entrare in conferenza",
+  "@notifications_messageSnackBar_conferenceVideoLeg": {
+    "description": "Shown when a conference failed because one of the merged calls is a video call, which the audio mixer cannot take."
+  },
+  "notifications_messageSnackBar_conferenceEnded": "La conferenza è terminata, le chiamate continuano",
+  "@notifications_messageSnackBar_conferenceEnded": {
+    "description": "Shown when the server ends a conference while its calls are still up; they go on as separate calls."
+  },
   "notifications_errorSnackBar_activeLineBlindTransferWarning": "Sei già in linea con il destinatario a cui stai cercando di trasferire alla cieca",
   "@notifications_errorSnackBar_activeLineBlindTransferWarning": {
     "description": "Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target."

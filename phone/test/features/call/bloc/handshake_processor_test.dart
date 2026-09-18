@@ -754,6 +754,71 @@ void main() {
       final actions = processor.process(lines: [], guestLine: null, activeCalls: const [], conference: null);
       expect(actions, isEmpty);
     });
+
+    test('the room the client is connected to is kept, with the server\'s membership', () async {
+      // A room outlives the socket: the mixer kept mixing while it was down,
+      // so the client carries on and only takes the list again.
+      const participants = [ConferenceParticipant(line: 0, callId: 'a', muted: true)];
+      final actions = processor.process(
+        lines: [],
+        guestLine: null,
+        activeCalls: const [],
+        conference: const ConferenceInfo(room: 4242, participants: participants),
+        localConference: const ConferenceState(room: 4242, phase: ConferencePhase.active, legs: {'a': 0, 'b': 1}),
+      );
+
+      expect(
+        actions.single,
+        isA<AdoptConferenceAction>()
+            .having((a) => a.room, 'room', 4242)
+            .having((a) => a.participants, 'participants', participants),
+      );
+    });
+
+    test('a room the client holds and the server does not is dropped', () async {
+      final actions = processor.process(
+        lines: [],
+        guestLine: null,
+        activeCalls: const [],
+        conference: null,
+        localConference: const ConferenceState(room: 4242, phase: ConferencePhase.active, legs: {'a': 0}),
+      );
+
+      expect(actions.single, isA<ForgetConferenceAction>());
+    });
+
+    test('a different room on each side is ended there and dropped here', () async {
+      final actions = processor.process(
+        lines: [],
+        guestLine: null,
+        activeCalls: const [],
+        conference: const ConferenceInfo(room: 99),
+        localConference: const ConferenceState(room: 4242, phase: ConferencePhase.active, legs: {'a': 0}),
+      );
+
+      expect(actions, [
+        isA<HangupStaleConferenceAction>().having((a) => a.room, 'room', 99),
+        isA<ForgetConferenceAction>(),
+      ]);
+    });
+
+    test('a merge still assembling is not a room to keep', () async {
+      // Assembling means the offer never came - the merge has no room id, and
+      // the server sends one offer per room, so there is nothing to come back
+      // to. The room is ended there and the merge dropped here.
+      const assembling = ConferenceState(phase: ConferencePhase.assembling, legs: {'a': 0});
+      expect(assembling.room, isNull, reason: 'the id arrives with the offer');
+
+      final actions = processor.process(
+        lines: [],
+        guestLine: null,
+        activeCalls: const [],
+        conference: const ConferenceInfo(room: 4242),
+        localConference: assembling,
+      );
+
+      expect(actions, [isA<HangupStaleConferenceAction>(), isA<ForgetConferenceAction>()]);
+    });
   });
 
   group('queued termination requests', () {
