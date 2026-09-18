@@ -7,16 +7,20 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/theme/styles/styles.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
-extension BuildContextSnackBar on BuildContext {
-  void removeCurrentSnackBar() {
-    ScaffoldMessenger.of(this).removeCurrentSnackBar();
-  }
+/// The snack bar of a screen, held apart from the widget that asked for it.
+///
+/// A message about something that has just left the screen has nowhere to come
+/// from by the time there is anything to say: a row acted on and then removed
+/// takes its element with it, and a context belonging to it is unmounted. Taken
+/// before the await, this outlives that - the messenger sits above the route,
+/// not inside the list.
+class AppSnackBars {
+  const AppSnackBars._(this._messenger, this._theme);
 
-  void hideCurrentSnackBar() {
-    ScaffoldMessenger.of(this).hideCurrentSnackBar();
-  }
+  final ScaffoldMessengerState _messenger;
+  final ThemeData _theme;
 
-  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showSnackBar(
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> show(
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 3),
@@ -24,44 +28,42 @@ extension BuildContextSnackBar on BuildContext {
     return _show(content: data, action: action, duration: duration);
   }
 
-  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showErrorSnackBar(
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showError(
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 5),
   }) {
-    final themeData = Theme.of(this);
-    final callStatusStyles = themeData.extension<SnackBarStyles>()?.primary;
+    final styles = _theme.extension<SnackBarStyles>()?.primary;
 
     return _show(
       content: data,
       action: action,
       duration: duration,
-      backgroundColor: callStatusStyles?.errorBackgroundColor ?? themeData.colorScheme.error,
+      backgroundColor: styles?.errorBackgroundColor ?? _theme.colorScheme.error,
     );
   }
 
-  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showFloatingSnackBar(
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showSuccess(
+    String data, {
+    SnackBarAction? action,
+    Duration duration = const Duration(seconds: 5),
+  }) {
+    final styles = _theme.extension<SnackBarStyles>()?.primary;
+
+    return _show(
+      content: data,
+      action: action,
+      duration: duration,
+      backgroundColor: styles?.successBackgroundColor ?? _theme.colorScheme.tertiary,
+    );
+  }
+
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showFloating(
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 1),
   }) {
     return _show(content: data, action: action, duration: duration, behavior: SnackBarBehavior.floating);
-  }
-
-  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showSuccessSnackBar(
-    String data, {
-    SnackBarAction? action,
-    Duration duration = const Duration(seconds: 5),
-  }) {
-    final themeData = Theme.of(this);
-    final callStatusStyles = themeData.extension<SnackBarStyles>()?.primary;
-
-    return _show(
-      content: data,
-      action: action,
-      duration: duration,
-      backgroundColor: callStatusStyles?.successBackgroundColor ?? themeData.colorScheme.tertiary,
-    );
   }
 
   /// Shows the one snack bar the app has, so every message is announced the
@@ -78,7 +80,7 @@ extension BuildContextSnackBar on BuildContext {
     Color? backgroundColor,
     SnackBarBehavior? behavior,
   }) {
-    return (ScaffoldMessenger.of(this)..removeCurrentSnackBar()).showSnackBar(
+    return (_messenger..removeCurrentSnackBar()).showSnackBar(
       SnackBar(
         content: SemanticId(identifier: appSnackBarId, child: Text(content)),
         action: action,
@@ -88,6 +90,51 @@ extension BuildContextSnackBar on BuildContext {
         showCloseIcon: action != null,
       ),
     );
+  }
+}
+
+extension BuildContextSnackBar on BuildContext {
+  /// The screen's snack bar, to keep past an await. See [AppSnackBars].
+  AppSnackBars get snackBars => AppSnackBars._(ScaffoldMessenger.of(this), Theme.of(this));
+
+  void removeCurrentSnackBar() {
+    ScaffoldMessenger.of(this).removeCurrentSnackBar();
+  }
+
+  void hideCurrentSnackBar() {
+    ScaffoldMessenger.of(this).hideCurrentSnackBar();
+  }
+
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showSnackBar(
+    String data, {
+    SnackBarAction? action,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    return snackBars.show(data, action: action, duration: duration);
+  }
+
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showErrorSnackBar(
+    String data, {
+    SnackBarAction? action,
+    Duration duration = const Duration(seconds: 5),
+  }) {
+    return snackBars.showError(data, action: action, duration: duration);
+  }
+
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showFloatingSnackBar(
+    String data, {
+    SnackBarAction? action,
+    Duration duration = const Duration(seconds: 1),
+  }) {
+    return snackBars.showFloating(data, action: action, duration: duration);
+  }
+
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showSuccessSnackBar(
+    String data, {
+    SnackBarAction? action,
+    Duration duration = const Duration(seconds: 5),
+  }) {
+    return snackBars.showSuccess(data, action: action, duration: duration);
   }
 
   T? readOrNull<T>() {
