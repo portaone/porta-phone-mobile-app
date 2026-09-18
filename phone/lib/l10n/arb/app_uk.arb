@@ -402,6 +402,8 @@
   },
   "call_description_held": "На утриманні",
   "@call_description_held": {},
+  "call_description_peerReportsMuted": "Співрозмовник повідомив, що вас заглушено",
+  "@call_description_peerReportsMuted": {},
   "call_description_incoming": "Вхідний дзвінок",
   "@call_description_incoming": {},
   "call_description_inviteToAttendedTransfer": "Вас запросили приєднатися до керованої переадресації",
