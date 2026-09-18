@@ -2951,6 +2951,16 @@
   "@voicemail_SemanticsLabel_undoMoveToTrash": {
     "description": "Accessibility name of the snackbar action that takes back the move to the trash."
   },
+  "voicemail_Snackbar_deleteFailed": "{count, plural, one{Impossibile eliminare il messaggio} other{Impossibile eliminare i messaggi}}",
+  "@voicemail_Snackbar_deleteFailed": {},
+  "voicemail_Snackbar_restoreFailed": "{count, plural, one{Impossibile ripristinare il messaggio} other{Impossibile ripristinare i messaggi}}",
+  "@voicemail_Snackbar_restoreFailed": {},
+  "voicemail_Snackbar_updateFailed": "Impossibile aggiornare il messaggio",
+  "@voicemail_Snackbar_updateFailed": {},
+  "voicemail_Snackbar_emptyTrashFailed": "Impossibile svuotare il cestino",
+  "@voicemail_Snackbar_emptyTrashFailed": {},
+  "voicemail_Snackbar_refreshFailed": "Impossibile aggiornare l'elenco",
+  "@voicemail_Snackbar_refreshFailed": {},
   "voicemail_Snackbar_messageGone": "Quel messaggio non è più disponibile",
   "@voicemail_Snackbar_messageGone": {},
   "voicemail_Snackbar_movedToTrash": "Spostato nel cestino",

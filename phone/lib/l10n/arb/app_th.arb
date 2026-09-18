@@ -2954,6 +2954,16 @@
   "@voicemail_SemanticsLabel_undoMoveToTrash": {
     "description": "Accessibility name of the snackbar action that takes back the move to the trash."
   },
+  "voicemail_Snackbar_deleteFailed": "{count, plural, other{ไม่สามารถลบข้อความได้}}",
+  "@voicemail_Snackbar_deleteFailed": {},
+  "voicemail_Snackbar_restoreFailed": "{count, plural, other{ไม่สามารถกู้คืนข้อความได้}}",
+  "@voicemail_Snackbar_restoreFailed": {},
+  "voicemail_Snackbar_updateFailed": "ไม่สามารถอัปเดตข้อความได้",
+  "@voicemail_Snackbar_updateFailed": {},
+  "voicemail_Snackbar_emptyTrashFailed": "ไม่สามารถล้างถังขยะได้",
+  "@voicemail_Snackbar_emptyTrashFailed": {},
+  "voicemail_Snackbar_refreshFailed": "ไม่สามารถรีเฟรชรายการได้",
+  "@voicemail_Snackbar_refreshFailed": {},
   "voicemail_Snackbar_messageGone": "ไม่มีข้อความนี้แล้ว",
   "@voicemail_Snackbar_messageGone": {},
   "voicemail_Snackbar_movedToTrash": "ย้ายไปถังขยะแล้ว",
