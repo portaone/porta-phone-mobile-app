@@ -9,22 +9,24 @@ import 'notifications.dart';
 /// refusal, what may be concluded from it - is written once and reads the same
 /// for all of them; only the columns below are per action.
 enum VoicemailAction {
-  remove('removeVoicemail', VoicemailDeleteFailedNotification()),
-  restore('restoreVoicemail', VoicemailRestoreFailedNotification(), rereadsTrash: true),
-  removePermanently('removeVoicemailPermanently', VoicemailDeleteFailedNotification(), rereadsTrash: true),
-  toggleSeen('toggleSeenStatus', VoicemailUpdateFailedNotification()),
-  toggleSaved('toggleSavedStatus', VoicemailUpdateFailedNotification());
+  remove('removeVoicemail', voicemailDeleteFailed),
+  restore('restoreVoicemail', voicemailRestoreFailed, rereadsTrash: true),
+  removePermanently('removeVoicemailPermanently', voicemailDeleteFailed, rereadsTrash: true),
+  toggleSeen('toggleSeenStatus', voicemailUpdateFailed),
+  toggleSaved('toggleSavedStatus', voicemailUpdateFailed);
 
   const VoicemailAction(this.name, this.whenFailed, {this.rereadsTrash = false});
 
   /// What a log line and a crash report are filed under.
   final String name;
 
-  /// What the person is told when it did not happen.
+  /// What the person is told when it did not happen, given what went wrong.
   ///
   /// Only for a refusal that says nothing about the message: one that says the
-  /// message is gone is answered where the row was, by whoever asked.
-  final Notification whenFailed;
+  /// message is gone is answered where the row was, by whoever asked. The
+  /// failure is carried into the notification rather than into the sentence -
+  /// it is what the details behind it are made of.
+  final Notification Function(Object error) whenFailed;
 
   /// Whether it changes what the trash holds.
   ///

@@ -292,6 +292,18 @@ void main() {
       expect(said, [isA<VoicemailUpdateFailedNotification>()]);
     });
 
+    test('what the backend answered is kept, so the person can ask why', () async {
+      // The sentence says what did not happen; the reason is a status code and
+      // a word from another system, which means nothing on a snackbar and
+      // everything on a support ticket. So it travels with the notification.
+      final failure = ServerFailureException(url: Uri(), requestId: 'req-42', statusCode: 500);
+      when(() => repository.removeVoicemail(any())).thenAnswer((_) async => throw failure);
+
+      await cubit.removeVoicemail('1');
+
+      expect(said, [isA<VoicemailDeleteFailedNotification>().having((n) => n.error, 'error', same(failure))]);
+    });
+
     test('a refused delete over a selection says how many it was about', () async {
       when(() => repository.removeMultipleVoicemails(any())).thenAnswer((_) async => throw Exception('refused'));
       voicemails.add([_voicemail('1'), _voicemail('2')]);

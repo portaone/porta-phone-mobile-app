@@ -97,7 +97,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded, error: e));
       _logger.severe('Error fetching voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchVoicemails');
-      _reportFailedRead();
+      _reportFailedRead(e);
     }
   }
 
@@ -142,7 +142,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded, error: e));
       _logger.severe('Error fetching trashed voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchTrashedVoicemails');
-      _reportFailedRead();
+      _reportFailedRead(e);
     }
   }
 
@@ -151,10 +151,10 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   /// With nothing to show, the screen puts a retry in place of the list and
   /// the sentence would be the second one saying the same thing. With a list
   /// still on it, the only visible difference is that it did not change.
-  void _reportFailedRead() {
+  void _reportFailedRead(Object error) {
     if (!state.isVoicemailsExists) return;
 
-    onSubmitNotification(const VoicemailRefreshFailedNotification());
+    onSubmitNotification(VoicemailRefreshFailedNotification(error));
   }
 
   /// Fetches whatever the current filter is showing.
@@ -186,7 +186,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       _logger.severe('Error removing all voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeAllVoicemails');
-      onSubmitNotification(VoicemailDeleteFailedNotification(count: state.visibleItems.length));
+      onSubmitNotification(VoicemailDeleteFailedNotification(e, count: state.visibleItems.length));
     }
   }
 
@@ -204,7 +204,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       _logger.severe('Error removing selected voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeSelectedVoicemails');
-      onSubmitNotification(VoicemailDeleteFailedNotification(count: selected.length));
+      onSubmitNotification(VoicemailDeleteFailedNotification(e, count: selected.length));
     }
   }
 
@@ -218,7 +218,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     } catch (e, s) {
       _logger.severe('Error restoring selected voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.restoreSelectedVoicemails');
-      onSubmitNotification(VoicemailRestoreFailedNotification(count: selected.length));
+      onSubmitNotification(VoicemailRestoreFailedNotification(e, count: selected.length));
     } finally {
       // Whatever happened, some of them may have moved, so the list on screen
       // is re-read rather than guessed at.
@@ -236,7 +236,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     } catch (e, s) {
       _logger.severe('Error permanently removing selected voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeSelectedVoicemailsPermanently');
-      onSubmitNotification(VoicemailDeleteFailedNotification(count: selected.length));
+      onSubmitNotification(VoicemailDeleteFailedNotification(e, count: selected.length));
     } finally {
       await _afterTrashChange();
     }
@@ -299,7 +299,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
 
       _logger.severe('$reason: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: reason);
-      onSubmitNotification(action.whenFailed);
+      onSubmitNotification(action.whenFailed(e));
       return VoicemailActionOutcome.failed;
     }
 
@@ -345,7 +345,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       _logger.severe('Error emptying the voicemail trash: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.emptyVoicemailTrash');
-      onSubmitNotification(const VoicemailEmptyTrashFailedNotification());
+      onSubmitNotification(VoicemailEmptyTrashFailedNotification(e));
     }
   }
 

@@ -149,9 +149,14 @@ the row was, by whoever asked - the list is already right, and the same thing
 said twice in two wordings is worse than said once. And a read that failed with
 nothing to show is answered by the retry view standing in place of the list.
 
-The sentences say what did not happen, not what went wrong: the reason belongs
-to the backend and means nothing to the person holding the phone, who needs to
-know the message is still there so they can try again or leave it. Which
+The sentences say what did not happen, not what went wrong: the reason is a
+status code and a word from another system, and putting it in the sentence
+would trade a clear statement for an unreadable one. It is still worth being
+able to ask, so each of them carries a `Details` action onto the existing error
+screen (`app/notifications/view/error_details_screen.dart`) with the status, the
+backend's own code and the request id - what a support ticket needs and what
+nobody can recover once the snackbar has gone. A failure with no such answer to
+show - the network never got there - offers no action. Which
 sentence goes with which action is declared on `models/voicemail_action.dart`
 alongside the rest of the per-action configuration; the sentences themselves are
 `models/notifications.dart`.
