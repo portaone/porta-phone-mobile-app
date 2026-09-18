@@ -175,20 +175,7 @@ class _InfoZone extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CallInfoBlock(
-          activeCalls: params.activeCalls,
-          focusedCall: params.focusedCall,
-          onCallSelected: params.onCallSelected,
-          mergeSupported: params.callConfig.isConferenceEnabled,
-          onMergePressed: params.onMerge,
-          conference: params.conference,
-          onSelfMutedChanged: params.onConferenceSelfMuted,
-          onParticipantMutedChanged: params.onConferenceParticipantMuted,
-          onParticipantHangup: params.onConferenceParticipantHangup,
-          onAddPressed: params.onConferenceAdd,
-          contactResolver: params.contactResolver,
-          textAlign: TextAlign.start,
-        ),
+        CallInfoBlock.fromParams(params, textAlign: TextAlign.start),
         if (params.keypadShown)
           ValueListenableBuilder<String>(
             valueListenable: params.dtmfInput,
@@ -210,12 +197,9 @@ class _InfoZone extends StatelessWidget {
     // too narrow for the picture and the gap beside it. The lines saying
     // who the call is with matter more than the portrait, so the avatar
     // gives way rather than overflow.
-    // One picture, one person: with several calls the roster rows carry a
-    // picture each and the large one is left out, the same way portrait does.
-    final avatarShown =
-        params.activeCalls.length < 2 &&
-        !params.remotePictureShown &&
-        constraints.maxWidth >= avatarRadius * 2 + 24 + 48;
+    // Landscape adds its own term - the picture needs the width to stand
+    // beside the info zone; who it could be of is decided on the params.
+    final avatarShown = params.largeAvatarHasSubject && constraints.maxWidth >= avatarRadius * 2 + 24 + 48;
     if (!avatarShown) {
       // No picture beside the lines (a live video already fills the screen,
       // or the zone is too narrow for the portrait) - the lines still stand
