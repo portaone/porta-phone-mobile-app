@@ -62,11 +62,12 @@ Called by Telecom when the call ends (hang-up from either side).
 
 - Updates state to `STATE_HOLDING` / `STATE_ACTIVE`.
 - Dispatches `ConnectionHolding` broadcast with new hold state.
-- **Grouped child** (`isGrouped`, i.e. the connection has a `conference`): complies with Telecom
-  (`setOnHold()` / `setActive()`) but dispatches nothing. Telecom holds one child whenever
-  another becomes active; the application owns the media of a group and a member is never held
-  on its own, so the application is not told. When the call leaves the group it is made active
-  again and holds reach the application as usual.
+- **Member of a call group** (`isGrouped`): complies with Telecom (`setOnHold()` / `setActive()`)
+  but dispatches nothing. Telecom holds one call whenever another becomes active; the application
+  owns the media of a group and a member is never held on its own, so the application is not told.
+  The reply is not optional - a connection that does not reach the state Telecom asked for is
+  disconnected a few seconds later. Leaving the group changes nothing about the state: the call
+  stays as Telecom left it and holds reach the application again from the next one on.
 
 ### `onPlayDtmfTone(c)` / `onStopDtmfTone()`
 
@@ -77,8 +78,8 @@ Called by Telecom when the call ends (hang-up from either side).
 Telecom-driven hook fired on every connection state transition.
 
 - Maps the raw Telecom `state` int via `CallConnectionState.fromTelecomState(state)`.
-- On `STATE_DISCONNECTED`, a child leaves its `PhoneConference`, which ends itself once fewer
-  than two calls remain.
+- On `STATE_DISCONNECTED`, a member leaves its call group, which is taken apart once fewer than
+  two calls remain in it.
 - For live states (RINGING/DIALING/ACTIVE/HOLDING) dispatches `ConnectionStateChanged`,
   carrying the state in `CallMetadata.connectionState` so the main process MIRRORS it into the
   shadow state rather than inferring a fixed state per event type.
@@ -87,8 +88,8 @@ Telecom-driven hook fired on every connection state transition.
 
 ### `onCallEndpointChanged(endpoint)` (API 34+) / legacy audio device change
 
-While the connection is a child of a `PhoneConference`, Telecom sends these callbacks to the
-conference; it forwards them to every child, so the application still hears them per call.
+Telecom addresses these to the foreground call. Grouped calls are ordinary connections to it -
+there is no conference object to address instead - so each one hears them under its own call id.
 
 - Dispatches `AudioDeviceSet` broadcast with the new endpoint.
 - Dispatches `AudioDevicesUpdate` broadcast with full device list.

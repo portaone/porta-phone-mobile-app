@@ -1,15 +1,12 @@
 package com.webtrit.callkeep.services.services.connection
 
-import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
-import android.telecom.PhoneAccountHandle
 import com.webtrit.callkeep.common.CallDataConst
 import com.webtrit.callkeep.models.CallMetadata
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,15 +33,21 @@ class PhoneConnectionServiceCallGroupTest {
             }
     }
 
-    private fun initialGroup(vararg ids: String): PhoneConference {
-        val account = PhoneAccountHandle(ComponentName(service, PhoneConnectionService::class.java), "review")
-        return PhoneConference(account).also { group -> ids.forEach { group.addConnection(calls.getValue(it)) } }
+    private fun initialGroup(vararg ids: String) {
+        PhoneConnectionService.applyCallGroup(ids.toSet())
     }
 
-    private fun declare(vararg ids: String) {
+    private fun declare(vararg ids: String) = send(ServiceAction.SetCallGroup, *ids)
+
+    private fun withdraw(vararg ids: String) = send(ServiceAction.UnsetCallGroup, *ids)
+
+    private fun send(
+        action: ServiceAction,
+        vararg ids: String,
+    ) {
         service.onStartCommand(
             Intent(service, PhoneConnectionService::class.java).apply {
-                action = ServiceAction.SetCallGroup.action
+                this.action = action.action
                 putExtra(CallDataConst.CALL_IDS, ids)
             },
             0,
@@ -52,33 +55,96 @@ class PhoneConnectionServiceCallGroupTest {
         )
     }
 
+    private fun grouped(): Set<String> = calls.filterValues { it.isGrouped }.keys
+
     @Test
-    fun `Telecom declaring one member of three dissolves the conference`() {
+    fun `Telecom declaring one member of three dissolves the group`() {
         initialGroup("A", "B", "C")
         declare("A")
-        assertNull("The named member must be removed by the handler", calls.getValue("A").conference)
-        assertNull("B must stand alone", calls.getValue("B").conference)
-        assertNull("C must stand alone", calls.getValue("C").conference)
+        assertEquals("A membership of one is no group for anyone in it", emptySet<String>(), grouped())
     }
 
     @Test
     fun `restating the group adds the listed and removes the omitted`() {
         initialGroup("A", "B", "C")
         declare("A", "B", "D")
-        val group = calls.getValue("A").conference
-        assertNotNull(group)
-        assertSame(group, calls.getValue("B").conference)
-        assertSame(group, calls.getValue("D").conference)
-        assertNull("C was omitted and must leave", calls.getValue("C").conference)
+        assertEquals(setOf("A", "B", "D"), grouped())
     }
 
     @Test
-    fun `Telecom disjoint replacement removes the previous conference`() {
+    fun `Telecom disjoint replacement removes the previous group`() {
         initialGroup("A", "B")
         declare("C", "D")
-        assertNotNull("The replacement group must actually be created", calls.getValue("C").conference)
-        assertSame(calls.getValue("C").conference, calls.getValue("D").conference)
-        assertNull("A was omitted and must leave", calls.getValue("A").conference)
-        assertNull("B was omitted and must leave", calls.getValue("B").conference)
+        assertEquals(setOf("C", "D"), grouped())
+    }
+
+    @Test
+    fun `an empty membership changes nothing`() {
+        initialGroup("A", "B")
+        declare()
+        assertEquals(setOf("A", "B"), grouped())
+    }
+
+    @Test
+    fun `withdrawing one of three keeps the rest grouped`() {
+        initialGroup("A", "B", "C")
+        withdraw("C")
+        assertEquals(setOf("A", "B"), grouped())
+    }
+
+    @Test
+    fun `withdrawing all but one takes the group apart`() {
+        initialGroup("A", "B", "C")
+        withdraw("B", "C")
+        assertEquals(emptySet<String>(), grouped())
+    }
+
+    @Test
+    fun `a held call leaving the group stays held while another call is active`() {
+        initialGroup("A", "B")
+        // What the sequencer does to a member: the hold is answered and goes no further, so
+        // Telecom holds a call the application still believes is speaking.
+        calls.getValue("B").onHold()
+        withdraw("A", "B")
+        assertEquals(
+            "Taking it off hold while another call is active makes Telecom disconnect it",
+            android.telecom.Connection.STATE_HOLDING,
+            calls.getValue("B").state,
+        )
+    }
+
+    @Test
+    fun `the survivor of a group is left as Telecom holds it`() {
+        listOf("C", "D").forEach { calls.getValue(it).setDisconnected(localCause()) }
+        initialGroup("A", "B")
+        calls.getValue("B").onHold()
+        calls.getValue("A").setDisconnected(localCause())
+        assertFalse("The group is over", calls.getValue("B").isGrouped)
+        assertEquals(
+            "A call whose connection has just ended is still active for Telecom, and taking the " +
+                "survivor off hold in that window makes Telecom disconnect it",
+            android.telecom.Connection.STATE_HOLDING,
+            calls.getValue("B").state,
+        )
+    }
+
+    @Test
+    fun `an ended member leaves the group and a lone survivor is no group`() {
+        initialGroup("A", "B", "C")
+        calls.getValue("C").setDisconnected(localCause())
+        assertEquals(setOf("A", "B"), grouped())
+        calls.getValue("B").setDisconnected(localCause())
+        assertFalse("One call left is not a group", calls.getValue("A").isGrouped)
+    }
+
+    private fun localCause() = android.telecom.DisconnectCause(android.telecom.DisconnectCause.LOCAL)
+
+    @Test
+    fun `Telecom is never told about the group`() {
+        initialGroup("A", "B")
+        // A self-managed application cannot have a self-managed Conference: Telecom masks the
+        // property off anything it did not mark itself, so a conference would be filed as a
+        // managed call and the platform dialer would draw the room.
+        assertTrue(calls.values.all { it.conference == null })
     }
 }

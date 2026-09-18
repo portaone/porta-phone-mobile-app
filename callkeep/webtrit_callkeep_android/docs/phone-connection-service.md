@@ -89,39 +89,52 @@ encoded as a string extra.
 | `SetAudioDevice`         | Select audio device                                                                  |
 | `SendDtmf`               | Send DTMF tone                                                                       |
 | `NotifyPending`          | Register callId as pending before `onCreateIncomingConnection` arrives               |
-| `SetCallGroup`           | `handleCallGroup()`: build or restate the one `PhoneConference` for the listed calls |
-| `UnsetCallGroup`         | `handleCallGroup()`: take the listed calls out of the conference                     |
+| `SetCallGroup`           | `handleCallGroup()`: declare the listed calls to be the one group                    |
+| `UnsetCallGroup`         | `handleCallGroup()`: take the listed calls out of the group                          |
 
-## Call Groups (`PhoneConference`)
+## Call Groups
 
 Telecom treats two self-managed connections of one application as rivals: it holds one whenever
 the other becomes active, and destroys a connection that ignores its hold within about five
-seconds. A group of calls is one thing to the user, so `handleCallGroup()` makes it one thing to
-Telecom as well - an `android.telecom.Conference` (`PhoneConference`) with the calls as children.
+seconds. A group of calls is one thing to the user, and `handleCallGroup()` keeps that membership
+here - Telecom is never told about it.
 
-There is one group at a time. `SetCallGroup` carries the whole membership: with no conference it
-builds one, adds every listed call and makes every child active (every member of a group is
-speaking); with a conference standing it restates it - children left off the list are removed,
-listed calls not yet in it are added, and a group Telecom held while the application dialled or
-answered another call is made active again. A membership of one takes the group apart for
-everyone. `UnsetCallGroup` removes only the named calls. Whenever fewer than two calls remain,
-the conference is ended (`dissolveIfLonely()`), also when a child disconnects on its own
-(`PhoneConnection.onStateChanged`); an emptied conference would otherwise stay in Telecom as a
-phantom managed call until the process dies.
+An `android.telecom.Conference` would be the sanctioned way to tell it, and it cannot be used
+from a self-managed application. `Call.setConnectionProperties` in Telecom masks
+`PROPERTY_SELF_MANAGED` off any call whose own `mIsSelfManaged` flag is not set ("ensure the
+ConnectionService can't change the state of the self-managed property"), and that flag is set
+only for connections - `CallsManager.createConferenceCall` never sets it. A conference therefore
+arrives as an ordinary managed call (`prop=[]`, `voip=false`), the default dialer's
+`InCallService` is bound to it, and the platform draws the group in its own in-call screen -
+with a hang-up button that ends every call in the room. It also shows zero participants there,
+because the children are self-managed and invisible to that service.
 
-A call that leaves a group held is made active on the way out: Telecom's sequencing then holds
-whichever call it must, and that hold reaches the application like any other. While grouped, a
-child answers Telecom's hold by complying without telling the application (see
-[phone-connection.md](phone-connection.md)).
+Nothing about the calls needs the conference. Telecom holds one of them either way; what
+membership changes is that the hold is answered and travels no further, which is
+`PhoneConnection.isGrouped` (see [phone-connection.md](phone-connection.md)). A room's audio is
+mixed away from the device, so a leg carries the room whatever Telecom thinks of its state.
 
-Once the conference is the foreground call, Telecom addresses the audio route, the endpoint list
-and the microphone state to it rather than to its calls; `PhoneConference` hands those callbacks
-to every child, so each still reports under its own call id. `PhoneConference.onDisconnect()` -
-the system's own conference notification has a hang-up - ends every call in the group.
+There is one group at a time, and it is read off the connections that carry it, so a membership
+naming none of its members still ends it. `SetCallGroup` carries the whole membership: the listed
+calls become the group and every other call leaves it. An empty list names no group and changes
+nothing. `UnsetCallGroup` takes only the named calls out. One call is not a group, so any
+membership that would leave a single call in it leaves nobody in it - the same rule the
+standalone backend applies - and that covers both a membership of one and the last member
+disconnecting on its own (`PhoneConnection.onStateChanged` -> `releaseFromCallGroup`).
 
-Telecom files the conference as a managed call regardless of `PROPERTY_SELF_MANAGED`, so the
-system dialer shows a "Conference call" notification with hang-up, speaker and mute; that is
-the platform's presentation of the group, not the plugin's.
+Membership is all that changes. A call crossing the boundary in either direction is left in the
+state Telecom put it in, held or active, because taking a held self-managed call off hold while
+another is active does not swap them - it ends the call. `holdActiveCallForNewCall` asks whether
+the active call can be held, a connection of ours advertises `CAPABILITY_SUPPORT_HOLD` without
+`CAPABILITY_HOLD` so it cannot, and the same-source branch then disconnects the held call of this
+account outright ("Disconnect held call %s before holding active call %s"). Measured both ways on
+a device: a leg of a room gone 20 ms after joining it, and a survivor gone 12 ms after the room
+ended - the other call's connection had reached DISCONNECTED while its Telecom call was still
+ACTIVE, so no synchronous check can tell the two apart.
+
+The disagreement that leaves behind is bookkeeping: Telecom holds a call the application believes
+is speaking. Resolving it belongs to the application, which does so once the other call is really
+gone.
 
 The pre-dial hang-up of an active connection in `startOutgoingCall()` never takes a group
 member: the group is what Telecom holds for the new call.
@@ -142,7 +155,6 @@ See [ipc-broadcasting.md](ipc-broadcasting.md) for the full event catalogue.
 | `ActivityWakelockManager`          | Acquires/releases wake lock for incoming calls                                  |
 | `ProximitySensorManager`           | Manages proximity sensor for in-ear audio routing                               |
 | `PhoneConnection`                  | Individual Telecom call object (see [phone-connection.md](phone-connection.md)) |
-| `PhoneConference`                  | The one Telecom `Conference` a call group is presented as (see above)           |
 
 ## Related Components
 

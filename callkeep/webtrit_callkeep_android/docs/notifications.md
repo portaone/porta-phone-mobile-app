@@ -107,9 +107,9 @@ notification (`NOTIFICATION_ID = 1`) summarizing every active call, not one entr
 - **Action**: one Hang up button. Its `PendingIntent` targets `ActiveCallService` with the
   `Decline` action and carries the **first** call's bundle in the extras. If that call is in a
   group (`CallkeepCore.groupMembersWith`), the service hangs up every member; otherwise that call alone.
-- **Telecom groups**: once calls are a `PhoneConference`, Telecom files it as a managed call and
-  the system dialer posts its own "Conference call" notification (hang-up, speaker, mute) above
-  this one; its hang-up reaches `PhoneConference.onDisconnect()` and ends every call.
+- **Telecom groups**: nothing is posted by the platform. A group is not declared to Telecom at
+  all (see [phone-connection-service.md](phone-connection-service.md)), so this notification is
+  the only one the user gets for a room.
 - **Behavior**: `setOngoing(true)`, `setOnlyAlertOnce(true)`, media style with the action in
   compact view. As an ongoing FGS notification it cannot be swiped away.
 

@@ -175,8 +175,8 @@ class CallServiceRouter(
      * calls at all.
      *
      * Unlike every other command here the answer matters to the caller, because grouping is the
-     * one thing the two backends do not both do yet. The Telecom path needs an
-     * [android.telecom.Conference] and says so by refusing.
+     * one thing the two backends do not both do yet. A backend that cannot group says so by
+     * refusing.
      */
     fun setCallGroup(callIds: List<String>): Boolean =
         route(
