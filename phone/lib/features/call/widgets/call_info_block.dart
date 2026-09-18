@@ -135,6 +135,7 @@ class CallInfoBlock extends StatelessWidget {
       inviteToAttendedTransfer: focusedTransfer is InviteToAttendedTransfer,
       isIncoming: focusedCall.isIncoming,
       held: focusedCall.held,
+      peerReportedConferenceMute: focusedCall.peerReportedConferenceMute,
       number: focusedCall.handle.value,
       username: focusedCall.displayName,
       acceptedTime: focusedCall.acceptedTime,

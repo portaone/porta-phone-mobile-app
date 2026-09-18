@@ -6,6 +6,24 @@ import 'package:signaling/src/events/call/call_events.dart';
 import 'package:signaling/src/events/call_event.dart';
 
 void main() {
+  test('ConferenceMutePeerMessageEvent: decoded by its type and round trips', () {
+    const event = ConferenceMutePeerMessageEvent(line: 1, callId: 'qwerty', sender: '123', muted: true);
+
+    expect(PeerMessageEvent.fromJson(event.toJson()), event);
+  });
+
+  test('ConferenceMutePeerMessageEvent: a non-boolean muted falls back to unknown', () {
+    final decoded = PeerMessageEvent.fromJson({
+      'event': 'peer_message',
+      'line': 1,
+      'call_id': 'qwerty',
+      'type': 'conference_mute_state',
+      'data': {'muted': 'yes'},
+    });
+
+    expect(decoded, isA<UnknownPeerMessageEvent>());
+  });
+
   void testFromJson(String description, Map<String, dynamic> actual, PeerMessageEvent expected) {
     test(description, () {
       expect(PeerMessageEvent.fromJson(actual), equals(expected));
