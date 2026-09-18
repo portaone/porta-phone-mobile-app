@@ -2951,6 +2951,18 @@
   "@voicemail_SemanticsLabel_undoMoveToTrash": {
     "description": "Accessibility name of the snackbar action that takes back the move to the trash."
   },
+  "voicemail_Snackbar_deleteFailed": "{count, plural, one{Не вдалося видалити повідомлення} other{Не вдалося видалити повідомлення}}",
+  "@voicemail_Snackbar_deleteFailed": {},
+  "voicemail_Snackbar_restoreFailed": "{count, plural, one{Не вдалося відновити повідомлення} other{Не вдалося відновити повідомлення}}",
+  "@voicemail_Snackbar_restoreFailed": {},
+  "voicemail_Snackbar_updateFailed": "Не вдалося оновити повідомлення",
+  "@voicemail_Snackbar_updateFailed": {},
+  "voicemail_Snackbar_emptyTrashFailed": "Не вдалося очистити кошик",
+  "@voicemail_Snackbar_emptyTrashFailed": {},
+  "voicemail_Snackbar_refreshFailed": "Не вдалося оновити список",
+  "@voicemail_Snackbar_refreshFailed": {},
+  "voicemail_Snackbar_messageGone": "Цього повідомлення вже немає",
+  "@voicemail_Snackbar_messageGone": {},
   "voicemail_Snackbar_movedToTrash": "Переміщено в кошик",
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."

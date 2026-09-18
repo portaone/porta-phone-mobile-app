@@ -3359,6 +3359,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_SemanticsLabel_undoMoveToTrash => 'Undo move to trash';
 
   @override
+  String voicemail_Snackbar_deleteFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The messages could not be deleted',
+      one: 'The message could not be deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String voicemail_Snackbar_restoreFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The messages could not be restored',
+      one: 'The message could not be restored',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voicemail_Snackbar_updateFailed => 'The message could not be updated';
+
+  @override
+  String get voicemail_Snackbar_emptyTrashFailed => 'The trash could not be emptied';
+
+  @override
+  String get voicemail_Snackbar_refreshFailed => 'The list could not be refreshed';
+
+  @override
+  String get voicemail_Snackbar_messageGone => 'That message is no longer there';
+
+  @override
   String get voicemail_Snackbar_movedToTrash => 'Moved to trash';
 
   @override

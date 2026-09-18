@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:api/api.dart';
+
 import 'package:webtrit_phone/features/voicemail/bloc/voicemail_cubit.dart';
+import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -29,11 +32,15 @@ Voicemail _voicemail(String id, {bool? saved, String? forwardedBy}) => Voicemail
 void main() {
   late _Repository repository;
   late StreamController<List<Voicemail>> voicemails;
+  late List<Object> said;
   late VoicemailCubit cubit;
 
   setUp(() {
     repository = _Repository();
     voicemails = StreamController<List<Voicemail>>.broadcast();
+    // What the person would be shown. The channel is the app's notifications
+    // bloc in the running app; here it is just a list of what was said.
+    said = [];
     when(() => repository.isFeatureSupported).thenReturn(true);
     when(() => repository.watchVoicemails()).thenAnswer((_) => voicemails.stream);
     when(() => repository.fetchVoicemails()).thenAnswer((_) async {});
@@ -41,7 +48,7 @@ void main() {
       repository: repository,
       contactsRepository: _Contacts(),
       onCallStarted: (_) {},
-      onSubmitNotification: (_) {},
+      onSubmitNotification: said.add,
       saveSupported: true,
       trashSupported: true,
       forwardSupported: true,
@@ -116,7 +123,11 @@ void main() {
     });
 
     test('a failure leaves the screen loaded rather than stuck', () async {
-      when(() => repository.updateVoicemailSavedStatus(any(), any())).thenThrow(Exception('refused'));
+      // Refused through the future rather than thrown at the call, because
+      // that is how every repository method here fails: they are all async, so
+      // the error arrives where the cubit awaits it.
+      when(() => repository.updateVoicemailSavedStatus(any(), any()))
+          .thenAnswer((_) async => throw Exception('refused'));
 
       cubit.toggleSavedStatus(_voicemail('1', saved: false));
       await pumpEventQueue();
@@ -167,16 +178,190 @@ void main() {
       verify(() => repository.fetchTrashedVoicemails()).called(1);
     });
 
-    test('a delete the server refused is reported as not done', () async {
-      when(() => repository.removeVoicemail(any())).thenThrow(Exception('refused'));
-
-      expect(await cubit.removeVoicemail('1'), isFalse);
-    });
-
-    test('a delete the server took is reported as done', () async {
+    test('a move to the trash offers the way back', () async {
       when(() => repository.removeVoicemail(any())).thenAnswer((_) async {});
 
-      expect(await cubit.removeVoicemail('1'), isTrue);
+      await cubit.removeVoicemail('1');
+
+      // Said where anything else about the mailbox is said, not by the row -
+      // which by then has left the list along with the message.
+      expect(said, [isA<VoicemailMovedToTrashNotification>()]);
+      (said.single as VoicemailMovedToTrashNotification).onUndo();
+      await pumpEventQueue();
+      verify(() => repository.restoreVoicemail('1')).called(1);
+    });
+
+    test('a delete the server refused offers nothing back', () async {
+      // Offering to undo something that never happened is worse than saying
+      // nothing: the message is still there and the offer says it is not.
+      when(() => repository.removeVoicemail(any())).thenAnswer((_) async => throw Exception('refused'));
+
+      await cubit.removeVoicemail('1');
+
+      expect(said.whereType<VoicemailMovedToTrashNotification>(), isEmpty);
+    });
+
+    test('a message the backend no longer has says so, and the list is re-read', () async {
+      // The one refusal that says something about the state: the list is
+      // behind, so it is read again and the row goes with it.
+      when(() => repository.removeVoicemail(any()))
+          .thenAnswer((_) async => throw VoicemailMessageGoneException(url: Uri(), requestId: 'r', statusCode: 404));
+      clearInteractions(repository);
+
+      await cubit.removeVoicemail('1');
+
+      expect(said, [isA<VoicemailMessageGoneNotification>()]);
+      verify(() => repository.fetchVoicemails()).called(1);
+    });
+
+    test('a server that broke leaves the list exactly as it was', () async {
+      // Nothing is known about what happened on the other side, so nothing
+      // here is guessed at - re-reading would be inventing an answer. The api
+      // names that case, so this is the exception it raises rather than a
+      // status read here.
+      when(() => repository.removeVoicemail(any()))
+          .thenAnswer((_) async => throw ServerFailureException(url: Uri(), requestId: 'r', statusCode: 500));
+      clearInteractions(repository);
+
+      await cubit.removeVoicemail('1');
+
+      // Said out loud, because nothing on screen shows it otherwise - but the
+      // list is left exactly as it was.
+      expect(said, [isA<VoicemailDeleteFailedNotification>()]);
+      verifyNever(() => repository.fetchVoicemails());
+      verifyNever(() => repository.fetchTrashedVoicemails());
+    });
+
+    test('a restore whose re-read fails is still a restore that happened', () async {
+      // The write went through and the read after it did not. Treating that as
+      // a failed restore would tell the person the opposite of what the backend
+      // did, and offer to put back a message that is already back.
+      cubit.setFilter(VoicemailFilter.trash);
+      await pumpEventQueue();
+      when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) async => throw Exception('offline'));
+
+      await cubit.restoreVoicemail('1');
+
+      expect(said, isEmpty);
+      verify(() => repository.restoreVoicemail('1')).called(1);
+    });
+
+    test('a re-read that answers 404 does not make the message gone', () async {
+      // Only a refusal of the action itself says anything about the message.
+      // A read that failed afterwards is about the list.
+      cubit.setFilter(VoicemailFilter.trash);
+      await pumpEventQueue();
+      when(() => repository.fetchTrashedVoicemails())
+          .thenAnswer((_) async => throw VoicemailMessageGoneException(url: Uri(), requestId: 'r', statusCode: 404));
+
+      await cubit.restoreVoicemail('1');
+
+      expect(said, isEmpty);
+    });
+  });
+
+  group('what the person is told about a refusal', () {
+    setUp(() {
+      when(() => repository.restoreVoicemail(any())).thenAnswer((_) async {});
+      when(() => repository.removeMultipleVoicemails(any())).thenAnswer((_) async {});
+      when(() => repository.emptyVoicemailTrash()).thenAnswer((_) async {});
+      when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) async => const []);
+    });
+
+    test('a delete that did not happen is said out loud', () async {
+      // The bug this is all about: the message stayed on screen looking
+      // untouched, and nothing anywhere said the tap had come to nothing.
+      when(() => repository.removeVoicemail(any()))
+          .thenAnswer((_) async => throw ServerFailureException(url: Uri(), requestId: 'r', statusCode: 500));
+
+      await cubit.removeVoicemail('1');
+
+      expect(said, [isA<VoicemailDeleteFailedNotification>()]);
+    });
+
+    test('a message that is already gone has a sentence of its own', () async {
+      // That one explains itself, and the list has already been put right;
+      // saying it twice, in two different wordings, would be worse than once.
+      when(() => repository.removeVoicemail(any()))
+          .thenAnswer((_) async => throw VoicemailMessageGoneException(url: Uri(), requestId: 'r', statusCode: 404));
+
+      await cubit.removeVoicemail('1');
+
+      expect(said, [isA<VoicemailMessageGoneNotification>()]);
+    });
+
+    test('a refused restore says restore, not delete', () async {
+      when(() => repository.restoreVoicemail(any()))
+          .thenAnswer((_) async => throw ServerFailureException(url: Uri(), requestId: 'r', statusCode: 500));
+
+      await cubit.restoreVoicemail('1');
+
+      expect(said, [isA<VoicemailRestoreFailedNotification>()]);
+    });
+
+    test('a refused flag is one sentence for all four of them', () async {
+      when(() => repository.updateVoicemailSavedStatus(any(), any()))
+          .thenAnswer((_) async => throw ServerFailureException(url: Uri(), requestId: 'r', statusCode: 500));
+
+      await cubit.toggleSavedStatus(_voicemail('1', saved: false));
+
+      expect(said, [isA<VoicemailUpdateFailedNotification>()]);
+    });
+
+    test('what the backend answered is kept, so the person can ask why', () async {
+      // The sentence says what did not happen; the reason is a status code and
+      // a word from another system, which means nothing on a snackbar and
+      // everything on a support ticket. So it travels with the notification.
+      final failure = ServerFailureException(url: Uri(), requestId: 'req-42', statusCode: 500);
+      when(() => repository.removeVoicemail(any())).thenAnswer((_) async => throw failure);
+
+      await cubit.removeVoicemail('1');
+
+      expect(said, [isA<VoicemailDeleteFailedNotification>().having((n) => n.failure, 'failure', same(failure))]);
+    });
+
+    test('a refused delete over a selection says how many it was about', () async {
+      when(() => repository.removeMultipleVoicemails(any())).thenAnswer((_) async => throw Exception('refused'));
+      voicemails.add([_voicemail('1'), _voicemail('2')]);
+      await pumpEventQueue();
+      cubit.toggleSelection(_voicemail('1'));
+      cubit.toggleSelection(_voicemail('2'));
+
+      cubit.removeSelectedVoicemails();
+      await pumpEventQueue();
+
+      // The selection is cleared as the list is put right, so the count has to
+      // be held before any of that happens.
+      expect(said, [isA<VoicemailDeleteFailedNotification>().having((n) => n.count, 'count', 2)]);
+    });
+
+    test('a trash that would not empty says so', () async {
+      when(() => repository.emptyVoicemailTrash()).thenAnswer((_) async => throw Exception('refused'));
+
+      await cubit.emptyVoicemailTrash();
+
+      expect(said, [isA<VoicemailEmptyTrashFailedNotification>()]);
+    });
+
+    test('a read that failed with a list still on screen says it is out of date', () async {
+      voicemails.add([_voicemail('1')]);
+      await pumpEventQueue();
+      when(() => repository.fetchVoicemails()).thenAnswer((_) async => throw Exception('offline'));
+
+      await cubit.refresh();
+
+      expect(said, [isA<VoicemailRefreshFailedNotification>()]);
+    });
+
+    test('a read that failed with nothing to show leaves it to the retry view', () async {
+      // The screen puts a retry in place of the list and says it there. A
+      // snackbar on top of it would be the same thing said twice.
+      when(() => repository.fetchVoicemails()).thenAnswer((_) async => throw Exception('offline'));
+
+      await cubit.refresh();
+
+      expect(cubit.state.isLoadedWithError, isTrue);
+      expect(said, isEmpty);
     });
   });
 
@@ -189,7 +374,7 @@ void main() {
       repository: repository,
       contactsRepository: contacts,
       onCallStarted: (_) {},
-      onSubmitNotification: (_) {},
+      onSubmitNotification: said.add,
       saveSupported: true,
       trashSupported: true,
       forwardSupported: true,

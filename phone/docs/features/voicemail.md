@@ -3,7 +3,7 @@
 The mailbox: what the backend recorded for this account, and everything the
 person can do with one message - hear it, keep it, throw it away, call back,
 open the caller's card, pass it to a colleague.
-Last reviewed: 2026-09-17.
+Last reviewed: 2026-09-18.
 
 ## Where it lives
 
@@ -87,6 +87,81 @@ stop the rest, the first refusal is what the caller is told about, and a
 condition that will hold for every message stops the loop rather than being
 asked a hundred times.
 
+## A message that is not where the list has it
+
+The list is drawn from what was true when it was read, and a mailbox moves on:
+deleted from another device or from the IVR, emptied out of the trash, acted on
+twice. Every action over one message can meet that, and each one answers it for
+itself:
+
+| What the backend said | What happens here |
+|---|---|
+| it did what was asked | the state is put where the action left it, and a move to the trash carries the way back |
+| the message is not there any more | the list is read again, the row goes with it, and the person is told why |
+| anything else | nothing here is touched |
+
+Nothing of this is decided on screen. The row that was tapped is usually gone by
+the time there is anything to say - the list has been re-read and the message is
+no longer in it - so the mailbox says it through the app's notifications channel
+(`models/notifications.dart`), which is also where the way back after a move to
+the trash is offered. The list only asks.
+
+The line between the last two is the point. A refusal that names the message
+tells us something about the state and the list can be put right. A server that
+broke tells us nothing - the write did not happen, and what is on the server now
+is exactly as unknown as it was before the call - so re-reading would be
+inventing an answer the backend did not give.
+
+Which refusal is which is not read here at all: the api names it. A
+`message_not_found` from the voicemail endpoints arrives as
+`VoicemailMessageGoneException`, declared as a rule on those endpoints and keyed
+on the code rather than the status - these calls are optional, so a bare 404 is
+how a deployment says it has no such route, and a mailbox that was never
+configured has a name of its own too.
+
+A backend that broke needs no exclusion there: the api names that case itself.
+Any 5xx no rule claimed arrives as `ServerFailureException`, which is a name for
+"nothing follows from this" rather than a status for a feature to read.
+
+## Saying that something did not happen
+
+Every refusal other than `gone` used to be logged, recorded and never
+mentioned: the message stayed on screen exactly as it was, so a tap that came
+to nothing looked like a tap that was never made. They now go to the app's
+notifications bloc through `onSubmitNotification`, which the shell turns into a
+snackbar (`app/router/app_shell.dart`).
+
+| What did not happen | What is said |
+|---|---|
+| a delete, one message or a selection | the message(s) could not be deleted |
+| a restore out of the trash | the message(s) could not be restored |
+| marking read/unread, keeping/unkeeping | the message could not be updated |
+| emptying the trash | the trash could not be emptied |
+| a read that left a list on screen | the list could not be refreshed |
+
+An answer is about the write and nothing else. Some of these actions are
+followed by a read - the trash keeps no stored copy, so it is asked for again -
+and that read is not part of the answer: a restore that happened followed by a
+list that would not load is a restore that happened, and the read says the rest
+in its own words. Reporting it the other way told the person the opposite of
+what the backend did, and offered to put back a message that was already back.
+
+Two deliberate silences. A message the backend no longer has has a sentence of
+its own, said the same way - the list is already right, and saying it twice in
+two wordings is worse than saying it once. And a read that failed with nothing
+to show is answered by the retry view standing in place of the list.
+
+The sentences say what did not happen, not what went wrong: the reason is a
+status code and a word from another system, and putting it in the sentence
+would trade a clear statement for an unreadable one. It is still worth being
+able to ask, so each of them carries what the backend answered behind a
+`Details` action onto the existing error screen (`app/notifications/view/error_details_screen.dart`) with the status, the
+backend's own code and the request id - what a support ticket needs and what
+nobody can recover once the snackbar has gone. Which failure it was is the catch clause rather than a
+test inside it: a `RequestFailure` carries its answer, and a request that never
+arrived carries none and offers no action. Each action says what did
+not happen in its own words, and the sentences are `models/notifications.dart`.
+
 ## The forwarder's name on a tile
 
 A forwarded message arrives with the id of whoever passed it along and nothing
@@ -133,7 +208,8 @@ counting only once somebody opens the screen it sits on is of no use there.
 
 | File | What it pins |
 |---|---|
-| `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup |
+| `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup, and which refusal re-reads the list |
+| `test/features/voicemail/extensions/request_failure_test.dart` | which refusals mean the message is gone, and which only look like it |
 | `test/features/voicemail/voicemail_filter_test.dart` | which filters a deployment offers, and what each one shows |
 | `test/features/voicemail/voicemail_tile_test.dart` | what one row offers, including the actions a capability removes |
 | `test/features/voicemail/view/voicemail_selection_test.dart` | the header over the trash: restore, delete for good, and the count in the dialog |

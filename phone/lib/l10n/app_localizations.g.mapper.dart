@@ -1540,6 +1540,11 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_SemanticsLabel_saved' => voicemail_SemanticsLabel_saved,
       'voicemail_SemanticsLabel_undoMoveToTrash' =>
         voicemail_SemanticsLabel_undoMoveToTrash,
+      'voicemail_Snackbar_updateFailed' => voicemail_Snackbar_updateFailed,
+      'voicemail_Snackbar_emptyTrashFailed' =>
+        voicemail_Snackbar_emptyTrashFailed,
+      'voicemail_Snackbar_refreshFailed' => voicemail_Snackbar_refreshFailed,
+      'voicemail_Snackbar_messageGone' => voicemail_Snackbar_messageGone,
       'voicemail_Snackbar_movedToTrash' => voicemail_Snackbar_movedToTrash,
       'voicemail_Snackbar_forwardFailed' => voicemail_Snackbar_forwardFailed,
       'voicemail_Snackbar_forwardTooLarge' =>
@@ -2234,6 +2239,18 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final String name] => voicemail_SemanticsLabel_forwardTo(name),
         _ => throw ArgumentError(
           'voicemail_SemanticsLabel_forwardTo requires 1 arguments',
+        ),
+      },
+      'voicemail_Snackbar_deleteFailed' => switch (args) {
+        [final int count] => voicemail_Snackbar_deleteFailed(count),
+        _ => throw ArgumentError(
+          'voicemail_Snackbar_deleteFailed requires 1 arguments',
+        ),
+      },
+      'voicemail_Snackbar_restoreFailed' => switch (args) {
+        [final int count] => voicemail_Snackbar_restoreFailed(count),
+        _ => throw ArgumentError(
+          'voicemail_Snackbar_restoreFailed requires 1 arguments',
         ),
       },
       'voicemail_Snackbar_forwardRecipientFull' => switch (args) {
