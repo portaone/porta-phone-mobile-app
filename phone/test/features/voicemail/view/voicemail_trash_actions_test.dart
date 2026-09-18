@@ -61,7 +61,7 @@ void main() {
     when(() => player.positionStream).thenAnswer((_) => Stream.value(Duration.zero));
     when(() => player.duration).thenReturn(const Duration(seconds: 10));
     when(() => cubit.refresh()).thenAnswer((_) async {});
-    when(() => cubit.removeVoicemail(any())).thenAnswer((_) async => true);
+    when(() => cubit.removeVoicemail(any())).thenAnswer((_) async {});
     when(() => cubit.restoreVoicemail(any())).thenAnswer((_) async {});
     when(() => cubit.removeVoicemailPermanently(any())).thenAnswer((_) async {});
 
@@ -122,42 +122,26 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('moving to the trash asks nothing and offers the way back', (tester) async {
+  testWidgets('moving to the trash asks nothing', (tester) async {
+    // A question before every delete trains people to dismiss it, and this one
+    // has nothing to warn about: the message can be had back. What is said
+    // afterwards is the mailbox's, not this row's.
     whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: loaded());
 
     await tester.pumpWidget(host());
     await chooseFromMenu(tester, 'Move to trash');
 
-    // No dialog: a question before every delete trains people to dismiss it,
-    // and this one has nothing to warn about.
     expect(find.text('Delete voicemail?'), findsNothing);
     verify(() => cubit.removeVoicemail('vm-1')).called(1);
-    expect(find.text('Moved to trash'), findsOneWidget);
-    expect(find.text('Undo'), findsOneWidget);
   });
 
-  testWidgets('undoing a move to the trash puts the message back', (tester) async {
-    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: loaded());
+  testWidgets('restoring asks the mailbox to put the message back', (tester) async {
+    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: loaded(filter: VoicemailFilter.trash));
 
     await tester.pumpWidget(host());
-    await chooseFromMenu(tester, 'Move to trash');
-    await tester.tap(find.text('Undo'));
-    await tester.pumpAndSettle();
+    await chooseFromMenu(tester, 'Restore');
 
     verify(() => cubit.restoreVoicemail('vm-1')).called(1);
-  });
-
-  testWidgets('a move the server refused is not offered back', (tester) async {
-    // Offering to undo something that never happened is worse than saying
-    // nothing: the message is still there and the offer says it is not.
-    when(() => cubit.removeVoicemail(any())).thenAnswer((_) async => false);
-    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: loaded());
-
-    await tester.pumpWidget(host());
-    await chooseFromMenu(tester, 'Move to trash');
-
-    expect(find.text('Moved to trash'), findsNothing);
-    expect(find.text('Undo'), findsNothing);
   });
 
   testWidgets('without a trash the delete asks first and then is final', (tester) async {
@@ -177,16 +161,6 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => cubit.removeVoicemail('vm-1')).called(1);
-    expect(find.text('Moved to trash'), findsNothing);
-  });
-
-  testWidgets('restoring from the trash needs no confirmation', (tester) async {
-    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: loaded(filter: VoicemailFilter.trash));
-
-    await tester.pumpWidget(host());
-    await chooseFromMenu(tester, 'Restore');
-
-    verify(() => cubit.restoreVoicemail('vm-1')).called(1);
   });
 
   testWidgets('deleting for good from the trash asks first', (tester) async {
