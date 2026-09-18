@@ -148,6 +148,10 @@ class VoicemailListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<VoicemailCubit>();
     final colorScheme = Theme.of(context).colorScheme;
+    // Built here rather than per row: an answer about one message arrives after
+    // the list has been re-read, and a message that is gone takes its row - and
+    // any context belonging to it - with it.
+    final reporter = VoicemailActionReporter(context.snackBars, context.l10n);
 
     return ListView.separated(
       // A mailbox with a message or two has nothing to scroll, and a list that
@@ -156,7 +160,7 @@ class VoicemailListView extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: items.length,
       separatorBuilder: (_, _) => Divider(color: colorScheme.surfaceContainerHigh, height: 1),
-      itemBuilder: (context, index) {
+      itemBuilder: (_, index) {
         final item = items[index];
         return VoicemailTile(
           voicemail: item,
@@ -168,11 +172,11 @@ class VoicemailListView extends StatelessWidget {
           forwardSupported: forwardSupported,
           inTrash: inTrash,
           forwardedByName: forwarderOf?.call(item),
-          onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
-          onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
+          onToggleSeenStatus: (it) => reporter.report(cubit.toggleSeenStatus(it)),
+          onToggleSavedStatus: (it) => reporter.report(cubit.toggleSavedStatus(it)),
           onForwarded: (it) => _onForwardVoicemail(context, it),
           onOpenContact: (it) => _onOpenContact(context, it),
-          onRestored: (it) => cubit.restoreVoicemail(it.id),
+          onRestored: (it) => reporter.report(cubit.restoreVoicemail(it.id)),
           onDeletedPermanently: (it) => _onDeletePermanently(context, it),
           onCall: (it) => cubit.startCall(it),
           onLongPress: (it) => cubit.toggleSelection(it),
@@ -191,6 +195,9 @@ class VoicemailListView extends StatelessWidget {
   /// first and there is nothing to offer after.
   void _onDeleteVoicemail(BuildContext context, Voicemail voicemail) async {
     final cubit = context.read<VoicemailCubit>();
+    // Built now: a message that is gone takes its row with it, and by the time
+    // there is anything to say the widget that asked has left the tree.
+    final reporter = VoicemailActionReporter(context.snackBars, context.l10n);
 
     if (!trashSupported) {
       final confirmed =
@@ -201,17 +208,15 @@ class VoicemailListView extends StatelessWidget {
           )) ??
           false;
 
-      if (confirmed) cubit.removeVoicemail(voicemail.id);
+      if (!confirmed) return;
+
+      await reporter.report(cubit.removeVoicemail(voicemail.id));
       return;
     }
 
-    final l10n = context.l10n;
-    final moved = await cubit.removeVoicemail(voicemail.id);
-    if (!moved || !context.mounted) return;
-
-    context.showSnackBar(
-      l10n.voicemail_Snackbar_movedToTrash,
-      action: SnackBarAction(label: l10n.voicemail_Label_undo, onPressed: () => cubit.restoreVoicemail(voicemail.id)),
+    await reporter.reportMoveToTrash(
+      cubit.removeVoicemail(voicemail.id),
+      onUndo: () => cubit.restoreVoicemail(voicemail.id),
     );
   }
 
@@ -268,6 +273,7 @@ class VoicemailListView extends StatelessWidget {
 
   void _onDeletePermanently(BuildContext context, Voicemail voicemail) async {
     final cubit = context.read<VoicemailCubit>();
+    final reporter = VoicemailActionReporter(context.snackBars, context.l10n);
 
     final confirmed =
         (await ConfirmDialog.showDangerous(
@@ -277,6 +283,8 @@ class VoicemailListView extends StatelessWidget {
         )) ??
         false;
 
-    if (confirmed) cubit.removeVoicemailPermanently(voicemail.id);
+    if (!confirmed) return;
+
+    await reporter.report(cubit.removeVoicemailPermanently(voicemail.id));
   }
 }
