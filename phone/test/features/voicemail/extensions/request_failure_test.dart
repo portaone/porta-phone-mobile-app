@@ -48,4 +48,48 @@ void main() {
 
     expect(failure.voicemailForwardOutcome, VoicemailForwardOutcome.failed);
   });
+
+  group('a message the backend no longer has', () {
+    // The list is drawn from what was true when it was read: a mailbox can be
+    // emptied from the IVR or from another device between then and the tap.
+    test('is what a 404 over the message means', () {
+      final failure = RequestFailure(url: Uri(), requestId: 'r', statusCode: 404);
+
+      expect(failure.isVoicemailGone, isTrue);
+    });
+
+    test('and a 410 as well', () {
+      final failure = RequestFailure(url: Uri(), requestId: 'r', statusCode: 410);
+
+      expect(failure.isVoicemailGone, isTrue);
+    });
+
+    test('is not what a route this deployment lacks means', () {
+      // The same 404, and the opposite meaning: these calls are declared
+      // optional, so a backend without the route answers this way.
+      final failure = EndpointNotSupportedException(
+        url: Uri(),
+        requestId: 'r',
+        statusCode: 404,
+        recognizedNotSupportedCodes: const [],
+      );
+
+      expect(failure.isVoicemailGone, isFalse);
+    });
+
+    test('is not what an unconfigured mailbox means', () {
+      final failure = VoicemailNotConfiguredException(url: Uri(), requestId: 'r', statusCode: 422);
+
+      expect(failure.isVoicemailGone, isFalse);
+    });
+
+    test('and a server that broke says nothing about the message', () {
+      // The one the adapter answers today when a message has drifted. It is
+      // indistinguishable from any other failure on that side, which is why
+      // nothing here may be concluded from it.
+      final failure = RequestFailure(url: Uri(), requestId: 'r', statusCode: 500);
+
+      expect(failure.isVoicemailGone, isFalse);
+    });
+  });
 }

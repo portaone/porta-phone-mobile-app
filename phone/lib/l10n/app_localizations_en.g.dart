@@ -3256,6 +3256,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicemail_SemanticsLabel_undoMoveToTrash => 'Undo move to trash';
 
   @override
+  String get voicemail_Snackbar_messageGone => 'That message is no longer there';
+
+  @override
   String get voicemail_Snackbar_movedToTrash => 'Moved to trash';
 
   @override

@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:api/api.dart';
+
 import 'package:webtrit_phone/features/voicemail/bloc/voicemail_cubit.dart';
+import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -116,7 +119,11 @@ void main() {
     });
 
     test('a failure leaves the screen loaded rather than stuck', () async {
-      when(() => repository.updateVoicemailSavedStatus(any(), any())).thenThrow(Exception('refused'));
+      // Refused through the future rather than thrown at the call, because
+      // that is how every repository method here fails: they are all async, so
+      // the error arrives where the cubit awaits it.
+      when(() => repository.updateVoicemailSavedStatus(any(), any()))
+          .thenAnswer((_) async => throw Exception('refused'));
 
       cubit.toggleSavedStatus(_voicemail('1', saved: false));
       await pumpEventQueue();
@@ -168,15 +175,42 @@ void main() {
     });
 
     test('a delete the server refused is reported as not done', () async {
-      when(() => repository.removeVoicemail(any())).thenThrow(Exception('refused'));
+      when(() => repository.removeVoicemail(any())).thenAnswer((_) async => throw Exception('refused'));
 
-      expect(await cubit.removeVoicemail('1'), isFalse);
+      expect(await cubit.removeVoicemail('1'), VoicemailActionOutcome.failed);
+    });
+
+    test('a message the backend no longer has is reported as gone and the list is re-read', () async {
+      // The one refusal that says something about the state: the list is
+      // behind, so it is read again and the row goes with it.
+      when(() => repository.removeVoicemail(any()))
+          .thenAnswer((_) async => throw RequestFailure(url: Uri(), requestId: 'r', statusCode: 404));
+      clearInteractions(repository);
+
+      expect(await cubit.removeVoicemail('1'), VoicemailActionOutcome.gone);
+
+      verify(() => repository.fetchVoicemails()).called(1);
+    });
+
+    test('a server that broke leaves the list exactly as it was', () async {
+      // Nothing is known about what happened on the other side, so nothing
+      // here is guessed at - re-reading would be inventing an answer. The api
+      // names that case, so this is the exception it raises rather than a
+      // status read here.
+      when(() => repository.removeVoicemail(any()))
+          .thenAnswer((_) async => throw ServerFailureException(url: Uri(), requestId: 'r', statusCode: 500));
+      clearInteractions(repository);
+
+      expect(await cubit.removeVoicemail('1'), VoicemailActionOutcome.failed);
+
+      verifyNever(() => repository.fetchVoicemails());
+      verifyNever(() => repository.fetchTrashedVoicemails());
     });
 
     test('a delete the server took is reported as done', () async {
       when(() => repository.removeVoicemail(any())).thenAnswer((_) async {});
 
-      expect(await cubit.removeVoicemail('1'), isTrue);
+      expect(await cubit.removeVoicemail('1'), VoicemailActionOutcome.done);
     });
   });
 

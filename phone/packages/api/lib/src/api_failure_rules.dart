@@ -40,21 +40,29 @@ class FailureContext {
 /// are in [defaultFailureRules], and anything true of a single endpoint is
 /// declared by that endpoint through `ResponseOptions.failures`.
 class FailureRule {
-  const FailureRule({this.status, this.code, required this.build});
+  const FailureRule({this.status, this.code, this.when, required this.build});
 
   /// The status this rule answers to; null matches any.
   final int? status;
 
   /// The backend error code this rule answers to; null matches any.
   ///
-  /// A rule with neither a status nor a code matches every failure, which is
-  /// only ever what an endpoint wants, never a default.
+  /// A rule with neither a status, a code nor a [when] matches every failure,
+  /// which is only ever what an endpoint wants, never a default.
   final String? code;
+
+  /// Anything the other two cannot say - a class of statuses rather than one.
+  ///
+  /// Kept to that: a rule is a declaration, and a predicate that reads the body
+  /// or the url would be a branch in the transport wearing a rule's clothes.
+  final bool Function(FailureContext failure)? when;
 
   final RequestFailure Function(FailureContext failure) build;
 
   bool matches(FailureContext failure) =>
-      (status == null || status == failure.statusCode) && (code == null || code == failure.code);
+      (status == null || status == failure.statusCode) &&
+      (code == null || code == failure.code) &&
+      (when == null || when!(failure));
 }
 
 /// The failures that mean the same thing whichever endpoint returned them.
@@ -122,6 +130,21 @@ final List<FailureRule> defaultFailureRules = [
       statusCode: f.statusCode,
       token: f.token,
       error: f.error,
+    ),
+  ),
+
+  // Anything the backend answered for with its own failure. Last in the list on
+  // purpose: a 5xx that some endpoint or code recognises is that answer first,
+  // and only what nobody claimed arrives here.
+  FailureRule(
+    when: (f) => f.statusCode >= 500 && f.statusCode < 600,
+    build: (f) => ServerFailureException(
+      url: f.url,
+      requestId: f.requestId,
+      statusCode: f.statusCode,
+      token: f.token,
+      error: f.error,
+      rawBody: f.rawBody,
     ),
   ),
 ];
