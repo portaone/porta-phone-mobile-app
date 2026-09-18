@@ -5959,6 +5959,36 @@ abstract class AppLocalizations {
   /// **'Undo move to trash'**
   String get voicemail_SemanticsLabel_undoMoveToTrash;
 
+  /// Shown when a delete was refused for a reason that says nothing about the message.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{The message could not be deleted} other{The messages could not be deleted}}'**
+  String voicemail_Snackbar_deleteFailed(int count);
+
+  /// Shown when restoring from the trash was refused.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{The message could not be restored} other{The messages could not be restored}}'**
+  String voicemail_Snackbar_restoreFailed(int count);
+
+  /// Shown when marking a message read or kept was refused.
+  ///
+  /// In en, this message translates to:
+  /// **'The message could not be updated'**
+  String get voicemail_Snackbar_updateFailed;
+
+  /// Shown when emptying the trash was refused.
+  ///
+  /// In en, this message translates to:
+  /// **'The trash could not be emptied'**
+  String get voicemail_Snackbar_emptyTrashFailed;
+
+  /// Shown when a read failed while a list was still on screen and so stayed out of date.
+  ///
+  /// In en, this message translates to:
+  /// **'The list could not be refreshed'**
+  String get voicemail_Snackbar_refreshFailed;
+
   /// Shown when an action over one message finds that the backend no longer has it.
   ///
   /// In en, this message translates to:

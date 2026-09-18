@@ -3238,6 +3238,27 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_SemanticsLabel_undoMoveToTrash => 'เลิกทำการย้ายไปถังขยะ';
 
   @override
+  String voicemail_Snackbar_deleteFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'ไม่สามารถลบข้อความได้');
+    return '$_temp0';
+  }
+
+  @override
+  String voicemail_Snackbar_restoreFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'ไม่สามารถกู้คืนข้อความได้');
+    return '$_temp0';
+  }
+
+  @override
+  String get voicemail_Snackbar_updateFailed => 'ไม่สามารถอัปเดตข้อความได้';
+
+  @override
+  String get voicemail_Snackbar_emptyTrashFailed => 'ไม่สามารถล้างถังขยะได้';
+
+  @override
+  String get voicemail_Snackbar_refreshFailed => 'ไม่สามารถรีเฟรชรายการได้';
+
+  @override
   String get voicemail_Snackbar_messageGone => 'ไม่มีข้อความนี้แล้ว';
 
   @override

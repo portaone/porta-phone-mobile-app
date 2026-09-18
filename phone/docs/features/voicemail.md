@@ -121,7 +121,33 @@ A backend that broke needs no exclusion there: the api names that case itself.
 Any 5xx no rule claimed arrives as `ServerFailureException`, which is a name for
 "nothing follows from this" rather than a status for a feature to read.
 
-Failures other than `gone` are still silent - that is the next change.
+## Saying that something did not happen
+
+Every refusal other than `gone` used to be logged, recorded and never
+mentioned: the message stayed on screen exactly as it was, so a tap that came
+to nothing looked like a tap that was never made. They now go to the app's
+notifications bloc through `onSubmitNotification`, which the shell turns into a
+snackbar (`app/router/app_shell.dart`).
+
+| What did not happen | What is said |
+|---|---|
+| a delete, one message or a selection | the message(s) could not be deleted |
+| a restore out of the trash | the message(s) could not be restored |
+| marking read/unread, keeping/unkeeping | the message could not be updated |
+| emptying the trash | the trash could not be emptied |
+| a read that left a list on screen | the list could not be refreshed |
+
+Two deliberate silences. A message the backend no longer has is answered where
+the row was, by whoever asked - the list is already right, and the same thing
+said twice in two wordings is worse than said once. And a read that failed with
+nothing to show is answered by the retry view standing in place of the list.
+
+The sentences say what did not happen, not what went wrong: the reason belongs
+to the backend and means nothing to the person holding the phone, who needs to
+know the message is still there so they can try again or leave it. Which
+sentence goes with which action is declared on `models/voicemail_action.dart`
+alongside the rest of the per-action configuration; the sentences themselves are
+`models/notifications.dart`.
 
 ## The forwarder's name on a tile
 
