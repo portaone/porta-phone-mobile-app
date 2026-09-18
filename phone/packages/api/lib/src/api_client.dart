@@ -737,12 +737,20 @@ class WebtritApiClient {
   /// Moves a voicemail message to the trash, or deletes it outright when
   /// [permanent] is set.
   ///
-  /// A plain delete always means "to the trash", on every backend that has one,
-  /// and the backend does not gate that on the trash being advertised. A client
-  /// that does not offer the trash controls must therefore pass [permanent], or
-  /// it leaves its user's messages occupying the mailbox for good - space is
-  /// freed only by a permanent delete or by emptying the trash, and nothing
-  /// expires on its own.
+  /// Space is freed only by a permanent delete or by emptying the trash;
+  /// nothing in there expires on its own.
+  ///
+  /// Which way a plain delete goes is the thing the backend changed. It used to
+  /// mean "to the trash" wherever there was one, and is becoming permanent, so
+  /// that a client built before the trash existed goes on deleting rather than
+  /// quietly filling a mailbox nobody empties. A move to the trash therefore
+  /// asks for the trash by name.
+  ///
+  /// A backend that has not made that change yet declares no such parameter and
+  /// refuses the request outright. That refusal is left to be seen rather than
+  /// worked around here: a client quietly speaking two contracts hides which
+  /// one the backend speaks, and the answer to a backend that has not shipped
+  /// the change is a release that waits for it, not a second request.
   Future<void> deleteUserVoicemail(
     String token,
     String messageId, {
@@ -754,7 +762,7 @@ class WebtritApiClient {
       [..._apiBasePathSegmentsV1, 'user', 'voicemails', messageId],
       locale != null ? {'Accept-Language': locale} : null,
       token,
-      queryParameters: permanent ? {'permanent': 'true'} : null,
+      queryParameters: permanent ? {'permanent': 'true'} : {'trash': 'true'},
       requestOptions: options,
       responseOptions: _voicemailEndpoint,
     );
