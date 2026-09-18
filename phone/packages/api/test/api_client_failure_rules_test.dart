@@ -49,11 +49,16 @@ void main() {
     });
 
     test('an unrecognised failure stays a plain RequestFailure', () async {
-      final apiClient = clientAnswering(500, {'code': 'something_else'});
+      // A 4xx nobody claims: the backend answered about this request and no
+      // rule has anything to add. A 5xx is not this case any more - the
+      // backend blamed itself, which is a name of its own.
+      final apiClient = clientAnswering(409, {'code': 'something_else'});
 
       await expectLater(
         apiClient.getUserContactList(token),
-        throwsA(allOf(isA<RequestFailure>(), isNot(isA<UnauthorizedException>()))),
+        throwsA(
+          allOf(isA<RequestFailure>(), isNot(isA<UnauthorizedException>()), isNot(isA<ServerFailureException>())),
+        ),
       );
     });
   });
@@ -120,6 +125,34 @@ void main() {
       final apiClient = clientAnswering(404, null);
 
       await expectLater(apiClient.getUserVoicemailList(token), throwsA(isA<EndpointNotSupportedException>()));
+    });
+  });
+
+  group('a backend that failed on its own side', () {
+    test('is named rather than left as a bare failure', () async {
+      final apiClient = clientAnswering(500, {'code': 'external_api_issue'});
+
+      await expectLater(
+        apiClient.deleteUserVoicemail(token, 'vm-1'),
+        throwsA(isA<ServerFailureException>().having((e) => e.statusCode, 'statusCode', 500)),
+      );
+    });
+
+    test('whatever the shape of the 5xx', () async {
+      final apiClient = clientAnswering(503, null);
+
+      await expectLater(apiClient.deleteUserVoicemail(token, 'vm-1'), throwsA(isA<ServerFailureException>()));
+    });
+
+    test('while a 4xx still answers about the request itself', () async {
+      // The distinction the name is for: this one is an answer about the
+      // message, and a caller may act on it.
+      final apiClient = clientAnswering(404, {'code': 'message_not_found'});
+
+      await expectLater(
+        apiClient.deleteUserVoicemail(token, 'vm-1'),
+        throwsA(isA<RequestFailure>().having((e) => e is ServerFailureException, 'is a server failure', isFalse)),
+      );
     });
   });
 }

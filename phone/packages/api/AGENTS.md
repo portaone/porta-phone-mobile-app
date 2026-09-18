@@ -62,6 +62,7 @@ body, and classification getters: `isClientError` (4xx), `isServerError` (5xx),
 | `IncorrectCredentialsException` | any 401 from `createSession` - the one call made without a session, so the status alone means the credentials were refused (adapters disagree on the code, and the PortaSwitch one sends none) |
 | `UserNotFoundException` | 404 with `user_not_found` (any endpoint); any 404 from `getUserInfo` / `createSessionOtp` |
 | `EndpointNotSupportedException` | methods declared `ResponseOptions(optionalEndpoint: true)` only: 501, or 404 without a backend error code |
+| `ServerFailureException` | any 5xx no earlier rule claimed - the backend blamed itself, so nothing follows about what the request did |
 | `VoicemailNotConfiguredException` | `voicemail_not_configured` |
 | `PasswordChangeRequiredException` | `password_change_required` |
 

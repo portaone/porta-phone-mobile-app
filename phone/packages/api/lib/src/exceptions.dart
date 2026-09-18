@@ -59,6 +59,26 @@ class RequestFailure implements Exception {
   }
 }
 
+/// The backend failed on its own side, and nothing follows from it about what
+/// the request did.
+///
+/// Named rather than left as a bare [RequestFailure] because the difference
+/// matters to a caller: a 4xx is an answer about the thing being asked for and
+/// can be acted on, while this says only that the other side broke. A caller
+/// that was changing something learns nothing about whether it changed, so
+/// guessing at the new state after one of these is inventing an answer the
+/// backend did not give.
+class ServerFailureException extends RequestFailure {
+  ServerFailureException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.token,
+    super.error,
+    super.rawBody,
+  }) : super();
+}
+
 class EndpointNotSupportedException extends RequestFailure {
   EndpointNotSupportedException({
     required super.url,
