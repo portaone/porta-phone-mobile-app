@@ -12,12 +12,11 @@ AppPushToken _$AppPushTokenFromJson(Map<String, dynamic> json) => AppPushToken(
   env: $enumDecodeNullable(_$AppPushTokenEnvEnumMap, json['env']),
 );
 
-Map<String, dynamic> _$AppPushTokenToJson(AppPushToken instance) =>
-    <String, dynamic>{
-      'type': _$AppPushTokenTypeEnumMap[instance.type]!,
-      'value': instance.value,
-      'env': _$AppPushTokenEnvEnumMap[instance.env],
-    };
+Map<String, dynamic> _$AppPushTokenToJson(AppPushToken instance) => <String, dynamic>{
+  'type': _$AppPushTokenTypeEnumMap[instance.type]!,
+  'value': instance.value,
+  'env': _$AppPushTokenEnvEnumMap[instance.env],
+};
 
 const _$AppPushTokenTypeEnumMap = {
   AppPushTokenType.fcm: 'fcm',
@@ -26,7 +25,4 @@ const _$AppPushTokenTypeEnumMap = {
   AppPushTokenType.apkvoip: 'apkvoip',
 };
 
-const _$AppPushTokenEnvEnumMap = {
-  AppPushTokenEnv.dev: 'dev',
-  AppPushTokenEnv.prod: 'prod',
-};
+const _$AppPushTokenEnvEnumMap = {AppPushTokenEnv.dev: 'dev', AppPushTokenEnv.prod: 'prod'};

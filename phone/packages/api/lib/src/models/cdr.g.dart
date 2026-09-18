@@ -11,20 +11,12 @@ CdrRecord _$CdrRecordFromJson(Map<String, dynamic> json) => CdrRecord(
   callee: json['callee'] as String,
   caller: json['caller'] as String,
   connectTime: DateTime.parse(json['connect_time'] as String),
-  direction: $enumDecode(
-    _$CdrDirectionEnumMap,
-    json['direction'],
-    unknownValue: CdrDirection.unrecognized,
-  ),
+  direction: $enumDecode(_$CdrDirectionEnumMap, json['direction'], unknownValue: CdrDirection.unrecognized),
   disconnectReason: json['disconnect_reason'] as String,
   disconnectTime: DateTime.parse(json['disconnect_time'] as String),
   duration: (json['duration'] as num).toInt(),
   recordingId: json['recording_id'],
-  status: $enumDecode(
-    _$CdrStatusEnumMap,
-    json['status'],
-    unknownValue: CdrStatus.unrecognized,
-  ),
+  status: $enumDecode(_$CdrStatusEnumMap, json['status'], unknownValue: CdrStatus.unrecognized),
 );
 
 Map<String, dynamic> _$CdrRecordToJson(CdrRecord instance) => <String, dynamic>{
@@ -58,12 +50,10 @@ const _$CdrStatusEnumMap = {
   CdrStatus.unrecognized: 'unrecognized',
 };
 
-CdrHistoryResponse _$CdrHistoryResponseFromJson(Map<String, dynamic> json) =>
-    CdrHistoryResponse(
-      items: (json['items'] as List<dynamic>)
-          .map((e) => CdrRecord.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+CdrHistoryResponse _$CdrHistoryResponseFromJson(Map<String, dynamic> json) => CdrHistoryResponse(
+  items: (json['items'] as List<dynamic>).map((e) => CdrRecord.fromJson(e as Map<String, dynamic>)).toList(),
+);
 
-Map<String, dynamic> _$CdrHistoryResponseToJson(CdrHistoryResponse instance) =>
-    <String, dynamic>{'items': instance.items.map((e) => e.toJson()).toList()};
+Map<String, dynamic> _$CdrHistoryResponseToJson(CdrHistoryResponse instance) => <String, dynamic>{
+  'items': instance.items.map((e) => e.toJson()).toList(),
+};

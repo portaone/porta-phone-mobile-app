@@ -39,7 +39,6 @@ class RequestFailure implements Exception {
 
   /// The backend-produced error code from the response body, if any.
   String? get errorCode => error?.code;
-
   @override
   String toString() {
     final buffer = StringBuffer()
