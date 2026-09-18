@@ -198,6 +198,13 @@ sealed class _CallSignalingEvent extends CallEvent {
   const factory _CallSignalingEvent.peerMediaState({required int? line, required String callId, required bool video}) =
       _CallSignalingEventPeerMediaState;
 
+  /// What the other party of this call says about a room-wide mute of it.
+  const factory _CallSignalingEvent.peerConferenceMute({
+    required int? line,
+    required String callId,
+    required bool muted,
+  }) = _CallSignalingEventPeerConferenceMute;
+
   const factory _CallSignalingEvent.updating({required int? line, required String callId}) =
       _CallSignalingEventUpdating;
 
@@ -394,6 +401,15 @@ class _CallSignalingEventPeerMediaState extends _CallSignalingEvent {
 
   @override
   List<Object?> get props => [line, callId, video];
+}
+
+class _CallSignalingEventPeerConferenceMute extends _CallSignalingEvent {
+  const _CallSignalingEventPeerConferenceMute({required this.line, required this.callId, required this.muted});
+  final int? line;
+  final String callId;
+  final bool muted;
+  @override
+  List<Object?> get props => [line, callId, muted];
 }
 
 class _CallSignalingEventCallUpdating extends _CallSignalingEvent {

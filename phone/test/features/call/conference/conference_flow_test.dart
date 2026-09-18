@@ -18,7 +18,9 @@ const _candidate = {'candidate': 'candidate:1 1 udp 1 10.0.0.1 5000 typ host', '
 ConferenceParticipant _participant(String callId, int line, {bool muted = false}) =>
     ConferenceParticipant(line: line, callId: callId, muted: muted);
 
-CallBlocHarness _harness() => CallBlocHarness(capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true));
+CallBlocHarness _harness({bool peerMessages = false}) => CallBlocHarness(
+  capabilities: CallCapabilitiesConfig(isConferenceEnabled: true, isPeerMessageEnabled: peerMessages),
+);
 
 Future<void> _merge(CallBlocHarness h, List<String> callIds) async {
   h.bloc.add(CallControlEvent.merged(callIds));
@@ -978,6 +980,80 @@ void main() {
     await _settle(h, () => false);
 
     expect(h.bloc.state.conference.phase, ConferencePhase.assembling, reason: 'room 7 is not this room');
+  });
+
+  test('a participant is told when the room mutes them, and when it stops', () async {
+    // The server tells a muted participant nothing, so their own client
+    // would show a live microphone while nobody hears them.
+    final h = _harness(peerMessages: true);
+    addTearDown(h.close);
+    h.seedEstablishedCall('a', line: 0);
+    h.seedEstablishedCall('b', line: 1);
+    await _merge(h, ['a', 'b']);
+    await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+
+    h.signaling.emit(
+      ConferenceUpdatedEvent(room: 7, participants: [_participant('a', 0, muted: true), _participant('b', 1)]),
+    );
+    await pumpEventQueue();
+
+    final told = h.signaling.requests.whereType<ConferenceMutePeerMessageRequest>().toList();
+    expect(told.single.callId, 'a');
+    expect(told.single.muted, isTrue);
+    expect(told.single.line, 0, reason: 'the server names a leg by line');
+
+    h.signaling.emit(ConferenceUpdatedEvent(room: 7, participants: [_participant('a', 0), _participant('b', 1)]));
+    await pumpEventQueue();
+
+    final again = h.signaling.requests.whereType<ConferenceMutePeerMessageRequest>().toList();
+    expect(again.length, 2, reason: 'only the change is sent, not the whole list each time');
+    expect(again.last.muted, isFalse);
+  });
+
+  test('a room that ends mutes nobody, and says so', () async {
+    final h = _harness(peerMessages: true);
+    addTearDown(h.close);
+    h.seedEstablishedCall('a', line: 0);
+    h.seedEstablishedCall('b', line: 1);
+    await _merge(h, ['a', 'b']);
+    await _offerRoom(h, 7, [_participant('a', 0, muted: true), _participant('b', 1)]);
+    expect(h.signaling.requests.whereType<ConferenceMutePeerMessageRequest>().single.muted, isTrue);
+
+    h.signaling.emit(const ConferenceTerminatedEvent(room: 7));
+    await _settle(h, () => !h.bloc.state.conference.isPresent);
+
+    final told = h.signaling.requests.whereType<ConferenceMutePeerMessageRequest>().toList();
+    expect(told.last.callId, 'a');
+    expect(told.last.muted, isFalse);
+  });
+
+  test('a core that does not take peer messages is told nothing', () async {
+    // An older core closes the signaling socket with 4600 on a request it
+    // does not know: the hint is not worth the session the room is in.
+    final h = _harness();
+    addTearDown(h.close);
+    h.seedEstablishedCall('a', line: 0);
+    h.seedEstablishedCall('b', line: 1);
+    await _merge(h, ['a', 'b']);
+    await _offerRoom(h, 7, [_participant('a', 0, muted: true), _participant('b', 1)]);
+
+    expect(h.signaling.requests.whereType<ConferenceMutePeerMessageRequest>(), isEmpty);
+  });
+
+  test('what the other side says about a mute is recorded on that call alone', () async {
+    // The receiving side has no room of its own to check this against: it is
+    // a claim about this call, kept as one.
+    final h = _harness();
+    addTearDown(h.close);
+    h.seedEstablishedCall('a', line: 0);
+    h.seedEstablishedCall('b', line: 1);
+
+    h.signaling.emit(const ConferenceMutePeerMessageEvent(line: 0, callId: 'a', muted: true));
+    await pumpEventQueue();
+
+    expect(h.bloc.state.retrieveActiveCall('a')!.peerReportedConferenceMute, isTrue);
+    expect(h.bloc.state.retrieveActiveCall('b')!.peerReportedConferenceMute, isNull);
+    expect(h.bloc.state.conference, const ConferenceState(), reason: 'no room is invented from a claim');
   });
 
   test('closing the bloc with a room up returns the microphone', () async {

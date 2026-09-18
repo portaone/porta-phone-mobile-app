@@ -431,6 +431,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_description_held => 'На утриманні';
 
   @override
+  String get call_description_peerReportsMuted => 'Співрозмовник повідомив, що вас заглушено';
+
+  @override
   String get call_description_incoming => 'Вхідний дзвінок';
 
   @override

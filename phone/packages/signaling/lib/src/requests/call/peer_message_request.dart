@@ -18,6 +18,7 @@ sealed class PeerMessageRequest extends CallRequest {
 
     return switch (json['type']) {
       MediaStatePeerMessageRequest.messageType => MediaStatePeerMessageRequest.fromJson(json),
+      ConferenceMutePeerMessageRequest.messageType => ConferenceMutePeerMessageRequest.fromJson(json),
       final other => throw ArgumentError.value(other, 'type', 'Unknown peer_message type'),
     };
   }
@@ -57,6 +58,51 @@ final class MediaStatePeerMessageRequest extends PeerMessageRequest {
       'call_id': callId,
       'type': messageType,
       'data': {'video': video},
+    };
+  }
+}
+
+/// Tells the other party of this call that the host has muted them for the
+/// whole room, or lifted it (`data: {muted: bool}`).
+///
+/// The server tells a muted participant nothing - every conference message is
+/// addressed to the host's session - and their own client has no room state
+/// to read. This is the host saying so over the one channel the two of them
+/// share; see [ConferenceMutePeerMessageEvent] for why the receiving side
+/// treats it as a claim about this call rather than as its own state.
+final class ConferenceMutePeerMessageRequest extends PeerMessageRequest {
+  const ConferenceMutePeerMessageRequest({
+    required super.transaction,
+    required super.line,
+    required super.callId,
+    required this.muted,
+  });
+
+  static const messageType = 'conference_mute_state';
+
+  final bool muted;
+
+  @override
+  List<Object?> get props => [...super.props, muted];
+
+  factory ConferenceMutePeerMessageRequest.fromJson(Map<String, dynamic> json) {
+    return ConferenceMutePeerMessageRequest(
+      transaction: json['transaction'],
+      line: json['line'],
+      callId: json['call_id'],
+      muted: json['data']['muted'],
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      Request.typeKey: PeerMessageRequest.typeValue,
+      'transaction': transaction,
+      'line': line,
+      'call_id': callId,
+      'type': messageType,
+      'data': {'muted': muted},
     };
   }
 }

@@ -1008,6 +1008,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallSignalingEventCallUpdating() => __onCallSignalingEventCallUpdating(event, emit),
       _CallSignalingEventUpdated() => __onCallSignalingEventUpdated(event, emit),
       _CallSignalingEventPeerMediaState() => __onCallSignalingEventPeerMediaState(event, emit),
+      _CallSignalingEventPeerConferenceMute() => __onCallSignalingEventPeerConferenceMute(event, emit),
       _CallSignalingEventTransfer() => __onCallSignalingEventTransfer(event, emit),
       _CallSignalingEventTransferring() => __onCallSignalingEventTransfering(event, emit),
       _CallSignalingEventTransferAccepted() => __onCallSignalingEventTransferAccepted(event, emit),
@@ -1277,6 +1278,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// the camera off while this incoming call is still ringing). Carries no
   /// SDP, so no renegotiation is involved - only the video flag and the
   /// native call UI are updated.
+  /// The other party of this call says the host has muted it for the room,
+  /// or lifted that. Recorded on the call and shown; nothing else follows
+  /// from it - see [ActiveCall.peerReportedConferenceMute] for why it is a
+  /// claim rather than this client's own state.
+  Future<void> __onCallSignalingEventPeerConferenceMute(
+    _CallSignalingEventPeerConferenceMute event,
+    Emitter<CallState> emit,
+  ) async {
+    if (state.retrieveActiveCall(event.callId) == null) return;
+    emit(
+      state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(peerReportedConferenceMute: event.muted)),
+    );
+  }
+
   Future<void> __onCallSignalingEventPeerMediaState(
     _CallSignalingEventPeerMediaState event,
     Emitter<CallState> emit,
@@ -4384,6 +4399,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       switch (event) {
         case MediaStatePeerMessageEvent e:
           add(_CallSignalingEvent.peerMediaState(line: e.line, callId: e.callId, video: e.video));
+        case ConferenceMutePeerMessageEvent e:
+          add(_CallSignalingEvent.peerConferenceMute(line: e.line, callId: e.callId, muted: e.muted));
         case UnknownPeerMessageEvent e:
           _logger.info('[SIG] PeerMessageEvent: ignoring unknown type "${e.type}"');
       }
@@ -5074,6 +5091,19 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // server counts it in the mix, so its own connection must go quiet -
     // membership and where its audio actually goes cannot disagree.
     final adopted = legs.keys.where((callId) => !state.conference.legs.containsKey(callId)).toList();
+    // What each leg is to be told about its own mute, and only where that
+    // changed: this list is re-declared on every update and on every
+    // handshake, and repeating an unchanged mute to every participant each
+    // time would be chatter.
+    final muteChanges = {
+      for (final participant in participants)
+        if (participant.muted != state.conference.participantMuted(participant.callId) ||
+            !state.conference.isReady(participant.callId) && participant.muted)
+          participant.callId: participant.muted,
+      // A leg that is no longer in the room is no longer muted by it.
+      for (final callId in vanished)
+        if (state.conference.participantMuted(callId)) callId: false,
+    };
     emit(
       state
           .copyWithMappedActiveCalls((call) => unheld.contains(call.callId) ? call.copyWith(held: false) : call)
@@ -5082,6 +5112,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           ),
     );
     await _quietLegs(adopted);
+    _tellLegsTheirRoomMute(muteChanges);
     // Told to the OS here, ahead of the grouping that follows: the plugin
     // refuses a hold change on a member of a group.
     for (final callId in unheld) {
@@ -5090,6 +5121,39 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
     for (final callId in vanished) {
       if (await _restoreLegAudio(callId)) add(CallControlEvent.setHeld(callId, true));
+    }
+  }
+
+  /// Tells each leg whether the host has muted it for the room, when that
+  /// changes.
+  ///
+  /// The server says nothing to a muted participant - every conference
+  /// message goes to the host's session - so their client would show a live
+  /// microphone while nobody hears them. This is the host saying so over the
+  /// one channel the two of them share. Best effort by nature: it is not
+  /// replayed, and a participant that was away for it learns nothing, which
+  /// is why the authority stays with the server's list here.
+  void _tellLegsTheirRoomMute(Map<String, bool> mutedByCallId) {
+    // An older core closes the signaling socket with 4600 on a request it
+    // does not know, so a hint nobody can carry must not be attempted: it
+    // would cost the session the room is in.
+    if (!capabilities.isPeerMessageEnabled) return;
+    for (final entry in mutedByCallId.entries) {
+      final line = state.conference.legs[entry.key] ?? state.retrieveActiveCall(entry.key)?.line;
+      if (line == null) continue;
+      // Sent, not waited on, and each is independent: this is a hint, and
+      // holding the queue on a round trip per participant would delay the
+      // room's own work behind it.
+      _signalingModule
+          .execute(
+            ConferenceMutePeerMessageRequest(
+              transaction: WebtritSignalingClient.generateTransactionId(),
+              line: line,
+              callId: entry.key,
+              muted: entry.value,
+            ),
+          )
+          ?.catchError((Object e) => _logger.info('_tellLegsTheirRoomMute: $e'));
     }
   }
 
@@ -5142,6 +5206,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _legMutes.forgetAll();
     final legIds = state.conference.legIds.toList();
     final focused = state.focusedCall?.callId;
+    // A room that is over mutes nobody: told before the state is cleared,
+    // while the list that says who was muted is still here.
+    final wereMuted = {
+      for (final callId in legIds)
+        if (state.conference.participantMuted(callId)) callId: false,
+    };
     // Not waited on: the mixer's connection serialises its own work, so a
     // teardown asked for while it is still opening runs after that and
     // closes it - but waiting here would hold the queue for exactly as long
@@ -5152,6 +5222,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       final error = await callkeep.unsetCallGroup(legIds);
       if (error != null) _logger.warning('_leaveRoom: unsetCallGroup error: $error');
     }
+    _tellLegsTheirRoomMute(wereMuted);
     emit(state.copyWith(conference: const ConferenceState()));
     if (!restoreLegs) return const [];
     final restored = <String>[];
