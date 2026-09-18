@@ -177,8 +177,10 @@ Grouping is presentation: it tells Telecom or CallKit that several calls belong 
 Nothing about the calls changes, so a backend that cannot group them answers
 `callGroupingNotSupported` and the calls carry on. Every supported backend groups calls today
 (the desktop packages are not supported platforms and keep the base stubs): the
-Android standalone one keeps the membership itself, Telecom gets an `android.telecom.Conference`,
-CallKit a `CXSetGroupCallAction`, and web keeps the membership without any presentation. The
+Android backends keep the membership themselves - Telecom is deliberately not told, because a
+`Conference` from a self-managed application is filed as a managed call and the platform dialer
+then draws the group - CallKit gets a `CXSetGroupCallAction`, and web keeps the membership
+without any presentation. The
 rules are the same everywhere:
 
 - every backend holds one group at a time, and `setCallGroup` states its whole membership: a

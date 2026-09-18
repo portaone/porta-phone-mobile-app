@@ -159,12 +159,20 @@ class PhoneConnectionService : ConnectionService() {
     }
 
     /**
-     * Builds or takes apart a Telecom [android.telecom.Conference] for [callIds].
+     * Declares or withdraws the membership [callIds] have in the one group this backend keeps.
      *
-     * Telecom treats two connections of one application as rivals and holds one when the other
-     * becomes active. A conference is the sanctioned way to say they are one thing. The calls
-     * themselves are untouched - this changes what the framework, the shade and a headset think
-     * they are looking at, nothing else.
+     * Telecom is not told. A [android.telecom.Conference] would be the sanctioned way to say that
+     * several connections are one thing, and it cannot be used here: Telecom masks
+     * [Connection.PROPERTY_SELF_MANAGED] off any call it did not itself mark self-managed, and it
+     * marks connections only - `CallsManager.createConferenceCall` never does - so a conference
+     * built by this application arrives as an ordinary managed call, the default dialer is bound
+     * to it, and the platform in-call screen draws the group. Its hang-up button then ends every
+     * leg of a room from a screen the application does not own.
+     *
+     * What the conference bought is kept without it. Telecom holds one call to make another
+     * active whether or not they are grouped; what the group changes is that the hold is answered
+     * and goes no further, which is [PhoneConnection.isGrouped] and nothing else. The calls
+     * themselves are untouched either way - a room's audio was never mixed on the device.
      *
      * A group needs two calls, so a membership smaller than that takes the group apart instead,
      * which is the same rule the standalone backend applies.
@@ -173,81 +181,23 @@ class PhoneConnectionService : ConnectionService() {
         action: ServiceAction,
         callIds: List<String>,
     ) {
-        val connections = callIds.mapNotNull { connectionManager.getConnection(it) }
-        Log.i(TAG, "handleCallGroup: action=$action requested=$callIds resolved=${connections.size}")
-        // There is one group at a time, so the conference that stands is found among every
-        // connection, not only the listed ones: a membership naming none of its members still
-        // means it is over.
-        val current = connectionManager.getConnections().firstNotNullOfOrNull { it.conference as? PhoneConference }
+        val named = callIds.mapNotNull { connectionManager.getConnection(it) }.map { it.callId }
+        Log.i(TAG, "handleCallGroup: action=$action requested=$callIds resolved=${named.size}")
+        // There is one group at a time, so it is read off every connection, not only the listed
+        // ones: a membership naming none of its members still means it is over.
+        val current = currentCallGroup()
+        val next =
+            when {
+                action == ServiceAction.UnsetCallGroup -> current - callIds.toSet()
 
-        if (action == ServiceAction.SetCallGroup && connections.size < 2) {
-            if (callIds.isEmpty()) return
-            // One call named as the whole membership: the group is over for everyone in it.
-            current?.let {
-                Log.i(TAG, "handleCallGroup: a membership of one, taking the group apart")
-                it.dissolve()
-            }
-            return
-        }
+                // An empty list names no group at all and changes nothing, so a caller that
+                // computes the membership and comes up empty cannot take a group apart by
+                // accident.
+                callIds.isEmpty() -> current
 
-        if (action == ServiceAction.UnsetCallGroup) {
-            val touched = mutableSetOf<PhoneConference>()
-            connections.forEach { connection ->
-                (connection.conference as? PhoneConference)?.let { conference ->
-                    Log.i(TAG, "handleCallGroup: removing ${connection.callId} from its group")
-                    conference.removeConnection(connection)
-                    touched += conference
-                }
+                else -> named.toSet()
             }
-            touched.forEach { it.dissolveIfLonely() }
-            // While grouped, a hold from Telecom's sequencing was answered without telling the
-            // application, so a removed call can be held for Telecom and active for the
-            // application. Making it active again lets the sequencer hold whichever call it must,
-            // and that hold now reaches the application like any other.
-            connections.filter { it.state == Connection.STATE_HOLDING }.forEach {
-                Log.i(TAG, "handleCallGroup: ${it.callId} was held as a child, making it active")
-                it.setActive()
-            }
-            return
-        }
-
-        val existing = current
-        if (existing != null) {
-            Log.i(TAG, "handleCallGroup: restating the existing group")
-            // The list is the whole membership: a child left off it leaves the group, and a call
-            // that was held as a child is made active on the way out (see the unset path above).
-            existing.connections.filterIsInstance<PhoneConnection>().filter { it !in connections }.forEach {
-                Log.i(TAG, "handleCallGroup: ${it.callId} was left off the membership, removing")
-                existing.removeConnection(it)
-                if (it.state == Connection.STATE_HOLDING) it.setActive()
-            }
-            connections.filter { it.conference == null }.forEach {
-                existing.addConnection(it)
-                it.setActive()
-            }
-            if (existing.dissolveIfLonely()) return
-            // Telecom held the group when the application started the call that is joining it
-            // now. The group is speaking again, so it is active again.
-            if (existing.state == Connection.STATE_HOLDING) {
-                Log.i(TAG, "handleCallGroup: the group was held, making it active")
-                existing.setActive()
-            }
-            return
-        }
-
-        val conference = PhoneConference(TelephonyUtils(applicationContext).getPhoneAccountHandle())
-        connections.forEach { conference.addConnection(it) }
-        addConference(conference)
-        // Every member of a group is speaking, so every child is active. Telephony conferences
-        // work this way because the radio reports all legs active; here the states are ours to
-        // set, and leaving a child held would mean a participant nobody can hear. Done after
-        // addConference so Telecom already knows they belong to one thing when they go active.
-        connections.forEach { it.setActive() }
-        Log.i(
-            TAG,
-            "handleCallGroup: addConference returned, children=${conference.connections.size} " +
-                "state=${conference.state}",
-        )
+        applyCallGroup(next)
     }
 
     /**
@@ -659,6 +609,60 @@ class PhoneConnectionService : ConnectionService() {
             }
 
         var connectionManager: ConnectionManager = ConnectionManager()
+
+        /** The calls that stand as the one group, read off the connections that carry it. */
+        fun currentCallGroup(): Set<String> =
+            connectionManager
+                .getConnections()
+                .filter { it.isGrouped }
+                .map { it.callId }
+                .toSet()
+
+        /**
+         * Makes [members] the group, and everything else not the group.
+         *
+         * One call is not a group, so a membership that would leave one behind leaves nobody in
+         * it.
+         *
+         * Nothing else is touched. Telecom's own idea of which call is active is left exactly as
+         * it stands, because taking a held call off hold while another is active is not a swap
+         * here - it ends the call. `CallsManager.holdActiveCallForNewCall` first asks whether the
+         * active call can be held, and a self-managed connection of ours advertises
+         * CAPABILITY_SUPPORT_HOLD without CAPABILITY_HOLD, so it cannot; the same-source branch
+         * then disconnects the held call of this account outright ("Disconnect held call %s
+         * before holding active call %s") - measured, a leg of a room gone 20 ms after
+         * `setActive()`. Membership does not need it either way: a held member carries the room
+         * like any other, because the room is mixed off the device.
+         *
+         * A call on the way out is left held as well, even though the application believes it is
+         * speaking. Asking "is anything else active" first is not enough: a call whose connection
+         * has reached DISCONNECTED is still ACTIVE for Telecom for a few more milliseconds, and
+         * that window is exactly when the last member leaves a room - measured, the survivor was
+         * disconnected 12 ms after being made active. The disagreement is Telecom's bookkeeping
+         * only; who is held is the application's to publish, and it publishes it when the room
+         * ends.
+         */
+        fun applyCallGroup(members: Set<String>) {
+            val settled = if (members.size < 2) emptySet() else members
+            connectionManager.getConnections().forEach { connection ->
+                val belongs = connection.callId in settled
+                if (connection.isGrouped == belongs) return@forEach
+                Log.i(TAG, "applyCallGroup: ${connection.callId} ${if (belongs) "joins" else "leaves"} the group")
+                connection.isGrouped = belongs
+            }
+        }
+
+        /**
+         * Takes [connection] out of the group, taking the group apart if one call is left in it.
+         *
+         * The flag is cleared on the connection itself rather than through [applyCallGroup],
+         * because the one caller is a connection that has just reached DISCONNECTED and a
+         * disconnected connection is no longer among [ConnectionManager.getConnections].
+         */
+        fun releaseFromCallGroup(connection: PhoneConnection) {
+            connection.isGrouped = false
+            applyCallGroup(currentCallGroup())
+        }
 
         fun startAnswerCall(
             context: Context,

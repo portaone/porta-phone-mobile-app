@@ -77,8 +77,8 @@ Called by Telecom when the call ends (hang-up from either side).
 Telecom-driven hook fired on every connection state transition.
 
 - Maps the raw Telecom `state` int via `CallConnectionState.fromTelecomState(state)`.
-- On `STATE_DISCONNECTED`, a child leaves its `PhoneConference`, which ends itself once fewer
-  than two calls remain.
+- On `STATE_DISCONNECTED`, a member leaves its call group, which is taken apart once fewer than
+  two calls remain in it.
 - For live states (RINGING/DIALING/ACTIVE/HOLDING) dispatches `ConnectionStateChanged`,
   carrying the state in `CallMetadata.connectionState` so the main process MIRRORS it into the
   shadow state rather than inferring a fixed state per event type.
@@ -87,8 +87,8 @@ Telecom-driven hook fired on every connection state transition.
 
 ### `onCallEndpointChanged(endpoint)` (API 34+) / legacy audio device change
 
-While the connection is a child of a `PhoneConference`, Telecom sends these callbacks to the
-conference; it forwards them to every child, so the application still hears them per call.
+Telecom addresses these to the foreground call. Grouped calls are ordinary connections to it -
+there is no conference object to address instead - so each one hears them under its own call id.
 
 - Dispatches `AudioDeviceSet` broadcast with the new endpoint.
 - Dispatches `AudioDevicesUpdate` broadcast with full device list.
