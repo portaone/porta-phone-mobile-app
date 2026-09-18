@@ -1,8 +1,4 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-
-import 'package:clock/clock.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
@@ -74,19 +70,7 @@ class ConferencePanel extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  context.l10n.call_ConferencePanel_header(legs.length).toUpperCase(),
-                  style: statusStyle.copyWith(fontSize: 11, letterSpacing: 1.2),
-                ),
-              ),
-            ],
-          ),
-        ),
+        CallRowHeader(label: context.l10n.call_ConferencePanel_header(legs.length), style: style),
         CallRowFrame(
           name: context.l10n.call_ConferencePanel_you,
           status: context.l10n.call_ConferencePanel_hostStatus,
@@ -131,7 +115,7 @@ class ConferencePanel extends StatelessWidget {
 
 /// One participant of the room: who they are, how long their call has been
 /// up, the room-wide mute and the way to drop them.
-class _ParticipantRow extends StatefulWidget {
+class _ParticipantRow extends StatelessWidget {
   const _ParticipantRow({
     super.key,
     required this.index,
@@ -162,51 +146,19 @@ class _ParticipantRow extends StatefulWidget {
   final CallListStyle? listStyle;
   final ButtonStyle? hangupStyle;
 
-  @override
-  State<_ParticipantRow> createState() => _ParticipantRowState();
-}
-
-class _ParticipantRowState extends State<_ParticipantRow> {
-  Timer? _ticker;
-
-  @override
-  void initState() {
-    super.initState();
-    _syncTicker();
-  }
-
-  @override
-  void didUpdateWidget(covariant _ParticipantRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _syncTicker();
-  }
-
-  /// Ticks only while there is a duration to tick; a leg the server lists but
-  /// this client has no call for shows none.
-  void _syncTicker() {
-    final wanted = widget.call?.acceptedTime != null;
-    if (wanted && _ticker == null) {
-      _ticker = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
-    } else if (!wanted) {
-      _ticker?.cancel();
-      _ticker = null;
-    }
-  }
-
-  @override
-  void dispose() {
-    _ticker?.cancel();
-    super.dispose();
+  Widget? _leading() {
+    final call = this.call;
+    return call == null ? null : CallRowAvatar(call: call, contactResolver: contactResolver);
   }
 
   @override
   Widget build(BuildContext context) {
-    final call = widget.call;
-    final statusStyle = widget.style?.callStatus ?? const TextStyle();
+    final call = this.call;
+    final statusStyle = style?.callStatus ?? const TextStyle();
     final acceptedTime = call?.acceptedTime;
 
-    final name = call?.displayName ?? call?.handle.value ?? widget.callId;
-    final status = widget.muted
+    final name = call?.displayName ?? call?.handle.value ?? callId;
+    final status = muted
         ? context.l10n.call_ConferencePanel_participantMuted
         : context.l10n.call_ConferencePanel_participantStatus;
 
@@ -215,31 +167,32 @@ class _ParticipantRowState extends State<_ParticipantRow> {
       // The picture of whoever this leg is with, the same as a roster row -
       // a leg of a room is still a call with somebody. No state badge: the
       // row says in words whether they are muted for everyone.
-      leading: call == null ? null : CallRowAvatar(call: call, contactResolver: widget.contactResolver),
+      leading: _leading(),
       // The duration stands with the status rather than beside the controls:
       // past an hour it grows to HH:MM:SS, and on a narrow screen at a large
       // text scale a trailing group of that width has nowhere to go.
-      status: acceptedTime == null ? status : '$status  ${clock.now().difference(acceptedTime).format()}',
-      style: widget.style,
-      listStyle: widget.listStyle,
+      statusBuilder: (context, elapsed) => elapsed == null ? status : '$status  ${elapsed.format()}',
+      since: acceptedTime,
+      style: style,
+      listStyle: listStyle,
       trailing: [
         _MuteToggle(
-          muted: widget.muted,
-          identifier: numberedId(conferenceParticipantMuteId, widget.index),
+          muted: muted,
+          identifier: numberedId(conferenceParticipantMuteId, index),
           // Named, not "this participant": four rows of identical
           // destructive controls say nothing about which one they act on
           // (docs/accessibility.md, naming a control that is one of many).
-          label: widget.muted
+          label: muted
               ? context.l10n.call_SemanticsLabel_conferenceParticipantUnmute(name)
               : context.l10n.call_SemanticsLabel_conferenceParticipantMute(name),
-          onPressed: widget.ready ? () => widget.onMutedChanged(!widget.muted) : null,
+          onPressed: ready ? () => onMutedChanged(!muted) : null,
           style: statusStyle,
         ),
         CallActionButton(
           label: context.l10n.call_SemanticsLabel_conferenceParticipantHangup(name),
-          identifier: numberedId(conferenceParticipantHangupId, widget.index),
-          onPressed: widget.onHangup,
-          style: (widget.hangupStyle ?? _fallbackHangupStyle(context)).copyWith(
+          identifier: numberedId(conferenceParticipantHangupId, index),
+          onPressed: onHangup,
+          style: (hangupStyle ?? _fallbackHangupStyle(context)).copyWith(
             minimumSize: const WidgetStatePropertyAll(Size(40, 40)),
             padding: const WidgetStatePropertyAll(EdgeInsets.zero),
           ),

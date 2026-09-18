@@ -1,11 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
-import 'package:clock/clock.dart';
-
 import 'package:webtrit_phone/app/keys.dart';
-import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -14,6 +9,7 @@ import '../models/models.dart';
 import '../view/call_screen_style.dart';
 import '../utils/contact_resolver.dart';
 import 'call_list_action.dart';
+import 'call_duration.dart';
 import 'call_row_frame.dart';
 
 /// The list-of-calls roster for the call screen.
@@ -64,20 +60,7 @@ class CallList extends StatelessWidget {
         // of calls: one call is not a set to choose from and not a set to
         // merge. A list that says what it is carries its header either way.
         if (header != null || calls.length > 1)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    (header ?? context.l10n.call_CallList_header(calls.length)).toUpperCase(),
-                    style: (style?.callStatus ?? const TextStyle()).copyWith(fontSize: 11, letterSpacing: 1.2),
-                  ),
-                ),
-                if (action case final action?) CallListActionButton(action: action, style: style),
-              ],
-            ),
-          ),
+          CallRowHeader(label: header ?? context.l10n.call_CallList_header(calls.length), action: action, style: style),
         // Each row is one control: the badge, the name and the duration are
         // its content, and the id is numbered because there are several of
         // them and a call id is not something a test can know in advance.
@@ -101,7 +84,7 @@ class CallList extends StatelessWidget {
 
 /// One call in the [CallList]: status badge, name/number and a live duration
 /// for answered calls (or the call direction while it is still ringing).
-class CallRow extends StatefulWidget {
+class CallRow extends StatelessWidget {
   const CallRow({
     super.key,
     required this.call,
@@ -119,61 +102,16 @@ class CallRow extends StatefulWidget {
   final CallInfoStyle? style;
   final CallListStyle? listStyle;
 
-  @override
-  State<CallRow> createState() => _CallRowState();
-}
-
-class _CallRowState extends State<CallRow> {
-  Timer? _ticker;
-
-  @override
-  void initState() {
-    super.initState();
-    _syncTicker();
-  }
-
-  @override
-  void didUpdateWidget(covariant CallRow oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _syncTicker();
-  }
-
-  @override
-  void dispose() {
-    _ticker?.cancel();
-    super.dispose();
-  }
-
-  // Keeps the duration label ticking only while the call is answered.
-  void _syncTicker() {
-    if (widget.call.wasAccepted && _ticker == null) {
-      _ticker = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
-    } else if (!widget.call.wasAccepted && _ticker != null) {
-      _ticker?.cancel();
-      _ticker = null;
-    }
-  }
-
   String _statusBadge(BuildContext context) {
-    final call = widget.call;
     if (!call.wasAccepted) return context.l10n.callProcessingStatus_ringing;
     if (call.held) return context.l10n.call_description_held;
     return context.l10n.call_CallList_statusOnCall;
-  }
-
-  String _trailing(BuildContext context) {
-    final call = widget.call;
-    final acceptedTime = call.acceptedTime;
-    if (acceptedTime != null) return clock.now().difference(acceptedTime).format();
-    return call.isIncoming ? context.l10n.call_CallList_incoming : context.l10n.call_CallList_outgoing;
   }
 
   /// Status dot from the themed call-list palette (CallListStyle, fed by the
   /// theme JSONs); the fallback is the row text color so an unthemed harness
   /// stays legible without any fixed colors.
   Color _statusDotColor(Color base) {
-    final call = widget.call;
-    final listStyle = widget.listStyle;
     if (!call.wasAccepted) return listStyle?.dotRinging ?? base;
     if (call.held) return listStyle?.dotHeld ?? base;
     return listStyle?.dotOnCall ?? base;
@@ -181,38 +119,37 @@ class _CallRowState extends State<CallRow> {
 
   @override
   Widget build(BuildContext context) {
-    final statusStyle = widget.style?.callStatus ?? const TextStyle();
-    final base = CallRowFrame.baseColor(context, widget.style);
+    final statusStyle = style?.callStatus ?? const TextStyle();
+    final base = CallRowFrame.baseColor(context, style);
 
     return CallRowFrame(
-      name: widget.call.displayName ?? widget.call.handle.value,
+      name: call.displayName ?? call.handle.value,
       status: _statusBadge(context),
-      focused: widget.focused,
-      onTap: widget.onTap,
-      style: widget.style,
-      listStyle: widget.listStyle,
+      focused: focused,
+      onTap: onTap,
+      style: style,
+      listStyle: listStyle,
       // The person, then their state on top of them. With several calls the
       // screen shows no single large picture - it would be one of them - so
       // each row carries its own.
       leading: CallRowAvatar(
-        call: widget.call,
-        contactResolver: widget.contactResolver,
+        call: call,
+        contactResolver: contactResolver,
         dotColor: _statusDotColor(base),
         // The row's own colour, asked of the row rather than worked out here:
         // two derivations would drift the moment the palette changed.
-        dotBorderColor: CallRowFrame.rowColor(
-          context,
-          focused: widget.focused,
-          style: widget.style,
-          listStyle: widget.listStyle,
-        ),
+        dotBorderColor: CallRowFrame.rowColor(context, focused: focused, style: style, listStyle: listStyle),
       ),
       trailing: [
         // Video lines carry a camera glyph next to the trailing
         // duration/direction label.
-        if (widget.call.remoteVideo)
+        if (call.remoteVideo)
           Icon(Icons.videocam, key: const ValueKey('CallRowVideoBadge'), size: 16, color: statusStyle.color),
-        Text(_trailing(context), style: statusStyle.copyWith(fontSize: 13)),
+        CallDurationText(
+          since: call.acceptedTime,
+          style: statusStyle.copyWith(fontSize: 13),
+          placeholder: call.isIncoming ? context.l10n.call_CallList_incoming : context.l10n.call_CallList_outgoing,
+        ),
       ],
     );
   }

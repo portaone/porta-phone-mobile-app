@@ -11,6 +11,7 @@ export 'call_info.dart';
 export 'call_info_block.dart';
 export 'call_remote_avatar.dart';
 export 'call_list.dart';
+export 'call_duration.dart';
 export 'call_row_frame.dart';
 export 'call_list_action.dart';
 export 'conference_panel.dart';
