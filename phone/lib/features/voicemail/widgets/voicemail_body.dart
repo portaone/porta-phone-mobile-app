@@ -9,6 +9,7 @@ import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/l10n/app_localizations.g.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
@@ -148,6 +149,11 @@ class VoicemailListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<VoicemailCubit>();
     final colorScheme = Theme.of(context).colorScheme;
+    // Held rather than looked up per row: an answer about one message arrives
+    // after the list has been re-read, and a message that is gone takes its
+    // row - and any context belonging to it - with it.
+    final snackBars = context.snackBars;
+    final l10n = context.l10n;
 
     return ListView.separated(
       // A mailbox with a message or two has nothing to scroll, and a list that
@@ -156,7 +162,7 @@ class VoicemailListView extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: items.length,
       separatorBuilder: (_, _) => Divider(color: colorScheme.surfaceContainerHigh, height: 1),
-      itemBuilder: (context, index) {
+      itemBuilder: (_, index) {
         final item = items[index];
         return VoicemailTile(
           voicemail: item,
@@ -168,11 +174,11 @@ class VoicemailListView extends StatelessWidget {
           forwardSupported: forwardSupported,
           inTrash: inTrash,
           forwardedByName: forwarderOf?.call(item),
-          onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
-          onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
+          onToggleSeenStatus: (it) => _runAndReport(snackBars, l10n, cubit.toggleSeenStatus(it)),
+          onToggleSavedStatus: (it) => _runAndReport(snackBars, l10n, cubit.toggleSavedStatus(it)),
           onForwarded: (it) => _onForwardVoicemail(context, it),
           onOpenContact: (it) => _onOpenContact(context, it),
-          onRestored: (it) => cubit.restoreVoicemail(it.id),
+          onRestored: (it) => _runAndReport(snackBars, l10n, cubit.restoreVoicemail(it.id)),
           onDeletedPermanently: (it) => _onDeletePermanently(context, it),
           onCall: (it) => cubit.startCall(it),
           onLongPress: (it) => cubit.toggleSelection(it),
@@ -191,6 +197,10 @@ class VoicemailListView extends StatelessWidget {
   /// first and there is nothing to offer after.
   void _onDeleteVoicemail(BuildContext context, Voicemail voicemail) async {
     final cubit = context.read<VoicemailCubit>();
+    final l10n = context.l10n;
+    // Taken now: a message that is gone takes its row with it, and by the time
+    // there is anything to say the widget that asked has left the tree.
+    final snackBars = context.snackBars;
 
     if (!trashSupported) {
       final confirmed =
@@ -201,18 +211,46 @@ class VoicemailListView extends StatelessWidget {
           )) ??
           false;
 
-      if (confirmed) cubit.removeVoicemail(voicemail.id);
+      if (!confirmed) return;
+
+      _reportGone(snackBars, l10n, await cubit.removeVoicemail(voicemail.id));
       return;
     }
 
-    final l10n = context.l10n;
-    final moved = await cubit.removeVoicemail(voicemail.id);
-    if (!moved || !context.mounted) return;
+    final outcome = await cubit.removeVoicemail(voicemail.id);
 
-    context.showSnackBar(
+    if (outcome != VoicemailActionOutcome.done) {
+      _reportGone(snackBars, l10n, outcome);
+      return;
+    }
+
+    snackBars.show(
       l10n.voicemail_Snackbar_movedToTrash,
-      action: SnackBarAction(label: l10n.voicemail_Label_undo, onPressed: () => cubit.restoreVoicemail(voicemail.id)),
+      // Undo is an action of its own and can meet the same answer: somebody
+      // emptied the trash in between, and there is nothing left to put back.
+      action: SnackBarAction(
+        label: l10n.voicemail_Label_undo,
+        onPressed: () => _runAndReport(snackBars, l10n, cubit.restoreVoicemail(voicemail.id)),
+      ),
     );
+  }
+
+  /// Runs an action that needs nothing said about it unless the message has
+  /// gone.
+  void _runAndReport(AppSnackBars snackBars, AppLocalizations l10n, Future<VoicemailActionOutcome> action) async {
+    _reportGone(snackBars, l10n, await action);
+  }
+
+  /// Says the one thing a refusal can say for itself.
+  ///
+  /// A message the backend no longer has is the only answer that carries its
+  /// own explanation, and the list has already been put right by the time this
+  /// runs - this only tells the person why the row they acted on has gone.
+  /// Every other refusal is still silent; that is a change of its own.
+  void _reportGone(AppSnackBars snackBars, AppLocalizations l10n, VoicemailActionOutcome outcome) {
+    if (outcome != VoicemailActionOutcome.gone) return;
+
+    snackBars.show(l10n.voicemail_Snackbar_messageGone);
   }
 
   /// Opens the card of whoever left the message.
@@ -268,6 +306,8 @@ class VoicemailListView extends StatelessWidget {
 
   void _onDeletePermanently(BuildContext context, Voicemail voicemail) async {
     final cubit = context.read<VoicemailCubit>();
+    final l10n = context.l10n;
+    final snackBars = context.snackBars;
 
     final confirmed =
         (await ConfirmDialog.showDangerous(
@@ -277,6 +317,8 @@ class VoicemailListView extends StatelessWidget {
         )) ??
         false;
 
-    if (confirmed) cubit.removeVoicemailPermanently(voicemail.id);
+    if (!confirmed) return;
+
+    _reportGone(snackBars, l10n, await cubit.removeVoicemailPermanently(voicemail.id));
   }
 }

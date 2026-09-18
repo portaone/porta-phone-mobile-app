@@ -2823,6 +2823,8 @@
   "@voicemail_SemanticsLabel_undoMoveToTrash": {
     "description": "Accessibility name of the snackbar action that takes back the move to the trash."
   },
+  "voicemail_Snackbar_messageGone": "ไม่มีข้อความนี้แล้ว",
+  "@voicemail_Snackbar_messageGone": {},
   "voicemail_Snackbar_movedToTrash": "ย้ายไปถังขยะแล้ว",
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."
