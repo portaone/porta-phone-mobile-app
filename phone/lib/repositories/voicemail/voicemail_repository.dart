@@ -402,8 +402,17 @@ class VoicemailRepositoryImpl
 
     // The row went when the message was trashed, and what comes back carries
     // more than a restore answers with, so the mailbox is asked again rather
-    // than the row guessed at. A failure here is the refresh's own.
-    await fetchVoicemails(localeCode: localeCode);
+    // than the row guessed at.
+    //
+    // A failure here is the refresh's own and is not thrown: the restore
+    // happened, and reporting it as a failed restore would be telling the
+    // caller the opposite of what the backend did. What is left is a list that
+    // is behind, which the next read puts right and reports for itself.
+    try {
+      await fetchVoicemails(localeCode: localeCode);
+    } catch (e, s) {
+      _logger.warning('Restored $messageId but could not re-read the mailbox', e, s);
+    }
   }
 
   @override

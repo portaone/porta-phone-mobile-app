@@ -61,9 +61,9 @@ void main() {
     when(() => player.positionStream).thenAnswer((_) => Stream.value(Duration.zero));
     when(() => player.duration).thenReturn(const Duration(seconds: 10));
     when(() => cubit.refresh()).thenAnswer((_) async {});
-    when(() => cubit.removeVoicemail(any())).thenAnswer((_) async => true);
-    when(() => cubit.restoreVoicemail(any())).thenAnswer((_) async {});
-    when(() => cubit.removeVoicemailPermanently(any())).thenAnswer((_) async {});
+    when(() => cubit.removeVoicemail(any())).thenAnswer((_) async => VoicemailActionOutcome.done);
+    when(() => cubit.restoreVoicemail(any())).thenAnswer((_) async => VoicemailActionOutcome.done);
+    when(() => cubit.removeVoicemailPermanently(any())).thenAnswer((_) async => VoicemailActionOutcome.done);
 
     controller = VoicemailPlaybackController(player: player, setupAudioSession: () async {});
   });
@@ -147,10 +147,50 @@ void main() {
     verify(() => cubit.restoreVoicemail('vm-1')).called(1);
   });
 
+  testWidgets('a message that is already gone says so, though its row has left with it', (tester) async {
+    // The order is the point. The list is re-read before the answer reaches
+    // the screen, so by then the row - and its element - is gone, which is
+    // exactly the moment the sentence is needed and exactly when anything held
+    // by that row can no longer say it.
+    final states = StreamController<VoicemailState>.broadcast(sync: true);
+    addTearDown(states.close);
+    final answer = Completer<VoicemailActionOutcome>();
+    when(() => cubit.removeVoicemail(any())).thenAnswer((_) => answer.future);
+    whenListen(cubit, states.stream, initialState: loaded());
+
+    await tester.pumpWidget(host());
+    await chooseFromMenu(tester, 'Move to trash');
+
+    states.add(loaded(items: const []));
+    await tester.pumpAndSettle();
+    expect(find.text('User 555001'), findsNothing);
+
+    answer.complete(VoicemailActionOutcome.gone);
+    await tester.pumpAndSettle();
+
+    expect(find.text('That message is no longer there'), findsOneWidget);
+    expect(find.text('Moved to trash'), findsNothing);
+  });
+
+  testWidgets('undoing a move that has nothing left to put back says so too', (tester) async {
+    // Undo is an action of its own and meets the same answer: the trash was
+    // emptied in between, from somewhere else.
+    when(() => cubit.removeVoicemail(any())).thenAnswer((_) async => VoicemailActionOutcome.done);
+    when(() => cubit.restoreVoicemail(any())).thenAnswer((_) async => VoicemailActionOutcome.gone);
+    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: loaded());
+
+    await tester.pumpWidget(host());
+    await chooseFromMenu(tester, 'Move to trash');
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('That message is no longer there'), findsOneWidget);
+  });
+
   testWidgets('a move the server refused is not offered back', (tester) async {
     // Offering to undo something that never happened is worse than saying
     // nothing: the message is still there and the offer says it is not.
-    when(() => cubit.removeVoicemail(any())).thenAnswer((_) async => false);
+    when(() => cubit.removeVoicemail(any())).thenAnswer((_) async => VoicemailActionOutcome.failed);
     whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: loaded());
 
     await tester.pumpWidget(host());
