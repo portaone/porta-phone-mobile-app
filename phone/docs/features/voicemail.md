@@ -137,6 +137,13 @@ snackbar (`app/router/app_shell.dart`).
 | emptying the trash | the trash could not be emptied |
 | a read that left a list on screen | the list could not be refreshed |
 
+An answer is about the write and nothing else. Some of these actions are
+followed by a read - the trash keeps no stored copy, so it is asked for again -
+and that read is not part of the answer: a restore that happened followed by a
+list that would not load is a restore that happened, and the read says the rest
+in its own words. Reporting it the other way told the person the opposite of
+what the backend did, and offered to put back a message that was already back.
+
 Two deliberate silences. A message the backend no longer has is answered where
 the row was, by whoever asked - the list is already right, and the same thing
 said twice in two wordings is worse than said once. And a read that failed with

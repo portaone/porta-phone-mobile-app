@@ -288,13 +288,6 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     try {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));
       await request;
-
-      if (action.rereadsTrash && state.filter.isRemote) {
-        await fetchTrashedVoicemails();
-      } else {
-        _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-      }
-      return VoicemailActionOutcome.done;
     } catch (e, s) {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
 
@@ -309,6 +302,17 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       onSubmitNotification(action.whenFailed);
       return VoicemailActionOutcome.failed;
     }
+
+    // Past this line the backend has done what was asked, and nothing that
+    // follows can change that. The re-read is a read like any other: it says
+    // so itself when it fails, and it does not turn a write that happened into
+    // one that did not.
+    if (action.rereadsTrash && state.filter.isRemote) {
+      await fetchTrashedVoicemails();
+    } else {
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+    }
+    return VoicemailActionOutcome.done;
   }
 
   /// Puts a trashed message back where it was.

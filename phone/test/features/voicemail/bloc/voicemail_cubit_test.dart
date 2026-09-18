@@ -211,6 +211,31 @@ void main() {
       verifyNever(() => repository.fetchTrashedVoicemails());
     });
 
+    test('a restore whose re-read fails is still a restore that happened', () async {
+      // The write went through and the read after it did not. Reporting that as
+      // a failed restore tells the caller the opposite of what the backend did,
+      // and the screen then offers to put back a message that is already back.
+      cubit.setFilter(VoicemailFilter.trash);
+      await pumpEventQueue();
+      when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) async => throw Exception('offline'));
+
+      expect(await cubit.restoreVoicemail('1'), VoicemailActionOutcome.done);
+
+      verify(() => repository.restoreVoicemail('1')).called(1);
+    });
+
+    test('a re-read that answers 404 does not make the message gone', () async {
+      // Only a refusal of the action itself says anything about the message.
+      // A read that failed afterwards is about the list, and the list says so
+      // in its own words.
+      cubit.setFilter(VoicemailFilter.trash);
+      await pumpEventQueue();
+      when(() => repository.fetchTrashedVoicemails())
+          .thenAnswer((_) async => throw RequestFailure(url: Uri(), requestId: 'r', statusCode: 404));
+
+      expect(await cubit.restoreVoicemail('1'), VoicemailActionOutcome.done);
+    });
+
     test('a delete the server took is reported as done', () async {
       when(() => repository.removeVoicemail(any())).thenAnswer((_) async {});
 
