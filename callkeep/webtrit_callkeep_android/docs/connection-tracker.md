@@ -302,3 +302,9 @@ guards.
 - [foreground-service.md](foreground-service.md) -- drives state mutations from broadcast handlers
 - [ipc-broadcasting.md](ipc-broadcasting.md) -- the events that trigger state transitions
 - [dual-process.md](dual-process.md) -- why the shadow exists at all
+
+## Shared membership rules
+
+Group declaration and removal use the immutable `CallGroup` model, then project its result
+into the existing shadow records. No backend object crosses IPC. See
+[Shared call connection and group](call-connection.md).

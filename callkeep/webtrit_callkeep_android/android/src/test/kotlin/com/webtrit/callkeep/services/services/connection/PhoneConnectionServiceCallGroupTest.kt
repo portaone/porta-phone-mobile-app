@@ -147,4 +147,17 @@ class PhoneConnectionServiceCallGroupTest {
         // managed call and the platform dialer would draw the room.
         assertTrue(calls.values.all { it.conference == null })
     }
+    @Test
+    fun `duplicate ids cannot keep a lone member grouped`() {
+        initialGroup("A", "B")
+        declare("A", "A")
+        assertEquals(emptySet<String>(), grouped())
+    }
+
+    @Test
+    fun `unresolved declaration ends the current group`() {
+        initialGroup("A", "B")
+        declare("missing")
+        assertEquals(emptySet<String>(), grouped())
+    }
 }

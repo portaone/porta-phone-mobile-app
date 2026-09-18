@@ -86,6 +86,10 @@
 
 ## Call Groups
 
+The rules themselves - one group at a time, a group needs two, an empty declaration is a
+no-op - are the shared `CallGroup` model, applied here to the shadow records and in each
+backend to its own: see [Shared call connection and group](call-connection.md).
+
 The backend that presents a group runs in another process (Telecom) or in a service of its own
 (standalone), so the main process cannot ask it synchronously whether a call is grouped. The
 answer comes from the membership the application declared, and that membership lives where the
