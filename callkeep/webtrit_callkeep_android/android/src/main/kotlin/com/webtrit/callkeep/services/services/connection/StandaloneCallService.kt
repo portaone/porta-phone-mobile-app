@@ -21,7 +21,9 @@ import com.webtrit.callkeep.common.startForegroundServiceCompat
 import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.models.AudioDevice
 import com.webtrit.callkeep.models.AudioDeviceType
+import com.webtrit.callkeep.models.CallConnection
 import com.webtrit.callkeep.models.CallConnectionState
+import com.webtrit.callkeep.models.CallGroup
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.notifications.StandaloneActiveCallNotificationBuilder
 import com.webtrit.callkeep.notifications.StandaloneIncomingCallNotificationBuilder
@@ -228,7 +230,7 @@ class StandaloneCallService : Service() {
      * foreground but failed to parse does not leave a zombie (foreground) service running.
      */
     private fun stopIfIdle() {
-        if (callMetadataMap.isEmpty() && pendingAnswers.isEmpty()) {
+        if (connections.isEmpty() && pendingAnswers.isEmpty()) {
             stopSelf()
         }
     }
@@ -358,9 +360,8 @@ class StandaloneCallService : Service() {
     private fun handleIncomingCall(metadata: CallMetadata) {
         Log.i(TAG, "handleIncomingCall: callId=${metadata.callId}")
         promoteToForeground()
-        callMetadataMap[metadata.callId] = metadata
+        connections[metadata.callId] = CallConnection(metadata, CallConnectionState.RINGING)
         ringingIncomingCallIds.add(metadata.callId)
-        answeredCallIds.remove(metadata.callId)
         if (answeredCallIds.isNotEmpty()) {
             Log.d(TAG, "handleIncomingCall: active call detected — playing call-waiting tone for callId=${metadata.callId}")
             ringtoneManager.startCallWaitingTone()
@@ -432,8 +433,7 @@ class StandaloneCallService : Service() {
     private fun handleOutgoingCall(metadata: CallMetadata) {
         Log.i(TAG, "handleOutgoingCall: callId=${metadata.callId}")
         promoteToForeground()
-        callMetadataMap[metadata.callId] = metadata
-        answeredCallIds.remove(metadata.callId)
+        connections[metadata.callId] = CallConnection(metadata, CallConnectionState.DIALING)
         // Notify the main process that the outgoing call is in progress, mirroring the
         // OngoingCall broadcast that PhoneConnectionService fires after onCreateOutgoingConnection.
         // ForegroundService listens for this to promote the call to STATE_DIALING and call performStartCall.
@@ -444,9 +444,9 @@ class StandaloneCallService : Service() {
         Log.i(TAG, "handleEstablishCall: callId=${metadata.callId}")
         ringtoneManager.stopRingtone()
         ringtoneManager.stopCallWaitingTone()
-        val full = (callMetadataMap[metadata.callId] ?: metadata).mergeWith(metadata)
-        callMetadataMap[metadata.callId] = full.copy(acceptedTime = System.currentTimeMillis())
-        answeredCallIds.add(metadata.callId)
+        val connection = ensureConnection(metadata)
+        connection.updateMetadata(metadata)
+        connection.answer(System.currentTimeMillis())
         pendingAnswers.remove(metadata.callId)
 
         activateAudio()
@@ -455,15 +455,15 @@ class StandaloneCallService : Service() {
 
         // Mirror PhoneConnection.establish() on the Telecom path: swap the foreground
         // notification to the ongoing-call variant and make sure the app UI is visible.
-        showActiveCallNotification(callMetadataMap[metadata.callId]!!)
+        showActiveCallNotification(connection.metadata)
         ActivityHolder.start(applicationContext)
 
-        core.notifyConnectionEvent(CallLifecycleEvent.AnswerCall, callMetadataMap[metadata.callId]!!.toBundle())
+        core.notifyConnectionEvent(CallLifecycleEvent.AnswerCall, connection.metadata.toBundle())
         // No onStateChanged here (no telecom Connection) — emit the state explicitly so the shadow
         // mirrors it (replaces the removed markAnswered state-stamping).
         core.notifyConnectionEvent(
             CallLifecycleEvent.ConnectionStateChanged,
-            callMetadataMap[metadata.callId]!!.copy(connectionState = CallConnectionState.ACTIVE).toBundle(),
+            connection.metadata.copy(connectionState = CallConnectionState.ACTIVE).toBundle(),
         )
     }
 
@@ -471,9 +471,9 @@ class StandaloneCallService : Service() {
         Log.i(TAG, "handleAnswerCall: callId=${metadata.callId}")
         ringtoneManager.stopRingtone()
         ringtoneManager.stopCallWaitingTone()
-        val full = (callMetadataMap[metadata.callId] ?: metadata).mergeWith(metadata)
-        callMetadataMap[metadata.callId] = full.copy(acceptedTime = System.currentTimeMillis())
-        answeredCallIds.add(metadata.callId)
+        val connection = ensureConnection(metadata)
+        connection.updateMetadata(metadata)
+        connection.answer(System.currentTimeMillis())
         pendingAnswers.remove(metadata.callId)
 
         activateAudio()
@@ -486,14 +486,14 @@ class StandaloneCallService : Service() {
         // (notification trampoline restriction - "Indirect notification activity start blocked"),
         // so the Answer action goes through StandaloneAnswerTrampolineActivity, which starts the
         // host activity itself before forwarding the answer command to this service.
-        showActiveCallNotification(callMetadataMap[metadata.callId]!!)
+        showActiveCallNotification(connection.metadata)
 
-        core.notifyConnectionEvent(CallLifecycleEvent.AnswerCall, callMetadataMap[metadata.callId]!!.toBundle())
+        core.notifyConnectionEvent(CallLifecycleEvent.AnswerCall, connection.metadata.toBundle())
         // No onStateChanged here (no telecom Connection) — emit the state explicitly so the shadow
         // mirrors it (replaces the removed markAnswered state-stamping).
         core.notifyConnectionEvent(
             CallLifecycleEvent.ConnectionStateChanged,
-            callMetadataMap[metadata.callId]!!.copy(connectionState = CallConnectionState.ACTIVE).toBundle(),
+            connection.metadata.copy(connectionState = CallConnectionState.ACTIVE).toBundle(),
         )
     }
 
@@ -547,15 +547,15 @@ class StandaloneCallService : Service() {
 
     private fun handleUpdateCall(metadata: CallMetadata) {
         Log.i(TAG, "handleUpdateCall: callId=${metadata.callId}")
-        val updated = (callMetadataMap[metadata.callId] ?: metadata).mergeWith(metadata)
-        callMetadataMap[metadata.callId] = updated
+        val updated = (connections[metadata.callId]?.metadata ?: metadata).mergeWith(metadata)
+        ensureConnection(metadata).updateMetadata(updated)
     }
 
     private fun handleSendDtmf(metadata: CallMetadata) {
         val dtmf = metadata.dualToneMultiFrequency ?: return
         Log.i(TAG, "handleSendDtmf: callId=${metadata.callId}, dtmf=$dtmf")
-        val updated = (callMetadataMap[metadata.callId] ?: metadata).copy(dualToneMultiFrequency = dtmf)
-        callMetadataMap[metadata.callId] = updated
+        val updated = (connections[metadata.callId]?.metadata ?: metadata).copy(dualToneMultiFrequency = dtmf)
+        ensureConnection(metadata).updateMetadata(updated)
         core.notifyConnectionEvent(CallMediaEvent.SentDTMF, updated.toBundle())
     }
 
@@ -571,8 +571,9 @@ class StandaloneCallService : Service() {
         // The Telecom backend behaves the same way and always has: PhoneConnection.onHold and
         // onUnhold do not touch the mode, and PhoneConnection.onDisconnect releases it only once
         // no active or holding connection remains.
-        val updated = (callMetadataMap[metadata.callId] ?: metadata).copy(hasHold = onHold)
-        callMetadataMap[metadata.callId] = updated
+        val connection = ensureConnection(metadata)
+        connection.setHeld(onHold)
+        val updated = connection.metadata
         core.notifyConnectionEvent(CallMediaEvent.ConnectionHolding, updated.toBundle())
         // No onStateChanged here (no telecom Connection) — emit the state explicitly so the shadow
         // mirrors it (replaces the removed markHeld state-stamping).
@@ -585,13 +586,13 @@ class StandaloneCallService : Service() {
 
     private fun handleSetCallGroup(callIds: List<String>) {
         Log.i(TAG, "handleSetCallGroup: callIds=$callIds")
-        val next = withCallGroup(callGroupIds, callIds, ::newCallGroupId)
+        val next = callGroup.declare(callIds, ::newCallGroupId)
         replaceCallGroups(next)
     }
 
     private fun handleUnsetCallGroup(callIds: List<String>) {
         Log.i(TAG, "handleUnsetCallGroup: callIds=$callIds")
-        val next = withoutCallGroup(callGroupIds, callIds)
+        val next = callGroup.without(callIds)
         replaceCallGroups(next)
     }
 
@@ -605,7 +606,7 @@ class StandaloneCallService : Service() {
     private fun handleHungUpCallGroup(callIds: List<String>) {
         Log.i(TAG, "handleHungUpCallGroup: callIds=$callIds")
         callIds.forEach { callId ->
-            val meta = callMetadataMap[callId] ?: CallMetadata(callId = callId)
+            val meta = connections[callId]?.metadata ?: CallMetadata(callId = callId)
             handleHungUpCall(meta)
         }
     }
@@ -613,15 +614,13 @@ class StandaloneCallService : Service() {
     /**
      * Swaps the whole group assignment in one step.
      *
-     * The reconciliation is a pure function over the previous assignment, so the map is replaced
-     * rather than edited in place - an in-place edit would leave a half-applied assignment visible
-     * to anything reading the map between the removals and the additions.
+     * The immutable snapshot is replaced in one assignment; readers never see a partially
+     * removed or partially added group.
      */
-    private fun replaceCallGroups(next: Map<String, String>) {
-        if (callGroupIds.toMap() == next) return
-        callGroupIds.keys.retainAll(next.keys)
-        callGroupIds.putAll(next)
-        Log.d(TAG, "replaceCallGroups: assignment is now $callGroupIds")
+    private fun replaceCallGroups(next: CallGroup) {
+        if (callGroup == next) return
+        callGroup = next
+        Log.d(TAG, "replaceCallGroups: membership is now ${next.members}")
         refreshOngoingNotification()
     }
 
@@ -634,7 +633,7 @@ class StandaloneCallService : Service() {
      */
     private fun refreshOngoingNotification() {
         val shown = shownNotification as? ShownNotification.Ongoing ?: return
-        val metadata = callMetadataMap[shown.callId] ?: return
+        val metadata = connections[shown.callId]?.metadata ?: return
         showActiveCallNotification(metadata)
     }
 
@@ -647,42 +646,40 @@ class StandaloneCallService : Service() {
      */
     private fun survivingAnchor(
         endedCallId: String,
-        wasGroupedWith: Map<String, String>,
+        wasGroupedWith: CallGroup,
     ): CallMetadata? {
-        val formerGroup = wasGroupedWith[endedCallId]
+        val wasGrouped = endedCallId in wasGroupedWith
         val candidates = answeredCallIds.filter { it != endedCallId }.sorted()
-        val preferred = candidates.firstOrNull { formerGroup != null && wasGroupedWith[it] == formerGroup }
-        return (preferred ?: candidates.firstOrNull())?.let { callMetadataMap[it] }
+        val preferred = candidates.firstOrNull { wasGrouped && it in wasGroupedWith }
+        return (preferred ?: candidates.firstOrNull())?.let { connections[it]?.metadata }
     }
 
     /**
      * Every call grouped with [callId], this one included, or empty when it stands alone.
      *
      * Ordered by call id so the notification does not reshuffle the names on every refresh; the
-     * assignment itself is an unordered map.
+     * membership itself is an unordered set.
      */
     private fun groupMembersOf(callId: String): List<CallMetadata> {
-        val groupId = callGroupIds[callId] ?: return emptyList()
-        return callGroupIds
-            .filterValues { it == groupId }
-            .keys
+        if (callId !in callGroup) return emptyList()
+        return callGroup.members
             .sorted()
-            .mapNotNull { callMetadataMap[it] }
+            .mapNotNull { connections[it]?.metadata }
     }
 
     private fun handleTearDownConnections() {
-        Log.i(TAG, "handleTearDownConnections: cleaning up ${callMetadataMap.size} calls")
+        Log.i(TAG, "handleTearDownConnections: cleaning up ${connections.size} calls")
         ringtoneManager.stopRingtone()
         ringtoneManager.stopCallWaitingTone()
-        callMetadataMap.keys.toList().forEach { callId ->
-            val meta = callMetadataMap[callId] ?: CallMetadata(callId = callId)
+        connections.keys.toList().forEach { callId ->
+            val meta = connections[callId]?.metadata ?: CallMetadata(callId = callId)
             core.notifyConnectionEvent(CallLifecycleEvent.HungUp, meta.toBundle())
         }
-        callMetadataMap.clear()
+        connections.values.forEach { it.transitionTo(CallConnectionState.DISCONNECTED) }
+        connections.clear()
         ringingIncomingCallIds.clear()
-        answeredCallIds.clear()
         pendingAnswers.clear()
-        callGroupIds.clear()
+        callGroup = CallGroup.empty
         shownNotification = ShownNotification.None
         deactivateAudio(force = true)
         core.notifyConnectionEvent(CallCommandEvent.TearDownComplete)
@@ -691,11 +688,11 @@ class StandaloneCallService : Service() {
 
     private fun handleCleanConnections() {
         Log.i(TAG, "handleCleanConnections: clearing state")
-        callMetadataMap.clear()
+        connections.values.forEach { it.transitionTo(CallConnectionState.DISCONNECTED) }
+        connections.clear()
         ringingIncomingCallIds.clear()
-        answeredCallIds.clear()
         pendingAnswers.clear()
-        callGroupIds.clear()
+        callGroup = CallGroup.empty
         shownNotification = ShownNotification.None
         deactivateAudio(force = true)
         ringtoneManager.stopRingtone()
@@ -711,7 +708,7 @@ class StandaloneCallService : Service() {
      */
     private fun handleReserveAnswer(callId: String) {
         Log.i(TAG, "handleReserveAnswer: callId=$callId")
-        val meta = callMetadataMap[callId]
+        val meta = connections[callId]?.metadata
         if (meta != null) {
             handleAnswerCall(meta)
         } else {
@@ -723,9 +720,9 @@ class StandaloneCallService : Service() {
         val muted = metadata.hasMute ?: return
         Log.i(TAG, "handleMuting: callId=${metadata.callId}, muted=$muted")
         audioManager.isMicrophoneMute = muted
-        val updated =
-            (callMetadataMap[metadata.callId] ?: metadata).copy(hasMute = muted)
-        callMetadataMap[metadata.callId] = updated
+        val connection = ensureConnection(metadata)
+        connection.setMuted(muted)
+        val updated = connection.metadata
         core.notifyConnectionEvent(CallMediaEvent.AudioMuting, updated.toBundle())
     }
 
@@ -736,11 +733,11 @@ class StandaloneCallService : Service() {
         audioManager.isSpeakerphoneOn = speaker
         val deviceType = if (speaker) AudioDeviceType.SPEAKER else AudioDeviceType.EARPIECE
         val updated =
-            (callMetadataMap[metadata.callId] ?: metadata).copy(
+            (connections[metadata.callId]?.metadata ?: metadata).copy(
                 hasSpeaker = speaker,
                 audioDevice = AudioDevice(deviceType),
             )
-        callMetadataMap[metadata.callId] = updated
+        ensureConnection(metadata).updateMetadata(updated)
         core.notifyConnectionEvent(CallMediaEvent.AudioDeviceSet, updated.toBundle())
     }
 
@@ -751,11 +748,11 @@ class StandaloneCallService : Service() {
         @Suppress("DEPRECATION")
         audioManager.isSpeakerphoneOn = isSpeaker
         val updated =
-            (callMetadataMap[metadata.callId] ?: metadata).copy(
+            (connections[metadata.callId]?.metadata ?: metadata).copy(
                 hasSpeaker = isSpeaker,
                 audioDevice = device,
             )
-        callMetadataMap[metadata.callId] = updated
+        ensureConnection(metadata).updateMetadata(updated)
         core.notifyConnectionEvent(CallMediaEvent.AudioDeviceSet, updated.toBundle())
     }
 
@@ -767,7 +764,7 @@ class StandaloneCallService : Service() {
     private fun handleReplayConnectionStates() {
         Log.i(TAG, "handleReplayConnectionStates: re-emitting AnswerCall + ACTIVE state for answered calls")
         answeredCallIds.forEach { callId ->
-            val meta = callMetadataMap[callId] ?: CallMetadata(callId = callId)
+            val meta = connections[callId]?.metadata ?: CallMetadata(callId = callId)
             core.notifyConnectionEvent(CallLifecycleEvent.AnswerCall, meta.toBundle())
             core.notifyConnectionEvent(
                 CallLifecycleEvent.ConnectionStateChanged,
@@ -785,7 +782,7 @@ class StandaloneCallService : Service() {
     }
 
     private fun deactivateAudio(force: Boolean = false) {
-        if (force || callMetadataMap.isEmpty()) {
+        if (force || connections.isEmpty()) {
             audioManager.mode = AudioManager.MODE_NORMAL
             @Suppress("DEPRECATION")
             audioManager.isSpeakerphoneOn = false
@@ -802,7 +799,7 @@ class StandaloneCallService : Service() {
      * added in a follow-up when needed.
      */
     private fun fireInitialAudioState(callId: String) {
-        val metadata = callMetadataMap[callId] ?: return
+        val metadata = connections[callId]?.metadata ?: return
         val availableDevices =
             listOf(
                 AudioDevice(AudioDeviceType.EARPIECE),
@@ -810,30 +807,29 @@ class StandaloneCallService : Service() {
             )
         val currentDevice = metadata.audioDevice ?: AudioDevice(AudioDeviceType.EARPIECE)
         val updated = metadata.copy(audioDevices = availableDevices, audioDevice = currentDevice)
-        callMetadataMap[callId] = updated
+        connections.getValue(callId).updateMetadata(updated)
         core.notifyConnectionEvent(CallMediaEvent.AudioDevicesUpdate, updated.toBundle())
         core.notifyConnectionEvent(CallMediaEvent.AudioDeviceSet, updated.toBundle())
     }
 
     private fun endCall(metadata: CallMetadata) {
-        callMetadataMap.remove(metadata.callId)
+        connections.remove(metadata.callId)?.transitionTo(CallConnectionState.DISCONNECTED)
         ringingIncomingCallIds.remove(metadata.callId)
-        answeredCallIds.remove(metadata.callId)
         pendingAnswers.remove(metadata.callId)
         val shown = shownNotification
         val anchorEnded = shown is ShownNotification.Ongoing && shown.callId == metadata.callId
         if (anchorEnded) shownNotification = ShownNotification.None
-        val before = callGroupIds.toMap()
+        val before = callGroup
         // A call that has ended cannot be in a group, and a group that drops to one member is
-        // not a group any more - withoutCallGroup applies both rules.
-        replaceCallGroups(withoutCallGroup(before, listOf(metadata.callId)))
+        // not a group any more - CallGroup applies both rules.
+        replaceCallGroups(before.without(listOf(metadata.callId)))
         if (anchorEnded) {
             // The notification stood for the call that just ended; if another answered call
             // survives it takes the notification over, rebuilt from what is actually left -
             // otherwise the old name and the old hang-up membership would stay on screen.
             survivingAnchor(metadata.callId, before)?.let { showActiveCallNotification(it) }
         }
-        if (callMetadataMap.isEmpty()) {
+        if (connections.isEmpty()) {
             deactivateAudio()
             stopSelf()
         }
@@ -853,82 +849,39 @@ class StandaloneCallService : Service() {
         var isRunning: Boolean = false
             private set
 
-        // Call state shared within the :callkeep_core process JVM.
-        // Written on the main thread (onStartCommand); read from static dispatch methods
-        // called on the main process thread, hence ConcurrentHashMap.
-        internal val callMetadataMap: ConcurrentHashMap<String, CallMetadata> = ConcurrentHashMap()
+        // Backend-owned objects in the main process. Telecom owns separate objects in
+        // :callkeep_core; neither backend reads the other's registry.
+        internal val connections: ConcurrentHashMap<String, CallConnection> = ConcurrentHashMap()
+
+        /**
+         * The connection this backend keeps for the call, opened on first sight of it.
+         *
+         * A command can arrive for a call this service never registered - a push-delivered
+         * answer, a replay after the process restarted - so a missing record is a call to open,
+         * not an error. The name says so: reading alone is `connections[callId]`.
+         */
+        private fun ensureConnection(metadata: CallMetadata): CallConnection = connections.getOrPut(metadata.callId) { CallConnection(metadata) }
 
         // Incoming call ids, from registration until the call ends (added in handleIncomingCall,
         // removed in endCall / cleared on teardown+clean). It is NOT pruned when a call is answered,
         // so it may contain answered calls; "still ringing" is therefore membership here AND absence
-        // from answeredCallIds (see hasOtherRingingCall). Distinct from callMetadataMap, which also
+        // from answeredCallIds (see hasOtherRingingCall). Distinct from connections, which also
         // holds outgoing/dialing calls that never play the ringtone - hence the ringtone-stop guard
         // consults this set, not the full map, to decide whether another call is still ringing.
         internal val ringingIncomingCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
-        internal val answeredCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+        internal val answeredCallIds: Set<String>
+            get() =
+                connections.values
+                    .filter { it.hasAnswered }
+                    .map { it.callId }
+                    .toSet()
         internal val pendingAnswers: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-        // Which group each call belongs to, callId -> groupId. Absence means the call stands
-        // alone, which is the state of every call until the application says otherwise, so the
-        // map is empty for the overwhelming majority of calls. Several groups can coexist: the
-        // identifier is what distinguishes them, and it is a plain String because this map is
-        // read from the main process alongside the others.
-        internal val callGroupIds: ConcurrentHashMap<String, String> = ConcurrentHashMap()
+        internal var callGroup: CallGroup = CallGroup.empty
 
         private val callGroupSequence = AtomicLong()
 
         private fun newCallGroupId(): String = "group-${callGroupSequence.incrementAndGet()}"
-
-        /**
-         * The group assignment after [callIds] are declared to be the group.
-         *
-         * There is one group at a time, and the request is declarative: it says the group
-         * contains exactly these calls. So a member that has dropped off the list leaves it,
-         * whatever it was grouped with before, and calling this repeatedly with a growing list
-         * adds calls to the same group. Keeping the group's id while any listed call already
-         * belongs to it is what lets the notification recognise the group it was showing.
-         *
-         * A group needs two calls to exist, so an assignment that leaves one behind is dissolved
-         * rather than kept as a group of one. That also makes [withCallGroup] with a single call
-         * the way to take a group apart, matching what the caller said: this call is alone now.
-         * An empty list names no group at all and changes nothing.
-         */
-        internal fun withCallGroup(
-            groups: Map<String, String>,
-            callIds: Collection<String>,
-            groupIdFactory: () -> String,
-        ): Map<String, String> {
-            if (callIds.isEmpty()) return groups.toMap()
-            val groupId = callIds.firstNotNullOfOrNull { groups[it] } ?: groupIdFactory()
-            val next = mutableMapOf<String, String>()
-            callIds.forEach { next[it] = groupId }
-            return withoutLoneMembers(next)
-        }
-
-        /**
-         * The group assignment after [callIds] leave whatever group they are in.
-         *
-         * The calls themselves are untouched; only the grouping is. An empty list does nothing,
-         * so a caller that computes the list and comes up empty cannot take a group apart by
-         * accident. Passing every member takes the group apart, and so does passing all but one,
-         * because the one left behind is no longer in a group either.
-         */
-        internal fun withoutCallGroup(
-            groups: Map<String, String>,
-            callIds: Collection<String>,
-        ): Map<String, String> {
-            if (callIds.isEmpty()) return groups.toMap()
-            val next = groups.toMutableMap()
-            callIds.forEach { next.remove(it) }
-            return withoutLoneMembers(next)
-        }
-
-        /** Drops every group that has fewer than two members; one call is not a group. */
-        private fun withoutLoneMembers(groups: MutableMap<String, String>): Map<String, String> {
-            val sizes = groups.values.groupingBy { it }.eachCount()
-            groups.entries.removeAll { sizes.getValue(it.value) < 2 }
-            return groups
-        }
 
         /**
          * `true` when a call other than [excludingCallId] is still ringing, i.e. registered in

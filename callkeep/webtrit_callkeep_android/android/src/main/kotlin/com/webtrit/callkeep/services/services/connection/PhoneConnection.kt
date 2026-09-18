@@ -25,6 +25,7 @@ import com.webtrit.callkeep.managers.AudioManager
 import com.webtrit.callkeep.managers.NotificationManager
 import com.webtrit.callkeep.models.AudioDevice
 import com.webtrit.callkeep.models.AudioDeviceType
+import com.webtrit.callkeep.models.CallConnection
 import com.webtrit.callkeep.models.CallConnectionState
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
@@ -38,12 +39,14 @@ import java.util.concurrent.Executors
 class PhoneConnection internal constructor(
     private val context: Context,
     private val dispatcher: PerformDispatchHandle,
-    private var metadata: CallMetadata,
+    metadata: CallMetadata,
     var onDisconnectCallback: (connection: PhoneConnection) -> Unit,
     var timeout: ConnectionTimeout? = null,
     private val audioManager: AudioManager = AudioManager(context),
 ) : Connection() {
-    private var isMute = false
+    internal val callConnection = CallConnection(metadata, initiallyMuted = false)
+    private val metadata: CallMetadata get() = callConnection.metadata
+    private val isMute: Boolean get() = callConnection.hasMute
     private var isHasSpeaker = false
 
     /**
@@ -130,8 +133,7 @@ class PhoneConnection internal constructor(
     var isGrouped: Boolean = false
         internal set
 
-    var hasAnswered: Boolean = false
-        private set
+    val hasAnswered: Boolean get() = callConnection.hasAnswered
 
     /**
      * The current call metadata backing this connection. Exposed so [PhoneConnectionService] can
@@ -164,7 +166,7 @@ class PhoneConnection internal constructor(
      */
     fun changeMuteState(muted: Boolean) {
         logger.d("Changing mute state to: $muted for callId: $callId")
-        this.isMute = muted
+        callConnection.setMuted(muted)
         dispatcher(CallMediaEvent.AudioMuting, metadata.copy(hasMute = this.isMute))
     }
 
@@ -212,7 +214,7 @@ class PhoneConnection internal constructor(
     override fun onAnswer() {
         logger.i("Answering call: $metadata")
         super.onAnswer()
-        hasAnswered = true
+        callConnection.answer()
         setActive()
         dispatcher(CallLifecycleEvent.AnswerCall, metadata)
         ActivityHolder.start(context)
@@ -233,6 +235,7 @@ class PhoneConnection internal constructor(
     override fun onDisconnect() {
         logger.i("Disconnecting call: $callId")
         super.onDisconnect()
+        callConnection.transitionTo(CallConnectionState.DISCONNECTED)
 
         timeout?.cancel()
         notificationManager.cancelIncomingNotification(hasAnswered)
@@ -273,6 +276,7 @@ class PhoneConnection internal constructor(
             logger.i("onHold: $callId is in a group, Telecom is answered but the application is not told")
             return
         }
+        callConnection.setHeld(true)
         dispatcher(CallMediaEvent.ConnectionHolding, metadata.copy(hasHold = true))
     }
 
@@ -287,6 +291,7 @@ class PhoneConnection internal constructor(
             logger.i("onUnhold: $callId is in a group, Telecom is answered but the application is not told")
             return
         }
+        callConnection.setHeld(false)
         dispatcher(CallMediaEvent.ConnectionHolding, metadata.copy(hasHold = false))
     }
 
@@ -315,6 +320,10 @@ class PhoneConnection internal constructor(
             }
         logger.v("Connection state is now: $stateText for callId: $callId")
         super.onStateChanged(state)
+        val observed = telecomConnectionState(state)
+        if (observed != null && (!isGrouped || (state != STATE_ACTIVE && state != STATE_HOLDING))) {
+            callConnection.transitionTo(observed)
+        }
         handleConnectionTimeout(state)
         if (state == STATE_DISCONNECTED && isGrouped) {
             // An ended call leaves its group, and a group left with one call is no group.
@@ -334,8 +343,7 @@ class PhoneConnection internal constructor(
         // real connection state instead of inferring a fixed value per lifecycle event. Live states
         // only -- terminal DISCONNECTED stays on the cause-carrying termination events
         // (onDisconnect -> HungUp/DeclineCall), which preserve the DisconnectCause.
-        CallConnectionState
-            .fromTelecomState(state)
+        telecomConnectionState(state)
             ?.takeIf { it != CallConnectionState.DISCONNECTED }
             ?.let { dispatcher(CallLifecycleEvent.ConnectionStateChanged, metadata.copy(connectionState = it)) }
 
@@ -477,7 +485,7 @@ class PhoneConnection internal constructor(
     override fun onMuteStateChanged(isMuted: Boolean) {
         super.onMuteStateChanged(isMuted)
         logger.d("Mute state changed via system: $isMuted")
-        isMute = isMuted
+        callConnection.setMuted(isMuted)
         dispatcher(CallMediaEvent.AudioMuting, metadata.copy(hasMute = isMute))
     }
 
@@ -631,7 +639,7 @@ class PhoneConnection internal constructor(
 
         val previousHasVideo = metadata.hasVideo
 
-        metadata = metadata.mergeWith(requestCallMetadata)
+        callConnection.updateMetadata(requestCallMetadata)
         extras = metadata.toBundle()
 
         val number = metadata.number

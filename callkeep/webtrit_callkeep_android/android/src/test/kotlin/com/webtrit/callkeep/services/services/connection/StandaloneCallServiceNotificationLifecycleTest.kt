@@ -4,6 +4,8 @@ import android.app.Notification
 import android.content.Intent
 import android.os.Build
 import com.webtrit.callkeep.common.CallDataConst
+import com.webtrit.callkeep.models.CallConnection
+import com.webtrit.callkeep.models.CallGroup
 import com.webtrit.callkeep.models.CallMetadata
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -35,15 +37,14 @@ class StandaloneCallServiceNotificationLifecycleTest {
 
     @Before
     fun setUp() {
-        StandaloneCallService.callMetadataMap.clear()
-        StandaloneCallService.callGroupIds.clear()
-        StandaloneCallService.answeredCallIds.clear()
+        StandaloneCallService.connections.clear()
+        StandaloneCallService.callGroup = CallGroup.empty
         StandaloneCallService.ringingIncomingCallIds.clear()
         StandaloneCallService.pendingAnswers.clear()
         service = Robolectric.buildService(StandaloneCallService::class.java).create().get()
         listOf(alice, bob).forEach {
-            StandaloneCallService.callMetadataMap[it.callId] = it
-            StandaloneCallService.answeredCallIds.add(it.callId)
+            StandaloneCallService.connections[it.callId] = CallConnection(it)
+            StandaloneCallService.connections.getValue(it.callId).answer()
         }
         invokeMetadata("showActiveCallNotification", bob)
     }
@@ -78,8 +79,8 @@ class StandaloneCallServiceNotificationLifecycleTest {
         assertEquals("Alice, Bob", notification().extras.getCharSequence(Notification.EXTRA_TEXT).toString())
         invokeMetadata("endCall", bob)
         assertEquals("Alice", notification().extras.getCharSequence(Notification.EXTRA_TEXT).toString())
-        StandaloneCallService.callMetadataMap[carol.callId] = carol
-        StandaloneCallService.answeredCallIds.add(carol.callId)
+        StandaloneCallService.connections[carol.callId] = CallConnection(carol)
+        StandaloneCallService.connections.getValue(carol.callId).answer()
         group("A", "C")
         assertEquals("Alice, Carol", notification().extras.getCharSequence(Notification.EXTRA_TEXT).toString())
     }
@@ -87,7 +88,7 @@ class StandaloneCallServiceNotificationLifecycleTest {
     @Test
     fun `group reconciliation must preserve a ringing incoming notification`() {
         group("A", "B")
-        StandaloneCallService.callMetadataMap[carol.callId] = carol
+        StandaloneCallService.connections[carol.callId] = CallConnection(carol)
         StandaloneCallService.ringingIncomingCallIds.add(carol.callId)
         invokeMetadata("showIncomingCallNotification", carol)
         val incoming = notification()
@@ -99,7 +100,7 @@ class StandaloneCallServiceNotificationLifecycleTest {
     @Test
     fun `ordinary call end without grouping must preserve another ringing call`() {
         invokeMetadata("showActiveCallNotification", alice)
-        StandaloneCallService.callMetadataMap[carol.callId] = carol
+        StandaloneCallService.connections[carol.callId] = CallConnection(carol)
         StandaloneCallService.ringingIncomingCallIds.add(carol.callId)
         invokeMetadata("showIncomingCallNotification", carol)
         assertEquals(1, notification().extras.getInt("android.callType"))

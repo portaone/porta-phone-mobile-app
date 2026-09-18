@@ -23,6 +23,11 @@ services, broadcast-based IPC, and a Pigeon bridge to the Flutter layer.
 | [notifications.md](notifications.md)                       | Notification builders and channel management                                |
 | [call-flows.md](call-flows.md)                             | End-to-end flows: incoming call, outgoing call, teardown                    |
 
+## Shared backend models
+
+[CallConnection and CallGroup](call-connection.md) hold backend-independent call state and
+membership rules. Telecom and standalone retain their own platform effects and process ownership.
+
 ## High-Level Diagram
 
 ```text
