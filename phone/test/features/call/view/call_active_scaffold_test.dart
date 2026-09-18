@@ -424,20 +424,24 @@ void main() {
       await teardownCallScaffold(tester);
     });
 
-    testWidgets('a live picture behind a held focus does not stand in for the held one', (tester) async {
-      // The frames are probed on the live (current) call; with the held call
-      // focused, the controls describe her, and her avatar must be there.
+    testWidgets('several calls carry a picture each and none above them', (tester) async {
+      // One large picture can only be of one person. With several calls the
+      // rows say who each of them is with, and a large one of whichever row
+      // happens to be focused would say less while taking the room they need.
       final live = VideoCall();
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
       await tester.pump(const Duration(milliseconds: 1));
 
-      expect(find.descendant(of: find.byType(CallRemoteAvatar), matching: find.text('CD')), findsOneWidget);
+      expect(find.descendant(of: find.byType(CallRow), matching: find.byType(CallRemoteAvatar)), findsNWidgets(2));
+      expect(find.byType(CallRemoteAvatar), findsNWidgets(2), reason: 'the rows only, never one above them');
+      expect(find.descendant(of: find.byType(CallRow), matching: find.text('CD')), findsOneWidget);
 
-      // Focus back on the live call: the picture is hers, the avatar stands down.
+      // Focusing the other call changes nothing about that: the rows are the
+      // pictures either way.
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: live));
       await tester.pump();
-      expect(find.byType(CallRemoteAvatar), findsNothing);
+      expect(find.byType(CallRemoteAvatar), findsNWidgets(2));
       await teardownCallScaffold(tester);
     });
 
@@ -462,9 +466,10 @@ void main() {
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: held));
       await tester.pump();
 
-      // The roster highlights Clara and the actions act on her - the picture
-      // must not show Boris (the derived current call) at the same time.
-      expect(find.descendant(of: find.byType(CallRemoteAvatar), matching: find.text('CD')), findsOneWidget);
+      // The roster highlights Clara and the actions act on her; her own row
+      // carries her picture, and no large one shows anybody at all.
+      expect(find.descendant(of: find.byType(CallRow), matching: find.text('CD')), findsOneWidget);
+      expect(find.byType(CallRemoteAvatar), findsNWidgets(2), reason: 'one per row, none above them');
       await teardownCallScaffold(tester);
     });
 

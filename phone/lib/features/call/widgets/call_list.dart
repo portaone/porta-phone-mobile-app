@@ -12,7 +12,9 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 import '../bloc/call_bloc.dart';
 import '../models/models.dart';
 import '../view/call_screen_style.dart';
+import '../utils/contact_resolver.dart';
 import 'call_list_action.dart';
+import 'call_row_frame.dart';
 
 /// The list-of-calls roster for the call screen.
 ///
@@ -29,6 +31,7 @@ class CallList extends StatelessWidget {
     required this.onCallTap,
     this.header,
     this.action,
+    this.contactResolver,
     this.style,
     this.listStyle,
   });
@@ -44,6 +47,10 @@ class CallList extends StatelessWidget {
   /// The action offered beside the header; absent where there is none to
   /// offer, as on a deployment without conferences.
   final CallListAction? action;
+
+  /// Resolves who a call is with, so each row can show that person's picture;
+  /// `null` leaves the rows with initials only.
+  final ContactResolver? contactResolver;
 
   final CallInfoStyle? style;
   final CallListStyle? listStyle;
@@ -82,6 +89,7 @@ class CallList extends StatelessWidget {
               call: call,
               focused: call.callId == focusedCallId,
               onTap: () => onCallTap(call.callId),
+              contactResolver: contactResolver,
               style: style,
               listStyle: listStyle,
             ),
@@ -99,6 +107,7 @@ class CallRow extends StatefulWidget {
     required this.call,
     required this.focused,
     required this.onTap,
+    this.contactResolver,
     this.style,
     this.listStyle,
   });
@@ -106,6 +115,7 @@ class CallRow extends StatefulWidget {
   final ActiveCall call;
   final bool focused;
   final VoidCallback onTap;
+  final ContactResolver? contactResolver;
   final CallInfoStyle? style;
   final CallListStyle? listStyle;
 
@@ -171,67 +181,39 @@ class _CallRowState extends State<CallRow> {
 
   @override
   Widget build(BuildContext context) {
-    final nameStyle = widget.style?.number ?? const TextStyle();
     final statusStyle = widget.style?.callStatus ?? const TextStyle();
+    final base = CallRowFrame.baseColor(context, widget.style);
 
-    // Row colors come from the themed call-list palette (CallListStyle, fed
-    // by the theme JSONs); the fallbacks derive from the row text color so an
-    // unthemed harness keeps the design polarity (focused = brighter).
-    final base = statusStyle.color ?? Theme.of(context).colorScheme.surface;
-    final listStyle = widget.listStyle;
-    final rowColor = widget.focused
-        ? (listStyle?.rowFocusedBackground ?? base.withValues(alpha: 0.26))
-        : (listStyle?.rowBackground ?? base.withValues(alpha: 0.10));
-    final borderColor = listStyle?.rowFocusedBorder ?? base.withValues(alpha: 0.55);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Material(
-        color: rowColor,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: widget.focused ? Border.all(color: borderColor) : null,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.only(right: 10),
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: _statusDotColor(base)),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_statusBadge(context), style: statusStyle.copyWith(fontSize: 10, letterSpacing: 1.1)),
-                      Text(
-                        widget.call.displayName ?? widget.call.handle.value,
-                        style: nameStyle.copyWith(fontSize: 16),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                // Video lines carry a camera glyph next to the trailing
-                // duration/direction label.
-                if (widget.call.remoteVideo) ...[
-                  Icon(Icons.videocam, key: const ValueKey('CallRowVideoBadge'), size: 16, color: statusStyle.color),
-                  const SizedBox(width: 6),
-                ],
-                Text(_trailing(context), style: statusStyle.copyWith(fontSize: 13)),
-              ],
-            ),
-          ),
+    return CallRowFrame(
+      name: widget.call.displayName ?? widget.call.handle.value,
+      status: _statusBadge(context),
+      focused: widget.focused,
+      onTap: widget.onTap,
+      style: widget.style,
+      listStyle: widget.listStyle,
+      // The person, then their state on top of them. With several calls the
+      // screen shows no single large picture - it would be one of them - so
+      // each row carries its own.
+      leading: CallRowAvatar(
+        call: widget.call,
+        contactResolver: widget.contactResolver,
+        dotColor: _statusDotColor(base),
+        // The row's own colour, asked of the row rather than worked out here:
+        // two derivations would drift the moment the palette changed.
+        dotBorderColor: CallRowFrame.rowColor(
+          context,
+          focused: widget.focused,
+          style: widget.style,
+          listStyle: widget.listStyle,
         ),
       ),
+      trailing: [
+        // Video lines carry a camera glyph next to the trailing
+        // duration/direction label.
+        if (widget.call.remoteVideo)
+          Icon(Icons.videocam, key: const ValueKey('CallRowVideoBadge'), size: 16, color: statusStyle.color),
+        Text(_trailing(context), style: statusStyle.copyWith(fontSize: 13)),
+      ],
     );
   }
 }

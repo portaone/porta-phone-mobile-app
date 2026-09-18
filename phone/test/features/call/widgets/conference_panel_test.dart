@@ -84,6 +84,18 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets('every row leads with a picture, the host included', (tester) async {
+      // The panel and the roster are the same kind of list, so a leg says who
+      // it is with the same way a call outside the room does. The host has no
+      // contact of their own, and a row without a picture would start its
+      // name at a different place down the list.
+      await tester.pumpWidget(subject());
+
+      expect(find.byType(CallRowAvatar), findsNWidgets(2), reason: 'one per leg');
+      expect(find.byType(CallRowSelfAvatar), findsOneWidget, reason: 'and one standing for the host');
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('a leg falls back to its number, and to its id before the call is known', (tester) async {
       await tester.pumpWidget(subject(calls: [_call('a')]));
 
