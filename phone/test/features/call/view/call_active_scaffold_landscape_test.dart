@@ -155,14 +155,17 @@ void main() {
   });
 
   group('CallActiveScaffold - landscape, several calls', () {
-    testWidgets('the roster takes the info zone, left of the grid, with no avatar', (tester) async {
+    testWidgets('the roster takes the info zone, left of the grid, its rows the only pictures', (tester) async {
       setLandscapePhoneSurface(tester);
       final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, active], focusedCall: active));
 
       expect(find.byType(CallList), findsOneWidget);
       expect(find.byType(CallRow), findsNWidgets(2));
-      expect(find.byType(CallRemoteAvatar), findsNothing);
+      // The large avatar is left out with several calls, the same as portrait;
+      // each row carries the person it is about.
+      expect(find.descendant(of: find.byType(CallRow), matching: find.byType(CallRemoteAvatar)), findsNWidgets(2));
+      expect(find.byType(CallRemoteAvatar), findsNWidgets(2));
 
       final rosterDx = tester.getCenter(find.byType(CallList)).dx;
       final gridDx = tester.getCenter(find.byType(ActiveCallActions)).dx;

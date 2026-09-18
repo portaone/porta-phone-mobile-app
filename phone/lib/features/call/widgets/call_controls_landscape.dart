@@ -186,6 +186,7 @@ class _InfoZone extends StatelessWidget {
           onParticipantMutedChanged: params.onConferenceParticipantMuted,
           onParticipantHangup: params.onConferenceParticipantHangup,
           onAddPressed: params.onConferenceAdd,
+          contactResolver: params.contactResolver,
           textAlign: TextAlign.start,
         ),
         if (params.keypadShown)
@@ -209,7 +210,12 @@ class _InfoZone extends StatelessWidget {
     // too narrow for the picture and the gap beside it. The lines saying
     // who the call is with matter more than the portrait, so the avatar
     // gives way rather than overflow.
-    final avatarShown = !params.remotePictureShown && constraints.maxWidth >= avatarRadius * 2 + 24 + 48;
+    // One picture, one person: with several calls the roster rows carry a
+    // picture each and the large one is left out, the same way portrait does.
+    final avatarShown =
+        params.activeCalls.length < 2 &&
+        !params.remotePictureShown &&
+        constraints.maxWidth >= avatarRadius * 2 + 24 + 48;
     if (!avatarShown) {
       // No picture beside the lines (a live video already fills the screen,
       // or the zone is too narrow for the portrait) - the lines still stand

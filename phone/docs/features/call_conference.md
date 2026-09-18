@@ -21,7 +21,8 @@ lib/features/call/
   models/conference_state.dart        ConferenceState, ConferencePhase
   bloc/call_bloc.dart                 the handlers, in the "conference" section
   bloc/call_state.dart                the derivations: mergeableCallIds, mergeableLegs, canMerge, canAdd
-  widgets/conference_panel.dart       the room on screen: the host, the participants, End
+  widgets/conference_panel.dart       the room on screen: the host, the participants
+  widgets/call_row_frame.dart         the row every list on the call screen is made of
   widgets/call_list_action.dart       the Merge and Add controls in a roster header
 ```
 
@@ -196,10 +197,18 @@ would refuse a merge outright; where it does, it stays visible and goes
 disabled while this particular set cannot be merged, so it does not appear and
 vanish as a call is answered or ends.
 
+With several calls the screen shows no single large picture - one picture can
+only be of one person - and each roster row carries the picture of whoever that
+call is with, its status dot riding on it as a badge. A single call keeps the
+large one.
+
 While a room stands the roster gives way to a panel (`ConferencePanel`): the
 legs are one conversation, not calls to choose between. It lists the host and
 every participant by line, each row carrying the room-wide mute for that
-person and a way to drop them. Calls outside the room keep their rows
+person and a way to drop them. A panel row and a roster row are the same
+widget (`CallRowFrame`) - the panel is a list of calls like any other - so a
+leg shows the picture of whoever it is with, and the host's own row a
+placeholder in its place, which is what keeps the names in one column. Calls outside the room keep their rows
 underneath, under a header that says so, with the same control offered as
 `Add`.
 

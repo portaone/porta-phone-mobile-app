@@ -10,7 +10,9 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 
 import '../models/models.dart';
 import '../view/call_screen_style.dart';
+import '../utils/contact_resolver.dart';
 import 'call_action_button.dart';
+import 'call_row_frame.dart';
 
 /// The conference room: who is in it, who is muted for everyone, and the way
 /// out of it.
@@ -31,6 +33,7 @@ class ConferencePanel extends StatelessWidget {
     required this.onSelfMutedChanged,
     required this.onParticipantMutedChanged,
     required this.onParticipantHangup,
+    this.contactResolver,
     this.style,
     this.listStyle,
     this.actionsStyle,
@@ -52,6 +55,9 @@ class ConferencePanel extends StatelessWidget {
 
   /// Ends one participant's call, which takes them out of the room.
   final ValueChanged<String> onParticipantHangup;
+
+  /// Resolves who a leg is with, for the picture on its row.
+  final ContactResolver? contactResolver;
 
   final CallInfoStyle? style;
   final CallListStyle? listStyle;
@@ -81,12 +87,13 @@ class ConferencePanel extends StatelessWidget {
             ],
           ),
         ),
-        _PanelRow(
+        CallRowFrame(
           name: context.l10n.call_ConferencePanel_you,
           status: context.l10n.call_ConferencePanel_hostStatus,
           style: style,
           listStyle: listStyle,
           focused: true,
+          leading: CallRowSelfAvatar(style: style),
           trailing: [
             _MuteToggle(
               muted: conference.selfMuted,
@@ -112,6 +119,7 @@ class ConferencePanel extends StatelessWidget {
             muted: conference.participantMuted(leg.key),
             onMutedChanged: (muted) => onParticipantMutedChanged(leg.key, muted),
             onHangup: () => onParticipantHangup(leg.key),
+            contactResolver: contactResolver,
             style: style,
             listStyle: listStyle,
             hangupStyle: actionsStyle?.hangup,
@@ -133,6 +141,7 @@ class _ParticipantRow extends StatefulWidget {
     required this.muted,
     required this.onMutedChanged,
     required this.onHangup,
+    required this.contactResolver,
     required this.style,
     required this.listStyle,
     required this.hangupStyle,
@@ -148,6 +157,7 @@ class _ParticipantRow extends StatefulWidget {
   final bool muted;
   final ValueChanged<bool> onMutedChanged;
   final VoidCallback onHangup;
+  final ContactResolver? contactResolver;
   final CallInfoStyle? style;
   final CallListStyle? listStyle;
   final ButtonStyle? hangupStyle;
@@ -200,8 +210,12 @@ class _ParticipantRowState extends State<_ParticipantRow> {
         ? context.l10n.call_ConferencePanel_participantMuted
         : context.l10n.call_ConferencePanel_participantStatus;
 
-    return _PanelRow(
+    return CallRowFrame(
       name: name,
+      // The picture of whoever this leg is with, the same as a roster row -
+      // a leg of a room is still a call with somebody. No state badge: the
+      // row says in words whether they are muted for everyone.
+      leading: call == null ? null : CallRowAvatar(call: call, contactResolver: widget.contactResolver),
       // The duration stands with the status rather than beside the controls:
       // past an hour it grows to HH:MM:SS, and on a narrow screen at a large
       // text scale a trailing group of that width has nowhere to go.
@@ -232,62 +246,6 @@ class _ParticipantRowState extends State<_ParticipantRow> {
           child: const Icon(Icons.call_end, size: 20),
         ),
       ],
-    );
-  }
-}
-
-/// The shape every row of the panel shares with a call roster row, so the
-/// room does not read as a different screen.
-class _PanelRow extends StatelessWidget {
-  const _PanelRow({
-    required this.name,
-    required this.status,
-    required this.trailing,
-    required this.style,
-    required this.listStyle,
-    this.focused = false,
-  });
-
-  final String name;
-  final String status;
-  final List<Widget> trailing;
-  final CallInfoStyle? style;
-  final CallListStyle? listStyle;
-  final bool focused;
-
-  @override
-  Widget build(BuildContext context) {
-    final nameStyle = style?.number ?? const TextStyle();
-    final statusStyle = style?.callStatus ?? const TextStyle();
-    final base = statusStyle.color ?? Theme.of(context).colorScheme.surface;
-    final rowColor = focused
-        ? (listStyle?.rowFocusedBackground ?? base.withValues(alpha: 0.26))
-        : (listStyle?.rowBackground ?? base.withValues(alpha: 0.10));
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Material(
-        color: rowColor,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-          child: Row(
-            spacing: 8,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(status, style: statusStyle.copyWith(fontSize: 10, letterSpacing: 1.1)),
-                    Text(name, style: nameStyle.copyWith(fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  ],
-                ),
-              ),
-              ...trailing,
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

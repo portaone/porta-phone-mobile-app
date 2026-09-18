@@ -5,6 +5,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 
 import '../models/models.dart';
 import '../view/call_screen_styles.dart';
+import '../utils/contact_resolver.dart';
 import 'call_info.dart';
 import 'call_list.dart';
 import 'call_list_action.dart';
@@ -30,6 +31,7 @@ class CallInfoBlock extends StatelessWidget {
     this.onAddPressed,
     this.mergeSupported = false,
     this.onMergePressed,
+    this.contactResolver,
     this.textAlign = TextAlign.center,
   });
 
@@ -51,6 +53,9 @@ class CallInfoBlock extends StatelessWidget {
   /// them can join - one is still ringing, or the room is still assembling -
   /// which leaves the control visible and disabled.
   final VoidCallback? onAddPressed;
+
+  /// Resolves who a call is with, for the picture on each roster row.
+  final ContactResolver? contactResolver;
 
   /// Whether the deployment offers conferences; see [CallList.mergeSupported].
   final bool mergeSupported;
@@ -81,6 +86,7 @@ class CallInfoBlock extends StatelessWidget {
             onSelfMutedChanged: onSelfMutedChanged ?? (_) {},
             onParticipantMutedChanged: onParticipantMutedChanged ?? (_, _) {},
             onParticipantHangup: onParticipantHangup ?? (_) {},
+            contactResolver: contactResolver,
             style: style?.callInfo,
             listStyle: style?.list,
             actionsStyle: style?.actions,
@@ -97,6 +103,7 @@ class CallInfoBlock extends StatelessWidget {
                 icon: Icons.group_add_outlined,
                 onPressed: onAddPressed,
               ),
+              contactResolver: contactResolver,
               style: style?.callInfo,
               listStyle: style?.list,
               onCallTap: onCallSelected,
@@ -120,6 +127,7 @@ class CallInfoBlock extends StatelessWidget {
                 onPressed: onMergePressed,
               )
             : null,
+        contactResolver: contactResolver,
         style: style?.callInfo,
         listStyle: style?.list,
         onCallTap: onCallSelected,
