@@ -108,11 +108,18 @@ class PhoneConnection internal constructor(
     /**
      * Whether this call is part of a group, and therefore not something to hold on its own.
      *
-     * Telecom holds one call to make another active and does not exempt two children of the same
-     * conference, so a member of a group is asked to hold routinely. The request has to be
-     * answered - a connection that does not reach the state Telecom asked for is disconnected a
-     * few seconds later with "did not reach the target state in timeout window" - but it must
-     * not travel any further.
+     * Membership is ours to remember. Telecom is not told about the group at all: a
+     * [android.telecom.Conference] built by a self-managed application is filed as an ordinary
+     * managed call - Telecom masks [Connection.PROPERTY_SELF_MANAGED] off anything it did not
+     * mark self-managed itself, and it marks connections, never conferences - so the default
+     * dialer is bound to it and draws the group in the platform in-call screen, which is the one
+     * thing a self-managed application owns itself. Membership is set by
+     * [PhoneConnectionService.applyCallGroup] and nowhere else.
+     *
+     * Telecom holds one call to make another active, so a member of a group is asked to hold
+     * routinely. The request has to be answered - a connection that does not reach the state
+     * Telecom asked for is disconnected a few seconds later with "did not reach the target state
+     * in timeout window" - but it must not travel any further.
      *
      * Beyond Telecom's own bookkeeping the hold means nothing here. A room's audio is mixed away
      * from the device, so the leg carries the room whatever Telecom thinks of it, and telling the
@@ -120,8 +127,8 @@ class PhoneConnection internal constructor(
      * change. The same goes for a hold arriving from the application: a merged leg is not held on
      * its own from either direction, which is the rule the server states by refusing one.
      */
-    val isGrouped: Boolean
-        get() = conference != null
+    var isGrouped: Boolean = false
+        internal set
 
     var hasAnswered: Boolean = false
         private set
@@ -309,13 +316,9 @@ class PhoneConnection internal constructor(
         logger.v("Connection state is now: $stateText for callId: $callId")
         super.onStateChanged(state)
         handleConnectionTimeout(state)
-        if (state == STATE_DISCONNECTED) {
-            // Telecom drops a disconnected child from its conference on its own, but the group
-            // that is left behind is ours to close once it has fewer than two calls.
-            (conference as? PhoneConference)?.let {
-                it.removeConnection(this)
-                it.dissolveIfLonely()
-            }
+        if (state == STATE_DISCONNECTED && isGrouped) {
+            // An ended call leaves its group, and a group left with one call is no group.
+            PhoneConnectionService.releaseFromCallGroup(this)
         }
 
         if (lastKnownState == STATE_NEW && state == STATE_DIALING) {
