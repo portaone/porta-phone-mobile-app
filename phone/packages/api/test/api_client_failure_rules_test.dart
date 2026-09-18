@@ -121,6 +121,26 @@ void main() {
       );
     });
 
+    test('a message the mailbox lost is named by its code', () async {
+      // The distinction the code makes: this 404 is about one message, and the
+      // caller can act on it - read the list again, and say why the row went.
+      final apiClient = clientAnswering(404, {'code': 'message_not_found'});
+
+      await expectLater(
+        apiClient.deleteUserVoicemail(token, 'vm-1'),
+        throwsA(isA<VoicemailMessageGoneException>().having((e) => e.statusCode, 'statusCode', 404)),
+      );
+    });
+
+    test('the same code from an unrelated endpoint is NOT read as that', () async {
+      final apiClient = clientAnswering(404, {'code': 'message_not_found'});
+
+      await expectLater(
+        apiClient.getUserContactList(token),
+        throwsA(allOf(isA<RequestFailure>(), isNot(isA<VoicemailMessageGoneException>()))),
+      );
+    });
+
     test('an optional endpoint still reads a bare 404 as absent', () async {
       final apiClient = clientAnswering(404, null);
 
@@ -197,10 +217,7 @@ void main() {
       // message, and a caller may act on it.
       final apiClient = clientAnswering(404, {'code': 'message_not_found'});
 
-      await expectLater(
-        apiClient.deleteUserVoicemail(token, 'vm-1'),
-        throwsA(isA<RequestFailure>().having((e) => e is ServerFailureException, 'is a server failure', isFalse)),
-      );
+      await expectLater(apiClient.deleteUserVoicemail(token, 'vm-1'), throwsA(isA<VoicemailMessageGoneException>()));
     });
   });
 }

@@ -59,6 +59,23 @@ class RequestFailure implements Exception {
   }
 }
 
+/// The mailbox no longer has the message this was about.
+///
+/// Deleted from another device or from the IVR, emptied out of the trash, acted
+/// on twice - a list is drawn from what was true when it was read, and the
+/// mailbox moves on. Named because it is the one refusal that says something
+/// about the state rather than about the request: whoever asked can read their
+/// list again and know the row is gone, instead of guessing from a status.
+class VoicemailMessageGoneException extends RequestFailure {
+  VoicemailMessageGoneException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.token,
+    super.error,
+  }) : super();
+}
+
 /// The backend failed on its own side, and nothing follows from it about what
 /// the request did.
 ///

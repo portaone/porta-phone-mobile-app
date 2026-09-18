@@ -149,6 +149,23 @@ final List<FailureRule> defaultFailureRules = [
   ),
 ];
 
+/// A message the mailbox no longer has.
+///
+/// Declared by the voicemail endpoints, and by the error code rather than by
+/// the status: these calls are optional, so a bare 404 is how a deployment says
+/// it has no such route at all. The code is what tells "this message is gone"
+/// from "this backend cannot do this".
+final FailureRule voicemailMessageGoneRule = FailureRule(
+  code: 'message_not_found',
+  build: (f) => VoicemailMessageGoneException(
+    url: f.url,
+    requestId: f.requestId,
+    statusCode: f.statusCode,
+    token: f.token,
+    error: f.error,
+  ),
+);
+
 /// Voicemail is switched off for this subscriber.
 ///
 /// Declared by the voicemail endpoints rather than globally: only the mailbox

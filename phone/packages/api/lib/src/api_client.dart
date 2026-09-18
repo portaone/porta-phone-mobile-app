@@ -87,12 +87,15 @@ class WebtritApiClient {
 
   // The voicemail endpoints, which are optional like the rest and are also the
   // only ones that can report the mailbox as unconfigured.
-  static final _voicemailEndpoint = ResponseOptions(optionalEndpoint: true, failures: [voicemailNotConfiguredRule]);
+  static final _voicemailEndpoint = ResponseOptions(
+    optionalEndpoint: true,
+    failures: [voicemailNotConfiguredRule, voicemailMessageGoneRule],
+  );
 
   static final _voicemailEndpointBytes = ResponseOptions(
     responseType: ResponseType.bytes,
     optionalEndpoint: true,
-    failures: [voicemailNotConfiguredRule],
+    failures: [voicemailNotConfiguredRule, voicemailMessageGoneRule],
   );
 
   final Uri tenantUrl;
