@@ -2895,6 +2895,10 @@
   "@voicemail_SemanticsLabel_undoMoveToTrash": {
     "description": "Accessibility name of the snackbar action that takes back the move to the trash."
   },
+  "voicemail_Snackbar_messageGone": "That message is no longer there",
+  "@voicemail_Snackbar_messageGone": {
+    "description": "Shown when an action over one message finds that the backend no longer has it."
+  },
   "voicemail_Snackbar_movedToTrash": "Moved to trash",
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."
