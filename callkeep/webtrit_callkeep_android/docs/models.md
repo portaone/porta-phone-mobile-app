@@ -26,10 +26,14 @@ The central data class describing a single call. Passed across process boundarie
 | `hasHold`          | `Boolean`           | Whether hold capability is available             |
 | `speakerOnVideo`   | `Boolean`           | Auto-route audio to speaker when video is active |
 | `ringtonePath`     | `String?`           | Custom ringtone file path (asset cache)          |
-| `connectionState`  | `CallConnectionState?` | Transient payload on `ConnectionStateChanged` events -- the live state the main process mirrors into its shadow state. Null on all other events. |
+
+`connectionState: CallConnectionState?` is the transient payload on
+`ConnectionStateChanged` events: the live state the main process mirrors into
+its shadow state. It is null on all other events.
 
 `CallConnectionState` is a local domain enum (`models/CallConnectionState.kt`:
-INITIALIZING/NEW/RINGING/DIALING/ACTIVE/HOLDING/DISCONNECTED) with `fromTelecomState(Int)`. It is
+INITIALIZING/NEW/RINGING/DIALING/ACTIVE/HOLDING/DISCONNECTED). The Telecom adapter maps
+framework constants via `telecomConnectionState(Int)`. The shared enum is
 deliberately NOT the raw `android.telecom.Connection` state ints (untyped magic numbers, and the
 no-Telecom backend has no android `Connection`) nor the Pigeon-generated enum (Pigeon types stay
 out of the model layer; the Pigeon mapping happens only at the tracker boundary).

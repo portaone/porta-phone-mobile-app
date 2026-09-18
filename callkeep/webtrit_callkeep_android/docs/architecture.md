@@ -14,6 +14,7 @@ services, broadcast-based IPC, and a Pigeon bridge to the Flutter layer.
 | [connection-tracker.md](connection-tracker.md)             | `MainProcessConnectionTracker` — shadow call-state registry                 |
 | [phone-connection-service.md](phone-connection-service.md) | `PhoneConnectionService` — Telecom `ConnectionService` in `:callkeep_core`  |
 | [phone-connection.md](phone-connection.md)                 | `PhoneConnection` — single call object inside Telecom                       |
+| [call-connection.md](call-connection.md)                   | `CallConnection` / `CallGroup` — shared call state and membership           |
 | [foreground-service.md](foreground-service.md)             | Call groups — declared membership, kept with the calls in the core          |
 | [connection-manager.md](connection-manager.md)             | `ConnectionManager` — call registry inside `:callkeep_core`                 |
 | [ipc-broadcasting.md](ipc-broadcasting.md)                 | `ConnectionServicePerformBroadcaster` — cross-process event bus             |
@@ -22,6 +23,11 @@ services, broadcast-based IPC, and a Pigeon bridge to the Flutter layer.
 | [models.md](models.md)                                     | `CallMetadata`, `CallHandle`, `AudioDevice`, and other data models          |
 | [notifications.md](notifications.md)                       | Notification builders and channel management                                |
 | [call-flows.md](call-flows.md)                             | End-to-end flows: incoming call, outgoing call, teardown                    |
+
+## Shared backend models
+
+[CallConnection and CallGroup](call-connection.md) hold backend-independent call state and
+membership rules. Telecom and standalone retain their own platform effects and process ownership.
 
 ## High-Level Diagram
 

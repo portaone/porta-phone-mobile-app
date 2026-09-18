@@ -162,3 +162,9 @@ See [ipc-broadcasting.md](ipc-broadcasting.md) for the full event catalogue.
 - [connection-manager.md](connection-manager.md) — call registry used here
 - [ipc-broadcasting.md](ipc-broadcasting.md) — events dispatched from here
 - [dual-process.md](dual-process.md) — explains why this runs in a separate process
+
+## Shared membership rules
+
+Group changes are computed by `CallGroup` before the adapter updates connection membership.
+Membership remains internal to the backend; no Android conference is created. See
+[Shared call connection and group](call-connection.md).
