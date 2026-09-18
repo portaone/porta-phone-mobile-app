@@ -65,10 +65,18 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.featureNotSupported, error: e));
     } on VoicemailNotConfiguredException catch (e) {
       _safeEmit(state.copyWith(status: VoicemailStatus.featureNotSupported, error: e));
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded, error: e));
       _logger.severe('Error fetching voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchVoicemails');
+      _reportFailedRead(e);
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded, error: e));
+      _logger.severe('Error fetching voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchVoicemails');
+      _reportFailedRead(null);
     }
   }
 
@@ -83,10 +91,18 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.featureNotSupported, error: e));
     } on VoicemailNotConfiguredException catch (e) {
       _safeEmit(state.copyWith(status: VoicemailStatus.featureNotSupported, error: e));
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded, error: e));
       _logger.severe('Error fetching trashed voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchTrashedVoicemails');
+      _reportFailedRead(e);
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded, error: e));
+      _logger.severe('Error fetching trashed voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.fetchTrashedVoicemails');
+      _reportFailedRead(null);
     }
   }
 
@@ -115,33 +131,63 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));
       await _repository.removeAllVoicemails();
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       _logger.severe('Error removing all voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeAllVoicemails');
+      onSubmitNotification(VoicemailDeleteFailedNotification(e, count: state.visibleItems.length));
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      _logger.severe('Error removing all voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeAllVoicemails');
+      onSubmitNotification(VoicemailDeleteFailedNotification(null, count: state.visibleItems.length));
     }
   }
 
   void removeSelectedVoicemails() async {
+    // Held before anything is emitted: what was picked is cleared as the list
+    // is put right, and the sentence about a failure needs to know how many
+    // messages it was about.
+    final selected = state.selectedVoicemailsIds;
+
     try {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));
-      await _repository.removeMultipleVoicemails(state.selectedVoicemailsIds);
+      await _repository.removeMultipleVoicemails(selected);
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       _logger.severe('Error removing selected voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeSelectedVoicemails');
+      onSubmitNotification(VoicemailDeleteFailedNotification(e, count: selected.length));
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      _logger.severe('Error removing selected voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeSelectedVoicemails');
+      onSubmitNotification(VoicemailDeleteFailedNotification(null, count: selected.length));
     }
   }
 
   /// Puts everything picked back where it was.
   void restoreSelectedVoicemails() async {
+    final selected = state.selectedVoicemailsIds;
+
     try {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));
-      await _repository.restoreMultipleVoicemails(state.selectedVoicemailsIds);
-    } catch (e, s) {
+      await _repository.restoreMultipleVoicemails(selected);
+    } on RequestFailure catch (e, s) {
       _logger.severe('Error restoring selected voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.restoreSelectedVoicemails');
+      onSubmitNotification(VoicemailRestoreFailedNotification(e, count: selected.length));
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _logger.severe('Error restoring selected voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.restoreSelectedVoicemails');
+      onSubmitNotification(VoicemailRestoreFailedNotification(null, count: selected.length));
     } finally {
       // Whatever happened, some of them may have moved, so the list on screen
       // is re-read rather than guessed at.
@@ -151,12 +197,21 @@ class VoicemailCubit extends Cubit<VoicemailState> {
 
   /// Deletes everything picked for good.
   void removeSelectedVoicemailsPermanently() async {
+    final selected = state.selectedVoicemailsIds;
+
     try {
       _safeEmit(state.copyWith(status: VoicemailStatus.loading));
-      await _repository.removeMultipleVoicemailsPermanently(state.selectedVoicemailsIds);
-    } catch (e, s) {
+      await _repository.removeMultipleVoicemailsPermanently(selected);
+    } on RequestFailure catch (e, s) {
       _logger.severe('Error permanently removing selected voicemails: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeSelectedVoicemailsPermanently');
+      onSubmitNotification(VoicemailDeleteFailedNotification(e, count: selected.length));
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _logger.severe('Error permanently removing selected voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeSelectedVoicemailsPermanently');
+      onSubmitNotification(VoicemailDeleteFailedNotification(null, count: selected.length));
     } finally {
       await _afterTrashChange();
     }
@@ -187,9 +242,18 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       await refresh();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _logger.severe('VoicemailCubit.removeVoicemail: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeVoicemail');
+      onSubmitNotification(VoicemailDeleteFailedNotification(e));
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      return;
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _logger.severe('VoicemailCubit.removeVoicemail: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeVoicemail');
+      onSubmitNotification(const VoicemailDeleteFailedNotification(null));
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       return;
     }
@@ -215,9 +279,18 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       await refresh();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _logger.severe('VoicemailCubit.restoreVoicemail: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.restoreVoicemail');
+      onSubmitNotification(VoicemailRestoreFailedNotification(e));
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      return;
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _logger.severe('VoicemailCubit.restoreVoicemail: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.restoreVoicemail');
+      onSubmitNotification(const VoicemailRestoreFailedNotification(null));
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       return;
     }
@@ -239,9 +312,18 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       await refresh();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _logger.severe('VoicemailCubit.removeVoicemailPermanently: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeVoicemailPermanently');
+      onSubmitNotification(VoicemailDeleteFailedNotification(e));
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      return;
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _logger.severe('VoicemailCubit.removeVoicemailPermanently: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.removeVoicemailPermanently');
+      onSubmitNotification(const VoicemailDeleteFailedNotification(null));
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       return;
     }
@@ -259,9 +341,16 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       await refresh();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _logger.severe('VoicemailCubit.toggleSeenStatus: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.toggleSeenStatus');
+      onSubmitNotification(VoicemailUpdateFailedNotification(e));
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _logger.severe('VoicemailCubit.toggleSeenStatus: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.toggleSeenStatus');
+      onSubmitNotification(const VoicemailUpdateFailedNotification(null));
     }
 
     _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
@@ -282,9 +371,16 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       await refresh();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _logger.severe('VoicemailCubit.toggleSavedStatus: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.toggleSavedStatus');
+      onSubmitNotification(VoicemailUpdateFailedNotification(e));
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _logger.severe('VoicemailCubit.toggleSavedStatus: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.toggleSavedStatus');
+      onSubmitNotification(const VoicemailUpdateFailedNotification(null));
     }
 
     _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
@@ -301,10 +397,18 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       // Re-read rather than assume empty: the backend deletes what it can and
       // a partial pass leaves the rest, which the screen has to show.
       await fetchTrashedVoicemails();
-    } catch (e, s) {
+    } on RequestFailure catch (e, s) {
       _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
       _logger.severe('Error emptying the voicemail trash: $e', e, s);
       CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.emptyVoicemailTrash');
+      onSubmitNotification(VoicemailEmptyTrashFailedNotification(e));
+    } catch (e, s) {
+      // The request never arrived, so there is nothing the backend said and
+      // nothing to show behind the sentence.
+      _safeEmit(state.copyWith(status: VoicemailStatus.loaded));
+      _logger.severe('Error emptying the voicemail trash: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit.emptyVoicemailTrash');
+      onSubmitNotification(const VoicemailEmptyTrashFailedNotification(null));
     }
   }
 
@@ -383,6 +487,17 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       // the tile falls back to the id and the message still reads correctly.
       _logger.warning('Error resolving voicemail forwarder names: $e', e, s);
     }
+  }
+
+  /// Says a read failed, where nothing on screen says it already.
+  ///
+  /// With nothing to show, the screen puts a retry in place of the list and
+  /// the sentence would be the second one saying the same thing. With a list
+  /// still on it, the only visible difference is that it did not change.
+  void _reportFailedRead(RequestFailure? failure) {
+    if (!state.isVoicemailsExists) return;
+
+    onSubmitNotification(VoicemailRefreshFailedNotification(failure));
   }
 
   /// Leaves selection and re-reads whichever list is on screen.

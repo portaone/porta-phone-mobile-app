@@ -3403,6 +3403,37 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_SemanticsLabel_undoMoveToTrash => 'Annulla lo spostamento nel cestino';
 
   @override
+  String voicemail_Snackbar_deleteFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Impossibile eliminare i messaggi',
+      one: 'Impossibile eliminare il messaggio',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String voicemail_Snackbar_restoreFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Impossibile ripristinare i messaggi',
+      one: 'Impossibile ripristinare il messaggio',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get voicemail_Snackbar_updateFailed => 'Impossibile aggiornare il messaggio';
+
+  @override
+  String get voicemail_Snackbar_emptyTrashFailed => 'Impossibile svuotare il cestino';
+
+  @override
+  String get voicemail_Snackbar_refreshFailed => 'Impossibile aggiornare l\'elenco';
+
+  @override
   String get voicemail_Snackbar_messageGone => 'Quel messaggio non è più disponibile';
 
   @override
