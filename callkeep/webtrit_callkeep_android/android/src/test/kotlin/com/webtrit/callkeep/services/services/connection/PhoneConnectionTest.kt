@@ -4,9 +4,11 @@ import android.content.Context
 import android.os.Build
 import android.os.ParcelUuid
 import android.telecom.CallEndpoint
+import android.telecom.Connection
 import com.webtrit.callkeep.managers.AudioManager
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.models.PerformDispatchHandle
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
@@ -226,5 +228,28 @@ class PhoneConnectionTest {
         repeat(5) { connection.onSilence() }
 
         verify(mockAudioManager, org.mockito.Mockito.times(5)).stopRingtone()
+    }
+
+    /**
+     * A connection must tell Telecom it can be held NOW, not merely that it supports being held.
+     *
+     * `CallsManager.canHold` passes a ConnectionService call only on CAPABILITY_HOLD; with
+     * CAPABILITY_SUPPORT_HOLD alone Telecom takes the same-source branch of
+     * `holdActiveCallForNewCall`, which disconnects this application's held call instead of
+     * swapping the two - a call the user never ended, measured on a device. Robolectric does not
+     * run that arbitration, so the guard is the declaration itself.
+     */
+    @Test
+    fun `a connection declares that it can be held right now`() {
+        val connection = createConnection(CallMetadata(callId = "test-hold-capability"))
+
+        assertTrue(
+            "Without CAPABILITY_HOLD Telecom disconnects the held call instead of swapping",
+            connection.connectionCapabilities and Connection.CAPABILITY_HOLD == Connection.CAPABILITY_HOLD,
+        )
+        assertTrue(
+            "CAPABILITY_SUPPORT_HOLD stays: the two answer different questions",
+            connection.connectionCapabilities and Connection.CAPABILITY_SUPPORT_HOLD == Connection.CAPABILITY_SUPPORT_HOLD,
+        )
     }
 }

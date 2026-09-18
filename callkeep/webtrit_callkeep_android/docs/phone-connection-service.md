@@ -123,14 +123,18 @@ standalone backend applies - and that covers both a membership of one and the la
 disconnecting on its own (`PhoneConnection.onStateChanged` -> `releaseFromCallGroup`).
 
 Membership is all that changes. A call crossing the boundary in either direction is left in the
-state Telecom put it in, held or active, because taking a held self-managed call off hold while
-another is active does not swap them - it ends the call. `holdActiveCallForNewCall` asks whether
-the active call can be held, a connection of ours advertises `CAPABILITY_SUPPORT_HOLD` without
-`CAPABILITY_HOLD` so it cannot, and the same-source branch then disconnects the held call of this
-account outright ("Disconnect held call %s before holding active call %s"). Measured both ways on
-a device: a leg of a room gone 20 ms after joining it, and a survivor gone 12 ms after the room
-ended - the other call's connection had reached DISCONNECTED while its Telecom call was still
-ACTIVE, so no synchronous check can tell the two apart.
+state Telecom put it in, held or active: a member carries the room whichever state Telecom keeps
+it in, so there is nothing to correct, and the application is the one that decides who is held
+once the room is over.
+
+This used to be more than a preference. While a connection advertised `CAPABILITY_SUPPORT_HOLD`
+without `CAPABILITY_HOLD`, `CallsManager.canHold` was false for it, and taking a held call off
+hold while another was active did not swap them - the same-source branch of
+`holdActiveCallForNewCall` disconnected this application's held call outright ("Disconnect held
+call %s before holding active call %s"). It was measured twice on a Xiaomi through exactly this
+code: a leg of a room gone 20 ms after joining it, and a survivor gone 12 ms after the room ended.
+The capability is declared now (see [phone-connection.md](phone-connection.md)), so that branch of
+the arbitration swaps rather than disconnects; the rule here stands on its own reason.
 
 The disagreement that leaves behind is bookkeeping: Telecom holds a call the application believes
 is speaking. Resolving it belongs to the application, which does so once the other call is really
