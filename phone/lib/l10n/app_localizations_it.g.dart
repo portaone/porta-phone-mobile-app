@@ -412,6 +412,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get call_description_held => 'In attesa';
 
   @override
+  String get call_description_peerReportsMuted => 'L\'altra parte dice che sei disattivato';
+
+  @override
   String get call_description_incoming => 'Chiamata in arrivo';
 
   @override

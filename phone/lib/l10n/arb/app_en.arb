@@ -426,6 +426,8 @@
   },
   "call_description_held": "On hold",
   "@call_description_held": {},
+  "call_description_peerReportsMuted": "The other side says you are muted",
+  "@call_description_peerReportsMuted": {},
   "call_description_incoming": "Incoming call",
   "@call_description_incoming": {},
   "call_description_inviteToAttendedTransfer": "You've been invited to join an attended transfer call",
