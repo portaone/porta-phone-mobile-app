@@ -24,11 +24,27 @@ class AppShell extends StatelessWidget {
   const AppShell({super.key});
 
   /// Map scopes to their associated routes.
+  ///
+  /// Named by the router of a stack rather than by the screen at its root: a
+  /// scope is "the person is somewhere in here", and a sub-screen is still in
+  /// here. Settings used to be named by its own first screen, so every
+  /// notification raised from a screen it leads to - voicemail, network,
+  /// diagnostics - was judged out of scope and dropped without a word.
   static const Map<NotificationScope, List<String>> _scopeRoutes = {
     NotificationScope.login: [LoginRouterPageRoute.name],
-    NotificationScope.main: [MainScreenPageRoute.name, SettingsScreenPageRoute.name],
+    NotificationScope.main: [MainScreenPageRoute.name, SettingsRouterPageRoute.name],
     NotificationScope.call: [CallScreenPageRoute.name],
   };
+
+  /// Whether [notification] belongs where the person currently is.
+  ///
+  /// [isRouteActive] is `context.router.isRouteActive` in the app and a plain
+  /// set of names in a test, which is the whole reason this is separate: the
+  /// decision is worth checking without a router to build.
+  @visibleForTesting
+  static bool isNotificationInScope(Notification notification, bool Function(String routeName) isRouteActive) {
+    return notification.scopes().any((scope) => (_scopeRoutes[scope] ?? const []).any(isRouteActive));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,12 +65,9 @@ class AppShell extends StatelessWidget {
     final lastNotification = state.lastNotification;
     if (lastNotification == null) return;
 
-    final isNotificationInScope = lastNotification.scopes().any((scope) {
-      final routes = _scopeRoutes[scope] ?? [];
-      return routes.any((routeName) => context.router.isRouteActive(routeName));
-    });
+    final inScope = isNotificationInScope(lastNotification, context.router.isRouteActive);
 
-    if (isNotificationInScope) {
+    if (inScope) {
       _showNotificationSnackBar(context, lastNotification);
     }
     context.read<NotificationsBloc>().add(const NotificationsCleared());
