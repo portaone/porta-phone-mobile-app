@@ -62,8 +62,15 @@ body, and classification getters: `isClientError` (4xx), `isServerError` (5xx),
 | `IncorrectCredentialsException` | any 401 from `createSession` - the one call made without a session, so the status alone means the credentials were refused (adapters disagree on the code, and the PortaSwitch one sends none) |
 | `UserNotFoundException` | 404 with `user_not_found` (any endpoint); any 404 from `getUserInfo` / `createSessionOtp` |
 | `EndpointNotSupportedException` | methods declared `ResponseOptions(optionalEndpoint: true)` only: 501, or 404 without a backend error code |
+| `ServerFailureException` | any 5xx no earlier rule claimed - the backend blamed itself, so nothing follows about what the request did |
 | `VoicemailNotConfiguredException` | `voicemail_not_configured` |
 | `PasswordChangeRequiredException` | `password_change_required` |
+
+An error body is read for what it can add and never for permission to fail:
+`details` arrives as one object from an adaptee and as a list from Core (one
+entry per field it refused), both read the same, and a body in any other shape
+leaves `error` null with the text kept in `rawBody`. A failure always surfaces
+as `RequestFailure` carrying the status the backend sent.
 
 Failure log level: client errors (4xx) log as `warning`; `severe` is reserved
 for server-side (5xx) and transport failures. `EndpointNotSupportedException`

@@ -49,11 +49,16 @@ void main() {
     });
 
     test('an unrecognised failure stays a plain RequestFailure', () async {
-      final apiClient = clientAnswering(500, {'code': 'something_else'});
+      // A 4xx nobody claims: the backend answered about this request and no
+      // rule has anything to add. A 5xx is not this case any more - the
+      // backend blamed itself, which is a name of its own.
+      final apiClient = clientAnswering(409, {'code': 'something_else'});
 
       await expectLater(
         apiClient.getUserContactList(token),
-        throwsA(allOf(isA<RequestFailure>(), isNot(isA<UnauthorizedException>()))),
+        throwsA(
+          allOf(isA<RequestFailure>(), isNot(isA<UnauthorizedException>()), isNot(isA<ServerFailureException>())),
+        ),
       );
     });
   });
@@ -120,6 +125,82 @@ void main() {
       final apiClient = clientAnswering(404, null);
 
       await expectLater(apiClient.getUserVoicemailList(token), throwsA(isA<EndpointNotSupportedException>()));
+    });
+  });
+
+  group('an error body in a shape of its own', () {
+    // Two shapes are in the wild, and neither may cost the caller the status
+    // code: the whole point of reading the body is to say more about a failure,
+    // never to turn one into something else.
+    test('Core lists what it refused, and the first of them is read', () async {
+      final apiClient = clientAnswering(422, {
+        'code': 'parameters_validate_issue',
+        'details': [
+          {'reason': 'unexpected_field', 'path': 'trash'},
+        ],
+      });
+
+      await expectLater(
+        apiClient.deleteUserVoicemail(token, 'vm-1'),
+        throwsA(
+          isA<RequestFailure>()
+              .having((e) => e.statusCode, 'statusCode', 422)
+              .having((e) => e.errorCode, 'errorCode', 'parameters_validate_issue')
+              .having((e) => e.error?.details?.path, 'details.path', 'trash')
+              .having((e) => e.error?.details?.reason, 'details.reason', 'unexpected_field'),
+        ),
+      );
+    });
+
+    test('an adaptee sends one detail rather than a list, and it reads the same', () async {
+      final apiClient = clientAnswering(422, {
+        'code': 'validation_error',
+        'details': {'reason': 'too_long', 'path': 'name'},
+      });
+
+      await expectLater(
+        apiClient.getUserContactList(token),
+        throwsA(isA<RequestFailure>().having((e) => e.error?.details?.reason, 'details.reason', 'too_long')),
+      );
+    });
+
+    test('a shape nobody expected still answers with the status it came with', () async {
+      // This used to throw a cast error out of the parse, so the caller was
+      // handed a TypeError and never learned there had been a 422 at all.
+      final apiClient = clientAnswering(422, {'code': 'odd', 'details': 42});
+
+      await expectLater(
+        apiClient.deleteUserVoicemail(token, 'vm-1'),
+        throwsA(isA<RequestFailure>().having((e) => e.statusCode, 'statusCode', 422)),
+      );
+    });
+  });
+
+  group('a backend that failed on its own side', () {
+    test('is named rather than left as a bare failure', () async {
+      final apiClient = clientAnswering(500, {'code': 'external_api_issue'});
+
+      await expectLater(
+        apiClient.deleteUserVoicemail(token, 'vm-1'),
+        throwsA(isA<ServerFailureException>().having((e) => e.statusCode, 'statusCode', 500)),
+      );
+    });
+
+    test('whatever the shape of the 5xx', () async {
+      final apiClient = clientAnswering(503, null);
+
+      await expectLater(apiClient.deleteUserVoicemail(token, 'vm-1'), throwsA(isA<ServerFailureException>()));
+    });
+
+    test('while a 4xx still answers about the request itself', () async {
+      // The distinction the name is for: this one is an answer about the
+      // message, and a caller may act on it.
+      final apiClient = clientAnswering(404, {'code': 'message_not_found'});
+
+      await expectLater(
+        apiClient.deleteUserVoicemail(token, 'vm-1'),
+        throwsA(isA<RequestFailure>().having((e) => e is ServerFailureException, 'is a server failure', isFalse)),
+      );
     });
   });
 }
