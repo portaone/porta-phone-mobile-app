@@ -52,6 +52,7 @@ class CallControlsPortrait extends StatelessWidget {
               onParticipantMutedChanged: params.onConferenceParticipantMuted,
               onParticipantHangup: params.onConferenceParticipantHangup,
               onAddPressed: params.onConferenceAdd,
+              contactResolver: params.contactResolver,
             ),
           ),
           // Nothing to render in the video area (audio-only call,
@@ -61,7 +62,15 @@ class CallControlsPortrait extends StatelessWidget {
           // by the info block and the action area and scales itself
           // down into it - so growing content (e.g. the open in-call
           // keypad) shrinks the avatar, never the controls.
-          if (!params.conference.isPresent && !params.remotePictureShown && !params.keypadShown)
+          //
+          // One picture can only be of one person, so it is shown for one
+          // call. With several the roster rows carry a picture each, and a
+          // large one of whichever row happens to be focused would say less
+          // than they do while taking the room they need.
+          if (params.activeCalls.length < 2 &&
+              !params.conference.isPresent &&
+              !params.remotePictureShown &&
+              !params.keypadShown)
             Flexible(
               child: Center(
                 child: FittedBox(
