@@ -3,8 +3,7 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $ContactsTableTable extends ContactsTable
-    with TableInfo<$ContactsTableTable, ContactData> {
+class $ContactsTableTable extends ContactsTable with TableInfo<$ContactsTableTable, ContactData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -18,35 +17,26 @@ class $ContactsTableTable extends ContactsTable
     hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'),
   );
   @override
-  late final GeneratedColumnWithTypeConverter<ContactSourceTypeEnum, int>
-  sourceType =
-      GeneratedColumn<int>(
-        'source_type',
-        aliasedName,
-        false,
-        type: DriftSqlType.int,
-        requiredDuringInsert: true,
-      ).withConverter<ContactSourceTypeEnum>(
-        $ContactsTableTable.$convertersourceType,
-      );
+  late final GeneratedColumnWithTypeConverter<ContactSourceTypeEnum, int> sourceType = GeneratedColumn<int>(
+    'source_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  ).withConverter<ContactSourceTypeEnum>($ContactsTableTable.$convertersourceType);
   @override
-  late final GeneratedColumnWithTypeConverter<ContactKindTypeEnum, int> kind =
-      GeneratedColumn<int>(
-        'kind',
-        aliasedName,
-        false,
-        type: DriftSqlType.int,
-        requiredDuringInsert: false,
-        defaultValue: Constant(ContactKindTypeEnum.visible.index),
-      ).withConverter<ContactKindTypeEnum>($ContactsTableTable.$converterkind);
-  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
-    'sourceId',
-  );
+  late final GeneratedColumnWithTypeConverter<ContactKindTypeEnum, int> kind = GeneratedColumn<int>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: Constant(ContactKindTypeEnum.visible.index),
+  ).withConverter<ContactKindTypeEnum>($ContactsTableTable.$converterkind);
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta('sourceId');
   @override
   late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
     'source_id',
@@ -55,9 +45,7 @@ class $ContactsTableTable extends ContactsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _firstNameMeta = const VerificationMeta(
-    'firstName',
-  );
+  static const VerificationMeta _firstNameMeta = const VerificationMeta('firstName');
   @override
   late final GeneratedColumn<String> firstName = GeneratedColumn<String>(
     'first_name',
@@ -66,9 +54,7 @@ class $ContactsTableTable extends ContactsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _lastNameMeta = const VerificationMeta(
-    'lastName',
-  );
+  static const VerificationMeta _lastNameMeta = const VerificationMeta('lastName');
   @override
   late final GeneratedColumn<String> lastName = GeneratedColumn<String>(
     'last_name',
@@ -77,9 +63,7 @@ class $ContactsTableTable extends ContactsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _aliasNameMeta = const VerificationMeta(
-    'aliasName',
-  );
+  static const VerificationMeta _aliasNameMeta = const VerificationMeta('aliasName');
   @override
   late final GeneratedColumn<String> aliasName = GeneratedColumn<String>(
     'alias_name',
@@ -88,9 +72,7 @@ class $ContactsTableTable extends ContactsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _thumbnailMeta = const VerificationMeta(
-    'thumbnail',
-  );
+  static const VerificationMeta _thumbnailMeta = const VerificationMeta('thumbnail');
   @override
   late final GeneratedColumn<Uint8List> thumbnail = GeneratedColumn<Uint8List>(
     'thumbnail',
@@ -99,9 +81,7 @@ class $ContactsTableTable extends ContactsTable
     type: DriftSqlType.blob,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _registeredMeta = const VerificationMeta(
-    'registered',
-  );
+  static const VerificationMeta _registeredMeta = const VerificationMeta('registered');
   @override
   late final GeneratedColumn<bool> registered = GeneratedColumn<bool>(
     'registered',
@@ -109,13 +89,9 @@ class $ContactsTableTable extends ContactsTable
     true,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("registered" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("registered" IN (0, 1))'),
   );
-  static const VerificationMeta _userRegisteredMeta = const VerificationMeta(
-    'userRegistered',
-  );
+  static const VerificationMeta _userRegisteredMeta = const VerificationMeta('userRegistered');
   @override
   late final GeneratedColumn<bool> userRegistered = GeneratedColumn<bool>(
     'user_registered',
@@ -123,13 +99,9 @@ class $ContactsTableTable extends ContactsTable
     true,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("user_registered" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("user_registered" IN (0, 1))'),
   );
-  static const VerificationMeta _isCurrentUserMeta = const VerificationMeta(
-    'isCurrentUser',
-  );
+  static const VerificationMeta _isCurrentUserMeta = const VerificationMeta('isCurrentUser');
   @override
   late final GeneratedColumn<bool> isCurrentUser = GeneratedColumn<bool>(
     'is_current_user',
@@ -137,13 +109,9 @@ class $ContactsTableTable extends ContactsTable
     true,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_current_user" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("is_current_user" IN (0, 1))'),
   );
-  static const VerificationMeta _insertedAtMeta = const VerificationMeta(
-    'insertedAt',
-  );
+  static const VerificationMeta _insertedAtMeta = const VerificationMeta('insertedAt');
   @override
   late final GeneratedColumn<DateTime> insertedAt = GeneratedColumn<DateTime>(
     'inserted_at',
@@ -152,9 +120,7 @@ class $ContactsTableTable extends ContactsTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -185,80 +151,47 @@ class $ContactsTableTable extends ContactsTable
   String get actualTableName => $name;
   static const String $name = 'contacts';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ContactData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ContactData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('source_id')) {
-      context.handle(
-        _sourceIdMeta,
-        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
-      );
+      context.handle(_sourceIdMeta, sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta));
     }
     if (data.containsKey('first_name')) {
-      context.handle(
-        _firstNameMeta,
-        firstName.isAcceptableOrUnknown(data['first_name']!, _firstNameMeta),
-      );
+      context.handle(_firstNameMeta, firstName.isAcceptableOrUnknown(data['first_name']!, _firstNameMeta));
     }
     if (data.containsKey('last_name')) {
-      context.handle(
-        _lastNameMeta,
-        lastName.isAcceptableOrUnknown(data['last_name']!, _lastNameMeta),
-      );
+      context.handle(_lastNameMeta, lastName.isAcceptableOrUnknown(data['last_name']!, _lastNameMeta));
     }
     if (data.containsKey('alias_name')) {
-      context.handle(
-        _aliasNameMeta,
-        aliasName.isAcceptableOrUnknown(data['alias_name']!, _aliasNameMeta),
-      );
+      context.handle(_aliasNameMeta, aliasName.isAcceptableOrUnknown(data['alias_name']!, _aliasNameMeta));
     }
     if (data.containsKey('thumbnail')) {
-      context.handle(
-        _thumbnailMeta,
-        thumbnail.isAcceptableOrUnknown(data['thumbnail']!, _thumbnailMeta),
-      );
+      context.handle(_thumbnailMeta, thumbnail.isAcceptableOrUnknown(data['thumbnail']!, _thumbnailMeta));
     }
     if (data.containsKey('registered')) {
-      context.handle(
-        _registeredMeta,
-        registered.isAcceptableOrUnknown(data['registered']!, _registeredMeta),
-      );
+      context.handle(_registeredMeta, registered.isAcceptableOrUnknown(data['registered']!, _registeredMeta));
     }
     if (data.containsKey('user_registered')) {
       context.handle(
         _userRegisteredMeta,
-        userRegistered.isAcceptableOrUnknown(
-          data['user_registered']!,
-          _userRegisteredMeta,
-        ),
+        userRegistered.isAcceptableOrUnknown(data['user_registered']!, _userRegisteredMeta),
       );
     }
     if (data.containsKey('is_current_user')) {
       context.handle(
         _isCurrentUserMeta,
-        isCurrentUser.isAcceptableOrUnknown(
-          data['is_current_user']!,
-          _isCurrentUserMeta,
-        ),
+        isCurrentUser.isAcceptableOrUnknown(data['is_current_user']!, _isCurrentUserMeta),
       );
     }
     if (data.containsKey('inserted_at')) {
-      context.handle(
-        _insertedAtMeta,
-        insertedAt.isAcceptableOrUnknown(data['inserted_at']!, _insertedAtMeta),
-      );
+      context.handle(_insertedAtMeta, insertedAt.isAcceptableOrUnknown(data['inserted_at']!, _insertedAtMeta));
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
     return context;
   }
@@ -269,62 +202,23 @@ class $ContactsTableTable extends ContactsTable
   ContactData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ContactData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       sourceType: $ContactsTableTable.$convertersourceType.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}source_type'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}source_type'])!,
       ),
       kind: $ContactsTableTable.$converterkind.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}kind'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}kind'])!,
       ),
-      sourceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source_id'],
-      ),
-      firstName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}first_name'],
-      ),
-      lastName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}last_name'],
-      ),
-      aliasName: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}alias_name'],
-      ),
-      thumbnail: attachedDatabase.typeMapping.read(
-        DriftSqlType.blob,
-        data['${effectivePrefix}thumbnail'],
-      ),
-      registered: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}registered'],
-      ),
-      userRegistered: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}user_registered'],
-      ),
-      isCurrentUser: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_current_user'],
-      ),
-      insertedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}inserted_at'],
-      ),
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      ),
+      sourceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source_id']),
+      firstName: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}first_name']),
+      lastName: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}last_name']),
+      aliasName: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}alias_name']),
+      thumbnail: attachedDatabase.typeMapping.read(DriftSqlType.blob, data['${effectivePrefix}thumbnail']),
+      registered: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}registered']),
+      userRegistered: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}user_registered']),
+      isCurrentUser: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}is_current_user']),
+      insertedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}inserted_at']),
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at']),
     );
   }
 
@@ -333,10 +227,8 @@ class $ContactsTableTable extends ContactsTable
     return $ContactsTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<ContactSourceTypeEnum, int, int>
-  $convertersourceType = const EnumIndexConverter<ContactSourceTypeEnum>(
-    ContactSourceTypeEnum.values,
-  );
+  static JsonTypeConverter2<ContactSourceTypeEnum, int, int> $convertersourceType =
+      const EnumIndexConverter<ContactSourceTypeEnum>(ContactSourceTypeEnum.values);
   static JsonTypeConverter2<ContactKindTypeEnum, int, int> $converterkind =
       const EnumIndexConverter<ContactKindTypeEnum>(ContactKindTypeEnum.values);
 }
@@ -375,14 +267,10 @@ class ContactData extends DataClass implements Insertable<ContactData> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     {
-      map['source_type'] = Variable<int>(
-        $ContactsTableTable.$convertersourceType.toSql(sourceType),
-      );
+      map['source_type'] = Variable<int>($ContactsTableTable.$convertersourceType.toSql(sourceType));
     }
     {
-      map['kind'] = Variable<int>(
-        $ContactsTableTable.$converterkind.toSql(kind),
-      );
+      map['kind'] = Variable<int>($ContactsTableTable.$converterkind.toSql(kind));
     }
     if (!nullToAbsent || sourceId != null) {
       map['source_id'] = Variable<String>(sourceId);
@@ -422,52 +310,25 @@ class ContactData extends DataClass implements Insertable<ContactData> {
       id: Value(id),
       sourceType: Value(sourceType),
       kind: Value(kind),
-      sourceId: sourceId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(sourceId),
-      firstName: firstName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(firstName),
-      lastName: lastName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastName),
-      aliasName: aliasName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(aliasName),
-      thumbnail: thumbnail == null && nullToAbsent
-          ? const Value.absent()
-          : Value(thumbnail),
-      registered: registered == null && nullToAbsent
-          ? const Value.absent()
-          : Value(registered),
-      userRegistered: userRegistered == null && nullToAbsent
-          ? const Value.absent()
-          : Value(userRegistered),
-      isCurrentUser: isCurrentUser == null && nullToAbsent
-          ? const Value.absent()
-          : Value(isCurrentUser),
-      insertedAt: insertedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(insertedAt),
-      updatedAt: updatedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(updatedAt),
+      sourceId: sourceId == null && nullToAbsent ? const Value.absent() : Value(sourceId),
+      firstName: firstName == null && nullToAbsent ? const Value.absent() : Value(firstName),
+      lastName: lastName == null && nullToAbsent ? const Value.absent() : Value(lastName),
+      aliasName: aliasName == null && nullToAbsent ? const Value.absent() : Value(aliasName),
+      thumbnail: thumbnail == null && nullToAbsent ? const Value.absent() : Value(thumbnail),
+      registered: registered == null && nullToAbsent ? const Value.absent() : Value(registered),
+      userRegistered: userRegistered == null && nullToAbsent ? const Value.absent() : Value(userRegistered),
+      isCurrentUser: isCurrentUser == null && nullToAbsent ? const Value.absent() : Value(isCurrentUser),
+      insertedAt: insertedAt == null && nullToAbsent ? const Value.absent() : Value(insertedAt),
+      updatedAt: updatedAt == null && nullToAbsent ? const Value.absent() : Value(updatedAt),
     );
   }
 
-  factory ContactData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ContactData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContactData(
       id: serializer.fromJson<int>(json['id']),
-      sourceType: $ContactsTableTable.$convertersourceType.fromJson(
-        serializer.fromJson<int>(json['sourceType']),
-      ),
-      kind: $ContactsTableTable.$converterkind.fromJson(
-        serializer.fromJson<int>(json['kind']),
-      ),
+      sourceType: $ContactsTableTable.$convertersourceType.fromJson(serializer.fromJson<int>(json['sourceType'])),
+      kind: $ContactsTableTable.$converterkind.fromJson(serializer.fromJson<int>(json['kind'])),
       sourceId: serializer.fromJson<String?>(json['sourceId']),
       firstName: serializer.fromJson<String?>(json['firstName']),
       lastName: serializer.fromJson<String?>(json['lastName']),
@@ -485,12 +346,8 @@ class ContactData extends DataClass implements Insertable<ContactData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'sourceType': serializer.toJson<int>(
-        $ContactsTableTable.$convertersourceType.toJson(sourceType),
-      ),
-      'kind': serializer.toJson<int>(
-        $ContactsTableTable.$converterkind.toJson(kind),
-      ),
+      'sourceType': serializer.toJson<int>($ContactsTableTable.$convertersourceType.toJson(sourceType)),
+      'kind': serializer.toJson<int>($ContactsTableTable.$converterkind.toJson(kind)),
       'sourceId': serializer.toJson<String?>(sourceId),
       'firstName': serializer.toJson<String?>(firstName),
       'lastName': serializer.toJson<String?>(lastName),
@@ -528,39 +385,25 @@ class ContactData extends DataClass implements Insertable<ContactData> {
     aliasName: aliasName.present ? aliasName.value : this.aliasName,
     thumbnail: thumbnail.present ? thumbnail.value : this.thumbnail,
     registered: registered.present ? registered.value : this.registered,
-    userRegistered: userRegistered.present
-        ? userRegistered.value
-        : this.userRegistered,
-    isCurrentUser: isCurrentUser.present
-        ? isCurrentUser.value
-        : this.isCurrentUser,
+    userRegistered: userRegistered.present ? userRegistered.value : this.userRegistered,
+    isCurrentUser: isCurrentUser.present ? isCurrentUser.value : this.isCurrentUser,
     insertedAt: insertedAt.present ? insertedAt.value : this.insertedAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   ContactData copyWithCompanion(ContactDataCompanion data) {
     return ContactData(
       id: data.id.present ? data.id.value : this.id,
-      sourceType: data.sourceType.present
-          ? data.sourceType.value
-          : this.sourceType,
+      sourceType: data.sourceType.present ? data.sourceType.value : this.sourceType,
       kind: data.kind.present ? data.kind.value : this.kind,
       sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
       firstName: data.firstName.present ? data.firstName.value : this.firstName,
       lastName: data.lastName.present ? data.lastName.value : this.lastName,
       aliasName: data.aliasName.present ? data.aliasName.value : this.aliasName,
       thumbnail: data.thumbnail.present ? data.thumbnail.value : this.thumbnail,
-      registered: data.registered.present
-          ? data.registered.value
-          : this.registered,
-      userRegistered: data.userRegistered.present
-          ? data.userRegistered.value
-          : this.userRegistered,
-      isCurrentUser: data.isCurrentUser.present
-          ? data.isCurrentUser.value
-          : this.isCurrentUser,
-      insertedAt: data.insertedAt.present
-          ? data.insertedAt.value
-          : this.insertedAt,
+      registered: data.registered.present ? data.registered.value : this.registered,
+      userRegistered: data.userRegistered.present ? data.userRegistered.value : this.userRegistered,
+      isCurrentUser: data.isCurrentUser.present ? data.isCurrentUser.value : this.isCurrentUser,
+      insertedAt: data.insertedAt.present ? data.insertedAt.value : this.insertedAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -735,14 +578,10 @@ class ContactDataCompanion extends UpdateCompanion<ContactData> {
       map['id'] = Variable<int>(id.value);
     }
     if (sourceType.present) {
-      map['source_type'] = Variable<int>(
-        $ContactsTableTable.$convertersourceType.toSql(sourceType.value),
-      );
+      map['source_type'] = Variable<int>($ContactsTableTable.$convertersourceType.toSql(sourceType.value));
     }
     if (kind.present) {
-      map['kind'] = Variable<int>(
-        $ContactsTableTable.$converterkind.toSql(kind.value),
-      );
+      map['kind'] = Variable<int>($ContactsTableTable.$converterkind.toSql(kind.value));
     }
     if (sourceId.present) {
       map['source_id'] = Variable<String>(sourceId.value);
@@ -798,8 +637,7 @@ class ContactDataCompanion extends UpdateCompanion<ContactData> {
   }
 }
 
-class $ContactPhonesTableTable extends ContactPhonesTable
-    with TableInfo<$ContactPhonesTableTable, ContactPhoneData> {
+class $ContactPhonesTableTable extends ContactPhonesTable with TableInfo<$ContactPhonesTableTable, ContactPhoneData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -813,9 +651,7 @@ class $ContactPhonesTableTable extends ContactPhonesTable
     hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'),
   );
   static const VerificationMeta _numberMeta = const VerificationMeta('number');
   @override
@@ -835,9 +671,7 @@ class $ContactPhonesTableTable extends ContactPhonesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _contactIdMeta = const VerificationMeta(
-    'contactId',
-  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta('contactId');
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
     'contact_id',
@@ -847,9 +681,7 @@ class $ContactPhonesTableTable extends ContactPhonesTable
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL REFERENCES contacts(id) ON DELETE CASCADE',
   );
-  static const VerificationMeta _insertedAtMeta = const VerificationMeta(
-    'insertedAt',
-  );
+  static const VerificationMeta _insertedAtMeta = const VerificationMeta('insertedAt');
   @override
   late final GeneratedColumn<DateTime> insertedAt = GeneratedColumn<DateTime>(
     'inserted_at',
@@ -858,9 +690,7 @@ class $ContactPhonesTableTable extends ContactPhonesTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -870,64 +700,39 @@ class $ContactPhonesTableTable extends ContactPhonesTable
     requiredDuringInsert: false,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    number,
-    label,
-    contactId,
-    insertedAt,
-    updatedAt,
-  ];
+  List<GeneratedColumn> get $columns => [id, number, label, contactId, insertedAt, updatedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'contact_phones';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ContactPhoneData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ContactPhoneData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('number')) {
-      context.handle(
-        _numberMeta,
-        number.isAcceptableOrUnknown(data['number']!, _numberMeta),
-      );
+      context.handle(_numberMeta, number.isAcceptableOrUnknown(data['number']!, _numberMeta));
     } else if (isInserting) {
       context.missing(_numberMeta);
     }
     if (data.containsKey('label')) {
-      context.handle(
-        _labelMeta,
-        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
-      );
+      context.handle(_labelMeta, label.isAcceptableOrUnknown(data['label']!, _labelMeta));
     } else if (isInserting) {
       context.missing(_labelMeta);
     }
     if (data.containsKey('contact_id')) {
-      context.handle(
-        _contactIdMeta,
-        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
-      );
+      context.handle(_contactIdMeta, contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
     } else if (isInserting) {
       context.missing(_contactIdMeta);
     }
     if (data.containsKey('inserted_at')) {
-      context.handle(
-        _insertedAtMeta,
-        insertedAt.isAcceptableOrUnknown(data['inserted_at']!, _insertedAtMeta),
-      );
+      context.handle(_insertedAtMeta, insertedAt.isAcceptableOrUnknown(data['inserted_at']!, _insertedAtMeta));
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
     return context;
   }
@@ -938,30 +743,12 @@ class $ContactPhonesTableTable extends ContactPhonesTable
   ContactPhoneData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ContactPhoneData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      number: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}number'],
-      )!,
-      label: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}label'],
-      )!,
-      contactId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}contact_id'],
-      )!,
-      insertedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}inserted_at'],
-      ),
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      number: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}number'])!,
+      label: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}label'])!,
+      contactId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      insertedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}inserted_at']),
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at']),
     );
   }
 
@@ -971,8 +758,7 @@ class $ContactPhonesTableTable extends ContactPhonesTable
   }
 }
 
-class ContactPhoneData extends DataClass
-    implements Insertable<ContactPhoneData> {
+class ContactPhoneData extends DataClass implements Insertable<ContactPhoneData> {
   final int id;
   final String number;
   final String label;
@@ -1009,19 +795,12 @@ class ContactPhoneData extends DataClass
       number: Value(number),
       label: Value(label),
       contactId: Value(contactId),
-      insertedAt: insertedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(insertedAt),
-      updatedAt: updatedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(updatedAt),
+      insertedAt: insertedAt == null && nullToAbsent ? const Value.absent() : Value(insertedAt),
+      updatedAt: updatedAt == null && nullToAbsent ? const Value.absent() : Value(updatedAt),
     );
   }
 
-  factory ContactPhoneData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ContactPhoneData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContactPhoneData(
       id: serializer.fromJson<int>(json['id']),
@@ -1066,9 +845,7 @@ class ContactPhoneData extends DataClass
       number: data.number.present ? data.number.value : this.number,
       label: data.label.present ? data.label.value : this.label,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
-      insertedAt: data.insertedAt.present
-          ? data.insertedAt.value
-          : this.insertedAt,
+      insertedAt: data.insertedAt.present ? data.insertedAt.value : this.insertedAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -1087,8 +864,7 @@ class ContactPhoneData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, number, label, contactId, insertedAt, updatedAt);
+  int get hashCode => Object.hash(id, number, label, contactId, insertedAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1200,8 +976,7 @@ class ContactPhoneDataCompanion extends UpdateCompanion<ContactPhoneData> {
   }
 }
 
-class $ContactEmailsTableTable extends ContactEmailsTable
-    with TableInfo<$ContactEmailsTableTable, ContactEmailData> {
+class $ContactEmailsTableTable extends ContactEmailsTable with TableInfo<$ContactEmailsTableTable, ContactEmailData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1215,13 +990,9 @@ class $ContactEmailsTableTable extends ContactEmailsTable
     hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'),
   );
-  static const VerificationMeta _addressMeta = const VerificationMeta(
-    'address',
-  );
+  static const VerificationMeta _addressMeta = const VerificationMeta('address');
   @override
   late final GeneratedColumn<String> address = GeneratedColumn<String>(
     'address',
@@ -1239,9 +1010,7 @@ class $ContactEmailsTableTable extends ContactEmailsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _contactIdMeta = const VerificationMeta(
-    'contactId',
-  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta('contactId');
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
     'contact_id',
@@ -1251,9 +1020,7 @@ class $ContactEmailsTableTable extends ContactEmailsTable
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL REFERENCES contacts(id) ON DELETE CASCADE',
   );
-  static const VerificationMeta _insertedAtMeta = const VerificationMeta(
-    'insertedAt',
-  );
+  static const VerificationMeta _insertedAtMeta = const VerificationMeta('insertedAt');
   @override
   late final GeneratedColumn<DateTime> insertedAt = GeneratedColumn<DateTime>(
     'inserted_at',
@@ -1262,9 +1029,7 @@ class $ContactEmailsTableTable extends ContactEmailsTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -1274,64 +1039,39 @@ class $ContactEmailsTableTable extends ContactEmailsTable
     requiredDuringInsert: false,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    address,
-    label,
-    contactId,
-    insertedAt,
-    updatedAt,
-  ];
+  List<GeneratedColumn> get $columns => [id, address, label, contactId, insertedAt, updatedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'contact_emails';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ContactEmailData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ContactEmailData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('address')) {
-      context.handle(
-        _addressMeta,
-        address.isAcceptableOrUnknown(data['address']!, _addressMeta),
-      );
+      context.handle(_addressMeta, address.isAcceptableOrUnknown(data['address']!, _addressMeta));
     } else if (isInserting) {
       context.missing(_addressMeta);
     }
     if (data.containsKey('label')) {
-      context.handle(
-        _labelMeta,
-        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
-      );
+      context.handle(_labelMeta, label.isAcceptableOrUnknown(data['label']!, _labelMeta));
     } else if (isInserting) {
       context.missing(_labelMeta);
     }
     if (data.containsKey('contact_id')) {
-      context.handle(
-        _contactIdMeta,
-        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
-      );
+      context.handle(_contactIdMeta, contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
     } else if (isInserting) {
       context.missing(_contactIdMeta);
     }
     if (data.containsKey('inserted_at')) {
-      context.handle(
-        _insertedAtMeta,
-        insertedAt.isAcceptableOrUnknown(data['inserted_at']!, _insertedAtMeta),
-      );
+      context.handle(_insertedAtMeta, insertedAt.isAcceptableOrUnknown(data['inserted_at']!, _insertedAtMeta));
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
     return context;
   }
@@ -1342,30 +1082,12 @@ class $ContactEmailsTableTable extends ContactEmailsTable
   ContactEmailData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ContactEmailData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      address: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}address'],
-      )!,
-      label: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}label'],
-      )!,
-      contactId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}contact_id'],
-      )!,
-      insertedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}inserted_at'],
-      ),
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      address: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}address'])!,
+      label: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}label'])!,
+      contactId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      insertedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}inserted_at']),
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at']),
     );
   }
 
@@ -1375,8 +1097,7 @@ class $ContactEmailsTableTable extends ContactEmailsTable
   }
 }
 
-class ContactEmailData extends DataClass
-    implements Insertable<ContactEmailData> {
+class ContactEmailData extends DataClass implements Insertable<ContactEmailData> {
   final int id;
   final String address;
   final String label;
@@ -1413,19 +1134,12 @@ class ContactEmailData extends DataClass
       address: Value(address),
       label: Value(label),
       contactId: Value(contactId),
-      insertedAt: insertedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(insertedAt),
-      updatedAt: updatedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(updatedAt),
+      insertedAt: insertedAt == null && nullToAbsent ? const Value.absent() : Value(insertedAt),
+      updatedAt: updatedAt == null && nullToAbsent ? const Value.absent() : Value(updatedAt),
     );
   }
 
-  factory ContactEmailData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ContactEmailData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContactEmailData(
       id: serializer.fromJson<int>(json['id']),
@@ -1470,9 +1184,7 @@ class ContactEmailData extends DataClass
       address: data.address.present ? data.address.value : this.address,
       label: data.label.present ? data.label.value : this.label,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
-      insertedAt: data.insertedAt.present
-          ? data.insertedAt.value
-          : this.insertedAt,
+      insertedAt: data.insertedAt.present ? data.insertedAt.value : this.insertedAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -1491,8 +1203,7 @@ class ContactEmailData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, address, label, contactId, insertedAt, updatedAt);
+  int get hashCode => Object.hash(id, address, label, contactId, insertedAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1604,8 +1315,7 @@ class ContactEmailDataCompanion extends UpdateCompanion<ContactEmailData> {
   }
 }
 
-class $CallLogsTableTable extends CallLogsTable
-    with TableInfo<$CallLogsTableTable, CallLogData> {
+class $CallLogsTableTable extends CallLogsTable with TableInfo<$CallLogsTableTable, CallLogData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1619,22 +1329,16 @@ class $CallLogsTableTable extends CallLogsTable
     hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'),
   );
   @override
-  late final GeneratedColumnWithTypeConverter<CallLogDirectionEnum, int>
-  direction =
-      GeneratedColumn<int>(
-        'direction',
-        aliasedName,
-        false,
-        type: DriftSqlType.int,
-        requiredDuringInsert: true,
-      ).withConverter<CallLogDirectionEnum>(
-        $CallLogsTableTable.$converterdirection,
-      );
+  late final GeneratedColumnWithTypeConverter<CallLogDirectionEnum, int> direction = GeneratedColumn<int>(
+    'direction',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  ).withConverter<CallLogDirectionEnum>($CallLogsTableTable.$converterdirection);
   static const VerificationMeta _numberMeta = const VerificationMeta('number');
   @override
   late final GeneratedColumn<String> number = GeneratedColumn<String>(
@@ -1643,12 +1347,9 @@ class $CallLogsTableTable extends CallLogsTable
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints:
-        'NOT NULL CONSTRAINT "call_logs.number not_empty" CHECK (length(number) > 0)',
+    $customConstraints: 'NOT NULL CONSTRAINT "call_logs.number not_empty" CHECK (length(number) > 0)',
   );
-  static const VerificationMeta _usernameMeta = const VerificationMeta(
-    'username',
-  );
+  static const VerificationMeta _usernameMeta = const VerificationMeta('username');
   @override
   late final GeneratedColumn<String> username = GeneratedColumn<String>(
     'username',
@@ -1665,13 +1366,9 @@ class $CallLogsTableTable extends CallLogsTable
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("video" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("video" IN (0, 1))'),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
     'created_at',
@@ -1680,9 +1377,7 @@ class $CallLogsTableTable extends CallLogsTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _acceptedAtMeta = const VerificationMeta(
-    'acceptedAt',
-  );
+  static const VerificationMeta _acceptedAtMeta = const VerificationMeta('acceptedAt');
   @override
   late final GeneratedColumn<DateTime> acceptedAt = GeneratedColumn<DateTime>(
     'accepted_at',
@@ -1691,9 +1386,7 @@ class $CallLogsTableTable extends CallLogsTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _hungUpAtMeta = const VerificationMeta(
-    'hungUpAt',
-  );
+  static const VerificationMeta _hungUpAtMeta = const VerificationMeta('hungUpAt');
   @override
   late final GeneratedColumn<DateTime> hungUpAt = GeneratedColumn<DateTime>(
     'hung_up_at',
@@ -1703,72 +1396,42 @@ class $CallLogsTableTable extends CallLogsTable
     requiredDuringInsert: false,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    direction,
-    number,
-    username,
-    video,
-    createdAt,
-    acceptedAt,
-    hungUpAt,
-  ];
+  List<GeneratedColumn> get $columns => [id, direction, number, username, video, createdAt, acceptedAt, hungUpAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'call_logs';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<CallLogData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<CallLogData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('number')) {
-      context.handle(
-        _numberMeta,
-        number.isAcceptableOrUnknown(data['number']!, _numberMeta),
-      );
+      context.handle(_numberMeta, number.isAcceptableOrUnknown(data['number']!, _numberMeta));
     } else if (isInserting) {
       context.missing(_numberMeta);
     }
     if (data.containsKey('username')) {
-      context.handle(
-        _usernameMeta,
-        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
-      );
+      context.handle(_usernameMeta, username.isAcceptableOrUnknown(data['username']!, _usernameMeta));
     }
     if (data.containsKey('video')) {
-      context.handle(
-        _videoMeta,
-        video.isAcceptableOrUnknown(data['video']!, _videoMeta),
-      );
+      context.handle(_videoMeta, video.isAcceptableOrUnknown(data['video']!, _videoMeta));
     } else if (isInserting) {
       context.missing(_videoMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta, createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
     if (data.containsKey('accepted_at')) {
-      context.handle(
-        _acceptedAtMeta,
-        acceptedAt.isAcceptableOrUnknown(data['accepted_at']!, _acceptedAtMeta),
-      );
+      context.handle(_acceptedAtMeta, acceptedAt.isAcceptableOrUnknown(data['accepted_at']!, _acceptedAtMeta));
     }
     if (data.containsKey('hung_up_at')) {
-      context.handle(
-        _hungUpAtMeta,
-        hungUpAt.isAcceptableOrUnknown(data['hung_up_at']!, _hungUpAtMeta),
-      );
+      context.handle(_hungUpAtMeta, hungUpAt.isAcceptableOrUnknown(data['hung_up_at']!, _hungUpAtMeta));
     }
     return context;
   }
@@ -1779,40 +1442,16 @@ class $CallLogsTableTable extends CallLogsTable
   CallLogData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CallLogData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       direction: $CallLogsTableTable.$converterdirection.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}direction'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}direction'])!,
       ),
-      number: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}number'],
-      )!,
-      username: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}username'],
-      ),
-      video: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}video'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      acceptedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}accepted_at'],
-      ),
-      hungUpAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}hung_up_at'],
-      ),
+      number: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}number'])!,
+      username: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}username']),
+      video: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}video'])!,
+      createdAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      acceptedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}accepted_at']),
+      hungUpAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}hung_up_at']),
     );
   }
 
@@ -1821,10 +1460,8 @@ class $CallLogsTableTable extends CallLogsTable
     return $CallLogsTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<CallLogDirectionEnum, int, int>
-  $converterdirection = const EnumIndexConverter<CallLogDirectionEnum>(
-    CallLogDirectionEnum.values,
-  );
+  static JsonTypeConverter2<CallLogDirectionEnum, int, int> $converterdirection =
+      const EnumIndexConverter<CallLogDirectionEnum>(CallLogDirectionEnum.values);
 }
 
 class CallLogData extends DataClass implements Insertable<CallLogData> {
@@ -1851,9 +1488,7 @@ class CallLogData extends DataClass implements Insertable<CallLogData> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     {
-      map['direction'] = Variable<int>(
-        $CallLogsTableTable.$converterdirection.toSql(direction),
-      );
+      map['direction'] = Variable<int>($CallLogsTableTable.$converterdirection.toSql(direction));
     }
     map['number'] = Variable<String>(number);
     if (!nullToAbsent || username != null) {
@@ -1875,30 +1510,19 @@ class CallLogData extends DataClass implements Insertable<CallLogData> {
       id: Value(id),
       direction: Value(direction),
       number: Value(number),
-      username: username == null && nullToAbsent
-          ? const Value.absent()
-          : Value(username),
+      username: username == null && nullToAbsent ? const Value.absent() : Value(username),
       video: Value(video),
       createdAt: Value(createdAt),
-      acceptedAt: acceptedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(acceptedAt),
-      hungUpAt: hungUpAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(hungUpAt),
+      acceptedAt: acceptedAt == null && nullToAbsent ? const Value.absent() : Value(acceptedAt),
+      hungUpAt: hungUpAt == null && nullToAbsent ? const Value.absent() : Value(hungUpAt),
     );
   }
 
-  factory CallLogData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory CallLogData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CallLogData(
       id: serializer.fromJson<int>(json['id']),
-      direction: $CallLogsTableTable.$converterdirection.fromJson(
-        serializer.fromJson<int>(json['direction']),
-      ),
+      direction: $CallLogsTableTable.$converterdirection.fromJson(serializer.fromJson<int>(json['direction'])),
       number: serializer.fromJson<String>(json['number']),
       username: serializer.fromJson<String?>(json['username']),
       video: serializer.fromJson<bool>(json['video']),
@@ -1912,9 +1536,7 @@ class CallLogData extends DataClass implements Insertable<CallLogData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'direction': serializer.toJson<int>(
-        $CallLogsTableTable.$converterdirection.toJson(direction),
-      ),
+      'direction': serializer.toJson<int>($CallLogsTableTable.$converterdirection.toJson(direction)),
       'number': serializer.toJson<String>(number),
       'username': serializer.toJson<String?>(username),
       'video': serializer.toJson<bool>(video),
@@ -1951,9 +1573,7 @@ class CallLogData extends DataClass implements Insertable<CallLogData> {
       username: data.username.present ? data.username.value : this.username,
       video: data.video.present ? data.video.value : this.video,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      acceptedAt: data.acceptedAt.present
-          ? data.acceptedAt.value
-          : this.acceptedAt,
+      acceptedAt: data.acceptedAt.present ? data.acceptedAt.value : this.acceptedAt,
       hungUpAt: data.hungUpAt.present ? data.hungUpAt.value : this.hungUpAt,
     );
   }
@@ -1974,16 +1594,7 @@ class CallLogData extends DataClass implements Insertable<CallLogData> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    direction,
-    number,
-    username,
-    video,
-    createdAt,
-    acceptedAt,
-    hungUpAt,
-  );
+  int get hashCode => Object.hash(id, direction, number, username, video, createdAt, acceptedAt, hungUpAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2081,9 +1692,7 @@ class CallLogDataCompanion extends UpdateCompanion<CallLogData> {
       map['id'] = Variable<int>(id.value);
     }
     if (direction.present) {
-      map['direction'] = Variable<int>(
-        $CallLogsTableTable.$converterdirection.toSql(direction.value),
-      );
+      map['direction'] = Variable<int>($CallLogsTableTable.$converterdirection.toSql(direction.value));
     }
     if (number.present) {
       map['number'] = Variable<String>(number.value);
@@ -2122,8 +1731,7 @@ class CallLogDataCompanion extends UpdateCompanion<CallLogData> {
   }
 }
 
-class $FavoritesTableTable extends FavoritesTable
-    with TableInfo<$FavoritesTableTable, FavoriteData> {
+class $FavoritesTableTable extends FavoritesTable with TableInfo<$FavoritesTableTable, FavoriteData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2137,13 +1745,9 @@ class $FavoritesTableTable extends FavoritesTable
     hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'),
   );
-  static const VerificationMeta _contactPhoneIdMeta = const VerificationMeta(
-    'contactPhoneId',
-  );
+  static const VerificationMeta _contactPhoneIdMeta = const VerificationMeta('contactPhoneId');
   @override
   late final GeneratedColumn<int> contactPhoneId = GeneratedColumn<int>(
     'contact_phone_id',
@@ -2151,12 +1755,9 @@ class $FavoritesTableTable extends FavoritesTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    $customConstraints:
-        'NOT NULL REFERENCES contact_phones(id) ON DELETE CASCADE',
+    $customConstraints: 'NOT NULL REFERENCES contact_phones(id) ON DELETE CASCADE',
   );
-  static const VerificationMeta _positionMeta = const VerificationMeta(
-    'position',
-  );
+  static const VerificationMeta _positionMeta = const VerificationMeta('position');
   @override
   late final GeneratedColumn<int> position = GeneratedColumn<int>(
     'position',
@@ -2173,10 +1774,7 @@ class $FavoritesTableTable extends FavoritesTable
   String get actualTableName => $name;
   static const String $name = 'favorites';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<FavoriteData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<FavoriteData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -2185,19 +1783,13 @@ class $FavoritesTableTable extends FavoritesTable
     if (data.containsKey('contact_phone_id')) {
       context.handle(
         _contactPhoneIdMeta,
-        contactPhoneId.isAcceptableOrUnknown(
-          data['contact_phone_id']!,
-          _contactPhoneIdMeta,
-        ),
+        contactPhoneId.isAcceptableOrUnknown(data['contact_phone_id']!, _contactPhoneIdMeta),
       );
     } else if (isInserting) {
       context.missing(_contactPhoneIdMeta);
     }
     if (data.containsKey('position')) {
-      context.handle(
-        _positionMeta,
-        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
-      );
+      context.handle(_positionMeta, position.isAcceptableOrUnknown(data['position']!, _positionMeta));
     } else if (isInserting) {
       context.missing(_positionMeta);
     }
@@ -2210,18 +1802,9 @@ class $FavoritesTableTable extends FavoritesTable
   FavoriteData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return FavoriteData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      contactPhoneId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}contact_phone_id'],
-      )!,
-      position: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}position'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      contactPhoneId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}contact_phone_id'])!,
+      position: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}position'])!,
     );
   }
 
@@ -2235,11 +1818,7 @@ class FavoriteData extends DataClass implements Insertable<FavoriteData> {
   final int id;
   final int contactPhoneId;
   final int position;
-  const FavoriteData({
-    required this.id,
-    required this.contactPhoneId,
-    required this.position,
-  });
+  const FavoriteData({required this.id, required this.contactPhoneId, required this.position});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2250,17 +1829,10 @@ class FavoriteData extends DataClass implements Insertable<FavoriteData> {
   }
 
   FavoriteDataCompanion toCompanion(bool nullToAbsent) {
-    return FavoriteDataCompanion(
-      id: Value(id),
-      contactPhoneId: Value(contactPhoneId),
-      position: Value(position),
-    );
+    return FavoriteDataCompanion(id: Value(id), contactPhoneId: Value(contactPhoneId), position: Value(position));
   }
 
-  factory FavoriteData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory FavoriteData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return FavoriteData(
       id: serializer.fromJson<int>(json['id']),
@@ -2278,18 +1850,15 @@ class FavoriteData extends DataClass implements Insertable<FavoriteData> {
     };
   }
 
-  FavoriteData copyWith({int? id, int? contactPhoneId, int? position}) =>
-      FavoriteData(
-        id: id ?? this.id,
-        contactPhoneId: contactPhoneId ?? this.contactPhoneId,
-        position: position ?? this.position,
-      );
+  FavoriteData copyWith({int? id, int? contactPhoneId, int? position}) => FavoriteData(
+    id: id ?? this.id,
+    contactPhoneId: contactPhoneId ?? this.contactPhoneId,
+    position: position ?? this.position,
+  );
   FavoriteData copyWithCompanion(FavoriteDataCompanion data) {
     return FavoriteData(
       id: data.id.present ? data.id.value : this.id,
-      contactPhoneId: data.contactPhoneId.present
-          ? data.contactPhoneId.value
-          : this.contactPhoneId,
+      contactPhoneId: data.contactPhoneId.present ? data.contactPhoneId.value : this.contactPhoneId,
       position: data.position.present ? data.position.value : this.position,
     );
   }
@@ -2324,12 +1893,9 @@ class FavoriteDataCompanion extends UpdateCompanion<FavoriteData> {
     this.contactPhoneId = const Value.absent(),
     this.position = const Value.absent(),
   });
-  FavoriteDataCompanion.insert({
-    this.id = const Value.absent(),
-    required int contactPhoneId,
-    required int position,
-  }) : contactPhoneId = Value(contactPhoneId),
-       position = Value(position);
+  FavoriteDataCompanion.insert({this.id = const Value.absent(), required int contactPhoneId, required int position})
+    : contactPhoneId = Value(contactPhoneId),
+      position = Value(position);
   static Insertable<FavoriteData> custom({
     Expression<int>? id,
     Expression<int>? contactPhoneId,
@@ -2342,11 +1908,7 @@ class FavoriteDataCompanion extends UpdateCompanion<FavoriteData> {
     });
   }
 
-  FavoriteDataCompanion copyWith({
-    Value<int>? id,
-    Value<int>? contactPhoneId,
-    Value<int>? position,
-  }) {
+  FavoriteDataCompanion copyWith({Value<int>? id, Value<int>? contactPhoneId, Value<int>? position}) {
     return FavoriteDataCompanion(
       id: id ?? this.id,
       contactPhoneId: contactPhoneId ?? this.contactPhoneId,
@@ -2396,32 +1958,22 @@ class $FavoritesOutboxTableTable extends FavoritesOutboxTable
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<FavoriteSourceTypeData, String>
-  sourceType =
-      GeneratedColumn<String>(
-        'source_type',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<FavoriteSourceTypeData>(
-        $FavoritesOutboxTableTable.$convertersourceType,
-      );
+  late final GeneratedColumnWithTypeConverter<FavoriteSourceTypeData, String> sourceType = GeneratedColumn<String>(
+    'source_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<FavoriteSourceTypeData>($FavoritesOutboxTableTable.$convertersourceType);
   @override
-  late final GeneratedColumnWithTypeConverter<FavoriteOutboxActionData, String>
-  action =
-      GeneratedColumn<String>(
-        'action',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<FavoriteOutboxActionData>(
-        $FavoritesOutboxTableTable.$converteraction,
-      );
-  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
-    'sourceId',
-  );
+  late final GeneratedColumnWithTypeConverter<FavoriteOutboxActionData, String> action = GeneratedColumn<String>(
+    'action',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<FavoriteOutboxActionData>($FavoritesOutboxTableTable.$converteraction);
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta('sourceId');
   @override
   late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
     'source_id',
@@ -2439,9 +1991,7 @@ class $FavoritesOutboxTableTable extends FavoritesOutboxTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _positionMeta = const VerificationMeta(
-    'position',
-  );
+  static const VerificationMeta _positionMeta = const VerificationMeta('position');
   @override
   late final GeneratedColumn<int> position = GeneratedColumn<int>(
     'position',
@@ -2450,9 +2000,7 @@ class $FavoritesOutboxTableTable extends FavoritesOutboxTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -2462,9 +2010,7 @@ class $FavoritesOutboxTableTable extends FavoritesOutboxTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -2490,54 +2036,30 @@ class $FavoritesOutboxTableTable extends FavoritesOutboxTable
   String get actualTableName => $name;
   static const String $name = 'favorites_outbox';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<FavoriteOutboxEntryData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<FavoriteOutboxEntryData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('number')) {
-      context.handle(
-        _numberMeta,
-        number.isAcceptableOrUnknown(data['number']!, _numberMeta),
-      );
+      context.handle(_numberMeta, number.isAcceptableOrUnknown(data['number']!, _numberMeta));
     } else if (isInserting) {
       context.missing(_numberMeta);
     }
     if (data.containsKey('source_id')) {
-      context.handle(
-        _sourceIdMeta,
-        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
-      );
+      context.handle(_sourceIdMeta, sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta));
     }
     if (data.containsKey('label')) {
-      context.handle(
-        _labelMeta,
-        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
-      );
+      context.handle(_labelMeta, label.isAcceptableOrUnknown(data['label']!, _labelMeta));
     }
     if (data.containsKey('position')) {
-      context.handle(
-        _positionMeta,
-        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
-      );
+      context.handle(_positionMeta, position.isAcceptableOrUnknown(data['position']!, _positionMeta));
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_timestampUsecMeta);
@@ -2548,48 +2070,21 @@ class $FavoritesOutboxTableTable extends FavoritesOutboxTable
   @override
   Set<GeneratedColumn> get $primaryKey => {number, sourceType, action};
   @override
-  FavoriteOutboxEntryData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  FavoriteOutboxEntryData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return FavoriteOutboxEntryData(
-      number: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}number'],
-      )!,
+      number: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}number'])!,
       sourceType: $FavoritesOutboxTableTable.$convertersourceType.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}source_type'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source_type'])!,
       ),
       action: $FavoritesOutboxTableTable.$converteraction.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}action'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}action'])!,
       ),
-      sourceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source_id'],
-      ),
-      label: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}label'],
-      ),
-      position: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}position'],
-      ),
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      )!,
+      sourceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source_id']),
+      label: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}label']),
+      position: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}position']),
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec'])!,
     );
   }
 
@@ -2598,18 +2093,13 @@ class $FavoritesOutboxTableTable extends FavoritesOutboxTable
     return $FavoritesOutboxTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<FavoriteSourceTypeData, String, String>
-  $convertersourceType = const EnumNameConverter<FavoriteSourceTypeData>(
-    FavoriteSourceTypeData.values,
-  );
-  static JsonTypeConverter2<FavoriteOutboxActionData, String, String>
-  $converteraction = const EnumNameConverter<FavoriteOutboxActionData>(
-    FavoriteOutboxActionData.values,
-  );
+  static JsonTypeConverter2<FavoriteSourceTypeData, String, String> $convertersourceType =
+      const EnumNameConverter<FavoriteSourceTypeData>(FavoriteSourceTypeData.values);
+  static JsonTypeConverter2<FavoriteOutboxActionData, String, String> $converteraction =
+      const EnumNameConverter<FavoriteOutboxActionData>(FavoriteOutboxActionData.values);
 }
 
-class FavoriteOutboxEntryData extends DataClass
-    implements Insertable<FavoriteOutboxEntryData> {
+class FavoriteOutboxEntryData extends DataClass implements Insertable<FavoriteOutboxEntryData> {
   final String number;
   final FavoriteSourceTypeData sourceType;
   final FavoriteOutboxActionData action;
@@ -2633,14 +2123,10 @@ class FavoriteOutboxEntryData extends DataClass
     final map = <String, Expression>{};
     map['number'] = Variable<String>(number);
     {
-      map['source_type'] = Variable<String>(
-        $FavoritesOutboxTableTable.$convertersourceType.toSql(sourceType),
-      );
+      map['source_type'] = Variable<String>($FavoritesOutboxTableTable.$convertersourceType.toSql(sourceType));
     }
     {
-      map['action'] = Variable<String>(
-        $FavoritesOutboxTableTable.$converteraction.toSql(action),
-      );
+      map['action'] = Variable<String>($FavoritesOutboxTableTable.$converteraction.toSql(action));
     }
     if (!nullToAbsent || sourceId != null) {
       map['source_id'] = Variable<String>(sourceId);
@@ -2661,33 +2147,22 @@ class FavoriteOutboxEntryData extends DataClass
       number: Value(number),
       sourceType: Value(sourceType),
       action: Value(action),
-      sourceId: sourceId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(sourceId),
-      label: label == null && nullToAbsent
-          ? const Value.absent()
-          : Value(label),
-      position: position == null && nullToAbsent
-          ? const Value.absent()
-          : Value(position),
+      sourceId: sourceId == null && nullToAbsent ? const Value.absent() : Value(sourceId),
+      label: label == null && nullToAbsent ? const Value.absent() : Value(label),
+      position: position == null && nullToAbsent ? const Value.absent() : Value(position),
       sendAttempts: Value(sendAttempts),
       timestampUsec: Value(timestampUsec),
     );
   }
 
-  factory FavoriteOutboxEntryData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory FavoriteOutboxEntryData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return FavoriteOutboxEntryData(
       number: serializer.fromJson<String>(json['number']),
       sourceType: $FavoritesOutboxTableTable.$convertersourceType.fromJson(
         serializer.fromJson<String>(json['sourceType']),
       ),
-      action: $FavoritesOutboxTableTable.$converteraction.fromJson(
-        serializer.fromJson<String>(json['action']),
-      ),
+      action: $FavoritesOutboxTableTable.$converteraction.fromJson(serializer.fromJson<String>(json['action'])),
       sourceId: serializer.fromJson<String?>(json['sourceId']),
       label: serializer.fromJson<String?>(json['label']),
       position: serializer.fromJson<int?>(json['position']),
@@ -2700,12 +2175,8 @@ class FavoriteOutboxEntryData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'number': serializer.toJson<String>(number),
-      'sourceType': serializer.toJson<String>(
-        $FavoritesOutboxTableTable.$convertersourceType.toJson(sourceType),
-      ),
-      'action': serializer.toJson<String>(
-        $FavoritesOutboxTableTable.$converteraction.toJson(action),
-      ),
+      'sourceType': serializer.toJson<String>($FavoritesOutboxTableTable.$convertersourceType.toJson(sourceType)),
+      'action': serializer.toJson<String>($FavoritesOutboxTableTable.$converteraction.toJson(action)),
       'sourceId': serializer.toJson<String?>(sourceId),
       'label': serializer.toJson<String?>(label),
       'position': serializer.toJson<int?>(position),
@@ -2733,24 +2204,16 @@ class FavoriteOutboxEntryData extends DataClass
     sendAttempts: sendAttempts ?? this.sendAttempts,
     timestampUsec: timestampUsec ?? this.timestampUsec,
   );
-  FavoriteOutboxEntryData copyWithCompanion(
-    FavoriteOutboxEntryDataCompanion data,
-  ) {
+  FavoriteOutboxEntryData copyWithCompanion(FavoriteOutboxEntryDataCompanion data) {
     return FavoriteOutboxEntryData(
       number: data.number.present ? data.number.value : this.number,
-      sourceType: data.sourceType.present
-          ? data.sourceType.value
-          : this.sourceType,
+      sourceType: data.sourceType.present ? data.sourceType.value : this.sourceType,
       action: data.action.present ? data.action.value : this.action,
       sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
       label: data.label.present ? data.label.value : this.label,
       position: data.position.present ? data.position.value : this.position,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
     );
   }
 
@@ -2770,16 +2233,7 @@ class FavoriteOutboxEntryData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    number,
-    sourceType,
-    action,
-    sourceId,
-    label,
-    position,
-    sendAttempts,
-    timestampUsec,
-  );
+  int get hashCode => Object.hash(number, sourceType, action, sourceId, label, position, sendAttempts, timestampUsec);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2794,8 +2248,7 @@ class FavoriteOutboxEntryData extends DataClass
           other.timestampUsec == this.timestampUsec);
 }
 
-class FavoriteOutboxEntryDataCompanion
-    extends UpdateCompanion<FavoriteOutboxEntryData> {
+class FavoriteOutboxEntryDataCompanion extends UpdateCompanion<FavoriteOutboxEntryData> {
   final Value<String> number;
   final Value<FavoriteSourceTypeData> sourceType;
   final Value<FavoriteOutboxActionData> action;
@@ -2885,14 +2338,10 @@ class FavoriteOutboxEntryDataCompanion
       map['number'] = Variable<String>(number.value);
     }
     if (sourceType.present) {
-      map['source_type'] = Variable<String>(
-        $FavoritesOutboxTableTable.$convertersourceType.toSql(sourceType.value),
-      );
+      map['source_type'] = Variable<String>($FavoritesOutboxTableTable.$convertersourceType.toSql(sourceType.value));
     }
     if (action.present) {
-      map['action'] = Variable<String>(
-        $FavoritesOutboxTableTable.$converteraction.toSql(action.value),
-      );
+      map['action'] = Variable<String>($FavoritesOutboxTableTable.$converteraction.toSql(action.value));
     }
     if (sourceId.present) {
       map['source_id'] = Variable<String>(sourceId.value);
@@ -2932,8 +2381,7 @@ class FavoriteOutboxEntryDataCompanion
   }
 }
 
-class $FavoritesV2TableTable extends FavoritesV2Table
-    with TableInfo<$FavoritesV2TableTable, FavoriteV2Data> {
+class $FavoritesV2TableTable extends FavoritesV2Table with TableInfo<$FavoritesV2TableTable, FavoriteV2Data> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2948,20 +2396,14 @@ class $FavoritesV2TableTable extends FavoritesV2Table
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<FavoriteSourceTypeData, String>
-  sourceType =
-      GeneratedColumn<String>(
-        'source_type',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<FavoriteSourceTypeData>(
-        $FavoritesV2TableTable.$convertersourceType,
-      );
-  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
-    'sourceId',
-  );
+  late final GeneratedColumnWithTypeConverter<FavoriteSourceTypeData, String> sourceType = GeneratedColumn<String>(
+    'source_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<FavoriteSourceTypeData>($FavoritesV2TableTable.$convertersourceType);
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta('sourceId');
   @override
   late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
     'source_id',
@@ -2979,9 +2421,7 @@ class $FavoritesV2TableTable extends FavoritesV2Table
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _positionMeta = const VerificationMeta(
-    'position',
-  );
+  static const VerificationMeta _positionMeta = const VerificationMeta('position');
   @override
   late final GeneratedColumn<int> position = GeneratedColumn<int>(
     'position',
@@ -2991,54 +2431,33 @@ class $FavoritesV2TableTable extends FavoritesV2Table
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    number,
-    sourceType,
-    sourceId,
-    label,
-    position,
-  ];
+  List<GeneratedColumn> get $columns => [number, sourceType, sourceId, label, position];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'favorites_v2';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<FavoriteV2Data> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<FavoriteV2Data> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('number')) {
-      context.handle(
-        _numberMeta,
-        number.isAcceptableOrUnknown(data['number']!, _numberMeta),
-      );
+      context.handle(_numberMeta, number.isAcceptableOrUnknown(data['number']!, _numberMeta));
     } else if (isInserting) {
       context.missing(_numberMeta);
     }
     if (data.containsKey('source_id')) {
-      context.handle(
-        _sourceIdMeta,
-        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
-      );
+      context.handle(_sourceIdMeta, sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta));
     } else if (isInserting) {
       context.missing(_sourceIdMeta);
     }
     if (data.containsKey('label')) {
-      context.handle(
-        _labelMeta,
-        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
-      );
+      context.handle(_labelMeta, label.isAcceptableOrUnknown(data['label']!, _labelMeta));
     } else if (isInserting) {
       context.missing(_labelMeta);
     }
     if (data.containsKey('position')) {
-      context.handle(
-        _positionMeta,
-        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
-      );
+      context.handle(_positionMeta, position.isAcceptableOrUnknown(data['position']!, _positionMeta));
     } else if (isInserting) {
       context.missing(_positionMeta);
     }
@@ -3051,28 +2470,13 @@ class $FavoritesV2TableTable extends FavoritesV2Table
   FavoriteV2Data map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return FavoriteV2Data(
-      number: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}number'],
-      )!,
+      number: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}number'])!,
       sourceType: $FavoritesV2TableTable.$convertersourceType.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}source_type'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source_type'])!,
       ),
-      sourceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source_id'],
-      )!,
-      label: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}label'],
-      )!,
-      position: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}position'],
-      )!,
+      sourceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source_id'])!,
+      label: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}label'])!,
+      position: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}position'])!,
     );
   }
 
@@ -3081,10 +2485,8 @@ class $FavoritesV2TableTable extends FavoritesV2Table
     return $FavoritesV2TableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<FavoriteSourceTypeData, String, String>
-  $convertersourceType = const EnumNameConverter<FavoriteSourceTypeData>(
-    FavoriteSourceTypeData.values,
-  );
+  static JsonTypeConverter2<FavoriteSourceTypeData, String, String> $convertersourceType =
+      const EnumNameConverter<FavoriteSourceTypeData>(FavoriteSourceTypeData.values);
 }
 
 class FavoriteV2Data extends DataClass implements Insertable<FavoriteV2Data> {
@@ -3105,9 +2507,7 @@ class FavoriteV2Data extends DataClass implements Insertable<FavoriteV2Data> {
     final map = <String, Expression>{};
     map['number'] = Variable<String>(number);
     {
-      map['source_type'] = Variable<String>(
-        $FavoritesV2TableTable.$convertersourceType.toSql(sourceType),
-      );
+      map['source_type'] = Variable<String>($FavoritesV2TableTable.$convertersourceType.toSql(sourceType));
     }
     map['source_id'] = Variable<String>(sourceId);
     map['label'] = Variable<String>(label);
@@ -3125,16 +2525,11 @@ class FavoriteV2Data extends DataClass implements Insertable<FavoriteV2Data> {
     );
   }
 
-  factory FavoriteV2Data.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory FavoriteV2Data.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return FavoriteV2Data(
       number: serializer.fromJson<String>(json['number']),
-      sourceType: $FavoritesV2TableTable.$convertersourceType.fromJson(
-        serializer.fromJson<String>(json['sourceType']),
-      ),
+      sourceType: $FavoritesV2TableTable.$convertersourceType.fromJson(serializer.fromJson<String>(json['sourceType'])),
       sourceId: serializer.fromJson<String>(json['sourceId']),
       label: serializer.fromJson<String>(json['label']),
       position: serializer.fromJson<int>(json['position']),
@@ -3145,9 +2540,7 @@ class FavoriteV2Data extends DataClass implements Insertable<FavoriteV2Data> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'number': serializer.toJson<String>(number),
-      'sourceType': serializer.toJson<String>(
-        $FavoritesV2TableTable.$convertersourceType.toJson(sourceType),
-      ),
+      'sourceType': serializer.toJson<String>($FavoritesV2TableTable.$convertersourceType.toJson(sourceType)),
       'sourceId': serializer.toJson<String>(sourceId),
       'label': serializer.toJson<String>(label),
       'position': serializer.toJson<int>(position),
@@ -3170,9 +2563,7 @@ class FavoriteV2Data extends DataClass implements Insertable<FavoriteV2Data> {
   FavoriteV2Data copyWithCompanion(FavoriteV2DataCompanion data) {
     return FavoriteV2Data(
       number: data.number.present ? data.number.value : this.number,
-      sourceType: data.sourceType.present
-          ? data.sourceType.value
-          : this.sourceType,
+      sourceType: data.sourceType.present ? data.sourceType.value : this.sourceType,
       sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
       label: data.label.present ? data.label.value : this.label,
       position: data.position.present ? data.position.value : this.position,
@@ -3192,8 +2583,7 @@ class FavoriteV2Data extends DataClass implements Insertable<FavoriteV2Data> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(number, sourceType, sourceId, label, position);
+  int get hashCode => Object.hash(number, sourceType, sourceId, label, position);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3275,9 +2665,7 @@ class FavoriteV2DataCompanion extends UpdateCompanion<FavoriteV2Data> {
       map['number'] = Variable<String>(number.value);
     }
     if (sourceType.present) {
-      map['source_type'] = Variable<String>(
-        $FavoritesV2TableTable.$convertersourceType.toSql(sourceType.value),
-      );
+      map['source_type'] = Variable<String>($FavoritesV2TableTable.$convertersourceType.toSql(sourceType.value));
     }
     if (sourceId.present) {
       map['source_id'] = Variable<String>(sourceId.value);
@@ -3308,8 +2696,7 @@ class FavoriteV2DataCompanion extends UpdateCompanion<FavoriteV2Data> {
   }
 }
 
-class $ChatsTableTable extends ChatsTable
-    with TableInfo<$ChatsTableTable, ChatData> {
+class $ChatsTableTable extends ChatsTable with TableInfo<$ChatsTableTable, ChatData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -3324,14 +2711,13 @@ class $ChatsTableTable extends ChatsTable
     requiredDuringInsert: false,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<ChatTypeEnum, String> type =
-      GeneratedColumn<String>(
-        'type',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<ChatTypeEnum>($ChatsTableTable.$convertertype);
+  late final GeneratedColumnWithTypeConverter<ChatTypeEnum, String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<ChatTypeEnum>($ChatsTableTable.$convertertype);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -3341,66 +2727,45 @@ class $ChatsTableTable extends ChatsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _createdAtRemoteMeta = const VerificationMeta(
-    'createdAtRemote',
+  static const VerificationMeta _createdAtRemoteMeta = const VerificationMeta('createdAtRemote');
+  @override
+  late final GeneratedColumn<DateTime> createdAtRemote = GeneratedColumn<DateTime>(
+    'created_at_remote',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtRemoteMeta = const VerificationMeta('updatedAtRemote');
+  @override
+  late final GeneratedColumn<DateTime> updatedAtRemote = GeneratedColumn<DateTime>(
+    'updated_at_remote',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumn<DateTime> createdAtRemote =
-      GeneratedColumn<DateTime>(
-        'created_at_remote',
-        aliasedName,
-        false,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _updatedAtRemoteMeta = const VerificationMeta(
-    'updatedAtRemote',
-  );
-  @override
-  late final GeneratedColumn<DateTime> updatedAtRemote =
-      GeneratedColumn<DateTime>(
-        'updated_at_remote',
-        aliasedName,
-        false,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: true,
-      );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    type,
-    name,
-    createdAtRemote,
-    updatedAtRemote,
-  ];
+  List<GeneratedColumn> get $columns => [id, type, name, createdAtRemote, updatedAtRemote];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'chats';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ChatData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ChatData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     }
     if (data.containsKey('created_at_remote')) {
       context.handle(
         _createdAtRemoteMeta,
-        createdAtRemote.isAcceptableOrUnknown(
-          data['created_at_remote']!,
-          _createdAtRemoteMeta,
-        ),
+        createdAtRemote.isAcceptableOrUnknown(data['created_at_remote']!, _createdAtRemoteMeta),
       );
     } else if (isInserting) {
       context.missing(_createdAtRemoteMeta);
@@ -3408,10 +2773,7 @@ class $ChatsTableTable extends ChatsTable
     if (data.containsKey('updated_at_remote')) {
       context.handle(
         _updatedAtRemoteMeta,
-        updatedAtRemote.isAcceptableOrUnknown(
-          data['updated_at_remote']!,
-          _updatedAtRemoteMeta,
-        ),
+        updatedAtRemote.isAcceptableOrUnknown(data['updated_at_remote']!, _updatedAtRemoteMeta),
       );
     } else if (isInserting) {
       context.missing(_updatedAtRemoteMeta);
@@ -3425,20 +2787,11 @@ class $ChatsTableTable extends ChatsTable
   ChatData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChatData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       type: $ChatsTableTable.$convertertype.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}type'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}type'])!,
       ),
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      ),
+      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name']),
       createdAtRemote: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at_remote'],
@@ -3455,8 +2808,9 @@ class $ChatsTableTable extends ChatsTable
     return $ChatsTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<ChatTypeEnum, String, String> $convertertype =
-      const EnumNameConverter<ChatTypeEnum>(ChatTypeEnum.values);
+  static JsonTypeConverter2<ChatTypeEnum, String, String> $convertertype = const EnumNameConverter<ChatTypeEnum>(
+    ChatTypeEnum.values,
+  );
 }
 
 class ChatData extends DataClass implements Insertable<ChatData> {
@@ -3477,9 +2831,7 @@ class ChatData extends DataClass implements Insertable<ChatData> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     {
-      map['type'] = Variable<String>(
-        $ChatsTableTable.$convertertype.toSql(type),
-      );
+      map['type'] = Variable<String>($ChatsTableTable.$convertertype.toSql(type));
     }
     if (!nullToAbsent || name != null) {
       map['name'] = Variable<String>(name);
@@ -3499,16 +2851,11 @@ class ChatData extends DataClass implements Insertable<ChatData> {
     );
   }
 
-  factory ChatData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ChatData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChatData(
       id: serializer.fromJson<int>(json['id']),
-      type: $ChatsTableTable.$convertertype.fromJson(
-        serializer.fromJson<String>(json['type']),
-      ),
+      type: $ChatsTableTable.$convertertype.fromJson(serializer.fromJson<String>(json['type'])),
       name: serializer.fromJson<String?>(json['name']),
       createdAtRemote: serializer.fromJson<DateTime>(json['createdAtRemote']),
       updatedAtRemote: serializer.fromJson<DateTime>(json['updatedAtRemote']),
@@ -3519,9 +2866,7 @@ class ChatData extends DataClass implements Insertable<ChatData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'type': serializer.toJson<String>(
-        $ChatsTableTable.$convertertype.toJson(type),
-      ),
+      'type': serializer.toJson<String>($ChatsTableTable.$convertertype.toJson(type)),
       'name': serializer.toJson<String?>(name),
       'createdAtRemote': serializer.toJson<DateTime>(createdAtRemote),
       'updatedAtRemote': serializer.toJson<DateTime>(updatedAtRemote),
@@ -3546,12 +2891,8 @@ class ChatData extends DataClass implements Insertable<ChatData> {
       id: data.id.present ? data.id.value : this.id,
       type: data.type.present ? data.type.value : this.type,
       name: data.name.present ? data.name.value : this.name,
-      createdAtRemote: data.createdAtRemote.present
-          ? data.createdAtRemote.value
-          : this.createdAtRemote,
-      updatedAtRemote: data.updatedAtRemote.present
-          ? data.updatedAtRemote.value
-          : this.updatedAtRemote,
+      createdAtRemote: data.createdAtRemote.present ? data.createdAtRemote.value : this.createdAtRemote,
+      updatedAtRemote: data.updatedAtRemote.present ? data.updatedAtRemote.value : this.updatedAtRemote,
     );
   }
 
@@ -3568,8 +2909,7 @@ class ChatData extends DataClass implements Insertable<ChatData> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, type, name, createdAtRemote, updatedAtRemote);
+  int get hashCode => Object.hash(id, type, name, createdAtRemote, updatedAtRemote);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3642,9 +2982,7 @@ class ChatDataCompanion extends UpdateCompanion<ChatData> {
       map['id'] = Variable<int>(id.value);
     }
     if (type.present) {
-      map['type'] = Variable<String>(
-        $ChatsTableTable.$convertertype.toSql(type.value),
-      );
+      map['type'] = Variable<String>($ChatsTableTable.$convertertype.toSql(type.value));
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -3671,8 +3009,7 @@ class ChatDataCompanion extends UpdateCompanion<ChatData> {
   }
 }
 
-class $ChatMembersTableTable extends ChatMembersTable
-    with TableInfo<$ChatMembersTableTable, ChatMemberData> {
+class $ChatMembersTableTable extends ChatMembersTable with TableInfo<$ChatMembersTableTable, ChatMemberData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -3694,9 +3031,7 @@ class $ChatMembersTableTable extends ChatMembersTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES chats (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES chats (id) ON DELETE CASCADE'),
   );
   static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
@@ -3708,17 +3043,13 @@ class $ChatMembersTableTable extends ChatMembersTable
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<GroupAuthoritiesEnum?, String>
-  groupAuthorities =
-      GeneratedColumn<String>(
-        'group_authorities',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      ).withConverter<GroupAuthoritiesEnum?>(
-        $ChatMembersTableTable.$convertergroupAuthoritiesn,
-      );
+  late final GeneratedColumnWithTypeConverter<GroupAuthoritiesEnum?, String> groupAuthorities = GeneratedColumn<String>(
+    'group_authorities',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<GroupAuthoritiesEnum?>($ChatMembersTableTable.$convertergroupAuthoritiesn);
   @override
   List<GeneratedColumn> get $columns => [id, chatId, userId, groupAuthorities];
   @override
@@ -3727,28 +3058,19 @@ class $ChatMembersTableTable extends ChatMembersTable
   String get actualTableName => $name;
   static const String $name = 'chat_members';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ChatMemberData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ChatMemberData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('chat_id')) {
-      context.handle(
-        _chatIdMeta,
-        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
-      );
+      context.handle(_chatIdMeta, chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
     } else if (isInserting) {
       context.missing(_chatIdMeta);
     }
     if (data.containsKey('user_id')) {
-      context.handle(
-        _userIdMeta,
-        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
-      );
+      context.handle(_userIdMeta, userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
     } else if (isInserting) {
       context.missing(_userIdMeta);
     }
@@ -3761,25 +3083,12 @@ class $ChatMembersTableTable extends ChatMembersTable
   ChatMemberData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChatMemberData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      chatId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}chat_id'],
-      )!,
-      userId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}user_id'],
-      )!,
-      groupAuthorities: $ChatMembersTableTable.$convertergroupAuthoritiesn
-          .fromSql(
-            attachedDatabase.typeMapping.read(
-              DriftSqlType.string,
-              data['${effectivePrefix}group_authorities'],
-            ),
-          ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      chatId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}chat_id'])!,
+      userId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      groupAuthorities: $ChatMembersTableTable.$convertergroupAuthoritiesn.fromSql(
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}group_authorities']),
+      ),
     );
   }
 
@@ -3788,14 +3097,10 @@ class $ChatMembersTableTable extends ChatMembersTable
     return $ChatMembersTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<GroupAuthoritiesEnum, String, String>
-  $convertergroupAuthorities = const EnumNameConverter<GroupAuthoritiesEnum>(
-    GroupAuthoritiesEnum.values,
-  );
-  static JsonTypeConverter2<GroupAuthoritiesEnum?, String?, String?>
-  $convertergroupAuthoritiesn = JsonTypeConverter2.asNullable(
-    $convertergroupAuthorities,
-  );
+  static JsonTypeConverter2<GroupAuthoritiesEnum, String, String> $convertergroupAuthorities =
+      const EnumNameConverter<GroupAuthoritiesEnum>(GroupAuthoritiesEnum.values);
+  static JsonTypeConverter2<GroupAuthoritiesEnum?, String?, String?> $convertergroupAuthoritiesn =
+      JsonTypeConverter2.asNullable($convertergroupAuthorities);
 }
 
 class ChatMemberData extends DataClass implements Insertable<ChatMemberData> {
@@ -3803,12 +3108,7 @@ class ChatMemberData extends DataClass implements Insertable<ChatMemberData> {
   final int chatId;
   final String userId;
   final GroupAuthoritiesEnum? groupAuthorities;
-  const ChatMemberData({
-    required this.id,
-    required this.chatId,
-    required this.userId,
-    this.groupAuthorities,
-  });
+  const ChatMemberData({required this.id, required this.chatId, required this.userId, this.groupAuthorities});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3817,9 +3117,7 @@ class ChatMemberData extends DataClass implements Insertable<ChatMemberData> {
     map['user_id'] = Variable<String>(userId);
     if (!nullToAbsent || groupAuthorities != null) {
       map['group_authorities'] = Variable<String>(
-        $ChatMembersTableTable.$convertergroupAuthoritiesn.toSql(
-          groupAuthorities,
-        ),
+        $ChatMembersTableTable.$convertergroupAuthoritiesn.toSql(groupAuthorities),
       );
     }
     return map;
@@ -3830,23 +3128,19 @@ class ChatMemberData extends DataClass implements Insertable<ChatMemberData> {
       id: Value(id),
       chatId: Value(chatId),
       userId: Value(userId),
-      groupAuthorities: groupAuthorities == null && nullToAbsent
-          ? const Value.absent()
-          : Value(groupAuthorities),
+      groupAuthorities: groupAuthorities == null && nullToAbsent ? const Value.absent() : Value(groupAuthorities),
     );
   }
 
-  factory ChatMemberData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ChatMemberData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChatMemberData(
       id: serializer.fromJson<int>(json['id']),
       chatId: serializer.fromJson<int>(json['chatId']),
       userId: serializer.fromJson<String>(json['userId']),
-      groupAuthorities: $ChatMembersTableTable.$convertergroupAuthoritiesn
-          .fromJson(serializer.fromJson<String?>(json['groupAuthorities'])),
+      groupAuthorities: $ChatMembersTableTable.$convertergroupAuthoritiesn.fromJson(
+        serializer.fromJson<String?>(json['groupAuthorities']),
+      ),
     );
   }
   @override
@@ -3857,9 +3151,7 @@ class ChatMemberData extends DataClass implements Insertable<ChatMemberData> {
       'chatId': serializer.toJson<int>(chatId),
       'userId': serializer.toJson<String>(userId),
       'groupAuthorities': serializer.toJson<String?>(
-        $ChatMembersTableTable.$convertergroupAuthoritiesn.toJson(
-          groupAuthorities,
-        ),
+        $ChatMembersTableTable.$convertergroupAuthoritiesn.toJson(groupAuthorities),
       ),
     };
   }
@@ -3873,18 +3165,14 @@ class ChatMemberData extends DataClass implements Insertable<ChatMemberData> {
     id: id ?? this.id,
     chatId: chatId ?? this.chatId,
     userId: userId ?? this.userId,
-    groupAuthorities: groupAuthorities.present
-        ? groupAuthorities.value
-        : this.groupAuthorities,
+    groupAuthorities: groupAuthorities.present ? groupAuthorities.value : this.groupAuthorities,
   );
   ChatMemberData copyWithCompanion(ChatMemberDataCompanion data) {
     return ChatMemberData(
       id: data.id.present ? data.id.value : this.id,
       chatId: data.chatId.present ? data.chatId.value : this.chatId,
       userId: data.userId.present ? data.userId.value : this.userId,
-      groupAuthorities: data.groupAuthorities.present
-          ? data.groupAuthorities.value
-          : this.groupAuthorities,
+      groupAuthorities: data.groupAuthorities.present ? data.groupAuthorities.value : this.groupAuthorities,
     );
   }
 
@@ -3971,9 +3259,7 @@ class ChatMemberDataCompanion extends UpdateCompanion<ChatMemberData> {
     }
     if (groupAuthorities.present) {
       map['group_authorities'] = Variable<String>(
-        $ChatMembersTableTable.$convertergroupAuthoritiesn.toSql(
-          groupAuthorities.value,
-        ),
+        $ChatMembersTableTable.$convertergroupAuthoritiesn.toSql(groupAuthorities.value),
       );
     }
     return map;
@@ -3991,8 +3277,7 @@ class ChatMemberDataCompanion extends UpdateCompanion<ChatMemberData> {
   }
 }
 
-class $ChatMessagesTableTable extends ChatMessagesTable
-    with TableInfo<$ChatMessagesTableTable, ChatMessageData> {
+class $ChatMessagesTableTable extends ChatMessagesTable with TableInfo<$ChatMessagesTableTable, ChatMessageData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -4015,9 +3300,7 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _senderIdMeta = const VerificationMeta(
-    'senderId',
-  );
+  static const VerificationMeta _senderIdMeta = const VerificationMeta('senderId');
   @override
   late final GeneratedColumn<String> senderId = GeneratedColumn<String>(
     'sender_id',
@@ -4034,13 +3317,9 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES chats (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES chats (id) ON DELETE CASCADE'),
   );
-  static const VerificationMeta _replyToIdMeta = const VerificationMeta(
-    'replyToId',
-  );
+  static const VerificationMeta _replyToIdMeta = const VerificationMeta('replyToId');
   @override
   late final GeneratedColumn<int> replyToId = GeneratedColumn<int>(
     'reply_to_id',
@@ -4049,9 +3328,7 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _forwardFromIdMeta = const VerificationMeta(
-    'forwardFromId',
-  );
+  static const VerificationMeta _forwardFromIdMeta = const VerificationMeta('forwardFromId');
   @override
   late final GeneratedColumn<int> forwardFromId = GeneratedColumn<int>(
     'forward_from_id',
@@ -4060,9 +3337,7 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _authorIdMeta = const VerificationMeta(
-    'authorId',
-  );
+  static const VerificationMeta _authorIdMeta = const VerificationMeta('authorId');
   @override
   late final GeneratedColumn<String> authorId = GeneratedColumn<String>(
     'author_id',
@@ -4071,9 +3346,7 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _contentMeta = const VerificationMeta(
-    'content',
-  );
+  static const VerificationMeta _contentMeta = const VerificationMeta('content');
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
     'content',
@@ -4082,8 +3355,7 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _createdAtRemoteUsecMeta =
-      const VerificationMeta('createdAtRemoteUsec');
+  static const VerificationMeta _createdAtRemoteUsecMeta = const VerificationMeta('createdAtRemoteUsec');
   @override
   late final GeneratedColumn<int> createdAtRemoteUsec = GeneratedColumn<int>(
     'created_at_remote_usec',
@@ -4092,8 +3364,7 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _updatedAtRemoteUsecMeta =
-      const VerificationMeta('updatedAtRemoteUsec');
+  static const VerificationMeta _updatedAtRemoteUsecMeta = const VerificationMeta('updatedAtRemoteUsec');
   @override
   late final GeneratedColumn<int> updatedAtRemoteUsec = GeneratedColumn<int>(
     'updated_at_remote_usec',
@@ -4102,8 +3373,7 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _editedAtRemoteUsecMeta =
-      const VerificationMeta('editedAtRemoteUsec');
+  static const VerificationMeta _editedAtRemoteUsecMeta = const VerificationMeta('editedAtRemoteUsec');
   @override
   late final GeneratedColumn<int> editedAtRemoteUsec = GeneratedColumn<int>(
     'edited_at_remote_usec',
@@ -4112,8 +3382,7 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _deletedAtRemoteUsecMeta =
-      const VerificationMeta('deletedAtRemoteUsec');
+  static const VerificationMeta _deletedAtRemoteUsecMeta = const VerificationMeta('deletedAtRemoteUsec');
   @override
   late final GeneratedColumn<int> deletedAtRemoteUsec = GeneratedColumn<int>(
     'deleted_at_remote_usec',
@@ -4143,75 +3412,48 @@ class $ChatMessagesTableTable extends ChatMessagesTable
   String get actualTableName => $name;
   static const String $name = 'chat_messages';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ChatMessageData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ChatMessageData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('id_key')) {
-      context.handle(
-        _idKeyMeta,
-        idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta),
-      );
+      context.handle(_idKeyMeta, idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta));
     } else if (isInserting) {
       context.missing(_idKeyMeta);
     }
     if (data.containsKey('sender_id')) {
-      context.handle(
-        _senderIdMeta,
-        senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta),
-      );
+      context.handle(_senderIdMeta, senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta));
     } else if (isInserting) {
       context.missing(_senderIdMeta);
     }
     if (data.containsKey('chat_id')) {
-      context.handle(
-        _chatIdMeta,
-        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
-      );
+      context.handle(_chatIdMeta, chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
     } else if (isInserting) {
       context.missing(_chatIdMeta);
     }
     if (data.containsKey('reply_to_id')) {
-      context.handle(
-        _replyToIdMeta,
-        replyToId.isAcceptableOrUnknown(data['reply_to_id']!, _replyToIdMeta),
-      );
+      context.handle(_replyToIdMeta, replyToId.isAcceptableOrUnknown(data['reply_to_id']!, _replyToIdMeta));
     }
     if (data.containsKey('forward_from_id')) {
       context.handle(
         _forwardFromIdMeta,
-        forwardFromId.isAcceptableOrUnknown(
-          data['forward_from_id']!,
-          _forwardFromIdMeta,
-        ),
+        forwardFromId.isAcceptableOrUnknown(data['forward_from_id']!, _forwardFromIdMeta),
       );
     }
     if (data.containsKey('author_id')) {
-      context.handle(
-        _authorIdMeta,
-        authorId.isAcceptableOrUnknown(data['author_id']!, _authorIdMeta),
-      );
+      context.handle(_authorIdMeta, authorId.isAcceptableOrUnknown(data['author_id']!, _authorIdMeta));
     }
     if (data.containsKey('content')) {
-      context.handle(
-        _contentMeta,
-        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
-      );
+      context.handle(_contentMeta, content.isAcceptableOrUnknown(data['content']!, _contentMeta));
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
     if (data.containsKey('created_at_remote_usec')) {
       context.handle(
         _createdAtRemoteUsecMeta,
-        createdAtRemoteUsec.isAcceptableOrUnknown(
-          data['created_at_remote_usec']!,
-          _createdAtRemoteUsecMeta,
-        ),
+        createdAtRemoteUsec.isAcceptableOrUnknown(data['created_at_remote_usec']!, _createdAtRemoteUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_createdAtRemoteUsecMeta);
@@ -4219,10 +3461,7 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     if (data.containsKey('updated_at_remote_usec')) {
       context.handle(
         _updatedAtRemoteUsecMeta,
-        updatedAtRemoteUsec.isAcceptableOrUnknown(
-          data['updated_at_remote_usec']!,
-          _updatedAtRemoteUsecMeta,
-        ),
+        updatedAtRemoteUsec.isAcceptableOrUnknown(data['updated_at_remote_usec']!, _updatedAtRemoteUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_updatedAtRemoteUsecMeta);
@@ -4230,19 +3469,13 @@ class $ChatMessagesTableTable extends ChatMessagesTable
     if (data.containsKey('edited_at_remote_usec')) {
       context.handle(
         _editedAtRemoteUsecMeta,
-        editedAtRemoteUsec.isAcceptableOrUnknown(
-          data['edited_at_remote_usec']!,
-          _editedAtRemoteUsecMeta,
-        ),
+        editedAtRemoteUsec.isAcceptableOrUnknown(data['edited_at_remote_usec']!, _editedAtRemoteUsecMeta),
       );
     }
     if (data.containsKey('deleted_at_remote_usec')) {
       context.handle(
         _deletedAtRemoteUsecMeta,
-        deletedAtRemoteUsec.isAcceptableOrUnknown(
-          data['deleted_at_remote_usec']!,
-          _deletedAtRemoteUsecMeta,
-        ),
+        deletedAtRemoteUsec.isAcceptableOrUnknown(data['deleted_at_remote_usec']!, _deletedAtRemoteUsecMeta),
       );
     }
     return context;
@@ -4254,38 +3487,14 @@ class $ChatMessagesTableTable extends ChatMessagesTable
   ChatMessageData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChatMessageData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      idKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id_key'],
-      )!,
-      senderId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}sender_id'],
-      )!,
-      chatId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}chat_id'],
-      )!,
-      replyToId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}reply_to_id'],
-      ),
-      forwardFromId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}forward_from_id'],
-      ),
-      authorId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}author_id'],
-      ),
-      content: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}content'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      idKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id_key'])!,
+      senderId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sender_id'])!,
+      chatId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}chat_id'])!,
+      replyToId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}reply_to_id']),
+      forwardFromId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}forward_from_id']),
+      authorId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}author_id']),
+      content: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}content'])!,
       createdAtRemoteUsec: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at_remote_usec'],
@@ -4372,31 +3581,20 @@ class ChatMessageData extends DataClass implements Insertable<ChatMessageData> {
       idKey: Value(idKey),
       senderId: Value(senderId),
       chatId: Value(chatId),
-      replyToId: replyToId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(replyToId),
-      forwardFromId: forwardFromId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(forwardFromId),
-      authorId: authorId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(authorId),
+      replyToId: replyToId == null && nullToAbsent ? const Value.absent() : Value(replyToId),
+      forwardFromId: forwardFromId == null && nullToAbsent ? const Value.absent() : Value(forwardFromId),
+      authorId: authorId == null && nullToAbsent ? const Value.absent() : Value(authorId),
       content: Value(content),
       createdAtRemoteUsec: Value(createdAtRemoteUsec),
       updatedAtRemoteUsec: Value(updatedAtRemoteUsec),
-      editedAtRemoteUsec: editedAtRemoteUsec == null && nullToAbsent
-          ? const Value.absent()
-          : Value(editedAtRemoteUsec),
+      editedAtRemoteUsec: editedAtRemoteUsec == null && nullToAbsent ? const Value.absent() : Value(editedAtRemoteUsec),
       deletedAtRemoteUsec: deletedAtRemoteUsec == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAtRemoteUsec),
     );
   }
 
-  factory ChatMessageData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ChatMessageData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChatMessageData(
       id: serializer.fromJson<int>(json['id']),
@@ -4407,16 +3605,10 @@ class ChatMessageData extends DataClass implements Insertable<ChatMessageData> {
       forwardFromId: serializer.fromJson<int?>(json['forwardFromId']),
       authorId: serializer.fromJson<String?>(json['authorId']),
       content: serializer.fromJson<String>(json['content']),
-      createdAtRemoteUsec: serializer.fromJson<int>(
-        json['createdAtRemoteUsec'],
-      ),
-      updatedAtRemoteUsec: serializer.fromJson<int>(
-        json['updatedAtRemoteUsec'],
-      ),
+      createdAtRemoteUsec: serializer.fromJson<int>(json['createdAtRemoteUsec']),
+      updatedAtRemoteUsec: serializer.fromJson<int>(json['updatedAtRemoteUsec']),
       editedAtRemoteUsec: serializer.fromJson<int?>(json['editedAtRemoteUsec']),
-      deletedAtRemoteUsec: serializer.fromJson<int?>(
-        json['deletedAtRemoteUsec'],
-      ),
+      deletedAtRemoteUsec: serializer.fromJson<int?>(json['deletedAtRemoteUsec']),
     );
   }
   @override
@@ -4457,19 +3649,13 @@ class ChatMessageData extends DataClass implements Insertable<ChatMessageData> {
     senderId: senderId ?? this.senderId,
     chatId: chatId ?? this.chatId,
     replyToId: replyToId.present ? replyToId.value : this.replyToId,
-    forwardFromId: forwardFromId.present
-        ? forwardFromId.value
-        : this.forwardFromId,
+    forwardFromId: forwardFromId.present ? forwardFromId.value : this.forwardFromId,
     authorId: authorId.present ? authorId.value : this.authorId,
     content: content ?? this.content,
     createdAtRemoteUsec: createdAtRemoteUsec ?? this.createdAtRemoteUsec,
     updatedAtRemoteUsec: updatedAtRemoteUsec ?? this.updatedAtRemoteUsec,
-    editedAtRemoteUsec: editedAtRemoteUsec.present
-        ? editedAtRemoteUsec.value
-        : this.editedAtRemoteUsec,
-    deletedAtRemoteUsec: deletedAtRemoteUsec.present
-        ? deletedAtRemoteUsec.value
-        : this.deletedAtRemoteUsec,
+    editedAtRemoteUsec: editedAtRemoteUsec.present ? editedAtRemoteUsec.value : this.editedAtRemoteUsec,
+    deletedAtRemoteUsec: deletedAtRemoteUsec.present ? deletedAtRemoteUsec.value : this.deletedAtRemoteUsec,
   );
   ChatMessageData copyWithCompanion(ChatMessageDataCompanion data) {
     return ChatMessageData(
@@ -4478,23 +3664,13 @@ class ChatMessageData extends DataClass implements Insertable<ChatMessageData> {
       senderId: data.senderId.present ? data.senderId.value : this.senderId,
       chatId: data.chatId.present ? data.chatId.value : this.chatId,
       replyToId: data.replyToId.present ? data.replyToId.value : this.replyToId,
-      forwardFromId: data.forwardFromId.present
-          ? data.forwardFromId.value
-          : this.forwardFromId,
+      forwardFromId: data.forwardFromId.present ? data.forwardFromId.value : this.forwardFromId,
       authorId: data.authorId.present ? data.authorId.value : this.authorId,
       content: data.content.present ? data.content.value : this.content,
-      createdAtRemoteUsec: data.createdAtRemoteUsec.present
-          ? data.createdAtRemoteUsec.value
-          : this.createdAtRemoteUsec,
-      updatedAtRemoteUsec: data.updatedAtRemoteUsec.present
-          ? data.updatedAtRemoteUsec.value
-          : this.updatedAtRemoteUsec,
-      editedAtRemoteUsec: data.editedAtRemoteUsec.present
-          ? data.editedAtRemoteUsec.value
-          : this.editedAtRemoteUsec,
-      deletedAtRemoteUsec: data.deletedAtRemoteUsec.present
-          ? data.deletedAtRemoteUsec.value
-          : this.deletedAtRemoteUsec,
+      createdAtRemoteUsec: data.createdAtRemoteUsec.present ? data.createdAtRemoteUsec.value : this.createdAtRemoteUsec,
+      updatedAtRemoteUsec: data.updatedAtRemoteUsec.present ? data.updatedAtRemoteUsec.value : this.updatedAtRemoteUsec,
+      editedAtRemoteUsec: data.editedAtRemoteUsec.present ? data.editedAtRemoteUsec.value : this.editedAtRemoteUsec,
+      deletedAtRemoteUsec: data.deletedAtRemoteUsec.present ? data.deletedAtRemoteUsec.value : this.deletedAtRemoteUsec,
     );
   }
 
@@ -4619,14 +3795,10 @@ class ChatMessageDataCompanion extends UpdateCompanion<ChatMessageData> {
       if (forwardFromId != null) 'forward_from_id': forwardFromId,
       if (authorId != null) 'author_id': authorId,
       if (content != null) 'content': content,
-      if (createdAtRemoteUsec != null)
-        'created_at_remote_usec': createdAtRemoteUsec,
-      if (updatedAtRemoteUsec != null)
-        'updated_at_remote_usec': updatedAtRemoteUsec,
-      if (editedAtRemoteUsec != null)
-        'edited_at_remote_usec': editedAtRemoteUsec,
-      if (deletedAtRemoteUsec != null)
-        'deleted_at_remote_usec': deletedAtRemoteUsec,
+      if (createdAtRemoteUsec != null) 'created_at_remote_usec': createdAtRemoteUsec,
+      if (updatedAtRemoteUsec != null) 'updated_at_remote_usec': updatedAtRemoteUsec,
+      if (editedAtRemoteUsec != null) 'edited_at_remote_usec': editedAtRemoteUsec,
+      if (deletedAtRemoteUsec != null) 'deleted_at_remote_usec': deletedAtRemoteUsec,
     });
   }
 
@@ -4723,8 +3895,7 @@ class ChatMessageDataCompanion extends UpdateCompanion<ChatMessageData> {
 }
 
 class $ChatMessageSyncCursorTableTable extends ChatMessageSyncCursorTable
-    with
-        TableInfo<$ChatMessageSyncCursorTableTable, ChatMessageSyncCursorData> {
+    with TableInfo<$ChatMessageSyncCursorTableTable, ChatMessageSyncCursorData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -4737,25 +3908,17 @@ class $ChatMessageSyncCursorTableTable extends ChatMessageSyncCursorTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES chats (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES chats (id) ON DELETE CASCADE'),
   );
   @override
-  late final GeneratedColumnWithTypeConverter<MessageSyncCursorTypeEnum, String>
-  cursorType =
-      GeneratedColumn<String>(
-        'cursor_type',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<MessageSyncCursorTypeEnum>(
-        $ChatMessageSyncCursorTableTable.$convertercursorType,
-      );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  late final GeneratedColumnWithTypeConverter<MessageSyncCursorTypeEnum, String> cursorType = GeneratedColumn<String>(
+    'cursor_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<MessageSyncCursorTypeEnum>($ChatMessageSyncCursorTableTable.$convertercursorType);
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -4772,27 +3935,18 @@ class $ChatMessageSyncCursorTableTable extends ChatMessageSyncCursorTable
   String get actualTableName => $name;
   static const String $name = 'chat_message_sync_cursors';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ChatMessageSyncCursorData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ChatMessageSyncCursorData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('chat_id')) {
-      context.handle(
-        _chatIdMeta,
-        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
-      );
+      context.handle(_chatIdMeta, chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
     } else if (isInserting) {
       context.missing(_chatIdMeta);
     }
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_timestampUsecMeta);
@@ -4803,26 +3957,14 @@ class $ChatMessageSyncCursorTableTable extends ChatMessageSyncCursorTable
   @override
   Set<GeneratedColumn> get $primaryKey => {chatId, cursorType};
   @override
-  ChatMessageSyncCursorData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  ChatMessageSyncCursorData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChatMessageSyncCursorData(
-      chatId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}chat_id'],
-      )!,
+      chatId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}chat_id'])!,
       cursorType: $ChatMessageSyncCursorTableTable.$convertercursorType.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}cursor_type'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}cursor_type'])!,
       ),
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      )!,
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec'])!,
     );
   }
 
@@ -4831,30 +3973,21 @@ class $ChatMessageSyncCursorTableTable extends ChatMessageSyncCursorTable
     return $ChatMessageSyncCursorTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<MessageSyncCursorTypeEnum, String, String>
-  $convertercursorType = const EnumNameConverter<MessageSyncCursorTypeEnum>(
-    MessageSyncCursorTypeEnum.values,
-  );
+  static JsonTypeConverter2<MessageSyncCursorTypeEnum, String, String> $convertercursorType =
+      const EnumNameConverter<MessageSyncCursorTypeEnum>(MessageSyncCursorTypeEnum.values);
 }
 
-class ChatMessageSyncCursorData extends DataClass
-    implements Insertable<ChatMessageSyncCursorData> {
+class ChatMessageSyncCursorData extends DataClass implements Insertable<ChatMessageSyncCursorData> {
   final int chatId;
   final MessageSyncCursorTypeEnum cursorType;
   final int timestampUsec;
-  const ChatMessageSyncCursorData({
-    required this.chatId,
-    required this.cursorType,
-    required this.timestampUsec,
-  });
+  const ChatMessageSyncCursorData({required this.chatId, required this.cursorType, required this.timestampUsec});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['chat_id'] = Variable<int>(chatId);
     {
-      map['cursor_type'] = Variable<String>(
-        $ChatMessageSyncCursorTableTable.$convertercursorType.toSql(cursorType),
-      );
+      map['cursor_type'] = Variable<String>($ChatMessageSyncCursorTableTable.$convertercursorType.toSql(cursorType));
     }
     map['timestamp_usec'] = Variable<int>(timestampUsec);
     return map;
@@ -4868,15 +4001,13 @@ class ChatMessageSyncCursorData extends DataClass
     );
   }
 
-  factory ChatMessageSyncCursorData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ChatMessageSyncCursorData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChatMessageSyncCursorData(
       chatId: serializer.fromJson<int>(json['chatId']),
-      cursorType: $ChatMessageSyncCursorTableTable.$convertercursorType
-          .fromJson(serializer.fromJson<String>(json['cursorType'])),
+      cursorType: $ChatMessageSyncCursorTableTable.$convertercursorType.fromJson(
+        serializer.fromJson<String>(json['cursorType']),
+      ),
       timestampUsec: serializer.fromJson<int>(json['timestampUsec']),
     );
   }
@@ -4885,35 +4016,22 @@ class ChatMessageSyncCursorData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'chatId': serializer.toJson<int>(chatId),
-      'cursorType': serializer.toJson<String>(
-        $ChatMessageSyncCursorTableTable.$convertercursorType.toJson(
-          cursorType,
-        ),
-      ),
+      'cursorType': serializer.toJson<String>($ChatMessageSyncCursorTableTable.$convertercursorType.toJson(cursorType)),
       'timestampUsec': serializer.toJson<int>(timestampUsec),
     };
   }
 
-  ChatMessageSyncCursorData copyWith({
-    int? chatId,
-    MessageSyncCursorTypeEnum? cursorType,
-    int? timestampUsec,
-  }) => ChatMessageSyncCursorData(
-    chatId: chatId ?? this.chatId,
-    cursorType: cursorType ?? this.cursorType,
-    timestampUsec: timestampUsec ?? this.timestampUsec,
-  );
-  ChatMessageSyncCursorData copyWithCompanion(
-    ChatMessageSyncCursorDataCompanion data,
-  ) {
+  ChatMessageSyncCursorData copyWith({int? chatId, MessageSyncCursorTypeEnum? cursorType, int? timestampUsec}) =>
+      ChatMessageSyncCursorData(
+        chatId: chatId ?? this.chatId,
+        cursorType: cursorType ?? this.cursorType,
+        timestampUsec: timestampUsec ?? this.timestampUsec,
+      );
+  ChatMessageSyncCursorData copyWithCompanion(ChatMessageSyncCursorDataCompanion data) {
     return ChatMessageSyncCursorData(
       chatId: data.chatId.present ? data.chatId.value : this.chatId,
-      cursorType: data.cursorType.present
-          ? data.cursorType.value
-          : this.cursorType,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
+      cursorType: data.cursorType.present ? data.cursorType.value : this.cursorType,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
     );
   }
 
@@ -4938,8 +4056,7 @@ class ChatMessageSyncCursorData extends DataClass
           other.timestampUsec == this.timestampUsec);
 }
 
-class ChatMessageSyncCursorDataCompanion
-    extends UpdateCompanion<ChatMessageSyncCursorData> {
+class ChatMessageSyncCursorDataCompanion extends UpdateCompanion<ChatMessageSyncCursorData> {
   final Value<int> chatId;
   final Value<MessageSyncCursorTypeEnum> cursorType;
   final Value<int> timestampUsec;
@@ -4994,9 +4111,7 @@ class ChatMessageSyncCursorDataCompanion
     }
     if (cursorType.present) {
       map['cursor_type'] = Variable<String>(
-        $ChatMessageSyncCursorTableTable.$convertercursorType.toSql(
-          cursorType.value,
-        ),
+        $ChatMessageSyncCursorTableTable.$convertercursorType.toSql(cursorType.value),
       );
     }
     if (timestampUsec.present) {
@@ -5021,8 +4136,7 @@ class ChatMessageSyncCursorDataCompanion
 }
 
 class $ChatMessageReadCursorTableTable extends ChatMessageReadCursorTable
-    with
-        TableInfo<$ChatMessageReadCursorTableTable, ChatMessageReadCursorData> {
+    with TableInfo<$ChatMessageReadCursorTableTable, ChatMessageReadCursorData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -5035,9 +4149,7 @@ class $ChatMessageReadCursorTableTable extends ChatMessageReadCursorTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES chats (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES chats (id) ON DELETE CASCADE'),
   );
   static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
@@ -5048,9 +4160,7 @@ class $ChatMessageReadCursorTableTable extends ChatMessageReadCursorTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -5067,35 +4177,23 @@ class $ChatMessageReadCursorTableTable extends ChatMessageReadCursorTable
   String get actualTableName => $name;
   static const String $name = 'chat_message_read_cursors';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ChatMessageReadCursorData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ChatMessageReadCursorData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('chat_id')) {
-      context.handle(
-        _chatIdMeta,
-        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
-      );
+      context.handle(_chatIdMeta, chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
     } else if (isInserting) {
       context.missing(_chatIdMeta);
     }
     if (data.containsKey('user_id')) {
-      context.handle(
-        _userIdMeta,
-        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
-      );
+      context.handle(_userIdMeta, userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
     } else if (isInserting) {
       context.missing(_userIdMeta);
     }
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_timestampUsecMeta);
@@ -5106,24 +4204,12 @@ class $ChatMessageReadCursorTableTable extends ChatMessageReadCursorTable
   @override
   Set<GeneratedColumn> get $primaryKey => {chatId, userId};
   @override
-  ChatMessageReadCursorData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  ChatMessageReadCursorData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChatMessageReadCursorData(
-      chatId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}chat_id'],
-      )!,
-      userId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}user_id'],
-      )!,
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      )!,
+      chatId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}chat_id'])!,
+      userId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec'])!,
     );
   }
 
@@ -5133,16 +4219,11 @@ class $ChatMessageReadCursorTableTable extends ChatMessageReadCursorTable
   }
 }
 
-class ChatMessageReadCursorData extends DataClass
-    implements Insertable<ChatMessageReadCursorData> {
+class ChatMessageReadCursorData extends DataClass implements Insertable<ChatMessageReadCursorData> {
   final int chatId;
   final String userId;
   final int timestampUsec;
-  const ChatMessageReadCursorData({
-    required this.chatId,
-    required this.userId,
-    required this.timestampUsec,
-  });
+  const ChatMessageReadCursorData({required this.chatId, required this.userId, required this.timestampUsec});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5160,10 +4241,7 @@ class ChatMessageReadCursorData extends DataClass
     );
   }
 
-  factory ChatMessageReadCursorData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ChatMessageReadCursorData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChatMessageReadCursorData(
       chatId: serializer.fromJson<int>(json['chatId']),
@@ -5181,24 +4259,16 @@ class ChatMessageReadCursorData extends DataClass
     };
   }
 
-  ChatMessageReadCursorData copyWith({
-    int? chatId,
-    String? userId,
-    int? timestampUsec,
-  }) => ChatMessageReadCursorData(
+  ChatMessageReadCursorData copyWith({int? chatId, String? userId, int? timestampUsec}) => ChatMessageReadCursorData(
     chatId: chatId ?? this.chatId,
     userId: userId ?? this.userId,
     timestampUsec: timestampUsec ?? this.timestampUsec,
   );
-  ChatMessageReadCursorData copyWithCompanion(
-    ChatMessageReadCursorDataCompanion data,
-  ) {
+  ChatMessageReadCursorData copyWithCompanion(ChatMessageReadCursorDataCompanion data) {
     return ChatMessageReadCursorData(
       chatId: data.chatId.present ? data.chatId.value : this.chatId,
       userId: data.userId.present ? data.userId.value : this.userId,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
     );
   }
 
@@ -5223,8 +4293,7 @@ class ChatMessageReadCursorData extends DataClass
           other.timestampUsec == this.timestampUsec);
 }
 
-class ChatMessageReadCursorDataCompanion
-    extends UpdateCompanion<ChatMessageReadCursorData> {
+class ChatMessageReadCursorDataCompanion extends UpdateCompanion<ChatMessageReadCursorData> {
   final Value<int> chatId;
   final Value<String> userId;
   final Value<int> timestampUsec;
@@ -5324,13 +4393,9 @@ class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
     true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES chats (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES chats (id) ON DELETE CASCADE'),
   );
-  static const VerificationMeta _participantIdMeta = const VerificationMeta(
-    'participantId',
-  );
+  static const VerificationMeta _participantIdMeta = const VerificationMeta('participantId');
   @override
   late final GeneratedColumn<String> participantId = GeneratedColumn<String>(
     'participant_id',
@@ -5339,9 +4404,7 @@ class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _replyToIdMeta = const VerificationMeta(
-    'replyToId',
-  );
+  static const VerificationMeta _replyToIdMeta = const VerificationMeta('replyToId');
   @override
   late final GeneratedColumn<int> replyToId = GeneratedColumn<int>(
     'reply_to_id',
@@ -5350,9 +4413,7 @@ class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _forwardFromIdMeta = const VerificationMeta(
-    'forwardFromId',
-  );
+  static const VerificationMeta _forwardFromIdMeta = const VerificationMeta('forwardFromId');
   @override
   late final GeneratedColumn<int> forwardFromId = GeneratedColumn<int>(
     'forward_from_id',
@@ -5361,9 +4422,7 @@ class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _authorIdMeta = const VerificationMeta(
-    'authorId',
-  );
+  static const VerificationMeta _authorIdMeta = const VerificationMeta('authorId');
   @override
   late final GeneratedColumn<String> authorId = GeneratedColumn<String>(
     'author_id',
@@ -5372,9 +4431,7 @@ class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _contentMeta = const VerificationMeta(
-    'content',
-  );
+  static const VerificationMeta _contentMeta = const VerificationMeta('content');
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
     'content',
@@ -5383,9 +4440,7 @@ class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -5412,72 +4467,42 @@ class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
   String get actualTableName => $name;
   static const String $name = 'chat_outbox_messages';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ChatOutboxMessageData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ChatOutboxMessageData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id_key')) {
-      context.handle(
-        _idKeyMeta,
-        idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta),
-      );
+      context.handle(_idKeyMeta, idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta));
     } else if (isInserting) {
       context.missing(_idKeyMeta);
     }
     if (data.containsKey('chat_id')) {
-      context.handle(
-        _chatIdMeta,
-        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
-      );
+      context.handle(_chatIdMeta, chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
     }
     if (data.containsKey('participant_id')) {
       context.handle(
         _participantIdMeta,
-        participantId.isAcceptableOrUnknown(
-          data['participant_id']!,
-          _participantIdMeta,
-        ),
+        participantId.isAcceptableOrUnknown(data['participant_id']!, _participantIdMeta),
       );
     }
     if (data.containsKey('reply_to_id')) {
-      context.handle(
-        _replyToIdMeta,
-        replyToId.isAcceptableOrUnknown(data['reply_to_id']!, _replyToIdMeta),
-      );
+      context.handle(_replyToIdMeta, replyToId.isAcceptableOrUnknown(data['reply_to_id']!, _replyToIdMeta));
     }
     if (data.containsKey('forward_from_id')) {
       context.handle(
         _forwardFromIdMeta,
-        forwardFromId.isAcceptableOrUnknown(
-          data['forward_from_id']!,
-          _forwardFromIdMeta,
-        ),
+        forwardFromId.isAcceptableOrUnknown(data['forward_from_id']!, _forwardFromIdMeta),
       );
     }
     if (data.containsKey('author_id')) {
-      context.handle(
-        _authorIdMeta,
-        authorId.isAcceptableOrUnknown(data['author_id']!, _authorIdMeta),
-      );
+      context.handle(_authorIdMeta, authorId.isAcceptableOrUnknown(data['author_id']!, _authorIdMeta));
     }
     if (data.containsKey('content')) {
-      context.handle(
-        _contentMeta,
-        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
-      );
+      context.handle(_contentMeta, content.isAcceptableOrUnknown(data['content']!, _contentMeta));
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     return context;
   }
@@ -5488,38 +4513,14 @@ class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
   ChatOutboxMessageData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChatOutboxMessageData(
-      idKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id_key'],
-      )!,
-      chatId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}chat_id'],
-      ),
-      participantId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}participant_id'],
-      ),
-      replyToId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}reply_to_id'],
-      ),
-      forwardFromId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}forward_from_id'],
-      ),
-      authorId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}author_id'],
-      ),
-      content: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}content'],
-      )!,
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
+      idKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id_key'])!,
+      chatId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}chat_id']),
+      participantId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}participant_id']),
+      replyToId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}reply_to_id']),
+      forwardFromId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}forward_from_id']),
+      authorId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}author_id']),
+      content: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}content'])!,
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
     );
   }
 
@@ -5529,8 +4530,7 @@ class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
   }
 }
 
-class ChatOutboxMessageData extends DataClass
-    implements Insertable<ChatOutboxMessageData> {
+class ChatOutboxMessageData extends DataClass implements Insertable<ChatOutboxMessageData> {
   final String idKey;
   final int? chatId;
   final String? participantId;
@@ -5576,30 +4576,17 @@ class ChatOutboxMessageData extends DataClass
   ChatOutboxMessageDataCompanion toCompanion(bool nullToAbsent) {
     return ChatOutboxMessageDataCompanion(
       idKey: Value(idKey),
-      chatId: chatId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(chatId),
-      participantId: participantId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(participantId),
-      replyToId: replyToId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(replyToId),
-      forwardFromId: forwardFromId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(forwardFromId),
-      authorId: authorId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(authorId),
+      chatId: chatId == null && nullToAbsent ? const Value.absent() : Value(chatId),
+      participantId: participantId == null && nullToAbsent ? const Value.absent() : Value(participantId),
+      replyToId: replyToId == null && nullToAbsent ? const Value.absent() : Value(replyToId),
+      forwardFromId: forwardFromId == null && nullToAbsent ? const Value.absent() : Value(forwardFromId),
+      authorId: authorId == null && nullToAbsent ? const Value.absent() : Value(authorId),
       content: Value(content),
       sendAttempts: Value(sendAttempts),
     );
   }
 
-  factory ChatOutboxMessageData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ChatOutboxMessageData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChatOutboxMessageData(
       idKey: serializer.fromJson<String>(json['idKey']),
@@ -5639,13 +4626,9 @@ class ChatOutboxMessageData extends DataClass
   }) => ChatOutboxMessageData(
     idKey: idKey ?? this.idKey,
     chatId: chatId.present ? chatId.value : this.chatId,
-    participantId: participantId.present
-        ? participantId.value
-        : this.participantId,
+    participantId: participantId.present ? participantId.value : this.participantId,
     replyToId: replyToId.present ? replyToId.value : this.replyToId,
-    forwardFromId: forwardFromId.present
-        ? forwardFromId.value
-        : this.forwardFromId,
+    forwardFromId: forwardFromId.present ? forwardFromId.value : this.forwardFromId,
     authorId: authorId.present ? authorId.value : this.authorId,
     content: content ?? this.content,
     sendAttempts: sendAttempts ?? this.sendAttempts,
@@ -5654,18 +4637,12 @@ class ChatOutboxMessageData extends DataClass
     return ChatOutboxMessageData(
       idKey: data.idKey.present ? data.idKey.value : this.idKey,
       chatId: data.chatId.present ? data.chatId.value : this.chatId,
-      participantId: data.participantId.present
-          ? data.participantId.value
-          : this.participantId,
+      participantId: data.participantId.present ? data.participantId.value : this.participantId,
       replyToId: data.replyToId.present ? data.replyToId.value : this.replyToId,
-      forwardFromId: data.forwardFromId.present
-          ? data.forwardFromId.value
-          : this.forwardFromId,
+      forwardFromId: data.forwardFromId.present ? data.forwardFromId.value : this.forwardFromId,
       authorId: data.authorId.present ? data.authorId.value : this.authorId,
       content: data.content.present ? data.content.value : this.content,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
     );
   }
 
@@ -5685,16 +4662,8 @@ class ChatOutboxMessageData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    idKey,
-    chatId,
-    participantId,
-    replyToId,
-    forwardFromId,
-    authorId,
-    content,
-    sendAttempts,
-  );
+  int get hashCode =>
+      Object.hash(idKey, chatId, participantId, replyToId, forwardFromId, authorId, content, sendAttempts);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5709,8 +4678,7 @@ class ChatOutboxMessageData extends DataClass
           other.sendAttempts == this.sendAttempts);
 }
 
-class ChatOutboxMessageDataCompanion
-    extends UpdateCompanion<ChatOutboxMessageData> {
+class ChatOutboxMessageDataCompanion extends UpdateCompanion<ChatOutboxMessageData> {
   final Value<String> idKey;
   final Value<int?> chatId;
   final Value<String?> participantId;
@@ -5842,8 +4810,7 @@ class ChatOutboxMessageDataCompanion
 }
 
 class $ChatOutboxMessageEditTableTable extends ChatOutboxMessageEditTable
-    with
-        TableInfo<$ChatOutboxMessageEditTableTable, ChatOutboxMessageEditData> {
+    with TableInfo<$ChatOutboxMessageEditTableTable, ChatOutboxMessageEditData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -5874,13 +4841,9 @@ class $ChatOutboxMessageEditTableTable extends ChatOutboxMessageEditTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES chats (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES chats (id) ON DELETE CASCADE'),
   );
-  static const VerificationMeta _newContentMeta = const VerificationMeta(
-    'newContent',
-  );
+  static const VerificationMeta _newContentMeta = const VerificationMeta('newContent');
   @override
   late final GeneratedColumn<String> newContent = GeneratedColumn<String>(
     'new_content',
@@ -5889,9 +4852,7 @@ class $ChatOutboxMessageEditTableTable extends ChatOutboxMessageEditTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -5902,60 +4863,36 @@ class $ChatOutboxMessageEditTableTable extends ChatOutboxMessageEditTable
     defaultValue: const Constant(0),
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    idKey,
-    chatId,
-    newContent,
-    sendAttempts,
-  ];
+  List<GeneratedColumn> get $columns => [id, idKey, chatId, newContent, sendAttempts];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'chat_outbox_message_edits';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ChatOutboxMessageEditData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ChatOutboxMessageEditData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('id_key')) {
-      context.handle(
-        _idKeyMeta,
-        idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta),
-      );
+      context.handle(_idKeyMeta, idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta));
     } else if (isInserting) {
       context.missing(_idKeyMeta);
     }
     if (data.containsKey('chat_id')) {
-      context.handle(
-        _chatIdMeta,
-        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
-      );
+      context.handle(_chatIdMeta, chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
     } else if (isInserting) {
       context.missing(_chatIdMeta);
     }
     if (data.containsKey('new_content')) {
-      context.handle(
-        _newContentMeta,
-        newContent.isAcceptableOrUnknown(data['new_content']!, _newContentMeta),
-      );
+      context.handle(_newContentMeta, newContent.isAcceptableOrUnknown(data['new_content']!, _newContentMeta));
     } else if (isInserting) {
       context.missing(_newContentMeta);
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     return context;
   }
@@ -5963,32 +4900,14 @@ class $ChatOutboxMessageEditTableTable extends ChatOutboxMessageEditTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  ChatOutboxMessageEditData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  ChatOutboxMessageEditData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChatOutboxMessageEditData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      idKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id_key'],
-      )!,
-      chatId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}chat_id'],
-      )!,
-      newContent: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}new_content'],
-      )!,
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      idKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id_key'])!,
+      chatId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}chat_id'])!,
+      newContent: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}new_content'])!,
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
     );
   }
 
@@ -5998,8 +4917,7 @@ class $ChatOutboxMessageEditTableTable extends ChatOutboxMessageEditTable
   }
 }
 
-class ChatOutboxMessageEditData extends DataClass
-    implements Insertable<ChatOutboxMessageEditData> {
+class ChatOutboxMessageEditData extends DataClass implements Insertable<ChatOutboxMessageEditData> {
   final int id;
   final String idKey;
   final int chatId;
@@ -6033,10 +4951,7 @@ class ChatOutboxMessageEditData extends DataClass
     );
   }
 
-  factory ChatOutboxMessageEditData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ChatOutboxMessageEditData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChatOutboxMessageEditData(
       id: serializer.fromJson<int>(json['id']),
@@ -6058,32 +4973,21 @@ class ChatOutboxMessageEditData extends DataClass
     };
   }
 
-  ChatOutboxMessageEditData copyWith({
-    int? id,
-    String? idKey,
-    int? chatId,
-    String? newContent,
-    int? sendAttempts,
-  }) => ChatOutboxMessageEditData(
-    id: id ?? this.id,
-    idKey: idKey ?? this.idKey,
-    chatId: chatId ?? this.chatId,
-    newContent: newContent ?? this.newContent,
-    sendAttempts: sendAttempts ?? this.sendAttempts,
-  );
-  ChatOutboxMessageEditData copyWithCompanion(
-    ChatOutboxMessageEditDataCompanion data,
-  ) {
+  ChatOutboxMessageEditData copyWith({int? id, String? idKey, int? chatId, String? newContent, int? sendAttempts}) =>
+      ChatOutboxMessageEditData(
+        id: id ?? this.id,
+        idKey: idKey ?? this.idKey,
+        chatId: chatId ?? this.chatId,
+        newContent: newContent ?? this.newContent,
+        sendAttempts: sendAttempts ?? this.sendAttempts,
+      );
+  ChatOutboxMessageEditData copyWithCompanion(ChatOutboxMessageEditDataCompanion data) {
     return ChatOutboxMessageEditData(
       id: data.id.present ? data.id.value : this.id,
       idKey: data.idKey.present ? data.idKey.value : this.idKey,
       chatId: data.chatId.present ? data.chatId.value : this.chatId,
-      newContent: data.newContent.present
-          ? data.newContent.value
-          : this.newContent,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
+      newContent: data.newContent.present ? data.newContent.value : this.newContent,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
     );
   }
 
@@ -6112,8 +5016,7 @@ class ChatOutboxMessageEditData extends DataClass
           other.sendAttempts == this.sendAttempts);
 }
 
-class ChatOutboxMessageEditDataCompanion
-    extends UpdateCompanion<ChatOutboxMessageEditData> {
+class ChatOutboxMessageEditDataCompanion extends UpdateCompanion<ChatOutboxMessageEditData> {
   final Value<int> id;
   final Value<String> idKey;
   final Value<int> chatId;
@@ -6202,11 +5105,7 @@ class ChatOutboxMessageEditDataCompanion
 }
 
 class $ChatOutboxMessageDeleteTableTable extends ChatOutboxMessageDeleteTable
-    with
-        TableInfo<
-          $ChatOutboxMessageDeleteTableTable,
-          ChatOutboxMessageDeleteData
-        > {
+    with TableInfo<$ChatOutboxMessageDeleteTableTable, ChatOutboxMessageDeleteData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -6237,13 +5136,9 @@ class $ChatOutboxMessageDeleteTableTable extends ChatOutboxMessageDeleteTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES chats (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES chats (id) ON DELETE CASCADE'),
   );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -6261,39 +5156,24 @@ class $ChatOutboxMessageDeleteTableTable extends ChatOutboxMessageDeleteTable
   String get actualTableName => $name;
   static const String $name = 'chat_outbox_message_deletes';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ChatOutboxMessageDeleteData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ChatOutboxMessageDeleteData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('id_key')) {
-      context.handle(
-        _idKeyMeta,
-        idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta),
-      );
+      context.handle(_idKeyMeta, idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta));
     } else if (isInserting) {
       context.missing(_idKeyMeta);
     }
     if (data.containsKey('chat_id')) {
-      context.handle(
-        _chatIdMeta,
-        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
-      );
+      context.handle(_chatIdMeta, chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
     } else if (isInserting) {
       context.missing(_chatIdMeta);
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     return context;
   }
@@ -6301,28 +5181,13 @@ class $ChatOutboxMessageDeleteTableTable extends ChatOutboxMessageDeleteTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  ChatOutboxMessageDeleteData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  ChatOutboxMessageDeleteData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChatOutboxMessageDeleteData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      idKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id_key'],
-      )!,
-      chatId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}chat_id'],
-      )!,
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      idKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id_key'])!,
+      chatId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}chat_id'])!,
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
     );
   }
 
@@ -6332,8 +5197,7 @@ class $ChatOutboxMessageDeleteTableTable extends ChatOutboxMessageDeleteTable
   }
 }
 
-class ChatOutboxMessageDeleteData extends DataClass
-    implements Insertable<ChatOutboxMessageDeleteData> {
+class ChatOutboxMessageDeleteData extends DataClass implements Insertable<ChatOutboxMessageDeleteData> {
   final int id;
   final String idKey;
   final int chatId;
@@ -6363,10 +5227,7 @@ class ChatOutboxMessageDeleteData extends DataClass
     );
   }
 
-  factory ChatOutboxMessageDeleteData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ChatOutboxMessageDeleteData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChatOutboxMessageDeleteData(
       id: serializer.fromJson<int>(json['id']),
@@ -6386,27 +5247,19 @@ class ChatOutboxMessageDeleteData extends DataClass
     };
   }
 
-  ChatOutboxMessageDeleteData copyWith({
-    int? id,
-    String? idKey,
-    int? chatId,
-    int? sendAttempts,
-  }) => ChatOutboxMessageDeleteData(
-    id: id ?? this.id,
-    idKey: idKey ?? this.idKey,
-    chatId: chatId ?? this.chatId,
-    sendAttempts: sendAttempts ?? this.sendAttempts,
-  );
-  ChatOutboxMessageDeleteData copyWithCompanion(
-    ChatOutboxMessageDeleteDataCompanion data,
-  ) {
+  ChatOutboxMessageDeleteData copyWith({int? id, String? idKey, int? chatId, int? sendAttempts}) =>
+      ChatOutboxMessageDeleteData(
+        id: id ?? this.id,
+        idKey: idKey ?? this.idKey,
+        chatId: chatId ?? this.chatId,
+        sendAttempts: sendAttempts ?? this.sendAttempts,
+      );
+  ChatOutboxMessageDeleteData copyWithCompanion(ChatOutboxMessageDeleteDataCompanion data) {
     return ChatOutboxMessageDeleteData(
       id: data.id.present ? data.id.value : this.id,
       idKey: data.idKey.present ? data.idKey.value : this.idKey,
       chatId: data.chatId.present ? data.chatId.value : this.chatId,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
     );
   }
 
@@ -6433,8 +5286,7 @@ class ChatOutboxMessageDeleteData extends DataClass
           other.sendAttempts == this.sendAttempts);
 }
 
-class ChatOutboxMessageDeleteDataCompanion
-    extends UpdateCompanion<ChatOutboxMessageDeleteData> {
+class ChatOutboxMessageDeleteDataCompanion extends UpdateCompanion<ChatOutboxMessageDeleteData> {
   final Value<int> id;
   final Value<String> idKey;
   final Value<int> chatId;
@@ -6524,13 +5376,9 @@ class $ChatOutboxReadCursorsTableTable extends ChatOutboxReadCursorsTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES chats (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES chats (id) ON DELETE CASCADE'),
   );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -6539,9 +5387,7 @@ class $ChatOutboxReadCursorsTableTable extends ChatOutboxReadCursorsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -6559,37 +5405,22 @@ class $ChatOutboxReadCursorsTableTable extends ChatOutboxReadCursorsTable
   String get actualTableName => $name;
   static const String $name = 'chat_outbox_read_cursors';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ChatOutboxReadCursorData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ChatOutboxReadCursorData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('chat_id')) {
-      context.handle(
-        _chatIdMeta,
-        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
-      );
+      context.handle(_chatIdMeta, chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
     }
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_timestampUsecMeta);
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     return context;
   }
@@ -6597,24 +5428,12 @@ class $ChatOutboxReadCursorsTableTable extends ChatOutboxReadCursorsTable
   @override
   Set<GeneratedColumn> get $primaryKey => {chatId};
   @override
-  ChatOutboxReadCursorData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  ChatOutboxReadCursorData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ChatOutboxReadCursorData(
-      chatId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}chat_id'],
-      )!,
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      )!,
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
+      chatId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}chat_id'])!,
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec'])!,
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
     );
   }
 
@@ -6624,16 +5443,11 @@ class $ChatOutboxReadCursorsTableTable extends ChatOutboxReadCursorsTable
   }
 }
 
-class ChatOutboxReadCursorData extends DataClass
-    implements Insertable<ChatOutboxReadCursorData> {
+class ChatOutboxReadCursorData extends DataClass implements Insertable<ChatOutboxReadCursorData> {
   final int chatId;
   final int timestampUsec;
   final int sendAttempts;
-  const ChatOutboxReadCursorData({
-    required this.chatId,
-    required this.timestampUsec,
-    required this.sendAttempts,
-  });
+  const ChatOutboxReadCursorData({required this.chatId, required this.timestampUsec, required this.sendAttempts});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -6651,10 +5465,7 @@ class ChatOutboxReadCursorData extends DataClass
     );
   }
 
-  factory ChatOutboxReadCursorData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ChatOutboxReadCursorData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChatOutboxReadCursorData(
       chatId: serializer.fromJson<int>(json['chatId']),
@@ -6672,26 +5483,16 @@ class ChatOutboxReadCursorData extends DataClass
     };
   }
 
-  ChatOutboxReadCursorData copyWith({
-    int? chatId,
-    int? timestampUsec,
-    int? sendAttempts,
-  }) => ChatOutboxReadCursorData(
+  ChatOutboxReadCursorData copyWith({int? chatId, int? timestampUsec, int? sendAttempts}) => ChatOutboxReadCursorData(
     chatId: chatId ?? this.chatId,
     timestampUsec: timestampUsec ?? this.timestampUsec,
     sendAttempts: sendAttempts ?? this.sendAttempts,
   );
-  ChatOutboxReadCursorData copyWithCompanion(
-    ChatOutboxReadCursorDataCompanion data,
-  ) {
+  ChatOutboxReadCursorData copyWithCompanion(ChatOutboxReadCursorDataCompanion data) {
     return ChatOutboxReadCursorData(
       chatId: data.chatId.present ? data.chatId.value : this.chatId,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
     );
   }
 
@@ -6716,8 +5517,7 @@ class ChatOutboxReadCursorData extends DataClass
           other.sendAttempts == this.sendAttempts);
 }
 
-class ChatOutboxReadCursorDataCompanion
-    extends UpdateCompanion<ChatOutboxReadCursorData> {
+class ChatOutboxReadCursorDataCompanion extends UpdateCompanion<ChatOutboxReadCursorData> {
   final Value<int> chatId;
   final Value<int> timestampUsec;
   final Value<int> sendAttempts;
@@ -6796,9 +5596,7 @@ class $SmsConversationsTableTable extends SmsConversationsTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _firstPhoneNumberMeta = const VerificationMeta(
-    'firstPhoneNumber',
-  );
+  static const VerificationMeta _firstPhoneNumberMeta = const VerificationMeta('firstPhoneNumber');
   @override
   late final GeneratedColumn<String> firstPhoneNumber = GeneratedColumn<String>(
     'first_phone_number',
@@ -6807,60 +5605,42 @@ class $SmsConversationsTableTable extends SmsConversationsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _secondPhoneNumberMeta = const VerificationMeta(
-    'secondPhoneNumber',
+  static const VerificationMeta _secondPhoneNumberMeta = const VerificationMeta('secondPhoneNumber');
+  @override
+  late final GeneratedColumn<String> secondPhoneNumber = GeneratedColumn<String>(
+    'second_phone_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtRemoteMeta = const VerificationMeta('createdAtRemote');
+  @override
+  late final GeneratedColumn<DateTime> createdAtRemote = GeneratedColumn<DateTime>(
+    'created_at_remote',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtRemoteMeta = const VerificationMeta('updatedAtRemote');
+  @override
+  late final GeneratedColumn<DateTime> updatedAtRemote = GeneratedColumn<DateTime>(
+    'updated_at_remote',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumn<String> secondPhoneNumber =
-      GeneratedColumn<String>(
-        'second_phone_number',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _createdAtRemoteMeta = const VerificationMeta(
-    'createdAtRemote',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAtRemote =
-      GeneratedColumn<DateTime>(
-        'created_at_remote',
-        aliasedName,
-        false,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _updatedAtRemoteMeta = const VerificationMeta(
-    'updatedAtRemote',
-  );
-  @override
-  late final GeneratedColumn<DateTime> updatedAtRemote =
-      GeneratedColumn<DateTime>(
-        'updated_at_remote',
-        aliasedName,
-        false,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: true,
-      );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    firstPhoneNumber,
-    secondPhoneNumber,
-    createdAtRemote,
-    updatedAtRemote,
-  ];
+  List<GeneratedColumn> get $columns => [id, firstPhoneNumber, secondPhoneNumber, createdAtRemote, updatedAtRemote];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'sms_conversations';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SmsConversationData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SmsConversationData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -6869,10 +5649,7 @@ class $SmsConversationsTableTable extends SmsConversationsTable
     if (data.containsKey('first_phone_number')) {
       context.handle(
         _firstPhoneNumberMeta,
-        firstPhoneNumber.isAcceptableOrUnknown(
-          data['first_phone_number']!,
-          _firstPhoneNumberMeta,
-        ),
+        firstPhoneNumber.isAcceptableOrUnknown(data['first_phone_number']!, _firstPhoneNumberMeta),
       );
     } else if (isInserting) {
       context.missing(_firstPhoneNumberMeta);
@@ -6880,10 +5657,7 @@ class $SmsConversationsTableTable extends SmsConversationsTable
     if (data.containsKey('second_phone_number')) {
       context.handle(
         _secondPhoneNumberMeta,
-        secondPhoneNumber.isAcceptableOrUnknown(
-          data['second_phone_number']!,
-          _secondPhoneNumberMeta,
-        ),
+        secondPhoneNumber.isAcceptableOrUnknown(data['second_phone_number']!, _secondPhoneNumberMeta),
       );
     } else if (isInserting) {
       context.missing(_secondPhoneNumberMeta);
@@ -6891,10 +5665,7 @@ class $SmsConversationsTableTable extends SmsConversationsTable
     if (data.containsKey('created_at_remote')) {
       context.handle(
         _createdAtRemoteMeta,
-        createdAtRemote.isAcceptableOrUnknown(
-          data['created_at_remote']!,
-          _createdAtRemoteMeta,
-        ),
+        createdAtRemote.isAcceptableOrUnknown(data['created_at_remote']!, _createdAtRemoteMeta),
       );
     } else if (isInserting) {
       context.missing(_createdAtRemoteMeta);
@@ -6902,10 +5673,7 @@ class $SmsConversationsTableTable extends SmsConversationsTable
     if (data.containsKey('updated_at_remote')) {
       context.handle(
         _updatedAtRemoteMeta,
-        updatedAtRemote.isAcceptableOrUnknown(
-          data['updated_at_remote']!,
-          _updatedAtRemoteMeta,
-        ),
+        updatedAtRemote.isAcceptableOrUnknown(data['updated_at_remote']!, _updatedAtRemoteMeta),
       );
     } else if (isInserting) {
       context.missing(_updatedAtRemoteMeta);
@@ -6919,10 +5687,7 @@ class $SmsConversationsTableTable extends SmsConversationsTable
   SmsConversationData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SmsConversationData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       firstPhoneNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}first_phone_number'],
@@ -6948,8 +5713,7 @@ class $SmsConversationsTableTable extends SmsConversationsTable
   }
 }
 
-class SmsConversationData extends DataClass
-    implements Insertable<SmsConversationData> {
+class SmsConversationData extends DataClass implements Insertable<SmsConversationData> {
   final int id;
   final String firstPhoneNumber;
   final String secondPhoneNumber;
@@ -6983,10 +5747,7 @@ class SmsConversationData extends DataClass
     );
   }
 
-  factory SmsConversationData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SmsConversationData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SmsConversationData(
       id: serializer.fromJson<int>(json['id']),
@@ -7024,18 +5785,10 @@ class SmsConversationData extends DataClass
   SmsConversationData copyWithCompanion(SmsConversationDataCompanion data) {
     return SmsConversationData(
       id: data.id.present ? data.id.value : this.id,
-      firstPhoneNumber: data.firstPhoneNumber.present
-          ? data.firstPhoneNumber.value
-          : this.firstPhoneNumber,
-      secondPhoneNumber: data.secondPhoneNumber.present
-          ? data.secondPhoneNumber.value
-          : this.secondPhoneNumber,
-      createdAtRemote: data.createdAtRemote.present
-          ? data.createdAtRemote.value
-          : this.createdAtRemote,
-      updatedAtRemote: data.updatedAtRemote.present
-          ? data.updatedAtRemote.value
-          : this.updatedAtRemote,
+      firstPhoneNumber: data.firstPhoneNumber.present ? data.firstPhoneNumber.value : this.firstPhoneNumber,
+      secondPhoneNumber: data.secondPhoneNumber.present ? data.secondPhoneNumber.value : this.secondPhoneNumber,
+      createdAtRemote: data.createdAtRemote.present ? data.createdAtRemote.value : this.createdAtRemote,
+      updatedAtRemote: data.updatedAtRemote.present ? data.updatedAtRemote.value : this.updatedAtRemote,
     );
   }
 
@@ -7052,13 +5805,7 @@ class SmsConversationData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    firstPhoneNumber,
-    secondPhoneNumber,
-    createdAtRemote,
-    updatedAtRemote,
-  );
+  int get hashCode => Object.hash(id, firstPhoneNumber, secondPhoneNumber, createdAtRemote, updatedAtRemote);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -7070,8 +5817,7 @@ class SmsConversationData extends DataClass
           other.updatedAtRemote == this.updatedAtRemote);
 }
 
-class SmsConversationDataCompanion
-    extends UpdateCompanion<SmsConversationData> {
+class SmsConversationDataCompanion extends UpdateCompanion<SmsConversationData> {
   final Value<int> id;
   final Value<String> firstPhoneNumber;
   final Value<String> secondPhoneNumber;
@@ -7160,8 +5906,7 @@ class SmsConversationDataCompanion
   }
 }
 
-class $SmsMessagesTableTable extends SmsMessagesTable
-    with TableInfo<$SmsMessagesTableTable, SmsMessageData> {
+class $SmsMessagesTableTable extends SmsMessagesTable with TableInfo<$SmsMessagesTableTable, SmsMessageData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -7184,9 +5929,7 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _externalIdMeta = const VerificationMeta(
-    'externalId',
-  );
+  static const VerificationMeta _externalIdMeta = const VerificationMeta('externalId');
   @override
   late final GeneratedColumn<String> externalId = GeneratedColumn<String>(
     'external_id',
@@ -7195,9 +5938,7 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
-    'conversationId',
-  );
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta('conversationId');
   @override
   late final GeneratedColumn<int> conversationId = GeneratedColumn<int>(
     'conversation_id',
@@ -7205,13 +5946,9 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sms_conversations (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES sms_conversations (id) ON DELETE CASCADE'),
   );
-  static const VerificationMeta _fromPhoneNumberMeta = const VerificationMeta(
-    'fromPhoneNumber',
-  );
+  static const VerificationMeta _fromPhoneNumberMeta = const VerificationMeta('fromPhoneNumber');
   @override
   late final GeneratedColumn<String> fromPhoneNumber = GeneratedColumn<String>(
     'from_phone_number',
@@ -7220,9 +5957,7 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _toPhoneNumberMeta = const VerificationMeta(
-    'toPhoneNumber',
-  );
+  static const VerificationMeta _toPhoneNumberMeta = const VerificationMeta('toPhoneNumber');
   @override
   late final GeneratedColumn<String> toPhoneNumber = GeneratedColumn<String>(
     'to_phone_number',
@@ -7232,20 +5967,14 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<SmsSendingStatusEnum, String>
-  sendingStatus =
-      GeneratedColumn<String>(
-        'sending_status',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SmsSendingStatusEnum>(
-        $SmsMessagesTableTable.$convertersendingStatus,
-      );
-  static const VerificationMeta _contentMeta = const VerificationMeta(
-    'content',
-  );
+  late final GeneratedColumnWithTypeConverter<SmsSendingStatusEnum, String> sendingStatus = GeneratedColumn<String>(
+    'sending_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<SmsSendingStatusEnum>($SmsMessagesTableTable.$convertersendingStatus);
+  static const VerificationMeta _contentMeta = const VerificationMeta('content');
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
     'content',
@@ -7254,8 +5983,7 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _createdAtRemoteUsecMeta =
-      const VerificationMeta('createdAtRemoteUsec');
+  static const VerificationMeta _createdAtRemoteUsecMeta = const VerificationMeta('createdAtRemoteUsec');
   @override
   late final GeneratedColumn<int> createdAtRemoteUsec = GeneratedColumn<int>(
     'created_at_remote_usec',
@@ -7264,8 +5992,7 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _updatedAtRemoteUsecMeta =
-      const VerificationMeta('updatedAtRemoteUsec');
+  static const VerificationMeta _updatedAtRemoteUsecMeta = const VerificationMeta('updatedAtRemoteUsec');
   @override
   late final GeneratedColumn<int> updatedAtRemoteUsec = GeneratedColumn<int>(
     'updated_at_remote_usec',
@@ -7274,8 +6001,7 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _deletedAtRemoteUsecMeta =
-      const VerificationMeta('deletedAtRemoteUsec');
+  static const VerificationMeta _deletedAtRemoteUsecMeta = const VerificationMeta('deletedAtRemoteUsec');
   @override
   late final GeneratedColumn<int> deletedAtRemoteUsec = GeneratedColumn<int>(
     'deleted_at_remote_usec',
@@ -7304,36 +6030,24 @@ class $SmsMessagesTableTable extends SmsMessagesTable
   String get actualTableName => $name;
   static const String $name = 'sms_messages';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SmsMessageData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SmsMessageData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('id_key')) {
-      context.handle(
-        _idKeyMeta,
-        idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta),
-      );
+      context.handle(_idKeyMeta, idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta));
     } else if (isInserting) {
       context.missing(_idKeyMeta);
     }
     if (data.containsKey('external_id')) {
-      context.handle(
-        _externalIdMeta,
-        externalId.isAcceptableOrUnknown(data['external_id']!, _externalIdMeta),
-      );
+      context.handle(_externalIdMeta, externalId.isAcceptableOrUnknown(data['external_id']!, _externalIdMeta));
     }
     if (data.containsKey('conversation_id')) {
       context.handle(
         _conversationIdMeta,
-        conversationId.isAcceptableOrUnknown(
-          data['conversation_id']!,
-          _conversationIdMeta,
-        ),
+        conversationId.isAcceptableOrUnknown(data['conversation_id']!, _conversationIdMeta),
       );
     } else if (isInserting) {
       context.missing(_conversationIdMeta);
@@ -7341,10 +6055,7 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     if (data.containsKey('from_phone_number')) {
       context.handle(
         _fromPhoneNumberMeta,
-        fromPhoneNumber.isAcceptableOrUnknown(
-          data['from_phone_number']!,
-          _fromPhoneNumberMeta,
-        ),
+        fromPhoneNumber.isAcceptableOrUnknown(data['from_phone_number']!, _fromPhoneNumberMeta),
       );
     } else if (isInserting) {
       context.missing(_fromPhoneNumberMeta);
@@ -7352,29 +6063,20 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     if (data.containsKey('to_phone_number')) {
       context.handle(
         _toPhoneNumberMeta,
-        toPhoneNumber.isAcceptableOrUnknown(
-          data['to_phone_number']!,
-          _toPhoneNumberMeta,
-        ),
+        toPhoneNumber.isAcceptableOrUnknown(data['to_phone_number']!, _toPhoneNumberMeta),
       );
     } else if (isInserting) {
       context.missing(_toPhoneNumberMeta);
     }
     if (data.containsKey('content')) {
-      context.handle(
-        _contentMeta,
-        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
-      );
+      context.handle(_contentMeta, content.isAcceptableOrUnknown(data['content']!, _contentMeta));
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
     if (data.containsKey('created_at_remote_usec')) {
       context.handle(
         _createdAtRemoteUsecMeta,
-        createdAtRemoteUsec.isAcceptableOrUnknown(
-          data['created_at_remote_usec']!,
-          _createdAtRemoteUsecMeta,
-        ),
+        createdAtRemoteUsec.isAcceptableOrUnknown(data['created_at_remote_usec']!, _createdAtRemoteUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_createdAtRemoteUsecMeta);
@@ -7382,10 +6084,7 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     if (data.containsKey('updated_at_remote_usec')) {
       context.handle(
         _updatedAtRemoteUsecMeta,
-        updatedAtRemoteUsec.isAcceptableOrUnknown(
-          data['updated_at_remote_usec']!,
-          _updatedAtRemoteUsecMeta,
-        ),
+        updatedAtRemoteUsec.isAcceptableOrUnknown(data['updated_at_remote_usec']!, _updatedAtRemoteUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_updatedAtRemoteUsecMeta);
@@ -7393,10 +6092,7 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     if (data.containsKey('deleted_at_remote_usec')) {
       context.handle(
         _deletedAtRemoteUsecMeta,
-        deletedAtRemoteUsec.isAcceptableOrUnknown(
-          data['deleted_at_remote_usec']!,
-          _deletedAtRemoteUsecMeta,
-        ),
+        deletedAtRemoteUsec.isAcceptableOrUnknown(data['deleted_at_remote_usec']!, _deletedAtRemoteUsecMeta),
       );
     }
     return context;
@@ -7408,40 +6104,19 @@ class $SmsMessagesTableTable extends SmsMessagesTable
   SmsMessageData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SmsMessageData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      idKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id_key'],
-      )!,
-      externalId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}external_id'],
-      ),
-      conversationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}conversation_id'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      idKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id_key'])!,
+      externalId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}external_id']),
+      conversationId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}conversation_id'])!,
       fromPhoneNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}from_phone_number'],
       )!,
-      toPhoneNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}to_phone_number'],
-      )!,
+      toPhoneNumber: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}to_phone_number'])!,
       sendingStatus: $SmsMessagesTableTable.$convertersendingStatus.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}sending_status'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sending_status'])!,
       ),
-      content: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}content'],
-      )!,
+      content: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}content'])!,
       createdAtRemoteUsec: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at_remote_usec'],
@@ -7462,10 +6137,8 @@ class $SmsMessagesTableTable extends SmsMessagesTable
     return $SmsMessagesTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<SmsSendingStatusEnum, String, String>
-  $convertersendingStatus = const EnumNameConverter<SmsSendingStatusEnum>(
-    SmsSendingStatusEnum.values,
-  );
+  static JsonTypeConverter2<SmsSendingStatusEnum, String, String> $convertersendingStatus =
+      const EnumNameConverter<SmsSendingStatusEnum>(SmsSendingStatusEnum.values);
 }
 
 class SmsMessageData extends DataClass implements Insertable<SmsMessageData> {
@@ -7505,9 +6178,7 @@ class SmsMessageData extends DataClass implements Insertable<SmsMessageData> {
     map['from_phone_number'] = Variable<String>(fromPhoneNumber);
     map['to_phone_number'] = Variable<String>(toPhoneNumber);
     {
-      map['sending_status'] = Variable<String>(
-        $SmsMessagesTableTable.$convertersendingStatus.toSql(sendingStatus),
-      );
+      map['sending_status'] = Variable<String>($SmsMessagesTableTable.$convertersendingStatus.toSql(sendingStatus));
     }
     map['content'] = Variable<String>(content);
     map['created_at_remote_usec'] = Variable<int>(createdAtRemoteUsec);
@@ -7522,9 +6193,7 @@ class SmsMessageData extends DataClass implements Insertable<SmsMessageData> {
     return SmsMessageDataCompanion(
       id: Value(id),
       idKey: Value(idKey),
-      externalId: externalId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(externalId),
+      externalId: externalId == null && nullToAbsent ? const Value.absent() : Value(externalId),
       conversationId: Value(conversationId),
       fromPhoneNumber: Value(fromPhoneNumber),
       toPhoneNumber: Value(toPhoneNumber),
@@ -7538,10 +6207,7 @@ class SmsMessageData extends DataClass implements Insertable<SmsMessageData> {
     );
   }
 
-  factory SmsMessageData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SmsMessageData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SmsMessageData(
       id: serializer.fromJson<int>(json['id']),
@@ -7554,15 +6220,9 @@ class SmsMessageData extends DataClass implements Insertable<SmsMessageData> {
         serializer.fromJson<String>(json['sendingStatus']),
       ),
       content: serializer.fromJson<String>(json['content']),
-      createdAtRemoteUsec: serializer.fromJson<int>(
-        json['createdAtRemoteUsec'],
-      ),
-      updatedAtRemoteUsec: serializer.fromJson<int>(
-        json['updatedAtRemoteUsec'],
-      ),
-      deletedAtRemoteUsec: serializer.fromJson<int?>(
-        json['deletedAtRemoteUsec'],
-      ),
+      createdAtRemoteUsec: serializer.fromJson<int>(json['createdAtRemoteUsec']),
+      updatedAtRemoteUsec: serializer.fromJson<int>(json['updatedAtRemoteUsec']),
+      deletedAtRemoteUsec: serializer.fromJson<int?>(json['deletedAtRemoteUsec']),
     );
   }
   @override
@@ -7575,9 +6235,7 @@ class SmsMessageData extends DataClass implements Insertable<SmsMessageData> {
       'conversationId': serializer.toJson<int>(conversationId),
       'fromPhoneNumber': serializer.toJson<String>(fromPhoneNumber),
       'toPhoneNumber': serializer.toJson<String>(toPhoneNumber),
-      'sendingStatus': serializer.toJson<String>(
-        $SmsMessagesTableTable.$convertersendingStatus.toJson(sendingStatus),
-      ),
+      'sendingStatus': serializer.toJson<String>($SmsMessagesTableTable.$convertersendingStatus.toJson(sendingStatus)),
       'content': serializer.toJson<String>(content),
       'createdAtRemoteUsec': serializer.toJson<int>(createdAtRemoteUsec),
       'updatedAtRemoteUsec': serializer.toJson<int>(updatedAtRemoteUsec),
@@ -7608,39 +6266,21 @@ class SmsMessageData extends DataClass implements Insertable<SmsMessageData> {
     content: content ?? this.content,
     createdAtRemoteUsec: createdAtRemoteUsec ?? this.createdAtRemoteUsec,
     updatedAtRemoteUsec: updatedAtRemoteUsec ?? this.updatedAtRemoteUsec,
-    deletedAtRemoteUsec: deletedAtRemoteUsec.present
-        ? deletedAtRemoteUsec.value
-        : this.deletedAtRemoteUsec,
+    deletedAtRemoteUsec: deletedAtRemoteUsec.present ? deletedAtRemoteUsec.value : this.deletedAtRemoteUsec,
   );
   SmsMessageData copyWithCompanion(SmsMessageDataCompanion data) {
     return SmsMessageData(
       id: data.id.present ? data.id.value : this.id,
       idKey: data.idKey.present ? data.idKey.value : this.idKey,
-      externalId: data.externalId.present
-          ? data.externalId.value
-          : this.externalId,
-      conversationId: data.conversationId.present
-          ? data.conversationId.value
-          : this.conversationId,
-      fromPhoneNumber: data.fromPhoneNumber.present
-          ? data.fromPhoneNumber.value
-          : this.fromPhoneNumber,
-      toPhoneNumber: data.toPhoneNumber.present
-          ? data.toPhoneNumber.value
-          : this.toPhoneNumber,
-      sendingStatus: data.sendingStatus.present
-          ? data.sendingStatus.value
-          : this.sendingStatus,
+      externalId: data.externalId.present ? data.externalId.value : this.externalId,
+      conversationId: data.conversationId.present ? data.conversationId.value : this.conversationId,
+      fromPhoneNumber: data.fromPhoneNumber.present ? data.fromPhoneNumber.value : this.fromPhoneNumber,
+      toPhoneNumber: data.toPhoneNumber.present ? data.toPhoneNumber.value : this.toPhoneNumber,
+      sendingStatus: data.sendingStatus.present ? data.sendingStatus.value : this.sendingStatus,
       content: data.content.present ? data.content.value : this.content,
-      createdAtRemoteUsec: data.createdAtRemoteUsec.present
-          ? data.createdAtRemoteUsec.value
-          : this.createdAtRemoteUsec,
-      updatedAtRemoteUsec: data.updatedAtRemoteUsec.present
-          ? data.updatedAtRemoteUsec.value
-          : this.updatedAtRemoteUsec,
-      deletedAtRemoteUsec: data.deletedAtRemoteUsec.present
-          ? data.deletedAtRemoteUsec.value
-          : this.deletedAtRemoteUsec,
+      createdAtRemoteUsec: data.createdAtRemoteUsec.present ? data.createdAtRemoteUsec.value : this.createdAtRemoteUsec,
+      updatedAtRemoteUsec: data.updatedAtRemoteUsec.present ? data.updatedAtRemoteUsec.value : this.updatedAtRemoteUsec,
+      deletedAtRemoteUsec: data.deletedAtRemoteUsec.present ? data.deletedAtRemoteUsec.value : this.deletedAtRemoteUsec,
     );
   }
 
@@ -7760,12 +6400,9 @@ class SmsMessageDataCompanion extends UpdateCompanion<SmsMessageData> {
       if (toPhoneNumber != null) 'to_phone_number': toPhoneNumber,
       if (sendingStatus != null) 'sending_status': sendingStatus,
       if (content != null) 'content': content,
-      if (createdAtRemoteUsec != null)
-        'created_at_remote_usec': createdAtRemoteUsec,
-      if (updatedAtRemoteUsec != null)
-        'updated_at_remote_usec': updatedAtRemoteUsec,
-      if (deletedAtRemoteUsec != null)
-        'deleted_at_remote_usec': deletedAtRemoteUsec,
+      if (createdAtRemoteUsec != null) 'created_at_remote_usec': createdAtRemoteUsec,
+      if (updatedAtRemoteUsec != null) 'updated_at_remote_usec': updatedAtRemoteUsec,
+      if (deletedAtRemoteUsec != null) 'deleted_at_remote_usec': deletedAtRemoteUsec,
     });
   }
 
@@ -7820,9 +6457,7 @@ class SmsMessageDataCompanion extends UpdateCompanion<SmsMessageData> {
     }
     if (sendingStatus.present) {
       map['sending_status'] = Variable<String>(
-        $SmsMessagesTableTable.$convertersendingStatus.toSql(
-          sendingStatus.value,
-        ),
+        $SmsMessagesTableTable.$convertersendingStatus.toSql(sendingStatus.value),
       );
     }
     if (content.present) {
@@ -7865,9 +6500,7 @@ class $SmsMessageSyncCursorTableTable extends SmsMessageSyncCursorTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SmsMessageSyncCursorTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
-    'conversationId',
-  );
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta('conversationId');
   @override
   late final GeneratedColumn<int> conversationId = GeneratedColumn<int>(
     'conversation_id',
@@ -7875,25 +6508,17 @@ class $SmsMessageSyncCursorTableTable extends SmsMessageSyncCursorTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sms_conversations (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES sms_conversations (id) ON DELETE CASCADE'),
   );
   @override
-  late final GeneratedColumnWithTypeConverter<SmsSyncCursorTypeEnum, String>
-  cursorType =
-      GeneratedColumn<String>(
-        'cursor_type',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SmsSyncCursorTypeEnum>(
-        $SmsMessageSyncCursorTableTable.$convertercursorType,
-      );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  late final GeneratedColumnWithTypeConverter<SmsSyncCursorTypeEnum, String> cursorType = GeneratedColumn<String>(
+    'cursor_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<SmsSyncCursorTypeEnum>($SmsMessageSyncCursorTableTable.$convertercursorType);
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -7903,30 +6528,20 @@ class $SmsMessageSyncCursorTableTable extends SmsMessageSyncCursorTable
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    conversationId,
-    cursorType,
-    timestampUsec,
-  ];
+  List<GeneratedColumn> get $columns => [conversationId, cursorType, timestampUsec];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'sms_message_sync_cursors';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SmsMessageSyncCursorData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SmsMessageSyncCursorData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('conversation_id')) {
       context.handle(
         _conversationIdMeta,
-        conversationId.isAcceptableOrUnknown(
-          data['conversation_id']!,
-          _conversationIdMeta,
-        ),
+        conversationId.isAcceptableOrUnknown(data['conversation_id']!, _conversationIdMeta),
       );
     } else if (isInserting) {
       context.missing(_conversationIdMeta);
@@ -7934,10 +6549,7 @@ class $SmsMessageSyncCursorTableTable extends SmsMessageSyncCursorTable
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_timestampUsecMeta);
@@ -7948,26 +6560,14 @@ class $SmsMessageSyncCursorTableTable extends SmsMessageSyncCursorTable
   @override
   Set<GeneratedColumn> get $primaryKey => {conversationId, cursorType};
   @override
-  SmsMessageSyncCursorData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  SmsMessageSyncCursorData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SmsMessageSyncCursorData(
-      conversationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}conversation_id'],
-      )!,
+      conversationId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}conversation_id'])!,
       cursorType: $SmsMessageSyncCursorTableTable.$convertercursorType.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}cursor_type'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}cursor_type'])!,
       ),
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      )!,
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec'])!,
     );
   }
 
@@ -7976,30 +6576,21 @@ class $SmsMessageSyncCursorTableTable extends SmsMessageSyncCursorTable
     return $SmsMessageSyncCursorTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<SmsSyncCursorTypeEnum, String, String>
-  $convertercursorType = const EnumNameConverter<SmsSyncCursorTypeEnum>(
-    SmsSyncCursorTypeEnum.values,
-  );
+  static JsonTypeConverter2<SmsSyncCursorTypeEnum, String, String> $convertercursorType =
+      const EnumNameConverter<SmsSyncCursorTypeEnum>(SmsSyncCursorTypeEnum.values);
 }
 
-class SmsMessageSyncCursorData extends DataClass
-    implements Insertable<SmsMessageSyncCursorData> {
+class SmsMessageSyncCursorData extends DataClass implements Insertable<SmsMessageSyncCursorData> {
   final int conversationId;
   final SmsSyncCursorTypeEnum cursorType;
   final int timestampUsec;
-  const SmsMessageSyncCursorData({
-    required this.conversationId,
-    required this.cursorType,
-    required this.timestampUsec,
-  });
+  const SmsMessageSyncCursorData({required this.conversationId, required this.cursorType, required this.timestampUsec});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['conversation_id'] = Variable<int>(conversationId);
     {
-      map['cursor_type'] = Variable<String>(
-        $SmsMessageSyncCursorTableTable.$convertercursorType.toSql(cursorType),
-      );
+      map['cursor_type'] = Variable<String>($SmsMessageSyncCursorTableTable.$convertercursorType.toSql(cursorType));
     }
     map['timestamp_usec'] = Variable<int>(timestampUsec);
     return map;
@@ -8013,10 +6604,7 @@ class SmsMessageSyncCursorData extends DataClass
     );
   }
 
-  factory SmsMessageSyncCursorData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SmsMessageSyncCursorData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SmsMessageSyncCursorData(
       conversationId: serializer.fromJson<int>(json['conversationId']),
@@ -8031,35 +6619,22 @@ class SmsMessageSyncCursorData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'conversationId': serializer.toJson<int>(conversationId),
-      'cursorType': serializer.toJson<String>(
-        $SmsMessageSyncCursorTableTable.$convertercursorType.toJson(cursorType),
-      ),
+      'cursorType': serializer.toJson<String>($SmsMessageSyncCursorTableTable.$convertercursorType.toJson(cursorType)),
       'timestampUsec': serializer.toJson<int>(timestampUsec),
     };
   }
 
-  SmsMessageSyncCursorData copyWith({
-    int? conversationId,
-    SmsSyncCursorTypeEnum? cursorType,
-    int? timestampUsec,
-  }) => SmsMessageSyncCursorData(
-    conversationId: conversationId ?? this.conversationId,
-    cursorType: cursorType ?? this.cursorType,
-    timestampUsec: timestampUsec ?? this.timestampUsec,
-  );
-  SmsMessageSyncCursorData copyWithCompanion(
-    SmsMessageSyncCursorDataCompanion data,
-  ) {
+  SmsMessageSyncCursorData copyWith({int? conversationId, SmsSyncCursorTypeEnum? cursorType, int? timestampUsec}) =>
+      SmsMessageSyncCursorData(
+        conversationId: conversationId ?? this.conversationId,
+        cursorType: cursorType ?? this.cursorType,
+        timestampUsec: timestampUsec ?? this.timestampUsec,
+      );
+  SmsMessageSyncCursorData copyWithCompanion(SmsMessageSyncCursorDataCompanion data) {
     return SmsMessageSyncCursorData(
-      conversationId: data.conversationId.present
-          ? data.conversationId.value
-          : this.conversationId,
-      cursorType: data.cursorType.present
-          ? data.cursorType.value
-          : this.cursorType,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
+      conversationId: data.conversationId.present ? data.conversationId.value : this.conversationId,
+      cursorType: data.cursorType.present ? data.cursorType.value : this.cursorType,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
     );
   }
 
@@ -8084,8 +6659,7 @@ class SmsMessageSyncCursorData extends DataClass
           other.timestampUsec == this.timestampUsec);
 }
 
-class SmsMessageSyncCursorDataCompanion
-    extends UpdateCompanion<SmsMessageSyncCursorData> {
+class SmsMessageSyncCursorDataCompanion extends UpdateCompanion<SmsMessageSyncCursorData> {
   final Value<int> conversationId;
   final Value<SmsSyncCursorTypeEnum> cursorType;
   final Value<int> timestampUsec;
@@ -8140,9 +6714,7 @@ class SmsMessageSyncCursorDataCompanion
     }
     if (cursorType.present) {
       map['cursor_type'] = Variable<String>(
-        $SmsMessageSyncCursorTableTable.$convertercursorType.toSql(
-          cursorType.value,
-        ),
+        $SmsMessageSyncCursorTableTable.$convertercursorType.toSql(cursorType.value),
       );
     }
     if (timestampUsec.present) {
@@ -8172,9 +6744,7 @@ class $SmsMessageReadCursorTableTable extends SmsMessageReadCursorTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SmsMessageReadCursorTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
-    'conversationId',
-  );
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta('conversationId');
   @override
   late final GeneratedColumn<int> conversationId = GeneratedColumn<int>(
     'conversation_id',
@@ -8182,9 +6752,7 @@ class $SmsMessageReadCursorTableTable extends SmsMessageReadCursorTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sms_conversations (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES sms_conversations (id) ON DELETE CASCADE'),
   );
   static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
@@ -8195,9 +6763,7 @@ class $SmsMessageReadCursorTableTable extends SmsMessageReadCursorTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -8214,38 +6780,26 @@ class $SmsMessageReadCursorTableTable extends SmsMessageReadCursorTable
   String get actualTableName => $name;
   static const String $name = 'sms_message_read_cursors';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SmsMessageReadCursorData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SmsMessageReadCursorData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('conversation_id')) {
       context.handle(
         _conversationIdMeta,
-        conversationId.isAcceptableOrUnknown(
-          data['conversation_id']!,
-          _conversationIdMeta,
-        ),
+        conversationId.isAcceptableOrUnknown(data['conversation_id']!, _conversationIdMeta),
       );
     } else if (isInserting) {
       context.missing(_conversationIdMeta);
     }
     if (data.containsKey('user_id')) {
-      context.handle(
-        _userIdMeta,
-        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
-      );
+      context.handle(_userIdMeta, userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
     } else if (isInserting) {
       context.missing(_userIdMeta);
     }
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_timestampUsecMeta);
@@ -8256,24 +6810,12 @@ class $SmsMessageReadCursorTableTable extends SmsMessageReadCursorTable
   @override
   Set<GeneratedColumn> get $primaryKey => {conversationId, userId};
   @override
-  SmsMessageReadCursorData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  SmsMessageReadCursorData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SmsMessageReadCursorData(
-      conversationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}conversation_id'],
-      )!,
-      userId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}user_id'],
-      )!,
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      )!,
+      conversationId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}conversation_id'])!,
+      userId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec'])!,
     );
   }
 
@@ -8283,16 +6825,11 @@ class $SmsMessageReadCursorTableTable extends SmsMessageReadCursorTable
   }
 }
 
-class SmsMessageReadCursorData extends DataClass
-    implements Insertable<SmsMessageReadCursorData> {
+class SmsMessageReadCursorData extends DataClass implements Insertable<SmsMessageReadCursorData> {
   final int conversationId;
   final String userId;
   final int timestampUsec;
-  const SmsMessageReadCursorData({
-    required this.conversationId,
-    required this.userId,
-    required this.timestampUsec,
-  });
+  const SmsMessageReadCursorData({required this.conversationId, required this.userId, required this.timestampUsec});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -8310,10 +6847,7 @@ class SmsMessageReadCursorData extends DataClass
     );
   }
 
-  factory SmsMessageReadCursorData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SmsMessageReadCursorData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SmsMessageReadCursorData(
       conversationId: serializer.fromJson<int>(json['conversationId']),
@@ -8331,26 +6865,17 @@ class SmsMessageReadCursorData extends DataClass
     };
   }
 
-  SmsMessageReadCursorData copyWith({
-    int? conversationId,
-    String? userId,
-    int? timestampUsec,
-  }) => SmsMessageReadCursorData(
-    conversationId: conversationId ?? this.conversationId,
-    userId: userId ?? this.userId,
-    timestampUsec: timestampUsec ?? this.timestampUsec,
-  );
-  SmsMessageReadCursorData copyWithCompanion(
-    SmsMessageReadCursorDataCompanion data,
-  ) {
+  SmsMessageReadCursorData copyWith({int? conversationId, String? userId, int? timestampUsec}) =>
+      SmsMessageReadCursorData(
+        conversationId: conversationId ?? this.conversationId,
+        userId: userId ?? this.userId,
+        timestampUsec: timestampUsec ?? this.timestampUsec,
+      );
+  SmsMessageReadCursorData copyWithCompanion(SmsMessageReadCursorDataCompanion data) {
     return SmsMessageReadCursorData(
-      conversationId: data.conversationId.present
-          ? data.conversationId.value
-          : this.conversationId,
+      conversationId: data.conversationId.present ? data.conversationId.value : this.conversationId,
       userId: data.userId.present ? data.userId.value : this.userId,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
     );
   }
 
@@ -8375,8 +6900,7 @@ class SmsMessageReadCursorData extends DataClass
           other.timestampUsec == this.timestampUsec);
 }
 
-class SmsMessageReadCursorDataCompanion
-    extends UpdateCompanion<SmsMessageReadCursorData> {
+class SmsMessageReadCursorDataCompanion extends UpdateCompanion<SmsMessageReadCursorData> {
   final Value<int> conversationId;
   final Value<String> userId;
   final Value<int> timestampUsec;
@@ -8468,9 +6992,7 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
-    'conversationId',
-  );
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta('conversationId');
   @override
   late final GeneratedColumn<int> conversationId = GeneratedColumn<int>(
     'conversation_id',
@@ -8478,13 +7000,9 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
     true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sms_conversations (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES sms_conversations (id) ON DELETE CASCADE'),
   );
-  static const VerificationMeta _fromPhoneNumberMeta = const VerificationMeta(
-    'fromPhoneNumber',
-  );
+  static const VerificationMeta _fromPhoneNumberMeta = const VerificationMeta('fromPhoneNumber');
   @override
   late final GeneratedColumn<String> fromPhoneNumber = GeneratedColumn<String>(
     'from_phone_number',
@@ -8493,9 +7011,7 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _toPhoneNumberMeta = const VerificationMeta(
-    'toPhoneNumber',
-  );
+  static const VerificationMeta _toPhoneNumberMeta = const VerificationMeta('toPhoneNumber');
   @override
   late final GeneratedColumn<String> toPhoneNumber = GeneratedColumn<String>(
     'to_phone_number',
@@ -8504,9 +7020,7 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _recepientIdMeta = const VerificationMeta(
-    'recepientId',
-  );
+  static const VerificationMeta _recepientIdMeta = const VerificationMeta('recepientId');
   @override
   late final GeneratedColumn<String> recepientId = GeneratedColumn<String>(
     'recepient_id',
@@ -8515,9 +7029,7 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _contentMeta = const VerificationMeta(
-    'content',
-  );
+  static const VerificationMeta _contentMeta = const VerificationMeta('content');
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
     'content',
@@ -8526,9 +7038,7 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -8554,36 +7064,24 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
   String get actualTableName => $name;
   static const String $name = 'sms_outbox_messages';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SmsOutboxMessageData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SmsOutboxMessageData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id_key')) {
-      context.handle(
-        _idKeyMeta,
-        idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta),
-      );
+      context.handle(_idKeyMeta, idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta));
     } else if (isInserting) {
       context.missing(_idKeyMeta);
     }
     if (data.containsKey('conversation_id')) {
       context.handle(
         _conversationIdMeta,
-        conversationId.isAcceptableOrUnknown(
-          data['conversation_id']!,
-          _conversationIdMeta,
-        ),
+        conversationId.isAcceptableOrUnknown(data['conversation_id']!, _conversationIdMeta),
       );
     }
     if (data.containsKey('from_phone_number')) {
       context.handle(
         _fromPhoneNumberMeta,
-        fromPhoneNumber.isAcceptableOrUnknown(
-          data['from_phone_number']!,
-          _fromPhoneNumberMeta,
-        ),
+        fromPhoneNumber.isAcceptableOrUnknown(data['from_phone_number']!, _fromPhoneNumberMeta),
       );
     } else if (isInserting) {
       context.missing(_fromPhoneNumberMeta);
@@ -8591,39 +7089,21 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
     if (data.containsKey('to_phone_number')) {
       context.handle(
         _toPhoneNumberMeta,
-        toPhoneNumber.isAcceptableOrUnknown(
-          data['to_phone_number']!,
-          _toPhoneNumberMeta,
-        ),
+        toPhoneNumber.isAcceptableOrUnknown(data['to_phone_number']!, _toPhoneNumberMeta),
       );
     } else if (isInserting) {
       context.missing(_toPhoneNumberMeta);
     }
     if (data.containsKey('recepient_id')) {
-      context.handle(
-        _recepientIdMeta,
-        recepientId.isAcceptableOrUnknown(
-          data['recepient_id']!,
-          _recepientIdMeta,
-        ),
-      );
+      context.handle(_recepientIdMeta, recepientId.isAcceptableOrUnknown(data['recepient_id']!, _recepientIdMeta));
     }
     if (data.containsKey('content')) {
-      context.handle(
-        _contentMeta,
-        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
-      );
+      context.handle(_contentMeta, content.isAcceptableOrUnknown(data['content']!, _contentMeta));
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     return context;
   }
@@ -8634,34 +7114,16 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
   SmsOutboxMessageData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SmsOutboxMessageData(
-      idKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id_key'],
-      )!,
-      conversationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}conversation_id'],
-      ),
+      idKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id_key'])!,
+      conversationId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}conversation_id']),
       fromPhoneNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}from_phone_number'],
       )!,
-      toPhoneNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}to_phone_number'],
-      )!,
-      recepientId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}recepient_id'],
-      ),
-      content: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}content'],
-      )!,
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
+      toPhoneNumber: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}to_phone_number'])!,
+      recepientId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}recepient_id']),
+      content: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}content'])!,
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
     );
   }
 
@@ -8671,8 +7133,7 @@ class $SmsOutboxMessagesTableTable extends SmsOutboxMessagesTable
   }
 }
 
-class SmsOutboxMessageData extends DataClass
-    implements Insertable<SmsOutboxMessageData> {
+class SmsOutboxMessageData extends DataClass implements Insertable<SmsOutboxMessageData> {
   final String idKey;
   final int? conversationId;
   final String fromPhoneNumber;
@@ -8709,23 +7170,16 @@ class SmsOutboxMessageData extends DataClass
   SmsOutboxMessageDataCompanion toCompanion(bool nullToAbsent) {
     return SmsOutboxMessageDataCompanion(
       idKey: Value(idKey),
-      conversationId: conversationId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(conversationId),
+      conversationId: conversationId == null && nullToAbsent ? const Value.absent() : Value(conversationId),
       fromPhoneNumber: Value(fromPhoneNumber),
       toPhoneNumber: Value(toPhoneNumber),
-      recepientId: recepientId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(recepientId),
+      recepientId: recepientId == null && nullToAbsent ? const Value.absent() : Value(recepientId),
       content: Value(content),
       sendAttempts: Value(sendAttempts),
     );
   }
 
-  factory SmsOutboxMessageData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SmsOutboxMessageData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SmsOutboxMessageData(
       idKey: serializer.fromJson<String>(json['idKey']),
@@ -8761,9 +7215,7 @@ class SmsOutboxMessageData extends DataClass
     int? sendAttempts,
   }) => SmsOutboxMessageData(
     idKey: idKey ?? this.idKey,
-    conversationId: conversationId.present
-        ? conversationId.value
-        : this.conversationId,
+    conversationId: conversationId.present ? conversationId.value : this.conversationId,
     fromPhoneNumber: fromPhoneNumber ?? this.fromPhoneNumber,
     toPhoneNumber: toPhoneNumber ?? this.toPhoneNumber,
     recepientId: recepientId.present ? recepientId.value : this.recepientId,
@@ -8773,22 +7225,12 @@ class SmsOutboxMessageData extends DataClass
   SmsOutboxMessageData copyWithCompanion(SmsOutboxMessageDataCompanion data) {
     return SmsOutboxMessageData(
       idKey: data.idKey.present ? data.idKey.value : this.idKey,
-      conversationId: data.conversationId.present
-          ? data.conversationId.value
-          : this.conversationId,
-      fromPhoneNumber: data.fromPhoneNumber.present
-          ? data.fromPhoneNumber.value
-          : this.fromPhoneNumber,
-      toPhoneNumber: data.toPhoneNumber.present
-          ? data.toPhoneNumber.value
-          : this.toPhoneNumber,
-      recepientId: data.recepientId.present
-          ? data.recepientId.value
-          : this.recepientId,
+      conversationId: data.conversationId.present ? data.conversationId.value : this.conversationId,
+      fromPhoneNumber: data.fromPhoneNumber.present ? data.fromPhoneNumber.value : this.fromPhoneNumber,
+      toPhoneNumber: data.toPhoneNumber.present ? data.toPhoneNumber.value : this.toPhoneNumber,
+      recepientId: data.recepientId.present ? data.recepientId.value : this.recepientId,
       content: data.content.present ? data.content.value : this.content,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
     );
   }
 
@@ -8807,15 +7249,8 @@ class SmsOutboxMessageData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    idKey,
-    conversationId,
-    fromPhoneNumber,
-    toPhoneNumber,
-    recepientId,
-    content,
-    sendAttempts,
-  );
+  int get hashCode =>
+      Object.hash(idKey, conversationId, fromPhoneNumber, toPhoneNumber, recepientId, content, sendAttempts);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -8829,8 +7264,7 @@ class SmsOutboxMessageData extends DataClass
           other.sendAttempts == this.sendAttempts);
 }
 
-class SmsOutboxMessageDataCompanion
-    extends UpdateCompanion<SmsOutboxMessageData> {
+class SmsOutboxMessageDataCompanion extends UpdateCompanion<SmsOutboxMessageData> {
   final Value<String> idKey;
   final Value<int?> conversationId;
   final Value<String> fromPhoneNumber;
@@ -8953,11 +7387,7 @@ class SmsOutboxMessageDataCompanion
 }
 
 class $SmsOutboxMessageDeleteTableTable extends SmsOutboxMessageDeleteTable
-    with
-        TableInfo<
-          $SmsOutboxMessageDeleteTableTable,
-          SmsOutboxMessageDeleteData
-        > {
+    with TableInfo<$SmsOutboxMessageDeleteTableTable, SmsOutboxMessageDeleteData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -8980,9 +7410,7 @@ class $SmsOutboxMessageDeleteTableTable extends SmsOutboxMessageDeleteTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
-    'conversationId',
-  );
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta('conversationId');
   @override
   late final GeneratedColumn<int> conversationId = GeneratedColumn<int>(
     'conversation_id',
@@ -8990,13 +7418,9 @@ class $SmsOutboxMessageDeleteTableTable extends SmsOutboxMessageDeleteTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sms_conversations (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES sms_conversations (id) ON DELETE CASCADE'),
   );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -9007,54 +7431,34 @@ class $SmsOutboxMessageDeleteTableTable extends SmsOutboxMessageDeleteTable
     defaultValue: const Constant(0),
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    idKey,
-    conversationId,
-    sendAttempts,
-  ];
+  List<GeneratedColumn> get $columns => [id, idKey, conversationId, sendAttempts];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'sms_outbox_message_deletes';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SmsOutboxMessageDeleteData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SmsOutboxMessageDeleteData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('id_key')) {
-      context.handle(
-        _idKeyMeta,
-        idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta),
-      );
+      context.handle(_idKeyMeta, idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta));
     } else if (isInserting) {
       context.missing(_idKeyMeta);
     }
     if (data.containsKey('conversation_id')) {
       context.handle(
         _conversationIdMeta,
-        conversationId.isAcceptableOrUnknown(
-          data['conversation_id']!,
-          _conversationIdMeta,
-        ),
+        conversationId.isAcceptableOrUnknown(data['conversation_id']!, _conversationIdMeta),
       );
     } else if (isInserting) {
       context.missing(_conversationIdMeta);
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     return context;
   }
@@ -9062,28 +7466,13 @@ class $SmsOutboxMessageDeleteTableTable extends SmsOutboxMessageDeleteTable
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  SmsOutboxMessageDeleteData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  SmsOutboxMessageDeleteData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SmsOutboxMessageDeleteData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      idKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id_key'],
-      )!,
-      conversationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}conversation_id'],
-      )!,
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      idKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id_key'])!,
+      conversationId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}conversation_id'])!,
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
     );
   }
 
@@ -9093,8 +7482,7 @@ class $SmsOutboxMessageDeleteTableTable extends SmsOutboxMessageDeleteTable
   }
 }
 
-class SmsOutboxMessageDeleteData extends DataClass
-    implements Insertable<SmsOutboxMessageDeleteData> {
+class SmsOutboxMessageDeleteData extends DataClass implements Insertable<SmsOutboxMessageDeleteData> {
   final int id;
   final String idKey;
   final int conversationId;
@@ -9124,10 +7512,7 @@ class SmsOutboxMessageDeleteData extends DataClass
     );
   }
 
-  factory SmsOutboxMessageDeleteData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SmsOutboxMessageDeleteData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SmsOutboxMessageDeleteData(
       id: serializer.fromJson<int>(json['id']),
@@ -9147,29 +7532,19 @@ class SmsOutboxMessageDeleteData extends DataClass
     };
   }
 
-  SmsOutboxMessageDeleteData copyWith({
-    int? id,
-    String? idKey,
-    int? conversationId,
-    int? sendAttempts,
-  }) => SmsOutboxMessageDeleteData(
-    id: id ?? this.id,
-    idKey: idKey ?? this.idKey,
-    conversationId: conversationId ?? this.conversationId,
-    sendAttempts: sendAttempts ?? this.sendAttempts,
-  );
-  SmsOutboxMessageDeleteData copyWithCompanion(
-    SmsOutboxMessageDeleteDataCompanion data,
-  ) {
+  SmsOutboxMessageDeleteData copyWith({int? id, String? idKey, int? conversationId, int? sendAttempts}) =>
+      SmsOutboxMessageDeleteData(
+        id: id ?? this.id,
+        idKey: idKey ?? this.idKey,
+        conversationId: conversationId ?? this.conversationId,
+        sendAttempts: sendAttempts ?? this.sendAttempts,
+      );
+  SmsOutboxMessageDeleteData copyWithCompanion(SmsOutboxMessageDeleteDataCompanion data) {
     return SmsOutboxMessageDeleteData(
       id: data.id.present ? data.id.value : this.id,
       idKey: data.idKey.present ? data.idKey.value : this.idKey,
-      conversationId: data.conversationId.present
-          ? data.conversationId.value
-          : this.conversationId,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
+      conversationId: data.conversationId.present ? data.conversationId.value : this.conversationId,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
     );
   }
 
@@ -9196,8 +7571,7 @@ class SmsOutboxMessageDeleteData extends DataClass
           other.sendAttempts == this.sendAttempts);
 }
 
-class SmsOutboxMessageDeleteDataCompanion
-    extends UpdateCompanion<SmsOutboxMessageDeleteData> {
+class SmsOutboxMessageDeleteDataCompanion extends UpdateCompanion<SmsOutboxMessageDeleteData> {
   final Value<int> id;
   final Value<String> idKey;
   final Value<int> conversationId;
@@ -9279,9 +7653,7 @@ class $SmsOutboxReadCursorsTableTable extends SmsOutboxReadCursorsTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SmsOutboxReadCursorsTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
-    'conversationId',
-  );
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta('conversationId');
   @override
   late final GeneratedColumn<int> conversationId = GeneratedColumn<int>(
     'conversation_id',
@@ -9289,13 +7661,9 @@ class $SmsOutboxReadCursorsTableTable extends SmsOutboxReadCursorsTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sms_conversations (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES sms_conversations (id) ON DELETE CASCADE'),
   );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -9304,9 +7672,7 @@ class $SmsOutboxReadCursorsTableTable extends SmsOutboxReadCursorsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -9317,51 +7683,32 @@ class $SmsOutboxReadCursorsTableTable extends SmsOutboxReadCursorsTable
     defaultValue: const Constant(0),
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    conversationId,
-    timestampUsec,
-    sendAttempts,
-  ];
+  List<GeneratedColumn> get $columns => [conversationId, timestampUsec, sendAttempts];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'sms_outbox_read_cursors';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SmsOutboxReadCursorData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SmsOutboxReadCursorData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('conversation_id')) {
       context.handle(
         _conversationIdMeta,
-        conversationId.isAcceptableOrUnknown(
-          data['conversation_id']!,
-          _conversationIdMeta,
-        ),
+        conversationId.isAcceptableOrUnknown(data['conversation_id']!, _conversationIdMeta),
       );
     }
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_timestampUsecMeta);
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     return context;
   }
@@ -9369,24 +7716,12 @@ class $SmsOutboxReadCursorsTableTable extends SmsOutboxReadCursorsTable
   @override
   Set<GeneratedColumn> get $primaryKey => {conversationId};
   @override
-  SmsOutboxReadCursorData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  SmsOutboxReadCursorData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SmsOutboxReadCursorData(
-      conversationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}conversation_id'],
-      )!,
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      )!,
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
+      conversationId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}conversation_id'])!,
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec'])!,
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
     );
   }
 
@@ -9396,8 +7731,7 @@ class $SmsOutboxReadCursorsTableTable extends SmsOutboxReadCursorsTable
   }
 }
 
-class SmsOutboxReadCursorData extends DataClass
-    implements Insertable<SmsOutboxReadCursorData> {
+class SmsOutboxReadCursorData extends DataClass implements Insertable<SmsOutboxReadCursorData> {
   final int conversationId;
   final int timestampUsec;
   final int sendAttempts;
@@ -9423,10 +7757,7 @@ class SmsOutboxReadCursorData extends DataClass
     );
   }
 
-  factory SmsOutboxReadCursorData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SmsOutboxReadCursorData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SmsOutboxReadCursorData(
       conversationId: serializer.fromJson<int>(json['conversationId']),
@@ -9444,28 +7775,17 @@ class SmsOutboxReadCursorData extends DataClass
     };
   }
 
-  SmsOutboxReadCursorData copyWith({
-    int? conversationId,
-    int? timestampUsec,
-    int? sendAttempts,
-  }) => SmsOutboxReadCursorData(
-    conversationId: conversationId ?? this.conversationId,
-    timestampUsec: timestampUsec ?? this.timestampUsec,
-    sendAttempts: sendAttempts ?? this.sendAttempts,
-  );
-  SmsOutboxReadCursorData copyWithCompanion(
-    SmsOutboxReadCursorDataCompanion data,
-  ) {
+  SmsOutboxReadCursorData copyWith({int? conversationId, int? timestampUsec, int? sendAttempts}) =>
+      SmsOutboxReadCursorData(
+        conversationId: conversationId ?? this.conversationId,
+        timestampUsec: timestampUsec ?? this.timestampUsec,
+        sendAttempts: sendAttempts ?? this.sendAttempts,
+      );
+  SmsOutboxReadCursorData copyWithCompanion(SmsOutboxReadCursorDataCompanion data) {
     return SmsOutboxReadCursorData(
-      conversationId: data.conversationId.present
-          ? data.conversationId.value
-          : this.conversationId,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
+      conversationId: data.conversationId.present ? data.conversationId.value : this.conversationId,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
     );
   }
 
@@ -9490,8 +7810,7 @@ class SmsOutboxReadCursorData extends DataClass
           other.sendAttempts == this.sendAttempts);
 }
 
-class SmsOutboxReadCursorDataCompanion
-    extends UpdateCompanion<SmsOutboxReadCursorData> {
+class SmsOutboxReadCursorDataCompanion extends UpdateCompanion<SmsOutboxReadCursorData> {
   final Value<int> conversationId;
   final Value<int> timestampUsec;
   final Value<int> sendAttempts;
@@ -9562,17 +7881,13 @@ class $SipSubscriptionsTableTable extends SipSubscriptionsTable
   final String? _alias;
   $SipSubscriptionsTableTable(this.attachedDatabase, [this._alias]);
   @override
-  late final GeneratedColumnWithTypeConverter<SipSubscriptionTypeData, String>
-  type =
-      GeneratedColumn<String>(
-        'type',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SipSubscriptionTypeData>(
-        $SipSubscriptionsTableTable.$convertertype,
-      );
+  late final GeneratedColumnWithTypeConverter<SipSubscriptionTypeData, String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<SipSubscriptionTypeData>($SipSubscriptionsTableTable.$convertertype);
   static const VerificationMeta _numberMeta = const VerificationMeta('number');
   @override
   late final GeneratedColumn<String> number = GeneratedColumn<String>(
@@ -9582,9 +7897,7 @@ class $SipSubscriptionsTableTable extends SipSubscriptionsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _contactUserIdMeta = const VerificationMeta(
-    'contactUserId',
-  );
+  static const VerificationMeta _contactUserIdMeta = const VerificationMeta('contactUserId');
   @override
   late final GeneratedColumn<String> contactUserId = GeneratedColumn<String>(
     'contact_user_id',
@@ -9593,9 +7906,7 @@ class $SipSubscriptionsTableTable extends SipSubscriptionsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _subscribedAtUsecMeta = const VerificationMeta(
-    'subscribedAtUsec',
-  );
+  static const VerificationMeta _subscribedAtUsecMeta = const VerificationMeta('subscribedAtUsec');
   @override
   late final GeneratedColumn<int> subscribedAtUsec = GeneratedColumn<int>(
     'subscribed_at_usec',
@@ -9605,39 +7916,25 @@ class $SipSubscriptionsTableTable extends SipSubscriptionsTable
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    type,
-    number,
-    contactUserId,
-    subscribedAtUsec,
-  ];
+  List<GeneratedColumn> get $columns => [type, number, contactUserId, subscribedAtUsec];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'sip_subscriptions';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SipSubscriptionData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SipSubscriptionData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('number')) {
-      context.handle(
-        _numberMeta,
-        number.isAcceptableOrUnknown(data['number']!, _numberMeta),
-      );
+      context.handle(_numberMeta, number.isAcceptableOrUnknown(data['number']!, _numberMeta));
     } else if (isInserting) {
       context.missing(_numberMeta);
     }
     if (data.containsKey('contact_user_id')) {
       context.handle(
         _contactUserIdMeta,
-        contactUserId.isAcceptableOrUnknown(
-          data['contact_user_id']!,
-          _contactUserIdMeta,
-        ),
+        contactUserId.isAcceptableOrUnknown(data['contact_user_id']!, _contactUserIdMeta),
       );
     } else if (isInserting) {
       context.missing(_contactUserIdMeta);
@@ -9645,10 +7942,7 @@ class $SipSubscriptionsTableTable extends SipSubscriptionsTable
     if (data.containsKey('subscribed_at_usec')) {
       context.handle(
         _subscribedAtUsecMeta,
-        subscribedAtUsec.isAcceptableOrUnknown(
-          data['subscribed_at_usec']!,
-          _subscribedAtUsecMeta,
-        ),
+        subscribedAtUsec.isAcceptableOrUnknown(data['subscribed_at_usec']!, _subscribedAtUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_subscribedAtUsecMeta);
@@ -9663,19 +7957,10 @@ class $SipSubscriptionsTableTable extends SipSubscriptionsTable
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SipSubscriptionData(
       type: $SipSubscriptionsTableTable.$convertertype.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}type'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}type'])!,
       ),
-      number: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}number'],
-      )!,
-      contactUserId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}contact_user_id'],
-      )!,
+      number: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}number'])!,
+      contactUserId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}contact_user_id'])!,
       subscribedAtUsec: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}subscribed_at_usec'],
@@ -9688,14 +7973,11 @@ class $SipSubscriptionsTableTable extends SipSubscriptionsTable
     return $SipSubscriptionsTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<SipSubscriptionTypeData, String, String>
-  $convertertype = const EnumNameConverter<SipSubscriptionTypeData>(
-    SipSubscriptionTypeData.values,
-  );
+  static JsonTypeConverter2<SipSubscriptionTypeData, String, String> $convertertype =
+      const EnumNameConverter<SipSubscriptionTypeData>(SipSubscriptionTypeData.values);
 }
 
-class SipSubscriptionData extends DataClass
-    implements Insertable<SipSubscriptionData> {
+class SipSubscriptionData extends DataClass implements Insertable<SipSubscriptionData> {
   final SipSubscriptionTypeData type;
   final String number;
   final String contactUserId;
@@ -9710,9 +7992,7 @@ class SipSubscriptionData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     {
-      map['type'] = Variable<String>(
-        $SipSubscriptionsTableTable.$convertertype.toSql(type),
-      );
+      map['type'] = Variable<String>($SipSubscriptionsTableTable.$convertertype.toSql(type));
     }
     map['number'] = Variable<String>(number);
     map['contact_user_id'] = Variable<String>(contactUserId);
@@ -9729,15 +8009,10 @@ class SipSubscriptionData extends DataClass
     );
   }
 
-  factory SipSubscriptionData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SipSubscriptionData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SipSubscriptionData(
-      type: $SipSubscriptionsTableTable.$convertertype.fromJson(
-        serializer.fromJson<String>(json['type']),
-      ),
+      type: $SipSubscriptionsTableTable.$convertertype.fromJson(serializer.fromJson<String>(json['type'])),
       number: serializer.fromJson<String>(json['number']),
       contactUserId: serializer.fromJson<String>(json['contactUserId']),
       subscribedAtUsec: serializer.fromJson<int>(json['subscribedAtUsec']),
@@ -9747,9 +8022,7 @@ class SipSubscriptionData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'type': serializer.toJson<String>(
-        $SipSubscriptionsTableTable.$convertertype.toJson(type),
-      ),
+      'type': serializer.toJson<String>($SipSubscriptionsTableTable.$convertertype.toJson(type)),
       'number': serializer.toJson<String>(number),
       'contactUserId': serializer.toJson<String>(contactUserId),
       'subscribedAtUsec': serializer.toJson<int>(subscribedAtUsec),
@@ -9771,12 +8044,8 @@ class SipSubscriptionData extends DataClass
     return SipSubscriptionData(
       type: data.type.present ? data.type.value : this.type,
       number: data.number.present ? data.number.value : this.number,
-      contactUserId: data.contactUserId.present
-          ? data.contactUserId.value
-          : this.contactUserId,
-      subscribedAtUsec: data.subscribedAtUsec.present
-          ? data.subscribedAtUsec.value
-          : this.subscribedAtUsec,
+      contactUserId: data.contactUserId.present ? data.contactUserId.value : this.contactUserId,
+      subscribedAtUsec: data.subscribedAtUsec.present ? data.subscribedAtUsec.value : this.subscribedAtUsec,
     );
   }
 
@@ -9792,8 +8061,7 @@ class SipSubscriptionData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(type, number, contactUserId, subscribedAtUsec);
+  int get hashCode => Object.hash(type, number, contactUserId, subscribedAtUsec);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -9804,8 +8072,7 @@ class SipSubscriptionData extends DataClass
           other.subscribedAtUsec == this.subscribedAtUsec);
 }
 
-class SipSubscriptionDataCompanion
-    extends UpdateCompanion<SipSubscriptionData> {
+class SipSubscriptionDataCompanion extends UpdateCompanion<SipSubscriptionData> {
   final Value<SipSubscriptionTypeData> type;
   final Value<String> number;
   final Value<String> contactUserId;
@@ -9864,9 +8131,7 @@ class SipSubscriptionDataCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (type.present) {
-      map['type'] = Variable<String>(
-        $SipSubscriptionsTableTable.$convertertype.toSql(type.value),
-      );
+      map['type'] = Variable<String>($SipSubscriptionsTableTable.$convertertype.toSql(type.value));
     }
     if (number.present) {
       map['number'] = Variable<String>(number.value);
@@ -9897,42 +8162,27 @@ class SipSubscriptionDataCompanion
 }
 
 class $SipSubscriptionsOutboxTableTable extends SipSubscriptionsOutboxTable
-    with
-        TableInfo<
-          $SipSubscriptionsOutboxTableTable,
-          SipSubscriptionOutboxEntryData
-        > {
+    with TableInfo<$SipSubscriptionsOutboxTableTable, SipSubscriptionOutboxEntryData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SipSubscriptionsOutboxTableTable(this.attachedDatabase, [this._alias]);
   @override
-  late final GeneratedColumnWithTypeConverter<
-    SipSubscriptionOutboxActionData,
-    String
-  >
-  action =
-      GeneratedColumn<String>(
-        'action',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SipSubscriptionOutboxActionData>(
-        $SipSubscriptionsOutboxTableTable.$converteraction,
-      );
+  late final GeneratedColumnWithTypeConverter<SipSubscriptionOutboxActionData, String> action = GeneratedColumn<String>(
+    'action',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<SipSubscriptionOutboxActionData>($SipSubscriptionsOutboxTableTable.$converteraction);
   @override
-  late final GeneratedColumnWithTypeConverter<SipSubscriptionTypeData, String>
-  type =
-      GeneratedColumn<String>(
-        'type',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SipSubscriptionTypeData>(
-        $SipSubscriptionsOutboxTableTable.$convertertype,
-      );
+  late final GeneratedColumnWithTypeConverter<SipSubscriptionTypeData, String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<SipSubscriptionTypeData>($SipSubscriptionsOutboxTableTable.$convertertype);
   static const VerificationMeta _numberMeta = const VerificationMeta('number');
   @override
   late final GeneratedColumn<String> number = GeneratedColumn<String>(
@@ -9942,9 +8192,7 @@ class $SipSubscriptionsOutboxTableTable extends SipSubscriptionsOutboxTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _contactUserIdMeta = const VerificationMeta(
-    'contactUserId',
-  );
+  static const VerificationMeta _contactUserIdMeta = const VerificationMeta('contactUserId');
   @override
   late final GeneratedColumn<String> contactUserId = GeneratedColumn<String>(
     'contact_user_id',
@@ -9953,9 +8201,7 @@ class $SipSubscriptionsOutboxTableTable extends SipSubscriptionsOutboxTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -9965,9 +8211,7 @@ class $SipSubscriptionsOutboxTableTable extends SipSubscriptionsOutboxTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -9977,14 +8221,7 @@ class $SipSubscriptionsOutboxTableTable extends SipSubscriptionsOutboxTable
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    action,
-    type,
-    number,
-    contactUserId,
-    sendAttempts,
-    timestampUsec,
-  ];
+  List<GeneratedColumn> get $columns => [action, type, number, contactUserId, sendAttempts, timestampUsec];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -9998,38 +8235,23 @@ class $SipSubscriptionsOutboxTableTable extends SipSubscriptionsOutboxTable
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('number')) {
-      context.handle(
-        _numberMeta,
-        number.isAcceptableOrUnknown(data['number']!, _numberMeta),
-      );
+      context.handle(_numberMeta, number.isAcceptableOrUnknown(data['number']!, _numberMeta));
     } else if (isInserting) {
       context.missing(_numberMeta);
     }
     if (data.containsKey('contact_user_id')) {
       context.handle(
         _contactUserIdMeta,
-        contactUserId.isAcceptableOrUnknown(
-          data['contact_user_id']!,
-          _contactUserIdMeta,
-        ),
+        contactUserId.isAcceptableOrUnknown(data['contact_user_id']!, _contactUserIdMeta),
       );
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_timestampUsecMeta);
@@ -10040,40 +8262,19 @@ class $SipSubscriptionsOutboxTableTable extends SipSubscriptionsOutboxTable
   @override
   Set<GeneratedColumn> get $primaryKey => {action, type, number};
   @override
-  SipSubscriptionOutboxEntryData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  SipSubscriptionOutboxEntryData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SipSubscriptionOutboxEntryData(
       action: $SipSubscriptionsOutboxTableTable.$converteraction.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}action'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}action'])!,
       ),
       type: $SipSubscriptionsOutboxTableTable.$convertertype.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}type'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}type'])!,
       ),
-      number: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}number'],
-      )!,
-      contactUserId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}contact_user_id'],
-      ),
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      )!,
+      number: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}number'])!,
+      contactUserId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}contact_user_id']),
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec'])!,
     );
   }
 
@@ -10082,18 +8283,13 @@ class $SipSubscriptionsOutboxTableTable extends SipSubscriptionsOutboxTable
     return $SipSubscriptionsOutboxTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<SipSubscriptionOutboxActionData, String, String>
-  $converteraction = const EnumNameConverter<SipSubscriptionOutboxActionData>(
-    SipSubscriptionOutboxActionData.values,
-  );
-  static JsonTypeConverter2<SipSubscriptionTypeData, String, String>
-  $convertertype = const EnumNameConverter<SipSubscriptionTypeData>(
-    SipSubscriptionTypeData.values,
-  );
+  static JsonTypeConverter2<SipSubscriptionOutboxActionData, String, String> $converteraction =
+      const EnumNameConverter<SipSubscriptionOutboxActionData>(SipSubscriptionOutboxActionData.values);
+  static JsonTypeConverter2<SipSubscriptionTypeData, String, String> $convertertype =
+      const EnumNameConverter<SipSubscriptionTypeData>(SipSubscriptionTypeData.values);
 }
 
-class SipSubscriptionOutboxEntryData extends DataClass
-    implements Insertable<SipSubscriptionOutboxEntryData> {
+class SipSubscriptionOutboxEntryData extends DataClass implements Insertable<SipSubscriptionOutboxEntryData> {
   final SipSubscriptionOutboxActionData action;
   final SipSubscriptionTypeData type;
   final String number;
@@ -10112,14 +8308,10 @@ class SipSubscriptionOutboxEntryData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     {
-      map['action'] = Variable<String>(
-        $SipSubscriptionsOutboxTableTable.$converteraction.toSql(action),
-      );
+      map['action'] = Variable<String>($SipSubscriptionsOutboxTableTable.$converteraction.toSql(action));
     }
     {
-      map['type'] = Variable<String>(
-        $SipSubscriptionsOutboxTableTable.$convertertype.toSql(type),
-      );
+      map['type'] = Variable<String>($SipSubscriptionsOutboxTableTable.$convertertype.toSql(type));
     }
     map['number'] = Variable<String>(number);
     if (!nullToAbsent || contactUserId != null) {
@@ -10135,26 +8327,17 @@ class SipSubscriptionOutboxEntryData extends DataClass
       action: Value(action),
       type: Value(type),
       number: Value(number),
-      contactUserId: contactUserId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(contactUserId),
+      contactUserId: contactUserId == null && nullToAbsent ? const Value.absent() : Value(contactUserId),
       sendAttempts: Value(sendAttempts),
       timestampUsec: Value(timestampUsec),
     );
   }
 
-  factory SipSubscriptionOutboxEntryData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SipSubscriptionOutboxEntryData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SipSubscriptionOutboxEntryData(
-      action: $SipSubscriptionsOutboxTableTable.$converteraction.fromJson(
-        serializer.fromJson<String>(json['action']),
-      ),
-      type: $SipSubscriptionsOutboxTableTable.$convertertype.fromJson(
-        serializer.fromJson<String>(json['type']),
-      ),
+      action: $SipSubscriptionsOutboxTableTable.$converteraction.fromJson(serializer.fromJson<String>(json['action'])),
+      type: $SipSubscriptionsOutboxTableTable.$convertertype.fromJson(serializer.fromJson<String>(json['type'])),
       number: serializer.fromJson<String>(json['number']),
       contactUserId: serializer.fromJson<String?>(json['contactUserId']),
       sendAttempts: serializer.fromJson<int>(json['sendAttempts']),
@@ -10165,12 +8348,8 @@ class SipSubscriptionOutboxEntryData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'action': serializer.toJson<String>(
-        $SipSubscriptionsOutboxTableTable.$converteraction.toJson(action),
-      ),
-      'type': serializer.toJson<String>(
-        $SipSubscriptionsOutboxTableTable.$convertertype.toJson(type),
-      ),
+      'action': serializer.toJson<String>($SipSubscriptionsOutboxTableTable.$converteraction.toJson(action)),
+      'type': serializer.toJson<String>($SipSubscriptionsOutboxTableTable.$convertertype.toJson(type)),
       'number': serializer.toJson<String>(number),
       'contactUserId': serializer.toJson<String?>(contactUserId),
       'sendAttempts': serializer.toJson<int>(sendAttempts),
@@ -10189,28 +8368,18 @@ class SipSubscriptionOutboxEntryData extends DataClass
     action: action ?? this.action,
     type: type ?? this.type,
     number: number ?? this.number,
-    contactUserId: contactUserId.present
-        ? contactUserId.value
-        : this.contactUserId,
+    contactUserId: contactUserId.present ? contactUserId.value : this.contactUserId,
     sendAttempts: sendAttempts ?? this.sendAttempts,
     timestampUsec: timestampUsec ?? this.timestampUsec,
   );
-  SipSubscriptionOutboxEntryData copyWithCompanion(
-    SipSubscriptionOutboxEntryDataCompanion data,
-  ) {
+  SipSubscriptionOutboxEntryData copyWithCompanion(SipSubscriptionOutboxEntryDataCompanion data) {
     return SipSubscriptionOutboxEntryData(
       action: data.action.present ? data.action.value : this.action,
       type: data.type.present ? data.type.value : this.type,
       number: data.number.present ? data.number.value : this.number,
-      contactUserId: data.contactUserId.present
-          ? data.contactUserId.value
-          : this.contactUserId,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
+      contactUserId: data.contactUserId.present ? data.contactUserId.value : this.contactUserId,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
     );
   }
 
@@ -10228,14 +8397,7 @@ class SipSubscriptionOutboxEntryData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    action,
-    type,
-    number,
-    contactUserId,
-    sendAttempts,
-    timestampUsec,
-  );
+  int get hashCode => Object.hash(action, type, number, contactUserId, sendAttempts, timestampUsec);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -10248,8 +8410,7 @@ class SipSubscriptionOutboxEntryData extends DataClass
           other.timestampUsec == this.timestampUsec);
 }
 
-class SipSubscriptionOutboxEntryDataCompanion
-    extends UpdateCompanion<SipSubscriptionOutboxEntryData> {
+class SipSubscriptionOutboxEntryDataCompanion extends UpdateCompanion<SipSubscriptionOutboxEntryData> {
   final Value<SipSubscriptionOutboxActionData> action;
   final Value<SipSubscriptionTypeData> type;
   final Value<String> number;
@@ -10322,14 +8483,10 @@ class SipSubscriptionOutboxEntryDataCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (action.present) {
-      map['action'] = Variable<String>(
-        $SipSubscriptionsOutboxTableTable.$converteraction.toSql(action.value),
-      );
+      map['action'] = Variable<String>($SipSubscriptionsOutboxTableTable.$converteraction.toSql(action.value));
     }
     if (type.present) {
-      map['type'] = Variable<String>(
-        $SipSubscriptionsOutboxTableTable.$convertertype.toSql(type.value),
-      );
+      map['type'] = Variable<String>($SipSubscriptionsOutboxTableTable.$convertertype.toSql(type.value));
     }
     if (number.present) {
       map['number'] = Variable<String>(number.value);
@@ -10370,9 +8527,7 @@ class $UserSmsNumbersTableTable extends UserSmsNumbersTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $UserSmsNumbersTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _phoneNumberMeta = const VerificationMeta(
-    'phoneNumber',
-  );
+  static const VerificationMeta _phoneNumberMeta = const VerificationMeta('phoneNumber');
   @override
   late final GeneratedColumn<String> phoneNumber = GeneratedColumn<String>(
     'phone_number',
@@ -10389,20 +8544,11 @@ class $UserSmsNumbersTableTable extends UserSmsNumbersTable
   String get actualTableName => $name;
   static const String $name = 'user_sms_numbers';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<UserSmsNumberData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<UserSmsNumberData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('phone_number')) {
-      context.handle(
-        _phoneNumberMeta,
-        phoneNumber.isAcceptableOrUnknown(
-          data['phone_number']!,
-          _phoneNumberMeta,
-        ),
-      );
+      context.handle(_phoneNumberMeta, phoneNumber.isAcceptableOrUnknown(data['phone_number']!, _phoneNumberMeta));
     } else if (isInserting) {
       context.missing(_phoneNumberMeta);
     }
@@ -10415,10 +8561,7 @@ class $UserSmsNumbersTableTable extends UserSmsNumbersTable
   UserSmsNumberData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return UserSmsNumberData(
-      phoneNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}phone_number'],
-      )!,
+      phoneNumber: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}phone_number'])!,
     );
   }
 
@@ -10428,8 +8571,7 @@ class $UserSmsNumbersTableTable extends UserSmsNumbersTable
   }
 }
 
-class UserSmsNumberData extends DataClass
-    implements Insertable<UserSmsNumberData> {
+class UserSmsNumberData extends DataClass implements Insertable<UserSmsNumberData> {
   final String phoneNumber;
   const UserSmsNumberData({required this.phoneNumber});
   @override
@@ -10443,31 +8585,19 @@ class UserSmsNumberData extends DataClass
     return UserSmsNumberDataCompanion(phoneNumber: Value(phoneNumber));
   }
 
-  factory UserSmsNumberData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory UserSmsNumberData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return UserSmsNumberData(
-      phoneNumber: serializer.fromJson<String>(json['phoneNumber']),
-    );
+    return UserSmsNumberData(phoneNumber: serializer.fromJson<String>(json['phoneNumber']));
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'phoneNumber': serializer.toJson<String>(phoneNumber),
-    };
+    return <String, dynamic>{'phoneNumber': serializer.toJson<String>(phoneNumber)};
   }
 
-  UserSmsNumberData copyWith({String? phoneNumber}) =>
-      UserSmsNumberData(phoneNumber: phoneNumber ?? this.phoneNumber);
+  UserSmsNumberData copyWith({String? phoneNumber}) => UserSmsNumberData(phoneNumber: phoneNumber ?? this.phoneNumber);
   UserSmsNumberData copyWithCompanion(UserSmsNumberDataCompanion data) {
-    return UserSmsNumberData(
-      phoneNumber: data.phoneNumber.present
-          ? data.phoneNumber.value
-          : this.phoneNumber,
-    );
+    return UserSmsNumberData(phoneNumber: data.phoneNumber.present ? data.phoneNumber.value : this.phoneNumber);
   }
 
   @override
@@ -10482,39 +8612,24 @@ class UserSmsNumberData extends DataClass
   int get hashCode => phoneNumber.hashCode;
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is UserSmsNumberData && other.phoneNumber == this.phoneNumber);
+      identical(this, other) || (other is UserSmsNumberData && other.phoneNumber == this.phoneNumber);
 }
 
 class UserSmsNumberDataCompanion extends UpdateCompanion<UserSmsNumberData> {
   final Value<String> phoneNumber;
   final Value<int> rowid;
-  const UserSmsNumberDataCompanion({
-    this.phoneNumber = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  UserSmsNumberDataCompanion.insert({
-    required String phoneNumber,
-    this.rowid = const Value.absent(),
-  }) : phoneNumber = Value(phoneNumber);
-  static Insertable<UserSmsNumberData> custom({
-    Expression<String>? phoneNumber,
-    Expression<int>? rowid,
-  }) {
+  const UserSmsNumberDataCompanion({this.phoneNumber = const Value.absent(), this.rowid = const Value.absent()});
+  UserSmsNumberDataCompanion.insert({required String phoneNumber, this.rowid = const Value.absent()})
+    : phoneNumber = Value(phoneNumber);
+  static Insertable<UserSmsNumberData> custom({Expression<String>? phoneNumber, Expression<int>? rowid}) {
     return RawValuesInsertable({
       if (phoneNumber != null) 'phone_number': phoneNumber,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  UserSmsNumberDataCompanion copyWith({
-    Value<String>? phoneNumber,
-    Value<int>? rowid,
-  }) {
-    return UserSmsNumberDataCompanion(
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      rowid: rowid ?? this.rowid,
-    );
+  UserSmsNumberDataCompanion copyWith({Value<String>? phoneNumber, Value<int>? rowid}) {
+    return UserSmsNumberDataCompanion(phoneNumber: phoneNumber ?? this.phoneNumber, rowid: rowid ?? this.rowid);
   }
 
   @override
@@ -10539,20 +8654,13 @@ class UserSmsNumberDataCompanion extends UpdateCompanion<UserSmsNumberData> {
   }
 }
 
-class $ActiveMessageNotificationsTableTable
-    extends ActiveMessageNotificationsTable
-    with
-        TableInfo<
-          $ActiveMessageNotificationsTableTable,
-          ActiveMessageNotificationData
-        > {
+class $ActiveMessageNotificationsTableTable extends ActiveMessageNotificationsTable
+    with TableInfo<$ActiveMessageNotificationsTableTable, ActiveMessageNotificationData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ActiveMessageNotificationsTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _notificationIdMeta = const VerificationMeta(
-    'notificationId',
-  );
+  static const VerificationMeta _notificationIdMeta = const VerificationMeta('notificationId');
   @override
   late final GeneratedColumn<String> notificationId = GeneratedColumn<String>(
     'notification_id',
@@ -10561,9 +8669,7 @@ class $ActiveMessageNotificationsTableTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _messageIdMeta = const VerificationMeta(
-    'messageId',
-  );
+  static const VerificationMeta _messageIdMeta = const VerificationMeta('messageId');
   @override
   late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
     'message_id',
@@ -10572,9 +8678,7 @@ class $ActiveMessageNotificationsTableTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
-    'conversationId',
-  );
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta('conversationId');
   @override
   late final GeneratedColumn<int> conversationId = GeneratedColumn<int>(
     'conversation_id',
@@ -10611,14 +8715,7 @@ class $ActiveMessageNotificationsTableTable
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    notificationId,
-    messageId,
-    conversationId,
-    title,
-    body,
-    time,
-  ];
+  List<GeneratedColumn> get $columns => [notificationId, messageId, conversationId, title, body, time];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -10634,54 +8731,36 @@ class $ActiveMessageNotificationsTableTable
     if (data.containsKey('notification_id')) {
       context.handle(
         _notificationIdMeta,
-        notificationId.isAcceptableOrUnknown(
-          data['notification_id']!,
-          _notificationIdMeta,
-        ),
+        notificationId.isAcceptableOrUnknown(data['notification_id']!, _notificationIdMeta),
       );
     } else if (isInserting) {
       context.missing(_notificationIdMeta);
     }
     if (data.containsKey('message_id')) {
-      context.handle(
-        _messageIdMeta,
-        messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta),
-      );
+      context.handle(_messageIdMeta, messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
     } else if (isInserting) {
       context.missing(_messageIdMeta);
     }
     if (data.containsKey('conversation_id')) {
       context.handle(
         _conversationIdMeta,
-        conversationId.isAcceptableOrUnknown(
-          data['conversation_id']!,
-          _conversationIdMeta,
-        ),
+        conversationId.isAcceptableOrUnknown(data['conversation_id']!, _conversationIdMeta),
       );
     } else if (isInserting) {
       context.missing(_conversationIdMeta);
     }
     if (data.containsKey('title')) {
-      context.handle(
-        _titleMeta,
-        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
-      );
+      context.handle(_titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
     if (data.containsKey('body')) {
-      context.handle(
-        _bodyMeta,
-        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
-      );
+      context.handle(_bodyMeta, body.isAcceptableOrUnknown(data['body']!, _bodyMeta));
     } else if (isInserting) {
       context.missing(_bodyMeta);
     }
     if (data.containsKey('time')) {
-      context.handle(
-        _timeMeta,
-        time.isAcceptableOrUnknown(data['time']!, _timeMeta),
-      );
+      context.handle(_timeMeta, time.isAcceptableOrUnknown(data['time']!, _timeMeta));
     } else if (isInserting) {
       context.missing(_timeMeta);
     }
@@ -10691,36 +8770,18 @@ class $ActiveMessageNotificationsTableTable
   @override
   Set<GeneratedColumn> get $primaryKey => {notificationId};
   @override
-  ActiveMessageNotificationData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  ActiveMessageNotificationData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ActiveMessageNotificationData(
       notificationId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notification_id'],
       )!,
-      messageId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}message_id'],
-      )!,
-      conversationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}conversation_id'],
-      )!,
-      title: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}title'],
-      )!,
-      body: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}body'],
-      )!,
-      time: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}time'],
-      )!,
+      messageId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}message_id'])!,
+      conversationId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}conversation_id'])!,
+      title: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      body: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}body'])!,
+      time: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}time'])!,
     );
   }
 
@@ -10730,8 +8791,7 @@ class $ActiveMessageNotificationsTableTable
   }
 }
 
-class ActiveMessageNotificationData extends DataClass
-    implements Insertable<ActiveMessageNotificationData> {
+class ActiveMessageNotificationData extends DataClass implements Insertable<ActiveMessageNotificationData> {
   final String notificationId;
   final int messageId;
   final int conversationId;
@@ -10769,10 +8829,7 @@ class ActiveMessageNotificationData extends DataClass
     );
   }
 
-  factory ActiveMessageNotificationData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ActiveMessageNotificationData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ActiveMessageNotificationData(
       notificationId: serializer.fromJson<String>(json['notificationId']),
@@ -10811,17 +8868,11 @@ class ActiveMessageNotificationData extends DataClass
     body: body ?? this.body,
     time: time ?? this.time,
   );
-  ActiveMessageNotificationData copyWithCompanion(
-    ActiveMessageNotificationDataCompanion data,
-  ) {
+  ActiveMessageNotificationData copyWithCompanion(ActiveMessageNotificationDataCompanion data) {
     return ActiveMessageNotificationData(
-      notificationId: data.notificationId.present
-          ? data.notificationId.value
-          : this.notificationId,
+      notificationId: data.notificationId.present ? data.notificationId.value : this.notificationId,
       messageId: data.messageId.present ? data.messageId.value : this.messageId,
-      conversationId: data.conversationId.present
-          ? data.conversationId.value
-          : this.conversationId,
+      conversationId: data.conversationId.present ? data.conversationId.value : this.conversationId,
       title: data.title.present ? data.title.value : this.title,
       body: data.body.present ? data.body.value : this.body,
       time: data.time.present ? data.time.value : this.time,
@@ -10842,8 +8893,7 @@ class ActiveMessageNotificationData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(notificationId, messageId, conversationId, title, body, time);
+  int get hashCode => Object.hash(notificationId, messageId, conversationId, title, body, time);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -10856,8 +8906,7 @@ class ActiveMessageNotificationData extends DataClass
           other.time == this.time);
 }
 
-class ActiveMessageNotificationDataCompanion
-    extends UpdateCompanion<ActiveMessageNotificationData> {
+class ActiveMessageNotificationDataCompanion extends UpdateCompanion<ActiveMessageNotificationData> {
   final Value<String> notificationId;
   final Value<int> messageId;
   final Value<int> conversationId;
@@ -10970,8 +9019,7 @@ class ActiveMessageNotificationDataCompanion
   }
 }
 
-class $VoicemailTableTable extends VoicemailTable
-    with TableInfo<$VoicemailTableTable, VoicemailData> {
+class $VoicemailTableTable extends VoicemailTable with TableInfo<$VoicemailTableTable, VoicemailData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -10994,9 +9042,7 @@ class $VoicemailTableTable extends VoicemailTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _durationMeta = const VerificationMeta(
-    'duration',
-  );
+  static const VerificationMeta _durationMeta = const VerificationMeta('duration');
   @override
   late final GeneratedColumn<double> duration = GeneratedColumn<double>(
     'duration',
@@ -11014,9 +9060,7 @@ class $VoicemailTableTable extends VoicemailTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _receiverMeta = const VerificationMeta(
-    'receiver',
-  );
+  static const VerificationMeta _receiverMeta = const VerificationMeta('receiver');
   @override
   late final GeneratedColumn<String> receiver = GeneratedColumn<String>(
     'receiver',
@@ -11033,9 +9077,7 @@ class $VoicemailTableTable extends VoicemailTable
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("seen" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("seen" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _sizeMeta = const VerificationMeta('size');
@@ -11056,9 +9098,7 @@ class $VoicemailTableTable extends VoicemailTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _attachmentPathMeta = const VerificationMeta(
-    'attachmentPath',
-  );
+  static const VerificationMeta _attachmentPathMeta = const VerificationMeta('attachmentPath');
   @override
   late final GeneratedColumn<String> attachmentPath = GeneratedColumn<String>(
     'attachment_path',
@@ -11075,13 +9115,9 @@ class $VoicemailTableTable extends VoicemailTable
     true,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("saved" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("saved" IN (0, 1))'),
   );
-  static const VerificationMeta _forwardedByMeta = const VerificationMeta(
-    'forwardedBy',
-  );
+  static const VerificationMeta _forwardedByMeta = const VerificationMeta('forwardedBy');
   @override
   late final GeneratedColumn<String> forwardedBy = GeneratedColumn<String>(
     'forwarded_by',
@@ -11110,10 +9146,7 @@ class $VoicemailTableTable extends VoicemailTable
   String get actualTableName => $name;
   static const String $name = 'voicemails';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<VoicemailData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<VoicemailData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -11122,82 +9155,49 @@ class $VoicemailTableTable extends VoicemailTable
       context.missing(_idMeta);
     }
     if (data.containsKey('date')) {
-      context.handle(
-        _dateMeta,
-        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
-      );
+      context.handle(_dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
     if (data.containsKey('duration')) {
-      context.handle(
-        _durationMeta,
-        duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
-      );
+      context.handle(_durationMeta, duration.isAcceptableOrUnknown(data['duration']!, _durationMeta));
     } else if (isInserting) {
       context.missing(_durationMeta);
     }
     if (data.containsKey('sender')) {
-      context.handle(
-        _senderMeta,
-        sender.isAcceptableOrUnknown(data['sender']!, _senderMeta),
-      );
+      context.handle(_senderMeta, sender.isAcceptableOrUnknown(data['sender']!, _senderMeta));
     } else if (isInserting) {
       context.missing(_senderMeta);
     }
     if (data.containsKey('receiver')) {
-      context.handle(
-        _receiverMeta,
-        receiver.isAcceptableOrUnknown(data['receiver']!, _receiverMeta),
-      );
+      context.handle(_receiverMeta, receiver.isAcceptableOrUnknown(data['receiver']!, _receiverMeta));
     } else if (isInserting) {
       context.missing(_receiverMeta);
     }
     if (data.containsKey('seen')) {
-      context.handle(
-        _seenMeta,
-        seen.isAcceptableOrUnknown(data['seen']!, _seenMeta),
-      );
+      context.handle(_seenMeta, seen.isAcceptableOrUnknown(data['seen']!, _seenMeta));
     }
     if (data.containsKey('size')) {
-      context.handle(
-        _sizeMeta,
-        size.isAcceptableOrUnknown(data['size']!, _sizeMeta),
-      );
+      context.handle(_sizeMeta, size.isAcceptableOrUnknown(data['size']!, _sizeMeta));
     } else if (isInserting) {
       context.missing(_sizeMeta);
     }
     if (data.containsKey('type')) {
-      context.handle(
-        _typeMeta,
-        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
-      );
+      context.handle(_typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
     if (data.containsKey('attachment_path')) {
       context.handle(
         _attachmentPathMeta,
-        attachmentPath.isAcceptableOrUnknown(
-          data['attachment_path']!,
-          _attachmentPathMeta,
-        ),
+        attachmentPath.isAcceptableOrUnknown(data['attachment_path']!, _attachmentPathMeta),
       );
     }
     if (data.containsKey('saved')) {
-      context.handle(
-        _savedMeta,
-        saved.isAcceptableOrUnknown(data['saved']!, _savedMeta),
-      );
+      context.handle(_savedMeta, saved.isAcceptableOrUnknown(data['saved']!, _savedMeta));
     }
     if (data.containsKey('forwarded_by')) {
-      context.handle(
-        _forwardedByMeta,
-        forwardedBy.isAcceptableOrUnknown(
-          data['forwarded_by']!,
-          _forwardedByMeta,
-        ),
-      );
+      context.handle(_forwardedByMeta, forwardedBy.isAcceptableOrUnknown(data['forwarded_by']!, _forwardedByMeta));
     }
     return context;
   }
@@ -11208,50 +9208,17 @@ class $VoicemailTableTable extends VoicemailTable
   VoicemailData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return VoicemailData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      date: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}date'],
-      )!,
-      duration: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}duration'],
-      )!,
-      sender: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}sender'],
-      )!,
-      receiver: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}receiver'],
-      )!,
-      seen: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}seen'],
-      )!,
-      size: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}size'],
-      )!,
-      type: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}type'],
-      )!,
-      attachmentPath: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}attachment_path'],
-      ),
-      saved: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}saved'],
-      ),
-      forwardedBy: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}forwarded_by'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      date: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}date'])!,
+      duration: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}duration'])!,
+      sender: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}sender'])!,
+      receiver: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}receiver'])!,
+      seen: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}seen'])!,
+      size: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}size'])!,
+      type: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      attachmentPath: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}attachment_path']),
+      saved: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}saved']),
+      forwardedBy: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}forwarded_by']),
     );
   }
 
@@ -11329,22 +9296,13 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
       seen: Value(seen),
       size: Value(size),
       type: Value(type),
-      attachmentPath: attachmentPath == null && nullToAbsent
-          ? const Value.absent()
-          : Value(attachmentPath),
-      saved: saved == null && nullToAbsent
-          ? const Value.absent()
-          : Value(saved),
-      forwardedBy: forwardedBy == null && nullToAbsent
-          ? const Value.absent()
-          : Value(forwardedBy),
+      attachmentPath: attachmentPath == null && nullToAbsent ? const Value.absent() : Value(attachmentPath),
+      saved: saved == null && nullToAbsent ? const Value.absent() : Value(saved),
+      forwardedBy: forwardedBy == null && nullToAbsent ? const Value.absent() : Value(forwardedBy),
     );
   }
 
-  factory VoicemailData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory VoicemailData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return VoicemailData(
       id: serializer.fromJson<String>(json['id']),
@@ -11399,9 +9357,7 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
     seen: seen ?? this.seen,
     size: size ?? this.size,
     type: type ?? this.type,
-    attachmentPath: attachmentPath.present
-        ? attachmentPath.value
-        : this.attachmentPath,
+    attachmentPath: attachmentPath.present ? attachmentPath.value : this.attachmentPath,
     saved: saved.present ? saved.value : this.saved,
     forwardedBy: forwardedBy.present ? forwardedBy.value : this.forwardedBy,
   );
@@ -11415,13 +9371,9 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
       seen: data.seen.present ? data.seen.value : this.seen,
       size: data.size.present ? data.size.value : this.size,
       type: data.type.present ? data.type.value : this.type,
-      attachmentPath: data.attachmentPath.present
-          ? data.attachmentPath.value
-          : this.attachmentPath,
+      attachmentPath: data.attachmentPath.present ? data.attachmentPath.value : this.attachmentPath,
       saved: data.saved.present ? data.saved.value : this.saved,
-      forwardedBy: data.forwardedBy.present
-          ? data.forwardedBy.value
-          : this.forwardedBy,
+      forwardedBy: data.forwardedBy.present ? data.forwardedBy.value : this.forwardedBy,
     );
   }
 
@@ -11444,19 +9396,8 @@ class VoicemailData extends DataClass implements Insertable<VoicemailData> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    date,
-    duration,
-    sender,
-    receiver,
-    seen,
-    size,
-    type,
-    attachmentPath,
-    saved,
-    forwardedBy,
-  );
+  int get hashCode =>
+      Object.hash(id, date, duration, sender, receiver, seen, size, type, attachmentPath, saved, forwardedBy);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -11667,9 +9608,7 @@ class $SystemNotificationsTableTable extends SystemNotificationsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _contentMeta = const VerificationMeta(
-    'content',
-  );
+  static const VerificationMeta _contentMeta = const VerificationMeta('content');
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
     'content',
@@ -11679,17 +9618,13 @@ class $SystemNotificationsTableTable extends SystemNotificationsTable
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<SystemNotificationType, String>
-  type =
-      GeneratedColumn<String>(
-        'type',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SystemNotificationType>(
-        $SystemNotificationsTableTable.$convertertype,
-      );
+  late final GeneratedColumnWithTypeConverter<SystemNotificationType, String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<SystemNotificationType>($SystemNotificationsTableTable.$convertertype);
   static const VerificationMeta _seenMeta = const VerificationMeta('seen');
   @override
   late final GeneratedColumn<bool> seen = GeneratedColumn<bool>(
@@ -11698,12 +9633,9 @@ class $SystemNotificationsTableTable extends SystemNotificationsTable
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("seen" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("seen" IN (0, 1))'),
   );
-  static const VerificationMeta _createdAtRemoteUsecMeta =
-      const VerificationMeta('createdAtRemoteUsec');
+  static const VerificationMeta _createdAtRemoteUsecMeta = const VerificationMeta('createdAtRemoteUsec');
   @override
   late final GeneratedColumn<int> createdAtRemoteUsec = GeneratedColumn<int>(
     'created_at_remote_usec',
@@ -11712,8 +9644,7 @@ class $SystemNotificationsTableTable extends SystemNotificationsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _updatedAtRemoteUsecMeta =
-      const VerificationMeta('updatedAtRemoteUsec');
+  static const VerificationMeta _updatedAtRemoteUsecMeta = const VerificationMeta('updatedAtRemoteUsec');
   @override
   late final GeneratedColumn<int> updatedAtRemoteUsec = GeneratedColumn<int>(
     'updated_at_remote_usec',
@@ -11723,61 +9654,38 @@ class $SystemNotificationsTableTable extends SystemNotificationsTable
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    title,
-    content,
-    type,
-    seen,
-    createdAtRemoteUsec,
-    updatedAtRemoteUsec,
-  ];
+  List<GeneratedColumn> get $columns => [id, title, content, type, seen, createdAtRemoteUsec, updatedAtRemoteUsec];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'system_notifications';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SystemNotificationData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SystemNotificationData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('title')) {
-      context.handle(
-        _titleMeta,
-        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
-      );
+      context.handle(_titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
     if (data.containsKey('content')) {
-      context.handle(
-        _contentMeta,
-        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
-      );
+      context.handle(_contentMeta, content.isAcceptableOrUnknown(data['content']!, _contentMeta));
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
     if (data.containsKey('seen')) {
-      context.handle(
-        _seenMeta,
-        seen.isAcceptableOrUnknown(data['seen']!, _seenMeta),
-      );
+      context.handle(_seenMeta, seen.isAcceptableOrUnknown(data['seen']!, _seenMeta));
     } else if (isInserting) {
       context.missing(_seenMeta);
     }
     if (data.containsKey('created_at_remote_usec')) {
       context.handle(
         _createdAtRemoteUsecMeta,
-        createdAtRemoteUsec.isAcceptableOrUnknown(
-          data['created_at_remote_usec']!,
-          _createdAtRemoteUsecMeta,
-        ),
+        createdAtRemoteUsec.isAcceptableOrUnknown(data['created_at_remote_usec']!, _createdAtRemoteUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_createdAtRemoteUsecMeta);
@@ -11785,10 +9693,7 @@ class $SystemNotificationsTableTable extends SystemNotificationsTable
     if (data.containsKey('updated_at_remote_usec')) {
       context.handle(
         _updatedAtRemoteUsecMeta,
-        updatedAtRemoteUsec.isAcceptableOrUnknown(
-          data['updated_at_remote_usec']!,
-          _updatedAtRemoteUsecMeta,
-        ),
+        updatedAtRemoteUsec.isAcceptableOrUnknown(data['updated_at_remote_usec']!, _updatedAtRemoteUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_updatedAtRemoteUsecMeta);
@@ -11802,28 +9707,13 @@ class $SystemNotificationsTableTable extends SystemNotificationsTable
   SystemNotificationData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SystemNotificationData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      title: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}title'],
-      )!,
-      content: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}content'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      title: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      content: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}content'])!,
       type: $SystemNotificationsTableTable.$convertertype.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}type'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}type'])!,
       ),
-      seen: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}seen'],
-      )!,
+      seen: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}seen'])!,
       createdAtRemoteUsec: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at_remote_usec'],
@@ -11840,14 +9730,11 @@ class $SystemNotificationsTableTable extends SystemNotificationsTable
     return $SystemNotificationsTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<SystemNotificationType, String, String>
-  $convertertype = const EnumNameConverter<SystemNotificationType>(
-    SystemNotificationType.values,
-  );
+  static JsonTypeConverter2<SystemNotificationType, String, String> $convertertype =
+      const EnumNameConverter<SystemNotificationType>(SystemNotificationType.values);
 }
 
-class SystemNotificationData extends DataClass
-    implements Insertable<SystemNotificationData> {
+class SystemNotificationData extends DataClass implements Insertable<SystemNotificationData> {
   final int id;
   final String title;
   final String content;
@@ -11871,9 +9758,7 @@ class SystemNotificationData extends DataClass
     map['title'] = Variable<String>(title);
     map['content'] = Variable<String>(content);
     {
-      map['type'] = Variable<String>(
-        $SystemNotificationsTableTable.$convertertype.toSql(type),
-      );
+      map['type'] = Variable<String>($SystemNotificationsTableTable.$convertertype.toSql(type));
     }
     map['seen'] = Variable<bool>(seen);
     map['created_at_remote_usec'] = Variable<int>(createdAtRemoteUsec);
@@ -11893,25 +9778,16 @@ class SystemNotificationData extends DataClass
     );
   }
 
-  factory SystemNotificationData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SystemNotificationData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SystemNotificationData(
       id: serializer.fromJson<int>(json['id']),
       title: serializer.fromJson<String>(json['title']),
       content: serializer.fromJson<String>(json['content']),
-      type: $SystemNotificationsTableTable.$convertertype.fromJson(
-        serializer.fromJson<String>(json['type']),
-      ),
+      type: $SystemNotificationsTableTable.$convertertype.fromJson(serializer.fromJson<String>(json['type'])),
       seen: serializer.fromJson<bool>(json['seen']),
-      createdAtRemoteUsec: serializer.fromJson<int>(
-        json['createdAtRemoteUsec'],
-      ),
-      updatedAtRemoteUsec: serializer.fromJson<int>(
-        json['updatedAtRemoteUsec'],
-      ),
+      createdAtRemoteUsec: serializer.fromJson<int>(json['createdAtRemoteUsec']),
+      updatedAtRemoteUsec: serializer.fromJson<int>(json['updatedAtRemoteUsec']),
     );
   }
   @override
@@ -11921,9 +9797,7 @@ class SystemNotificationData extends DataClass
       'id': serializer.toJson<int>(id),
       'title': serializer.toJson<String>(title),
       'content': serializer.toJson<String>(content),
-      'type': serializer.toJson<String>(
-        $SystemNotificationsTableTable.$convertertype.toJson(type),
-      ),
+      'type': serializer.toJson<String>($SystemNotificationsTableTable.$convertertype.toJson(type)),
       'seen': serializer.toJson<bool>(seen),
       'createdAtRemoteUsec': serializer.toJson<int>(createdAtRemoteUsec),
       'updatedAtRemoteUsec': serializer.toJson<int>(updatedAtRemoteUsec),
@@ -11947,21 +9821,15 @@ class SystemNotificationData extends DataClass
     createdAtRemoteUsec: createdAtRemoteUsec ?? this.createdAtRemoteUsec,
     updatedAtRemoteUsec: updatedAtRemoteUsec ?? this.updatedAtRemoteUsec,
   );
-  SystemNotificationData copyWithCompanion(
-    SystemNotificationDataCompanion data,
-  ) {
+  SystemNotificationData copyWithCompanion(SystemNotificationDataCompanion data) {
     return SystemNotificationData(
       id: data.id.present ? data.id.value : this.id,
       title: data.title.present ? data.title.value : this.title,
       content: data.content.present ? data.content.value : this.content,
       type: data.type.present ? data.type.value : this.type,
       seen: data.seen.present ? data.seen.value : this.seen,
-      createdAtRemoteUsec: data.createdAtRemoteUsec.present
-          ? data.createdAtRemoteUsec.value
-          : this.createdAtRemoteUsec,
-      updatedAtRemoteUsec: data.updatedAtRemoteUsec.present
-          ? data.updatedAtRemoteUsec.value
-          : this.updatedAtRemoteUsec,
+      createdAtRemoteUsec: data.createdAtRemoteUsec.present ? data.createdAtRemoteUsec.value : this.createdAtRemoteUsec,
+      updatedAtRemoteUsec: data.updatedAtRemoteUsec.present ? data.updatedAtRemoteUsec.value : this.updatedAtRemoteUsec,
     );
   }
 
@@ -11980,15 +9848,7 @@ class SystemNotificationData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    title,
-    content,
-    type,
-    seen,
-    createdAtRemoteUsec,
-    updatedAtRemoteUsec,
-  );
+  int get hashCode => Object.hash(id, title, content, type, seen, createdAtRemoteUsec, updatedAtRemoteUsec);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -12002,8 +9862,7 @@ class SystemNotificationData extends DataClass
           other.updatedAtRemoteUsec == this.updatedAtRemoteUsec);
 }
 
-class SystemNotificationDataCompanion
-    extends UpdateCompanion<SystemNotificationData> {
+class SystemNotificationDataCompanion extends UpdateCompanion<SystemNotificationData> {
   final Value<int> id;
   final Value<String> title;
   final Value<String> content;
@@ -12049,10 +9908,8 @@ class SystemNotificationDataCompanion
       if (content != null) 'content': content,
       if (type != null) 'type': type,
       if (seen != null) 'seen': seen,
-      if (createdAtRemoteUsec != null)
-        'created_at_remote_usec': createdAtRemoteUsec,
-      if (updatedAtRemoteUsec != null)
-        'updated_at_remote_usec': updatedAtRemoteUsec,
+      if (createdAtRemoteUsec != null) 'created_at_remote_usec': createdAtRemoteUsec,
+      if (updatedAtRemoteUsec != null) 'updated_at_remote_usec': updatedAtRemoteUsec,
     });
   }
 
@@ -12089,9 +9946,7 @@ class SystemNotificationDataCompanion
       map['content'] = Variable<String>(content.value);
     }
     if (type.present) {
-      map['type'] = Variable<String>(
-        $SystemNotificationsTableTable.$convertertype.toSql(type.value),
-      );
+      map['type'] = Variable<String>($SystemNotificationsTableTable.$convertertype.toSql(type.value));
     }
     if (seen.present) {
       map['seen'] = Variable<bool>(seen.value);
@@ -12120,20 +9975,13 @@ class SystemNotificationDataCompanion
   }
 }
 
-class $SystemNotificationsOutboxTableTable
-    extends SystemNotificationsOutboxTable
-    with
-        TableInfo<
-          $SystemNotificationsOutboxTableTable,
-          SystemNotificationOutboxEntryData
-        > {
+class $SystemNotificationsOutboxTableTable extends SystemNotificationsOutboxTable
+    with TableInfo<$SystemNotificationsOutboxTableTable, SystemNotificationOutboxEntryData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SystemNotificationsOutboxTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _notificationIdMeta = const VerificationMeta(
-    'notificationId',
-  );
+  static const VerificationMeta _notificationIdMeta = const VerificationMeta('notificationId');
   @override
   late final GeneratedColumn<int> notificationId = GeneratedColumn<int>(
     'notification_id',
@@ -12141,36 +9989,25 @@ class $SystemNotificationsOutboxTableTable
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES system_notifications (id) ON DELETE CASCADE',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('REFERENCES system_notifications (id) ON DELETE CASCADE'),
   );
   @override
-  late final GeneratedColumnWithTypeConverter<SnOutboxDataActionType, String>
-  actionType =
-      GeneratedColumn<String>(
-        'action_type',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SnOutboxDataActionType>(
-        $SystemNotificationsOutboxTableTable.$converteractionType,
-      );
+  late final GeneratedColumnWithTypeConverter<SnOutboxDataActionType, String> actionType = GeneratedColumn<String>(
+    'action_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<SnOutboxDataActionType>($SystemNotificationsOutboxTableTable.$converteractionType);
   @override
-  late final GeneratedColumnWithTypeConverter<SnOutboxDataState, String> state =
-      GeneratedColumn<String>(
-        'state',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<SnOutboxDataState>(
-        $SystemNotificationsOutboxTableTable.$converterstate,
-      );
-  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta(
-    'sendAttempts',
-  );
+  late final GeneratedColumnWithTypeConverter<SnOutboxDataState, String> state = GeneratedColumn<String>(
+    'state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<SnOutboxDataState>($SystemNotificationsOutboxTableTable.$converterstate);
+  static const VerificationMeta _sendAttemptsMeta = const VerificationMeta('sendAttempts');
   @override
   late final GeneratedColumn<int> sendAttempts = GeneratedColumn<int>(
     'send_attempts',
@@ -12181,12 +10018,7 @@ class $SystemNotificationsOutboxTableTable
     defaultValue: const Constant(0),
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    notificationId,
-    actionType,
-    state,
-    sendAttempts,
-  ];
+  List<GeneratedColumn> get $columns => [notificationId, actionType, state, sendAttempts];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -12202,22 +10034,13 @@ class $SystemNotificationsOutboxTableTable
     if (data.containsKey('notification_id')) {
       context.handle(
         _notificationIdMeta,
-        notificationId.isAcceptableOrUnknown(
-          data['notification_id']!,
-          _notificationIdMeta,
-        ),
+        notificationId.isAcceptableOrUnknown(data['notification_id']!, _notificationIdMeta),
       );
     } else if (isInserting) {
       context.missing(_notificationIdMeta);
     }
     if (data.containsKey('send_attempts')) {
-      context.handle(
-        _sendAttemptsMeta,
-        sendAttempts.isAcceptableOrUnknown(
-          data['send_attempts']!,
-          _sendAttemptsMeta,
-        ),
-      );
+      context.handle(_sendAttemptsMeta, sendAttempts.isAcceptableOrUnknown(data['send_attempts']!, _sendAttemptsMeta));
     }
     return context;
   }
@@ -12225,33 +10048,17 @@ class $SystemNotificationsOutboxTableTable
   @override
   Set<GeneratedColumn> get $primaryKey => {notificationId, actionType};
   @override
-  SystemNotificationOutboxEntryData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  SystemNotificationOutboxEntryData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SystemNotificationOutboxEntryData(
-      notificationId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}notification_id'],
-      )!,
-      actionType: $SystemNotificationsOutboxTableTable.$converteractionType
-          .fromSql(
-            attachedDatabase.typeMapping.read(
-              DriftSqlType.string,
-              data['${effectivePrefix}action_type'],
-            )!,
-          ),
-      state: $SystemNotificationsOutboxTableTable.$converterstate.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}state'],
-        )!,
+      notificationId: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}notification_id'])!,
+      actionType: $SystemNotificationsOutboxTableTable.$converteractionType.fromSql(
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}action_type'])!,
       ),
-      sendAttempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}send_attempts'],
-      )!,
+      state: $SystemNotificationsOutboxTableTable.$converterstate.fromSql(
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}state'])!,
+      ),
+      sendAttempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}send_attempts'])!,
     );
   }
 
@@ -12260,16 +10067,13 @@ class $SystemNotificationsOutboxTableTable
     return $SystemNotificationsOutboxTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<SnOutboxDataActionType, String, String>
-  $converteractionType = const EnumNameConverter<SnOutboxDataActionType>(
-    SnOutboxDataActionType.values,
-  );
+  static JsonTypeConverter2<SnOutboxDataActionType, String, String> $converteractionType =
+      const EnumNameConverter<SnOutboxDataActionType>(SnOutboxDataActionType.values);
   static JsonTypeConverter2<SnOutboxDataState, String, String> $converterstate =
       const EnumNameConverter<SnOutboxDataState>(SnOutboxDataState.values);
 }
 
-class SystemNotificationOutboxEntryData extends DataClass
-    implements Insertable<SystemNotificationOutboxEntryData> {
+class SystemNotificationOutboxEntryData extends DataClass implements Insertable<SystemNotificationOutboxEntryData> {
   final int notificationId;
   final SnOutboxDataActionType actionType;
   final SnOutboxDataState state;
@@ -12286,15 +10090,11 @@ class SystemNotificationOutboxEntryData extends DataClass
     map['notification_id'] = Variable<int>(notificationId);
     {
       map['action_type'] = Variable<String>(
-        $SystemNotificationsOutboxTableTable.$converteractionType.toSql(
-          actionType,
-        ),
+        $SystemNotificationsOutboxTableTable.$converteractionType.toSql(actionType),
       );
     }
     {
-      map['state'] = Variable<String>(
-        $SystemNotificationsOutboxTableTable.$converterstate.toSql(state),
-      );
+      map['state'] = Variable<String>($SystemNotificationsOutboxTableTable.$converterstate.toSql(state));
     }
     map['send_attempts'] = Variable<int>(sendAttempts);
     return map;
@@ -12309,18 +10109,14 @@ class SystemNotificationOutboxEntryData extends DataClass
     );
   }
 
-  factory SystemNotificationOutboxEntryData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SystemNotificationOutboxEntryData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SystemNotificationOutboxEntryData(
       notificationId: serializer.fromJson<int>(json['notificationId']),
-      actionType: $SystemNotificationsOutboxTableTable.$converteractionType
-          .fromJson(serializer.fromJson<String>(json['actionType'])),
-      state: $SystemNotificationsOutboxTableTable.$converterstate.fromJson(
-        serializer.fromJson<String>(json['state']),
+      actionType: $SystemNotificationsOutboxTableTable.$converteractionType.fromJson(
+        serializer.fromJson<String>(json['actionType']),
       ),
+      state: $SystemNotificationsOutboxTableTable.$converterstate.fromJson(serializer.fromJson<String>(json['state'])),
       sendAttempts: serializer.fromJson<int>(json['sendAttempts']),
     );
   }
@@ -12330,13 +10126,9 @@ class SystemNotificationOutboxEntryData extends DataClass
     return <String, dynamic>{
       'notificationId': serializer.toJson<int>(notificationId),
       'actionType': serializer.toJson<String>(
-        $SystemNotificationsOutboxTableTable.$converteractionType.toJson(
-          actionType,
-        ),
+        $SystemNotificationsOutboxTableTable.$converteractionType.toJson(actionType),
       ),
-      'state': serializer.toJson<String>(
-        $SystemNotificationsOutboxTableTable.$converterstate.toJson(state),
-      ),
+      'state': serializer.toJson<String>($SystemNotificationsOutboxTableTable.$converterstate.toJson(state)),
       'sendAttempts': serializer.toJson<int>(sendAttempts),
     };
   }
@@ -12352,20 +10144,12 @@ class SystemNotificationOutboxEntryData extends DataClass
     state: state ?? this.state,
     sendAttempts: sendAttempts ?? this.sendAttempts,
   );
-  SystemNotificationOutboxEntryData copyWithCompanion(
-    SystemNotificationOutboxEntryDataCompanion data,
-  ) {
+  SystemNotificationOutboxEntryData copyWithCompanion(SystemNotificationOutboxEntryDataCompanion data) {
     return SystemNotificationOutboxEntryData(
-      notificationId: data.notificationId.present
-          ? data.notificationId.value
-          : this.notificationId,
-      actionType: data.actionType.present
-          ? data.actionType.value
-          : this.actionType,
+      notificationId: data.notificationId.present ? data.notificationId.value : this.notificationId,
+      actionType: data.actionType.present ? data.actionType.value : this.actionType,
       state: data.state.present ? data.state.value : this.state,
-      sendAttempts: data.sendAttempts.present
-          ? data.sendAttempts.value
-          : this.sendAttempts,
+      sendAttempts: data.sendAttempts.present ? data.sendAttempts.value : this.sendAttempts,
     );
   }
 
@@ -12381,8 +10165,7 @@ class SystemNotificationOutboxEntryData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(notificationId, actionType, state, sendAttempts);
+  int get hashCode => Object.hash(notificationId, actionType, state, sendAttempts);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -12393,8 +10176,7 @@ class SystemNotificationOutboxEntryData extends DataClass
           other.sendAttempts == this.sendAttempts);
 }
 
-class SystemNotificationOutboxEntryDataCompanion
-    extends UpdateCompanion<SystemNotificationOutboxEntryData> {
+class SystemNotificationOutboxEntryDataCompanion extends UpdateCompanion<SystemNotificationOutboxEntryData> {
   final Value<int> notificationId;
   final Value<SnOutboxDataActionType> actionType;
   final Value<SnOutboxDataState> state;
@@ -12456,15 +10238,11 @@ class SystemNotificationOutboxEntryDataCompanion
     }
     if (actionType.present) {
       map['action_type'] = Variable<String>(
-        $SystemNotificationsOutboxTableTable.$converteractionType.toSql(
-          actionType.value,
-        ),
+        $SystemNotificationsOutboxTableTable.$converteractionType.toSql(actionType.value),
       );
     }
     if (state.present) {
-      map['state'] = Variable<String>(
-        $SystemNotificationsOutboxTableTable.$converterstate.toSql(state.value),
-      );
+      map['state'] = Variable<String>($SystemNotificationsOutboxTableTable.$converterstate.toSql(state.value));
     }
     if (sendAttempts.present) {
       map['send_attempts'] = Variable<int>(sendAttempts.value);
@@ -12488,8 +10266,7 @@ class SystemNotificationOutboxEntryDataCompanion
   }
 }
 
-class $PresenceInfoTableTable extends PresenceInfoTable
-    with TableInfo<$PresenceInfoTableTable, PresenceInfoData> {
+class $PresenceInfoTableTable extends PresenceInfoTable with TableInfo<$PresenceInfoTableTable, PresenceInfoData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -12512,9 +10289,7 @@ class $PresenceInfoTableTable extends PresenceInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _availableMeta = const VerificationMeta(
-    'available',
-  );
+  static const VerificationMeta _availableMeta = const VerificationMeta('available');
   @override
   late final GeneratedColumn<bool> available = GeneratedColumn<bool>(
     'available',
@@ -12522,9 +10297,7 @@ class $PresenceInfoTableTable extends PresenceInfoTable
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("available" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("available" IN (0, 1))'),
   );
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
@@ -12535,9 +10308,7 @@ class $PresenceInfoTableTable extends PresenceInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _statusIconMeta = const VerificationMeta(
-    'statusIcon',
-  );
+  static const VerificationMeta _statusIconMeta = const VerificationMeta('statusIcon');
   @override
   late final GeneratedColumn<String> statusIcon = GeneratedColumn<String>(
     'status_icon',
@@ -12555,9 +10326,7 @@ class $PresenceInfoTableTable extends PresenceInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _timeOffsetMinMeta = const VerificationMeta(
-    'timeOffsetMin',
-  );
+  static const VerificationMeta _timeOffsetMinMeta = const VerificationMeta('timeOffsetMin');
   @override
   late final GeneratedColumn<int> timeOffsetMin = GeneratedColumn<int>(
     'time_offset_min',
@@ -12566,9 +10335,7 @@ class $PresenceInfoTableTable extends PresenceInfoTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -12577,9 +10344,7 @@ class $PresenceInfoTableTable extends PresenceInfoTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _activitiesJsonMeta = const VerificationMeta(
-    'activitiesJson',
-  );
+  static const VerificationMeta _activitiesJsonMeta = const VerificationMeta('activitiesJson');
   @override
   late final GeneratedColumn<String> activitiesJson = GeneratedColumn<String>(
     'activities_json',
@@ -12597,9 +10362,7 @@ class $PresenceInfoTableTable extends PresenceInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _arrivalTimeUsecMeta = const VerificationMeta(
-    'arrivalTimeUsec',
-  );
+  static const VerificationMeta _arrivalTimeUsecMeta = const VerificationMeta('arrivalTimeUsec');
   @override
   late final GeneratedColumn<int> arrivalTimeUsec = GeneratedColumn<int>(
     'arrival_time_usec',
@@ -12628,100 +10391,64 @@ class $PresenceInfoTableTable extends PresenceInfoTable
   String get actualTableName => $name;
   static const String $name = 'presence_info';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<PresenceInfoData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<PresenceInfoData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id_key')) {
-      context.handle(
-        _idKeyMeta,
-        idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta),
-      );
+      context.handle(_idKeyMeta, idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta));
     } else if (isInserting) {
       context.missing(_idKeyMeta);
     }
     if (data.containsKey('number')) {
-      context.handle(
-        _numberMeta,
-        number.isAcceptableOrUnknown(data['number']!, _numberMeta),
-      );
+      context.handle(_numberMeta, number.isAcceptableOrUnknown(data['number']!, _numberMeta));
     } else if (isInserting) {
       context.missing(_numberMeta);
     }
     if (data.containsKey('available')) {
-      context.handle(
-        _availableMeta,
-        available.isAcceptableOrUnknown(data['available']!, _availableMeta),
-      );
+      context.handle(_availableMeta, available.isAcceptableOrUnknown(data['available']!, _availableMeta));
     } else if (isInserting) {
       context.missing(_availableMeta);
     }
     if (data.containsKey('note')) {
-      context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
+      context.handle(_noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     } else if (isInserting) {
       context.missing(_noteMeta);
     }
     if (data.containsKey('status_icon')) {
-      context.handle(
-        _statusIconMeta,
-        statusIcon.isAcceptableOrUnknown(data['status_icon']!, _statusIconMeta),
-      );
+      context.handle(_statusIconMeta, statusIcon.isAcceptableOrUnknown(data['status_icon']!, _statusIconMeta));
     }
     if (data.containsKey('device')) {
-      context.handle(
-        _deviceMeta,
-        device.isAcceptableOrUnknown(data['device']!, _deviceMeta),
-      );
+      context.handle(_deviceMeta, device.isAcceptableOrUnknown(data['device']!, _deviceMeta));
     }
     if (data.containsKey('time_offset_min')) {
       context.handle(
         _timeOffsetMinMeta,
-        timeOffsetMin.isAcceptableOrUnknown(
-          data['time_offset_min']!,
-          _timeOffsetMinMeta,
-        ),
+        timeOffsetMin.isAcceptableOrUnknown(data['time_offset_min']!, _timeOffsetMinMeta),
       );
     }
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     }
     if (data.containsKey('activities_json')) {
       context.handle(
         _activitiesJsonMeta,
-        activitiesJson.isAcceptableOrUnknown(
-          data['activities_json']!,
-          _activitiesJsonMeta,
-        ),
+        activitiesJson.isAcceptableOrUnknown(data['activities_json']!, _activitiesJsonMeta),
       );
     } else if (isInserting) {
       context.missing(_activitiesJsonMeta);
     }
     if (data.containsKey('source')) {
-      context.handle(
-        _sourceMeta,
-        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
-      );
+      context.handle(_sourceMeta, source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
     } else if (isInserting) {
       context.missing(_sourceMeta);
     }
     if (data.containsKey('arrival_time_usec')) {
       context.handle(
         _arrivalTimeUsecMeta,
-        arrivalTimeUsec.isAcceptableOrUnknown(
-          data['arrival_time_usec']!,
-          _arrivalTimeUsecMeta,
-        ),
+        arrivalTimeUsec.isAcceptableOrUnknown(data['arrival_time_usec']!, _arrivalTimeUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_arrivalTimeUsecMeta);
@@ -12735,46 +10462,19 @@ class $PresenceInfoTableTable extends PresenceInfoTable
   PresenceInfoData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PresenceInfoData(
-      idKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id_key'],
-      )!,
-      number: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}number'],
-      )!,
-      available: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}available'],
-      )!,
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      )!,
-      statusIcon: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}status_icon'],
-      ),
-      device: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}device'],
-      ),
-      timeOffsetMin: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}time_offset_min'],
-      ),
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      ),
+      idKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id_key'])!,
+      number: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}number'])!,
+      available: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}available'])!,
+      note: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}note'])!,
+      statusIcon: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}status_icon']),
+      device: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}device']),
+      timeOffsetMin: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}time_offset_min']),
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec']),
       activitiesJson: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}activities_json'],
       )!,
-      source: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source'],
-      )!,
+      source: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source'])!,
       arrivalTimeUsec: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}arrival_time_usec'],
@@ -12788,8 +10488,7 @@ class $PresenceInfoTableTable extends PresenceInfoTable
   }
 }
 
-class PresenceInfoData extends DataClass
-    implements Insertable<PresenceInfoData> {
+class PresenceInfoData extends DataClass implements Insertable<PresenceInfoData> {
   final String idKey;
   final String number;
   final bool available;
@@ -12845,28 +10544,17 @@ class PresenceInfoData extends DataClass
       number: Value(number),
       available: Value(available),
       note: Value(note),
-      statusIcon: statusIcon == null && nullToAbsent
-          ? const Value.absent()
-          : Value(statusIcon),
-      device: device == null && nullToAbsent
-          ? const Value.absent()
-          : Value(device),
-      timeOffsetMin: timeOffsetMin == null && nullToAbsent
-          ? const Value.absent()
-          : Value(timeOffsetMin),
-      timestampUsec: timestampUsec == null && nullToAbsent
-          ? const Value.absent()
-          : Value(timestampUsec),
+      statusIcon: statusIcon == null && nullToAbsent ? const Value.absent() : Value(statusIcon),
+      device: device == null && nullToAbsent ? const Value.absent() : Value(device),
+      timeOffsetMin: timeOffsetMin == null && nullToAbsent ? const Value.absent() : Value(timeOffsetMin),
+      timestampUsec: timestampUsec == null && nullToAbsent ? const Value.absent() : Value(timestampUsec),
       activitiesJson: Value(activitiesJson),
       source: Value(source),
       arrivalTimeUsec: Value(arrivalTimeUsec),
     );
   }
 
-  factory PresenceInfoData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory PresenceInfoData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PresenceInfoData(
       idKey: serializer.fromJson<String>(json['idKey']),
@@ -12919,12 +10607,8 @@ class PresenceInfoData extends DataClass
     note: note ?? this.note,
     statusIcon: statusIcon.present ? statusIcon.value : this.statusIcon,
     device: device.present ? device.value : this.device,
-    timeOffsetMin: timeOffsetMin.present
-        ? timeOffsetMin.value
-        : this.timeOffsetMin,
-    timestampUsec: timestampUsec.present
-        ? timestampUsec.value
-        : this.timestampUsec,
+    timeOffsetMin: timeOffsetMin.present ? timeOffsetMin.value : this.timeOffsetMin,
+    timestampUsec: timestampUsec.present ? timestampUsec.value : this.timestampUsec,
     activitiesJson: activitiesJson ?? this.activitiesJson,
     source: source ?? this.source,
     arrivalTimeUsec: arrivalTimeUsec ?? this.arrivalTimeUsec,
@@ -12935,23 +10619,13 @@ class PresenceInfoData extends DataClass
       number: data.number.present ? data.number.value : this.number,
       available: data.available.present ? data.available.value : this.available,
       note: data.note.present ? data.note.value : this.note,
-      statusIcon: data.statusIcon.present
-          ? data.statusIcon.value
-          : this.statusIcon,
+      statusIcon: data.statusIcon.present ? data.statusIcon.value : this.statusIcon,
       device: data.device.present ? data.device.value : this.device,
-      timeOffsetMin: data.timeOffsetMin.present
-          ? data.timeOffsetMin.value
-          : this.timeOffsetMin,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
-      activitiesJson: data.activitiesJson.present
-          ? data.activitiesJson.value
-          : this.activitiesJson,
+      timeOffsetMin: data.timeOffsetMin.present ? data.timeOffsetMin.value : this.timeOffsetMin,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
+      activitiesJson: data.activitiesJson.present ? data.activitiesJson.value : this.activitiesJson,
       source: data.source.present ? data.source.value : this.source,
-      arrivalTimeUsec: data.arrivalTimeUsec.present
-          ? data.arrivalTimeUsec.value
-          : this.arrivalTimeUsec,
+      arrivalTimeUsec: data.arrivalTimeUsec.present ? data.arrivalTimeUsec.value : this.arrivalTimeUsec,
     );
   }
 
@@ -13173,8 +10847,7 @@ class PresenceInfoDataCompanion extends UpdateCompanion<PresenceInfoData> {
   }
 }
 
-class $DialogInfoTableTable extends DialogInfoTable
-    with TableInfo<$DialogInfoTableTable, DialogInfoData> {
+class $DialogInfoTableTable extends DialogInfoTable with TableInfo<$DialogInfoTableTable, DialogInfoData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -13188,9 +10861,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _entityNumberMeta = const VerificationMeta(
-    'entityNumber',
-  );
+  static const VerificationMeta _entityNumberMeta = const VerificationMeta('entityNumber');
   @override
   late final GeneratedColumn<String> entityNumber = GeneratedColumn<String>(
     'entity_number',
@@ -13217,9 +10888,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _directionMeta = const VerificationMeta(
-    'direction',
-  );
+  static const VerificationMeta _directionMeta = const VerificationMeta('direction');
   @override
   late final GeneratedColumn<String> direction = GeneratedColumn<String>(
     'direction',
@@ -13228,9 +10897,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _localTagMeta = const VerificationMeta(
-    'localTag',
-  );
+  static const VerificationMeta _localTagMeta = const VerificationMeta('localTag');
   @override
   late final GeneratedColumn<String> localTag = GeneratedColumn<String>(
     'local_tag',
@@ -13239,9 +10906,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _localNumberMeta = const VerificationMeta(
-    'localNumber',
-  );
+  static const VerificationMeta _localNumberMeta = const VerificationMeta('localNumber');
   @override
   late final GeneratedColumn<String> localNumber = GeneratedColumn<String>(
     'local_number',
@@ -13250,9 +10915,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _localDisplayNameMeta = const VerificationMeta(
-    'localDisplayName',
-  );
+  static const VerificationMeta _localDisplayNameMeta = const VerificationMeta('localDisplayName');
   @override
   late final GeneratedColumn<String> localDisplayName = GeneratedColumn<String>(
     'local_display_name',
@@ -13261,9 +10924,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _remoteTagMeta = const VerificationMeta(
-    'remoteTag',
-  );
+  static const VerificationMeta _remoteTagMeta = const VerificationMeta('remoteTag');
   @override
   late final GeneratedColumn<String> remoteTag = GeneratedColumn<String>(
     'remote_tag',
@@ -13272,9 +10933,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _remoteNumberMeta = const VerificationMeta(
-    'remoteNumber',
-  );
+  static const VerificationMeta _remoteNumberMeta = const VerificationMeta('remoteNumber');
   @override
   late final GeneratedColumn<String> remoteNumber = GeneratedColumn<String>(
     'remote_number',
@@ -13283,21 +10942,16 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _remoteDisplayNameMeta = const VerificationMeta(
-    'remoteDisplayName',
-  );
+  static const VerificationMeta _remoteDisplayNameMeta = const VerificationMeta('remoteDisplayName');
   @override
-  late final GeneratedColumn<String> remoteDisplayName =
-      GeneratedColumn<String>(
-        'remote_display_name',
-        aliasedName,
-        true,
-        type: DriftSqlType.string,
-        requiredDuringInsert: false,
-      );
-  static const VerificationMeta _arrivalVersionMeta = const VerificationMeta(
-    'arrivalVersion',
+  late final GeneratedColumn<String> remoteDisplayName = GeneratedColumn<String>(
+    'remote_display_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
+  static const VerificationMeta _arrivalVersionMeta = const VerificationMeta('arrivalVersion');
   @override
   late final GeneratedColumn<String> arrivalVersion = GeneratedColumn<String>(
     'arrival_version',
@@ -13306,9 +10960,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _arrivalTimeUsecMeta = const VerificationMeta(
-    'arrivalTimeUsec',
-  );
+  static const VerificationMeta _arrivalTimeUsecMeta = const VerificationMeta('arrivalTimeUsec');
   @override
   late final GeneratedColumn<int> arrivalTimeUsec = GeneratedColumn<int>(
     'arrival_time_usec',
@@ -13317,9 +10969,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _hasVideoMeta = const VerificationMeta(
-    'hasVideo',
-  );
+  static const VerificationMeta _hasVideoMeta = const VerificationMeta('hasVideo');
   @override
   late final GeneratedColumn<bool> hasVideo = GeneratedColumn<bool>(
     'has_video',
@@ -13327,9 +10977,7 @@ class $DialogInfoTableTable extends DialogInfoTable
     true,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("has_video" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("has_video" IN (0, 1))'),
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -13354,106 +11002,58 @@ class $DialogInfoTableTable extends DialogInfoTable
   String get actualTableName => $name;
   static const String $name = 'dialog_info';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<DialogInfoData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<DialogInfoData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id_key')) {
-      context.handle(
-        _idKeyMeta,
-        idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta),
-      );
+      context.handle(_idKeyMeta, idKey.isAcceptableOrUnknown(data['id_key']!, _idKeyMeta));
     } else if (isInserting) {
       context.missing(_idKeyMeta);
     }
     if (data.containsKey('entity_number')) {
-      context.handle(
-        _entityNumberMeta,
-        entityNumber.isAcceptableOrUnknown(
-          data['entity_number']!,
-          _entityNumberMeta,
-        ),
-      );
+      context.handle(_entityNumberMeta, entityNumber.isAcceptableOrUnknown(data['entity_number']!, _entityNumberMeta));
     } else if (isInserting) {
       context.missing(_entityNumberMeta);
     }
     if (data.containsKey('state')) {
-      context.handle(
-        _stateMeta,
-        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
-      );
+      context.handle(_stateMeta, state.isAcceptableOrUnknown(data['state']!, _stateMeta));
     } else if (isInserting) {
       context.missing(_stateMeta);
     }
     if (data.containsKey('call_id')) {
-      context.handle(
-        _callIdMeta,
-        callId.isAcceptableOrUnknown(data['call_id']!, _callIdMeta),
-      );
+      context.handle(_callIdMeta, callId.isAcceptableOrUnknown(data['call_id']!, _callIdMeta));
     }
     if (data.containsKey('direction')) {
-      context.handle(
-        _directionMeta,
-        direction.isAcceptableOrUnknown(data['direction']!, _directionMeta),
-      );
+      context.handle(_directionMeta, direction.isAcceptableOrUnknown(data['direction']!, _directionMeta));
     }
     if (data.containsKey('local_tag')) {
-      context.handle(
-        _localTagMeta,
-        localTag.isAcceptableOrUnknown(data['local_tag']!, _localTagMeta),
-      );
+      context.handle(_localTagMeta, localTag.isAcceptableOrUnknown(data['local_tag']!, _localTagMeta));
     }
     if (data.containsKey('local_number')) {
-      context.handle(
-        _localNumberMeta,
-        localNumber.isAcceptableOrUnknown(
-          data['local_number']!,
-          _localNumberMeta,
-        ),
-      );
+      context.handle(_localNumberMeta, localNumber.isAcceptableOrUnknown(data['local_number']!, _localNumberMeta));
     }
     if (data.containsKey('local_display_name')) {
       context.handle(
         _localDisplayNameMeta,
-        localDisplayName.isAcceptableOrUnknown(
-          data['local_display_name']!,
-          _localDisplayNameMeta,
-        ),
+        localDisplayName.isAcceptableOrUnknown(data['local_display_name']!, _localDisplayNameMeta),
       );
     }
     if (data.containsKey('remote_tag')) {
-      context.handle(
-        _remoteTagMeta,
-        remoteTag.isAcceptableOrUnknown(data['remote_tag']!, _remoteTagMeta),
-      );
+      context.handle(_remoteTagMeta, remoteTag.isAcceptableOrUnknown(data['remote_tag']!, _remoteTagMeta));
     }
     if (data.containsKey('remote_number')) {
-      context.handle(
-        _remoteNumberMeta,
-        remoteNumber.isAcceptableOrUnknown(
-          data['remote_number']!,
-          _remoteNumberMeta,
-        ),
-      );
+      context.handle(_remoteNumberMeta, remoteNumber.isAcceptableOrUnknown(data['remote_number']!, _remoteNumberMeta));
     }
     if (data.containsKey('remote_display_name')) {
       context.handle(
         _remoteDisplayNameMeta,
-        remoteDisplayName.isAcceptableOrUnknown(
-          data['remote_display_name']!,
-          _remoteDisplayNameMeta,
-        ),
+        remoteDisplayName.isAcceptableOrUnknown(data['remote_display_name']!, _remoteDisplayNameMeta),
       );
     }
     if (data.containsKey('arrival_version')) {
       context.handle(
         _arrivalVersionMeta,
-        arrivalVersion.isAcceptableOrUnknown(
-          data['arrival_version']!,
-          _arrivalVersionMeta,
-        ),
+        arrivalVersion.isAcceptableOrUnknown(data['arrival_version']!, _arrivalVersionMeta),
       );
     } else if (isInserting) {
       context.missing(_arrivalVersionMeta);
@@ -13461,19 +11061,13 @@ class $DialogInfoTableTable extends DialogInfoTable
     if (data.containsKey('arrival_time_usec')) {
       context.handle(
         _arrivalTimeUsecMeta,
-        arrivalTimeUsec.isAcceptableOrUnknown(
-          data['arrival_time_usec']!,
-          _arrivalTimeUsecMeta,
-        ),
+        arrivalTimeUsec.isAcceptableOrUnknown(data['arrival_time_usec']!, _arrivalTimeUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_arrivalTimeUsecMeta);
     }
     if (data.containsKey('has_video')) {
-      context.handle(
-        _hasVideoMeta,
-        hasVideo.isAcceptableOrUnknown(data['has_video']!, _hasVideoMeta),
-      );
+      context.handle(_hasVideoMeta, hasVideo.isAcceptableOrUnknown(data['has_video']!, _hasVideoMeta));
     }
     return context;
   }
@@ -13484,46 +11078,19 @@ class $DialogInfoTableTable extends DialogInfoTable
   DialogInfoData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return DialogInfoData(
-      idKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id_key'],
-      )!,
-      entityNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}entity_number'],
-      )!,
-      state: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}state'],
-      )!,
-      callId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}call_id'],
-      ),
-      direction: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}direction'],
-      ),
-      localTag: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}local_tag'],
-      ),
-      localNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}local_number'],
-      ),
+      idKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id_key'])!,
+      entityNumber: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}entity_number'])!,
+      state: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}state'])!,
+      callId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}call_id']),
+      direction: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}direction']),
+      localTag: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}local_tag']),
+      localNumber: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}local_number']),
       localDisplayName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}local_display_name'],
       ),
-      remoteTag: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_tag'],
-      ),
-      remoteNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_number'],
-      ),
+      remoteTag: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}remote_tag']),
+      remoteNumber: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}remote_number']),
       remoteDisplayName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}remote_display_name'],
@@ -13536,10 +11103,7 @@ class $DialogInfoTableTable extends DialogInfoTable
         DriftSqlType.int,
         data['${effectivePrefix}arrival_time_usec'],
       )!,
-      hasVideo: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}has_video'],
-      ),
+      hasVideo: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}has_video']),
     );
   }
 
@@ -13623,42 +11187,21 @@ class DialogInfoData extends DataClass implements Insertable<DialogInfoData> {
       idKey: Value(idKey),
       entityNumber: Value(entityNumber),
       state: Value(state),
-      callId: callId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(callId),
-      direction: direction == null && nullToAbsent
-          ? const Value.absent()
-          : Value(direction),
-      localTag: localTag == null && nullToAbsent
-          ? const Value.absent()
-          : Value(localTag),
-      localNumber: localNumber == null && nullToAbsent
-          ? const Value.absent()
-          : Value(localNumber),
-      localDisplayName: localDisplayName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(localDisplayName),
-      remoteTag: remoteTag == null && nullToAbsent
-          ? const Value.absent()
-          : Value(remoteTag),
-      remoteNumber: remoteNumber == null && nullToAbsent
-          ? const Value.absent()
-          : Value(remoteNumber),
-      remoteDisplayName: remoteDisplayName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(remoteDisplayName),
+      callId: callId == null && nullToAbsent ? const Value.absent() : Value(callId),
+      direction: direction == null && nullToAbsent ? const Value.absent() : Value(direction),
+      localTag: localTag == null && nullToAbsent ? const Value.absent() : Value(localTag),
+      localNumber: localNumber == null && nullToAbsent ? const Value.absent() : Value(localNumber),
+      localDisplayName: localDisplayName == null && nullToAbsent ? const Value.absent() : Value(localDisplayName),
+      remoteTag: remoteTag == null && nullToAbsent ? const Value.absent() : Value(remoteTag),
+      remoteNumber: remoteNumber == null && nullToAbsent ? const Value.absent() : Value(remoteNumber),
+      remoteDisplayName: remoteDisplayName == null && nullToAbsent ? const Value.absent() : Value(remoteDisplayName),
       arrivalVersion: Value(arrivalVersion),
       arrivalTimeUsec: Value(arrivalTimeUsec),
-      hasVideo: hasVideo == null && nullToAbsent
-          ? const Value.absent()
-          : Value(hasVideo),
+      hasVideo: hasVideo == null && nullToAbsent ? const Value.absent() : Value(hasVideo),
     );
   }
 
-  factory DialogInfoData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory DialogInfoData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return DialogInfoData(
       idKey: serializer.fromJson<String>(json['idKey']),
@@ -13671,9 +11214,7 @@ class DialogInfoData extends DataClass implements Insertable<DialogInfoData> {
       localDisplayName: serializer.fromJson<String?>(json['localDisplayName']),
       remoteTag: serializer.fromJson<String?>(json['remoteTag']),
       remoteNumber: serializer.fromJson<String?>(json['remoteNumber']),
-      remoteDisplayName: serializer.fromJson<String?>(
-        json['remoteDisplayName'],
-      ),
+      remoteDisplayName: serializer.fromJson<String?>(json['remoteDisplayName']),
       arrivalVersion: serializer.fromJson<String>(json['arrivalVersion']),
       arrivalTimeUsec: serializer.fromJson<int>(json['arrivalTimeUsec']),
       hasVideo: serializer.fromJson<bool?>(json['hasVideo']),
@@ -13723,14 +11264,10 @@ class DialogInfoData extends DataClass implements Insertable<DialogInfoData> {
     direction: direction.present ? direction.value : this.direction,
     localTag: localTag.present ? localTag.value : this.localTag,
     localNumber: localNumber.present ? localNumber.value : this.localNumber,
-    localDisplayName: localDisplayName.present
-        ? localDisplayName.value
-        : this.localDisplayName,
+    localDisplayName: localDisplayName.present ? localDisplayName.value : this.localDisplayName,
     remoteTag: remoteTag.present ? remoteTag.value : this.remoteTag,
     remoteNumber: remoteNumber.present ? remoteNumber.value : this.remoteNumber,
-    remoteDisplayName: remoteDisplayName.present
-        ? remoteDisplayName.value
-        : this.remoteDisplayName,
+    remoteDisplayName: remoteDisplayName.present ? remoteDisplayName.value : this.remoteDisplayName,
     arrivalVersion: arrivalVersion ?? this.arrivalVersion,
     arrivalTimeUsec: arrivalTimeUsec ?? this.arrivalTimeUsec,
     hasVideo: hasVideo.present ? hasVideo.value : this.hasVideo,
@@ -13738,32 +11275,18 @@ class DialogInfoData extends DataClass implements Insertable<DialogInfoData> {
   DialogInfoData copyWithCompanion(DialogInfoDataCompanion data) {
     return DialogInfoData(
       idKey: data.idKey.present ? data.idKey.value : this.idKey,
-      entityNumber: data.entityNumber.present
-          ? data.entityNumber.value
-          : this.entityNumber,
+      entityNumber: data.entityNumber.present ? data.entityNumber.value : this.entityNumber,
       state: data.state.present ? data.state.value : this.state,
       callId: data.callId.present ? data.callId.value : this.callId,
       direction: data.direction.present ? data.direction.value : this.direction,
       localTag: data.localTag.present ? data.localTag.value : this.localTag,
-      localNumber: data.localNumber.present
-          ? data.localNumber.value
-          : this.localNumber,
-      localDisplayName: data.localDisplayName.present
-          ? data.localDisplayName.value
-          : this.localDisplayName,
+      localNumber: data.localNumber.present ? data.localNumber.value : this.localNumber,
+      localDisplayName: data.localDisplayName.present ? data.localDisplayName.value : this.localDisplayName,
       remoteTag: data.remoteTag.present ? data.remoteTag.value : this.remoteTag,
-      remoteNumber: data.remoteNumber.present
-          ? data.remoteNumber.value
-          : this.remoteNumber,
-      remoteDisplayName: data.remoteDisplayName.present
-          ? data.remoteDisplayName.value
-          : this.remoteDisplayName,
-      arrivalVersion: data.arrivalVersion.present
-          ? data.arrivalVersion.value
-          : this.arrivalVersion,
-      arrivalTimeUsec: data.arrivalTimeUsec.present
-          ? data.arrivalTimeUsec.value
-          : this.arrivalTimeUsec,
+      remoteNumber: data.remoteNumber.present ? data.remoteNumber.value : this.remoteNumber,
+      remoteDisplayName: data.remoteDisplayName.present ? data.remoteDisplayName.value : this.remoteDisplayName,
+      arrivalVersion: data.arrivalVersion.present ? data.arrivalVersion.value : this.arrivalVersion,
+      arrivalTimeUsec: data.arrivalTimeUsec.present ? data.arrivalTimeUsec.value : this.arrivalTimeUsec,
       hasVideo: data.hasVideo.present ? data.hasVideo.value : this.hasVideo,
     );
   }
@@ -14026,8 +11549,7 @@ class DialogInfoDataCompanion extends UpdateCompanion<DialogInfoData> {
   }
 }
 
-class $CdrTableTable extends CdrTable
-    with TableInfo<$CdrTableTable, CdrRecordData> {
+class $CdrTableTable extends CdrTable with TableInfo<$CdrTableTable, CdrRecordData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -14042,8 +11564,7 @@ class $CdrTableTable extends CdrTable
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<CallDirectionData, String>
-  direction = GeneratedColumn<String>(
+  late final GeneratedColumnWithTypeConverter<CallDirectionData, String> direction = GeneratedColumn<String>(
     'direction',
     aliasedName,
     false,
@@ -14051,14 +11572,13 @@ class $CdrTableTable extends CdrTable
     requiredDuringInsert: true,
   ).withConverter<CallDirectionData>($CdrTableTable.$converterdirection);
   @override
-  late final GeneratedColumnWithTypeConverter<CdrStatusData, String> status =
-      GeneratedColumn<String>(
-        'status',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<CdrStatusData>($CdrTableTable.$converterstatus);
+  late final GeneratedColumnWithTypeConverter<CdrStatusData, String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  ).withConverter<CdrStatusData>($CdrTableTable.$converterstatus);
   static const VerificationMeta _calleeMeta = const VerificationMeta('callee');
   @override
   late final GeneratedColumn<String> callee = GeneratedColumn<String>(
@@ -14068,9 +11588,7 @@ class $CdrTableTable extends CdrTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _calleeNumberMeta = const VerificationMeta(
-    'calleeNumber',
-  );
+  static const VerificationMeta _calleeNumberMeta = const VerificationMeta('calleeNumber');
   @override
   late final GeneratedColumn<String> calleeNumber = GeneratedColumn<String>(
     'callee_number',
@@ -14088,9 +11606,7 @@ class $CdrTableTable extends CdrTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _callerNumberMeta = const VerificationMeta(
-    'callerNumber',
-  );
+  static const VerificationMeta _callerNumberMeta = const VerificationMeta('callerNumber');
   @override
   late final GeneratedColumn<String> callerNumber = GeneratedColumn<String>(
     'caller_number',
@@ -14099,9 +11615,7 @@ class $CdrTableTable extends CdrTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _connectTimeUsecMeta = const VerificationMeta(
-    'connectTimeUsec',
-  );
+  static const VerificationMeta _connectTimeUsecMeta = const VerificationMeta('connectTimeUsec');
   @override
   late final GeneratedColumn<int> connectTimeUsec = GeneratedColumn<int>(
     'connect_time_usec',
@@ -14110,8 +11624,7 @@ class $CdrTableTable extends CdrTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _disconnectTimeUsecMeta =
-      const VerificationMeta('disconnectTimeUsec');
+  static const VerificationMeta _disconnectTimeUsecMeta = const VerificationMeta('disconnectTimeUsec');
   @override
   late final GeneratedColumn<int> disconnectTimeUsec = GeneratedColumn<int>(
     'disconnect_time_usec',
@@ -14120,9 +11633,7 @@ class $CdrTableTable extends CdrTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _disconnectReasonMeta = const VerificationMeta(
-    'disconnectReason',
-  );
+  static const VerificationMeta _disconnectReasonMeta = const VerificationMeta('disconnectReason');
   @override
   late final GeneratedColumn<String> disconnectReason = GeneratedColumn<String>(
     'disconnect_reason',
@@ -14131,9 +11642,7 @@ class $CdrTableTable extends CdrTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _durationSecondsMeta = const VerificationMeta(
-    'durationSeconds',
-  );
+  static const VerificationMeta _durationSecondsMeta = const VerificationMeta('durationSeconds');
   @override
   late final GeneratedColumn<int> durationSeconds = GeneratedColumn<int>(
     'duration_seconds',
@@ -14142,9 +11651,7 @@ class $CdrTableTable extends CdrTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _recordingIdMeta = const VerificationMeta(
-    'recordingId',
-  );
+  static const VerificationMeta _recordingIdMeta = const VerificationMeta('recordingId');
   @override
   late final GeneratedColumn<String> recordingId = GeneratedColumn<String>(
     'recording_id',
@@ -14174,61 +11681,34 @@ class $CdrTableTable extends CdrTable
   String get actualTableName => $name;
   static const String $name = 'cdrs';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<CdrRecordData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<CdrRecordData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('call_id')) {
-      context.handle(
-        _callIdMeta,
-        callId.isAcceptableOrUnknown(data['call_id']!, _callIdMeta),
-      );
+      context.handle(_callIdMeta, callId.isAcceptableOrUnknown(data['call_id']!, _callIdMeta));
     } else if (isInserting) {
       context.missing(_callIdMeta);
     }
     if (data.containsKey('callee')) {
-      context.handle(
-        _calleeMeta,
-        callee.isAcceptableOrUnknown(data['callee']!, _calleeMeta),
-      );
+      context.handle(_calleeMeta, callee.isAcceptableOrUnknown(data['callee']!, _calleeMeta));
     } else if (isInserting) {
       context.missing(_calleeMeta);
     }
     if (data.containsKey('callee_number')) {
-      context.handle(
-        _calleeNumberMeta,
-        calleeNumber.isAcceptableOrUnknown(
-          data['callee_number']!,
-          _calleeNumberMeta,
-        ),
-      );
+      context.handle(_calleeNumberMeta, calleeNumber.isAcceptableOrUnknown(data['callee_number']!, _calleeNumberMeta));
     }
     if (data.containsKey('caller')) {
-      context.handle(
-        _callerMeta,
-        caller.isAcceptableOrUnknown(data['caller']!, _callerMeta),
-      );
+      context.handle(_callerMeta, caller.isAcceptableOrUnknown(data['caller']!, _callerMeta));
     } else if (isInserting) {
       context.missing(_callerMeta);
     }
     if (data.containsKey('caller_number')) {
-      context.handle(
-        _callerNumberMeta,
-        callerNumber.isAcceptableOrUnknown(
-          data['caller_number']!,
-          _callerNumberMeta,
-        ),
-      );
+      context.handle(_callerNumberMeta, callerNumber.isAcceptableOrUnknown(data['caller_number']!, _callerNumberMeta));
     }
     if (data.containsKey('connect_time_usec')) {
       context.handle(
         _connectTimeUsecMeta,
-        connectTimeUsec.isAcceptableOrUnknown(
-          data['connect_time_usec']!,
-          _connectTimeUsecMeta,
-        ),
+        connectTimeUsec.isAcceptableOrUnknown(data['connect_time_usec']!, _connectTimeUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_connectTimeUsecMeta);
@@ -14236,10 +11716,7 @@ class $CdrTableTable extends CdrTable
     if (data.containsKey('disconnect_time_usec')) {
       context.handle(
         _disconnectTimeUsecMeta,
-        disconnectTimeUsec.isAcceptableOrUnknown(
-          data['disconnect_time_usec']!,
-          _disconnectTimeUsecMeta,
-        ),
+        disconnectTimeUsec.isAcceptableOrUnknown(data['disconnect_time_usec']!, _disconnectTimeUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_disconnectTimeUsecMeta);
@@ -14247,10 +11724,7 @@ class $CdrTableTable extends CdrTable
     if (data.containsKey('disconnect_reason')) {
       context.handle(
         _disconnectReasonMeta,
-        disconnectReason.isAcceptableOrUnknown(
-          data['disconnect_reason']!,
-          _disconnectReasonMeta,
-        ),
+        disconnectReason.isAcceptableOrUnknown(data['disconnect_reason']!, _disconnectReasonMeta),
       );
     } else if (isInserting) {
       context.missing(_disconnectReasonMeta);
@@ -14258,22 +11732,13 @@ class $CdrTableTable extends CdrTable
     if (data.containsKey('duration_seconds')) {
       context.handle(
         _durationSecondsMeta,
-        durationSeconds.isAcceptableOrUnknown(
-          data['duration_seconds']!,
-          _durationSecondsMeta,
-        ),
+        durationSeconds.isAcceptableOrUnknown(data['duration_seconds']!, _durationSecondsMeta),
       );
     } else if (isInserting) {
       context.missing(_durationSecondsMeta);
     }
     if (data.containsKey('recording_id')) {
-      context.handle(
-        _recordingIdMeta,
-        recordingId.isAcceptableOrUnknown(
-          data['recording_id']!,
-          _recordingIdMeta,
-        ),
-      );
+      context.handle(_recordingIdMeta, recordingId.isAcceptableOrUnknown(data['recording_id']!, _recordingIdMeta));
     }
     return context;
   }
@@ -14284,38 +11749,17 @@ class $CdrTableTable extends CdrTable
   CdrRecordData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CdrRecordData(
-      callId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}call_id'],
-      )!,
+      callId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}call_id'])!,
       direction: $CdrTableTable.$converterdirection.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}direction'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}direction'])!,
       ),
       status: $CdrTableTable.$converterstatus.fromSql(
-        attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}status'],
-        )!,
+        attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}status'])!,
       ),
-      callee: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}callee'],
-      )!,
-      calleeNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}callee_number'],
-      ),
-      caller: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}caller'],
-      )!,
-      callerNumber: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}caller_number'],
-      ),
+      callee: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}callee'])!,
+      calleeNumber: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}callee_number']),
+      caller: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}caller'])!,
+      callerNumber: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}caller_number']),
       connectTimeUsec: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}connect_time_usec'],
@@ -14328,14 +11772,8 @@ class $CdrTableTable extends CdrTable
         DriftSqlType.string,
         data['${effectivePrefix}disconnect_reason'],
       )!,
-      durationSeconds: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration_seconds'],
-      )!,
-      recordingId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}recording_id'],
-      ),
+      durationSeconds: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}duration_seconds'])!,
+      recordingId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}recording_id']),
     );
   }
 
@@ -14344,12 +11782,11 @@ class $CdrTableTable extends CdrTable
     return $CdrTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<CallDirectionData, String, String>
-  $converterdirection = const EnumNameConverter<CallDirectionData>(
-    CallDirectionData.values,
+  static JsonTypeConverter2<CallDirectionData, String, String> $converterdirection =
+      const EnumNameConverter<CallDirectionData>(CallDirectionData.values);
+  static JsonTypeConverter2<CdrStatusData, String, String> $converterstatus = const EnumNameConverter<CdrStatusData>(
+    CdrStatusData.values,
   );
-  static JsonTypeConverter2<CdrStatusData, String, String> $converterstatus =
-      const EnumNameConverter<CdrStatusData>(CdrStatusData.values);
 }
 
 class CdrRecordData extends DataClass implements Insertable<CdrRecordData> {
@@ -14384,14 +11821,10 @@ class CdrRecordData extends DataClass implements Insertable<CdrRecordData> {
     final map = <String, Expression>{};
     map['call_id'] = Variable<String>(callId);
     {
-      map['direction'] = Variable<String>(
-        $CdrTableTable.$converterdirection.toSql(direction),
-      );
+      map['direction'] = Variable<String>($CdrTableTable.$converterdirection.toSql(direction));
     }
     {
-      map['status'] = Variable<String>(
-        $CdrTableTable.$converterstatus.toSql(status),
-      );
+      map['status'] = Variable<String>($CdrTableTable.$converterstatus.toSql(status));
     }
     map['callee'] = Variable<String>(callee);
     if (!nullToAbsent || calleeNumber != null) {
@@ -14417,36 +11850,23 @@ class CdrRecordData extends DataClass implements Insertable<CdrRecordData> {
       direction: Value(direction),
       status: Value(status),
       callee: Value(callee),
-      calleeNumber: calleeNumber == null && nullToAbsent
-          ? const Value.absent()
-          : Value(calleeNumber),
+      calleeNumber: calleeNumber == null && nullToAbsent ? const Value.absent() : Value(calleeNumber),
       caller: Value(caller),
-      callerNumber: callerNumber == null && nullToAbsent
-          ? const Value.absent()
-          : Value(callerNumber),
+      callerNumber: callerNumber == null && nullToAbsent ? const Value.absent() : Value(callerNumber),
       connectTimeUsec: Value(connectTimeUsec),
       disconnectTimeUsec: Value(disconnectTimeUsec),
       disconnectReason: Value(disconnectReason),
       durationSeconds: Value(durationSeconds),
-      recordingId: recordingId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(recordingId),
+      recordingId: recordingId == null && nullToAbsent ? const Value.absent() : Value(recordingId),
     );
   }
 
-  factory CdrRecordData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory CdrRecordData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CdrRecordData(
       callId: serializer.fromJson<String>(json['callId']),
-      direction: $CdrTableTable.$converterdirection.fromJson(
-        serializer.fromJson<String>(json['direction']),
-      ),
-      status: $CdrTableTable.$converterstatus.fromJson(
-        serializer.fromJson<String>(json['status']),
-      ),
+      direction: $CdrTableTable.$converterdirection.fromJson(serializer.fromJson<String>(json['direction'])),
+      status: $CdrTableTable.$converterstatus.fromJson(serializer.fromJson<String>(json['status'])),
       callee: serializer.fromJson<String>(json['callee']),
       calleeNumber: serializer.fromJson<String?>(json['calleeNumber']),
       caller: serializer.fromJson<String>(json['caller']),
@@ -14463,12 +11883,8 @@ class CdrRecordData extends DataClass implements Insertable<CdrRecordData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'callId': serializer.toJson<String>(callId),
-      'direction': serializer.toJson<String>(
-        $CdrTableTable.$converterdirection.toJson(direction),
-      ),
-      'status': serializer.toJson<String>(
-        $CdrTableTable.$converterstatus.toJson(status),
-      ),
+      'direction': serializer.toJson<String>($CdrTableTable.$converterdirection.toJson(direction)),
+      'status': serializer.toJson<String>($CdrTableTable.$converterstatus.toJson(status)),
       'callee': serializer.toJson<String>(callee),
       'calleeNumber': serializer.toJson<String?>(calleeNumber),
       'caller': serializer.toJson<String>(caller),
@@ -14514,28 +11930,14 @@ class CdrRecordData extends DataClass implements Insertable<CdrRecordData> {
       direction: data.direction.present ? data.direction.value : this.direction,
       status: data.status.present ? data.status.value : this.status,
       callee: data.callee.present ? data.callee.value : this.callee,
-      calleeNumber: data.calleeNumber.present
-          ? data.calleeNumber.value
-          : this.calleeNumber,
+      calleeNumber: data.calleeNumber.present ? data.calleeNumber.value : this.calleeNumber,
       caller: data.caller.present ? data.caller.value : this.caller,
-      callerNumber: data.callerNumber.present
-          ? data.callerNumber.value
-          : this.callerNumber,
-      connectTimeUsec: data.connectTimeUsec.present
-          ? data.connectTimeUsec.value
-          : this.connectTimeUsec,
-      disconnectTimeUsec: data.disconnectTimeUsec.present
-          ? data.disconnectTimeUsec.value
-          : this.disconnectTimeUsec,
-      disconnectReason: data.disconnectReason.present
-          ? data.disconnectReason.value
-          : this.disconnectReason,
-      durationSeconds: data.durationSeconds.present
-          ? data.durationSeconds.value
-          : this.durationSeconds,
-      recordingId: data.recordingId.present
-          ? data.recordingId.value
-          : this.recordingId,
+      callerNumber: data.callerNumber.present ? data.callerNumber.value : this.callerNumber,
+      connectTimeUsec: data.connectTimeUsec.present ? data.connectTimeUsec.value : this.connectTimeUsec,
+      disconnectTimeUsec: data.disconnectTimeUsec.present ? data.disconnectTimeUsec.value : this.disconnectTimeUsec,
+      disconnectReason: data.disconnectReason.present ? data.disconnectReason.value : this.disconnectReason,
+      durationSeconds: data.durationSeconds.present ? data.durationSeconds.value : this.durationSeconds,
+      recordingId: data.recordingId.present ? data.recordingId.value : this.recordingId,
     );
   }
 
@@ -14667,8 +12069,7 @@ class CdrRecordDataCompanion extends UpdateCompanion<CdrRecordData> {
       if (caller != null) 'caller': caller,
       if (callerNumber != null) 'caller_number': callerNumber,
       if (connectTimeUsec != null) 'connect_time_usec': connectTimeUsec,
-      if (disconnectTimeUsec != null)
-        'disconnect_time_usec': disconnectTimeUsec,
+      if (disconnectTimeUsec != null) 'disconnect_time_usec': disconnectTimeUsec,
       if (disconnectReason != null) 'disconnect_reason': disconnectReason,
       if (durationSeconds != null) 'duration_seconds': durationSeconds,
       if (recordingId != null) 'recording_id': recordingId,
@@ -14715,14 +12116,10 @@ class CdrRecordDataCompanion extends UpdateCompanion<CdrRecordData> {
       map['call_id'] = Variable<String>(callId.value);
     }
     if (direction.present) {
-      map['direction'] = Variable<String>(
-        $CdrTableTable.$converterdirection.toSql(direction.value),
-      );
+      map['direction'] = Variable<String>($CdrTableTable.$converterdirection.toSql(direction.value));
     }
     if (status.present) {
-      map['status'] = Variable<String>(
-        $CdrTableTable.$converterstatus.toSql(status.value),
-      );
+      map['status'] = Variable<String>($CdrTableTable.$converterstatus.toSql(status.value));
     }
     if (callee.present) {
       map['callee'] = Variable<String>(callee.value);
@@ -14778,8 +12175,162 @@ class CdrRecordDataCompanion extends UpdateCompanion<CdrRecordData> {
   }
 }
 
-class $CdrSyncCursorTableTable extends CdrSyncCursorTable
-    with TableInfo<$CdrSyncCursorTableTable, CdrSyncCursorData> {
+class $CdrHistoryWalkTableTable extends CdrHistoryWalkTable
+    with TableInfo<$CdrHistoryWalkTableTable, CdrHistoryWalkData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CdrHistoryWalkTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _walkedToUsecMeta = const VerificationMeta('walkedToUsec');
+  @override
+  late final GeneratedColumn<int> walkedToUsec = GeneratedColumn<int>(
+    'walked_to_usec',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, walkedToUsec];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cdr_history_walk';
+  @override
+  VerificationContext validateIntegrity(Insertable<CdrHistoryWalkData> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('walked_to_usec')) {
+      context.handle(_walkedToUsecMeta, walkedToUsec.isAcceptableOrUnknown(data['walked_to_usec']!, _walkedToUsecMeta));
+    } else if (isInserting) {
+      context.missing(_walkedToUsecMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CdrHistoryWalkData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CdrHistoryWalkData(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      walkedToUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}walked_to_usec'])!,
+    );
+  }
+
+  @override
+  $CdrHistoryWalkTableTable createAlias(String alias) {
+    return $CdrHistoryWalkTableTable(attachedDatabase, alias);
+  }
+}
+
+class CdrHistoryWalkData extends DataClass implements Insertable<CdrHistoryWalkData> {
+  /// Always 0: the table stores a single global watermark.
+  final int id;
+  final int walkedToUsec;
+  const CdrHistoryWalkData({required this.id, required this.walkedToUsec});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['walked_to_usec'] = Variable<int>(walkedToUsec);
+    return map;
+  }
+
+  CdrHistoryWalkDataCompanion toCompanion(bool nullToAbsent) {
+    return CdrHistoryWalkDataCompanion(id: Value(id), walkedToUsec: Value(walkedToUsec));
+  }
+
+  factory CdrHistoryWalkData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CdrHistoryWalkData(
+      id: serializer.fromJson<int>(json['id']),
+      walkedToUsec: serializer.fromJson<int>(json['walkedToUsec']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{'id': serializer.toJson<int>(id), 'walkedToUsec': serializer.toJson<int>(walkedToUsec)};
+  }
+
+  CdrHistoryWalkData copyWith({int? id, int? walkedToUsec}) =>
+      CdrHistoryWalkData(id: id ?? this.id, walkedToUsec: walkedToUsec ?? this.walkedToUsec);
+  CdrHistoryWalkData copyWithCompanion(CdrHistoryWalkDataCompanion data) {
+    return CdrHistoryWalkData(
+      id: data.id.present ? data.id.value : this.id,
+      walkedToUsec: data.walkedToUsec.present ? data.walkedToUsec.value : this.walkedToUsec,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CdrHistoryWalkData(')
+          ..write('id: $id, ')
+          ..write('walkedToUsec: $walkedToUsec')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, walkedToUsec);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CdrHistoryWalkData && other.id == this.id && other.walkedToUsec == this.walkedToUsec);
+}
+
+class CdrHistoryWalkDataCompanion extends UpdateCompanion<CdrHistoryWalkData> {
+  final Value<int> id;
+  final Value<int> walkedToUsec;
+  const CdrHistoryWalkDataCompanion({this.id = const Value.absent(), this.walkedToUsec = const Value.absent()});
+  CdrHistoryWalkDataCompanion.insert({this.id = const Value.absent(), required int walkedToUsec})
+    : walkedToUsec = Value(walkedToUsec);
+  static Insertable<CdrHistoryWalkData> custom({Expression<int>? id, Expression<int>? walkedToUsec}) {
+    return RawValuesInsertable({if (id != null) 'id': id, if (walkedToUsec != null) 'walked_to_usec': walkedToUsec});
+  }
+
+  CdrHistoryWalkDataCompanion copyWith({Value<int>? id, Value<int>? walkedToUsec}) {
+    return CdrHistoryWalkDataCompanion(id: id ?? this.id, walkedToUsec: walkedToUsec ?? this.walkedToUsec);
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (walkedToUsec.present) {
+      map['walked_to_usec'] = Variable<int>(walkedToUsec.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CdrHistoryWalkDataCompanion(')
+          ..write('id: $id, ')
+          ..write('walkedToUsec: $walkedToUsec')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CdrSyncCursorTableTable extends CdrSyncCursorTable with TableInfo<$CdrSyncCursorTableTable, CdrSyncCursorData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -14793,9 +12344,7 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
-    'timestampUsec',
-  );
+  static const VerificationMeta _timestampUsecMeta = const VerificationMeta('timestampUsec');
   @override
   late final GeneratedColumn<int> timestampUsec = GeneratedColumn<int>(
     'timestamp_usec',
@@ -14812,10 +12361,7 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
   String get actualTableName => $name;
   static const String $name = 'cdr_sync_cursors';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<CdrSyncCursorData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<CdrSyncCursorData> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -14824,10 +12370,7 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
-        timestampUsec.isAcceptableOrUnknown(
-          data['timestamp_usec']!,
-          _timestampUsecMeta,
-        ),
+        timestampUsec.isAcceptableOrUnknown(data['timestamp_usec']!, _timestampUsecMeta),
       );
     } else if (isInserting) {
       context.missing(_timestampUsecMeta);
@@ -14841,14 +12384,8 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
   CdrSyncCursorData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CdrSyncCursorData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      timestampUsec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}timestamp_usec'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      timestampUsec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}timestamp_usec'])!,
     );
   }
 
@@ -14858,8 +12395,7 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
   }
 }
 
-class CdrSyncCursorData extends DataClass
-    implements Insertable<CdrSyncCursorData> {
+class CdrSyncCursorData extends DataClass implements Insertable<CdrSyncCursorData> {
   /// Always 0: the table stores a single global cursor row.
   final int id;
   final int timestampUsec;
@@ -14873,16 +12409,10 @@ class CdrSyncCursorData extends DataClass
   }
 
   CdrSyncCursorDataCompanion toCompanion(bool nullToAbsent) {
-    return CdrSyncCursorDataCompanion(
-      id: Value(id),
-      timestampUsec: Value(timestampUsec),
-    );
+    return CdrSyncCursorDataCompanion(id: Value(id), timestampUsec: Value(timestampUsec));
   }
 
-  factory CdrSyncCursorData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory CdrSyncCursorData.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CdrSyncCursorData(
       id: serializer.fromJson<int>(json['id']),
@@ -14892,23 +12422,15 @@ class CdrSyncCursorData extends DataClass
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'timestampUsec': serializer.toJson<int>(timestampUsec),
-    };
+    return <String, dynamic>{'id': serializer.toJson<int>(id), 'timestampUsec': serializer.toJson<int>(timestampUsec)};
   }
 
   CdrSyncCursorData copyWith({int? id, int? timestampUsec}) =>
-      CdrSyncCursorData(
-        id: id ?? this.id,
-        timestampUsec: timestampUsec ?? this.timestampUsec,
-      );
+      CdrSyncCursorData(id: id ?? this.id, timestampUsec: timestampUsec ?? this.timestampUsec);
   CdrSyncCursorData copyWithCompanion(CdrSyncCursorDataCompanion data) {
     return CdrSyncCursorData(
       id: data.id.present ? data.id.value : this.id,
-      timestampUsec: data.timestampUsec.present
-          ? data.timestampUsec.value
-          : this.timestampUsec,
+      timestampUsec: data.timestampUsec.present ? data.timestampUsec.value : this.timestampUsec,
     );
   }
 
@@ -14926,40 +12448,21 @@ class CdrSyncCursorData extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is CdrSyncCursorData &&
-          other.id == this.id &&
-          other.timestampUsec == this.timestampUsec);
+      (other is CdrSyncCursorData && other.id == this.id && other.timestampUsec == this.timestampUsec);
 }
 
 class CdrSyncCursorDataCompanion extends UpdateCompanion<CdrSyncCursorData> {
   final Value<int> id;
   final Value<int> timestampUsec;
-  const CdrSyncCursorDataCompanion({
-    this.id = const Value.absent(),
-    this.timestampUsec = const Value.absent(),
-  });
-  CdrSyncCursorDataCompanion.insert({
-    this.id = const Value.absent(),
-    required int timestampUsec,
-  }) : timestampUsec = Value(timestampUsec);
-  static Insertable<CdrSyncCursorData> custom({
-    Expression<int>? id,
-    Expression<int>? timestampUsec,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (timestampUsec != null) 'timestamp_usec': timestampUsec,
-    });
+  const CdrSyncCursorDataCompanion({this.id = const Value.absent(), this.timestampUsec = const Value.absent()});
+  CdrSyncCursorDataCompanion.insert({this.id = const Value.absent(), required int timestampUsec})
+    : timestampUsec = Value(timestampUsec);
+  static Insertable<CdrSyncCursorData> custom({Expression<int>? id, Expression<int>? timestampUsec}) {
+    return RawValuesInsertable({if (id != null) 'id': id, if (timestampUsec != null) 'timestamp_usec': timestampUsec});
   }
 
-  CdrSyncCursorDataCompanion copyWith({
-    Value<int>? id,
-    Value<int>? timestampUsec,
-  }) {
-    return CdrSyncCursorDataCompanion(
-      id: id ?? this.id,
-      timestampUsec: timestampUsec ?? this.timestampUsec,
-    );
+  CdrSyncCursorDataCompanion copyWith({Value<int>? id, Value<int>? timestampUsec}) {
+    return CdrSyncCursorDataCompanion(id: id ?? this.id, timestampUsec: timestampUsec ?? this.timestampUsec);
   }
 
   @override
@@ -14988,102 +12491,63 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ContactsTableTable contactsTable = $ContactsTableTable(this);
-  late final $ContactPhonesTableTable contactPhonesTable =
-      $ContactPhonesTableTable(this);
-  late final $ContactEmailsTableTable contactEmailsTable =
-      $ContactEmailsTableTable(this);
+  late final $ContactPhonesTableTable contactPhonesTable = $ContactPhonesTableTable(this);
+  late final $ContactEmailsTableTable contactEmailsTable = $ContactEmailsTableTable(this);
   late final $CallLogsTableTable callLogsTable = $CallLogsTableTable(this);
   late final $FavoritesTableTable favoritesTable = $FavoritesTableTable(this);
-  late final $FavoritesOutboxTableTable favoritesOutboxTable =
-      $FavoritesOutboxTableTable(this);
-  late final $FavoritesV2TableTable favoritesV2Table = $FavoritesV2TableTable(
-    this,
-  );
+  late final $FavoritesOutboxTableTable favoritesOutboxTable = $FavoritesOutboxTableTable(this);
+  late final $FavoritesV2TableTable favoritesV2Table = $FavoritesV2TableTable(this);
   late final $ChatsTableTable chatsTable = $ChatsTableTable(this);
-  late final $ChatMembersTableTable chatMembersTable = $ChatMembersTableTable(
-    this,
-  );
-  late final $ChatMessagesTableTable chatMessagesTable =
-      $ChatMessagesTableTable(this);
-  late final $ChatMessageSyncCursorTableTable chatMessageSyncCursorTable =
-      $ChatMessageSyncCursorTableTable(this);
-  late final $ChatMessageReadCursorTableTable chatMessageReadCursorTable =
-      $ChatMessageReadCursorTableTable(this);
-  late final $ChatOutboxMessageTableTable chatOutboxMessageTable =
-      $ChatOutboxMessageTableTable(this);
-  late final $ChatOutboxMessageEditTableTable chatOutboxMessageEditTable =
-      $ChatOutboxMessageEditTableTable(this);
-  late final $ChatOutboxMessageDeleteTableTable chatOutboxMessageDeleteTable =
-      $ChatOutboxMessageDeleteTableTable(this);
-  late final $ChatOutboxReadCursorsTableTable chatOutboxReadCursorsTable =
-      $ChatOutboxReadCursorsTableTable(this);
-  late final $SmsConversationsTableTable smsConversationsTable =
-      $SmsConversationsTableTable(this);
-  late final $SmsMessagesTableTable smsMessagesTable = $SmsMessagesTableTable(
-    this,
-  );
-  late final $SmsMessageSyncCursorTableTable smsMessageSyncCursorTable =
-      $SmsMessageSyncCursorTableTable(this);
-  late final $SmsMessageReadCursorTableTable smsMessageReadCursorTable =
-      $SmsMessageReadCursorTableTable(this);
-  late final $SmsOutboxMessagesTableTable smsOutboxMessagesTable =
-      $SmsOutboxMessagesTableTable(this);
-  late final $SmsOutboxMessageDeleteTableTable smsOutboxMessageDeleteTable =
-      $SmsOutboxMessageDeleteTableTable(this);
-  late final $SmsOutboxReadCursorsTableTable smsOutboxReadCursorsTable =
-      $SmsOutboxReadCursorsTableTable(this);
-  late final $SipSubscriptionsTableTable sipSubscriptionsTable =
-      $SipSubscriptionsTableTable(this);
-  late final $SipSubscriptionsOutboxTableTable sipSubscriptionsOutboxTable =
-      $SipSubscriptionsOutboxTableTable(this);
-  late final $UserSmsNumbersTableTable userSmsNumbersTable =
-      $UserSmsNumbersTableTable(this);
-  late final $ActiveMessageNotificationsTableTable
-  activeMessageNotificationsTable = $ActiveMessageNotificationsTableTable(this);
+  late final $ChatMembersTableTable chatMembersTable = $ChatMembersTableTable(this);
+  late final $ChatMessagesTableTable chatMessagesTable = $ChatMessagesTableTable(this);
+  late final $ChatMessageSyncCursorTableTable chatMessageSyncCursorTable = $ChatMessageSyncCursorTableTable(this);
+  late final $ChatMessageReadCursorTableTable chatMessageReadCursorTable = $ChatMessageReadCursorTableTable(this);
+  late final $ChatOutboxMessageTableTable chatOutboxMessageTable = $ChatOutboxMessageTableTable(this);
+  late final $ChatOutboxMessageEditTableTable chatOutboxMessageEditTable = $ChatOutboxMessageEditTableTable(this);
+  late final $ChatOutboxMessageDeleteTableTable chatOutboxMessageDeleteTable = $ChatOutboxMessageDeleteTableTable(this);
+  late final $ChatOutboxReadCursorsTableTable chatOutboxReadCursorsTable = $ChatOutboxReadCursorsTableTable(this);
+  late final $SmsConversationsTableTable smsConversationsTable = $SmsConversationsTableTable(this);
+  late final $SmsMessagesTableTable smsMessagesTable = $SmsMessagesTableTable(this);
+  late final $SmsMessageSyncCursorTableTable smsMessageSyncCursorTable = $SmsMessageSyncCursorTableTable(this);
+  late final $SmsMessageReadCursorTableTable smsMessageReadCursorTable = $SmsMessageReadCursorTableTable(this);
+  late final $SmsOutboxMessagesTableTable smsOutboxMessagesTable = $SmsOutboxMessagesTableTable(this);
+  late final $SmsOutboxMessageDeleteTableTable smsOutboxMessageDeleteTable = $SmsOutboxMessageDeleteTableTable(this);
+  late final $SmsOutboxReadCursorsTableTable smsOutboxReadCursorsTable = $SmsOutboxReadCursorsTableTable(this);
+  late final $SipSubscriptionsTableTable sipSubscriptionsTable = $SipSubscriptionsTableTable(this);
+  late final $SipSubscriptionsOutboxTableTable sipSubscriptionsOutboxTable = $SipSubscriptionsOutboxTableTable(this);
+  late final $UserSmsNumbersTableTable userSmsNumbersTable = $UserSmsNumbersTableTable(this);
+  late final $ActiveMessageNotificationsTableTable activeMessageNotificationsTable =
+      $ActiveMessageNotificationsTableTable(this);
   late final $VoicemailTableTable voicemailTable = $VoicemailTableTable(this);
-  late final $SystemNotificationsTableTable systemNotificationsTable =
-      $SystemNotificationsTableTable(this);
-  late final $SystemNotificationsOutboxTableTable
-  systemNotificationsOutboxTable = $SystemNotificationsOutboxTableTable(this);
-  late final $PresenceInfoTableTable presenceInfoTable =
-      $PresenceInfoTableTable(this);
-  late final $DialogInfoTableTable dialogInfoTable = $DialogInfoTableTable(
+  late final $SystemNotificationsTableTable systemNotificationsTable = $SystemNotificationsTableTable(this);
+  late final $SystemNotificationsOutboxTableTable systemNotificationsOutboxTable = $SystemNotificationsOutboxTableTable(
     this,
   );
+  late final $PresenceInfoTableTable presenceInfoTable = $PresenceInfoTableTable(this);
+  late final $DialogInfoTableTable dialogInfoTable = $DialogInfoTableTable(this);
   late final $CdrTableTable cdrTable = $CdrTableTable(this);
-  late final $CdrSyncCursorTableTable cdrSyncCursorTable =
-      $CdrSyncCursorTableTable(this);
+  late final $CdrHistoryWalkTableTable cdrHistoryWalkTable = $CdrHistoryWalkTableTable(this);
+  late final $CdrSyncCursorTableTable cdrSyncCursorTable = $CdrSyncCursorTableTable(this);
   late final ContactsDao contactsDao = ContactsDao(this as AppDatabase);
-  late final ContactPhonesDao contactPhonesDao = ContactPhonesDao(
-    this as AppDatabase,
-  );
-  late final ContactEmailsDao contactEmailsDao = ContactEmailsDao(
-    this as AppDatabase,
-  );
+  late final ContactPhonesDao contactPhonesDao = ContactPhonesDao(this as AppDatabase);
+  late final ContactEmailsDao contactEmailsDao = ContactEmailsDao(this as AppDatabase);
   late final CallLogsDao callLogsDao = CallLogsDao(this as AppDatabase);
   late final RecentsDao recentsDao = RecentsDao(this as AppDatabase);
   late final FavoritesDao favoritesDao = FavoritesDao(this as AppDatabase);
-  late final FavoritesV2Dao favoritesV2Dao = FavoritesV2Dao(
-    this as AppDatabase,
-  );
+  late final FavoritesV2Dao favoritesV2Dao = FavoritesV2Dao(this as AppDatabase);
   late final ChatsDao chatsDao = ChatsDao(this as AppDatabase);
   late final SmsDao smsDao = SmsDao(this as AppDatabase);
-  late final SipSubscriptionsDao sipSubscriptionsDao = SipSubscriptionsDao(
+  late final SipSubscriptionsDao sipSubscriptionsDao = SipSubscriptionsDao(this as AppDatabase);
+  late final ActiveMessageNotificationsDao activeMessageNotificationsDao = ActiveMessageNotificationsDao(
     this as AppDatabase,
   );
-  late final ActiveMessageNotificationsDao activeMessageNotificationsDao =
-      ActiveMessageNotificationsDao(this as AppDatabase);
   late final VoicemailDao voicemailDao = VoicemailDao(this as AppDatabase);
-  late final SystemNotificationsDao systemNotificationsDao =
-      SystemNotificationsDao(this as AppDatabase);
-  late final PresenceInfoDao presenceInfoDao = PresenceInfoDao(
-    this as AppDatabase,
-  );
+  late final SystemNotificationsDao systemNotificationsDao = SystemNotificationsDao(this as AppDatabase);
+  late final PresenceInfoDao presenceInfoDao = PresenceInfoDao(this as AppDatabase);
   late final DialogInfoDao dialogInfoDao = DialogInfoDao(this as AppDatabase);
   late final CdrsDao cdrsDao = CdrsDao(this as AppDatabase);
   @override
-  Iterable<TableInfo<Table, Object?>> get allTables =>
-      allSchemaEntities.whereType<TableInfo<Table, Object?>>();
+  Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     contactsTable,
@@ -15119,153 +12583,82 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     presenceInfoTable,
     dialogInfoTable,
     cdrTable,
+    cdrHistoryWalkTable,
     cdrSyncCursorTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'contacts',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('contacts', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('contact_phones', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'contacts',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('contacts', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('contact_emails', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'contact_phones',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('contact_phones', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('favorites', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chats',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('chats', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('chat_members', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chats',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('chats', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('chat_messages', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chats',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('chat_message_sync_cursors', kind: UpdateKind.delete),
-      ],
+      on: TableUpdateQuery.onTableName('chats', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('chat_message_sync_cursors', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chats',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('chat_message_read_cursors', kind: UpdateKind.delete),
-      ],
+      on: TableUpdateQuery.onTableName('chats', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('chat_message_read_cursors', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chats',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('chats', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('chat_outbox_messages', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chats',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('chat_outbox_message_edits', kind: UpdateKind.delete),
-      ],
+      on: TableUpdateQuery.onTableName('chats', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('chat_outbox_message_edits', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chats',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('chat_outbox_message_deletes', kind: UpdateKind.delete),
-      ],
+      on: TableUpdateQuery.onTableName('chats', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('chat_outbox_message_deletes', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'chats',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('chat_outbox_read_cursors', kind: UpdateKind.delete),
-      ],
+      on: TableUpdateQuery.onTableName('chats', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('chat_outbox_read_cursors', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'sms_conversations',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('sms_conversations', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('sms_messages', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'sms_conversations',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('sms_message_sync_cursors', kind: UpdateKind.delete),
-      ],
+      on: TableUpdateQuery.onTableName('sms_conversations', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('sms_message_sync_cursors', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'sms_conversations',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('sms_message_read_cursors', kind: UpdateKind.delete),
-      ],
+      on: TableUpdateQuery.onTableName('sms_conversations', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('sms_message_read_cursors', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'sms_conversations',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('sms_conversations', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('sms_outbox_messages', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'sms_conversations',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('sms_outbox_message_deletes', kind: UpdateKind.delete),
-      ],
+      on: TableUpdateQuery.onTableName('sms_conversations', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('sms_outbox_message_deletes', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'sms_conversations',
-        limitUpdateKind: UpdateKind.delete,
-      ),
+      on: TableUpdateQuery.onTableName('sms_conversations', limitUpdateKind: UpdateKind.delete),
       result: [TableUpdate('sms_outbox_read_cursors', kind: UpdateKind.delete)],
     ),
     WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'system_notifications',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('system_notifications_outbox', kind: UpdateKind.delete),
-      ],
+      on: TableUpdateQuery.onTableName('system_notifications', limitUpdateKind: UpdateKind.delete),
+      result: [TableUpdate('system_notifications_outbox', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -15303,23 +12696,15 @@ typedef $$ContactsTableTableUpdateCompanionBuilder =
       Value<DateTime?> updatedAt,
     });
 
-final class $$ContactsTableTableReferences
-    extends BaseReferences<_$AppDatabase, $ContactsTableTable, ContactData> {
-  $$ContactsTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+final class $$ContactsTableTableReferences extends BaseReferences<_$AppDatabase, $ContactsTableTable, ContactData> {
+  $$ContactsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<$ContactPhonesTableTable, List<ContactPhoneData>>
-  _contactPhonesTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.contactPhonesTable,
-        aliasName: $_aliasNameGenerator(
-          db.contactsTable.id,
-          db.contactPhonesTable.contactId,
-        ),
-      );
+  static MultiTypedResultKey<$ContactPhonesTableTable, List<ContactPhoneData>> _contactPhonesTableRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.contactPhonesTable,
+    aliasName: $_aliasNameGenerator(db.contactsTable.id, db.contactPhonesTable.contactId),
+  );
 
   $$ContactPhonesTableTableProcessedTableManager get contactPhonesTableRefs {
     final manager = $$ContactPhonesTableTableTableManager(
@@ -15327,23 +12712,16 @@ final class $$ContactsTableTableReferences
       $_db.contactPhonesTable,
     ).filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _contactPhonesTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_contactPhonesTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<$ContactEmailsTableTable, List<ContactEmailData>>
-  _contactEmailsTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.contactEmailsTable,
-        aliasName: $_aliasNameGenerator(
-          db.contactsTable.id,
-          db.contactEmailsTable.contactId,
-        ),
-      );
+  static MultiTypedResultKey<$ContactEmailsTableTable, List<ContactEmailData>> _contactEmailsTableRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.contactEmailsTable,
+    aliasName: $_aliasNameGenerator(db.contactsTable.id, db.contactEmailsTable.contactId),
+  );
 
   $$ContactEmailsTableTableProcessedTableManager get contactEmailsTableRefs {
     final manager = $$ContactEmailsTableTableTableManager(
@@ -15351,17 +12729,12 @@ final class $$ContactsTableTableReferences
       $_db.contactEmailsTable,
     ).filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _contactEmailsTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_contactEmailsTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $$ContactsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ContactsTableTable> {
+class $$ContactsTableTableFilterComposer extends Composer<_$AppDatabase, $ContactsTableTable> {
   $$ContactsTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -15369,130 +12742,82 @@ class $$ContactsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<
-    ContactSourceTypeEnum,
-    ContactSourceTypeEnum,
-    int
-  >
-  get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<ContactSourceTypeEnum, ContactSourceTypeEnum, int> get sourceType =>
+      $composableBuilder(column: $table.sourceType, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnWithTypeConverterFilters<ContactKindTypeEnum, ContactKindTypeEnum, int>
-  get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<ContactKindTypeEnum, ContactKindTypeEnum, int> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get sourceId => $composableBuilder(
-    column: $table.sourceId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get firstName => $composableBuilder(
-    column: $table.firstName,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get firstName =>
+      $composableBuilder(column: $table.firstName, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get lastName => $composableBuilder(
-    column: $table.lastName,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get lastName =>
+      $composableBuilder(column: $table.lastName, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get aliasName => $composableBuilder(
-    column: $table.aliasName,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get aliasName =>
+      $composableBuilder(column: $table.aliasName, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<Uint8List> get thumbnail => $composableBuilder(
-    column: $table.thumbnail,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<Uint8List> get thumbnail =>
+      $composableBuilder(column: $table.thumbnail, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get registered => $composableBuilder(
-    column: $table.registered,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get registered =>
+      $composableBuilder(column: $table.registered, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get userRegistered => $composableBuilder(
-    column: $table.userRegistered,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get userRegistered =>
+      $composableBuilder(column: $table.userRegistered, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get isCurrentUser => $composableBuilder(
-    column: $table.isCurrentUser,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get isCurrentUser =>
+      $composableBuilder(column: $table.isCurrentUser, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get insertedAt => $composableBuilder(
-    column: $table.insertedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get insertedAt =>
+      $composableBuilder(column: $table.insertedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  Expression<bool> contactPhonesTableRefs(
-    Expression<bool> Function($$ContactPhonesTableTableFilterComposer f) f,
-  ) {
+  Expression<bool> contactPhonesTableRefs(Expression<bool> Function($$ContactPhonesTableTableFilterComposer f) f) {
     final $$ContactPhonesTableTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.contactPhonesTable,
       getReferencedColumn: (t) => t.contactId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactPhonesTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactPhonesTableTableFilterComposer(
             $db: $db,
             $table: $db.contactPhonesTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> contactEmailsTableRefs(
-    Expression<bool> Function($$ContactEmailsTableTableFilterComposer f) f,
-  ) {
+  Expression<bool> contactEmailsTableRefs(Expression<bool> Function($$ContactEmailsTableTableFilterComposer f) f) {
     final $$ContactEmailsTableTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.contactEmailsTable,
       getReferencedColumn: (t) => t.contactId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactEmailsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactEmailsTableTableFilterComposer(
             $db: $db,
             $table: $db.contactEmailsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 }
 
-class $$ContactsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ContactsTableTable> {
+class $$ContactsTableTableOrderingComposer extends Composer<_$AppDatabase, $ContactsTableTable> {
   $$ContactsTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -15500,74 +12825,46 @@ class $$ContactsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sourceType =>
+      $composableBuilder(column: $table.sourceType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get sourceId => $composableBuilder(
-    column: $table.sourceId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get firstName => $composableBuilder(
-    column: $table.firstName,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get firstName =>
+      $composableBuilder(column: $table.firstName, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get lastName => $composableBuilder(
-    column: $table.lastName,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get lastName =>
+      $composableBuilder(column: $table.lastName, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get aliasName => $composableBuilder(
-    column: $table.aliasName,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get aliasName =>
+      $composableBuilder(column: $table.aliasName, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<Uint8List> get thumbnail => $composableBuilder(
-    column: $table.thumbnail,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<Uint8List> get thumbnail =>
+      $composableBuilder(column: $table.thumbnail, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get registered => $composableBuilder(
-    column: $table.registered,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get registered =>
+      $composableBuilder(column: $table.registered, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get userRegistered => $composableBuilder(
-    column: $table.userRegistered,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get userRegistered =>
+      $composableBuilder(column: $table.userRegistered, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get isCurrentUser => $composableBuilder(
-    column: $table.isCurrentUser,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get isCurrentUser =>
+      $composableBuilder(column: $table.isCurrentUser, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get insertedAt => $composableBuilder(
-    column: $table.insertedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get insertedAt =>
+      $composableBuilder(column: $table.insertedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ContactsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ContactsTableTable> {
+class $$ContactsTableTableAnnotationComposer extends Composer<_$AppDatabase, $ContactsTableTable> {
   $$ContactsTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -15575,105 +12872,74 @@ class $$ContactsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<ContactSourceTypeEnum, int> get sourceType =>
-      $composableBuilder(
-        column: $table.sourceType,
-        builder: (column) => column,
-      );
+      $composableBuilder(column: $table.sourceType, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<ContactKindTypeEnum, int> get kind =>
       $composableBuilder(column: $table.kind, builder: (column) => column);
 
-  GeneratedColumn<String> get sourceId =>
-      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+  GeneratedColumn<String> get sourceId => $composableBuilder(column: $table.sourceId, builder: (column) => column);
 
-  GeneratedColumn<String> get firstName =>
-      $composableBuilder(column: $table.firstName, builder: (column) => column);
+  GeneratedColumn<String> get firstName => $composableBuilder(column: $table.firstName, builder: (column) => column);
 
-  GeneratedColumn<String> get lastName =>
-      $composableBuilder(column: $table.lastName, builder: (column) => column);
+  GeneratedColumn<String> get lastName => $composableBuilder(column: $table.lastName, builder: (column) => column);
 
-  GeneratedColumn<String> get aliasName =>
-      $composableBuilder(column: $table.aliasName, builder: (column) => column);
+  GeneratedColumn<String> get aliasName => $composableBuilder(column: $table.aliasName, builder: (column) => column);
 
-  GeneratedColumn<Uint8List> get thumbnail =>
-      $composableBuilder(column: $table.thumbnail, builder: (column) => column);
+  GeneratedColumn<Uint8List> get thumbnail => $composableBuilder(column: $table.thumbnail, builder: (column) => column);
 
-  GeneratedColumn<bool> get registered => $composableBuilder(
-    column: $table.registered,
-    builder: (column) => column,
-  );
+  GeneratedColumn<bool> get registered => $composableBuilder(column: $table.registered, builder: (column) => column);
 
-  GeneratedColumn<bool> get userRegistered => $composableBuilder(
-    column: $table.userRegistered,
-    builder: (column) => column,
-  );
+  GeneratedColumn<bool> get userRegistered =>
+      $composableBuilder(column: $table.userRegistered, builder: (column) => column);
 
-  GeneratedColumn<bool> get isCurrentUser => $composableBuilder(
-    column: $table.isCurrentUser,
-    builder: (column) => column,
-  );
+  GeneratedColumn<bool> get isCurrentUser =>
+      $composableBuilder(column: $table.isCurrentUser, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get insertedAt => $composableBuilder(
-    column: $table.insertedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get insertedAt =>
+      $composableBuilder(column: $table.insertedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   Expression<T> contactPhonesTableRefs<T extends Object>(
     Expression<T> Function($$ContactPhonesTableTableAnnotationComposer a) f,
   ) {
-    final $$ContactPhonesTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.contactPhonesTable,
-          getReferencedColumn: (t) => t.contactId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ContactPhonesTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.contactPhonesTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ContactPhonesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.contactPhonesTable,
+      getReferencedColumn: (t) => t.contactId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactPhonesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contactPhonesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> contactEmailsTableRefs<T extends Object>(
     Expression<T> Function($$ContactEmailsTableTableAnnotationComposer a) f,
   ) {
-    final $$ContactEmailsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.contactEmailsTable,
-          getReferencedColumn: (t) => t.contactId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ContactEmailsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.contactEmailsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ContactEmailsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.contactEmailsTable,
+      getReferencedColumn: (t) => t.contactId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactEmailsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contactEmailsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -15691,22 +12957,16 @@ class $$ContactsTableTableTableManager
           $$ContactsTableTableUpdateCompanionBuilder,
           (ContactData, $$ContactsTableTableReferences),
           ContactData,
-          PrefetchHooks Function({
-            bool contactPhonesTableRefs,
-            bool contactEmailsTableRefs,
-          })
+          PrefetchHooks Function({bool contactPhonesTableRefs, bool contactEmailsTableRefs})
         > {
   $$ContactsTableTableTableManager(_$AppDatabase db, $ContactsTableTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ContactsTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ContactsTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ContactsTableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ContactsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ContactsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ContactsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -15767,74 +13027,42 @@ class $$ContactsTableTableTableManager
                 insertedAt: insertedAt,
                 updatedAt: updatedAt,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ContactsTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback:
-              ({
-                contactPhonesTableRefs = false,
-                contactEmailsTableRefs = false,
-              }) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (contactPhonesTableRefs) db.contactPhonesTable,
-                    if (contactEmailsTableRefs) db.contactEmailsTable,
-                  ],
-                  addJoins: null,
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (contactPhonesTableRefs)
-                        await $_getPrefetchedData<
-                          ContactData,
-                          $ContactsTableTable,
-                          ContactPhoneData
-                        >(
-                          currentTable: table,
-                          referencedTable: $$ContactsTableTableReferences
-                              ._contactPhonesTableRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$ContactsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).contactPhonesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                      if (contactEmailsTableRefs)
-                        await $_getPrefetchedData<
-                          ContactData,
-                          $ContactsTableTable,
-                          ContactEmailData
-                        >(
-                          currentTable: table,
-                          referencedTable: $$ContactsTableTableReferences
-                              ._contactEmailsTableRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$ContactsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).contactEmailsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                    ];
-                  },
-                );
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ContactsTableTableReferences(db, table, e))).toList(),
+          prefetchHooksCallback: ({contactPhonesTableRefs = false, contactEmailsTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (contactPhonesTableRefs) db.contactPhonesTable,
+                if (contactEmailsTableRefs) db.contactEmailsTable,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (contactPhonesTableRefs)
+                    await $_getPrefetchedData<ContactData, $ContactsTableTable, ContactPhoneData>(
+                      currentTable: table,
+                      referencedTable: $$ContactsTableTableReferences._contactPhonesTableRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$ContactsTableTableReferences(db, table, p0).contactPhonesTableRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.contactId == item.id),
+                      typedResults: items,
+                    ),
+                  if (contactEmailsTableRefs)
+                    await $_getPrefetchedData<ContactData, $ContactsTableTable, ContactEmailData>(
+                      currentTable: table,
+                      referencedTable: $$ContactsTableTableReferences._contactEmailsTableRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$ContactsTableTableReferences(db, table, p0).contactEmailsTableRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.contactId == item.id),
+                      typedResults: items,
+                    ),
+                ];
               },
+            );
+          },
         ),
       );
 }
@@ -15851,10 +13079,7 @@ typedef $$ContactsTableTableProcessedTableManager =
       $$ContactsTableTableUpdateCompanionBuilder,
       (ContactData, $$ContactsTableTableReferences),
       ContactData,
-      PrefetchHooks Function({
-        bool contactPhonesTableRefs,
-        bool contactEmailsTableRefs,
-      })
+      PrefetchHooks Function({bool contactPhonesTableRefs, bool contactEmailsTableRefs})
     >;
 typedef $$ContactPhonesTableTableCreateCompanionBuilder =
     ContactPhoneDataCompanion Function({
@@ -15876,48 +13101,26 @@ typedef $$ContactPhonesTableTableUpdateCompanionBuilder =
     });
 
 final class $$ContactPhonesTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $ContactPhonesTableTable,
-          ContactPhoneData
-        > {
-  $$ContactPhonesTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ContactPhonesTableTable, ContactPhoneData> {
+  $$ContactPhonesTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ContactsTableTable _contactIdTable(_$AppDatabase db) =>
-      db.contactsTable.createAlias(
-        $_aliasNameGenerator(
-          db.contactPhonesTable.contactId,
-          db.contactsTable.id,
-        ),
-      );
+      db.contactsTable.createAlias($_aliasNameGenerator(db.contactPhonesTable.contactId, db.contactsTable.id));
 
   $$ContactsTableTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
 
-    final manager = $$ContactsTableTableTableManager(
-      $_db,
-      $_db.contactsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ContactsTableTableTableManager($_db, $_db.contactsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static MultiTypedResultKey<$FavoritesTableTable, List<FavoriteData>>
-  _favoritesTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.favoritesTable,
-    aliasName: $_aliasNameGenerator(
-      db.contactPhonesTable.id,
-      db.favoritesTable.contactPhoneId,
-    ),
-  );
+  static MultiTypedResultKey<$FavoritesTableTable, List<FavoriteData>> _favoritesTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.favoritesTable,
+        aliasName: $_aliasNameGenerator(db.contactPhonesTable.id, db.favoritesTable.contactPhoneId),
+      );
 
   $$FavoritesTableTableProcessedTableManager get favoritesTableRefs {
     final manager = $$FavoritesTableTableTableManager(
@@ -15926,14 +13129,11 @@ final class $$ContactPhonesTableTableReferences
     ).filter((f) => f.contactPhoneId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_favoritesTableRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $$ContactPhonesTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ContactPhonesTableTable> {
+class $$ContactPhonesTableTableFilterComposer extends Composer<_$AppDatabase, $ContactPhonesTableTable> {
   $$ContactPhonesTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -15941,30 +13141,19 @@ class $$ContactPhonesTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get label => $composableBuilder(
-    column: $table.label,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get insertedAt => $composableBuilder(
-    column: $table.insertedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get insertedAt =>
+      $composableBuilder(column: $table.insertedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
   $$ContactsTableTableFilterComposer get contactId {
     final $$ContactsTableTableFilterComposer composer = $composerBuilder(
@@ -15972,51 +13161,38 @@ class $$ContactPhonesTableTableFilterComposer
       getCurrentColumn: (t) => t.contactId,
       referencedTable: $db.contactsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactsTableTableFilterComposer(
             $db: $db,
             $table: $db.contactsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 
-  Expression<bool> favoritesTableRefs(
-    Expression<bool> Function($$FavoritesTableTableFilterComposer f) f,
-  ) {
+  Expression<bool> favoritesTableRefs(Expression<bool> Function($$FavoritesTableTableFilterComposer f) f) {
     final $$FavoritesTableTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.favoritesTable,
       getReferencedColumn: (t) => t.contactPhoneId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$FavoritesTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$FavoritesTableTableFilterComposer(
             $db: $db,
             $table: $db.favoritesTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 }
 
-class $$ContactPhonesTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ContactPhonesTableTable> {
+class $$ContactPhonesTableTableOrderingComposer extends Composer<_$AppDatabase, $ContactPhonesTableTable> {
   $$ContactPhonesTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -16024,30 +13200,19 @@ class $$ContactPhonesTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get label => $composableBuilder(
-    column: $table.label,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get insertedAt => $composableBuilder(
-    column: $table.insertedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get insertedAt =>
+      $composableBuilder(column: $table.insertedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
   $$ContactsTableTableOrderingComposer get contactId {
     final $$ContactsTableTableOrderingComposer composer = $composerBuilder(
@@ -16055,26 +13220,20 @@ class $$ContactPhonesTableTableOrderingComposer
       getCurrentColumn: (t) => t.contactId,
       referencedTable: $db.contactsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactsTableTableOrderingComposer(
             $db: $db,
             $table: $db.contactsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$ContactPhonesTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ContactPhonesTableTable> {
+class $$ContactPhonesTableTableAnnotationComposer extends Composer<_$AppDatabase, $ContactPhonesTableTable> {
   $$ContactPhonesTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -16082,22 +13241,16 @@ class $$ContactPhonesTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get number =>
-      $composableBuilder(column: $table.number, builder: (column) => column);
+  GeneratedColumn<String> get number => $composableBuilder(column: $table.number, builder: (column) => column);
 
-  GeneratedColumn<String> get label =>
-      $composableBuilder(column: $table.label, builder: (column) => column);
+  GeneratedColumn<String> get label => $composableBuilder(column: $table.label, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get insertedAt => $composableBuilder(
-    column: $table.insertedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get insertedAt =>
+      $composableBuilder(column: $table.insertedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$ContactsTableTableAnnotationComposer get contactId {
     final $$ContactsTableTableAnnotationComposer composer = $composerBuilder(
@@ -16105,18 +13258,13 @@ class $$ContactPhonesTableTableAnnotationComposer
       getCurrentColumn: (t) => t.contactId,
       referencedTable: $db.contactsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.contactsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -16130,18 +13278,13 @@ class $$ContactPhonesTableTableAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.favoritesTable,
       getReferencedColumn: (t) => t.contactPhoneId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$FavoritesTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$FavoritesTableTableAnnotationComposer(
             $db: $db,
             $table: $db.favoritesTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -16163,22 +13306,14 @@ class $$ContactPhonesTableTableTableManager
           ContactPhoneData,
           PrefetchHooks Function({bool contactId, bool favoritesTableRefs})
         > {
-  $$ContactPhonesTableTableTableManager(
-    _$AppDatabase db,
-    $ContactPhonesTableTable table,
-  ) : super(
+  $$ContactPhonesTableTableTableManager(_$AppDatabase db, $ContactPhonesTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ContactPhonesTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ContactPhonesTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ContactPhonesTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ContactPhonesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ContactPhonesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ContactPhonesTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -16211,82 +13346,57 @@ class $$ContactPhonesTableTableTableManager
                 insertedAt: insertedAt,
                 updatedAt: updatedAt,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ContactPhonesTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback:
-              ({contactId = false, favoritesTableRefs = false}) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (favoritesTableRefs) db.favoritesTable,
-                  ],
-                  addJoins:
-                      <
-                        T extends TableManagerState<
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic
-                        >
-                      >(state) {
-                        if (contactId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.contactId,
-                                    referencedTable:
-                                        $$ContactPhonesTableTableReferences
-                                            ._contactIdTable(db),
-                                    referencedColumn:
-                                        $$ContactPhonesTableTableReferences
-                                            ._contactIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
-                        }
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ContactPhonesTableTableReferences(db, table, e))).toList(),
+          prefetchHooksCallback: ({contactId = false, favoritesTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (favoritesTableRefs) db.favoritesTable],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable: $$ContactPhonesTableTableReferences._contactIdTable(db),
+                                referencedColumn: $$ContactPhonesTableTableReferences._contactIdTable(db).id,
+                              )
+                              as T;
+                    }
 
-                        return state;
-                      },
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (favoritesTableRefs)
-                        await $_getPrefetchedData<
-                          ContactPhoneData,
-                          $ContactPhonesTableTable,
-                          FavoriteData
-                        >(
-                          currentTable: table,
-                          referencedTable: $$ContactPhonesTableTableReferences
-                              ._favoritesTableRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$ContactPhonesTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).favoritesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactPhoneId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                    ];
+                    return state;
                   },
-                );
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (favoritesTableRefs)
+                    await $_getPrefetchedData<ContactPhoneData, $ContactPhonesTableTable, FavoriteData>(
+                      currentTable: table,
+                      referencedTable: $$ContactPhonesTableTableReferences._favoritesTableRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$ContactPhonesTableTableReferences(db, table, p0).favoritesTableRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.contactPhoneId == item.id),
+                      typedResults: items,
+                    ),
+                ];
               },
+            );
+          },
         ),
       );
 }
@@ -16325,43 +13435,23 @@ typedef $$ContactEmailsTableTableUpdateCompanionBuilder =
     });
 
 final class $$ContactEmailsTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $ContactEmailsTableTable,
-          ContactEmailData
-        > {
-  $$ContactEmailsTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ContactEmailsTableTable, ContactEmailData> {
+  $$ContactEmailsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ContactsTableTable _contactIdTable(_$AppDatabase db) =>
-      db.contactsTable.createAlias(
-        $_aliasNameGenerator(
-          db.contactEmailsTable.contactId,
-          db.contactsTable.id,
-        ),
-      );
+      db.contactsTable.createAlias($_aliasNameGenerator(db.contactEmailsTable.contactId, db.contactsTable.id));
 
   $$ContactsTableTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
 
-    final manager = $$ContactsTableTableTableManager(
-      $_db,
-      $_db.contactsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ContactsTableTableTableManager($_db, $_db.contactsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$ContactEmailsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ContactEmailsTableTable> {
+class $$ContactEmailsTableTableFilterComposer extends Composer<_$AppDatabase, $ContactEmailsTableTable> {
   $$ContactEmailsTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -16369,30 +13459,19 @@ class $$ContactEmailsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get address => $composableBuilder(
-    column: $table.address,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get address =>
+      $composableBuilder(column: $table.address, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get label => $composableBuilder(
-    column: $table.label,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get insertedAt => $composableBuilder(
-    column: $table.insertedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get insertedAt =>
+      $composableBuilder(column: $table.insertedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
   $$ContactsTableTableFilterComposer get contactId {
     final $$ContactsTableTableFilterComposer composer = $composerBuilder(
@@ -16400,26 +13479,20 @@ class $$ContactEmailsTableTableFilterComposer
       getCurrentColumn: (t) => t.contactId,
       referencedTable: $db.contactsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactsTableTableFilterComposer(
             $db: $db,
             $table: $db.contactsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$ContactEmailsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ContactEmailsTableTable> {
+class $$ContactEmailsTableTableOrderingComposer extends Composer<_$AppDatabase, $ContactEmailsTableTable> {
   $$ContactEmailsTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -16427,30 +13500,19 @@ class $$ContactEmailsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get address => $composableBuilder(
-    column: $table.address,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get address =>
+      $composableBuilder(column: $table.address, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get label => $composableBuilder(
-    column: $table.label,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get insertedAt => $composableBuilder(
-    column: $table.insertedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get insertedAt =>
+      $composableBuilder(column: $table.insertedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
   $$ContactsTableTableOrderingComposer get contactId {
     final $$ContactsTableTableOrderingComposer composer = $composerBuilder(
@@ -16458,26 +13520,20 @@ class $$ContactEmailsTableTableOrderingComposer
       getCurrentColumn: (t) => t.contactId,
       referencedTable: $db.contactsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactsTableTableOrderingComposer(
             $db: $db,
             $table: $db.contactsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$ContactEmailsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ContactEmailsTableTable> {
+class $$ContactEmailsTableTableAnnotationComposer extends Composer<_$AppDatabase, $ContactEmailsTableTable> {
   $$ContactEmailsTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -16485,22 +13541,16 @@ class $$ContactEmailsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get address =>
-      $composableBuilder(column: $table.address, builder: (column) => column);
+  GeneratedColumn<String> get address => $composableBuilder(column: $table.address, builder: (column) => column);
 
-  GeneratedColumn<String> get label =>
-      $composableBuilder(column: $table.label, builder: (column) => column);
+  GeneratedColumn<String> get label => $composableBuilder(column: $table.label, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get insertedAt => $composableBuilder(
-    column: $table.insertedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get insertedAt =>
+      $composableBuilder(column: $table.insertedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$ContactsTableTableAnnotationComposer get contactId {
     final $$ContactsTableTableAnnotationComposer composer = $composerBuilder(
@@ -16508,18 +13558,13 @@ class $$ContactEmailsTableTableAnnotationComposer
       getCurrentColumn: (t) => t.contactId,
       referencedTable: $db.contactsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.contactsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -16541,22 +13586,14 @@ class $$ContactEmailsTableTableTableManager
           ContactEmailData,
           PrefetchHooks Function({bool contactId})
         > {
-  $$ContactEmailsTableTableTableManager(
-    _$AppDatabase db,
-    $ContactEmailsTableTable table,
-  ) : super(
+  $$ContactEmailsTableTableTableManager(_$AppDatabase db, $ContactEmailsTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ContactEmailsTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ContactEmailsTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ContactEmailsTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ContactEmailsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ContactEmailsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ContactEmailsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -16589,14 +13626,8 @@ class $$ContactEmailsTableTableTableManager
                 insertedAt: insertedAt,
                 updatedAt: updatedAt,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ContactEmailsTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ContactEmailsTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({contactId = false}) {
             return PrefetchHooks(
               db: db,
@@ -16622,13 +13653,8 @@ class $$ContactEmailsTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.contactId,
-                                referencedTable:
-                                    $$ContactEmailsTableTableReferences
-                                        ._contactIdTable(db),
-                                referencedColumn:
-                                    $$ContactEmailsTableTableReferences
-                                        ._contactIdTable(db)
-                                        .id,
+                                referencedTable: $$ContactEmailsTableTableReferences._contactIdTable(db),
+                                referencedColumn: $$ContactEmailsTableTableReferences._contactIdTable(db).id,
                               )
                               as T;
                     }
@@ -16681,8 +13707,7 @@ typedef $$CallLogsTableTableUpdateCompanionBuilder =
       Value<DateTime?> hungUpAt,
     });
 
-class $$CallLogsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $CallLogsTableTable> {
+class $$CallLogsTableTableFilterComposer extends Composer<_$AppDatabase, $CallLogsTableTable> {
   $$CallLogsTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -16690,54 +13715,30 @@ class $$CallLogsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<
-    CallLogDirectionEnum,
-    CallLogDirectionEnum,
-    int
-  >
-  get direction => $composableBuilder(
-    column: $table.direction,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<CallLogDirectionEnum, CallLogDirectionEnum, int> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get username => $composableBuilder(
-    column: $table.username,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get username =>
+      $composableBuilder(column: $table.username, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get video => $composableBuilder(
-    column: $table.video,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get video => $composableBuilder(column: $table.video, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get acceptedAt => $composableBuilder(
-    column: $table.acceptedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get acceptedAt =>
+      $composableBuilder(column: $table.acceptedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get hungUpAt => $composableBuilder(
-    column: $table.hungUpAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get hungUpAt =>
+      $composableBuilder(column: $table.hungUpAt, builder: (column) => ColumnFilters(column));
 }
 
-class $$CallLogsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $CallLogsTableTable> {
+class $$CallLogsTableTableOrderingComposer extends Composer<_$AppDatabase, $CallLogsTableTable> {
   $$CallLogsTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -16745,49 +13746,31 @@ class $$CallLogsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get direction => $composableBuilder(
-    column: $table.direction,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get username => $composableBuilder(
-    column: $table.username,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get username =>
+      $composableBuilder(column: $table.username, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get video => $composableBuilder(
-    column: $table.video,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get video =>
+      $composableBuilder(column: $table.video, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get acceptedAt => $composableBuilder(
-    column: $table.acceptedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get acceptedAt =>
+      $composableBuilder(column: $table.acceptedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get hungUpAt => $composableBuilder(
-    column: $table.hungUpAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get hungUpAt =>
+      $composableBuilder(column: $table.hungUpAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $$CallLogsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CallLogsTableTable> {
+class $$CallLogsTableTableAnnotationComposer extends Composer<_$AppDatabase, $CallLogsTableTable> {
   $$CallLogsTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -16795,31 +13778,23 @@ class $$CallLogsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<CallLogDirectionEnum, int> get direction =>
       $composableBuilder(column: $table.direction, builder: (column) => column);
 
-  GeneratedColumn<String> get number =>
-      $composableBuilder(column: $table.number, builder: (column) => column);
+  GeneratedColumn<String> get number => $composableBuilder(column: $table.number, builder: (column) => column);
 
-  GeneratedColumn<String> get username =>
-      $composableBuilder(column: $table.username, builder: (column) => column);
+  GeneratedColumn<String> get username => $composableBuilder(column: $table.username, builder: (column) => column);
 
-  GeneratedColumn<bool> get video =>
-      $composableBuilder(column: $table.video, builder: (column) => column);
+  GeneratedColumn<bool> get video => $composableBuilder(column: $table.video, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get createdAt => $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get acceptedAt => $composableBuilder(
-    column: $table.acceptedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get acceptedAt =>
+      $composableBuilder(column: $table.acceptedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get hungUpAt =>
-      $composableBuilder(column: $table.hungUpAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get hungUpAt => $composableBuilder(column: $table.hungUpAt, builder: (column) => column);
 }
 
 class $$CallLogsTableTableTableManager
@@ -16833,10 +13808,7 @@ class $$CallLogsTableTableTableManager
           $$CallLogsTableTableAnnotationComposer,
           $$CallLogsTableTableCreateCompanionBuilder,
           $$CallLogsTableTableUpdateCompanionBuilder,
-          (
-            CallLogData,
-            BaseReferences<_$AppDatabase, $CallLogsTableTable, CallLogData>,
-          ),
+          (CallLogData, BaseReferences<_$AppDatabase, $CallLogsTableTable, CallLogData>),
           CallLogData,
           PrefetchHooks Function()
         > {
@@ -16845,12 +13817,9 @@ class $$CallLogsTableTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$CallLogsTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$CallLogsTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$CallLogsTableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$CallLogsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$CallLogsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$CallLogsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -16891,9 +13860,7 @@ class $$CallLogsTableTableTableManager
                 acceptedAt: acceptedAt,
                 hungUpAt: hungUpAt,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -16909,41 +13876,21 @@ typedef $$CallLogsTableTableProcessedTableManager =
       $$CallLogsTableTableAnnotationComposer,
       $$CallLogsTableTableCreateCompanionBuilder,
       $$CallLogsTableTableUpdateCompanionBuilder,
-      (
-        CallLogData,
-        BaseReferences<_$AppDatabase, $CallLogsTableTable, CallLogData>,
-      ),
+      (CallLogData, BaseReferences<_$AppDatabase, $CallLogsTableTable, CallLogData>),
       CallLogData,
       PrefetchHooks Function()
     >;
 typedef $$FavoritesTableTableCreateCompanionBuilder =
-    FavoriteDataCompanion Function({
-      Value<int> id,
-      required int contactPhoneId,
-      required int position,
-    });
+    FavoriteDataCompanion Function({Value<int> id, required int contactPhoneId, required int position});
 typedef $$FavoritesTableTableUpdateCompanionBuilder =
-    FavoriteDataCompanion Function({
-      Value<int> id,
-      Value<int> contactPhoneId,
-      Value<int> position,
-    });
+    FavoriteDataCompanion Function({Value<int> id, Value<int> contactPhoneId, Value<int> position});
 
-final class $$FavoritesTableTableReferences
-    extends BaseReferences<_$AppDatabase, $FavoritesTableTable, FavoriteData> {
-  $$FavoritesTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
+final class $$FavoritesTableTableReferences extends BaseReferences<_$AppDatabase, $FavoritesTableTable, FavoriteData> {
+  $$FavoritesTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ContactPhonesTableTable _contactPhoneIdTable(_$AppDatabase db) => db.contactPhonesTable.createAlias(
+    $_aliasNameGenerator(db.favoritesTable.contactPhoneId, db.contactPhonesTable.id),
   );
-
-  static $ContactPhonesTableTable _contactPhoneIdTable(_$AppDatabase db) =>
-      db.contactPhonesTable.createAlias(
-        $_aliasNameGenerator(
-          db.favoritesTable.contactPhoneId,
-          db.contactPhonesTable.id,
-        ),
-      );
 
   $$ContactPhonesTableTableProcessedTableManager get contactPhoneId {
     final $_column = $_itemColumn<int>('contact_phone_id')!;
@@ -16954,14 +13901,11 @@ final class $$FavoritesTableTableReferences
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactPhoneIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$FavoritesTableTableFilterComposer
-    extends Composer<_$AppDatabase, $FavoritesTableTable> {
+class $$FavoritesTableTableFilterComposer extends Composer<_$AppDatabase, $FavoritesTableTable> {
   $$FavoritesTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -16969,15 +13913,10 @@ class $$FavoritesTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnFilters(column));
 
   $$ContactPhonesTableTableFilterComposer get contactPhoneId {
     final $$ContactPhonesTableTableFilterComposer composer = $composerBuilder(
@@ -16985,26 +13924,20 @@ class $$FavoritesTableTableFilterComposer
       getCurrentColumn: (t) => t.contactPhoneId,
       referencedTable: $db.contactPhonesTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactPhonesTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactPhonesTableTableFilterComposer(
             $db: $db,
             $table: $db.contactPhonesTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$FavoritesTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $FavoritesTableTable> {
+class $$FavoritesTableTableOrderingComposer extends Composer<_$AppDatabase, $FavoritesTableTable> {
   $$FavoritesTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -17012,15 +13945,10 @@ class $$FavoritesTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnOrderings(column));
 
   $$ContactPhonesTableTableOrderingComposer get contactPhoneId {
     final $$ContactPhonesTableTableOrderingComposer composer = $composerBuilder(
@@ -17028,26 +13956,20 @@ class $$FavoritesTableTableOrderingComposer
       getCurrentColumn: (t) => t.contactPhoneId,
       referencedTable: $db.contactPhonesTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ContactPhonesTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactPhonesTableTableOrderingComposer(
             $db: $db,
             $table: $db.contactPhonesTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$FavoritesTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $FavoritesTableTable> {
+class $$FavoritesTableTableAnnotationComposer extends Composer<_$AppDatabase, $FavoritesTableTable> {
   $$FavoritesTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -17055,33 +13977,25 @@ class $$FavoritesTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get position =>
-      $composableBuilder(column: $table.position, builder: (column) => column);
+  GeneratedColumn<int> get position => $composableBuilder(column: $table.position, builder: (column) => column);
 
   $$ContactPhonesTableTableAnnotationComposer get contactPhoneId {
-    final $$ContactPhonesTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.contactPhoneId,
-          referencedTable: $db.contactPhonesTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ContactPhonesTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.contactPhonesTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ContactPhonesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactPhoneId,
+      referencedTable: $db.contactPhonesTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ContactPhonesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contactPhonesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -17101,47 +14015,25 @@ class $$FavoritesTableTableTableManager
           FavoriteData,
           PrefetchHooks Function({bool contactPhoneId})
         > {
-  $$FavoritesTableTableTableManager(
-    _$AppDatabase db,
-    $FavoritesTableTable table,
-  ) : super(
+  $$FavoritesTableTableTableManager(_$AppDatabase db, $FavoritesTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$FavoritesTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$FavoritesTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$FavoritesTableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$FavoritesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$FavoritesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$FavoritesTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 Value<int> contactPhoneId = const Value.absent(),
                 Value<int> position = const Value.absent(),
-              }) => FavoriteDataCompanion(
-                id: id,
-                contactPhoneId: contactPhoneId,
-                position: position,
-              ),
+              }) => FavoriteDataCompanion(id: id, contactPhoneId: contactPhoneId, position: position),
           createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int contactPhoneId,
-                required int position,
-              }) => FavoriteDataCompanion.insert(
-                id: id,
-                contactPhoneId: contactPhoneId,
-                position: position,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$FavoritesTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+              ({Value<int> id = const Value.absent(), required int contactPhoneId, required int position}) =>
+                  FavoriteDataCompanion.insert(id: id, contactPhoneId: contactPhoneId, position: position),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$FavoritesTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({contactPhoneId = false}) {
             return PrefetchHooks(
               db: db,
@@ -17167,12 +14059,8 @@ class $$FavoritesTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.contactPhoneId,
-                                referencedTable: $$FavoritesTableTableReferences
-                                    ._contactPhoneIdTable(db),
-                                referencedColumn:
-                                    $$FavoritesTableTableReferences
-                                        ._contactPhoneIdTable(db)
-                                        .id,
+                                referencedTable: $$FavoritesTableTableReferences._contactPhoneIdTable(db),
+                                referencedColumn: $$FavoritesTableTableReferences._contactPhoneIdTable(db).id,
                               )
                               as T;
                     }
@@ -17227,8 +14115,7 @@ typedef $$FavoritesOutboxTableTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$FavoritesOutboxTableTableFilterComposer
-    extends Composer<_$AppDatabase, $FavoritesOutboxTableTable> {
+class $$FavoritesOutboxTableTableFilterComposer extends Composer<_$AppDatabase, $FavoritesOutboxTableTable> {
   $$FavoritesOutboxTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -17236,59 +14123,32 @@ class $$FavoritesOutboxTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<
-    FavoriteSourceTypeData,
-    FavoriteSourceTypeData,
-    String
-  >
-  get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<FavoriteSourceTypeData, FavoriteSourceTypeData, String> get sourceType =>
+      $composableBuilder(column: $table.sourceType, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnWithTypeConverterFilters<
-    FavoriteOutboxActionData,
-    FavoriteOutboxActionData,
-    String
-  >
-  get action => $composableBuilder(
-    column: $table.action,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<FavoriteOutboxActionData, FavoriteOutboxActionData, String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get sourceId => $composableBuilder(
-    column: $table.sourceId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get label => $composableBuilder(
-    column: $table.label,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 }
 
-class $$FavoritesOutboxTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $FavoritesOutboxTableTable> {
+class $$FavoritesOutboxTableTableOrderingComposer extends Composer<_$AppDatabase, $FavoritesOutboxTableTable> {
   $$FavoritesOutboxTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -17296,49 +14156,32 @@ class $$FavoritesOutboxTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get sourceType =>
+      $composableBuilder(column: $table.sourceType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get action => $composableBuilder(
-    column: $table.action,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get sourceId => $composableBuilder(
-    column: $table.sourceId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get label => $composableBuilder(
-    column: $table.label,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 }
 
-class $$FavoritesOutboxTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $FavoritesOutboxTableTable> {
+class $$FavoritesOutboxTableTableAnnotationComposer extends Composer<_$AppDatabase, $FavoritesOutboxTableTable> {
   $$FavoritesOutboxTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -17346,37 +14189,24 @@ class $$FavoritesOutboxTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get number =>
-      $composableBuilder(column: $table.number, builder: (column) => column);
+  GeneratedColumn<String> get number => $composableBuilder(column: $table.number, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<FavoriteSourceTypeData, String>
-  get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<FavoriteSourceTypeData, String> get sourceType =>
+      $composableBuilder(column: $table.sourceType, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<FavoriteOutboxActionData, String>
-  get action =>
+  GeneratedColumnWithTypeConverter<FavoriteOutboxActionData, String> get action =>
       $composableBuilder(column: $table.action, builder: (column) => column);
 
-  GeneratedColumn<String> get sourceId =>
-      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+  GeneratedColumn<String> get sourceId => $composableBuilder(column: $table.sourceId, builder: (column) => column);
 
-  GeneratedColumn<String> get label =>
-      $composableBuilder(column: $table.label, builder: (column) => column);
+  GeneratedColumn<String> get label => $composableBuilder(column: $table.label, builder: (column) => column);
 
-  GeneratedColumn<int> get position =>
-      $composableBuilder(column: $table.position, builder: (column) => column);
+  GeneratedColumn<int> get position => $composableBuilder(column: $table.position, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 }
 
 class $$FavoritesOutboxTableTableTableManager
@@ -17390,36 +14220,18 @@ class $$FavoritesOutboxTableTableTableManager
           $$FavoritesOutboxTableTableAnnotationComposer,
           $$FavoritesOutboxTableTableCreateCompanionBuilder,
           $$FavoritesOutboxTableTableUpdateCompanionBuilder,
-          (
-            FavoriteOutboxEntryData,
-            BaseReferences<
-              _$AppDatabase,
-              $FavoritesOutboxTableTable,
-              FavoriteOutboxEntryData
-            >,
-          ),
+          (FavoriteOutboxEntryData, BaseReferences<_$AppDatabase, $FavoritesOutboxTableTable, FavoriteOutboxEntryData>),
           FavoriteOutboxEntryData,
           PrefetchHooks Function()
         > {
-  $$FavoritesOutboxTableTableTableManager(
-    _$AppDatabase db,
-    $FavoritesOutboxTableTable table,
-  ) : super(
+  $$FavoritesOutboxTableTableTableManager(_$AppDatabase db, $FavoritesOutboxTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$FavoritesOutboxTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$FavoritesOutboxTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$FavoritesOutboxTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$FavoritesOutboxTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$FavoritesOutboxTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$FavoritesOutboxTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> number = const Value.absent(),
@@ -17464,9 +14276,7 @@ class $$FavoritesOutboxTableTableTableManager
                 timestampUsec: timestampUsec,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -17482,14 +14292,7 @@ typedef $$FavoritesOutboxTableTableProcessedTableManager =
       $$FavoritesOutboxTableTableAnnotationComposer,
       $$FavoritesOutboxTableTableCreateCompanionBuilder,
       $$FavoritesOutboxTableTableUpdateCompanionBuilder,
-      (
-        FavoriteOutboxEntryData,
-        BaseReferences<
-          _$AppDatabase,
-          $FavoritesOutboxTableTable,
-          FavoriteOutboxEntryData
-        >,
-      ),
+      (FavoriteOutboxEntryData, BaseReferences<_$AppDatabase, $FavoritesOutboxTableTable, FavoriteOutboxEntryData>),
       FavoriteOutboxEntryData,
       PrefetchHooks Function()
     >;
@@ -17512,8 +14315,7 @@ typedef $$FavoritesV2TableTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$FavoritesV2TableTableFilterComposer
-    extends Composer<_$AppDatabase, $FavoritesV2TableTable> {
+class $$FavoritesV2TableTableFilterComposer extends Composer<_$AppDatabase, $FavoritesV2TableTable> {
   $$FavoritesV2TableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -17521,39 +14323,23 @@ class $$FavoritesV2TableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<
-    FavoriteSourceTypeData,
-    FavoriteSourceTypeData,
-    String
-  >
-  get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<FavoriteSourceTypeData, FavoriteSourceTypeData, String> get sourceType =>
+      $composableBuilder(column: $table.sourceType, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get sourceId => $composableBuilder(
-    column: $table.sourceId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get label => $composableBuilder(
-    column: $table.label,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnFilters(column));
 }
 
-class $$FavoritesV2TableTableOrderingComposer
-    extends Composer<_$AppDatabase, $FavoritesV2TableTable> {
+class $$FavoritesV2TableTableOrderingComposer extends Composer<_$AppDatabase, $FavoritesV2TableTable> {
   $$FavoritesV2TableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -17561,34 +14347,23 @@ class $$FavoritesV2TableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get sourceType =>
+      $composableBuilder(column: $table.sourceType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get sourceId => $composableBuilder(
-    column: $table.sourceId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get label => $composableBuilder(
-    column: $table.label,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnOrderings(column));
 }
 
-class $$FavoritesV2TableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $FavoritesV2TableTable> {
+class $$FavoritesV2TableTableAnnotationComposer extends Composer<_$AppDatabase, $FavoritesV2TableTable> {
   $$FavoritesV2TableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -17596,23 +14371,16 @@ class $$FavoritesV2TableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get number =>
-      $composableBuilder(column: $table.number, builder: (column) => column);
+  GeneratedColumn<String> get number => $composableBuilder(column: $table.number, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<FavoriteSourceTypeData, String>
-  get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<FavoriteSourceTypeData, String> get sourceType =>
+      $composableBuilder(column: $table.sourceType, builder: (column) => column);
 
-  GeneratedColumn<String> get sourceId =>
-      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+  GeneratedColumn<String> get sourceId => $composableBuilder(column: $table.sourceId, builder: (column) => column);
 
-  GeneratedColumn<String> get label =>
-      $composableBuilder(column: $table.label, builder: (column) => column);
+  GeneratedColumn<String> get label => $composableBuilder(column: $table.label, builder: (column) => column);
 
-  GeneratedColumn<int> get position =>
-      $composableBuilder(column: $table.position, builder: (column) => column);
+  GeneratedColumn<int> get position => $composableBuilder(column: $table.position, builder: (column) => column);
 }
 
 class $$FavoritesV2TableTableTableManager
@@ -17626,30 +14394,18 @@ class $$FavoritesV2TableTableTableManager
           $$FavoritesV2TableTableAnnotationComposer,
           $$FavoritesV2TableTableCreateCompanionBuilder,
           $$FavoritesV2TableTableUpdateCompanionBuilder,
-          (
-            FavoriteV2Data,
-            BaseReferences<
-              _$AppDatabase,
-              $FavoritesV2TableTable,
-              FavoriteV2Data
-            >,
-          ),
+          (FavoriteV2Data, BaseReferences<_$AppDatabase, $FavoritesV2TableTable, FavoriteV2Data>),
           FavoriteV2Data,
           PrefetchHooks Function()
         > {
-  $$FavoritesV2TableTableTableManager(
-    _$AppDatabase db,
-    $FavoritesV2TableTable table,
-  ) : super(
+  $$FavoritesV2TableTableTableManager(_$AppDatabase db, $FavoritesV2TableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$FavoritesV2TableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$FavoritesV2TableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$FavoritesV2TableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$FavoritesV2TableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$FavoritesV2TableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$FavoritesV2TableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> number = const Value.absent(),
@@ -17682,9 +14438,7 @@ class $$FavoritesV2TableTableTableManager
                 position: position,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -17700,10 +14454,7 @@ typedef $$FavoritesV2TableTableProcessedTableManager =
       $$FavoritesV2TableTableAnnotationComposer,
       $$FavoritesV2TableTableCreateCompanionBuilder,
       $$FavoritesV2TableTableUpdateCompanionBuilder,
-      (
-        FavoriteV2Data,
-        BaseReferences<_$AppDatabase, $FavoritesV2TableTable, FavoriteV2Data>,
-      ),
+      (FavoriteV2Data, BaseReferences<_$AppDatabase, $FavoritesV2TableTable, FavoriteV2Data>),
       FavoriteV2Data,
       PrefetchHooks Function()
     >;
@@ -17724,17 +14475,14 @@ typedef $$ChatsTableTableUpdateCompanionBuilder =
       Value<DateTime> updatedAtRemote,
     });
 
-final class $$ChatsTableTableReferences
-    extends BaseReferences<_$AppDatabase, $ChatsTableTable, ChatData> {
+final class $$ChatsTableTableReferences extends BaseReferences<_$AppDatabase, $ChatsTableTable, ChatData> {
   $$ChatsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<$ChatMembersTableTable, List<ChatMemberData>>
-  _chatMembersTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+  static MultiTypedResultKey<$ChatMembersTableTable, List<ChatMemberData>> _chatMembersTableRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
     db.chatMembersTable,
-    aliasName: $_aliasNameGenerator(
-      db.chatsTable.id,
-      db.chatMembersTable.chatId,
-    ),
+    aliasName: $_aliasNameGenerator(db.chatsTable.id, db.chatMembersTable.chatId),
   );
 
   $$ChatMembersTableTableProcessedTableManager get chatMembersTableRefs {
@@ -17743,23 +14491,16 @@ final class $$ChatsTableTableReferences
       $_db.chatMembersTable,
     ).filter((f) => f.chatId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _chatMembersTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_chatMembersTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<$ChatMessagesTableTable, List<ChatMessageData>>
-  _chatMessagesTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.chatMessagesTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatMessagesTable.chatId,
-        ),
-      );
+  static MultiTypedResultKey<$ChatMessagesTableTable, List<ChatMessageData>> _chatMessagesTableRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.chatMessagesTable,
+    aliasName: $_aliasNameGenerator(db.chatsTable.id, db.chatMessagesTable.chatId),
+  );
 
   $$ChatMessagesTableTableProcessedTableManager get chatMessagesTableRefs {
     final manager = $$ChatMessagesTableTableTableManager(
@@ -17767,185 +14508,108 @@ final class $$ChatsTableTableReferences
       $_db.chatMessagesTable,
     ).filter((f) => f.chatId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _chatMessagesTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_chatMessagesTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $ChatMessageSyncCursorTableTable,
-    List<ChatMessageSyncCursorData>
-  >
-  _chatMessageSyncCursorTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.chatMessageSyncCursorTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatMessageSyncCursorTable.chatId,
-        ),
-      );
+  static MultiTypedResultKey<$ChatMessageSyncCursorTableTable, List<ChatMessageSyncCursorData>>
+  _chatMessageSyncCursorTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.chatMessageSyncCursorTable,
+    aliasName: $_aliasNameGenerator(db.chatsTable.id, db.chatMessageSyncCursorTable.chatId),
+  );
 
-  $$ChatMessageSyncCursorTableTableProcessedTableManager
-  get chatMessageSyncCursorTableRefs {
+  $$ChatMessageSyncCursorTableTableProcessedTableManager get chatMessageSyncCursorTableRefs {
     final manager = $$ChatMessageSyncCursorTableTableTableManager(
       $_db,
       $_db.chatMessageSyncCursorTable,
     ).filter((f) => f.chatId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _chatMessageSyncCursorTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_chatMessageSyncCursorTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $ChatMessageReadCursorTableTable,
-    List<ChatMessageReadCursorData>
-  >
-  _chatMessageReadCursorTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.chatMessageReadCursorTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatMessageReadCursorTable.chatId,
-        ),
-      );
+  static MultiTypedResultKey<$ChatMessageReadCursorTableTable, List<ChatMessageReadCursorData>>
+  _chatMessageReadCursorTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.chatMessageReadCursorTable,
+    aliasName: $_aliasNameGenerator(db.chatsTable.id, db.chatMessageReadCursorTable.chatId),
+  );
 
-  $$ChatMessageReadCursorTableTableProcessedTableManager
-  get chatMessageReadCursorTableRefs {
+  $$ChatMessageReadCursorTableTableProcessedTableManager get chatMessageReadCursorTableRefs {
     final manager = $$ChatMessageReadCursorTableTableTableManager(
       $_db,
       $_db.chatMessageReadCursorTable,
     ).filter((f) => f.chatId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _chatMessageReadCursorTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_chatMessageReadCursorTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $ChatOutboxMessageTableTable,
-    List<ChatOutboxMessageData>
-  >
-  _chatOutboxMessageTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.chatOutboxMessageTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatOutboxMessageTable.chatId,
-        ),
-      );
+  static MultiTypedResultKey<$ChatOutboxMessageTableTable, List<ChatOutboxMessageData>>
+  _chatOutboxMessageTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.chatOutboxMessageTable,
+    aliasName: $_aliasNameGenerator(db.chatsTable.id, db.chatOutboxMessageTable.chatId),
+  );
 
-  $$ChatOutboxMessageTableTableProcessedTableManager
-  get chatOutboxMessageTableRefs {
+  $$ChatOutboxMessageTableTableProcessedTableManager get chatOutboxMessageTableRefs {
     final manager = $$ChatOutboxMessageTableTableTableManager(
       $_db,
       $_db.chatOutboxMessageTable,
     ).filter((f) => f.chatId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _chatOutboxMessageTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_chatOutboxMessageTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $ChatOutboxMessageEditTableTable,
-    List<ChatOutboxMessageEditData>
-  >
-  _chatOutboxMessageEditTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.chatOutboxMessageEditTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatOutboxMessageEditTable.chatId,
-        ),
-      );
+  static MultiTypedResultKey<$ChatOutboxMessageEditTableTable, List<ChatOutboxMessageEditData>>
+  _chatOutboxMessageEditTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.chatOutboxMessageEditTable,
+    aliasName: $_aliasNameGenerator(db.chatsTable.id, db.chatOutboxMessageEditTable.chatId),
+  );
 
-  $$ChatOutboxMessageEditTableTableProcessedTableManager
-  get chatOutboxMessageEditTableRefs {
+  $$ChatOutboxMessageEditTableTableProcessedTableManager get chatOutboxMessageEditTableRefs {
     final manager = $$ChatOutboxMessageEditTableTableTableManager(
       $_db,
       $_db.chatOutboxMessageEditTable,
     ).filter((f) => f.chatId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _chatOutboxMessageEditTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_chatOutboxMessageEditTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $ChatOutboxMessageDeleteTableTable,
-    List<ChatOutboxMessageDeleteData>
-  >
-  _chatOutboxMessageDeleteTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.chatOutboxMessageDeleteTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatOutboxMessageDeleteTable.chatId,
-        ),
-      );
+  static MultiTypedResultKey<$ChatOutboxMessageDeleteTableTable, List<ChatOutboxMessageDeleteData>>
+  _chatOutboxMessageDeleteTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.chatOutboxMessageDeleteTable,
+    aliasName: $_aliasNameGenerator(db.chatsTable.id, db.chatOutboxMessageDeleteTable.chatId),
+  );
 
-  $$ChatOutboxMessageDeleteTableTableProcessedTableManager
-  get chatOutboxMessageDeleteTableRefs {
+  $$ChatOutboxMessageDeleteTableTableProcessedTableManager get chatOutboxMessageDeleteTableRefs {
     final manager = $$ChatOutboxMessageDeleteTableTableTableManager(
       $_db,
       $_db.chatOutboxMessageDeleteTable,
     ).filter((f) => f.chatId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _chatOutboxMessageDeleteTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_chatOutboxMessageDeleteTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $ChatOutboxReadCursorsTableTable,
-    List<ChatOutboxReadCursorData>
-  >
-  _chatOutboxReadCursorsTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.chatOutboxReadCursorsTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatOutboxReadCursorsTable.chatId,
-        ),
-      );
+  static MultiTypedResultKey<$ChatOutboxReadCursorsTableTable, List<ChatOutboxReadCursorData>>
+  _chatOutboxReadCursorsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.chatOutboxReadCursorsTable,
+    aliasName: $_aliasNameGenerator(db.chatsTable.id, db.chatOutboxReadCursorsTable.chatId),
+  );
 
-  $$ChatOutboxReadCursorsTableTableProcessedTableManager
-  get chatOutboxReadCursorsTableRefs {
+  $$ChatOutboxReadCursorsTableTableProcessedTableManager get chatOutboxReadCursorsTableRefs {
     final manager = $$ChatOutboxReadCursorsTableTableTableManager(
       $_db,
       $_db.chatOutboxReadCursorsTable,
     ).filter((f) => f.chatId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _chatOutboxReadCursorsTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_chatOutboxReadCursorsTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $$ChatsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ChatsTableTable> {
+class $$ChatsTableTableFilterComposer extends Composer<_$AppDatabase, $ChatsTableTable> {
   $$ChatsTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -17953,248 +14617,177 @@ class $$ChatsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<ChatTypeEnum, ChatTypeEnum, String> get type =>
-      $composableBuilder(
-        column: $table.type,
-        builder: (column) => ColumnWithTypeConverterFilters(column),
-      );
+      $composableBuilder(column: $table.type, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get name => $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get createdAtRemote => $composableBuilder(
-    column: $table.createdAtRemote,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get createdAtRemote =>
+      $composableBuilder(column: $table.createdAtRemote, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAtRemote => $composableBuilder(
-    column: $table.updatedAtRemote,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAtRemote =>
+      $composableBuilder(column: $table.updatedAtRemote, builder: (column) => ColumnFilters(column));
 
-  Expression<bool> chatMembersTableRefs(
-    Expression<bool> Function($$ChatMembersTableTableFilterComposer f) f,
-  ) {
+  Expression<bool> chatMembersTableRefs(Expression<bool> Function($$ChatMembersTableTableFilterComposer f) f) {
     final $$ChatMembersTableTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.chatMembersTable,
       getReferencedColumn: (t) => t.chatId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatMembersTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatMembersTableTableFilterComposer(
             $db: $db,
             $table: $db.chatMembersTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
-  Expression<bool> chatMessagesTableRefs(
-    Expression<bool> Function($$ChatMessagesTableTableFilterComposer f) f,
-  ) {
+  Expression<bool> chatMessagesTableRefs(Expression<bool> Function($$ChatMessagesTableTableFilterComposer f) f) {
     final $$ChatMessagesTableTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.chatMessagesTable,
       getReferencedColumn: (t) => t.chatId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatMessagesTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatMessagesTableTableFilterComposer(
             $db: $db,
             $table: $db.chatMessagesTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
   Expression<bool> chatMessageSyncCursorTableRefs(
-    Expression<bool> Function($$ChatMessageSyncCursorTableTableFilterComposer f)
-    f,
+    Expression<bool> Function($$ChatMessageSyncCursorTableTableFilterComposer f) f,
   ) {
-    final $$ChatMessageSyncCursorTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatMessageSyncCursorTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatMessageSyncCursorTableTableFilterComposer(
-                $db: $db,
-                $table: $db.chatMessageSyncCursorTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatMessageSyncCursorTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatMessageSyncCursorTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatMessageSyncCursorTableTableFilterComposer(
+            $db: $db,
+            $table: $db.chatMessageSyncCursorTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> chatMessageReadCursorTableRefs(
-    Expression<bool> Function($$ChatMessageReadCursorTableTableFilterComposer f)
-    f,
+    Expression<bool> Function($$ChatMessageReadCursorTableTableFilterComposer f) f,
   ) {
-    final $$ChatMessageReadCursorTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatMessageReadCursorTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatMessageReadCursorTableTableFilterComposer(
-                $db: $db,
-                $table: $db.chatMessageReadCursorTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatMessageReadCursorTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatMessageReadCursorTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatMessageReadCursorTableTableFilterComposer(
+            $db: $db,
+            $table: $db.chatMessageReadCursorTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> chatOutboxMessageTableRefs(
     Expression<bool> Function($$ChatOutboxMessageTableTableFilterComposer f) f,
   ) {
-    final $$ChatOutboxMessageTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatOutboxMessageTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatOutboxMessageTableTableFilterComposer(
-                $db: $db,
-                $table: $db.chatOutboxMessageTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatOutboxMessageTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatOutboxMessageTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatOutboxMessageTableTableFilterComposer(
+            $db: $db,
+            $table: $db.chatOutboxMessageTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> chatOutboxMessageEditTableRefs(
-    Expression<bool> Function($$ChatOutboxMessageEditTableTableFilterComposer f)
-    f,
+    Expression<bool> Function($$ChatOutboxMessageEditTableTableFilterComposer f) f,
   ) {
-    final $$ChatOutboxMessageEditTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatOutboxMessageEditTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatOutboxMessageEditTableTableFilterComposer(
-                $db: $db,
-                $table: $db.chatOutboxMessageEditTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatOutboxMessageEditTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatOutboxMessageEditTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatOutboxMessageEditTableTableFilterComposer(
+            $db: $db,
+            $table: $db.chatOutboxMessageEditTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> chatOutboxMessageDeleteTableRefs(
-    Expression<bool> Function(
-      $$ChatOutboxMessageDeleteTableTableFilterComposer f,
-    )
-    f,
+    Expression<bool> Function($$ChatOutboxMessageDeleteTableTableFilterComposer f) f,
   ) {
-    final $$ChatOutboxMessageDeleteTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatOutboxMessageDeleteTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatOutboxMessageDeleteTableTableFilterComposer(
-                $db: $db,
-                $table: $db.chatOutboxMessageDeleteTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatOutboxMessageDeleteTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatOutboxMessageDeleteTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatOutboxMessageDeleteTableTableFilterComposer(
+            $db: $db,
+            $table: $db.chatOutboxMessageDeleteTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> chatOutboxReadCursorsTableRefs(
-    Expression<bool> Function($$ChatOutboxReadCursorsTableTableFilterComposer f)
-    f,
+    Expression<bool> Function($$ChatOutboxReadCursorsTableTableFilterComposer f) f,
   ) {
-    final $$ChatOutboxReadCursorsTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatOutboxReadCursorsTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatOutboxReadCursorsTableTableFilterComposer(
-                $db: $db,
-                $table: $db.chatOutboxReadCursorsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatOutboxReadCursorsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatOutboxReadCursorsTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatOutboxReadCursorsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.chatOutboxReadCursorsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
 
-class $$ChatsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChatsTableTable> {
+class $$ChatsTableTableOrderingComposer extends Composer<_$AppDatabase, $ChatsTableTable> {
   $$ChatsTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -18202,34 +14795,22 @@ class $$ChatsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get createdAtRemote => $composableBuilder(
-    column: $table.createdAtRemote,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get createdAtRemote =>
+      $composableBuilder(column: $table.createdAtRemote, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAtRemote => $composableBuilder(
-    column: $table.updatedAtRemote,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAtRemote =>
+      $composableBuilder(column: $table.updatedAtRemote, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ChatsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChatsTableTable> {
+class $$ChatsTableTableAnnotationComposer extends Composer<_$AppDatabase, $ChatsTableTable> {
   $$ChatsTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -18237,24 +14818,18 @@ class $$ChatsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<ChatTypeEnum, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get name => $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAtRemote => $composableBuilder(
-    column: $table.createdAtRemote,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get createdAtRemote =>
+      $composableBuilder(column: $table.createdAtRemote, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAtRemote => $composableBuilder(
-    column: $table.updatedAtRemote,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get updatedAtRemote =>
+      $composableBuilder(column: $table.updatedAtRemote, builder: (column) => column);
 
   Expression<T> chatMembersTableRefs<T extends Object>(
     Expression<T> Function($$ChatMembersTableTableAnnotationComposer a) f,
@@ -18264,18 +14839,13 @@ class $$ChatsTableTableAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.chatMembersTable,
       getReferencedColumn: (t) => t.chatId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatMembersTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatMembersTableTableAnnotationComposer(
             $db: $db,
             $table: $db.chatMembersTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
@@ -18284,197 +14854,140 @@ class $$ChatsTableTableAnnotationComposer
   Expression<T> chatMessagesTableRefs<T extends Object>(
     Expression<T> Function($$ChatMessagesTableTableAnnotationComposer a) f,
   ) {
-    final $$ChatMessagesTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatMessagesTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatMessagesTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.chatMessagesTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatMessagesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatMessagesTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatMessagesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.chatMessagesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> chatMessageSyncCursorTableRefs<T extends Object>(
-    Expression<T> Function(
-      $$ChatMessageSyncCursorTableTableAnnotationComposer a,
-    )
-    f,
+    Expression<T> Function($$ChatMessageSyncCursorTableTableAnnotationComposer a) f,
   ) {
-    final $$ChatMessageSyncCursorTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatMessageSyncCursorTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatMessageSyncCursorTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.chatMessageSyncCursorTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatMessageSyncCursorTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatMessageSyncCursorTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatMessageSyncCursorTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.chatMessageSyncCursorTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> chatMessageReadCursorTableRefs<T extends Object>(
-    Expression<T> Function(
-      $$ChatMessageReadCursorTableTableAnnotationComposer a,
-    )
-    f,
+    Expression<T> Function($$ChatMessageReadCursorTableTableAnnotationComposer a) f,
   ) {
-    final $$ChatMessageReadCursorTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatMessageReadCursorTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatMessageReadCursorTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.chatMessageReadCursorTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatMessageReadCursorTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatMessageReadCursorTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatMessageReadCursorTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.chatMessageReadCursorTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> chatOutboxMessageTableRefs<T extends Object>(
     Expression<T> Function($$ChatOutboxMessageTableTableAnnotationComposer a) f,
   ) {
-    final $$ChatOutboxMessageTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatOutboxMessageTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatOutboxMessageTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.chatOutboxMessageTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatOutboxMessageTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatOutboxMessageTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatOutboxMessageTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.chatOutboxMessageTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> chatOutboxMessageEditTableRefs<T extends Object>(
-    Expression<T> Function(
-      $$ChatOutboxMessageEditTableTableAnnotationComposer a,
-    )
-    f,
+    Expression<T> Function($$ChatOutboxMessageEditTableTableAnnotationComposer a) f,
   ) {
-    final $$ChatOutboxMessageEditTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatOutboxMessageEditTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatOutboxMessageEditTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.chatOutboxMessageEditTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatOutboxMessageEditTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatOutboxMessageEditTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatOutboxMessageEditTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.chatOutboxMessageEditTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> chatOutboxMessageDeleteTableRefs<T extends Object>(
-    Expression<T> Function(
-      $$ChatOutboxMessageDeleteTableTableAnnotationComposer a,
-    )
-    f,
+    Expression<T> Function($$ChatOutboxMessageDeleteTableTableAnnotationComposer a) f,
   ) {
-    final $$ChatOutboxMessageDeleteTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatOutboxMessageDeleteTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatOutboxMessageDeleteTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.chatOutboxMessageDeleteTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatOutboxMessageDeleteTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatOutboxMessageDeleteTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatOutboxMessageDeleteTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.chatOutboxMessageDeleteTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> chatOutboxReadCursorsTableRefs<T extends Object>(
-    Expression<T> Function(
-      $$ChatOutboxReadCursorsTableTableAnnotationComposer a,
-    )
-    f,
+    Expression<T> Function($$ChatOutboxReadCursorsTableTableAnnotationComposer a) f,
   ) {
-    final $$ChatOutboxReadCursorsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.chatOutboxReadCursorsTable,
-          getReferencedColumn: (t) => t.chatId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ChatOutboxReadCursorsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.chatOutboxReadCursorsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$ChatOutboxReadCursorsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.chatOutboxReadCursorsTable,
+      getReferencedColumn: (t) => t.chatId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatOutboxReadCursorsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.chatOutboxReadCursorsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -18508,12 +15021,9 @@ class $$ChatsTableTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChatsTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ChatsTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ChatsTableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ChatsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChatsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChatsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -18542,14 +15052,8 @@ class $$ChatsTableTableTableManager
                 createdAtRemote: createdAtRemote,
                 updatedAtRemote: updatedAtRemote,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ChatsTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ChatsTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback:
               ({
                 chatMembersTableRefs = false,
@@ -18566,187 +15070,94 @@ class $$ChatsTableTableTableManager
                   explicitlyWatchedTables: [
                     if (chatMembersTableRefs) db.chatMembersTable,
                     if (chatMessagesTableRefs) db.chatMessagesTable,
-                    if (chatMessageSyncCursorTableRefs)
-                      db.chatMessageSyncCursorTable,
-                    if (chatMessageReadCursorTableRefs)
-                      db.chatMessageReadCursorTable,
+                    if (chatMessageSyncCursorTableRefs) db.chatMessageSyncCursorTable,
+                    if (chatMessageReadCursorTableRefs) db.chatMessageReadCursorTable,
                     if (chatOutboxMessageTableRefs) db.chatOutboxMessageTable,
-                    if (chatOutboxMessageEditTableRefs)
-                      db.chatOutboxMessageEditTable,
-                    if (chatOutboxMessageDeleteTableRefs)
-                      db.chatOutboxMessageDeleteTable,
-                    if (chatOutboxReadCursorsTableRefs)
-                      db.chatOutboxReadCursorsTable,
+                    if (chatOutboxMessageEditTableRefs) db.chatOutboxMessageEditTable,
+                    if (chatOutboxMessageDeleteTableRefs) db.chatOutboxMessageDeleteTable,
+                    if (chatOutboxReadCursorsTableRefs) db.chatOutboxReadCursorsTable,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (chatMembersTableRefs)
-                        await $_getPrefetchedData<
-                          ChatData,
-                          $ChatsTableTable,
-                          ChatMemberData
-                        >(
+                        await $_getPrefetchedData<ChatData, $ChatsTableTable, ChatMemberData>(
                           currentTable: table,
-                          referencedTable: $$ChatsTableTableReferences
-                              ._chatMembersTableRefsTable(db),
+                          referencedTable: $$ChatsTableTableReferences._chatMembersTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ChatsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).chatMembersTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                              $$ChatsTableTableReferences(db, table, p0).chatMembersTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.chatId == item.id),
                           typedResults: items,
                         ),
                       if (chatMessagesTableRefs)
-                        await $_getPrefetchedData<
-                          ChatData,
-                          $ChatsTableTable,
-                          ChatMessageData
-                        >(
+                        await $_getPrefetchedData<ChatData, $ChatsTableTable, ChatMessageData>(
                           currentTable: table,
-                          referencedTable: $$ChatsTableTableReferences
-                              ._chatMessagesTableRefsTable(db),
+                          referencedTable: $$ChatsTableTableReferences._chatMessagesTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ChatsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).chatMessagesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                              $$ChatsTableTableReferences(db, table, p0).chatMessagesTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.chatId == item.id),
                           typedResults: items,
                         ),
                       if (chatMessageSyncCursorTableRefs)
-                        await $_getPrefetchedData<
-                          ChatData,
-                          $ChatsTableTable,
-                          ChatMessageSyncCursorData
-                        >(
+                        await $_getPrefetchedData<ChatData, $ChatsTableTable, ChatMessageSyncCursorData>(
                           currentTable: table,
-                          referencedTable: $$ChatsTableTableReferences
-                              ._chatMessageSyncCursorTableRefsTable(db),
+                          referencedTable: $$ChatsTableTableReferences._chatMessageSyncCursorTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ChatsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).chatMessageSyncCursorTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                              $$ChatsTableTableReferences(db, table, p0).chatMessageSyncCursorTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.chatId == item.id),
                           typedResults: items,
                         ),
                       if (chatMessageReadCursorTableRefs)
-                        await $_getPrefetchedData<
-                          ChatData,
-                          $ChatsTableTable,
-                          ChatMessageReadCursorData
-                        >(
+                        await $_getPrefetchedData<ChatData, $ChatsTableTable, ChatMessageReadCursorData>(
                           currentTable: table,
-                          referencedTable: $$ChatsTableTableReferences
-                              ._chatMessageReadCursorTableRefsTable(db),
+                          referencedTable: $$ChatsTableTableReferences._chatMessageReadCursorTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ChatsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).chatMessageReadCursorTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                              $$ChatsTableTableReferences(db, table, p0).chatMessageReadCursorTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.chatId == item.id),
                           typedResults: items,
                         ),
                       if (chatOutboxMessageTableRefs)
-                        await $_getPrefetchedData<
-                          ChatData,
-                          $ChatsTableTable,
-                          ChatOutboxMessageData
-                        >(
+                        await $_getPrefetchedData<ChatData, $ChatsTableTable, ChatOutboxMessageData>(
                           currentTable: table,
-                          referencedTable: $$ChatsTableTableReferences
-                              ._chatOutboxMessageTableRefsTable(db),
+                          referencedTable: $$ChatsTableTableReferences._chatOutboxMessageTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ChatsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).chatOutboxMessageTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                              $$ChatsTableTableReferences(db, table, p0).chatOutboxMessageTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.chatId == item.id),
                           typedResults: items,
                         ),
                       if (chatOutboxMessageEditTableRefs)
-                        await $_getPrefetchedData<
-                          ChatData,
-                          $ChatsTableTable,
-                          ChatOutboxMessageEditData
-                        >(
+                        await $_getPrefetchedData<ChatData, $ChatsTableTable, ChatOutboxMessageEditData>(
                           currentTable: table,
-                          referencedTable: $$ChatsTableTableReferences
-                              ._chatOutboxMessageEditTableRefsTable(db),
+                          referencedTable: $$ChatsTableTableReferences._chatOutboxMessageEditTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ChatsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).chatOutboxMessageEditTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                              $$ChatsTableTableReferences(db, table, p0).chatOutboxMessageEditTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.chatId == item.id),
                           typedResults: items,
                         ),
                       if (chatOutboxMessageDeleteTableRefs)
-                        await $_getPrefetchedData<
-                          ChatData,
-                          $ChatsTableTable,
-                          ChatOutboxMessageDeleteData
-                        >(
+                        await $_getPrefetchedData<ChatData, $ChatsTableTable, ChatOutboxMessageDeleteData>(
                           currentTable: table,
-                          referencedTable: $$ChatsTableTableReferences
-                              ._chatOutboxMessageDeleteTableRefsTable(db),
+                          referencedTable: $$ChatsTableTableReferences._chatOutboxMessageDeleteTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ChatsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).chatOutboxMessageDeleteTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                              $$ChatsTableTableReferences(db, table, p0).chatOutboxMessageDeleteTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.chatId == item.id),
                           typedResults: items,
                         ),
                       if (chatOutboxReadCursorsTableRefs)
-                        await $_getPrefetchedData<
-                          ChatData,
-                          $ChatsTableTable,
-                          ChatOutboxReadCursorData
-                        >(
+                        await $_getPrefetchedData<ChatData, $ChatsTableTable, ChatOutboxReadCursorData>(
                           currentTable: table,
-                          referencedTable: $$ChatsTableTableReferences
-                              ._chatOutboxReadCursorsTableRefsTable(db),
+                          referencedTable: $$ChatsTableTableReferences._chatOutboxReadCursorsTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$ChatsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).chatOutboxReadCursorsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                              $$ChatsTableTableReferences(db, table, p0).chatOutboxReadCursorsTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.chatId == item.id),
                           typedResults: items,
                         ),
                     ];
@@ -18796,36 +15207,23 @@ typedef $$ChatMembersTableTableUpdateCompanionBuilder =
     });
 
 final class $$ChatMembersTableTableReferences
-    extends
-        BaseReferences<_$AppDatabase, $ChatMembersTableTable, ChatMemberData> {
-  $$ChatMembersTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ChatMembersTableTable, ChatMemberData> {
+  $$ChatMembersTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(db.chatMembersTable.chatId, db.chatsTable.id),
-      );
+      db.chatsTable.createAlias($_aliasNameGenerator(db.chatMembersTable.chatId, db.chatsTable.id));
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
 
-    final manager = $$ChatsTableTableTableManager(
-      $_db,
-      $_db.chatsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ChatsTableTableTableManager($_db, $_db.chatsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_chatIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$ChatMembersTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ChatMembersTableTable> {
+class $$ChatMembersTableTableFilterComposer extends Composer<_$AppDatabase, $ChatMembersTableTable> {
   $$ChatMembersTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -18833,25 +15231,13 @@ class $$ChatMembersTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get userId => $composableBuilder(
-    column: $table.userId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<
-    GroupAuthoritiesEnum?,
-    GroupAuthoritiesEnum,
-    String
-  >
-  get groupAuthorities => $composableBuilder(
-    column: $table.groupAuthorities,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<GroupAuthoritiesEnum?, GroupAuthoritiesEnum, String> get groupAuthorities =>
+      $composableBuilder(column: $table.groupAuthorities, builder: (column) => ColumnWithTypeConverterFilters(column));
 
   $$ChatsTableTableFilterComposer get chatId {
     final $$ChatsTableTableFilterComposer composer = $composerBuilder(
@@ -18859,26 +15245,20 @@ class $$ChatMembersTableTableFilterComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableFilterComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$ChatMembersTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChatMembersTableTable> {
+class $$ChatMembersTableTableOrderingComposer extends Composer<_$AppDatabase, $ChatMembersTableTable> {
   $$ChatMembersTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -18886,20 +15266,13 @@ class $$ChatMembersTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get userId => $composableBuilder(
-    column: $table.userId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get groupAuthorities => $composableBuilder(
-    column: $table.groupAuthorities,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get groupAuthorities =>
+      $composableBuilder(column: $table.groupAuthorities, builder: (column) => ColumnOrderings(column));
 
   $$ChatsTableTableOrderingComposer get chatId {
     final $$ChatsTableTableOrderingComposer composer = $composerBuilder(
@@ -18907,26 +15280,20 @@ class $$ChatMembersTableTableOrderingComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableOrderingComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$ChatMembersTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChatMembersTableTable> {
+class $$ChatMembersTableTableAnnotationComposer extends Composer<_$AppDatabase, $ChatMembersTableTable> {
   $$ChatMembersTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -18934,17 +15301,12 @@ class $$ChatMembersTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get userId =>
-      $composableBuilder(column: $table.userId, builder: (column) => column);
+  GeneratedColumn<String> get userId => $composableBuilder(column: $table.userId, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<GroupAuthoritiesEnum?, String>
-  get groupAuthorities => $composableBuilder(
-    column: $table.groupAuthorities,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<GroupAuthoritiesEnum?, String> get groupAuthorities =>
+      $composableBuilder(column: $table.groupAuthorities, builder: (column) => column);
 
   $$ChatsTableTableAnnotationComposer get chatId {
     final $$ChatsTableTableAnnotationComposer composer = $composerBuilder(
@@ -18952,18 +15314,13 @@ class $$ChatMembersTableTableAnnotationComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -18985,53 +15342,35 @@ class $$ChatMembersTableTableTableManager
           ChatMemberData,
           PrefetchHooks Function({bool chatId})
         > {
-  $$ChatMembersTableTableTableManager(
-    _$AppDatabase db,
-    $ChatMembersTableTable table,
-  ) : super(
+  $$ChatMembersTableTableTableManager(_$AppDatabase db, $ChatMembersTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChatMembersTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ChatMembersTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ChatMembersTableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ChatMembersTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChatMembersTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChatMembersTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 Value<int> chatId = const Value.absent(),
                 Value<String> userId = const Value.absent(),
-                Value<GroupAuthoritiesEnum?> groupAuthorities =
-                    const Value.absent(),
-              }) => ChatMemberDataCompanion(
-                id: id,
-                chatId: chatId,
-                userId: userId,
-                groupAuthorities: groupAuthorities,
-              ),
+                Value<GroupAuthoritiesEnum?> groupAuthorities = const Value.absent(),
+              }) => ChatMemberDataCompanion(id: id, chatId: chatId, userId: userId, groupAuthorities: groupAuthorities),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required int chatId,
                 required String userId,
-                Value<GroupAuthoritiesEnum?> groupAuthorities =
-                    const Value.absent(),
+                Value<GroupAuthoritiesEnum?> groupAuthorities = const Value.absent(),
               }) => ChatMemberDataCompanion.insert(
                 id: id,
                 chatId: chatId,
                 userId: userId,
                 groupAuthorities: groupAuthorities,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ChatMembersTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ChatMembersTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({chatId = false}) {
             return PrefetchHooks(
               db: db,
@@ -19057,13 +15396,8 @@ class $$ChatMembersTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.chatId,
-                                referencedTable:
-                                    $$ChatMembersTableTableReferences
-                                        ._chatIdTable(db),
-                                referencedColumn:
-                                    $$ChatMembersTableTableReferences
-                                        ._chatIdTable(db)
-                                        .id,
+                                referencedTable: $$ChatMembersTableTableReferences._chatIdTable(db),
+                                referencedColumn: $$ChatMembersTableTableReferences._chatIdTable(db).id,
                               )
                               as T;
                     }
@@ -19125,40 +15459,23 @@ typedef $$ChatMessagesTableTableUpdateCompanionBuilder =
     });
 
 final class $$ChatMessagesTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $ChatMessagesTableTable,
-          ChatMessageData
-        > {
-  $$ChatMessagesTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ChatMessagesTableTable, ChatMessageData> {
+  $$ChatMessagesTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(db.chatMessagesTable.chatId, db.chatsTable.id),
-      );
+      db.chatsTable.createAlias($_aliasNameGenerator(db.chatMessagesTable.chatId, db.chatsTable.id));
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
 
-    final manager = $$ChatsTableTableTableManager(
-      $_db,
-      $_db.chatsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ChatsTableTableTableManager($_db, $_db.chatsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_chatIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$ChatMessagesTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ChatMessagesTableTable> {
+class $$ChatMessagesTableTableFilterComposer extends Composer<_$AppDatabase, $ChatMessagesTableTable> {
   $$ChatMessagesTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -19166,60 +15483,37 @@ class $$ChatMessagesTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get senderId => $composableBuilder(
-    column: $table.senderId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get senderId =>
+      $composableBuilder(column: $table.senderId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get replyToId => $composableBuilder(
-    column: $table.replyToId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get replyToId =>
+      $composableBuilder(column: $table.replyToId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get forwardFromId => $composableBuilder(
-    column: $table.forwardFromId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get forwardFromId =>
+      $composableBuilder(column: $table.forwardFromId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get authorId => $composableBuilder(
-    column: $table.authorId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get authorId =>
+      $composableBuilder(column: $table.authorId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get createdAtRemoteUsec => $composableBuilder(
-    column: $table.createdAtRemoteUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get createdAtRemoteUsec =>
+      $composableBuilder(column: $table.createdAtRemoteUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get updatedAtRemoteUsec => $composableBuilder(
-    column: $table.updatedAtRemoteUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get updatedAtRemoteUsec =>
+      $composableBuilder(column: $table.updatedAtRemoteUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get editedAtRemoteUsec => $composableBuilder(
-    column: $table.editedAtRemoteUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get editedAtRemoteUsec =>
+      $composableBuilder(column: $table.editedAtRemoteUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get deletedAtRemoteUsec => $composableBuilder(
-    column: $table.deletedAtRemoteUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get deletedAtRemoteUsec =>
+      $composableBuilder(column: $table.deletedAtRemoteUsec, builder: (column) => ColumnFilters(column));
 
   $$ChatsTableTableFilterComposer get chatId {
     final $$ChatsTableTableFilterComposer composer = $composerBuilder(
@@ -19227,26 +15521,20 @@ class $$ChatMessagesTableTableFilterComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableFilterComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$ChatMessagesTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChatMessagesTableTable> {
+class $$ChatMessagesTableTableOrderingComposer extends Composer<_$AppDatabase, $ChatMessagesTableTable> {
   $$ChatMessagesTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -19254,60 +15542,37 @@ class $$ChatMessagesTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get senderId => $composableBuilder(
-    column: $table.senderId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get senderId =>
+      $composableBuilder(column: $table.senderId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get replyToId => $composableBuilder(
-    column: $table.replyToId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get replyToId =>
+      $composableBuilder(column: $table.replyToId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get forwardFromId => $composableBuilder(
-    column: $table.forwardFromId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get forwardFromId =>
+      $composableBuilder(column: $table.forwardFromId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get authorId => $composableBuilder(
-    column: $table.authorId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get authorId =>
+      $composableBuilder(column: $table.authorId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAtRemoteUsec => $composableBuilder(
-    column: $table.createdAtRemoteUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get createdAtRemoteUsec =>
+      $composableBuilder(column: $table.createdAtRemoteUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get updatedAtRemoteUsec => $composableBuilder(
-    column: $table.updatedAtRemoteUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get updatedAtRemoteUsec =>
+      $composableBuilder(column: $table.updatedAtRemoteUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get editedAtRemoteUsec => $composableBuilder(
-    column: $table.editedAtRemoteUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get editedAtRemoteUsec =>
+      $composableBuilder(column: $table.editedAtRemoteUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get deletedAtRemoteUsec => $composableBuilder(
-    column: $table.deletedAtRemoteUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get deletedAtRemoteUsec =>
+      $composableBuilder(column: $table.deletedAtRemoteUsec, builder: (column) => ColumnOrderings(column));
 
   $$ChatsTableTableOrderingComposer get chatId {
     final $$ChatsTableTableOrderingComposer composer = $composerBuilder(
@@ -19315,26 +15580,20 @@ class $$ChatMessagesTableTableOrderingComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableOrderingComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$ChatMessagesTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChatMessagesTableTable> {
+class $$ChatMessagesTableTableAnnotationComposer extends Composer<_$AppDatabase, $ChatMessagesTableTable> {
   $$ChatMessagesTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -19342,48 +15601,32 @@ class $$ChatMessagesTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get idKey =>
-      $composableBuilder(column: $table.idKey, builder: (column) => column);
+  GeneratedColumn<String> get idKey => $composableBuilder(column: $table.idKey, builder: (column) => column);
 
-  GeneratedColumn<String> get senderId =>
-      $composableBuilder(column: $table.senderId, builder: (column) => column);
+  GeneratedColumn<String> get senderId => $composableBuilder(column: $table.senderId, builder: (column) => column);
 
-  GeneratedColumn<int> get replyToId =>
-      $composableBuilder(column: $table.replyToId, builder: (column) => column);
+  GeneratedColumn<int> get replyToId => $composableBuilder(column: $table.replyToId, builder: (column) => column);
 
-  GeneratedColumn<int> get forwardFromId => $composableBuilder(
-    column: $table.forwardFromId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get forwardFromId =>
+      $composableBuilder(column: $table.forwardFromId, builder: (column) => column);
 
-  GeneratedColumn<String> get authorId =>
-      $composableBuilder(column: $table.authorId, builder: (column) => column);
+  GeneratedColumn<String> get authorId => $composableBuilder(column: $table.authorId, builder: (column) => column);
 
-  GeneratedColumn<String> get content =>
-      $composableBuilder(column: $table.content, builder: (column) => column);
+  GeneratedColumn<String> get content => $composableBuilder(column: $table.content, builder: (column) => column);
 
-  GeneratedColumn<int> get createdAtRemoteUsec => $composableBuilder(
-    column: $table.createdAtRemoteUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get createdAtRemoteUsec =>
+      $composableBuilder(column: $table.createdAtRemoteUsec, builder: (column) => column);
 
-  GeneratedColumn<int> get updatedAtRemoteUsec => $composableBuilder(
-    column: $table.updatedAtRemoteUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get updatedAtRemoteUsec =>
+      $composableBuilder(column: $table.updatedAtRemoteUsec, builder: (column) => column);
 
-  GeneratedColumn<int> get editedAtRemoteUsec => $composableBuilder(
-    column: $table.editedAtRemoteUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get editedAtRemoteUsec =>
+      $composableBuilder(column: $table.editedAtRemoteUsec, builder: (column) => column);
 
-  GeneratedColumn<int> get deletedAtRemoteUsec => $composableBuilder(
-    column: $table.deletedAtRemoteUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get deletedAtRemoteUsec =>
+      $composableBuilder(column: $table.deletedAtRemoteUsec, builder: (column) => column);
 
   $$ChatsTableTableAnnotationComposer get chatId {
     final $$ChatsTableTableAnnotationComposer composer = $composerBuilder(
@@ -19391,18 +15634,13 @@ class $$ChatMessagesTableTableAnnotationComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -19424,22 +15662,14 @@ class $$ChatMessagesTableTableTableManager
           ChatMessageData,
           PrefetchHooks Function({bool chatId})
         > {
-  $$ChatMessagesTableTableTableManager(
-    _$AppDatabase db,
-    $ChatMessagesTableTable table,
-  ) : super(
+  $$ChatMessagesTableTableTableManager(_$AppDatabase db, $ChatMessagesTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChatMessagesTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ChatMessagesTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ChatMessagesTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ChatMessagesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChatMessagesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChatMessagesTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -19496,14 +15726,8 @@ class $$ChatMessagesTableTableTableManager
                 editedAtRemoteUsec: editedAtRemoteUsec,
                 deletedAtRemoteUsec: deletedAtRemoteUsec,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ChatMessagesTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ChatMessagesTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({chatId = false}) {
             return PrefetchHooks(
               db: db,
@@ -19529,13 +15753,8 @@ class $$ChatMessagesTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.chatId,
-                                referencedTable:
-                                    $$ChatMessagesTableTableReferences
-                                        ._chatIdTable(db),
-                                referencedColumn:
-                                    $$ChatMessagesTableTableReferences
-                                        ._chatIdTable(db)
-                                        .id,
+                                referencedTable: $$ChatMessagesTableTableReferences._chatIdTable(db),
+                                referencedColumn: $$ChatMessagesTableTableReferences._chatIdTable(db).id,
                               )
                               as T;
                     }
@@ -19581,38 +15800,19 @@ typedef $$ChatMessageSyncCursorTableTableUpdateCompanionBuilder =
     });
 
 final class $$ChatMessageSyncCursorTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $ChatMessageSyncCursorTableTable,
-          ChatMessageSyncCursorData
-        > {
-  $$ChatMessageSyncCursorTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ChatMessageSyncCursorTableTable, ChatMessageSyncCursorData> {
+  $$ChatMessageSyncCursorTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatMessageSyncCursorTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+      db.chatsTable.createAlias($_aliasNameGenerator(db.chatMessageSyncCursorTable.chatId, db.chatsTable.id));
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
 
-    final manager = $$ChatsTableTableTableManager(
-      $_db,
-      $_db.chatsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ChatsTableTableTableManager($_db, $_db.chatsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_chatIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -19625,20 +15825,11 @@ class $$ChatMessageSyncCursorTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnWithTypeConverterFilters<
-    MessageSyncCursorTypeEnum,
-    MessageSyncCursorTypeEnum,
-    String
-  >
-  get cursorType => $composableBuilder(
-    column: $table.cursorType,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<MessageSyncCursorTypeEnum, MessageSyncCursorTypeEnum, String> get cursorType =>
+      $composableBuilder(column: $table.cursorType, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 
   $$ChatsTableTableFilterComposer get chatId {
     final $$ChatsTableTableFilterComposer composer = $composerBuilder(
@@ -19646,18 +15837,13 @@ class $$ChatMessageSyncCursorTableTableFilterComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableFilterComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -19673,15 +15859,11 @@ class $$ChatMessageSyncCursorTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get cursorType => $composableBuilder(
-    column: $table.cursorType,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get cursorType =>
+      $composableBuilder(column: $table.cursorType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 
   $$ChatsTableTableOrderingComposer get chatId {
     final $$ChatsTableTableOrderingComposer composer = $composerBuilder(
@@ -19689,18 +15871,13 @@ class $$ChatMessageSyncCursorTableTableOrderingComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableOrderingComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -19716,16 +15893,11 @@ class $$ChatMessageSyncCursorTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumnWithTypeConverter<MessageSyncCursorTypeEnum, String>
-  get cursorType => $composableBuilder(
-    column: $table.cursorType,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<MessageSyncCursorTypeEnum, String> get cursorType =>
+      $composableBuilder(column: $table.cursorType, builder: (column) => column);
 
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 
   $$ChatsTableTableAnnotationComposer get chatId {
     final $$ChatsTableTableAnnotationComposer composer = $composerBuilder(
@@ -19733,18 +15905,13 @@ class $$ChatMessageSyncCursorTableTableAnnotationComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -19762,40 +15929,23 @@ class $$ChatMessageSyncCursorTableTableTableManager
           $$ChatMessageSyncCursorTableTableAnnotationComposer,
           $$ChatMessageSyncCursorTableTableCreateCompanionBuilder,
           $$ChatMessageSyncCursorTableTableUpdateCompanionBuilder,
-          (
-            ChatMessageSyncCursorData,
-            $$ChatMessageSyncCursorTableTableReferences,
-          ),
+          (ChatMessageSyncCursorData, $$ChatMessageSyncCursorTableTableReferences),
           ChatMessageSyncCursorData,
           PrefetchHooks Function({bool chatId})
         > {
-  $$ChatMessageSyncCursorTableTableTableManager(
-    _$AppDatabase db,
-    $ChatMessageSyncCursorTableTable table,
-  ) : super(
+  $$ChatMessageSyncCursorTableTableTableManager(_$AppDatabase db, $ChatMessageSyncCursorTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChatMessageSyncCursorTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$ChatMessageSyncCursorTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ChatMessageSyncCursorTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChatMessageSyncCursorTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ChatMessageSyncCursorTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$ChatMessageSyncCursorTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> chatId = const Value.absent(),
-                Value<MessageSyncCursorTypeEnum> cursorType =
-                    const Value.absent(),
+                Value<MessageSyncCursorTypeEnum> cursorType = const Value.absent(),
                 Value<int> timestampUsec = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChatMessageSyncCursorDataCompanion(
@@ -19816,14 +15966,8 @@ class $$ChatMessageSyncCursorTableTableTableManager
                 timestampUsec: timestampUsec,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ChatMessageSyncCursorTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ChatMessageSyncCursorTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({chatId = false}) {
             return PrefetchHooks(
               db: db,
@@ -19849,13 +15993,8 @@ class $$ChatMessageSyncCursorTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.chatId,
-                                referencedTable:
-                                    $$ChatMessageSyncCursorTableTableReferences
-                                        ._chatIdTable(db),
-                                referencedColumn:
-                                    $$ChatMessageSyncCursorTableTableReferences
-                                        ._chatIdTable(db)
-                                        .id,
+                                referencedTable: $$ChatMessageSyncCursorTableTableReferences._chatIdTable(db),
+                                referencedColumn: $$ChatMessageSyncCursorTableTableReferences._chatIdTable(db).id,
                               )
                               as T;
                     }
@@ -19901,38 +16040,19 @@ typedef $$ChatMessageReadCursorTableTableUpdateCompanionBuilder =
     });
 
 final class $$ChatMessageReadCursorTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $ChatMessageReadCursorTableTable,
-          ChatMessageReadCursorData
-        > {
-  $$ChatMessageReadCursorTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ChatMessageReadCursorTableTable, ChatMessageReadCursorData> {
+  $$ChatMessageReadCursorTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatMessageReadCursorTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+      db.chatsTable.createAlias($_aliasNameGenerator(db.chatMessageReadCursorTable.chatId, db.chatsTable.id));
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
 
-    final manager = $$ChatsTableTableTableManager(
-      $_db,
-      $_db.chatsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ChatsTableTableTableManager($_db, $_db.chatsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_chatIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -19945,15 +16065,11 @@ class $$ChatMessageReadCursorTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get userId => $composableBuilder(
-    column: $table.userId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 
   $$ChatsTableTableFilterComposer get chatId {
     final $$ChatsTableTableFilterComposer composer = $composerBuilder(
@@ -19961,18 +16077,13 @@ class $$ChatMessageReadCursorTableTableFilterComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableFilterComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -19988,15 +16099,11 @@ class $$ChatMessageReadCursorTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get userId => $composableBuilder(
-    column: $table.userId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 
   $$ChatsTableTableOrderingComposer get chatId {
     final $$ChatsTableTableOrderingComposer composer = $composerBuilder(
@@ -20004,18 +16111,13 @@ class $$ChatMessageReadCursorTableTableOrderingComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableOrderingComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20031,13 +16133,10 @@ class $$ChatMessageReadCursorTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get userId =>
-      $composableBuilder(column: $table.userId, builder: (column) => column);
+  GeneratedColumn<String> get userId => $composableBuilder(column: $table.userId, builder: (column) => column);
 
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 
   $$ChatsTableTableAnnotationComposer get chatId {
     final $$ChatsTableTableAnnotationComposer composer = $composerBuilder(
@@ -20045,18 +16144,13 @@ class $$ChatMessageReadCursorTableTableAnnotationComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20074,35 +16168,19 @@ class $$ChatMessageReadCursorTableTableTableManager
           $$ChatMessageReadCursorTableTableAnnotationComposer,
           $$ChatMessageReadCursorTableTableCreateCompanionBuilder,
           $$ChatMessageReadCursorTableTableUpdateCompanionBuilder,
-          (
-            ChatMessageReadCursorData,
-            $$ChatMessageReadCursorTableTableReferences,
-          ),
+          (ChatMessageReadCursorData, $$ChatMessageReadCursorTableTableReferences),
           ChatMessageReadCursorData,
           PrefetchHooks Function({bool chatId})
         > {
-  $$ChatMessageReadCursorTableTableTableManager(
-    _$AppDatabase db,
-    $ChatMessageReadCursorTableTable table,
-  ) : super(
+  $$ChatMessageReadCursorTableTableTableManager(_$AppDatabase db, $ChatMessageReadCursorTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChatMessageReadCursorTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$ChatMessageReadCursorTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ChatMessageReadCursorTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChatMessageReadCursorTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ChatMessageReadCursorTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$ChatMessageReadCursorTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> chatId = const Value.absent(),
@@ -20127,14 +16205,8 @@ class $$ChatMessageReadCursorTableTableTableManager
                 timestampUsec: timestampUsec,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ChatMessageReadCursorTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ChatMessageReadCursorTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({chatId = false}) {
             return PrefetchHooks(
               db: db,
@@ -20160,13 +16232,8 @@ class $$ChatMessageReadCursorTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.chatId,
-                                referencedTable:
-                                    $$ChatMessageReadCursorTableTableReferences
-                                        ._chatIdTable(db),
-                                referencedColumn:
-                                    $$ChatMessageReadCursorTableTableReferences
-                                        ._chatIdTable(db)
-                                        .id,
+                                referencedTable: $$ChatMessageReadCursorTableTableReferences._chatIdTable(db),
+                                referencedColumn: $$ChatMessageReadCursorTableTableReferences._chatIdTable(db).id,
                               )
                               as T;
                     }
@@ -20222,43 +16289,23 @@ typedef $$ChatOutboxMessageTableTableUpdateCompanionBuilder =
     });
 
 final class $$ChatOutboxMessageTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $ChatOutboxMessageTableTable,
-          ChatOutboxMessageData
-        > {
-  $$ChatOutboxMessageTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ChatOutboxMessageTableTable, ChatOutboxMessageData> {
+  $$ChatOutboxMessageTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatOutboxMessageTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+      db.chatsTable.createAlias($_aliasNameGenerator(db.chatOutboxMessageTable.chatId, db.chatsTable.id));
 
   $$ChatsTableTableProcessedTableManager? get chatId {
     final $_column = $_itemColumn<int>('chat_id');
     if ($_column == null) return null;
-    final manager = $$ChatsTableTableTableManager(
-      $_db,
-      $_db.chatsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ChatsTableTableTableManager($_db, $_db.chatsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_chatIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$ChatOutboxMessageTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ChatOutboxMessageTableTable> {
+class $$ChatOutboxMessageTableTableFilterComposer extends Composer<_$AppDatabase, $ChatOutboxMessageTableTable> {
   $$ChatOutboxMessageTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -20266,40 +16313,26 @@ class $$ChatOutboxMessageTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get participantId => $composableBuilder(
-    column: $table.participantId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get participantId =>
+      $composableBuilder(column: $table.participantId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get replyToId => $composableBuilder(
-    column: $table.replyToId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get replyToId =>
+      $composableBuilder(column: $table.replyToId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get forwardFromId => $composableBuilder(
-    column: $table.forwardFromId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get forwardFromId =>
+      $composableBuilder(column: $table.forwardFromId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get authorId => $composableBuilder(
-    column: $table.authorId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get authorId =>
+      $composableBuilder(column: $table.authorId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
   $$ChatsTableTableFilterComposer get chatId {
     final $$ChatsTableTableFilterComposer composer = $composerBuilder(
@@ -20307,26 +16340,20 @@ class $$ChatOutboxMessageTableTableFilterComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableFilterComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$ChatOutboxMessageTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChatOutboxMessageTableTable> {
+class $$ChatOutboxMessageTableTableOrderingComposer extends Composer<_$AppDatabase, $ChatOutboxMessageTableTable> {
   $$ChatOutboxMessageTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -20334,40 +16361,26 @@ class $$ChatOutboxMessageTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get participantId => $composableBuilder(
-    column: $table.participantId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get participantId =>
+      $composableBuilder(column: $table.participantId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get replyToId => $composableBuilder(
-    column: $table.replyToId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get replyToId =>
+      $composableBuilder(column: $table.replyToId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get forwardFromId => $composableBuilder(
-    column: $table.forwardFromId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get forwardFromId =>
+      $composableBuilder(column: $table.forwardFromId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get authorId => $composableBuilder(
-    column: $table.authorId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get authorId =>
+      $composableBuilder(column: $table.authorId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
   $$ChatsTableTableOrderingComposer get chatId {
     final $$ChatsTableTableOrderingComposer composer = $composerBuilder(
@@ -20375,26 +16388,20 @@ class $$ChatOutboxMessageTableTableOrderingComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableOrderingComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
   }
 }
 
-class $$ChatOutboxMessageTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChatOutboxMessageTableTable> {
+class $$ChatOutboxMessageTableTableAnnotationComposer extends Composer<_$AppDatabase, $ChatOutboxMessageTableTable> {
   $$ChatOutboxMessageTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -20402,32 +16409,21 @@ class $$ChatOutboxMessageTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get idKey =>
-      $composableBuilder(column: $table.idKey, builder: (column) => column);
+  GeneratedColumn<String> get idKey => $composableBuilder(column: $table.idKey, builder: (column) => column);
 
-  GeneratedColumn<String> get participantId => $composableBuilder(
-    column: $table.participantId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get participantId =>
+      $composableBuilder(column: $table.participantId, builder: (column) => column);
 
-  GeneratedColumn<int> get replyToId =>
-      $composableBuilder(column: $table.replyToId, builder: (column) => column);
+  GeneratedColumn<int> get replyToId => $composableBuilder(column: $table.replyToId, builder: (column) => column);
 
-  GeneratedColumn<int> get forwardFromId => $composableBuilder(
-    column: $table.forwardFromId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get forwardFromId =>
+      $composableBuilder(column: $table.forwardFromId, builder: (column) => column);
 
-  GeneratedColumn<String> get authorId =>
-      $composableBuilder(column: $table.authorId, builder: (column) => column);
+  GeneratedColumn<String> get authorId => $composableBuilder(column: $table.authorId, builder: (column) => column);
 
-  GeneratedColumn<String> get content =>
-      $composableBuilder(column: $table.content, builder: (column) => column);
+  GeneratedColumn<String> get content => $composableBuilder(column: $table.content, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
   $$ChatsTableTableAnnotationComposer get chatId {
     final $$ChatsTableTableAnnotationComposer composer = $composerBuilder(
@@ -20435,18 +16431,13 @@ class $$ChatOutboxMessageTableTableAnnotationComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20468,28 +16459,14 @@ class $$ChatOutboxMessageTableTableTableManager
           ChatOutboxMessageData,
           PrefetchHooks Function({bool chatId})
         > {
-  $$ChatOutboxMessageTableTableTableManager(
-    _$AppDatabase db,
-    $ChatOutboxMessageTableTable table,
-  ) : super(
+  $$ChatOutboxMessageTableTableTableManager(_$AppDatabase db, $ChatOutboxMessageTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChatOutboxMessageTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$ChatOutboxMessageTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$ChatOutboxMessageTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ChatOutboxMessageTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChatOutboxMessageTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChatOutboxMessageTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> idKey = const Value.absent(),
@@ -20534,14 +16511,8 @@ class $$ChatOutboxMessageTableTableTableManager
                 sendAttempts: sendAttempts,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ChatOutboxMessageTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ChatOutboxMessageTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({chatId = false}) {
             return PrefetchHooks(
               db: db,
@@ -20567,13 +16538,8 @@ class $$ChatOutboxMessageTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.chatId,
-                                referencedTable:
-                                    $$ChatOutboxMessageTableTableReferences
-                                        ._chatIdTable(db),
-                                referencedColumn:
-                                    $$ChatOutboxMessageTableTableReferences
-                                        ._chatIdTable(db)
-                                        .id,
+                                referencedTable: $$ChatOutboxMessageTableTableReferences._chatIdTable(db),
+                                referencedColumn: $$ChatOutboxMessageTableTableReferences._chatIdTable(db).id,
                               )
                               as T;
                     }
@@ -20621,38 +16587,19 @@ typedef $$ChatOutboxMessageEditTableTableUpdateCompanionBuilder =
     });
 
 final class $$ChatOutboxMessageEditTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $ChatOutboxMessageEditTableTable,
-          ChatOutboxMessageEditData
-        > {
-  $$ChatOutboxMessageEditTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ChatOutboxMessageEditTableTable, ChatOutboxMessageEditData> {
+  $$ChatOutboxMessageEditTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatOutboxMessageEditTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+      db.chatsTable.createAlias($_aliasNameGenerator(db.chatOutboxMessageEditTable.chatId, db.chatsTable.id));
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
 
-    final manager = $$ChatsTableTableTableManager(
-      $_db,
-      $_db.chatsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ChatsTableTableTableManager($_db, $_db.chatsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_chatIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -20665,25 +16612,16 @@ class $$ChatOutboxMessageEditTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get newContent => $composableBuilder(
-    column: $table.newContent,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get newContent =>
+      $composableBuilder(column: $table.newContent, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
   $$ChatsTableTableFilterComposer get chatId {
     final $$ChatsTableTableFilterComposer composer = $composerBuilder(
@@ -20691,18 +16629,13 @@ class $$ChatOutboxMessageEditTableTableFilterComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableFilterComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20718,25 +16651,16 @@ class $$ChatOutboxMessageEditTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get newContent => $composableBuilder(
-    column: $table.newContent,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get newContent =>
+      $composableBuilder(column: $table.newContent, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
   $$ChatsTableTableOrderingComposer get chatId {
     final $$ChatsTableTableOrderingComposer composer = $composerBuilder(
@@ -20744,18 +16668,13 @@ class $$ChatOutboxMessageEditTableTableOrderingComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableOrderingComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20771,21 +16690,13 @@ class $$ChatOutboxMessageEditTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get idKey =>
-      $composableBuilder(column: $table.idKey, builder: (column) => column);
+  GeneratedColumn<String> get idKey => $composableBuilder(column: $table.idKey, builder: (column) => column);
 
-  GeneratedColumn<String> get newContent => $composableBuilder(
-    column: $table.newContent,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get newContent => $composableBuilder(column: $table.newContent, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
   $$ChatsTableTableAnnotationComposer get chatId {
     final $$ChatsTableTableAnnotationComposer composer = $composerBuilder(
@@ -20793,18 +16704,13 @@ class $$ChatOutboxMessageEditTableTableAnnotationComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -20822,35 +16728,19 @@ class $$ChatOutboxMessageEditTableTableTableManager
           $$ChatOutboxMessageEditTableTableAnnotationComposer,
           $$ChatOutboxMessageEditTableTableCreateCompanionBuilder,
           $$ChatOutboxMessageEditTableTableUpdateCompanionBuilder,
-          (
-            ChatOutboxMessageEditData,
-            $$ChatOutboxMessageEditTableTableReferences,
-          ),
+          (ChatOutboxMessageEditData, $$ChatOutboxMessageEditTableTableReferences),
           ChatOutboxMessageEditData,
           PrefetchHooks Function({bool chatId})
         > {
-  $$ChatOutboxMessageEditTableTableTableManager(
-    _$AppDatabase db,
-    $ChatOutboxMessageEditTableTable table,
-  ) : super(
+  $$ChatOutboxMessageEditTableTableTableManager(_$AppDatabase db, $ChatOutboxMessageEditTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChatOutboxMessageEditTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$ChatOutboxMessageEditTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ChatOutboxMessageEditTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChatOutboxMessageEditTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ChatOutboxMessageEditTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$ChatOutboxMessageEditTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -20879,14 +16769,8 @@ class $$ChatOutboxMessageEditTableTableTableManager
                 newContent: newContent,
                 sendAttempts: sendAttempts,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ChatOutboxMessageEditTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ChatOutboxMessageEditTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({chatId = false}) {
             return PrefetchHooks(
               db: db,
@@ -20912,13 +16796,8 @@ class $$ChatOutboxMessageEditTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.chatId,
-                                referencedTable:
-                                    $$ChatOutboxMessageEditTableTableReferences
-                                        ._chatIdTable(db),
-                                referencedColumn:
-                                    $$ChatOutboxMessageEditTableTableReferences
-                                        ._chatIdTable(db)
-                                        .id,
+                                referencedTable: $$ChatOutboxMessageEditTableTableReferences._chatIdTable(db),
+                                referencedColumn: $$ChatOutboxMessageEditTableTableReferences._chatIdTable(db).id,
                               )
                               as T;
                     }
@@ -20964,38 +16843,19 @@ typedef $$ChatOutboxMessageDeleteTableTableUpdateCompanionBuilder =
     });
 
 final class $$ChatOutboxMessageDeleteTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $ChatOutboxMessageDeleteTableTable,
-          ChatOutboxMessageDeleteData
-        > {
-  $$ChatOutboxMessageDeleteTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ChatOutboxMessageDeleteTableTable, ChatOutboxMessageDeleteData> {
+  $$ChatOutboxMessageDeleteTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatOutboxMessageDeleteTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+      db.chatsTable.createAlias($_aliasNameGenerator(db.chatOutboxMessageDeleteTable.chatId, db.chatsTable.id));
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
 
-    final manager = $$ChatsTableTableTableManager(
-      $_db,
-      $_db.chatsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ChatsTableTableTableManager($_db, $_db.chatsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_chatIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -21008,20 +16868,13 @@ class $$ChatOutboxMessageDeleteTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
   $$ChatsTableTableFilterComposer get chatId {
     final $$ChatsTableTableFilterComposer composer = $composerBuilder(
@@ -21029,18 +16882,13 @@ class $$ChatOutboxMessageDeleteTableTableFilterComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableFilterComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21056,20 +16904,13 @@ class $$ChatOutboxMessageDeleteTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
   $$ChatsTableTableOrderingComposer get chatId {
     final $$ChatsTableTableOrderingComposer composer = $composerBuilder(
@@ -21077,18 +16918,13 @@ class $$ChatOutboxMessageDeleteTableTableOrderingComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableOrderingComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21104,16 +16940,11 @@ class $$ChatOutboxMessageDeleteTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get idKey =>
-      $composableBuilder(column: $table.idKey, builder: (column) => column);
+  GeneratedColumn<String> get idKey => $composableBuilder(column: $table.idKey, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
   $$ChatsTableTableAnnotationComposer get chatId {
     final $$ChatsTableTableAnnotationComposer composer = $composerBuilder(
@@ -21121,18 +16952,13 @@ class $$ChatOutboxMessageDeleteTableTableAnnotationComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21150,35 +16976,19 @@ class $$ChatOutboxMessageDeleteTableTableTableManager
           $$ChatOutboxMessageDeleteTableTableAnnotationComposer,
           $$ChatOutboxMessageDeleteTableTableCreateCompanionBuilder,
           $$ChatOutboxMessageDeleteTableTableUpdateCompanionBuilder,
-          (
-            ChatOutboxMessageDeleteData,
-            $$ChatOutboxMessageDeleteTableTableReferences,
-          ),
+          (ChatOutboxMessageDeleteData, $$ChatOutboxMessageDeleteTableTableReferences),
           ChatOutboxMessageDeleteData,
           PrefetchHooks Function({bool chatId})
         > {
-  $$ChatOutboxMessageDeleteTableTableTableManager(
-    _$AppDatabase db,
-    $ChatOutboxMessageDeleteTableTable table,
-  ) : super(
+  $$ChatOutboxMessageDeleteTableTableTableManager(_$AppDatabase db, $ChatOutboxMessageDeleteTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChatOutboxMessageDeleteTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$ChatOutboxMessageDeleteTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ChatOutboxMessageDeleteTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChatOutboxMessageDeleteTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ChatOutboxMessageDeleteTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$ChatOutboxMessageDeleteTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -21203,14 +17013,8 @@ class $$ChatOutboxMessageDeleteTableTableTableManager
                 chatId: chatId,
                 sendAttempts: sendAttempts,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ChatOutboxMessageDeleteTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ChatOutboxMessageDeleteTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({chatId = false}) {
             return PrefetchHooks(
               db: db,
@@ -21236,13 +17040,8 @@ class $$ChatOutboxMessageDeleteTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.chatId,
-                                referencedTable:
-                                    $$ChatOutboxMessageDeleteTableTableReferences
-                                        ._chatIdTable(db),
-                                referencedColumn:
-                                    $$ChatOutboxMessageDeleteTableTableReferences
-                                        ._chatIdTable(db)
-                                        .id,
+                                referencedTable: $$ChatOutboxMessageDeleteTableTableReferences._chatIdTable(db),
+                                referencedColumn: $$ChatOutboxMessageDeleteTableTableReferences._chatIdTable(db).id,
                               )
                               as T;
                     }
@@ -21268,10 +17067,7 @@ typedef $$ChatOutboxMessageDeleteTableTableProcessedTableManager =
       $$ChatOutboxMessageDeleteTableTableAnnotationComposer,
       $$ChatOutboxMessageDeleteTableTableCreateCompanionBuilder,
       $$ChatOutboxMessageDeleteTableTableUpdateCompanionBuilder,
-      (
-        ChatOutboxMessageDeleteData,
-        $$ChatOutboxMessageDeleteTableTableReferences,
-      ),
+      (ChatOutboxMessageDeleteData, $$ChatOutboxMessageDeleteTableTableReferences),
       ChatOutboxMessageDeleteData,
       PrefetchHooks Function({bool chatId})
     >;
@@ -21282,45 +17078,22 @@ typedef $$ChatOutboxReadCursorsTableTableCreateCompanionBuilder =
       Value<int> sendAttempts,
     });
 typedef $$ChatOutboxReadCursorsTableTableUpdateCompanionBuilder =
-    ChatOutboxReadCursorDataCompanion Function({
-      Value<int> chatId,
-      Value<int> timestampUsec,
-      Value<int> sendAttempts,
-    });
+    ChatOutboxReadCursorDataCompanion Function({Value<int> chatId, Value<int> timestampUsec, Value<int> sendAttempts});
 
 final class $$ChatOutboxReadCursorsTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $ChatOutboxReadCursorsTableTable,
-          ChatOutboxReadCursorData
-        > {
-  $$ChatOutboxReadCursorsTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $ChatOutboxReadCursorsTableTable, ChatOutboxReadCursorData> {
+  $$ChatOutboxReadCursorsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatOutboxReadCursorsTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+      db.chatsTable.createAlias($_aliasNameGenerator(db.chatOutboxReadCursorsTable.chatId, db.chatsTable.id));
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
 
-    final manager = $$ChatsTableTableTableManager(
-      $_db,
-      $_db.chatsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
+    final manager = $$ChatsTableTableTableManager($_db, $_db.chatsTable).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_chatIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -21333,15 +17106,11 @@ class $$ChatOutboxReadCursorsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
   $$ChatsTableTableFilterComposer get chatId {
     final $$ChatsTableTableFilterComposer composer = $composerBuilder(
@@ -21349,18 +17118,13 @@ class $$ChatOutboxReadCursorsTableTableFilterComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableFilterComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21376,15 +17140,11 @@ class $$ChatOutboxReadCursorsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
   $$ChatsTableTableOrderingComposer get chatId {
     final $$ChatsTableTableOrderingComposer composer = $composerBuilder(
@@ -21392,18 +17152,13 @@ class $$ChatOutboxReadCursorsTableTableOrderingComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableOrderingComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableOrderingComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21419,15 +17174,10 @@ class $$ChatOutboxReadCursorsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
   $$ChatsTableTableAnnotationComposer get chatId {
     final $$ChatsTableTableAnnotationComposer composer = $composerBuilder(
@@ -21435,18 +17185,13 @@ class $$ChatOutboxReadCursorsTableTableAnnotationComposer
       getCurrentColumn: (t) => t.chatId,
       referencedTable: $db.chatsTable,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ChatsTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$ChatsTableTableAnnotationComposer(
             $db: $db,
             $table: $db.chatsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return composer;
@@ -21464,35 +17209,19 @@ class $$ChatOutboxReadCursorsTableTableTableManager
           $$ChatOutboxReadCursorsTableTableAnnotationComposer,
           $$ChatOutboxReadCursorsTableTableCreateCompanionBuilder,
           $$ChatOutboxReadCursorsTableTableUpdateCompanionBuilder,
-          (
-            ChatOutboxReadCursorData,
-            $$ChatOutboxReadCursorsTableTableReferences,
-          ),
+          (ChatOutboxReadCursorData, $$ChatOutboxReadCursorsTableTableReferences),
           ChatOutboxReadCursorData,
           PrefetchHooks Function({bool chatId})
         > {
-  $$ChatOutboxReadCursorsTableTableTableManager(
-    _$AppDatabase db,
-    $ChatOutboxReadCursorsTableTable table,
-  ) : super(
+  $$ChatOutboxReadCursorsTableTableTableManager(_$AppDatabase db, $ChatOutboxReadCursorsTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChatOutboxReadCursorsTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$ChatOutboxReadCursorsTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ChatOutboxReadCursorsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChatOutboxReadCursorsTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ChatOutboxReadCursorsTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$ChatOutboxReadCursorsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> chatId = const Value.absent(),
@@ -21513,14 +17242,8 @@ class $$ChatOutboxReadCursorsTableTableTableManager
                 timestampUsec: timestampUsec,
                 sendAttempts: sendAttempts,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ChatOutboxReadCursorsTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$ChatOutboxReadCursorsTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({chatId = false}) {
             return PrefetchHooks(
               db: db,
@@ -21546,13 +17269,8 @@ class $$ChatOutboxReadCursorsTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.chatId,
-                                referencedTable:
-                                    $$ChatOutboxReadCursorsTableTableReferences
-                                        ._chatIdTable(db),
-                                referencedColumn:
-                                    $$ChatOutboxReadCursorsTableTableReferences
-                                        ._chatIdTable(db)
-                                        .id,
+                                referencedTable: $$ChatOutboxReadCursorsTableTableReferences._chatIdTable(db),
+                                referencedColumn: $$ChatOutboxReadCursorsTableTableReferences._chatIdTable(db).id,
                               )
                               as T;
                     }
@@ -21600,25 +17318,14 @@ typedef $$SmsConversationsTableTableUpdateCompanionBuilder =
     });
 
 final class $$SmsConversationsTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $SmsConversationsTableTable,
-          SmsConversationData
-        > {
-  $$SmsConversationsTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $SmsConversationsTableTable, SmsConversationData> {
+  $$SmsConversationsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<$SmsMessagesTableTable, List<SmsMessageData>>
-  _smsMessagesTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+  static MultiTypedResultKey<$SmsMessagesTableTable, List<SmsMessageData>> _smsMessagesTableRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
     db.smsMessagesTable,
-    aliasName: $_aliasNameGenerator(
-      db.smsConversationsTable.id,
-      db.smsMessagesTable.conversationId,
-    ),
+    aliasName: $_aliasNameGenerator(db.smsConversationsTable.id, db.smsMessagesTable.conversationId),
   );
 
   $$SmsMessagesTableTableProcessedTableManager get smsMessagesTableRefs {
@@ -21627,157 +17334,93 @@ final class $$SmsConversationsTableTableReferences
       $_db.smsMessagesTable,
     ).filter((f) => f.conversationId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _smsMessagesTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_smsMessagesTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $SmsMessageSyncCursorTableTable,
-    List<SmsMessageSyncCursorData>
-  >
-  _smsMessageSyncCursorTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.smsMessageSyncCursorTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsMessageSyncCursorTable.conversationId,
-        ),
-      );
+  static MultiTypedResultKey<$SmsMessageSyncCursorTableTable, List<SmsMessageSyncCursorData>>
+  _smsMessageSyncCursorTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.smsMessageSyncCursorTable,
+    aliasName: $_aliasNameGenerator(db.smsConversationsTable.id, db.smsMessageSyncCursorTable.conversationId),
+  );
 
-  $$SmsMessageSyncCursorTableTableProcessedTableManager
-  get smsMessageSyncCursorTableRefs {
+  $$SmsMessageSyncCursorTableTableProcessedTableManager get smsMessageSyncCursorTableRefs {
     final manager = $$SmsMessageSyncCursorTableTableTableManager(
       $_db,
       $_db.smsMessageSyncCursorTable,
     ).filter((f) => f.conversationId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _smsMessageSyncCursorTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_smsMessageSyncCursorTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $SmsMessageReadCursorTableTable,
-    List<SmsMessageReadCursorData>
-  >
-  _smsMessageReadCursorTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.smsMessageReadCursorTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsMessageReadCursorTable.conversationId,
-        ),
-      );
+  static MultiTypedResultKey<$SmsMessageReadCursorTableTable, List<SmsMessageReadCursorData>>
+  _smsMessageReadCursorTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.smsMessageReadCursorTable,
+    aliasName: $_aliasNameGenerator(db.smsConversationsTable.id, db.smsMessageReadCursorTable.conversationId),
+  );
 
-  $$SmsMessageReadCursorTableTableProcessedTableManager
-  get smsMessageReadCursorTableRefs {
+  $$SmsMessageReadCursorTableTableProcessedTableManager get smsMessageReadCursorTableRefs {
     final manager = $$SmsMessageReadCursorTableTableTableManager(
       $_db,
       $_db.smsMessageReadCursorTable,
     ).filter((f) => f.conversationId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _smsMessageReadCursorTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_smsMessageReadCursorTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $SmsOutboxMessagesTableTable,
-    List<SmsOutboxMessageData>
-  >
-  _smsOutboxMessagesTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.smsOutboxMessagesTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsOutboxMessagesTable.conversationId,
-        ),
-      );
+  static MultiTypedResultKey<$SmsOutboxMessagesTableTable, List<SmsOutboxMessageData>> _smsOutboxMessagesTableRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.smsOutboxMessagesTable,
+    aliasName: $_aliasNameGenerator(db.smsConversationsTable.id, db.smsOutboxMessagesTable.conversationId),
+  );
 
-  $$SmsOutboxMessagesTableTableProcessedTableManager
-  get smsOutboxMessagesTableRefs {
+  $$SmsOutboxMessagesTableTableProcessedTableManager get smsOutboxMessagesTableRefs {
     final manager = $$SmsOutboxMessagesTableTableTableManager(
       $_db,
       $_db.smsOutboxMessagesTable,
     ).filter((f) => f.conversationId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _smsOutboxMessagesTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_smsOutboxMessagesTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $SmsOutboxMessageDeleteTableTable,
-    List<SmsOutboxMessageDeleteData>
-  >
-  _smsOutboxMessageDeleteTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.smsOutboxMessageDeleteTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsOutboxMessageDeleteTable.conversationId,
-        ),
-      );
+  static MultiTypedResultKey<$SmsOutboxMessageDeleteTableTable, List<SmsOutboxMessageDeleteData>>
+  _smsOutboxMessageDeleteTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.smsOutboxMessageDeleteTable,
+    aliasName: $_aliasNameGenerator(db.smsConversationsTable.id, db.smsOutboxMessageDeleteTable.conversationId),
+  );
 
-  $$SmsOutboxMessageDeleteTableTableProcessedTableManager
-  get smsOutboxMessageDeleteTableRefs {
+  $$SmsOutboxMessageDeleteTableTableProcessedTableManager get smsOutboxMessageDeleteTableRefs {
     final manager = $$SmsOutboxMessageDeleteTableTableTableManager(
       $_db,
       $_db.smsOutboxMessageDeleteTable,
     ).filter((f) => f.conversationId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _smsOutboxMessageDeleteTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_smsOutboxMessageDeleteTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<
-    $SmsOutboxReadCursorsTableTable,
-    List<SmsOutboxReadCursorData>
-  >
-  _smsOutboxReadCursorsTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.smsOutboxReadCursorsTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsOutboxReadCursorsTable.conversationId,
-        ),
-      );
+  static MultiTypedResultKey<$SmsOutboxReadCursorsTableTable, List<SmsOutboxReadCursorData>>
+  _smsOutboxReadCursorsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.smsOutboxReadCursorsTable,
+    aliasName: $_aliasNameGenerator(db.smsConversationsTable.id, db.smsOutboxReadCursorsTable.conversationId),
+  );
 
-  $$SmsOutboxReadCursorsTableTableProcessedTableManager
-  get smsOutboxReadCursorsTableRefs {
+  $$SmsOutboxReadCursorsTableTableProcessedTableManager get smsOutboxReadCursorsTableRefs {
     final manager = $$SmsOutboxReadCursorsTableTableTableManager(
       $_db,
       $_db.smsOutboxReadCursorsTable,
     ).filter((f) => f.conversationId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _smsOutboxReadCursorsTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_smsOutboxReadCursorsTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $$SmsConversationsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $SmsConversationsTableTable> {
+class $$SmsConversationsTableTableFilterComposer extends Composer<_$AppDatabase, $SmsConversationsTableTable> {
   $$SmsConversationsTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -21785,195 +17428,140 @@ class $$SmsConversationsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get firstPhoneNumber => $composableBuilder(
-    column: $table.firstPhoneNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get firstPhoneNumber =>
+      $composableBuilder(column: $table.firstPhoneNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get secondPhoneNumber => $composableBuilder(
-    column: $table.secondPhoneNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get secondPhoneNumber =>
+      $composableBuilder(column: $table.secondPhoneNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get createdAtRemote => $composableBuilder(
-    column: $table.createdAtRemote,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get createdAtRemote =>
+      $composableBuilder(column: $table.createdAtRemote, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAtRemote => $composableBuilder(
-    column: $table.updatedAtRemote,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAtRemote =>
+      $composableBuilder(column: $table.updatedAtRemote, builder: (column) => ColumnFilters(column));
 
-  Expression<bool> smsMessagesTableRefs(
-    Expression<bool> Function($$SmsMessagesTableTableFilterComposer f) f,
-  ) {
+  Expression<bool> smsMessagesTableRefs(Expression<bool> Function($$SmsMessagesTableTableFilterComposer f) f) {
     final $$SmsMessagesTableTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.smsMessagesTable,
       getReferencedColumn: (t) => t.conversationId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SmsMessagesTableTableFilterComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsMessagesTableTableFilterComposer(
             $db: $db,
             $table: $db.smsMessagesTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
   Expression<bool> smsMessageSyncCursorTableRefs(
-    Expression<bool> Function($$SmsMessageSyncCursorTableTableFilterComposer f)
-    f,
+    Expression<bool> Function($$SmsMessageSyncCursorTableTableFilterComposer f) f,
   ) {
-    final $$SmsMessageSyncCursorTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsMessageSyncCursorTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsMessageSyncCursorTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsMessageSyncCursorTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsMessageSyncCursorTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsMessageSyncCursorTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsMessageSyncCursorTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsMessageSyncCursorTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> smsMessageReadCursorTableRefs(
-    Expression<bool> Function($$SmsMessageReadCursorTableTableFilterComposer f)
-    f,
+    Expression<bool> Function($$SmsMessageReadCursorTableTableFilterComposer f) f,
   ) {
-    final $$SmsMessageReadCursorTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsMessageReadCursorTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsMessageReadCursorTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsMessageReadCursorTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsMessageReadCursorTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsMessageReadCursorTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsMessageReadCursorTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsMessageReadCursorTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> smsOutboxMessagesTableRefs(
     Expression<bool> Function($$SmsOutboxMessagesTableTableFilterComposer f) f,
   ) {
-    final $$SmsOutboxMessagesTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsOutboxMessagesTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsOutboxMessagesTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsOutboxMessagesTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsOutboxMessagesTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsOutboxMessagesTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsOutboxMessagesTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsOutboxMessagesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> smsOutboxMessageDeleteTableRefs(
-    Expression<bool> Function(
-      $$SmsOutboxMessageDeleteTableTableFilterComposer f,
-    )
-    f,
+    Expression<bool> Function($$SmsOutboxMessageDeleteTableTableFilterComposer f) f,
   ) {
-    final $$SmsOutboxMessageDeleteTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsOutboxMessageDeleteTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsOutboxMessageDeleteTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsOutboxMessageDeleteTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsOutboxMessageDeleteTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsOutboxMessageDeleteTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsOutboxMessageDeleteTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsOutboxMessageDeleteTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<bool> smsOutboxReadCursorsTableRefs(
-    Expression<bool> Function($$SmsOutboxReadCursorsTableTableFilterComposer f)
-    f,
+    Expression<bool> Function($$SmsOutboxReadCursorsTableTableFilterComposer f) f,
   ) {
-    final $$SmsOutboxReadCursorsTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsOutboxReadCursorsTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsOutboxReadCursorsTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsOutboxReadCursorsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsOutboxReadCursorsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsOutboxReadCursorsTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsOutboxReadCursorsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsOutboxReadCursorsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
 
-class $$SmsConversationsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $SmsConversationsTableTable> {
+class $$SmsConversationsTableTableOrderingComposer extends Composer<_$AppDatabase, $SmsConversationsTableTable> {
   $$SmsConversationsTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -21981,34 +17569,22 @@ class $$SmsConversationsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get firstPhoneNumber => $composableBuilder(
-    column: $table.firstPhoneNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get firstPhoneNumber =>
+      $composableBuilder(column: $table.firstPhoneNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get secondPhoneNumber => $composableBuilder(
-    column: $table.secondPhoneNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get secondPhoneNumber =>
+      $composableBuilder(column: $table.secondPhoneNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get createdAtRemote => $composableBuilder(
-    column: $table.createdAtRemote,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get createdAtRemote =>
+      $composableBuilder(column: $table.createdAtRemote, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAtRemote => $composableBuilder(
-    column: $table.updatedAtRemote,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAtRemote =>
+      $composableBuilder(column: $table.updatedAtRemote, builder: (column) => ColumnOrderings(column));
 }
 
-class $$SmsConversationsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SmsConversationsTableTable> {
+class $$SmsConversationsTableTableAnnotationComposer extends Composer<_$AppDatabase, $SmsConversationsTableTable> {
   $$SmsConversationsTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -22016,28 +17592,19 @@ class $$SmsConversationsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get firstPhoneNumber => $composableBuilder(
-    column: $table.firstPhoneNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get firstPhoneNumber =>
+      $composableBuilder(column: $table.firstPhoneNumber, builder: (column) => column);
 
-  GeneratedColumn<String> get secondPhoneNumber => $composableBuilder(
-    column: $table.secondPhoneNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get secondPhoneNumber =>
+      $composableBuilder(column: $table.secondPhoneNumber, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAtRemote => $composableBuilder(
-    column: $table.createdAtRemote,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get createdAtRemote =>
+      $composableBuilder(column: $table.createdAtRemote, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAtRemote => $composableBuilder(
-    column: $table.updatedAtRemote,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get updatedAtRemote =>
+      $composableBuilder(column: $table.updatedAtRemote, builder: (column) => column);
 
   Expression<T> smsMessagesTableRefs<T extends Object>(
     Expression<T> Function($$SmsMessagesTableTableAnnotationComposer a) f,
@@ -22047,156 +17614,115 @@ class $$SmsConversationsTableTableAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.smsMessagesTable,
       getReferencedColumn: (t) => t.conversationId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SmsMessagesTableTableAnnotationComposer(
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsMessagesTableTableAnnotationComposer(
             $db: $db,
             $table: $db.smsMessagesTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
           ),
     );
     return f(composer);
   }
 
   Expression<T> smsMessageSyncCursorTableRefs<T extends Object>(
-    Expression<T> Function($$SmsMessageSyncCursorTableTableAnnotationComposer a)
-    f,
+    Expression<T> Function($$SmsMessageSyncCursorTableTableAnnotationComposer a) f,
   ) {
-    final $$SmsMessageSyncCursorTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsMessageSyncCursorTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsMessageSyncCursorTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsMessageSyncCursorTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsMessageSyncCursorTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsMessageSyncCursorTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsMessageSyncCursorTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsMessageSyncCursorTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> smsMessageReadCursorTableRefs<T extends Object>(
-    Expression<T> Function($$SmsMessageReadCursorTableTableAnnotationComposer a)
-    f,
+    Expression<T> Function($$SmsMessageReadCursorTableTableAnnotationComposer a) f,
   ) {
-    final $$SmsMessageReadCursorTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsMessageReadCursorTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsMessageReadCursorTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsMessageReadCursorTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsMessageReadCursorTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsMessageReadCursorTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsMessageReadCursorTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsMessageReadCursorTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> smsOutboxMessagesTableRefs<T extends Object>(
     Expression<T> Function($$SmsOutboxMessagesTableTableAnnotationComposer a) f,
   ) {
-    final $$SmsOutboxMessagesTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsOutboxMessagesTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsOutboxMessagesTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsOutboxMessagesTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsOutboxMessagesTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsOutboxMessagesTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsOutboxMessagesTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsOutboxMessagesTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> smsOutboxMessageDeleteTableRefs<T extends Object>(
-    Expression<T> Function(
-      $$SmsOutboxMessageDeleteTableTableAnnotationComposer a,
-    )
-    f,
+    Expression<T> Function($$SmsOutboxMessageDeleteTableTableAnnotationComposer a) f,
   ) {
-    final $$SmsOutboxMessageDeleteTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsOutboxMessageDeleteTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsOutboxMessageDeleteTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsOutboxMessageDeleteTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsOutboxMessageDeleteTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsOutboxMessageDeleteTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsOutboxMessageDeleteTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsOutboxMessageDeleteTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 
   Expression<T> smsOutboxReadCursorsTableRefs<T extends Object>(
-    Expression<T> Function($$SmsOutboxReadCursorsTableTableAnnotationComposer a)
-    f,
+    Expression<T> Function($$SmsOutboxReadCursorsTableTableAnnotationComposer a) f,
   ) {
-    final $$SmsOutboxReadCursorsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.smsOutboxReadCursorsTable,
-          getReferencedColumn: (t) => t.conversationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsOutboxReadCursorsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsOutboxReadCursorsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsOutboxReadCursorsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.smsOutboxReadCursorsTable,
+      getReferencedColumn: (t) => t.conversationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsOutboxReadCursorsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsOutboxReadCursorsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -22223,28 +17749,14 @@ class $$SmsConversationsTableTableTableManager
             bool smsOutboxReadCursorsTableRefs,
           })
         > {
-  $$SmsConversationsTableTableTableManager(
-    _$AppDatabase db,
-    $SmsConversationsTableTable table,
-  ) : super(
+  $$SmsConversationsTableTableTableManager(_$AppDatabase db, $SmsConversationsTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SmsConversationsTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SmsConversationsTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SmsConversationsTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SmsConversationsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SmsConversationsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SmsConversationsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -22273,14 +17785,8 @@ class $$SmsConversationsTableTableTableManager
                 createdAtRemote: createdAtRemote,
                 updatedAtRemote: updatedAtRemote,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SmsConversationsTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$SmsConversationsTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback:
               ({
                 smsMessagesTableRefs = false,
@@ -22294,39 +17800,23 @@ class $$SmsConversationsTableTableTableManager
                   db: db,
                   explicitlyWatchedTables: [
                     if (smsMessagesTableRefs) db.smsMessagesTable,
-                    if (smsMessageSyncCursorTableRefs)
-                      db.smsMessageSyncCursorTable,
-                    if (smsMessageReadCursorTableRefs)
-                      db.smsMessageReadCursorTable,
+                    if (smsMessageSyncCursorTableRefs) db.smsMessageSyncCursorTable,
+                    if (smsMessageReadCursorTableRefs) db.smsMessageReadCursorTable,
                     if (smsOutboxMessagesTableRefs) db.smsOutboxMessagesTable,
-                    if (smsOutboxMessageDeleteTableRefs)
-                      db.smsOutboxMessageDeleteTable,
-                    if (smsOutboxReadCursorsTableRefs)
-                      db.smsOutboxReadCursorsTable,
+                    if (smsOutboxMessageDeleteTableRefs) db.smsOutboxMessageDeleteTable,
+                    if (smsOutboxReadCursorsTableRefs) db.smsOutboxReadCursorsTable,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (smsMessagesTableRefs)
-                        await $_getPrefetchedData<
-                          SmsConversationData,
-                          $SmsConversationsTableTable,
-                          SmsMessageData
-                        >(
+                        await $_getPrefetchedData<SmsConversationData, $SmsConversationsTableTable, SmsMessageData>(
                           currentTable: table,
-                          referencedTable:
-                              $$SmsConversationsTableTableReferences
-                                  ._smsMessagesTableRefsTable(db),
+                          referencedTable: $$SmsConversationsTableTableReferences._smsMessagesTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$SmsConversationsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).smsMessagesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                              $$SmsConversationsTableTableReferences(db, table, p0).smsMessagesTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.conversationId == item.id),
                           typedResults: items,
                         ),
                       if (smsMessageSyncCursorTableRefs)
@@ -22336,19 +17826,13 @@ class $$SmsConversationsTableTableTableManager
                           SmsMessageSyncCursorData
                         >(
                           currentTable: table,
-                          referencedTable:
-                              $$SmsConversationsTableTableReferences
-                                  ._smsMessageSyncCursorTableRefsTable(db),
+                          referencedTable: $$SmsConversationsTableTableReferences._smsMessageSyncCursorTableRefsTable(
+                            db,
+                          ),
                           managerFromTypedResult: (p0) =>
-                              $$SmsConversationsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).smsMessageSyncCursorTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                              $$SmsConversationsTableTableReferences(db, table, p0).smsMessageSyncCursorTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.conversationId == item.id),
                           typedResults: items,
                         ),
                       if (smsMessageReadCursorTableRefs)
@@ -22358,19 +17842,13 @@ class $$SmsConversationsTableTableTableManager
                           SmsMessageReadCursorData
                         >(
                           currentTable: table,
-                          referencedTable:
-                              $$SmsConversationsTableTableReferences
-                                  ._smsMessageReadCursorTableRefsTable(db),
+                          referencedTable: $$SmsConversationsTableTableReferences._smsMessageReadCursorTableRefsTable(
+                            db,
+                          ),
                           managerFromTypedResult: (p0) =>
-                              $$SmsConversationsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).smsMessageReadCursorTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                              $$SmsConversationsTableTableReferences(db, table, p0).smsMessageReadCursorTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.conversationId == item.id),
                           typedResults: items,
                         ),
                       if (smsOutboxMessagesTableRefs)
@@ -22380,19 +17858,11 @@ class $$SmsConversationsTableTableTableManager
                           SmsOutboxMessageData
                         >(
                           currentTable: table,
-                          referencedTable:
-                              $$SmsConversationsTableTableReferences
-                                  ._smsOutboxMessagesTableRefsTable(db),
+                          referencedTable: $$SmsConversationsTableTableReferences._smsOutboxMessagesTableRefsTable(db),
                           managerFromTypedResult: (p0) =>
-                              $$SmsConversationsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).smsOutboxMessagesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                              $$SmsConversationsTableTableReferences(db, table, p0).smsOutboxMessagesTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.conversationId == item.id),
                           typedResults: items,
                         ),
                       if (smsOutboxMessageDeleteTableRefs)
@@ -22402,19 +17872,13 @@ class $$SmsConversationsTableTableTableManager
                           SmsOutboxMessageDeleteData
                         >(
                           currentTable: table,
-                          referencedTable:
-                              $$SmsConversationsTableTableReferences
-                                  ._smsOutboxMessageDeleteTableRefsTable(db),
+                          referencedTable: $$SmsConversationsTableTableReferences._smsOutboxMessageDeleteTableRefsTable(
+                            db,
+                          ),
                           managerFromTypedResult: (p0) =>
-                              $$SmsConversationsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).smsOutboxMessageDeleteTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                              $$SmsConversationsTableTableReferences(db, table, p0).smsOutboxMessageDeleteTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.conversationId == item.id),
                           typedResults: items,
                         ),
                       if (smsOutboxReadCursorsTableRefs)
@@ -22424,19 +17888,13 @@ class $$SmsConversationsTableTableTableManager
                           SmsOutboxReadCursorData
                         >(
                           currentTable: table,
-                          referencedTable:
-                              $$SmsConversationsTableTableReferences
-                                  ._smsOutboxReadCursorsTableRefsTable(db),
+                          referencedTable: $$SmsConversationsTableTableReferences._smsOutboxReadCursorsTableRefsTable(
+                            db,
+                          ),
                           managerFromTypedResult: (p0) =>
-                              $$SmsConversationsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).smsOutboxReadCursorsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                              $$SmsConversationsTableTableReferences(db, table, p0).smsOutboxReadCursorsTableRefs,
+                          referencedItemsForCurrentItem: (item, referencedItems) =>
+                              referencedItems.where((e) => e.conversationId == item.id),
                           typedResults: items,
                         ),
                     ];
@@ -22498,21 +17956,12 @@ typedef $$SmsMessagesTableTableUpdateCompanionBuilder =
     });
 
 final class $$SmsMessagesTableTableReferences
-    extends
-        BaseReferences<_$AppDatabase, $SmsMessagesTableTable, SmsMessageData> {
-  $$SmsMessagesTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $SmsMessagesTableTable, SmsMessageData> {
+  $$SmsMessagesTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
-      db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsMessagesTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
-      );
+  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) => db.smsConversationsTable.createAlias(
+    $_aliasNameGenerator(db.smsMessagesTable.conversationId, db.smsConversationsTable.id),
+  );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
     final $_column = $_itemColumn<int>('conversation_id')!;
@@ -22523,14 +17972,11 @@ final class $$SmsMessagesTableTableReferences
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_conversationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$SmsMessagesTableTableFilterComposer
-    extends Composer<_$AppDatabase, $SmsMessagesTableTable> {
+class $$SmsMessagesTableTableFilterComposer extends Composer<_$AppDatabase, $SmsMessagesTableTable> {
   $$SmsMessagesTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -22538,88 +17984,55 @@ class $$SmsMessagesTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get externalId => $composableBuilder(
-    column: $table.externalId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get externalId =>
+      $composableBuilder(column: $table.externalId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get fromPhoneNumber => $composableBuilder(
-    column: $table.fromPhoneNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get fromPhoneNumber =>
+      $composableBuilder(column: $table.fromPhoneNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get toPhoneNumber => $composableBuilder(
-    column: $table.toPhoneNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get toPhoneNumber =>
+      $composableBuilder(column: $table.toPhoneNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<
-    SmsSendingStatusEnum,
-    SmsSendingStatusEnum,
-    String
-  >
-  get sendingStatus => $composableBuilder(
-    column: $table.sendingStatus,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<SmsSendingStatusEnum, SmsSendingStatusEnum, String> get sendingStatus =>
+      $composableBuilder(column: $table.sendingStatus, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get createdAtRemoteUsec => $composableBuilder(
-    column: $table.createdAtRemoteUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get createdAtRemoteUsec =>
+      $composableBuilder(column: $table.createdAtRemoteUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get updatedAtRemoteUsec => $composableBuilder(
-    column: $table.updatedAtRemoteUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get updatedAtRemoteUsec =>
+      $composableBuilder(column: $table.updatedAtRemoteUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get deletedAtRemoteUsec => $composableBuilder(
-    column: $table.deletedAtRemoteUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get deletedAtRemoteUsec =>
+      $composableBuilder(column: $table.deletedAtRemoteUsec, builder: (column) => ColumnFilters(column));
 
   $$SmsConversationsTableTableFilterComposer get conversationId {
-    final $$SmsConversationsTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$SmsMessagesTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $SmsMessagesTableTable> {
+class $$SmsMessagesTableTableOrderingComposer extends Composer<_$AppDatabase, $SmsMessagesTableTable> {
   $$SmsMessagesTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -22627,83 +18040,55 @@ class $$SmsMessagesTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get externalId => $composableBuilder(
-    column: $table.externalId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get externalId =>
+      $composableBuilder(column: $table.externalId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get fromPhoneNumber => $composableBuilder(
-    column: $table.fromPhoneNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get fromPhoneNumber =>
+      $composableBuilder(column: $table.fromPhoneNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get toPhoneNumber => $composableBuilder(
-    column: $table.toPhoneNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get toPhoneNumber =>
+      $composableBuilder(column: $table.toPhoneNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get sendingStatus => $composableBuilder(
-    column: $table.sendingStatus,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get sendingStatus =>
+      $composableBuilder(column: $table.sendingStatus, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAtRemoteUsec => $composableBuilder(
-    column: $table.createdAtRemoteUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get createdAtRemoteUsec =>
+      $composableBuilder(column: $table.createdAtRemoteUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get updatedAtRemoteUsec => $composableBuilder(
-    column: $table.updatedAtRemoteUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get updatedAtRemoteUsec =>
+      $composableBuilder(column: $table.updatedAtRemoteUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get deletedAtRemoteUsec => $composableBuilder(
-    column: $table.deletedAtRemoteUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get deletedAtRemoteUsec =>
+      $composableBuilder(column: $table.deletedAtRemoteUsec, builder: (column) => ColumnOrderings(column));
 
   $$SmsConversationsTableTableOrderingComposer get conversationId {
-    final $$SmsConversationsTableTableOrderingComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableOrderingComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$SmsMessagesTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SmsMessagesTableTable> {
+class $$SmsMessagesTableTableAnnotationComposer extends Composer<_$AppDatabase, $SmsMessagesTableTable> {
   $$SmsMessagesTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -22711,72 +18096,47 @@ class $$SmsMessagesTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get idKey =>
-      $composableBuilder(column: $table.idKey, builder: (column) => column);
+  GeneratedColumn<String> get idKey => $composableBuilder(column: $table.idKey, builder: (column) => column);
 
-  GeneratedColumn<String> get externalId => $composableBuilder(
-    column: $table.externalId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get externalId => $composableBuilder(column: $table.externalId, builder: (column) => column);
 
-  GeneratedColumn<String> get fromPhoneNumber => $composableBuilder(
-    column: $table.fromPhoneNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get fromPhoneNumber =>
+      $composableBuilder(column: $table.fromPhoneNumber, builder: (column) => column);
 
-  GeneratedColumn<String> get toPhoneNumber => $composableBuilder(
-    column: $table.toPhoneNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get toPhoneNumber =>
+      $composableBuilder(column: $table.toPhoneNumber, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<SmsSendingStatusEnum, String>
-  get sendingStatus => $composableBuilder(
-    column: $table.sendingStatus,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<SmsSendingStatusEnum, String> get sendingStatus =>
+      $composableBuilder(column: $table.sendingStatus, builder: (column) => column);
 
-  GeneratedColumn<String> get content =>
-      $composableBuilder(column: $table.content, builder: (column) => column);
+  GeneratedColumn<String> get content => $composableBuilder(column: $table.content, builder: (column) => column);
 
-  GeneratedColumn<int> get createdAtRemoteUsec => $composableBuilder(
-    column: $table.createdAtRemoteUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get createdAtRemoteUsec =>
+      $composableBuilder(column: $table.createdAtRemoteUsec, builder: (column) => column);
 
-  GeneratedColumn<int> get updatedAtRemoteUsec => $composableBuilder(
-    column: $table.updatedAtRemoteUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get updatedAtRemoteUsec =>
+      $composableBuilder(column: $table.updatedAtRemoteUsec, builder: (column) => column);
 
-  GeneratedColumn<int> get deletedAtRemoteUsec => $composableBuilder(
-    column: $table.deletedAtRemoteUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get deletedAtRemoteUsec =>
+      $composableBuilder(column: $table.deletedAtRemoteUsec, builder: (column) => column);
 
   $$SmsConversationsTableTableAnnotationComposer get conversationId {
-    final $$SmsConversationsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -22796,19 +18156,14 @@ class $$SmsMessagesTableTableTableManager
           SmsMessageData,
           PrefetchHooks Function({bool conversationId})
         > {
-  $$SmsMessagesTableTableTableManager(
-    _$AppDatabase db,
-    $SmsMessagesTableTable table,
-  ) : super(
+  $$SmsMessagesTableTableTableManager(_$AppDatabase db, $SmsMessagesTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SmsMessagesTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SmsMessagesTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SmsMessagesTableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$SmsMessagesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SmsMessagesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SmsMessagesTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -22817,8 +18172,7 @@ class $$SmsMessagesTableTableTableManager
                 Value<int> conversationId = const Value.absent(),
                 Value<String> fromPhoneNumber = const Value.absent(),
                 Value<String> toPhoneNumber = const Value.absent(),
-                Value<SmsSendingStatusEnum> sendingStatus =
-                    const Value.absent(),
+                Value<SmsSendingStatusEnum> sendingStatus = const Value.absent(),
                 Value<String> content = const Value.absent(),
                 Value<int> createdAtRemoteUsec = const Value.absent(),
                 Value<int> updatedAtRemoteUsec = const Value.absent(),
@@ -22862,14 +18216,8 @@ class $$SmsMessagesTableTableTableManager
                 updatedAtRemoteUsec: updatedAtRemoteUsec,
                 deletedAtRemoteUsec: deletedAtRemoteUsec,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SmsMessagesTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$SmsMessagesTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({conversationId = false}) {
             return PrefetchHooks(
               db: db,
@@ -22895,13 +18243,8 @@ class $$SmsMessagesTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.conversationId,
-                                referencedTable:
-                                    $$SmsMessagesTableTableReferences
-                                        ._conversationIdTable(db),
-                                referencedColumn:
-                                    $$SmsMessagesTableTableReferences
-                                        ._conversationIdTable(db)
-                                        .id,
+                                referencedTable: $$SmsMessagesTableTableReferences._conversationIdTable(db),
+                                referencedColumn: $$SmsMessagesTableTableReferences._conversationIdTable(db).id,
                               )
                               as T;
                     }
@@ -22947,25 +18290,12 @@ typedef $$SmsMessageSyncCursorTableTableUpdateCompanionBuilder =
     });
 
 final class $$SmsMessageSyncCursorTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $SmsMessageSyncCursorTableTable,
-          SmsMessageSyncCursorData
-        > {
-  $$SmsMessageSyncCursorTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $SmsMessageSyncCursorTableTable, SmsMessageSyncCursorData> {
+  $$SmsMessageSyncCursorTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
-      db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsMessageSyncCursorTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
-      );
+  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) => db.smsConversationsTable.createAlias(
+    $_aliasNameGenerator(db.smsMessageSyncCursorTable.conversationId, db.smsConversationsTable.id),
+  );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
     final $_column = $_itemColumn<int>('conversation_id')!;
@@ -22976,14 +18306,11 @@ final class $$SmsMessageSyncCursorTableTableReferences
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_conversationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$SmsMessageSyncCursorTableTableFilterComposer
-    extends Composer<_$AppDatabase, $SmsMessageSyncCursorTableTable> {
+class $$SmsMessageSyncCursorTableTableFilterComposer extends Composer<_$AppDatabase, $SmsMessageSyncCursorTableTable> {
   $$SmsMessageSyncCursorTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -22991,42 +18318,27 @@ class $$SmsMessageSyncCursorTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnWithTypeConverterFilters<
-    SmsSyncCursorTypeEnum,
-    SmsSyncCursorTypeEnum,
-    String
-  >
-  get cursorType => $composableBuilder(
-    column: $table.cursorType,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<SmsSyncCursorTypeEnum, SmsSyncCursorTypeEnum, String> get cursorType =>
+      $composableBuilder(column: $table.cursorType, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 
   $$SmsConversationsTableTableFilterComposer get conversationId {
-    final $$SmsConversationsTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -23040,37 +18352,27 @@ class $$SmsMessageSyncCursorTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get cursorType => $composableBuilder(
-    column: $table.cursorType,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get cursorType =>
+      $composableBuilder(column: $table.cursorType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 
   $$SmsConversationsTableTableOrderingComposer get conversationId {
-    final $$SmsConversationsTableTableOrderingComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableOrderingComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -23084,38 +18386,27 @@ class $$SmsMessageSyncCursorTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumnWithTypeConverter<SmsSyncCursorTypeEnum, String>
-  get cursorType => $composableBuilder(
-    column: $table.cursorType,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<SmsSyncCursorTypeEnum, String> get cursorType =>
+      $composableBuilder(column: $table.cursorType, builder: (column) => column);
 
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 
   $$SmsConversationsTableTableAnnotationComposer get conversationId {
-    final $$SmsConversationsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -23131,35 +18422,18 @@ class $$SmsMessageSyncCursorTableTableTableManager
           $$SmsMessageSyncCursorTableTableAnnotationComposer,
           $$SmsMessageSyncCursorTableTableCreateCompanionBuilder,
           $$SmsMessageSyncCursorTableTableUpdateCompanionBuilder,
-          (
-            SmsMessageSyncCursorData,
-            $$SmsMessageSyncCursorTableTableReferences,
-          ),
+          (SmsMessageSyncCursorData, $$SmsMessageSyncCursorTableTableReferences),
           SmsMessageSyncCursorData,
           PrefetchHooks Function({bool conversationId})
         > {
-  $$SmsMessageSyncCursorTableTableTableManager(
-    _$AppDatabase db,
-    $SmsMessageSyncCursorTableTable table,
-  ) : super(
+  $$SmsMessageSyncCursorTableTableTableManager(_$AppDatabase db, $SmsMessageSyncCursorTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SmsMessageSyncCursorTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SmsMessageSyncCursorTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SmsMessageSyncCursorTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SmsMessageSyncCursorTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SmsMessageSyncCursorTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SmsMessageSyncCursorTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> conversationId = const Value.absent(),
@@ -23184,14 +18458,8 @@ class $$SmsMessageSyncCursorTableTableTableManager
                 timestampUsec: timestampUsec,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SmsMessageSyncCursorTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$SmsMessageSyncCursorTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({conversationId = false}) {
             return PrefetchHooks(
               db: db,
@@ -23217,13 +18485,10 @@ class $$SmsMessageSyncCursorTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.conversationId,
-                                referencedTable:
-                                    $$SmsMessageSyncCursorTableTableReferences
-                                        ._conversationIdTable(db),
-                                referencedColumn:
-                                    $$SmsMessageSyncCursorTableTableReferences
-                                        ._conversationIdTable(db)
-                                        .id,
+                                referencedTable: $$SmsMessageSyncCursorTableTableReferences._conversationIdTable(db),
+                                referencedColumn: $$SmsMessageSyncCursorTableTableReferences
+                                    ._conversationIdTable(db)
+                                    .id,
                               )
                               as T;
                     }
@@ -23269,25 +18534,12 @@ typedef $$SmsMessageReadCursorTableTableUpdateCompanionBuilder =
     });
 
 final class $$SmsMessageReadCursorTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $SmsMessageReadCursorTableTable,
-          SmsMessageReadCursorData
-        > {
-  $$SmsMessageReadCursorTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $SmsMessageReadCursorTableTable, SmsMessageReadCursorData> {
+  $$SmsMessageReadCursorTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
-      db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsMessageReadCursorTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
-      );
+  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) => db.smsConversationsTable.createAlias(
+    $_aliasNameGenerator(db.smsMessageReadCursorTable.conversationId, db.smsConversationsTable.id),
+  );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
     final $_column = $_itemColumn<int>('conversation_id')!;
@@ -23298,14 +18550,11 @@ final class $$SmsMessageReadCursorTableTableReferences
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_conversationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$SmsMessageReadCursorTableTableFilterComposer
-    extends Composer<_$AppDatabase, $SmsMessageReadCursorTableTable> {
+class $$SmsMessageReadCursorTableTableFilterComposer extends Composer<_$AppDatabase, $SmsMessageReadCursorTableTable> {
   $$SmsMessageReadCursorTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -23313,37 +18562,27 @@ class $$SmsMessageReadCursorTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get userId => $composableBuilder(
-    column: $table.userId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 
   $$SmsConversationsTableTableFilterComposer get conversationId {
-    final $$SmsConversationsTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -23357,37 +18596,27 @@ class $$SmsMessageReadCursorTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get userId => $composableBuilder(
-    column: $table.userId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 
   $$SmsConversationsTableTableOrderingComposer get conversationId {
-    final $$SmsConversationsTableTableOrderingComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableOrderingComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -23401,35 +18630,26 @@ class $$SmsMessageReadCursorTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get userId =>
-      $composableBuilder(column: $table.userId, builder: (column) => column);
+  GeneratedColumn<String> get userId => $composableBuilder(column: $table.userId, builder: (column) => column);
 
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 
   $$SmsConversationsTableTableAnnotationComposer get conversationId {
-    final $$SmsConversationsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -23445,35 +18665,18 @@ class $$SmsMessageReadCursorTableTableTableManager
           $$SmsMessageReadCursorTableTableAnnotationComposer,
           $$SmsMessageReadCursorTableTableCreateCompanionBuilder,
           $$SmsMessageReadCursorTableTableUpdateCompanionBuilder,
-          (
-            SmsMessageReadCursorData,
-            $$SmsMessageReadCursorTableTableReferences,
-          ),
+          (SmsMessageReadCursorData, $$SmsMessageReadCursorTableTableReferences),
           SmsMessageReadCursorData,
           PrefetchHooks Function({bool conversationId})
         > {
-  $$SmsMessageReadCursorTableTableTableManager(
-    _$AppDatabase db,
-    $SmsMessageReadCursorTableTable table,
-  ) : super(
+  $$SmsMessageReadCursorTableTableTableManager(_$AppDatabase db, $SmsMessageReadCursorTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SmsMessageReadCursorTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SmsMessageReadCursorTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SmsMessageReadCursorTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SmsMessageReadCursorTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SmsMessageReadCursorTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SmsMessageReadCursorTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> conversationId = const Value.absent(),
@@ -23498,14 +18701,8 @@ class $$SmsMessageReadCursorTableTableTableManager
                 timestampUsec: timestampUsec,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SmsMessageReadCursorTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$SmsMessageReadCursorTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({conversationId = false}) {
             return PrefetchHooks(
               db: db,
@@ -23531,13 +18728,10 @@ class $$SmsMessageReadCursorTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.conversationId,
-                                referencedTable:
-                                    $$SmsMessageReadCursorTableTableReferences
-                                        ._conversationIdTable(db),
-                                referencedColumn:
-                                    $$SmsMessageReadCursorTableTableReferences
-                                        ._conversationIdTable(db)
-                                        .id,
+                                referencedTable: $$SmsMessageReadCursorTableTableReferences._conversationIdTable(db),
+                                referencedColumn: $$SmsMessageReadCursorTableTableReferences
+                                    ._conversationIdTable(db)
+                                    .id,
                               )
                               as T;
                     }
@@ -23591,25 +18785,12 @@ typedef $$SmsOutboxMessagesTableTableUpdateCompanionBuilder =
     });
 
 final class $$SmsOutboxMessagesTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $SmsOutboxMessagesTableTable,
-          SmsOutboxMessageData
-        > {
-  $$SmsOutboxMessagesTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $SmsOutboxMessagesTableTable, SmsOutboxMessageData> {
+  $$SmsOutboxMessagesTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
-      db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsOutboxMessagesTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
-      );
+  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) => db.smsConversationsTable.createAlias(
+    $_aliasNameGenerator(db.smsOutboxMessagesTable.conversationId, db.smsConversationsTable.id),
+  );
 
   $$SmsConversationsTableTableProcessedTableManager? get conversationId {
     final $_column = $_itemColumn<int>('conversation_id');
@@ -23620,14 +18801,11 @@ final class $$SmsOutboxMessagesTableTableReferences
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_conversationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$SmsOutboxMessagesTableTableFilterComposer
-    extends Composer<_$AppDatabase, $SmsOutboxMessagesTableTable> {
+class $$SmsOutboxMessagesTableTableFilterComposer extends Composer<_$AppDatabase, $SmsOutboxMessagesTableTable> {
   $$SmsOutboxMessagesTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -23635,63 +18813,44 @@ class $$SmsOutboxMessagesTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get fromPhoneNumber => $composableBuilder(
-    column: $table.fromPhoneNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get fromPhoneNumber =>
+      $composableBuilder(column: $table.fromPhoneNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get toPhoneNumber => $composableBuilder(
-    column: $table.toPhoneNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get toPhoneNumber =>
+      $composableBuilder(column: $table.toPhoneNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get recepientId => $composableBuilder(
-    column: $table.recepientId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get recepientId =>
+      $composableBuilder(column: $table.recepientId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
   $$SmsConversationsTableTableFilterComposer get conversationId {
-    final $$SmsConversationsTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$SmsOutboxMessagesTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $SmsOutboxMessagesTableTable> {
+class $$SmsOutboxMessagesTableTableOrderingComposer extends Composer<_$AppDatabase, $SmsOutboxMessagesTableTable> {
   $$SmsOutboxMessagesTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -23699,63 +18858,44 @@ class $$SmsOutboxMessagesTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get fromPhoneNumber => $composableBuilder(
-    column: $table.fromPhoneNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get fromPhoneNumber =>
+      $composableBuilder(column: $table.fromPhoneNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get toPhoneNumber => $composableBuilder(
-    column: $table.toPhoneNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get toPhoneNumber =>
+      $composableBuilder(column: $table.toPhoneNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get recepientId => $composableBuilder(
-    column: $table.recepientId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get recepientId =>
+      $composableBuilder(column: $table.recepientId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
   $$SmsConversationsTableTableOrderingComposer get conversationId {
-    final $$SmsConversationsTableTableOrderingComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableOrderingComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
 
-class $$SmsOutboxMessagesTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SmsOutboxMessagesTableTable> {
+class $$SmsOutboxMessagesTableTableAnnotationComposer extends Composer<_$AppDatabase, $SmsOutboxMessagesTableTable> {
   $$SmsOutboxMessagesTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -23763,53 +18903,36 @@ class $$SmsOutboxMessagesTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get idKey =>
-      $composableBuilder(column: $table.idKey, builder: (column) => column);
+  GeneratedColumn<String> get idKey => $composableBuilder(column: $table.idKey, builder: (column) => column);
 
-  GeneratedColumn<String> get fromPhoneNumber => $composableBuilder(
-    column: $table.fromPhoneNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get fromPhoneNumber =>
+      $composableBuilder(column: $table.fromPhoneNumber, builder: (column) => column);
 
-  GeneratedColumn<String> get toPhoneNumber => $composableBuilder(
-    column: $table.toPhoneNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get toPhoneNumber =>
+      $composableBuilder(column: $table.toPhoneNumber, builder: (column) => column);
 
-  GeneratedColumn<String> get recepientId => $composableBuilder(
-    column: $table.recepientId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get recepientId =>
+      $composableBuilder(column: $table.recepientId, builder: (column) => column);
 
-  GeneratedColumn<String> get content =>
-      $composableBuilder(column: $table.content, builder: (column) => column);
+  GeneratedColumn<String> get content => $composableBuilder(column: $table.content, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
   $$SmsConversationsTableTableAnnotationComposer get conversationId {
-    final $$SmsConversationsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -23829,28 +18952,14 @@ class $$SmsOutboxMessagesTableTableTableManager
           SmsOutboxMessageData,
           PrefetchHooks Function({bool conversationId})
         > {
-  $$SmsOutboxMessagesTableTableTableManager(
-    _$AppDatabase db,
-    $SmsOutboxMessagesTableTable table,
-  ) : super(
+  $$SmsOutboxMessagesTableTableTableManager(_$AppDatabase db, $SmsOutboxMessagesTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SmsOutboxMessagesTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SmsOutboxMessagesTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SmsOutboxMessagesTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SmsOutboxMessagesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SmsOutboxMessagesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SmsOutboxMessagesTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> idKey = const Value.absent(),
@@ -23891,14 +19000,8 @@ class $$SmsOutboxMessagesTableTableTableManager
                 sendAttempts: sendAttempts,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SmsOutboxMessagesTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$SmsOutboxMessagesTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({conversationId = false}) {
             return PrefetchHooks(
               db: db,
@@ -23924,13 +19027,8 @@ class $$SmsOutboxMessagesTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.conversationId,
-                                referencedTable:
-                                    $$SmsOutboxMessagesTableTableReferences
-                                        ._conversationIdTable(db),
-                                referencedColumn:
-                                    $$SmsOutboxMessagesTableTableReferences
-                                        ._conversationIdTable(db)
-                                        .id,
+                                referencedTable: $$SmsOutboxMessagesTableTableReferences._conversationIdTable(db),
+                                referencedColumn: $$SmsOutboxMessagesTableTableReferences._conversationIdTable(db).id,
                               )
                               as T;
                     }
@@ -23976,25 +19074,12 @@ typedef $$SmsOutboxMessageDeleteTableTableUpdateCompanionBuilder =
     });
 
 final class $$SmsOutboxMessageDeleteTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $SmsOutboxMessageDeleteTableTable,
-          SmsOutboxMessageDeleteData
-        > {
-  $$SmsOutboxMessageDeleteTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $SmsOutboxMessageDeleteTableTable, SmsOutboxMessageDeleteData> {
+  $$SmsOutboxMessageDeleteTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
-      db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsOutboxMessageDeleteTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
-      );
+  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) => db.smsConversationsTable.createAlias(
+    $_aliasNameGenerator(db.smsOutboxMessageDeleteTable.conversationId, db.smsConversationsTable.id),
+  );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
     final $_column = $_itemColumn<int>('conversation_id')!;
@@ -24005,9 +19090,7 @@ final class $$SmsOutboxMessageDeleteTableTableReferences
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_conversationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -24020,42 +19103,29 @@ class $$SmsOutboxMessageDeleteTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
   $$SmsConversationsTableTableFilterComposer get conversationId {
-    final $$SmsConversationsTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -24069,42 +19139,29 @@ class $$SmsOutboxMessageDeleteTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
   $$SmsConversationsTableTableOrderingComposer get conversationId {
-    final $$SmsConversationsTableTableOrderingComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableOrderingComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -24118,38 +19175,27 @@ class $$SmsOutboxMessageDeleteTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get idKey =>
-      $composableBuilder(column: $table.idKey, builder: (column) => column);
+  GeneratedColumn<String> get idKey => $composableBuilder(column: $table.idKey, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
   $$SmsConversationsTableTableAnnotationComposer get conversationId {
-    final $$SmsConversationsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -24165,35 +19211,19 @@ class $$SmsOutboxMessageDeleteTableTableTableManager
           $$SmsOutboxMessageDeleteTableTableAnnotationComposer,
           $$SmsOutboxMessageDeleteTableTableCreateCompanionBuilder,
           $$SmsOutboxMessageDeleteTableTableUpdateCompanionBuilder,
-          (
-            SmsOutboxMessageDeleteData,
-            $$SmsOutboxMessageDeleteTableTableReferences,
-          ),
+          (SmsOutboxMessageDeleteData, $$SmsOutboxMessageDeleteTableTableReferences),
           SmsOutboxMessageDeleteData,
           PrefetchHooks Function({bool conversationId})
         > {
-  $$SmsOutboxMessageDeleteTableTableTableManager(
-    _$AppDatabase db,
-    $SmsOutboxMessageDeleteTableTable table,
-  ) : super(
+  $$SmsOutboxMessageDeleteTableTableTableManager(_$AppDatabase db, $SmsOutboxMessageDeleteTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SmsOutboxMessageDeleteTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SmsOutboxMessageDeleteTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SmsOutboxMessageDeleteTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SmsOutboxMessageDeleteTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$SmsOutboxMessageDeleteTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$SmsOutboxMessageDeleteTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -24218,14 +19248,8 @@ class $$SmsOutboxMessageDeleteTableTableTableManager
                 conversationId: conversationId,
                 sendAttempts: sendAttempts,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SmsOutboxMessageDeleteTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$SmsOutboxMessageDeleteTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({conversationId = false}) {
             return PrefetchHooks(
               db: db,
@@ -24251,13 +19275,10 @@ class $$SmsOutboxMessageDeleteTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.conversationId,
-                                referencedTable:
-                                    $$SmsOutboxMessageDeleteTableTableReferences
-                                        ._conversationIdTable(db),
-                                referencedColumn:
-                                    $$SmsOutboxMessageDeleteTableTableReferences
-                                        ._conversationIdTable(db)
-                                        .id,
+                                referencedTable: $$SmsOutboxMessageDeleteTableTableReferences._conversationIdTable(db),
+                                referencedColumn: $$SmsOutboxMessageDeleteTableTableReferences
+                                    ._conversationIdTable(db)
+                                    .id,
                               )
                               as T;
                     }
@@ -24283,10 +19304,7 @@ typedef $$SmsOutboxMessageDeleteTableTableProcessedTableManager =
       $$SmsOutboxMessageDeleteTableTableAnnotationComposer,
       $$SmsOutboxMessageDeleteTableTableCreateCompanionBuilder,
       $$SmsOutboxMessageDeleteTableTableUpdateCompanionBuilder,
-      (
-        SmsOutboxMessageDeleteData,
-        $$SmsOutboxMessageDeleteTableTableReferences,
-      ),
+      (SmsOutboxMessageDeleteData, $$SmsOutboxMessageDeleteTableTableReferences),
       SmsOutboxMessageDeleteData,
       PrefetchHooks Function({bool conversationId})
     >;
@@ -24304,25 +19322,12 @@ typedef $$SmsOutboxReadCursorsTableTableUpdateCompanionBuilder =
     });
 
 final class $$SmsOutboxReadCursorsTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $SmsOutboxReadCursorsTableTable,
-          SmsOutboxReadCursorData
-        > {
-  $$SmsOutboxReadCursorsTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $SmsOutboxReadCursorsTableTable, SmsOutboxReadCursorData> {
+  $$SmsOutboxReadCursorsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
-      db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsOutboxReadCursorsTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
-      );
+  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) => db.smsConversationsTable.createAlias(
+    $_aliasNameGenerator(db.smsOutboxReadCursorsTable.conversationId, db.smsConversationsTable.id),
+  );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
     final $_column = $_itemColumn<int>('conversation_id')!;
@@ -24333,14 +19338,11 @@ final class $$SmsOutboxReadCursorsTableTableReferences
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_conversationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
-class $$SmsOutboxReadCursorsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $SmsOutboxReadCursorsTableTable> {
+class $$SmsOutboxReadCursorsTableTableFilterComposer extends Composer<_$AppDatabase, $SmsOutboxReadCursorsTableTable> {
   $$SmsOutboxReadCursorsTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -24348,37 +19350,27 @@ class $$SmsOutboxReadCursorsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
   $$SmsConversationsTableTableFilterComposer get conversationId {
-    final $$SmsConversationsTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableFilterComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -24392,37 +19384,27 @@ class $$SmsOutboxReadCursorsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
   $$SmsConversationsTableTableOrderingComposer get conversationId {
-    final $$SmsConversationsTableTableOrderingComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableOrderingComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -24436,37 +19418,26 @@ class $$SmsOutboxReadCursorsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
   $$SmsConversationsTableTableAnnotationComposer get conversationId {
-    final $$SmsConversationsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.conversationId,
-          referencedTable: $db.smsConversationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SmsConversationsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.smsConversationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SmsConversationsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.conversationId,
+      referencedTable: $db.smsConversationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SmsConversationsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.smsConversationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -24486,28 +19457,14 @@ class $$SmsOutboxReadCursorsTableTableTableManager
           SmsOutboxReadCursorData,
           PrefetchHooks Function({bool conversationId})
         > {
-  $$SmsOutboxReadCursorsTableTableTableManager(
-    _$AppDatabase db,
-    $SmsOutboxReadCursorsTableTable table,
-  ) : super(
+  $$SmsOutboxReadCursorsTableTableTableManager(_$AppDatabase db, $SmsOutboxReadCursorsTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SmsOutboxReadCursorsTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SmsOutboxReadCursorsTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SmsOutboxReadCursorsTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SmsOutboxReadCursorsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SmsOutboxReadCursorsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SmsOutboxReadCursorsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> conversationId = const Value.absent(),
@@ -24528,14 +19485,8 @@ class $$SmsOutboxReadCursorsTableTableTableManager
                 timestampUsec: timestampUsec,
                 sendAttempts: sendAttempts,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SmsOutboxReadCursorsTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$SmsOutboxReadCursorsTableTableReferences(db, table, e))).toList(),
           prefetchHooksCallback: ({conversationId = false}) {
             return PrefetchHooks(
               db: db,
@@ -24561,13 +19512,10 @@ class $$SmsOutboxReadCursorsTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.conversationId,
-                                referencedTable:
-                                    $$SmsOutboxReadCursorsTableTableReferences
-                                        ._conversationIdTable(db),
-                                referencedColumn:
-                                    $$SmsOutboxReadCursorsTableTableReferences
-                                        ._conversationIdTable(db)
-                                        .id,
+                                referencedTable: $$SmsOutboxReadCursorsTableTableReferences._conversationIdTable(db),
+                                referencedColumn: $$SmsOutboxReadCursorsTableTableReferences
+                                    ._conversationIdTable(db)
+                                    .id,
                               )
                               as T;
                     }
@@ -24614,8 +19562,7 @@ typedef $$SipSubscriptionsTableTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$SipSubscriptionsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $SipSubscriptionsTableTable> {
+class $$SipSubscriptionsTableTableFilterComposer extends Composer<_$AppDatabase, $SipSubscriptionsTableTable> {
   $$SipSubscriptionsTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -24623,34 +19570,20 @@ class $$SipSubscriptionsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnWithTypeConverterFilters<
-    SipSubscriptionTypeData,
-    SipSubscriptionTypeData,
-    String
-  >
-  get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<SipSubscriptionTypeData, SipSubscriptionTypeData, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get contactUserId => $composableBuilder(
-    column: $table.contactUserId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get contactUserId =>
+      $composableBuilder(column: $table.contactUserId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get subscribedAtUsec => $composableBuilder(
-    column: $table.subscribedAtUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get subscribedAtUsec =>
+      $composableBuilder(column: $table.subscribedAtUsec, builder: (column) => ColumnFilters(column));
 }
 
-class $$SipSubscriptionsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $SipSubscriptionsTableTable> {
+class $$SipSubscriptionsTableTableOrderingComposer extends Composer<_$AppDatabase, $SipSubscriptionsTableTable> {
   $$SipSubscriptionsTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -24658,29 +19591,20 @@ class $$SipSubscriptionsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get contactUserId => $composableBuilder(
-    column: $table.contactUserId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get contactUserId =>
+      $composableBuilder(column: $table.contactUserId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get subscribedAtUsec => $composableBuilder(
-    column: $table.subscribedAtUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get subscribedAtUsec =>
+      $composableBuilder(column: $table.subscribedAtUsec, builder: (column) => ColumnOrderings(column));
 }
 
-class $$SipSubscriptionsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SipSubscriptionsTableTable> {
+class $$SipSubscriptionsTableTableAnnotationComposer extends Composer<_$AppDatabase, $SipSubscriptionsTableTable> {
   $$SipSubscriptionsTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -24691,18 +19615,13 @@ class $$SipSubscriptionsTableTableAnnotationComposer
   GeneratedColumnWithTypeConverter<SipSubscriptionTypeData, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<String> get number =>
-      $composableBuilder(column: $table.number, builder: (column) => column);
+  GeneratedColumn<String> get number => $composableBuilder(column: $table.number, builder: (column) => column);
 
-  GeneratedColumn<String> get contactUserId => $composableBuilder(
-    column: $table.contactUserId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get contactUserId =>
+      $composableBuilder(column: $table.contactUserId, builder: (column) => column);
 
-  GeneratedColumn<int> get subscribedAtUsec => $composableBuilder(
-    column: $table.subscribedAtUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get subscribedAtUsec =>
+      $composableBuilder(column: $table.subscribedAtUsec, builder: (column) => column);
 }
 
 class $$SipSubscriptionsTableTableTableManager
@@ -24716,39 +19635,18 @@ class $$SipSubscriptionsTableTableTableManager
           $$SipSubscriptionsTableTableAnnotationComposer,
           $$SipSubscriptionsTableTableCreateCompanionBuilder,
           $$SipSubscriptionsTableTableUpdateCompanionBuilder,
-          (
-            SipSubscriptionData,
-            BaseReferences<
-              _$AppDatabase,
-              $SipSubscriptionsTableTable,
-              SipSubscriptionData
-            >,
-          ),
+          (SipSubscriptionData, BaseReferences<_$AppDatabase, $SipSubscriptionsTableTable, SipSubscriptionData>),
           SipSubscriptionData,
           PrefetchHooks Function()
         > {
-  $$SipSubscriptionsTableTableTableManager(
-    _$AppDatabase db,
-    $SipSubscriptionsTableTable table,
-  ) : super(
+  $$SipSubscriptionsTableTableTableManager(_$AppDatabase db, $SipSubscriptionsTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SipSubscriptionsTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SipSubscriptionsTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SipSubscriptionsTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SipSubscriptionsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SipSubscriptionsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SipSubscriptionsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<SipSubscriptionTypeData> type = const Value.absent(),
@@ -24777,9 +19675,7 @@ class $$SipSubscriptionsTableTableTableManager
                 subscribedAtUsec: subscribedAtUsec,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -24795,14 +19691,7 @@ typedef $$SipSubscriptionsTableTableProcessedTableManager =
       $$SipSubscriptionsTableTableAnnotationComposer,
       $$SipSubscriptionsTableTableCreateCompanionBuilder,
       $$SipSubscriptionsTableTableUpdateCompanionBuilder,
-      (
-        SipSubscriptionData,
-        BaseReferences<
-          _$AppDatabase,
-          $SipSubscriptionsTableTable,
-          SipSubscriptionData
-        >,
-      ),
+      (SipSubscriptionData, BaseReferences<_$AppDatabase, $SipSubscriptionsTableTable, SipSubscriptionData>),
       SipSubscriptionData,
       PrefetchHooks Function()
     >;
@@ -24836,45 +19725,23 @@ class $$SipSubscriptionsOutboxTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnWithTypeConverterFilters<
-    SipSubscriptionOutboxActionData,
-    SipSubscriptionOutboxActionData,
-    String
-  >
-  get action => $composableBuilder(
-    column: $table.action,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<SipSubscriptionOutboxActionData, SipSubscriptionOutboxActionData, String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnWithTypeConverterFilters<
-    SipSubscriptionTypeData,
-    SipSubscriptionTypeData,
-    String
-  >
-  get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<SipSubscriptionTypeData, SipSubscriptionTypeData, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get contactUserId => $composableBuilder(
-    column: $table.contactUserId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get contactUserId =>
+      $composableBuilder(column: $table.contactUserId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 }
 
 class $$SipSubscriptionsOutboxTableTableOrderingComposer
@@ -24886,35 +19753,23 @@ class $$SipSubscriptionsOutboxTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get action => $composableBuilder(
-    column: $table.action,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get contactUserId => $composableBuilder(
-    column: $table.contactUserId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get contactUserId =>
+      $composableBuilder(column: $table.contactUserId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 }
 
 class $$SipSubscriptionsOutboxTableTableAnnotationComposer
@@ -24926,30 +19781,21 @@ class $$SipSubscriptionsOutboxTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumnWithTypeConverter<SipSubscriptionOutboxActionData, String>
-  get action =>
+  GeneratedColumnWithTypeConverter<SipSubscriptionOutboxActionData, String> get action =>
       $composableBuilder(column: $table.action, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<SipSubscriptionTypeData, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<String> get number =>
-      $composableBuilder(column: $table.number, builder: (column) => column);
+  GeneratedColumn<String> get number => $composableBuilder(column: $table.number, builder: (column) => column);
 
-  GeneratedColumn<String> get contactUserId => $composableBuilder(
-    column: $table.contactUserId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get contactUserId =>
+      $composableBuilder(column: $table.contactUserId, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 }
 
 class $$SipSubscriptionsOutboxTableTableTableManager
@@ -24965,41 +19811,23 @@ class $$SipSubscriptionsOutboxTableTableTableManager
           $$SipSubscriptionsOutboxTableTableUpdateCompanionBuilder,
           (
             SipSubscriptionOutboxEntryData,
-            BaseReferences<
-              _$AppDatabase,
-              $SipSubscriptionsOutboxTableTable,
-              SipSubscriptionOutboxEntryData
-            >,
+            BaseReferences<_$AppDatabase, $SipSubscriptionsOutboxTableTable, SipSubscriptionOutboxEntryData>,
           ),
           SipSubscriptionOutboxEntryData,
           PrefetchHooks Function()
         > {
-  $$SipSubscriptionsOutboxTableTableTableManager(
-    _$AppDatabase db,
-    $SipSubscriptionsOutboxTableTable table,
-  ) : super(
+  $$SipSubscriptionsOutboxTableTableTableManager(_$AppDatabase db, $SipSubscriptionsOutboxTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SipSubscriptionsOutboxTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SipSubscriptionsOutboxTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SipSubscriptionsOutboxTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SipSubscriptionsOutboxTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$SipSubscriptionsOutboxTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$SipSubscriptionsOutboxTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<SipSubscriptionOutboxActionData> action =
-                    const Value.absent(),
+                Value<SipSubscriptionOutboxActionData> action = const Value.absent(),
                 Value<SipSubscriptionTypeData> type = const Value.absent(),
                 Value<String> number = const Value.absent(),
                 Value<String?> contactUserId = const Value.absent(),
@@ -25033,9 +19861,7 @@ class $$SipSubscriptionsOutboxTableTableTableManager
                 timestampUsec: timestampUsec,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -25053,28 +19879,17 @@ typedef $$SipSubscriptionsOutboxTableTableProcessedTableManager =
       $$SipSubscriptionsOutboxTableTableUpdateCompanionBuilder,
       (
         SipSubscriptionOutboxEntryData,
-        BaseReferences<
-          _$AppDatabase,
-          $SipSubscriptionsOutboxTableTable,
-          SipSubscriptionOutboxEntryData
-        >,
+        BaseReferences<_$AppDatabase, $SipSubscriptionsOutboxTableTable, SipSubscriptionOutboxEntryData>,
       ),
       SipSubscriptionOutboxEntryData,
       PrefetchHooks Function()
     >;
 typedef $$UserSmsNumbersTableTableCreateCompanionBuilder =
-    UserSmsNumberDataCompanion Function({
-      required String phoneNumber,
-      Value<int> rowid,
-    });
+    UserSmsNumberDataCompanion Function({required String phoneNumber, Value<int> rowid});
 typedef $$UserSmsNumbersTableTableUpdateCompanionBuilder =
-    UserSmsNumberDataCompanion Function({
-      Value<String> phoneNumber,
-      Value<int> rowid,
-    });
+    UserSmsNumberDataCompanion Function({Value<String> phoneNumber, Value<int> rowid});
 
-class $$UserSmsNumbersTableTableFilterComposer
-    extends Composer<_$AppDatabase, $UserSmsNumbersTableTable> {
+class $$UserSmsNumbersTableTableFilterComposer extends Composer<_$AppDatabase, $UserSmsNumbersTableTable> {
   $$UserSmsNumbersTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -25082,14 +19897,11 @@ class $$UserSmsNumbersTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get phoneNumber => $composableBuilder(
-    column: $table.phoneNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get phoneNumber =>
+      $composableBuilder(column: $table.phoneNumber, builder: (column) => ColumnFilters(column));
 }
 
-class $$UserSmsNumbersTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $UserSmsNumbersTableTable> {
+class $$UserSmsNumbersTableTableOrderingComposer extends Composer<_$AppDatabase, $UserSmsNumbersTableTable> {
   $$UserSmsNumbersTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -25097,14 +19909,11 @@ class $$UserSmsNumbersTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get phoneNumber => $composableBuilder(
-    column: $table.phoneNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get phoneNumber =>
+      $composableBuilder(column: $table.phoneNumber, builder: (column) => ColumnOrderings(column));
 }
 
-class $$UserSmsNumbersTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $UserSmsNumbersTableTable> {
+class $$UserSmsNumbersTableTableAnnotationComposer extends Composer<_$AppDatabase, $UserSmsNumbersTableTable> {
   $$UserSmsNumbersTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -25112,10 +19921,8 @@ class $$UserSmsNumbersTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get phoneNumber => $composableBuilder(
-    column: $table.phoneNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get phoneNumber =>
+      $composableBuilder(column: $table.phoneNumber, builder: (column) => column);
 }
 
 class $$UserSmsNumbersTableTableTableManager
@@ -25129,55 +19936,24 @@ class $$UserSmsNumbersTableTableTableManager
           $$UserSmsNumbersTableTableAnnotationComposer,
           $$UserSmsNumbersTableTableCreateCompanionBuilder,
           $$UserSmsNumbersTableTableUpdateCompanionBuilder,
-          (
-            UserSmsNumberData,
-            BaseReferences<
-              _$AppDatabase,
-              $UserSmsNumbersTableTable,
-              UserSmsNumberData
-            >,
-          ),
+          (UserSmsNumberData, BaseReferences<_$AppDatabase, $UserSmsNumbersTableTable, UserSmsNumberData>),
           UserSmsNumberData,
           PrefetchHooks Function()
         > {
-  $$UserSmsNumbersTableTableTableManager(
-    _$AppDatabase db,
-    $UserSmsNumbersTableTable table,
-  ) : super(
+  $$UserSmsNumbersTableTableTableManager(_$AppDatabase db, $UserSmsNumbersTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$UserSmsNumbersTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$UserSmsNumbersTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$UserSmsNumbersTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$UserSmsNumbersTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$UserSmsNumbersTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$UserSmsNumbersTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
-              ({
-                Value<String> phoneNumber = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => UserSmsNumberDataCompanion(
-                phoneNumber: phoneNumber,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String phoneNumber,
-                Value<int> rowid = const Value.absent(),
-              }) => UserSmsNumberDataCompanion.insert(
-                phoneNumber: phoneNumber,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+              ({Value<String> phoneNumber = const Value.absent(), Value<int> rowid = const Value.absent()}) =>
+                  UserSmsNumberDataCompanion(phoneNumber: phoneNumber, rowid: rowid),
+          createCompanionCallback: ({required String phoneNumber, Value<int> rowid = const Value.absent()}) =>
+              UserSmsNumberDataCompanion.insert(phoneNumber: phoneNumber, rowid: rowid),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -25193,14 +19969,7 @@ typedef $$UserSmsNumbersTableTableProcessedTableManager =
       $$UserSmsNumbersTableTableAnnotationComposer,
       $$UserSmsNumbersTableTableCreateCompanionBuilder,
       $$UserSmsNumbersTableTableUpdateCompanionBuilder,
-      (
-        UserSmsNumberData,
-        BaseReferences<
-          _$AppDatabase,
-          $UserSmsNumbersTableTable,
-          UserSmsNumberData
-        >,
-      ),
+      (UserSmsNumberData, BaseReferences<_$AppDatabase, $UserSmsNumbersTableTable, UserSmsNumberData>),
       UserSmsNumberData,
       PrefetchHooks Function()
     >;
@@ -25234,35 +20003,22 @@ class $$ActiveMessageNotificationsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get notificationId => $composableBuilder(
-    column: $table.notificationId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get notificationId =>
+      $composableBuilder(column: $table.notificationId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get messageId => $composableBuilder(
-    column: $table.messageId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get messageId =>
+      $composableBuilder(column: $table.messageId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get conversationId => $composableBuilder(
-    column: $table.conversationId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get conversationId =>
+      $composableBuilder(column: $table.conversationId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get body => $composableBuilder(
-    column: $table.body,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get body => $composableBuilder(column: $table.body, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get time => $composableBuilder(
-    column: $table.time,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get time =>
+      $composableBuilder(column: $table.time, builder: (column) => ColumnFilters(column));
 }
 
 class $$ActiveMessageNotificationsTableTableOrderingComposer
@@ -25274,35 +20030,23 @@ class $$ActiveMessageNotificationsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get notificationId => $composableBuilder(
-    column: $table.notificationId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get notificationId =>
+      $composableBuilder(column: $table.notificationId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get messageId => $composableBuilder(
-    column: $table.messageId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get messageId =>
+      $composableBuilder(column: $table.messageId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get conversationId => $composableBuilder(
-    column: $table.conversationId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get conversationId =>
+      $composableBuilder(column: $table.conversationId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get body => $composableBuilder(
-    column: $table.body,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get time => $composableBuilder(
-    column: $table.time,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get time =>
+      $composableBuilder(column: $table.time, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ActiveMessageNotificationsTableTableAnnotationComposer
@@ -25314,27 +20058,19 @@ class $$ActiveMessageNotificationsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get notificationId => $composableBuilder(
-    column: $table.notificationId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get notificationId =>
+      $composableBuilder(column: $table.notificationId, builder: (column) => column);
 
-  GeneratedColumn<int> get messageId =>
-      $composableBuilder(column: $table.messageId, builder: (column) => column);
+  GeneratedColumn<int> get messageId => $composableBuilder(column: $table.messageId, builder: (column) => column);
 
-  GeneratedColumn<int> get conversationId => $composableBuilder(
-    column: $table.conversationId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get conversationId =>
+      $composableBuilder(column: $table.conversationId, builder: (column) => column);
 
-  GeneratedColumn<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => column);
+  GeneratedColumn<String> get title => $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumn<String> get body =>
-      $composableBuilder(column: $table.body, builder: (column) => column);
+  GeneratedColumn<String> get body => $composableBuilder(column: $table.body, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get time =>
-      $composableBuilder(column: $table.time, builder: (column) => column);
+  GeneratedColumn<DateTime> get time => $composableBuilder(column: $table.time, builder: (column) => column);
 }
 
 class $$ActiveMessageNotificationsTableTableTableManager
@@ -25350,37 +20086,20 @@ class $$ActiveMessageNotificationsTableTableTableManager
           $$ActiveMessageNotificationsTableTableUpdateCompanionBuilder,
           (
             ActiveMessageNotificationData,
-            BaseReferences<
-              _$AppDatabase,
-              $ActiveMessageNotificationsTableTable,
-              ActiveMessageNotificationData
-            >,
+            BaseReferences<_$AppDatabase, $ActiveMessageNotificationsTableTable, ActiveMessageNotificationData>,
           ),
           ActiveMessageNotificationData,
           PrefetchHooks Function()
         > {
-  $$ActiveMessageNotificationsTableTableTableManager(
-    _$AppDatabase db,
-    $ActiveMessageNotificationsTableTable table,
-  ) : super(
+  $$ActiveMessageNotificationsTableTableTableManager(_$AppDatabase db, $ActiveMessageNotificationsTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ActiveMessageNotificationsTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$ActiveMessageNotificationsTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$ActiveMessageNotificationsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ActiveMessageNotificationsTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$ActiveMessageNotificationsTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$ActiveMessageNotificationsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> notificationId = const Value.absent(),
@@ -25417,9 +20136,7 @@ class $$ActiveMessageNotificationsTableTableTableManager
                 time: time,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -25437,11 +20154,7 @@ typedef $$ActiveMessageNotificationsTableTableProcessedTableManager =
       $$ActiveMessageNotificationsTableTableUpdateCompanionBuilder,
       (
         ActiveMessageNotificationData,
-        BaseReferences<
-          _$AppDatabase,
-          $ActiveMessageNotificationsTableTable,
-          ActiveMessageNotificationData
-        >,
+        BaseReferences<_$AppDatabase, $ActiveMessageNotificationsTableTable, ActiveMessageNotificationData>,
       ),
       ActiveMessageNotificationData,
       PrefetchHooks Function()
@@ -25477,8 +20190,7 @@ typedef $$VoicemailTableTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$VoicemailTableTableFilterComposer
-    extends Composer<_$AppDatabase, $VoicemailTableTable> {
+class $$VoicemailTableTableFilterComposer extends Composer<_$AppDatabase, $VoicemailTableTable> {
   $$VoicemailTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -25486,64 +20198,35 @@ class $$VoicemailTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get date => $composableBuilder(column: $table.date, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get duration => $composableBuilder(
-    column: $table.duration,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get duration =>
+      $composableBuilder(column: $table.duration, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get sender => $composableBuilder(
-    column: $table.sender,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get sender =>
+      $composableBuilder(column: $table.sender, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get receiver => $composableBuilder(
-    column: $table.receiver,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get receiver =>
+      $composableBuilder(column: $table.receiver, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get seen => $composableBuilder(column: $table.seen, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get size => $composableBuilder(
-    column: $table.size,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get size => $composableBuilder(column: $table.size, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get type => $composableBuilder(column: $table.type, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get attachmentPath => $composableBuilder(
-    column: $table.attachmentPath,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get attachmentPath =>
+      $composableBuilder(column: $table.attachmentPath, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get saved => $composableBuilder(
-    column: $table.saved,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get saved => $composableBuilder(column: $table.saved, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get forwardedBy => $composableBuilder(
-    column: $table.forwardedBy,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get forwardedBy =>
+      $composableBuilder(column: $table.forwardedBy, builder: (column) => ColumnFilters(column));
 }
 
-class $$VoicemailTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $VoicemailTableTable> {
+class $$VoicemailTableTableOrderingComposer extends Composer<_$AppDatabase, $VoicemailTableTable> {
   $$VoicemailTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -25551,64 +20234,40 @@ class $$VoicemailTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get duration => $composableBuilder(
-    column: $table.duration,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get duration =>
+      $composableBuilder(column: $table.duration, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get sender => $composableBuilder(
-    column: $table.sender,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get sender =>
+      $composableBuilder(column: $table.sender, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get receiver => $composableBuilder(
-    column: $table.receiver,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get receiver =>
+      $composableBuilder(column: $table.receiver, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get seen =>
+      $composableBuilder(column: $table.seen, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get size => $composableBuilder(
-    column: $table.size,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get size =>
+      $composableBuilder(column: $table.size, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get attachmentPath => $composableBuilder(
-    column: $table.attachmentPath,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get attachmentPath =>
+      $composableBuilder(column: $table.attachmentPath, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get saved => $composableBuilder(
-    column: $table.saved,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get saved =>
+      $composableBuilder(column: $table.saved, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get forwardedBy => $composableBuilder(
-    column: $table.forwardedBy,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get forwardedBy =>
+      $composableBuilder(column: $table.forwardedBy, builder: (column) => ColumnOrderings(column));
 }
 
-class $$VoicemailTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $VoicemailTableTable> {
+class $$VoicemailTableTableAnnotationComposer extends Composer<_$AppDatabase, $VoicemailTableTable> {
   $$VoicemailTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -25616,42 +20275,29 @@ class $$VoicemailTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get date =>
-      $composableBuilder(column: $table.date, builder: (column) => column);
+  GeneratedColumn<String> get date => $composableBuilder(column: $table.date, builder: (column) => column);
 
-  GeneratedColumn<double> get duration =>
-      $composableBuilder(column: $table.duration, builder: (column) => column);
+  GeneratedColumn<double> get duration => $composableBuilder(column: $table.duration, builder: (column) => column);
 
-  GeneratedColumn<String> get sender =>
-      $composableBuilder(column: $table.sender, builder: (column) => column);
+  GeneratedColumn<String> get sender => $composableBuilder(column: $table.sender, builder: (column) => column);
 
-  GeneratedColumn<String> get receiver =>
-      $composableBuilder(column: $table.receiver, builder: (column) => column);
+  GeneratedColumn<String> get receiver => $composableBuilder(column: $table.receiver, builder: (column) => column);
 
-  GeneratedColumn<bool> get seen =>
-      $composableBuilder(column: $table.seen, builder: (column) => column);
+  GeneratedColumn<bool> get seen => $composableBuilder(column: $table.seen, builder: (column) => column);
 
-  GeneratedColumn<int> get size =>
-      $composableBuilder(column: $table.size, builder: (column) => column);
+  GeneratedColumn<int> get size => $composableBuilder(column: $table.size, builder: (column) => column);
 
-  GeneratedColumn<String> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => column);
+  GeneratedColumn<String> get type => $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<String> get attachmentPath => $composableBuilder(
-    column: $table.attachmentPath,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get attachmentPath =>
+      $composableBuilder(column: $table.attachmentPath, builder: (column) => column);
 
-  GeneratedColumn<bool> get saved =>
-      $composableBuilder(column: $table.saved, builder: (column) => column);
+  GeneratedColumn<bool> get saved => $composableBuilder(column: $table.saved, builder: (column) => column);
 
-  GeneratedColumn<String> get forwardedBy => $composableBuilder(
-    column: $table.forwardedBy,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get forwardedBy =>
+      $composableBuilder(column: $table.forwardedBy, builder: (column) => column);
 }
 
 class $$VoicemailTableTableTableManager
@@ -25665,26 +20311,18 @@ class $$VoicemailTableTableTableManager
           $$VoicemailTableTableAnnotationComposer,
           $$VoicemailTableTableCreateCompanionBuilder,
           $$VoicemailTableTableUpdateCompanionBuilder,
-          (
-            VoicemailData,
-            BaseReferences<_$AppDatabase, $VoicemailTableTable, VoicemailData>,
-          ),
+          (VoicemailData, BaseReferences<_$AppDatabase, $VoicemailTableTable, VoicemailData>),
           VoicemailData,
           PrefetchHooks Function()
         > {
-  $$VoicemailTableTableTableManager(
-    _$AppDatabase db,
-    $VoicemailTableTable table,
-  ) : super(
+  $$VoicemailTableTableTableManager(_$AppDatabase db, $VoicemailTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$VoicemailTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$VoicemailTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$VoicemailTableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$VoicemailTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$VoicemailTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$VoicemailTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -25741,9 +20379,7 @@ class $$VoicemailTableTableTableManager
                 forwardedBy: forwardedBy,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -25759,10 +20395,7 @@ typedef $$VoicemailTableTableProcessedTableManager =
       $$VoicemailTableTableAnnotationComposer,
       $$VoicemailTableTableCreateCompanionBuilder,
       $$VoicemailTableTableUpdateCompanionBuilder,
-      (
-        VoicemailData,
-        BaseReferences<_$AppDatabase, $VoicemailTableTable, VoicemailData>,
-      ),
+      (VoicemailData, BaseReferences<_$AppDatabase, $VoicemailTableTable, VoicemailData>),
       VoicemailData,
       PrefetchHooks Function()
     >;
@@ -25788,49 +20421,27 @@ typedef $$SystemNotificationsTableTableUpdateCompanionBuilder =
     });
 
 final class $$SystemNotificationsTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $SystemNotificationsTableTable,
-          SystemNotificationData
-        > {
-  $$SystemNotificationsTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
+    extends BaseReferences<_$AppDatabase, $SystemNotificationsTableTable, SystemNotificationData> {
+  $$SystemNotificationsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$SystemNotificationsOutboxTableTable, List<SystemNotificationOutboxEntryData>>
+  _systemNotificationsOutboxTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.systemNotificationsOutboxTable,
+    aliasName: $_aliasNameGenerator(db.systemNotificationsTable.id, db.systemNotificationsOutboxTable.notificationId),
   );
 
-  static MultiTypedResultKey<
-    $SystemNotificationsOutboxTableTable,
-    List<SystemNotificationOutboxEntryData>
-  >
-  _systemNotificationsOutboxTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.systemNotificationsOutboxTable,
-        aliasName: $_aliasNameGenerator(
-          db.systemNotificationsTable.id,
-          db.systemNotificationsOutboxTable.notificationId,
-        ),
-      );
-
-  $$SystemNotificationsOutboxTableTableProcessedTableManager
-  get systemNotificationsOutboxTableRefs {
+  $$SystemNotificationsOutboxTableTableProcessedTableManager get systemNotificationsOutboxTableRefs {
     final manager = $$SystemNotificationsOutboxTableTableTableManager(
       $_db,
       $_db.systemNotificationsOutboxTable,
     ).filter((f) => f.notificationId.id.sqlEquals($_itemColumn<int>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _systemNotificationsOutboxTableRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
+    final cache = $_typedResult.readTableOrNull(_systemNotificationsOutboxTableRefsTable($_db));
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
-class $$SystemNotificationsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $SystemNotificationsTableTable> {
+class $$SystemNotificationsTableTableFilterComposer extends Composer<_$AppDatabase, $SystemNotificationsTableTable> {
   $$SystemNotificationsTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -25838,78 +20449,47 @@ class $$SystemNotificationsTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<
-    SystemNotificationType,
-    SystemNotificationType,
-    String
-  >
-  get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<SystemNotificationType, SystemNotificationType, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<bool> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get seen => $composableBuilder(column: $table.seen, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get createdAtRemoteUsec => $composableBuilder(
-    column: $table.createdAtRemoteUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get createdAtRemoteUsec =>
+      $composableBuilder(column: $table.createdAtRemoteUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get updatedAtRemoteUsec => $composableBuilder(
-    column: $table.updatedAtRemoteUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get updatedAtRemoteUsec =>
+      $composableBuilder(column: $table.updatedAtRemoteUsec, builder: (column) => ColumnFilters(column));
 
   Expression<bool> systemNotificationsOutboxTableRefs(
-    Expression<bool> Function(
-      $$SystemNotificationsOutboxTableTableFilterComposer f,
-    )
-    f,
+    Expression<bool> Function($$SystemNotificationsOutboxTableTableFilterComposer f) f,
   ) {
-    final $$SystemNotificationsOutboxTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.systemNotificationsOutboxTable,
-          getReferencedColumn: (t) => t.notificationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SystemNotificationsOutboxTableTableFilterComposer(
-                $db: $db,
-                $table: $db.systemNotificationsOutboxTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SystemNotificationsOutboxTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.systemNotificationsOutboxTable,
+      getReferencedColumn: (t) => t.notificationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SystemNotificationsOutboxTableTableFilterComposer(
+            $db: $db,
+            $table: $db.systemNotificationsOutboxTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
 
-class $$SystemNotificationsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $SystemNotificationsTableTable> {
+class $$SystemNotificationsTableTableOrderingComposer extends Composer<_$AppDatabase, $SystemNotificationsTableTable> {
   $$SystemNotificationsTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -25917,40 +20497,25 @@ class $$SystemNotificationsTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get content => $composableBuilder(
-    column: $table.content,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get seen =>
+      $composableBuilder(column: $table.seen, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get createdAtRemoteUsec => $composableBuilder(
-    column: $table.createdAtRemoteUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get createdAtRemoteUsec =>
+      $composableBuilder(column: $table.createdAtRemoteUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get updatedAtRemoteUsec => $composableBuilder(
-    column: $table.updatedAtRemoteUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get updatedAtRemoteUsec =>
+      $composableBuilder(column: $table.updatedAtRemoteUsec, builder: (column) => ColumnOrderings(column));
 }
 
 class $$SystemNotificationsTableTableAnnotationComposer
@@ -25962,57 +20527,40 @@ class $$SystemNotificationsTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => column);
+  GeneratedColumn<String> get title => $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumn<String> get content =>
-      $composableBuilder(column: $table.content, builder: (column) => column);
+  GeneratedColumn<String> get content => $composableBuilder(column: $table.content, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<SystemNotificationType, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<bool> get seen =>
-      $composableBuilder(column: $table.seen, builder: (column) => column);
+  GeneratedColumn<bool> get seen => $composableBuilder(column: $table.seen, builder: (column) => column);
 
-  GeneratedColumn<int> get createdAtRemoteUsec => $composableBuilder(
-    column: $table.createdAtRemoteUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get createdAtRemoteUsec =>
+      $composableBuilder(column: $table.createdAtRemoteUsec, builder: (column) => column);
 
-  GeneratedColumn<int> get updatedAtRemoteUsec => $composableBuilder(
-    column: $table.updatedAtRemoteUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get updatedAtRemoteUsec =>
+      $composableBuilder(column: $table.updatedAtRemoteUsec, builder: (column) => column);
 
   Expression<T> systemNotificationsOutboxTableRefs<T extends Object>(
-    Expression<T> Function(
-      $$SystemNotificationsOutboxTableTableAnnotationComposer a,
-    )
-    f,
+    Expression<T> Function($$SystemNotificationsOutboxTableTableAnnotationComposer a) f,
   ) {
-    final $$SystemNotificationsOutboxTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.systemNotificationsOutboxTable,
-          getReferencedColumn: (t) => t.notificationId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SystemNotificationsOutboxTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.systemNotificationsOutboxTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SystemNotificationsOutboxTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.systemNotificationsOutboxTable,
+      getReferencedColumn: (t) => t.notificationId,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SystemNotificationsOutboxTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.systemNotificationsOutboxTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -26032,28 +20580,14 @@ class $$SystemNotificationsTableTableTableManager
           SystemNotificationData,
           PrefetchHooks Function({bool systemNotificationsOutboxTableRefs})
         > {
-  $$SystemNotificationsTableTableTableManager(
-    _$AppDatabase db,
-    $SystemNotificationsTableTable table,
-  ) : super(
+  $$SystemNotificationsTableTableTableManager(_$AppDatabase db, $SystemNotificationsTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SystemNotificationsTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SystemNotificationsTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$SystemNotificationsTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SystemNotificationsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SystemNotificationsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SystemNotificationsTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -26090,51 +20624,34 @@ class $$SystemNotificationsTableTableTableManager
                 createdAtRemoteUsec: createdAtRemoteUsec,
                 updatedAtRemoteUsec: updatedAtRemoteUsec,
               ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SystemNotificationsTableTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback:
-              ({systemNotificationsOutboxTableRefs = false}) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (systemNotificationsOutboxTableRefs)
-                      db.systemNotificationsOutboxTable,
-                  ],
-                  addJoins: null,
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (systemNotificationsOutboxTableRefs)
-                        await $_getPrefetchedData<
-                          SystemNotificationData,
-                          $SystemNotificationsTableTable,
-                          SystemNotificationOutboxEntryData
-                        >(
-                          currentTable: table,
-                          referencedTable:
-                              $$SystemNotificationsTableTableReferences
-                                  ._systemNotificationsOutboxTableRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$SystemNotificationsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).systemNotificationsOutboxTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.notificationId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                    ];
-                  },
-                );
+          withReferenceMapper: (p0) =>
+              p0.map((e) => (e.readTable(table), $$SystemNotificationsTableTableReferences(db, table, e))).toList(),
+          prefetchHooksCallback: ({systemNotificationsOutboxTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (systemNotificationsOutboxTableRefs) db.systemNotificationsOutboxTable],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (systemNotificationsOutboxTableRefs)
+                    await $_getPrefetchedData<
+                      SystemNotificationData,
+                      $SystemNotificationsTableTable,
+                      SystemNotificationOutboxEntryData
+                    >(
+                      currentTable: table,
+                      referencedTable: $$SystemNotificationsTableTableReferences
+                          ._systemNotificationsOutboxTableRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$SystemNotificationsTableTableReferences(db, table, p0).systemNotificationsOutboxTableRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.notificationId == item.id),
+                      typedResults: items,
+                    ),
+                ];
               },
+            );
+          },
         ),
       );
 }
@@ -26171,26 +20688,13 @@ typedef $$SystemNotificationsOutboxTableTableUpdateCompanionBuilder =
     });
 
 final class $$SystemNotificationsOutboxTableTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $SystemNotificationsOutboxTableTable,
-          SystemNotificationOutboxEntryData
-        > {
-  $$SystemNotificationsOutboxTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+    extends BaseReferences<_$AppDatabase, $SystemNotificationsOutboxTableTable, SystemNotificationOutboxEntryData> {
+  $$SystemNotificationsOutboxTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $SystemNotificationsTableTable _notificationIdTable(
-    _$AppDatabase db,
-  ) => db.systemNotificationsTable.createAlias(
-    $_aliasNameGenerator(
-      db.systemNotificationsOutboxTable.notificationId,
-      db.systemNotificationsTable.id,
-    ),
-  );
+  static $SystemNotificationsTableTable _notificationIdTable(_$AppDatabase db) =>
+      db.systemNotificationsTable.createAlias(
+        $_aliasNameGenerator(db.systemNotificationsOutboxTable.notificationId, db.systemNotificationsTable.id),
+      );
 
   $$SystemNotificationsTableTableProcessedTableManager get notificationId {
     final $_column = $_itemColumn<int>('notification_id')!;
@@ -26201,9 +20705,7 @@ final class $$SystemNotificationsOutboxTableTableReferences
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_notificationIdTable($_db));
     if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
+    return ProcessedTableManager(manager.$state.copyWith(prefetchedData: [item]));
   }
 }
 
@@ -26216,48 +20718,30 @@ class $$SystemNotificationsOutboxTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnWithTypeConverterFilters<
-    SnOutboxDataActionType,
-    SnOutboxDataActionType,
-    String
-  >
-  get actionType => $composableBuilder(
-    column: $table.actionType,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<SnOutboxDataActionType, SnOutboxDataActionType, String> get actionType =>
+      $composableBuilder(column: $table.actionType, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnWithTypeConverterFilters<SnOutboxDataState, SnOutboxDataState, String>
-  get state => $composableBuilder(
-    column: $table.state,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<SnOutboxDataState, SnOutboxDataState, String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnFilters(column));
 
   $$SystemNotificationsTableTableFilterComposer get notificationId {
-    final $$SystemNotificationsTableTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.notificationId,
-          referencedTable: $db.systemNotificationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SystemNotificationsTableTableFilterComposer(
-                $db: $db,
-                $table: $db.systemNotificationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SystemNotificationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.notificationId,
+      referencedTable: $db.systemNotificationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SystemNotificationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.systemNotificationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -26271,42 +20755,30 @@ class $$SystemNotificationsOutboxTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get actionType => $composableBuilder(
-    column: $table.actionType,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get actionType =>
+      $composableBuilder(column: $table.actionType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get state => $composableBuilder(
-    column: $table.state,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get sendAttempts =>
+      $composableBuilder(column: $table.sendAttempts, builder: (column) => ColumnOrderings(column));
 
   $$SystemNotificationsTableTableOrderingComposer get notificationId {
-    final $$SystemNotificationsTableTableOrderingComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.notificationId,
-          referencedTable: $db.systemNotificationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SystemNotificationsTableTableOrderingComposer(
-                $db: $db,
-                $table: $db.systemNotificationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SystemNotificationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.notificationId,
+      referencedTable: $db.systemNotificationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SystemNotificationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.systemNotificationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -26320,41 +20792,29 @@ class $$SystemNotificationsOutboxTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumnWithTypeConverter<SnOutboxDataActionType, String>
-  get actionType => $composableBuilder(
-    column: $table.actionType,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<SnOutboxDataActionType, String> get actionType =>
+      $composableBuilder(column: $table.actionType, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<SnOutboxDataState, String> get state =>
       $composableBuilder(column: $table.state, builder: (column) => column);
 
-  GeneratedColumn<int> get sendAttempts => $composableBuilder(
-    column: $table.sendAttempts,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get sendAttempts => $composableBuilder(column: $table.sendAttempts, builder: (column) => column);
 
   $$SystemNotificationsTableTableAnnotationComposer get notificationId {
-    final $$SystemNotificationsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.notificationId,
-          referencedTable: $db.systemNotificationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$SystemNotificationsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.systemNotificationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+    final $$SystemNotificationsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.notificationId,
+      referencedTable: $db.systemNotificationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder: (joinBuilder, {$addJoinBuilderToRootComposer, $removeJoinBuilderFromRootComposer}) =>
+          $$SystemNotificationsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.systemNotificationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return composer;
   }
 }
@@ -26370,35 +20830,19 @@ class $$SystemNotificationsOutboxTableTableTableManager
           $$SystemNotificationsOutboxTableTableAnnotationComposer,
           $$SystemNotificationsOutboxTableTableCreateCompanionBuilder,
           $$SystemNotificationsOutboxTableTableUpdateCompanionBuilder,
-          (
-            SystemNotificationOutboxEntryData,
-            $$SystemNotificationsOutboxTableTableReferences,
-          ),
+          (SystemNotificationOutboxEntryData, $$SystemNotificationsOutboxTableTableReferences),
           SystemNotificationOutboxEntryData,
           PrefetchHooks Function({bool notificationId})
         > {
-  $$SystemNotificationsOutboxTableTableTableManager(
-    _$AppDatabase db,
-    $SystemNotificationsOutboxTableTable table,
-  ) : super(
+  $$SystemNotificationsOutboxTableTableTableManager(_$AppDatabase db, $SystemNotificationsOutboxTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SystemNotificationsOutboxTableTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
-          createOrderingComposer: () =>
-              $$SystemNotificationsOutboxTableTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$SystemNotificationsOutboxTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SystemNotificationsOutboxTableTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$SystemNotificationsOutboxTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              $$SystemNotificationsOutboxTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> notificationId = const Value.absent(),
@@ -26428,12 +20872,7 @@ class $$SystemNotificationsOutboxTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SystemNotificationsOutboxTableTableReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable(table), $$SystemNotificationsOutboxTableTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: ({notificationId = false}) {
             return PrefetchHooks(
@@ -26460,13 +20899,12 @@ class $$SystemNotificationsOutboxTableTableTableManager
                           state.withJoin(
                                 currentTable: table,
                                 currentColumn: table.notificationId,
-                                referencedTable:
-                                    $$SystemNotificationsOutboxTableTableReferences
-                                        ._notificationIdTable(db),
-                                referencedColumn:
-                                    $$SystemNotificationsOutboxTableTableReferences
-                                        ._notificationIdTable(db)
-                                        .id,
+                                referencedTable: $$SystemNotificationsOutboxTableTableReferences._notificationIdTable(
+                                  db,
+                                ),
+                                referencedColumn: $$SystemNotificationsOutboxTableTableReferences
+                                    ._notificationIdTable(db)
+                                    .id,
                               )
                               as T;
                     }
@@ -26492,10 +20930,7 @@ typedef $$SystemNotificationsOutboxTableTableProcessedTableManager =
       $$SystemNotificationsOutboxTableTableAnnotationComposer,
       $$SystemNotificationsOutboxTableTableCreateCompanionBuilder,
       $$SystemNotificationsOutboxTableTableUpdateCompanionBuilder,
-      (
-        SystemNotificationOutboxEntryData,
-        $$SystemNotificationsOutboxTableTableReferences,
-      ),
+      (SystemNotificationOutboxEntryData, $$SystemNotificationsOutboxTableTableReferences),
       SystemNotificationOutboxEntryData,
       PrefetchHooks Function({bool notificationId})
     >;
@@ -26530,8 +20965,7 @@ typedef $$PresenceInfoTableTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$PresenceInfoTableTableFilterComposer
-    extends Composer<_$AppDatabase, $PresenceInfoTableTable> {
+class $$PresenceInfoTableTableFilterComposer extends Composer<_$AppDatabase, $PresenceInfoTableTable> {
   $$PresenceInfoTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -26539,64 +20973,40 @@ class $$PresenceInfoTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get available => $composableBuilder(
-    column: $table.available,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get available =>
+      $composableBuilder(column: $table.available, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get note => $composableBuilder(column: $table.note, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get statusIcon => $composableBuilder(
-    column: $table.statusIcon,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get statusIcon =>
+      $composableBuilder(column: $table.statusIcon, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get device => $composableBuilder(
-    column: $table.device,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get device =>
+      $composableBuilder(column: $table.device, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get timeOffsetMin => $composableBuilder(
-    column: $table.timeOffsetMin,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timeOffsetMin =>
+      $composableBuilder(column: $table.timeOffsetMin, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get activitiesJson => $composableBuilder(
-    column: $table.activitiesJson,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get activitiesJson =>
+      $composableBuilder(column: $table.activitiesJson, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get source => $composableBuilder(
-    column: $table.source,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get arrivalTimeUsec => $composableBuilder(
-    column: $table.arrivalTimeUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get arrivalTimeUsec =>
+      $composableBuilder(column: $table.arrivalTimeUsec, builder: (column) => ColumnFilters(column));
 }
 
-class $$PresenceInfoTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $PresenceInfoTableTable> {
+class $$PresenceInfoTableTableOrderingComposer extends Composer<_$AppDatabase, $PresenceInfoTableTable> {
   $$PresenceInfoTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -26604,64 +21014,41 @@ class $$PresenceInfoTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get number => $composableBuilder(
-    column: $table.number,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get number =>
+      $composableBuilder(column: $table.number, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get available => $composableBuilder(
-    column: $table.available,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get available =>
+      $composableBuilder(column: $table.available, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get statusIcon => $composableBuilder(
-    column: $table.statusIcon,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get statusIcon =>
+      $composableBuilder(column: $table.statusIcon, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get device => $composableBuilder(
-    column: $table.device,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get device =>
+      $composableBuilder(column: $table.device, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get timeOffsetMin => $composableBuilder(
-    column: $table.timeOffsetMin,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timeOffsetMin =>
+      $composableBuilder(column: $table.timeOffsetMin, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get activitiesJson => $composableBuilder(
-    column: $table.activitiesJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get activitiesJson =>
+      $composableBuilder(column: $table.activitiesJson, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get source => $composableBuilder(
-    column: $table.source,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get arrivalTimeUsec => $composableBuilder(
-    column: $table.arrivalTimeUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get arrivalTimeUsec =>
+      $composableBuilder(column: $table.arrivalTimeUsec, builder: (column) => ColumnOrderings(column));
 }
 
-class $$PresenceInfoTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $PresenceInfoTableTable> {
+class $$PresenceInfoTableTableAnnotationComposer extends Composer<_$AppDatabase, $PresenceInfoTableTable> {
   $$PresenceInfoTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -26669,48 +21056,31 @@ class $$PresenceInfoTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get idKey =>
-      $composableBuilder(column: $table.idKey, builder: (column) => column);
+  GeneratedColumn<String> get idKey => $composableBuilder(column: $table.idKey, builder: (column) => column);
 
-  GeneratedColumn<String> get number =>
-      $composableBuilder(column: $table.number, builder: (column) => column);
+  GeneratedColumn<String> get number => $composableBuilder(column: $table.number, builder: (column) => column);
 
-  GeneratedColumn<bool> get available =>
-      $composableBuilder(column: $table.available, builder: (column) => column);
+  GeneratedColumn<bool> get available => $composableBuilder(column: $table.available, builder: (column) => column);
 
-  GeneratedColumn<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => column);
+  GeneratedColumn<String> get note => $composableBuilder(column: $table.note, builder: (column) => column);
 
-  GeneratedColumn<String> get statusIcon => $composableBuilder(
-    column: $table.statusIcon,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get statusIcon => $composableBuilder(column: $table.statusIcon, builder: (column) => column);
 
-  GeneratedColumn<String> get device =>
-      $composableBuilder(column: $table.device, builder: (column) => column);
+  GeneratedColumn<String> get device => $composableBuilder(column: $table.device, builder: (column) => column);
 
-  GeneratedColumn<int> get timeOffsetMin => $composableBuilder(
-    column: $table.timeOffsetMin,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timeOffsetMin =>
+      $composableBuilder(column: $table.timeOffsetMin, builder: (column) => column);
 
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 
-  GeneratedColumn<String> get activitiesJson => $composableBuilder(
-    column: $table.activitiesJson,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get activitiesJson =>
+      $composableBuilder(column: $table.activitiesJson, builder: (column) => column);
 
-  GeneratedColumn<String> get source =>
-      $composableBuilder(column: $table.source, builder: (column) => column);
+  GeneratedColumn<String> get source => $composableBuilder(column: $table.source, builder: (column) => column);
 
-  GeneratedColumn<int> get arrivalTimeUsec => $composableBuilder(
-    column: $table.arrivalTimeUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get arrivalTimeUsec =>
+      $composableBuilder(column: $table.arrivalTimeUsec, builder: (column) => column);
 }
 
 class $$PresenceInfoTableTableTableManager
@@ -26724,33 +21094,18 @@ class $$PresenceInfoTableTableTableManager
           $$PresenceInfoTableTableAnnotationComposer,
           $$PresenceInfoTableTableCreateCompanionBuilder,
           $$PresenceInfoTableTableUpdateCompanionBuilder,
-          (
-            PresenceInfoData,
-            BaseReferences<
-              _$AppDatabase,
-              $PresenceInfoTableTable,
-              PresenceInfoData
-            >,
-          ),
+          (PresenceInfoData, BaseReferences<_$AppDatabase, $PresenceInfoTableTable, PresenceInfoData>),
           PresenceInfoData,
           PrefetchHooks Function()
         > {
-  $$PresenceInfoTableTableTableManager(
-    _$AppDatabase db,
-    $PresenceInfoTableTable table,
-  ) : super(
+  $$PresenceInfoTableTableTableManager(_$AppDatabase db, $PresenceInfoTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$PresenceInfoTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$PresenceInfoTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$PresenceInfoTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$PresenceInfoTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$PresenceInfoTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$PresenceInfoTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> idKey = const Value.absent(),
@@ -26807,9 +21162,7 @@ class $$PresenceInfoTableTableTableManager
                 arrivalTimeUsec: arrivalTimeUsec,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -26825,14 +21178,7 @@ typedef $$PresenceInfoTableTableProcessedTableManager =
       $$PresenceInfoTableTableAnnotationComposer,
       $$PresenceInfoTableTableCreateCompanionBuilder,
       $$PresenceInfoTableTableUpdateCompanionBuilder,
-      (
-        PresenceInfoData,
-        BaseReferences<
-          _$AppDatabase,
-          $PresenceInfoTableTable,
-          PresenceInfoData
-        >,
-      ),
+      (PresenceInfoData, BaseReferences<_$AppDatabase, $PresenceInfoTableTable, PresenceInfoData>),
       PresenceInfoData,
       PrefetchHooks Function()
     >;
@@ -26873,8 +21219,7 @@ typedef $$DialogInfoTableTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$DialogInfoTableTableFilterComposer
-    extends Composer<_$AppDatabase, $DialogInfoTableTable> {
+class $$DialogInfoTableTableFilterComposer extends Composer<_$AppDatabase, $DialogInfoTableTable> {
   $$DialogInfoTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -26882,79 +21227,50 @@ class $$DialogInfoTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get entityNumber => $composableBuilder(
-    column: $table.entityNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get entityNumber =>
+      $composableBuilder(column: $table.entityNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get state => $composableBuilder(
-    column: $table.state,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get callId => $composableBuilder(
-    column: $table.callId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get callId =>
+      $composableBuilder(column: $table.callId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get direction => $composableBuilder(
-    column: $table.direction,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get localTag => $composableBuilder(
-    column: $table.localTag,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get localTag =>
+      $composableBuilder(column: $table.localTag, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get localNumber => $composableBuilder(
-    column: $table.localNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get localNumber =>
+      $composableBuilder(column: $table.localNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get localDisplayName => $composableBuilder(
-    column: $table.localDisplayName,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get localDisplayName =>
+      $composableBuilder(column: $table.localDisplayName, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get remoteTag => $composableBuilder(
-    column: $table.remoteTag,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get remoteTag =>
+      $composableBuilder(column: $table.remoteTag, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get remoteNumber => $composableBuilder(
-    column: $table.remoteNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get remoteNumber =>
+      $composableBuilder(column: $table.remoteNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get remoteDisplayName => $composableBuilder(
-    column: $table.remoteDisplayName,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get remoteDisplayName =>
+      $composableBuilder(column: $table.remoteDisplayName, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get arrivalVersion => $composableBuilder(
-    column: $table.arrivalVersion,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get arrivalVersion =>
+      $composableBuilder(column: $table.arrivalVersion, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get arrivalTimeUsec => $composableBuilder(
-    column: $table.arrivalTimeUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get arrivalTimeUsec =>
+      $composableBuilder(column: $table.arrivalTimeUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get hasVideo => $composableBuilder(
-    column: $table.hasVideo,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get hasVideo =>
+      $composableBuilder(column: $table.hasVideo, builder: (column) => ColumnFilters(column));
 }
 
-class $$DialogInfoTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $DialogInfoTableTable> {
+class $$DialogInfoTableTableOrderingComposer extends Composer<_$AppDatabase, $DialogInfoTableTable> {
   $$DialogInfoTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -26962,79 +21278,50 @@ class $$DialogInfoTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get idKey => $composableBuilder(
-    column: $table.idKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get idKey =>
+      $composableBuilder(column: $table.idKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get entityNumber => $composableBuilder(
-    column: $table.entityNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get entityNumber =>
+      $composableBuilder(column: $table.entityNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get state => $composableBuilder(
-    column: $table.state,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get callId => $composableBuilder(
-    column: $table.callId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get callId =>
+      $composableBuilder(column: $table.callId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get direction => $composableBuilder(
-    column: $table.direction,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get localTag => $composableBuilder(
-    column: $table.localTag,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get localTag =>
+      $composableBuilder(column: $table.localTag, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get localNumber => $composableBuilder(
-    column: $table.localNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get localNumber =>
+      $composableBuilder(column: $table.localNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get localDisplayName => $composableBuilder(
-    column: $table.localDisplayName,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get localDisplayName =>
+      $composableBuilder(column: $table.localDisplayName, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get remoteTag => $composableBuilder(
-    column: $table.remoteTag,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get remoteTag =>
+      $composableBuilder(column: $table.remoteTag, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get remoteNumber => $composableBuilder(
-    column: $table.remoteNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get remoteNumber =>
+      $composableBuilder(column: $table.remoteNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get remoteDisplayName => $composableBuilder(
-    column: $table.remoteDisplayName,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get remoteDisplayName =>
+      $composableBuilder(column: $table.remoteDisplayName, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get arrivalVersion => $composableBuilder(
-    column: $table.arrivalVersion,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get arrivalVersion =>
+      $composableBuilder(column: $table.arrivalVersion, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get arrivalTimeUsec => $composableBuilder(
-    column: $table.arrivalTimeUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get arrivalTimeUsec =>
+      $composableBuilder(column: $table.arrivalTimeUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get hasVideo => $composableBuilder(
-    column: $table.hasVideo,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get hasVideo =>
+      $composableBuilder(column: $table.hasVideo, builder: (column) => ColumnOrderings(column));
 }
 
-class $$DialogInfoTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $DialogInfoTableTable> {
+class $$DialogInfoTableTableAnnotationComposer extends Composer<_$AppDatabase, $DialogInfoTableTable> {
   $$DialogInfoTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -27042,61 +21329,40 @@ class $$DialogInfoTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get idKey =>
-      $composableBuilder(column: $table.idKey, builder: (column) => column);
+  GeneratedColumn<String> get idKey => $composableBuilder(column: $table.idKey, builder: (column) => column);
 
-  GeneratedColumn<String> get entityNumber => $composableBuilder(
-    column: $table.entityNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get entityNumber =>
+      $composableBuilder(column: $table.entityNumber, builder: (column) => column);
 
-  GeneratedColumn<String> get state =>
-      $composableBuilder(column: $table.state, builder: (column) => column);
+  GeneratedColumn<String> get state => $composableBuilder(column: $table.state, builder: (column) => column);
 
-  GeneratedColumn<String> get callId =>
-      $composableBuilder(column: $table.callId, builder: (column) => column);
+  GeneratedColumn<String> get callId => $composableBuilder(column: $table.callId, builder: (column) => column);
 
-  GeneratedColumn<String> get direction =>
-      $composableBuilder(column: $table.direction, builder: (column) => column);
+  GeneratedColumn<String> get direction => $composableBuilder(column: $table.direction, builder: (column) => column);
 
-  GeneratedColumn<String> get localTag =>
-      $composableBuilder(column: $table.localTag, builder: (column) => column);
+  GeneratedColumn<String> get localTag => $composableBuilder(column: $table.localTag, builder: (column) => column);
 
-  GeneratedColumn<String> get localNumber => $composableBuilder(
-    column: $table.localNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get localNumber =>
+      $composableBuilder(column: $table.localNumber, builder: (column) => column);
 
-  GeneratedColumn<String> get localDisplayName => $composableBuilder(
-    column: $table.localDisplayName,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get localDisplayName =>
+      $composableBuilder(column: $table.localDisplayName, builder: (column) => column);
 
-  GeneratedColumn<String> get remoteTag =>
-      $composableBuilder(column: $table.remoteTag, builder: (column) => column);
+  GeneratedColumn<String> get remoteTag => $composableBuilder(column: $table.remoteTag, builder: (column) => column);
 
-  GeneratedColumn<String> get remoteNumber => $composableBuilder(
-    column: $table.remoteNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get remoteNumber =>
+      $composableBuilder(column: $table.remoteNumber, builder: (column) => column);
 
-  GeneratedColumn<String> get remoteDisplayName => $composableBuilder(
-    column: $table.remoteDisplayName,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get remoteDisplayName =>
+      $composableBuilder(column: $table.remoteDisplayName, builder: (column) => column);
 
-  GeneratedColumn<String> get arrivalVersion => $composableBuilder(
-    column: $table.arrivalVersion,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get arrivalVersion =>
+      $composableBuilder(column: $table.arrivalVersion, builder: (column) => column);
 
-  GeneratedColumn<int> get arrivalTimeUsec => $composableBuilder(
-    column: $table.arrivalTimeUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get arrivalTimeUsec =>
+      $composableBuilder(column: $table.arrivalTimeUsec, builder: (column) => column);
 
-  GeneratedColumn<bool> get hasVideo =>
-      $composableBuilder(column: $table.hasVideo, builder: (column) => column);
+  GeneratedColumn<bool> get hasVideo => $composableBuilder(column: $table.hasVideo, builder: (column) => column);
 }
 
 class $$DialogInfoTableTableTableManager
@@ -27110,30 +21376,18 @@ class $$DialogInfoTableTableTableManager
           $$DialogInfoTableTableAnnotationComposer,
           $$DialogInfoTableTableCreateCompanionBuilder,
           $$DialogInfoTableTableUpdateCompanionBuilder,
-          (
-            DialogInfoData,
-            BaseReferences<
-              _$AppDatabase,
-              $DialogInfoTableTable,
-              DialogInfoData
-            >,
-          ),
+          (DialogInfoData, BaseReferences<_$AppDatabase, $DialogInfoTableTable, DialogInfoData>),
           DialogInfoData,
           PrefetchHooks Function()
         > {
-  $$DialogInfoTableTableTableManager(
-    _$AppDatabase db,
-    $DialogInfoTableTable table,
-  ) : super(
+  $$DialogInfoTableTableTableManager(_$AppDatabase db, $DialogInfoTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$DialogInfoTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$DialogInfoTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$DialogInfoTableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$DialogInfoTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$DialogInfoTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$DialogInfoTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> idKey = const Value.absent(),
@@ -27202,9 +21456,7 @@ class $$DialogInfoTableTableTableManager
                 hasVideo: hasVideo,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -27220,10 +21472,7 @@ typedef $$DialogInfoTableTableProcessedTableManager =
       $$DialogInfoTableTableAnnotationComposer,
       $$DialogInfoTableTableCreateCompanionBuilder,
       $$DialogInfoTableTableUpdateCompanionBuilder,
-      (
-        DialogInfoData,
-        BaseReferences<_$AppDatabase, $DialogInfoTableTable, DialogInfoData>,
-      ),
+      (DialogInfoData, BaseReferences<_$AppDatabase, $DialogInfoTableTable, DialogInfoData>),
       DialogInfoData,
       PrefetchHooks Function()
     >;
@@ -27260,8 +21509,7 @@ typedef $$CdrTableTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-class $$CdrTableTableFilterComposer
-    extends Composer<_$AppDatabase, $CdrTableTable> {
+class $$CdrTableTableFilterComposer extends Composer<_$AppDatabase, $CdrTableTable> {
   $$CdrTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -27269,71 +21517,44 @@ class $$CdrTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get callId => $composableBuilder(
-    column: $table.callId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get callId =>
+      $composableBuilder(column: $table.callId, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<CallDirectionData, CallDirectionData, String>
-  get direction => $composableBuilder(
-    column: $table.direction,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<CallDirectionData, CallDirectionData, String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnWithTypeConverterFilters<CdrStatusData, CdrStatusData, String>
-  get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnWithTypeConverterFilters(column),
-  );
+  ColumnWithTypeConverterFilters<CdrStatusData, CdrStatusData, String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get callee => $composableBuilder(
-    column: $table.callee,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get callee =>
+      $composableBuilder(column: $table.callee, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get calleeNumber => $composableBuilder(
-    column: $table.calleeNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get calleeNumber =>
+      $composableBuilder(column: $table.calleeNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get caller => $composableBuilder(
-    column: $table.caller,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get caller =>
+      $composableBuilder(column: $table.caller, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get callerNumber => $composableBuilder(
-    column: $table.callerNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get callerNumber =>
+      $composableBuilder(column: $table.callerNumber, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get connectTimeUsec => $composableBuilder(
-    column: $table.connectTimeUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get connectTimeUsec =>
+      $composableBuilder(column: $table.connectTimeUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get disconnectTimeUsec => $composableBuilder(
-    column: $table.disconnectTimeUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get disconnectTimeUsec =>
+      $composableBuilder(column: $table.disconnectTimeUsec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get disconnectReason => $composableBuilder(
-    column: $table.disconnectReason,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get disconnectReason =>
+      $composableBuilder(column: $table.disconnectReason, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get durationSeconds => $composableBuilder(
-    column: $table.durationSeconds,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get durationSeconds =>
+      $composableBuilder(column: $table.durationSeconds, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get recordingId => $composableBuilder(
-    column: $table.recordingId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get recordingId =>
+      $composableBuilder(column: $table.recordingId, builder: (column) => ColumnFilters(column));
 }
 
-class $$CdrTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $CdrTableTable> {
+class $$CdrTableTableOrderingComposer extends Composer<_$AppDatabase, $CdrTableTable> {
   $$CdrTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -27341,69 +21562,44 @@ class $$CdrTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get callId => $composableBuilder(
-    column: $table.callId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get callId =>
+      $composableBuilder(column: $table.callId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get direction => $composableBuilder(
-    column: $table.direction,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get callee => $composableBuilder(
-    column: $table.callee,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get callee =>
+      $composableBuilder(column: $table.callee, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get calleeNumber => $composableBuilder(
-    column: $table.calleeNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get calleeNumber =>
+      $composableBuilder(column: $table.calleeNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get caller => $composableBuilder(
-    column: $table.caller,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get caller =>
+      $composableBuilder(column: $table.caller, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get callerNumber => $composableBuilder(
-    column: $table.callerNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get callerNumber =>
+      $composableBuilder(column: $table.callerNumber, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get connectTimeUsec => $composableBuilder(
-    column: $table.connectTimeUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get connectTimeUsec =>
+      $composableBuilder(column: $table.connectTimeUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get disconnectTimeUsec => $composableBuilder(
-    column: $table.disconnectTimeUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get disconnectTimeUsec =>
+      $composableBuilder(column: $table.disconnectTimeUsec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get disconnectReason => $composableBuilder(
-    column: $table.disconnectReason,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get disconnectReason =>
+      $composableBuilder(column: $table.disconnectReason, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get durationSeconds => $composableBuilder(
-    column: $table.durationSeconds,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get durationSeconds =>
+      $composableBuilder(column: $table.durationSeconds, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get recordingId => $composableBuilder(
-    column: $table.recordingId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get recordingId =>
+      $composableBuilder(column: $table.recordingId, builder: (column) => ColumnOrderings(column));
 }
 
-class $$CdrTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CdrTableTable> {
+class $$CdrTableTableAnnotationComposer extends Composer<_$AppDatabase, $CdrTableTable> {
   $$CdrTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -27411,8 +21607,7 @@ class $$CdrTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get callId =>
-      $composableBuilder(column: $table.callId, builder: (column) => column);
+  GeneratedColumn<String> get callId => $composableBuilder(column: $table.callId, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<CallDirectionData, String> get direction =>
       $composableBuilder(column: $table.direction, builder: (column) => column);
@@ -27420,46 +21615,30 @@ class $$CdrTableTableAnnotationComposer
   GeneratedColumnWithTypeConverter<CdrStatusData, String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<String> get callee =>
-      $composableBuilder(column: $table.callee, builder: (column) => column);
+  GeneratedColumn<String> get callee => $composableBuilder(column: $table.callee, builder: (column) => column);
 
-  GeneratedColumn<String> get calleeNumber => $composableBuilder(
-    column: $table.calleeNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get calleeNumber =>
+      $composableBuilder(column: $table.calleeNumber, builder: (column) => column);
 
-  GeneratedColumn<String> get caller =>
-      $composableBuilder(column: $table.caller, builder: (column) => column);
+  GeneratedColumn<String> get caller => $composableBuilder(column: $table.caller, builder: (column) => column);
 
-  GeneratedColumn<String> get callerNumber => $composableBuilder(
-    column: $table.callerNumber,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get callerNumber =>
+      $composableBuilder(column: $table.callerNumber, builder: (column) => column);
 
-  GeneratedColumn<int> get connectTimeUsec => $composableBuilder(
-    column: $table.connectTimeUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get connectTimeUsec =>
+      $composableBuilder(column: $table.connectTimeUsec, builder: (column) => column);
 
-  GeneratedColumn<int> get disconnectTimeUsec => $composableBuilder(
-    column: $table.disconnectTimeUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get disconnectTimeUsec =>
+      $composableBuilder(column: $table.disconnectTimeUsec, builder: (column) => column);
 
-  GeneratedColumn<String> get disconnectReason => $composableBuilder(
-    column: $table.disconnectReason,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get disconnectReason =>
+      $composableBuilder(column: $table.disconnectReason, builder: (column) => column);
 
-  GeneratedColumn<int> get durationSeconds => $composableBuilder(
-    column: $table.durationSeconds,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get durationSeconds =>
+      $composableBuilder(column: $table.durationSeconds, builder: (column) => column);
 
-  GeneratedColumn<String> get recordingId => $composableBuilder(
-    column: $table.recordingId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get recordingId =>
+      $composableBuilder(column: $table.recordingId, builder: (column) => column);
 }
 
 class $$CdrTableTableTableManager
@@ -27473,10 +21652,7 @@ class $$CdrTableTableTableManager
           $$CdrTableTableAnnotationComposer,
           $$CdrTableTableCreateCompanionBuilder,
           $$CdrTableTableUpdateCompanionBuilder,
-          (
-            CdrRecordData,
-            BaseReferences<_$AppDatabase, $CdrTableTable, CdrRecordData>,
-          ),
+          (CdrRecordData, BaseReferences<_$AppDatabase, $CdrTableTable, CdrRecordData>),
           CdrRecordData,
           PrefetchHooks Function()
         > {
@@ -27485,12 +21661,9 @@ class $$CdrTableTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$CdrTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$CdrTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$CdrTableTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$CdrTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$CdrTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$CdrTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> callId = const Value.absent(),
@@ -27551,9 +21724,7 @@ class $$CdrTableTableTableManager
                 recordingId: recordingId,
                 rowid: rowid,
               ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -27569,26 +21740,110 @@ typedef $$CdrTableTableProcessedTableManager =
       $$CdrTableTableAnnotationComposer,
       $$CdrTableTableCreateCompanionBuilder,
       $$CdrTableTableUpdateCompanionBuilder,
-      (
-        CdrRecordData,
-        BaseReferences<_$AppDatabase, $CdrTableTable, CdrRecordData>,
-      ),
+      (CdrRecordData, BaseReferences<_$AppDatabase, $CdrTableTable, CdrRecordData>),
       CdrRecordData,
       PrefetchHooks Function()
     >;
-typedef $$CdrSyncCursorTableTableCreateCompanionBuilder =
-    CdrSyncCursorDataCompanion Function({
-      Value<int> id,
-      required int timestampUsec,
-    });
-typedef $$CdrSyncCursorTableTableUpdateCompanionBuilder =
-    CdrSyncCursorDataCompanion Function({
-      Value<int> id,
-      Value<int> timestampUsec,
-    });
+typedef $$CdrHistoryWalkTableTableCreateCompanionBuilder =
+    CdrHistoryWalkDataCompanion Function({Value<int> id, required int walkedToUsec});
+typedef $$CdrHistoryWalkTableTableUpdateCompanionBuilder =
+    CdrHistoryWalkDataCompanion Function({Value<int> id, Value<int> walkedToUsec});
 
-class $$CdrSyncCursorTableTableFilterComposer
-    extends Composer<_$AppDatabase, $CdrSyncCursorTableTable> {
+class $$CdrHistoryWalkTableTableFilterComposer extends Composer<_$AppDatabase, $CdrHistoryWalkTableTable> {
+  $$CdrHistoryWalkTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get walkedToUsec =>
+      $composableBuilder(column: $table.walkedToUsec, builder: (column) => ColumnFilters(column));
+}
+
+class $$CdrHistoryWalkTableTableOrderingComposer extends Composer<_$AppDatabase, $CdrHistoryWalkTableTable> {
+  $$CdrHistoryWalkTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get walkedToUsec =>
+      $composableBuilder(column: $table.walkedToUsec, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CdrHistoryWalkTableTableAnnotationComposer extends Composer<_$AppDatabase, $CdrHistoryWalkTableTable> {
+  $$CdrHistoryWalkTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get walkedToUsec => $composableBuilder(column: $table.walkedToUsec, builder: (column) => column);
+}
+
+class $$CdrHistoryWalkTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CdrHistoryWalkTableTable,
+          CdrHistoryWalkData,
+          $$CdrHistoryWalkTableTableFilterComposer,
+          $$CdrHistoryWalkTableTableOrderingComposer,
+          $$CdrHistoryWalkTableTableAnnotationComposer,
+          $$CdrHistoryWalkTableTableCreateCompanionBuilder,
+          $$CdrHistoryWalkTableTableUpdateCompanionBuilder,
+          (CdrHistoryWalkData, BaseReferences<_$AppDatabase, $CdrHistoryWalkTableTable, CdrHistoryWalkData>),
+          CdrHistoryWalkData,
+          PrefetchHooks Function()
+        > {
+  $$CdrHistoryWalkTableTableTableManager(_$AppDatabase db, $CdrHistoryWalkTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $$CdrHistoryWalkTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$CdrHistoryWalkTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$CdrHistoryWalkTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({Value<int> id = const Value.absent(), Value<int> walkedToUsec = const Value.absent()}) =>
+                  CdrHistoryWalkDataCompanion(id: id, walkedToUsec: walkedToUsec),
+          createCompanionCallback: ({Value<int> id = const Value.absent(), required int walkedToUsec}) =>
+              CdrHistoryWalkDataCompanion.insert(id: id, walkedToUsec: walkedToUsec),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CdrHistoryWalkTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CdrHistoryWalkTableTable,
+      CdrHistoryWalkData,
+      $$CdrHistoryWalkTableTableFilterComposer,
+      $$CdrHistoryWalkTableTableOrderingComposer,
+      $$CdrHistoryWalkTableTableAnnotationComposer,
+      $$CdrHistoryWalkTableTableCreateCompanionBuilder,
+      $$CdrHistoryWalkTableTableUpdateCompanionBuilder,
+      (CdrHistoryWalkData, BaseReferences<_$AppDatabase, $CdrHistoryWalkTableTable, CdrHistoryWalkData>),
+      CdrHistoryWalkData,
+      PrefetchHooks Function()
+    >;
+typedef $$CdrSyncCursorTableTableCreateCompanionBuilder =
+    CdrSyncCursorDataCompanion Function({Value<int> id, required int timestampUsec});
+typedef $$CdrSyncCursorTableTableUpdateCompanionBuilder =
+    CdrSyncCursorDataCompanion Function({Value<int> id, Value<int> timestampUsec});
+
+class $$CdrSyncCursorTableTableFilterComposer extends Composer<_$AppDatabase, $CdrSyncCursorTableTable> {
   $$CdrSyncCursorTableTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -27596,19 +21851,13 @@ class $$CdrSyncCursorTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnFilters(column));
 }
 
-class $$CdrSyncCursorTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $CdrSyncCursorTableTable> {
+class $$CdrSyncCursorTableTableOrderingComposer extends Composer<_$AppDatabase, $CdrSyncCursorTableTable> {
   $$CdrSyncCursorTableTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -27616,19 +21865,13 @@ class $$CdrSyncCursorTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => ColumnOrderings(column));
 }
 
-class $$CdrSyncCursorTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CdrSyncCursorTableTable> {
+class $$CdrSyncCursorTableTableAnnotationComposer extends Composer<_$AppDatabase, $CdrSyncCursorTableTable> {
   $$CdrSyncCursorTableTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -27636,13 +21879,10 @@ class $$CdrSyncCursorTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get timestampUsec => $composableBuilder(
-    column: $table.timestampUsec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get timestampUsec =>
+      $composableBuilder(column: $table.timestampUsec, builder: (column) => column);
 }
 
 class $$CdrSyncCursorTableTableTableManager
@@ -27656,52 +21896,24 @@ class $$CdrSyncCursorTableTableTableManager
           $$CdrSyncCursorTableTableAnnotationComposer,
           $$CdrSyncCursorTableTableCreateCompanionBuilder,
           $$CdrSyncCursorTableTableUpdateCompanionBuilder,
-          (
-            CdrSyncCursorData,
-            BaseReferences<
-              _$AppDatabase,
-              $CdrSyncCursorTableTable,
-              CdrSyncCursorData
-            >,
-          ),
+          (CdrSyncCursorData, BaseReferences<_$AppDatabase, $CdrSyncCursorTableTable, CdrSyncCursorData>),
           CdrSyncCursorData,
           PrefetchHooks Function()
         > {
-  $$CdrSyncCursorTableTableTableManager(
-    _$AppDatabase db,
-    $CdrSyncCursorTableTable table,
-  ) : super(
+  $$CdrSyncCursorTableTableTableManager(_$AppDatabase db, $CdrSyncCursorTableTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$CdrSyncCursorTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$CdrSyncCursorTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$CdrSyncCursorTableTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () => $$CdrSyncCursorTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$CdrSyncCursorTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$CdrSyncCursorTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> timestampUsec = const Value.absent(),
-              }) => CdrSyncCursorDataCompanion(
-                id: id,
-                timestampUsec: timestampUsec,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int timestampUsec,
-              }) => CdrSyncCursorDataCompanion.insert(
-                id: id,
-                timestampUsec: timestampUsec,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+              ({Value<int> id = const Value.absent(), Value<int> timestampUsec = const Value.absent()}) =>
+                  CdrSyncCursorDataCompanion(id: id, timestampUsec: timestampUsec),
+          createCompanionCallback: ({Value<int> id = const Value.absent(), required int timestampUsec}) =>
+              CdrSyncCursorDataCompanion.insert(id: id, timestampUsec: timestampUsec),
+          withReferenceMapper: (p0) => p0.map((e) => (e.readTable(table), BaseReferences(db, table, e))).toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -27717,14 +21929,7 @@ typedef $$CdrSyncCursorTableTableProcessedTableManager =
       $$CdrSyncCursorTableTableAnnotationComposer,
       $$CdrSyncCursorTableTableCreateCompanionBuilder,
       $$CdrSyncCursorTableTableUpdateCompanionBuilder,
-      (
-        CdrSyncCursorData,
-        BaseReferences<
-          _$AppDatabase,
-          $CdrSyncCursorTableTable,
-          CdrSyncCursorData
-        >,
-      ),
+      (CdrSyncCursorData, BaseReferences<_$AppDatabase, $CdrSyncCursorTableTable, CdrSyncCursorData>),
       CdrSyncCursorData,
       PrefetchHooks Function()
     >;
@@ -27732,126 +21937,68 @@ typedef $$CdrSyncCursorTableTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$ContactsTableTableTableManager get contactsTable =>
-      $$ContactsTableTableTableManager(_db, _db.contactsTable);
+  $$ContactsTableTableTableManager get contactsTable => $$ContactsTableTableTableManager(_db, _db.contactsTable);
   $$ContactPhonesTableTableTableManager get contactPhonesTable =>
       $$ContactPhonesTableTableTableManager(_db, _db.contactPhonesTable);
   $$ContactEmailsTableTableTableManager get contactEmailsTable =>
       $$ContactEmailsTableTableTableManager(_db, _db.contactEmailsTable);
-  $$CallLogsTableTableTableManager get callLogsTable =>
-      $$CallLogsTableTableTableManager(_db, _db.callLogsTable);
-  $$FavoritesTableTableTableManager get favoritesTable =>
-      $$FavoritesTableTableTableManager(_db, _db.favoritesTable);
+  $$CallLogsTableTableTableManager get callLogsTable => $$CallLogsTableTableTableManager(_db, _db.callLogsTable);
+  $$FavoritesTableTableTableManager get favoritesTable => $$FavoritesTableTableTableManager(_db, _db.favoritesTable);
   $$FavoritesOutboxTableTableTableManager get favoritesOutboxTable =>
       $$FavoritesOutboxTableTableTableManager(_db, _db.favoritesOutboxTable);
   $$FavoritesV2TableTableTableManager get favoritesV2Table =>
       $$FavoritesV2TableTableTableManager(_db, _db.favoritesV2Table);
-  $$ChatsTableTableTableManager get chatsTable =>
-      $$ChatsTableTableTableManager(_db, _db.chatsTable);
+  $$ChatsTableTableTableManager get chatsTable => $$ChatsTableTableTableManager(_db, _db.chatsTable);
   $$ChatMembersTableTableTableManager get chatMembersTable =>
       $$ChatMembersTableTableTableManager(_db, _db.chatMembersTable);
   $$ChatMessagesTableTableTableManager get chatMessagesTable =>
       $$ChatMessagesTableTableTableManager(_db, _db.chatMessagesTable);
-  $$ChatMessageSyncCursorTableTableTableManager
-  get chatMessageSyncCursorTable =>
-      $$ChatMessageSyncCursorTableTableTableManager(
-        _db,
-        _db.chatMessageSyncCursorTable,
-      );
-  $$ChatMessageReadCursorTableTableTableManager
-  get chatMessageReadCursorTable =>
-      $$ChatMessageReadCursorTableTableTableManager(
-        _db,
-        _db.chatMessageReadCursorTable,
-      );
+  $$ChatMessageSyncCursorTableTableTableManager get chatMessageSyncCursorTable =>
+      $$ChatMessageSyncCursorTableTableTableManager(_db, _db.chatMessageSyncCursorTable);
+  $$ChatMessageReadCursorTableTableTableManager get chatMessageReadCursorTable =>
+      $$ChatMessageReadCursorTableTableTableManager(_db, _db.chatMessageReadCursorTable);
   $$ChatOutboxMessageTableTableTableManager get chatOutboxMessageTable =>
-      $$ChatOutboxMessageTableTableTableManager(
-        _db,
-        _db.chatOutboxMessageTable,
-      );
-  $$ChatOutboxMessageEditTableTableTableManager
-  get chatOutboxMessageEditTable =>
-      $$ChatOutboxMessageEditTableTableTableManager(
-        _db,
-        _db.chatOutboxMessageEditTable,
-      );
-  $$ChatOutboxMessageDeleteTableTableTableManager
-  get chatOutboxMessageDeleteTable =>
-      $$ChatOutboxMessageDeleteTableTableTableManager(
-        _db,
-        _db.chatOutboxMessageDeleteTable,
-      );
-  $$ChatOutboxReadCursorsTableTableTableManager
-  get chatOutboxReadCursorsTable =>
-      $$ChatOutboxReadCursorsTableTableTableManager(
-        _db,
-        _db.chatOutboxReadCursorsTable,
-      );
+      $$ChatOutboxMessageTableTableTableManager(_db, _db.chatOutboxMessageTable);
+  $$ChatOutboxMessageEditTableTableTableManager get chatOutboxMessageEditTable =>
+      $$ChatOutboxMessageEditTableTableTableManager(_db, _db.chatOutboxMessageEditTable);
+  $$ChatOutboxMessageDeleteTableTableTableManager get chatOutboxMessageDeleteTable =>
+      $$ChatOutboxMessageDeleteTableTableTableManager(_db, _db.chatOutboxMessageDeleteTable);
+  $$ChatOutboxReadCursorsTableTableTableManager get chatOutboxReadCursorsTable =>
+      $$ChatOutboxReadCursorsTableTableTableManager(_db, _db.chatOutboxReadCursorsTable);
   $$SmsConversationsTableTableTableManager get smsConversationsTable =>
       $$SmsConversationsTableTableTableManager(_db, _db.smsConversationsTable);
   $$SmsMessagesTableTableTableManager get smsMessagesTable =>
       $$SmsMessagesTableTableTableManager(_db, _db.smsMessagesTable);
   $$SmsMessageSyncCursorTableTableTableManager get smsMessageSyncCursorTable =>
-      $$SmsMessageSyncCursorTableTableTableManager(
-        _db,
-        _db.smsMessageSyncCursorTable,
-      );
+      $$SmsMessageSyncCursorTableTableTableManager(_db, _db.smsMessageSyncCursorTable);
   $$SmsMessageReadCursorTableTableTableManager get smsMessageReadCursorTable =>
-      $$SmsMessageReadCursorTableTableTableManager(
-        _db,
-        _db.smsMessageReadCursorTable,
-      );
+      $$SmsMessageReadCursorTableTableTableManager(_db, _db.smsMessageReadCursorTable);
   $$SmsOutboxMessagesTableTableTableManager get smsOutboxMessagesTable =>
-      $$SmsOutboxMessagesTableTableTableManager(
-        _db,
-        _db.smsOutboxMessagesTable,
-      );
-  $$SmsOutboxMessageDeleteTableTableTableManager
-  get smsOutboxMessageDeleteTable =>
-      $$SmsOutboxMessageDeleteTableTableTableManager(
-        _db,
-        _db.smsOutboxMessageDeleteTable,
-      );
+      $$SmsOutboxMessagesTableTableTableManager(_db, _db.smsOutboxMessagesTable);
+  $$SmsOutboxMessageDeleteTableTableTableManager get smsOutboxMessageDeleteTable =>
+      $$SmsOutboxMessageDeleteTableTableTableManager(_db, _db.smsOutboxMessageDeleteTable);
   $$SmsOutboxReadCursorsTableTableTableManager get smsOutboxReadCursorsTable =>
-      $$SmsOutboxReadCursorsTableTableTableManager(
-        _db,
-        _db.smsOutboxReadCursorsTable,
-      );
+      $$SmsOutboxReadCursorsTableTableTableManager(_db, _db.smsOutboxReadCursorsTable);
   $$SipSubscriptionsTableTableTableManager get sipSubscriptionsTable =>
       $$SipSubscriptionsTableTableTableManager(_db, _db.sipSubscriptionsTable);
-  $$SipSubscriptionsOutboxTableTableTableManager
-  get sipSubscriptionsOutboxTable =>
-      $$SipSubscriptionsOutboxTableTableTableManager(
-        _db,
-        _db.sipSubscriptionsOutboxTable,
-      );
+  $$SipSubscriptionsOutboxTableTableTableManager get sipSubscriptionsOutboxTable =>
+      $$SipSubscriptionsOutboxTableTableTableManager(_db, _db.sipSubscriptionsOutboxTable);
   $$UserSmsNumbersTableTableTableManager get userSmsNumbersTable =>
       $$UserSmsNumbersTableTableTableManager(_db, _db.userSmsNumbersTable);
-  $$ActiveMessageNotificationsTableTableTableManager
-  get activeMessageNotificationsTable =>
-      $$ActiveMessageNotificationsTableTableTableManager(
-        _db,
-        _db.activeMessageNotificationsTable,
-      );
-  $$VoicemailTableTableTableManager get voicemailTable =>
-      $$VoicemailTableTableTableManager(_db, _db.voicemailTable);
+  $$ActiveMessageNotificationsTableTableTableManager get activeMessageNotificationsTable =>
+      $$ActiveMessageNotificationsTableTableTableManager(_db, _db.activeMessageNotificationsTable);
+  $$VoicemailTableTableTableManager get voicemailTable => $$VoicemailTableTableTableManager(_db, _db.voicemailTable);
   $$SystemNotificationsTableTableTableManager get systemNotificationsTable =>
-      $$SystemNotificationsTableTableTableManager(
-        _db,
-        _db.systemNotificationsTable,
-      );
-  $$SystemNotificationsOutboxTableTableTableManager
-  get systemNotificationsOutboxTable =>
-      $$SystemNotificationsOutboxTableTableTableManager(
-        _db,
-        _db.systemNotificationsOutboxTable,
-      );
+      $$SystemNotificationsTableTableTableManager(_db, _db.systemNotificationsTable);
+  $$SystemNotificationsOutboxTableTableTableManager get systemNotificationsOutboxTable =>
+      $$SystemNotificationsOutboxTableTableTableManager(_db, _db.systemNotificationsOutboxTable);
   $$PresenceInfoTableTableTableManager get presenceInfoTable =>
       $$PresenceInfoTableTableTableManager(_db, _db.presenceInfoTable);
   $$DialogInfoTableTableTableManager get dialogInfoTable =>
       $$DialogInfoTableTableTableManager(_db, _db.dialogInfoTable);
-  $$CdrTableTableTableManager get cdrTable =>
-      $$CdrTableTableTableManager(_db, _db.cdrTable);
+  $$CdrTableTableTableManager get cdrTable => $$CdrTableTableTableManager(_db, _db.cdrTable);
+  $$CdrHistoryWalkTableTableTableManager get cdrHistoryWalkTable =>
+      $$CdrHistoryWalkTableTableTableManager(_db, _db.cdrHistoryWalkTable);
   $$CdrSyncCursorTableTableTableManager get cdrSyncCursorTable =>
       $$CdrSyncCursorTableTableTableManager(_db, _db.cdrSyncCursorTable);
 }

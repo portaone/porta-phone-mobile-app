@@ -46,6 +46,8 @@ void main() {
 
     when(() => local.events).thenAnswer((_) => events.stream);
     when(() => local.getLastSyncTime()).thenAnswer((_) async => null);
+    when(() => local.getHistoryWalkedTo()).thenAnswer((_) async => null);
+    when(() => local.markHistoryWalkedTo(any())).thenAnswer((_) async {});
     when(() => sync.state).thenReturn(const PollingTaskState(phase: PollingTaskPhase.idle));
     when(() => sync.states).thenAnswer((_) => syncStates.stream);
   });

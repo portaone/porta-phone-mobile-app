@@ -162,6 +162,16 @@ class FakeLocalRepository implements CdrsLocalRepository {
     return stored.map((cdr) => cdr.connectTime).reduce((a, b) => a.isBefore(b) ? a : b);
   }
 
+  DateTime? _walkedTo;
+
+  @override
+  Future<DateTime?> getHistoryWalkedTo() async => _walkedTo;
+
+  @override
+  Future<void> markHistoryWalkedTo(DateTime time) async {
+    if (_walkedTo == null || time.isBefore(_walkedTo!)) _walkedTo = time;
+  }
+
   @override
   Future<DateTime?> getLastSyncTime() async => _syncCursor;
 
@@ -179,6 +189,7 @@ class FakeLocalRepository implements CdrsLocalRepository {
   Future<void> wipeData() async {
     stored.clear();
     _syncCursor = null;
+    _walkedTo = null;
     _events.add(CdrRecordsWiped());
   }
 
@@ -685,6 +696,86 @@ void main() {
 
       expect(cubit.state.historyEndReached, isFalse);
       expect(cubit.state.historyCursor, isNotNull);
+      await cubit.close();
+    }),
+  );
+
+  test(
+    'the second list reads what the first one walked instead of asking again',
+    () => withClock(Clock.fixed(_now), () async {
+      // Both Recents tabs mount together. The archive is one, the cache is one,
+      // so how far back it has been asked for is one thing too.
+      final archive = <CdrRecord>[
+        _record('missed', _now.subtract(const Duration(days: 20)), status: CdrStatus.missed),
+        for (var i = 0; i < 3; i++) _record('old-$i', _now.subtract(Duration(days: 20, hours: 1 + i))),
+      ];
+      final remote = FakeAdapterRemoteRepository(archive);
+      await local.markSyncCompleted(_now);
+
+      final full = fullCubit(remote);
+      await full.init();
+      await settle(full);
+      final askedByFirst = remote.requests.length;
+      expect(askedByFirst, greaterThan(1), reason: 'the first list walked the quiet weeks');
+
+      final missed = MissedRecentCdrsCubit(
+        local,
+        remote,
+        syncHandle,
+        syncHandle,
+        pageSize: _pageSize,
+        historyWindows: _windows,
+      );
+      await missed.init();
+      await settle(missed);
+
+      expect(remote.requests.length, askedByFirst, reason: 'the second list asked for nothing at all');
+      expect(missed.state.records.map((cdr) => cdr.callId), ['missed'], reason: 'and still found its record locally');
+      await full.close();
+      await missed.close();
+    }),
+  );
+
+  test(
+    'a screen opened again resumes where the walk stopped',
+    () => withClock(Clock.fixed(_now), () async {
+      final archive = <CdrRecord>[_record('today', _now.subtract(const Duration(hours: 1)))];
+      final remote = FakeAdapterRemoteRepository(archive);
+      await local.markSyncCompleted(_now);
+
+      final first = fullCubit(remote);
+      await first.init();
+      await settle(first);
+      await first.close();
+      final askedFirstTime = remote.requests.length;
+      expect(await local.getHistoryWalkedTo(), isNotNull, reason: 'the walk left a watermark in the store');
+
+      final second = fullCubit(remote);
+      await second.init();
+      await settle(second);
+
+      expect(remote.requests.length, askedFirstTime, reason: 'the horizon was already reached; nothing to ask');
+      expect(second.state.historyEndReached, isTrue);
+      await second.close();
+    }),
+  );
+
+  test(
+    'a wipe sends the next walk back to the beginning',
+    () => withClock(Clock.fixed(_now), () async {
+      final archive = <CdrRecord>[_record('today', _now.subtract(const Duration(hours: 1)))];
+      final remote = FakeAdapterRemoteRepository(archive);
+      await local.markSyncCompleted(_now);
+
+      final cubit = fullCubit(remote);
+      await cubit.init();
+      await settle(cubit);
+      expect(await local.getHistoryWalkedTo(), isNotNull);
+
+      await local.wipeData();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(await local.getHistoryWalkedTo(), isNull, reason: 'the store forgot the records and the walk with them');
       await cubit.close();
     }),
   );

@@ -60,6 +60,8 @@ void main() {
     when(() => localRepository.upsertCdrs(any())).thenAnswer((_) async {});
     when(() => localRepository.getLastSyncTime()).thenAnswer((_) async => null);
     when(() => localRepository.markSyncCompleted(any())).thenAnswer((_) async {});
+    when(() => localRepository.getHistoryWalkedTo()).thenAnswer((_) async => null);
+    when(() => localRepository.markHistoryWalkedTo(any())).thenAnswer((_) async {});
     when(() => localRepository.notifyInitialSyncFailed()).thenAnswer((_) async {});
   });
 
@@ -110,6 +112,25 @@ void main() {
       expect(_windowsAsked(remoteRepository), 7, reason: 'a year of silence is seven slices');
       verifyNever(() => localRepository.upsertCdrs(any()));
       verify(() => localRepository.markSyncCompleted(any())).called(1);
+    });
+
+    test('records every slice it walked, so the lists do not walk them again', () async {
+      // The cycle and the lists share one archive and one cache; days this
+      // walked are days nobody needs to ask about a second time.
+      final found = _record('older-than-two-weeks', 1);
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
+      _answerWindows(remoteRepository, [
+        [],
+        [],
+        [found],
+      ]);
+
+      await worker.refresh();
+
+      final marked = verify(() => localRepository.markHistoryWalkedTo(captureAny())).captured.cast<DateTime>();
+      expect(marked, hasLength(3), reason: 'two empty slices and the page that ended the walk');
+      expect(marked.last, found.connectTime, reason: 'the rest of that slice is still for a list to walk');
+      expect(marked[1].isBefore(marked[0]), isTrue, reason: 'each empty slice moved it further back');
     });
 
     test('an account that stays empty is asked about the most recent slice only', () async {

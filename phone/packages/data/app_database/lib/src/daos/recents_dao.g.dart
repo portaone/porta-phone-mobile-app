@@ -6,12 +6,9 @@ part of 'recents_dao.dart';
 mixin _$RecentsDaoMixin on DatabaseAccessor<AppDatabase> {
   $CallLogsTableTable get callLogsTable => attachedDatabase.callLogsTable;
   $ContactsTableTable get contactsTable => attachedDatabase.contactsTable;
-  $ContactPhonesTableTable get contactPhonesTable =>
-      attachedDatabase.contactPhonesTable;
-  $ContactEmailsTableTable get contactEmailsTable =>
-      attachedDatabase.contactEmailsTable;
-  $PresenceInfoTableTable get presenceInfoTable =>
-      attachedDatabase.presenceInfoTable;
+  $ContactPhonesTableTable get contactPhonesTable => attachedDatabase.contactPhonesTable;
+  $ContactEmailsTableTable get contactEmailsTable => attachedDatabase.contactEmailsTable;
+  $PresenceInfoTableTable get presenceInfoTable => attachedDatabase.presenceInfoTable;
   RecentsDaoManager get managers => RecentsDaoManager(this);
 }
 
@@ -23,18 +20,9 @@ class RecentsDaoManager {
   $$ContactsTableTableTableManager get contactsTable =>
       $$ContactsTableTableTableManager(_db.attachedDatabase, _db.contactsTable);
   $$ContactPhonesTableTableTableManager get contactPhonesTable =>
-      $$ContactPhonesTableTableTableManager(
-        _db.attachedDatabase,
-        _db.contactPhonesTable,
-      );
+      $$ContactPhonesTableTableTableManager(_db.attachedDatabase, _db.contactPhonesTable);
   $$ContactEmailsTableTableTableManager get contactEmailsTable =>
-      $$ContactEmailsTableTableTableManager(
-        _db.attachedDatabase,
-        _db.contactEmailsTable,
-      );
+      $$ContactEmailsTableTableTableManager(_db.attachedDatabase, _db.contactEmailsTable);
   $$PresenceInfoTableTableTableManager get presenceInfoTable =>
-      $$PresenceInfoTableTableTableManager(
-        _db.attachedDatabase,
-        _db.presenceInfoTable,
-      );
+      $$PresenceInfoTableTableTableManager(_db.attachedDatabase, _db.presenceInfoTable);
 }
