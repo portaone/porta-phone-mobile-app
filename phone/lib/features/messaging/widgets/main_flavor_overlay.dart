@@ -35,6 +35,7 @@ class _MessagingFlavorOverlayState extends State<MessagingFlavorOverlay> {
     return BlocBuilder<UnreadCountCubit, UnreadCountState>(
       bloc: unreadCounts,
       builder: (context, state) {
+        // The totals already leave muted conversations out.
         final count = state.chatsWithUnreadCount + state.smsConversationsWithUnreadCount;
 
         return TabIconCountBadge(icon: widget.child, count: count);
