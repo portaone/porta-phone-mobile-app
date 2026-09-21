@@ -87,7 +87,8 @@ class CdrsSyncWorker implements PollingWorker {
   }
 
   Future<void> _refreshInitialHistory() async {
-    final initialCdrs = await remoteRepo.getHistory(page: 1, limit: pageSize);
+    final initialPage = await remoteRepo.getHistory(page: 1, limit: pageSize);
+    final initialCdrs = initialPage.records;
     _logger.fine('Initial CDRs fetched: ${initialCdrs.length}');
     await localRepo.upsertCdrs(initialCdrs.reversed.toList());
   }
@@ -97,7 +98,7 @@ class CdrsSyncWorker implements PollingWorker {
     final fetchedCdrs = <CdrRecord>[];
 
     while (true) {
-      final newCdrs = await remoteRepo.getHistory(timeFrom: lastUpdate, page: page, limit: pageSize);
+      final newCdrs = (await remoteRepo.getHistory(timeFrom: lastUpdate, page: page, limit: pageSize)).records;
       _logger.fine('New CDRs fetched from page $page: ${newCdrs.length}');
       fetchedCdrs.addAll(newCdrs);
 
