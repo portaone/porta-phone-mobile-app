@@ -10,6 +10,7 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/services/services.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
+import '../services/cdrs_history_walk.dart';
 import '../services/cdrs_history_windows.dart';
 
 part 'cdrs_list_state.dart';
@@ -27,7 +28,9 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
     this.syncStateSource, {
     this.pageSize = 50,
     HistoryWindows? historyWindows,
+    CdrsHistoryWalkQueue? walkQueue,
   }) : historyWindows = historyWindows ?? configuredCdrsHistoryWindows(),
+       walkQueue = walkQueue ?? CdrsHistoryWalkQueue(),
        super(const CdrsListState());
 
   final CdrsLocalRepository localRepository;
@@ -37,6 +40,10 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
 
   /// The slices the remote history is asked for, oldest bound first.
   final HistoryWindows historyWindows;
+
+  /// Shared with the other lists over the same store, so their walks queue
+  /// rather than cover the same slices side by side.
+  final CdrsHistoryWalkQueue walkQueue;
 
   late final Logger logger = Logger(runtimeType.toString());
 
@@ -139,16 +146,20 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
 
     emit(state.copyWith(fetchingHistory: true));
     try {
-      final oldestLocal = state.records.lastOrNull?.connectTime;
-      final localPage = await queryLocal(olderThan: oldestLocal);
+      var collected = await _takeLocalPage();
       if (isClosed) return;
-      if (localPage.isNotEmpty) {
-        emit(state.copyWith(records: state.records.mergeWithHistory(localPage).toList()));
-      }
 
-      if (localPage.length < pageSize) {
+      if (collected < pageSize) {
         logger.info('Local CDRs exhausted, walking the remote history back');
-        await _walkRemoteHistory(collected: localPage.length);
+        await walkQueue.add(() async {
+          if (isClosed) return;
+          // Another list may have walked while this one waited its turn, and
+          // what it fetched is in the store now: look again before asking the
+          // backend for days somebody else already paid for.
+          collected += await _takeLocalPage();
+          if (isClosed || collected >= pageSize) return;
+          await _walkRemoteHistory(collected: collected);
+        });
       }
       if (isClosed) return;
       emit(state.copyWith(fetchingHistory: false));
@@ -167,6 +178,18 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
       );
       if (!isClosed) emit(state.copyWith(fetchingHistory: false));
     }
+  }
+
+  /// Reads the next local page into the list and answers with how many rows it
+  /// GAINED - records already listed add nothing to scroll through.
+  Future<int> _takeLocalPage() async {
+    final oldestLocal = state.records.lastOrNull?.connectTime;
+    final localPage = await queryLocal(olderThan: oldestLocal);
+    if (isClosed || localPage.isEmpty) return 0;
+
+    final before = state.records.length;
+    emit(state.copyWith(records: state.records.mergeWithHistory(localPage).toList()));
+    return state.records.length - before;
   }
 
   /// Pages one slice may be asked for before the walk gives up on it. Bounds a
@@ -198,7 +221,11 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
     }
 
     final generation = _walkGeneration;
-    final resumeAt = state.historyCursor ?? await localRepository.getFirstRecordTime() ?? clock.now();
+    // The watermark belongs to the store, not to this list: whatever walked
+    // before - the other tab, this screen last time, the cycle that filled an
+    // empty store - covered those days for everyone.
+    final resumeAt =
+        await localRepository.getHistoryWalkedTo() ?? await localRepository.getFirstRecordTime() ?? clock.now();
     if (isClosed || generation != _walkGeneration) return;
 
     var reachedHorizon = false;
@@ -240,7 +267,10 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
           // this slice is still walked next time - overlapping by one backend
           // tick so a record stamped with the same second is not left behind.
           final resume = oldestTaken?.add(_backendResolution) ?? window.timeFrom;
-          emit(state.copyWith(historyCursor: resume.isBefore(window.timeTo) ? resume : window.timeTo));
+          final walkedTo = resume.isBefore(window.timeTo) ? resume : window.timeTo;
+          await localRepository.markHistoryWalkedTo(walkedTo);
+          if (isClosed || generation != _walkGeneration) return;
+          emit(state.copyWith(historyCursor: walkedTo));
           return;
         }
 
@@ -258,13 +288,15 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
       // The slice moves the cursor whatever it held. A walk that advanced by
       // the records instead would stand still on an empty answer, which is the
       // whole reason older history was unreachable.
+      await localRepository.markHistoryWalkedTo(window.timeFrom);
+      if (isClosed || generation != _walkGeneration) return;
       emit(state.copyWith(historyCursor: window.timeFrom));
       reachedHorizon = window.endsAtHorizon;
     }
 
     // Only the horizon ends a list. A walk that ran out of slices any other way
-    // - the sanity bound on a misconfigured width - resumes from its cursor on
-    // the next gesture instead of declaring the archive over.
+    // - the sanity bound on a misconfigured width - resumes from the watermark
+    // on the next gesture instead of declaring the archive over.
     if (reachedHorizon || !resumeAt.isAfter(clock.now().subtract(historyWindows.horizon))) {
       emit(state.copyWith(historyEndReached: true));
     }
@@ -277,7 +309,9 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
   /// filtered list would never move past a page of records it does not match.
   Future<void> _fetchUnboundedPage() async {
     final generation = _walkGeneration;
-    final timeTo = state.historyCursor ?? state.records.lastOrNull?.connectTime;
+    final timeTo =
+        state.historyCursor ?? await localRepository.getHistoryWalkedTo() ?? state.records.lastOrNull?.connectTime;
+    if (isClosed || generation != _walkGeneration) return;
 
     final result = await remoteRepository.getHistory(timeTo: timeTo, limit: pageSize);
     if (isClosed || generation != _walkGeneration) return;
@@ -291,6 +325,8 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
 
     final matched = result.records.where(matches).toList();
     final oldest = result.records.map((cdr) => cdr.connectTime).reduce((a, b) => a.isBefore(b) ? a : b);
+    await localRepository.markHistoryWalkedTo(oldest);
+    if (isClosed || generation != _walkGeneration) return;
     emit(
       state.copyWith(
         records: matched.isEmpty ? null : state.records.mergeWithHistory(matched).toList(),

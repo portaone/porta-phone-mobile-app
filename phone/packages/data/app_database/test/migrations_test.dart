@@ -16,6 +16,7 @@ import 'package:app_database/src/migrations/generated/schema_v23.dart' as v23;
 import 'package:app_database/src/migrations/generated/schema_v24.dart' as v24;
 import 'package:app_database/src/migrations/generated/schema_v25.dart' as v25;
 import 'package:app_database/src/migrations/generated/schema_v26.dart' as v26;
+import 'package:app_database/src/migrations/generated/schema_v27.dart' as v27;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -438,6 +439,44 @@ void main() {
       }
     });
   });
+  group('migration v27 data integrity', () {
+    test('keeps stored CDRs and starts with no walk watermark', () async {
+      final schema = await verifier.schemaAt(26);
+      try {
+        final oldDb = v26.DatabaseAtV26(schema.newConnection());
+        await oldDb.customStatement('''
+          INSERT INTO cdrs (call_id, callee, callee_number, caller, caller_number, connect_time_usec,
+                            disconnect_time_usec, disconnect_reason, duration_seconds, direction, status)
+          VALUES ('cdr-1', '1000', '1000', '2000', '2000', 1758000000000000,
+                  1758000060000000, 'normal', 60, 'incoming', 'accepted')
+        ''');
+        await oldDb.customStatement('INSERT INTO cdr_sync_cursors (id, timestamp_usec) VALUES (0, 1758000100000000)');
+        await oldDb.close();
+
+        final appDatabase = AppDatabase(schema.newConnection());
+        await verifier.migrateAndValidate(appDatabase, 27);
+        await appDatabase.close();
+
+        final checkDb = v27.DatabaseAtV27(schema.newConnection());
+        final cdrs = await checkDb.customSelect('SELECT call_id FROM cdrs').get();
+        expect(cdrs.single.read<String>('call_id'), 'cdr-1');
+
+        // The sync cursor is untouched: it says a cycle completed, which the
+        // new watermark says nothing about.
+        final cursor = await checkDb.customSelect('SELECT timestamp_usec FROM cdr_sync_cursors').get();
+        expect(cursor.single.read<int>('timestamp_usec'), 1758000100000000);
+
+        // And no walk is claimed for history fetched before the watermark
+        // existed - how far back that reached is not knowable here.
+        final walk = await checkDb.customSelect('SELECT walked_to_usec FROM cdr_history_walk').get();
+        expect(walk, isEmpty);
+        await checkDb.close();
+      } finally {
+        schema.close();
+      }
+    });
+  });
+
   group('migration v26 data integrity', () {
     test('keeps stored voicemails and leaves both new flags null', () async {
       final schema = await verifier.schemaAt(25);

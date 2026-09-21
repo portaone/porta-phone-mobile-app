@@ -55,9 +55,19 @@ from when it was missing:
 
 1. **It advances by the slice, never by what came back.** An empty range moves
    the cursor exactly as far as a full one, so a quiet week cannot stall it.
-2. **Its progress is the list's own state** (`CdrsListState.historyCursor`), not
-   the oldest cached record. The cache is shared: a sync cycle writing an older
-   record would otherwise skip the walk past days it never asked for.
+2. **Its progress is a watermark in the store**, `cdr_history_walk`, not the
+   oldest cached record and not per-list state, and walks over one store QUEUE
+   (`CdrsHistoryWalkQueue`). The watermark says where a previous walk stopped;
+   it cannot say that one is in flight, so two lists mounting in the same frame
+   would read it before either moved it and ask for every slice twice - which a
+   device showed them doing. Queued, the second one waits, reads the store
+   again, and usually finds it has nothing left to ask for. The archive is one and the cache
+   is one, so how far back it has been ASKED FOR is one thing: the second list
+   on the screen, the screen opened again and the next launch all resume where
+   the last walk stopped. Deriving it from the oldest record instead would let a
+   sync cycle writing an older row skip the walk past days nobody asked about,
+   and an empty stretch would never move it at all. It only ever moves further
+   back; a wipe clears it with the records.
 3. **A record can arrive twice.** One slice's boundary is the next slice's edge,
    and the backend's own resolution is coarser than ours, so
    `mergeWithHistory` keeps the copy already listed.
@@ -72,7 +82,7 @@ it - that is the whole point.
 | Incremental sync | `cdrs_sync_worker.dart` `_refreshIncrementalHistory` | `time_from` = newest local record, every page to now |
 | First fill of an empty store | `_refreshInitialHistory` | slices back from now, stopping at the first that holds records; stores that newest page |
 | Empty store after the first walk | `_refreshRecentHistory` | the most recent slice only - nothing to be incremental from, but no reason to re-walk the archive every five minutes |
-| Scrolling to the bottom | `CdrsListCubit.fetchHistory` | the next local page, then slices back until this list has a page worth of records or the horizon ends it |
+| Scrolling to the bottom | `CdrsListCubit.fetchHistory` | the next local page, then slices back from the watermark until this list has a page worth of records or the horizon ends it |
 | A list that opens short | `fetchesOnShortInit`, `resolveInitialLoad` | the same walk, without waiting to be scrolled - a list shorter than the screen has no scroll extent, so its pagination listener never fires and the user has no way to ask for more |
 
 The scroll path pages INSIDE a slice using `items_total`
@@ -108,5 +118,6 @@ per-number lists filter locally on records nobody asked them about.
 | The slice rule itself | `test/services/history_windows_test.dart` |
 | The lists against a backend with a default window | `test/features/cdrs/cdrs_history_walk_test.dart` |
 | The sync cycles | `test/features/cdrs/cdrs_sync_worker_test.dart` |
+| The watermark itself | `packages/data/app_database/test/cdrs_dao_test.dart`, `test/migrations_test.dart` |
 | Range and pagination on the wire | `packages/api/test/api_client_cdr_history_test.dart`, `test/repository/cdrs_remote_repository_test.dart` |
 | On a device against the local stand | `patrol_test/cdr_history_walk_e2e_test.dart` |

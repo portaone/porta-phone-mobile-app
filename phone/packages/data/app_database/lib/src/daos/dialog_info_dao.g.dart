@@ -12,8 +12,5 @@ class DialogInfoDaoManager {
   final _$DialogInfoDaoMixin _db;
   DialogInfoDaoManager(this._db);
   $$DialogInfoTableTableTableManager get dialogInfoTable =>
-      $$DialogInfoTableTableTableManager(
-        _db.attachedDatabase,
-        _db.dialogInfoTable,
-      );
+      $$DialogInfoTableTableTableManager(_db.attachedDatabase, _db.dialogInfoTable);
 }

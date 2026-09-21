@@ -9,6 +9,7 @@ class NumberCdrsLogCubit extends CdrsListCubit {
     super.syncStateSource, {
     super.pageSize,
     super.historyWindows,
+    super.walkQueue,
   });
 
   final String number;
