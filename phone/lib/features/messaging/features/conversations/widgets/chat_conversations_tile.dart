@@ -59,6 +59,13 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
 
   @override
   Widget build(BuildContext context) {
+    // Read here, on the tile's own build, not inside the contact builder
+    // below - a dependency belongs to the element that is building. And only
+    // this row's answer: a list of rows must not rebuild every one of them
+    // whenever any conversation's settings change.
+    final muted = context.select<ConversationUserSettingsCubit?, bool>(
+      (cubit) => cubit?.state.isChatMuted(widget.conversation.id) ?? false,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Material(
@@ -77,15 +84,15 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
           ),
           confirmDismiss: onDismiss,
           child: switch (widget.conversation.type) {
-            ChatType.direct => directContent(),
-            ChatType.group => groupContent(),
+            ChatType.direct => directContent(muted),
+            ChatType.group => groupContent(muted),
           },
         ),
       ),
     );
   }
 
-  Widget directContent() {
+  Widget directContent(bool muted) {
     final userId = widget.userId;
     final participant = widget.conversation.members.firstWhere((m) => m.userId != userId);
     final lastMessage = widget.lastMessage;
@@ -118,6 +125,7 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
               Expanded(
                 child: Text(text, style: const TextStyle(overflow: TextOverflow.ellipsis)),
               ),
+              if (muted) const NotificationMutedIndicator(),
               const SizedBox(width: 4),
               if (lastMessage != null) Text(lastMessage.createdAt.timeOrDate, style: const TextStyle(fontSize: 12)),
             ],
@@ -129,7 +137,7 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
     );
   }
 
-  Widget groupContent() {
+  Widget groupContent(bool muted) {
     final lastMessage = widget.lastMessage;
     final title = widget.conversation.title(context.l10n);
     return ListTile(
@@ -147,7 +155,11 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          // Outside the expanded name, so the mark keeps the trailing slot it
+          // has on every other row - next to the time, not glued to whatever
+          // the row happens to say about itself.
+          if (muted) const NotificationMutedIndicator(),
+          const SizedBox(width: 4),
           if (lastMessage != null) Text(lastMessage.createdAt.timeOrDate, style: const TextStyle(fontSize: 12)),
         ],
       ),

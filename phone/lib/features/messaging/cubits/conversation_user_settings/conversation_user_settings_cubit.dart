@@ -156,6 +156,14 @@ class ConversationUserSettingsState extends Equatable {
 
   NotificationMute chatMute(int chatId) => (chatSettings[chatId] ?? ConversationUserSettings.none).mute;
 
+  /// The mute in force on [chatId] right now: the stored one while it is
+  /// active, none once it has lapsed - what a control should show.
+  NotificationMute activeChatMute(int chatId) => isChatMuted(chatId) ? chatMute(chatId) : NotificationMute.none;
+
+  NotificationMute activeSmsConversationMute(int conversationId) {
+    return isSmsConversationMuted(conversationId) ? smsConversationMute(conversationId) : NotificationMute.none;
+  }
+
   NotificationMute smsConversationMute(int conversationId) {
     return (smsConversationSettings[conversationId] ?? ConversationUserSettings.none).mute;
   }

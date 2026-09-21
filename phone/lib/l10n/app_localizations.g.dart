@@ -3091,6 +3091,66 @@ abstract class AppLocalizations {
   /// **'Yesterday'**
   String get messaging_MessageView_yesterday;
 
+  /// No description provided for @messaging_NotificationMute_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get messaging_NotificationMute_title;
+
+  /// Shown under the Notifications row while nothing is muted.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get messaging_NotificationMute_on;
+
+  /// Shown under the Notifications row while the conversation is muted with no end.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get messaging_NotificationMute_muted;
+
+  /// Shown under the Notifications row while a timed mute is in force; {time} is the moment it ends, as a clock time today or as a day and a time otherwise.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted until {time}'**
+  String messaging_NotificationMute_mutedUntil(String time);
+
+  /// No description provided for @messaging_NotificationMute_sheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute notifications'**
+  String get messaging_NotificationMute_sheetTitle;
+
+  /// No description provided for @messaging_NotificationMute_forOneHour.
+  ///
+  /// In en, this message translates to:
+  /// **'For 1 hour'**
+  String get messaging_NotificationMute_forOneHour;
+
+  /// No description provided for @messaging_NotificationMute_forEightHours.
+  ///
+  /// In en, this message translates to:
+  /// **'For 8 hours'**
+  String get messaging_NotificationMute_forEightHours;
+
+  /// No description provided for @messaging_NotificationMute_forTwoDays.
+  ///
+  /// In en, this message translates to:
+  /// **'For 2 days'**
+  String get messaging_NotificationMute_forTwoDays;
+
+  /// No description provided for @messaging_NotificationMute_forever.
+  ///
+  /// In en, this message translates to:
+  /// **'Forever'**
+  String get messaging_NotificationMute_forever;
+
+  /// No description provided for @messaging_NotificationMute_unmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get messaging_NotificationMute_unmute;
+
   /// Shown when a participant in a conversation does not have a known or available name. Condition: the user's name is missing or cannot be retrieved.
   ///
   /// In en, this message translates to:
@@ -6978,6 +7038,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Conversation options'**
   String get messaging_SemanticsLabel_conversationOptions;
+
+  /// Spoken after the name of a conversation in the list whose notifications are muted; the icon beside the name says nothing on its own.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted'**
+  String get messaging_SemanticsLabel_muted;
 
   /// Read before the quoted message in the bar above the field, when a reply is being written.
   ///

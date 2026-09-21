@@ -198,6 +198,14 @@ const String callTileDialId = 'callTileDial';
 const String callTileMenuId = 'callTileMenu';
 const String chatInfoCallId = 'chatInfoCall';
 const String chatInfoVideoCallId = 'chatInfoVideoCall';
+
+/// The Notifications row of a conversation's info (and the same entry in a
+/// text conversation's menu), and the sheet it opens with one id per choice -
+/// built from the choice's name, so a flow asks for "forever", not for the
+/// fourth row.
+const String chatInfoNotificationsId = 'chatInfoNotifications';
+const String notificationMuteSheetId = 'notificationMuteSheet';
+const String notificationMuteOptionIdPrefix = 'notificationMuteOption';
 const String contactChatId = 'contactChat';
 const String contactDialogsSubscriptionId = 'contactDialogsSubscription';
 const String contactDialogsSubscriptionInfoId = 'contactDialogsSubscriptionInfo';

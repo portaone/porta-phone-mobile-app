@@ -1536,6 +1536,37 @@
   "@messaging_MessageView_today": {},
   "messaging_MessageView_yesterday": "Вчора",
   "@messaging_MessageView_yesterday": {},
+  "messaging_NotificationMute_title": "Сповіщення",
+  "@messaging_NotificationMute_title": {},
+  "messaging_NotificationMute_on": "Увімкнено",
+  "@messaging_NotificationMute_on": {
+      "description": "Shown under the Notifications row while nothing is muted."
+  },
+  "messaging_NotificationMute_muted": "Вимкнено",
+  "@messaging_NotificationMute_muted": {
+      "description": "Shown under the Notifications row while the conversation is muted with no end."
+  },
+  "messaging_NotificationMute_mutedUntil": "Вимкнено до {time}",
+  "@messaging_NotificationMute_mutedUntil": {
+      "description": "Shown under the Notifications row while a timed mute is in force; {time} is the moment it ends, as a clock time today or as a day and a time otherwise.",
+      "placeholders": {
+          "time": {
+              "type": "String"
+          }
+      }
+  },
+  "messaging_NotificationMute_sheetTitle": "Вимкнути сповіщення",
+  "@messaging_NotificationMute_sheetTitle": {},
+  "messaging_NotificationMute_forOneHour": "На 1 годину",
+  "@messaging_NotificationMute_forOneHour": {},
+  "messaging_NotificationMute_forEightHours": "На 8 годин",
+  "@messaging_NotificationMute_forEightHours": {},
+  "messaging_NotificationMute_forTwoDays": "На 2 дні",
+  "@messaging_NotificationMute_forTwoDays": {},
+  "messaging_NotificationMute_forever": "Назавжди",
+  "@messaging_NotificationMute_forever": {},
+  "messaging_NotificationMute_unmute": "Увімкнути",
+  "@messaging_NotificationMute_unmute": {},
   "messaging_ParticipantName_unknown": "Невідомий користувач",
   "@messaging_ParticipantName_unknown": {
     "description": "Shown when a participant in a conversation does not have a known or available name. Condition: the user's name is missing or cannot be retrieved."
@@ -3243,6 +3274,10 @@
   "messaging_SemanticsLabel_conversationOptions": "Параметри розмови",
   "@messaging_SemanticsLabel_conversationOptions": {
     "description": "Accessibility name of the button that opens what can be done with a text conversation."
+  },
+  "messaging_SemanticsLabel_muted": "Сповіщення вимкнено",
+  "@messaging_SemanticsLabel_muted": {
+      "description": "Spoken after the name of a conversation in the list whose notifications are muted; the icon beside the name says nothing on its own."
   },
   "messaging_SemanticsLabel_replying": "Відповідь на",
   "@messaging_SemanticsLabel_replying": {

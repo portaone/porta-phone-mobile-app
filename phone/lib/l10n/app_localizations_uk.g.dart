@@ -1737,6 +1737,38 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messaging_MessageView_yesterday => 'Вчора';
 
   @override
+  String get messaging_NotificationMute_title => 'Сповіщення';
+
+  @override
+  String get messaging_NotificationMute_on => 'Увімкнено';
+
+  @override
+  String get messaging_NotificationMute_muted => 'Вимкнено';
+
+  @override
+  String messaging_NotificationMute_mutedUntil(String time) {
+    return 'Вимкнено до $time';
+  }
+
+  @override
+  String get messaging_NotificationMute_sheetTitle => 'Вимкнути сповіщення';
+
+  @override
+  String get messaging_NotificationMute_forOneHour => 'На 1 годину';
+
+  @override
+  String get messaging_NotificationMute_forEightHours => 'На 8 годин';
+
+  @override
+  String get messaging_NotificationMute_forTwoDays => 'На 2 дні';
+
+  @override
+  String get messaging_NotificationMute_forever => 'Назавжди';
+
+  @override
+  String get messaging_NotificationMute_unmute => 'Увімкнути';
+
+  @override
   String get messaging_ParticipantName_unknown => 'Невідомий користувач';
 
   @override
@@ -3900,6 +3932,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get messaging_SemanticsLabel_conversationOptions => 'Параметри розмови';
+
+  @override
+  String get messaging_SemanticsLabel_muted => 'Сповіщення вимкнено';
 
   @override
   String get messaging_SemanticsLabel_replying => 'Відповідь на';

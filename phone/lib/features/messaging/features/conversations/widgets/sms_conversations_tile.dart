@@ -48,6 +48,12 @@ class _SmsConversationsTileState extends State<SmsConversationsTile> {
 
   @override
   Widget build(BuildContext context) {
+    // Read on the tile's own build, not inside the numbers builder below, and
+    // only this row's answer - see the chat tile.
+    final muted = context.select<ConversationUserSettingsCubit?, bool>(
+      (cubit) => cubit?.state.isSmsConversationMuted(widget.conversation.id) ?? false,
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Material(
@@ -76,7 +82,7 @@ class _SmsConversationsTileState extends State<SmsConversationsTile> {
               confirmDismiss: onDismiss,
               child: ListTile(
                 leading: leading(recipientNumber),
-                title: title(recipientNumber),
+                title: title(recipientNumber, muted),
                 subtitle: subtitle(userNumber),
                 onTap: onTap,
               ),
@@ -92,7 +98,7 @@ class _SmsConversationsTileState extends State<SmsConversationsTile> {
     return LeadingAvatar(username: text, radius: 20);
   }
 
-  Widget title(String? recipientNumber) {
+  Widget title(String? recipientNumber, bool muted) {
     final lastMessage = widget.lastMessage;
 
     return Row(
@@ -100,6 +106,7 @@ class _SmsConversationsTileState extends State<SmsConversationsTile> {
         Expanded(
           child: Text(recipientNumber ?? '', style: const TextStyle(overflow: TextOverflow.ellipsis)),
         ),
+        if (muted) const NotificationMutedIndicator(),
         const SizedBox(width: 4),
         if (lastMessage != null) Text(lastMessage.createdAt.timeOrDate, style: const TextStyle(fontSize: 12)),
       ],
