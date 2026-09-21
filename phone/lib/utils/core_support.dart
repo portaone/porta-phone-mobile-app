@@ -33,6 +33,10 @@ abstract class CoreSupport {
   /// Check if the internal messaging feature is supported by remote system.
   bool get supportsChats;
 
+  /// Whether one conversation's notifications can be muted, which the backend
+  /// reports separately from chats and SMS themselves.
+  bool get supportsConversationMute;
+
   /// Check if the core system supports system notifications and push sending.
   bool get supportsSystemNotifications;
 
@@ -83,6 +87,9 @@ class CoreSupportImpl extends Equatable implements CoreSupport {
 
   @override
   bool get supportsChats => _has(kChatMessagingFeatureFlag);
+
+  @override
+  bool get supportsConversationMute => _has(kConversationMuteFeatureFlag);
 
   @override
   bool get supportsSystemNotifications => _has(kSystemNotificationsFeatureFlag);

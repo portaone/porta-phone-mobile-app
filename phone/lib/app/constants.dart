@@ -88,6 +88,15 @@ const kAutoprovisionRout = '/autoprovision';
 
 const kSmsMessagingFeatureFlag = 'smsMessaging';
 const kChatMessagingFeatureFlag = 'internalMessaging';
+
+/// Per-conversation notification mute, for chats and SMS alike. Read as
+/// "offer the control", never as "messaging is on".
+///
+/// A core without it does not answer the mute events at all - its fallback
+/// handler replies nothing - so a client that offers the control anyway runs
+/// into its own push timeout instead of an error. There is nothing to probe
+/// with; this flag is the only way to know.
+const kConversationMuteFeatureFlag = 'conversationMute';
 const kVoicemailFeatureFlag = 'voicemail';
 
 /// The three WT-1878 voicemail functionalities. All hang off
