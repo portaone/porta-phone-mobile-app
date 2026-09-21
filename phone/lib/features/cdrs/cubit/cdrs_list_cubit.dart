@@ -32,8 +32,8 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
   StreamSubscription<PollingTaskState>? _syncStatesSub;
   bool _initialSyncHandled = false;
 
-  /// Local query backing this list; [from] is the pagination watermark.
-  Future<List<CdrRecord>> queryLocal({DateTime? from});
+  /// Local query backing this list; [olderThan] is the pagination watermark.
+  Future<List<CdrRecord>> queryLocal({DateTime? olderThan});
 
   /// Whether an upserted record belongs to this list.
   bool matches(CdrRecord cdr);
@@ -128,7 +128,7 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
     emit(state.copyWith(fetchingHistory: true));
     try {
       final oldestLocal = state.records.lastOrNull?.connectTime;
-      List<CdrRecord> history = await queryLocal(from: oldestLocal);
+      List<CdrRecord> history = await queryLocal(olderThan: oldestLocal);
       if (isClosed) return;
       emit(state.copyWith(records: state.records.mergeWithHistory(history).toList()));
 
@@ -141,7 +141,7 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
         while (!isClosed && scannedPages < 10 && scanResult.length < pageSize) {
           logger.info('Scanning remote CDRs iteration: $scannedPages time: $oldestSynced');
 
-          final scanPage = await remoteRepository.getHistory(to: oldestSynced, limit: pageSize);
+          final scanPage = await remoteRepository.getHistory(timeTo: oldestSynced, limit: pageSize);
           if (scanPage.isEmpty) {
             logger.info('No more remote CDRs to scan, stopping search');
             break;

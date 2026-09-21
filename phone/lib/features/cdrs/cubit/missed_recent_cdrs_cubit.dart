@@ -18,10 +18,10 @@ class MissedRecentCdrsCubit extends CdrsListCubit {
   Future<void> refresh() => syncRunner.runNow();
 
   @override
-  Future<List<CdrRecord>> queryLocal({DateTime? from}) => localRepository.getHistory(
+  Future<List<CdrRecord>> queryLocal({DateTime? olderThan}) => localRepository.getHistory(
     status: CdrStatus.missed,
     direction: CallDirection.incoming,
-    from: from,
+    olderThan: olderThan,
     limit: pageSize,
   );
 

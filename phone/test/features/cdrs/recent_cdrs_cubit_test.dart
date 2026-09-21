@@ -269,8 +269,8 @@ void main() {
           destination: any(named: 'destination'),
           status: any(named: 'status'),
           direction: any(named: 'direction'),
-          from: any(named: 'from'),
-          to: any(named: 'to'),
+          olderThan: any(named: 'olderThan'),
+          newerThan: any(named: 'newerThan'),
           limit: any(named: 'limit'),
         ),
       ).thenAnswer((_) async => <CdrRecord>[]);
@@ -278,7 +278,7 @@ void main() {
       when(() => local.upsertCdrs(any(), silent: any(named: 'silent'))).thenAnswer((_) async {});
       when(
         () => remote.getHistory(
-          to: any(named: 'to'),
+          timeTo: any(named: 'timeTo'),
           limit: any(named: 'limit'),
         ),
       ).thenAnswer((_) async => <CdrRecord>[]);
@@ -335,7 +335,7 @@ void main() {
       expect(cubit.state.isLoading, isFalse);
       verifyNever(
         () => remote.getHistory(
-          to: any(named: 'to'),
+          timeTo: any(named: 'timeTo'),
           limit: any(named: 'limit'),
         ),
       );
@@ -347,7 +347,7 @@ void main() {
 
       verify(
         () => remote.getHistory(
-          to: any(named: 'to'),
+          timeTo: any(named: 'timeTo'),
           limit: any(named: 'limit'),
         ),
       ).called(greaterThan(0));
@@ -378,8 +378,8 @@ void main() {
           destination: any(named: 'destination'),
           status: any(named: 'status'),
           direction: any(named: 'direction'),
-          from: any(named: 'from'),
-          to: any(named: 'to'),
+          olderThan: any(named: 'olderThan'),
+          newerThan: any(named: 'newerThan'),
           limit: any(named: 'limit'),
         ),
       ).thenAnswer((_) async => <CdrRecord>[]);
@@ -387,7 +387,7 @@ void main() {
       when(() => local.upsertCdrs(any(), silent: any(named: 'silent'))).thenAnswer((_) async {});
       when(
         () => remote.getHistory(
-          to: any(named: 'to'),
+          timeTo: any(named: 'timeTo'),
           limit: any(named: 'limit'),
         ),
       ).thenAnswer((_) async => <CdrRecord>[]);

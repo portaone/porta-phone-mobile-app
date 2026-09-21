@@ -10,19 +10,25 @@ import 'package:webtrit_phone/models/models.dart';
 abstract class CdrsLocalRepository {
   /// Fetches the history of Call Detail Records (CDRs) from the local database.
   ///
+  /// The list is ordered newest first, so the bounds are named for the
+  /// direction they move in rather than for a range: [olderThan] is the
+  /// pagination watermark that walks back through the history, [newerThan] its
+  /// mirror. They are NOT the remote `timeFrom`/`timeTo` pair - reading them as
+  /// such inverts the query.
+  ///
   /// [number] - Optional parameter to filter records by phone number.
   /// [status] - Optional parameter to filter records by call status.
   /// [direction] - Optional parameter to filter records by call direction.
-  /// [from] - Optional parameter to filter records `from` this date.
-  /// [to] - Optional parameter to filter records `to` this date.
+  /// [olderThan] - Optional; keeps records with an earlier connect time.
+  /// [newerThan] - Optional; keeps records with a later connect time.
   /// [limit] - Optional parameter to limit the number of records returned.
   Future<List<CdrRecord>> getHistory({
     String? number,
     String? destination,
     CdrStatus? status,
     CallDirection? direction,
-    DateTime? from,
-    DateTime? to,
+    DateTime? olderThan,
+    DateTime? newerThan,
     int? limit,
   });
 
@@ -81,15 +87,15 @@ class CdrsLocalRepositoryDriftImpl with CdrDriftMapper implements CdrsLocalRepos
     String? destination,
     CdrStatus? status,
     CallDirection? direction,
-    DateTime? from,
-    DateTime? to,
+    DateTime? olderThan,
+    DateTime? newerThan,
     int? limit,
   }) async {
     final driftCdrs = await _dao.getHistory(
       number: number,
       destination: destination,
-      from: from,
-      to: to,
+      olderThan: olderThan,
+      newerThan: newerThan,
       limit: limit,
       status: status != null ? CdrStatusData.values.byName(status.name) : null,
       direction: direction != null ? CallDirectionData.values.byName(direction.name) : null,

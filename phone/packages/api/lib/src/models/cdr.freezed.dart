@@ -210,7 +210,7 @@ case _:
 /// @nodoc
 mixin _$CdrHistoryResponse {
 
- List<CdrRecord> get items;
+ List<CdrRecord> get items; Pagination? get pagination;
 /// Create a copy of CdrHistoryResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -221,16 +221,16 @@ $CdrHistoryResponseCopyWith<CdrHistoryResponse> get copyWith => _$CdrHistoryResp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CdrHistoryResponse&&const DeepCollectionEquality().equals(other.items, items));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CdrHistoryResponse&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.pagination, pagination) || other.pagination == pagination));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),pagination);
 
 @override
 String toString() {
-  return 'CdrHistoryResponse(items: $items)';
+  return 'CdrHistoryResponse(items: $items, pagination: $pagination)';
 }
 
 
@@ -241,7 +241,7 @@ abstract mixin class $CdrHistoryResponseCopyWith<$Res>  {
   factory $CdrHistoryResponseCopyWith(CdrHistoryResponse value, $Res Function(CdrHistoryResponse) _then) = _$CdrHistoryResponseCopyWithImpl;
 @useResult
 $Res call({
- List<CdrRecord> items
+ List<CdrRecord> items, Pagination? pagination
 });
 
 
@@ -258,10 +258,11 @@ class _$CdrHistoryResponseCopyWithImpl<$Res>
 
 /// Create a copy of CdrHistoryResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? items = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? pagination = freezed,}) {
   return _then(CdrHistoryResponse(
 items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
-as List<CdrRecord>,
+as List<CdrRecord>,pagination: freezed == pagination ? _self.pagination : pagination // ignore: cast_nullable_to_non_nullable
+as Pagination?,
   ));
 }
 

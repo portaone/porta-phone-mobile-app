@@ -87,7 +87,7 @@ void main() {
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => lastUpdate);
       when(
         () => remoteRepository.getHistory(
-          from: lastUpdate,
+          timeFrom: lastUpdate,
           page: any(named: 'page'),
           limit: 2,
         ),
@@ -102,11 +102,11 @@ void main() {
       await worker.refresh();
 
       verifyInOrder([
-        () => remoteRepository.getHistory(from: lastUpdate, page: 1, limit: 2),
-        () => remoteRepository.getHistory(from: lastUpdate, page: 2, limit: 2),
+        () => remoteRepository.getHistory(timeFrom: lastUpdate, page: 1, limit: 2),
+        () => remoteRepository.getHistory(timeFrom: lastUpdate, page: 2, limit: 2),
         () => localRepository.upsertCdrs([...page2.reversed, ...page1.reversed]),
       ]);
-      verifyNever(() => remoteRepository.getHistory(from: lastUpdate, page: 3, limit: 2));
+      verifyNever(() => remoteRepository.getHistory(timeFrom: lastUpdate, page: 3, limit: 2));
     });
 
     test('requests a terminating empty page after an exact number of full pages', () async {
@@ -114,7 +114,7 @@ void main() {
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => lastUpdate);
       when(
         () => remoteRepository.getHistory(
-          from: lastUpdate,
+          timeFrom: lastUpdate,
           page: any(named: 'page'),
           limit: 2,
         ),
@@ -130,9 +130,9 @@ void main() {
       await worker.refresh();
 
       verifyInOrder([
-        () => remoteRepository.getHistory(from: lastUpdate, page: 1, limit: 2),
-        () => remoteRepository.getHistory(from: lastUpdate, page: 2, limit: 2),
-        () => remoteRepository.getHistory(from: lastUpdate, page: 3, limit: 2),
+        () => remoteRepository.getHistory(timeFrom: lastUpdate, page: 1, limit: 2),
+        () => remoteRepository.getHistory(timeFrom: lastUpdate, page: 2, limit: 2),
+        () => remoteRepository.getHistory(timeFrom: lastUpdate, page: 3, limit: 2),
       ]);
     });
 
@@ -142,7 +142,7 @@ void main() {
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => lastUpdate);
       when(
         () => remoteRepository.getHistory(
-          from: lastUpdate,
+          timeFrom: lastUpdate,
           page: any(named: 'page'),
           limit: 2,
         ),
@@ -164,7 +164,7 @@ void main() {
       final lastUpdate = DateTime.utc(2026, 1, 1);
       var markerRead = 0;
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => lastUpdate);
-      when(() => remoteRepository.getHistory(from: lastUpdate, page: 1, limit: 2)).thenAnswer((_) async => []);
+      when(() => remoteRepository.getHistory(timeFrom: lastUpdate, page: 1, limit: 2)).thenAnswer((_) async => []);
       when(() => localRepository.getLastSyncTime()).thenAnswer((_) async {
         markerRead++;
         return markerRead == 1 ? DateTime.utc(2026, 1, 1) : null;
