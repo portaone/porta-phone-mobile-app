@@ -982,8 +982,8 @@ class WebtritApiClient {
 
   Future<CdrHistoryResponse> getCdrHistory(
     String token, {
-    DateTime? from,
-    DateTime? to,
+    DateTime? timeFrom,
+    DateTime? timeTo,
     int? page,
     int? limit,
     String? locale,
@@ -995,8 +995,8 @@ class WebtritApiClient {
       token,
       requestOptions: options,
       queryParameters: {
-        if (from != null) 'time_from': from.toUtc().toIso8601String(),
-        if (to != null) 'time_to': to.toUtc().toIso8601String(),
+        if (timeFrom != null) 'time_from': timeFrom.toUtc().toIso8601String(),
+        if (timeTo != null) 'time_to': timeTo.toUtc().toIso8601String(),
         if (page != null) 'page': page.toString(),
         if (limit != null) 'items_per_page': limit.toString(),
       },

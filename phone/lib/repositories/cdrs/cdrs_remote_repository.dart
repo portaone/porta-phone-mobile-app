@@ -7,11 +7,14 @@ import 'package:webtrit_phone/models/models.dart';
 abstract class CdrsRemoteRepository {
   /// Fetches the history of Call Detail Records (CDRs).
   ///
-  /// [from] - Optional parameter to filter records `from` this date.
-  /// [to] - Optional parameter to filter records `to` this date.
+  /// [timeFrom] and [timeTo] are the bounds of the range to report on, and
+  /// carry the wire's names deliberately: the server fills in whichever bound
+  /// is omitted, and how it fills it in is the adapter's business, not
+  /// something a caller can assume. [page] walks pages INSIDE that range.
+  ///
   /// [page] - Optional one-based page number.
   /// [limit] - Optional parameter to limit the number of records returned.
-  Future<List<CdrRecord>> getHistory({DateTime? from, DateTime? to, int? page, int? limit});
+  Future<List<CdrRecord>> getHistory({DateTime? timeFrom, DateTime? timeTo, int? page, int? limit});
 }
 
 class CdrsRemoteRepositoryApiImpl with CdrApiMapper implements CdrsRemoteRepository {
@@ -22,9 +25,15 @@ class CdrsRemoteRepositoryApiImpl with CdrApiMapper implements CdrsRemoteReposit
   final SessionGuard _sessionGuard;
 
   @override
-  Future<List<CdrRecord>> getHistory({DateTime? from, DateTime? to, int? page, int? limit}) async {
+  Future<List<CdrRecord>> getHistory({DateTime? timeFrom, DateTime? timeTo, int? page, int? limit}) async {
     try {
-      final response = await _webtritApiClient.getCdrHistory(_token, from: from, to: to, page: page, limit: limit);
+      final response = await _webtritApiClient.getCdrHistory(
+        _token,
+        timeFrom: timeFrom,
+        timeTo: timeTo,
+        page: page,
+        limit: limit,
+      );
       return response.items.map(cdrFromApi).toList();
     } on UnauthorizedException catch (e) {
       _sessionGuard.onUnauthorized(e);
