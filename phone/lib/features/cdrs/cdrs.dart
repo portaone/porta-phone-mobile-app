@@ -2,6 +2,7 @@ export 'cubit/cdrs_list_cubit.dart';
 export 'cubit/full_recent_cdrs_cubit.dart';
 export 'cubit/missed_recent_cdrs_cubit.dart';
 export 'features/features.dart';
+export 'services/cdrs_history_walk.dart';
 export 'services/cdrs_history_windows.dart';
 export 'services/cdrs_sync_worker.dart';
 export 'view/recent_cdrs_router_page.dart';

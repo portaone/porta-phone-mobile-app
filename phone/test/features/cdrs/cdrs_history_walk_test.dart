@@ -113,6 +113,17 @@ class FakeAdapterRemoteRepository implements CdrsRemoteRepository {
 
 class FakeLocalRepository implements CdrsLocalRepository {
   final List<CdrRecord> stored = [];
+
+  /// Holds every local query open, so a test can land a wipe on one in flight.
+  bool holdLocalReads = false;
+  Completer<void>? _held;
+
+  void releaseLocalReads() {
+    holdLocalReads = false;
+    _held?.complete();
+    _held = null;
+  }
+
   final _events = StreamController<CdrRecordsEvent>.broadcast();
   DateTime? _syncCursor;
 
@@ -138,7 +149,15 @@ class FakeLocalRepository implements CdrsLocalRepository {
       if (newerThan != null && !cdr.connectTime.isAfter(newerThan)) return false;
       return true;
     }).toList()..sort((a, b) => b.connectTime.compareTo(a.connectTime));
-    return limit != null ? rows.take(limit).toList() : rows;
+    final answer = limit != null ? rows.take(limit).toList() : rows;
+
+    // Read here, handed over later - which is what a real query does. A wipe
+    // landing in between leaves this holding what the store used to have.
+    if (holdLocalReads) {
+      _held ??= Completer<void>();
+      await _held!.future;
+    }
+    return answer;
   }
 
   @override
@@ -162,6 +181,16 @@ class FakeLocalRepository implements CdrsLocalRepository {
     return stored.map((cdr) => cdr.connectTime).reduce((a, b) => a.isBefore(b) ? a : b);
   }
 
+  DateTime? _walkedTo;
+
+  @override
+  Future<DateTime?> getHistoryWalkedTo() async => _walkedTo;
+
+  @override
+  Future<void> markHistoryWalkedTo(DateTime time) async {
+    if (_walkedTo == null || time.isBefore(_walkedTo!)) _walkedTo = time;
+  }
+
   @override
   Future<DateTime?> getLastSyncTime() async => _syncCursor;
 
@@ -179,6 +208,7 @@ class FakeLocalRepository implements CdrsLocalRepository {
   Future<void> wipeData() async {
     stored.clear();
     _syncCursor = null;
+    _walkedTo = null;
     _events.add(CdrRecordsWiped());
   }
 
@@ -505,8 +535,11 @@ void main() {
   );
 
   test(
-    'a backend that ignores the page number cannot hold the walk in one slice',
+    'a backend that ignores the page number cannot hold the walk forever',
     () => withClock(Clock.fixed(_now), () async {
+      // The budget belongs to the WALK, not to one slice: per slice, a backend
+      // handing the same page back would burn it once for every slice the
+      // horizon allows.
       final archive = <CdrRecord>[
         for (var i = 0; i < 7; i++) _record('today-$i', _now.subtract(Duration(hours: 1 + i))),
       ];
@@ -524,9 +557,7 @@ void main() {
       await cubit.init();
       await settle(cubit);
 
-      final firstSlice = remote.requests.where((r) => r.to == _now).toList();
-      expect(firstSlice.length, lessThanOrEqualTo(40), reason: 'a page budget, not an infinite loop');
-      expect(remote.requests.where((r) => r.to != _now), isNotEmpty, reason: 'and the walk moved on');
+      expect(remote.requests.length, lessThanOrEqualTo(41), reason: 'one budget for the whole walk');
       await cubit.close();
     }),
   );
@@ -686,6 +717,192 @@ void main() {
       expect(cubit.state.historyEndReached, isFalse);
       expect(cubit.state.historyCursor, isNotNull);
       await cubit.close();
+    }),
+  );
+
+  test(
+    'the second list reads what the first one walked instead of asking again',
+    () => withClock(Clock.fixed(_now), () async {
+      // Both Recents tabs mount together. The archive is one, the cache is one,
+      // so how far back it has been asked for is one thing too.
+      final archive = <CdrRecord>[
+        _record('missed', _now.subtract(const Duration(days: 20)), status: CdrStatus.missed),
+        for (var i = 0; i < 3; i++) _record('old-$i', _now.subtract(Duration(days: 20, hours: 1 + i))),
+      ];
+      final remote = FakeAdapterRemoteRepository(archive);
+      await local.markSyncCompleted(_now);
+
+      final full = fullCubit(remote);
+      await full.init();
+      await settle(full);
+      final askedByFirst = remote.requests.length;
+      expect(askedByFirst, greaterThan(1), reason: 'the first list walked the quiet weeks');
+
+      final missed = MissedRecentCdrsCubit(
+        local,
+        remote,
+        syncHandle,
+        syncHandle,
+        pageSize: _pageSize,
+        historyWindows: _windows,
+      );
+      await missed.init();
+      await settle(missed);
+
+      expect(remote.requests.length, askedByFirst, reason: 'the second list asked for nothing at all');
+      expect(missed.state.records.map((cdr) => cdr.callId), ['missed'], reason: 'and still found its record locally');
+      await full.close();
+      await missed.close();
+    }),
+  );
+
+  test(
+    'two lists mounting together do not walk the same slices side by side',
+    () => withClock(Clock.fixed(_now), () async {
+      // What a device showed with the watermark already in place: both tabs
+      // start in the same frame, both read it before either has moved it, and
+      // each then works through its own slices - asking for every one of them
+      // twice. The watermark says where a PREVIOUS walk stopped; it cannot say
+      // that one is in flight.
+      final archive = <CdrRecord>[
+        _record('missed', _now.subtract(const Duration(days: 30)), status: CdrStatus.missed),
+        for (var i = 0; i < 3; i++) _record('old-$i', _now.subtract(Duration(days: 30, hours: 1 + i))),
+      ];
+      final remote = FakeAdapterRemoteRepository(archive);
+      await local.markSyncCompleted(_now);
+      final queue = CdrsHistoryWalkQueue();
+
+      final full = FullRecentCdrsCubit(
+        local,
+        remote,
+        syncHandle,
+        syncHandle,
+        pageSize: _pageSize,
+        historyWindows: _windows,
+        walkQueue: queue,
+      );
+      final missed = MissedRecentCdrsCubit(
+        local,
+        remote,
+        syncHandle,
+        syncHandle,
+        pageSize: _pageSize,
+        historyWindows: _windows,
+        walkQueue: queue,
+      );
+
+      // Mounted together, as the Recents screen mounts them.
+      await Future.wait([full.init(), missed.init()]);
+      await settle(full);
+      await settle(missed);
+
+      final ranges = remote.requests.map((r) => '${r.from}..${r.to}').toList();
+      expect(ranges.toSet(), hasLength(ranges.length), reason: 'no range was asked for twice');
+      expect(missed.state.records.map((cdr) => cdr.callId), ['missed']);
+      await full.close();
+      await missed.close();
+    }),
+  );
+
+  test(
+    'a screen opened again resumes where the walk stopped',
+    () => withClock(Clock.fixed(_now), () async {
+      final archive = <CdrRecord>[_record('today', _now.subtract(const Duration(hours: 1)))];
+      final remote = FakeAdapterRemoteRepository(archive);
+      await local.markSyncCompleted(_now);
+
+      final first = fullCubit(remote);
+      await first.init();
+      await settle(first);
+      await first.close();
+      final askedFirstTime = remote.requests.length;
+      expect(await local.getHistoryWalkedTo(), isNotNull, reason: 'the walk left a watermark in the store');
+
+      final second = fullCubit(remote);
+      await second.init();
+      await settle(second);
+
+      expect(remote.requests.length, askedFirstTime, reason: 'the horizon was already reached; nothing to ask');
+      expect(second.state.historyEndReached, isTrue);
+      await second.close();
+    }),
+  );
+
+  test(
+    'a wipe sends the next walk back to the beginning',
+    () => withClock(Clock.fixed(_now), () async {
+      final archive = <CdrRecord>[_record('today', _now.subtract(const Duration(hours: 1)))];
+      final remote = FakeAdapterRemoteRepository(archive);
+      await local.markSyncCompleted(_now);
+
+      final cubit = fullCubit(remote);
+      await cubit.init();
+      await settle(cubit);
+      expect(await local.getHistoryWalkedTo(), isNotNull);
+
+      await local.wipeData();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(await local.getHistoryWalkedTo(), isNull, reason: 'the store forgot the records and the walk with them');
+      await cubit.close();
+    }),
+  );
+
+  test(
+    'a wipe during the local read does not put deleted calls back on screen',
+    () => withClock(Clock.fixed(_now), () async {
+      // The local query is an await like any other: a wipe landing while it is
+      // in flight leaves it holding rows the store no longer has.
+      // The backend holds nothing, so anything left on screen could only be the
+      // rows the wiped store used to have.
+      final cached = <CdrRecord>[for (var i = 0; i < 6; i++) _record('old-$i', _now.subtract(Duration(hours: 1 + i)))];
+      final remote = FakeAdapterRemoteRepository(const []);
+      await local.upsertCdrs(cached, silent: true);
+      await local.markSyncCompleted(_now);
+
+      final cubit = fullCubit(remote);
+      await cubit.init();
+      await settle(cubit);
+      expect(cubit.state.records, isNotEmpty);
+
+      local.holdLocalReads = true;
+      final seenAfterWipe = <List<CdrRecord>>[];
+      final fetching = cubit.fetchHistory();
+      await Future<void>.delayed(Duration.zero);
+      await local.wipeData();
+      // Let the wipe reach the cubit BEFORE the query answers: the rows it is
+      // holding are stale from that moment on.
+      await Future<void>.delayed(Duration.zero);
+      final watching = cubit.stream.listen((state) => seenAfterWipe.add(state.records));
+      addTearDown(watching.cancel);
+      local.releaseLocalReads();
+      await fetching;
+      await settle(cubit);
+
+      expect(cubit.state.records, isEmpty, reason: 'the wiped store has nothing to show');
+      expect(
+        seenAfterWipe.every((records) => records.isEmpty),
+        isTrue,
+        reason: 'and the deleted rows must not flash back onto the screen on the way there',
+      );
+      await cubit.close();
+    }),
+  );
+
+  test(
+    'a record re-sent with corrected data replaces the copy on screen',
+    () => withClock(Clock.fixed(_now), () async {
+      // One call can be reported twice under one id with different data, and
+      // the store keeps the copy that arrived last. A list holding the first
+      // one would disagree with the database it was read from.
+      final at = _now.subtract(const Duration(hours: 2));
+      final first = _record('same-id', at, status: CdrStatus.accepted);
+      final corrected = _record('same-id', at, status: CdrStatus.missed);
+
+      final merged = [first].mergeWithHistory([corrected]).toList();
+
+      expect(merged, hasLength(1));
+      expect(merged.single.status, CdrStatus.missed);
     }),
   );
 
