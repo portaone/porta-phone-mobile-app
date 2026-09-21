@@ -39,8 +39,9 @@ class AppResourcesGetCommand extends Command<int> {
       )
       ..addOption(
         _argKeystoresPath,
-        help: "Path to the project's keystore folder.",
-        mandatory: true,
+        help: "Path to the project's keystore folder. Optional: needed only for a build that must "
+            'carry SSL certificates or a signing keystore (a production build); a local debug build '
+            'skips those steps when this is omitted.',
       )
       ..addOption(
         _argCacheSessionDataPath,
@@ -89,10 +90,12 @@ class AppResourcesGetCommand extends Command<int> {
       await writer.writeFiles(bundle.files, context.resolvePath);
       await writer.downloadAssets(bundle.assets, context.resolvePath);
 
-      await CertificateProcessor(logger: _logger).process(
-        projectKeystorePath: context.projectKeystorePath,
-        resolvePath: context.resolvePath,
-      );
+      if (context.projectKeystorePath case final projectKeystorePath?) {
+        await CertificateProcessor(logger: _logger).process(
+          projectKeystorePath: projectKeystorePath,
+          resolvePath: context.resolvePath,
+        );
+      }
 
       await _orDegraded<void>(
         'translations',
@@ -230,31 +233,37 @@ class AppResourcesGetCommand extends Command<int> {
       throw UsageException('Application ID and Token must not be empty.', usage);
     }
 
-    final keystoreArg = argResults![_argKeystoresPath] as String;
+    final keystoreArg = argResults![_argKeystoresPath] as String?;
 
-    final keystoreDirPath = path.isAbsolute(keystoreArg)
-        ? path.normalize(keystoreArg)
-        : path.normalize(path.join(workingDirectoryPath, keystoreArg));
+    String? projectKeystorePath;
+    if (keystoreArg == null || keystoreArg.isEmpty) {
+      _logger.info('- No keystore path provided: skipping SSL certificates and signing keystore.');
+    } else {
+      final keystoreDirPath = path.isAbsolute(keystoreArg)
+          ? path.normalize(keystoreArg)
+          : path.normalize(path.join(workingDirectoryPath, keystoreArg));
 
-    final keystoreDir = Directory(keystoreDirPath);
+      final keystoreDir = Directory(keystoreDirPath);
 
-    if (!keystoreDir.existsSync()) {
-      _logger.err('Keystores directory path does not exist: ${keystoreDir.path}');
-      throw UsageException('Invalid keystore path', usage);
+      if (!keystoreDir.existsSync()) {
+        _logger.err('Keystores directory path does not exist: ${keystoreDir.path}');
+        throw UsageException('Invalid keystore path', usage);
+      }
+
+      final projectKeystoreDir = Directory(path.join(keystoreDir.path, applicationId));
+      if (!projectKeystoreDir.existsSync()) {
+        _logger.err('Project keystore directory path does not exist: ${projectKeystoreDir.path}');
+        throw UsageException('Invalid project keystore path', usage);
+      }
+
+      _logger.info('- Project keystore directory: ${projectKeystoreDir.path}');
+      projectKeystorePath = projectKeystoreDir.path;
     }
-
-    final projectKeystoreDir = Directory(path.join(keystoreDir.path, applicationId));
-    if (!projectKeystoreDir.existsSync()) {
-      _logger.err('Project keystore directory path does not exist: ${projectKeystoreDir.path}');
-      throw UsageException('Invalid project keystore path', usage);
-    }
-
-    _logger.info('- Project keystore directory: ${projectKeystoreDir.path}');
 
     return CommandContext(
       workingDirectoryPath: workingDirectoryPath,
       applicationId: applicationId,
-      projectKeystorePath: projectKeystoreDir.path,
+      projectKeystorePath: projectKeystorePath,
       authHeader: {
         ...credentialHeader(token),
         // Which era is writing: see readPhoneVersion.

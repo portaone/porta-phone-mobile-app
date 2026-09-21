@@ -110,4 +110,17 @@ void main() {
     final said = verify(() => logger.err(captureAny())).captured.join('\n');
     expect(said, contains('localization refused'));
   });
+
+  test('a local debug build runs every generator without a keystore', () async {
+    // No `keystore_path` in the cache and no `--keystore-path` flag: the brand
+    // identifiers still come from the cache, only Firebase resolution is skipped.
+    File(p.join(checkout.path, 'cache_session_data.json')).writeAsStringSync(
+      '{"bundleIdAndroid": "com.brand.one", "bundleIdIos": "com.brand.one"}',
+    );
+
+    final exitCode = await runConfigure();
+
+    expect(exitCode, ExitCode.success.code);
+    expect(calls, ['dependencies', 'localization', 'assets']);
+  });
 }
