@@ -281,7 +281,7 @@ void main() {
           timeTo: any(named: 'timeTo'),
           limit: any(named: 'limit'),
         ),
-      ).thenAnswer((_) async => <CdrRecord>[]);
+      ).thenAnswer((_) async => const CdrHistoryPage.empty());
     });
 
     test('empty cache without a sync cursor stays loading until the sync completes and the scan runs', () async {
@@ -390,7 +390,7 @@ void main() {
           timeTo: any(named: 'timeTo'),
           limit: any(named: 'limit'),
         ),
-      ).thenAnswer((_) async => <CdrRecord>[]);
+      ).thenAnswer((_) async => const CdrHistoryPage.empty());
     });
 
     test('empty cache without a sync cursor stays loading until the sync completes and the scan runs', () async {

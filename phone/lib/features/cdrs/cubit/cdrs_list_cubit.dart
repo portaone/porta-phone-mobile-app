@@ -141,7 +141,7 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
         while (!isClosed && scannedPages < 10 && scanResult.length < pageSize) {
           logger.info('Scanning remote CDRs iteration: $scannedPages time: $oldestSynced');
 
-          final scanPage = await remoteRepository.getHistory(timeTo: oldestSynced, limit: pageSize);
+          final scanPage = (await remoteRepository.getHistory(timeTo: oldestSynced, limit: pageSize)).records;
           if (scanPage.isEmpty) {
             logger.info('No more remote CDRs to scan, stopping search');
             break;
