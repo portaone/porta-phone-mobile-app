@@ -33,11 +33,14 @@ class CdrsDao extends DatabaseAccessor<AppDatabase> with _$CdrsDaoMixin {
     return batch((batch) => batch.insertAllOnConflictUpdate(cdrTable, cdrs));
   }
 
+  /// Rows newest first. [olderThan] and [newerThan] say which side of a moment
+  /// to keep, which is what a descending list paginates by; neither is a range
+  /// bound, and neither matches the remote `timeFrom`/`timeTo` pair.
   Future<List<CdrRecordData>> getHistory({
     String? number,
     String? destination,
-    DateTime? from,
-    DateTime? to,
+    DateTime? olderThan,
+    DateTime? newerThan,
     int? limit,
     CdrStatusData? status,
     CallDirectionData? direction,
@@ -49,8 +52,12 @@ class CdrsDao extends DatabaseAccessor<AppDatabase> with _$CdrsDaoMixin {
     if (destination != null) query.where((tbl) => tbl.caller.equals(destination) | tbl.callee.equals(destination));
     if (status != null) query.where((tbl) => tbl.status.equals(status.name));
     if (direction != null) query.where((tbl) => tbl.direction.equals(direction.name));
-    if (from != null) query.where((tbl) => tbl.connectTimeUsec.isSmallerThanValue(from.microsecondsSinceEpoch));
-    if (to != null) query.where((tbl) => tbl.connectTimeUsec.isBiggerThanValue(to.microsecondsSinceEpoch));
+    if (olderThan != null) {
+      query.where((tbl) => tbl.connectTimeUsec.isSmallerThanValue(olderThan.microsecondsSinceEpoch));
+    }
+    if (newerThan != null) {
+      query.where((tbl) => tbl.connectTimeUsec.isBiggerThanValue(newerThan.microsecondsSinceEpoch));
+    }
     if (limit != null) query.limit(limit);
 
     return query.get();

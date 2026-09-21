@@ -19,7 +19,8 @@ class FullRecentCdrsCubit extends CdrsListCubit {
   Future<void> refresh() => syncRunner.runNow();
 
   @override
-  Future<List<CdrRecord>> queryLocal({DateTime? from}) => localRepository.getHistory(from: from, limit: pageSize);
+  Future<List<CdrRecord>> queryLocal({DateTime? olderThan}) =>
+      localRepository.getHistory(olderThan: olderThan, limit: pageSize);
 
   @override
   bool matches(CdrRecord cdr) => true;
@@ -46,9 +47,9 @@ class FullRecentCdrsCubit extends CdrsListCubit {
     emit(state.copyWith(fetchingHistory: true));
     try {
       final oldestLocal = state.records.lastOrNull?.connectTime;
-      var history = await queryLocal(from: oldestLocal);
+      var history = await queryLocal(olderThan: oldestLocal);
       if (history.isEmpty) {
-        history = await remoteRepository.getHistory(to: oldestLocal, limit: pageSize);
+        history = await remoteRepository.getHistory(timeTo: oldestLocal, limit: pageSize);
         await localRepository.upsertCdrs(history, silent: true);
       }
       if (isClosed) return;

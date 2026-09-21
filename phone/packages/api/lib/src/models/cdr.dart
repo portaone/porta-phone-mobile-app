@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'common.dart';
+
 part 'cdr.freezed.dart';
 
 part 'cdr.g.dart';
@@ -78,10 +80,15 @@ class CdrRecord with _$CdrRecord {
 @freezed
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class CdrHistoryResponse with _$CdrHistoryResponse {
-  const CdrHistoryResponse({required this.items});
+  const CdrHistoryResponse({required this.items, this.pagination});
 
   @override
   final List<CdrRecord> items;
+
+  /// Absent when the adapter answered without it; `items` is then all that is
+  /// known about the result set.
+  @override
+  final Pagination? pagination;
 
   factory CdrHistoryResponse.fromJson(Map<String, Object?> json) => _$CdrHistoryResponseFromJson(json);
 
