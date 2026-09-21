@@ -49,14 +49,7 @@ class AppConfigureContext {
 
     final projectKeystorePathArg = argResults[_keystorePath] as String?;
     final projectKeystorePathBuildConfig = cacheSessionData[keystorePathField] as String?;
-    final projectKeystorePath = projectKeystorePathArg ?? projectKeystorePathBuildConfig ?? '';
-
-    if (projectKeystorePath.isEmpty) {
-      logger.err(
-        'The option $_keystorePath cannot be empty and must be provided as a parameter or through $defaultCacheSessionDataPath',
-      );
-      throw UsageException('Missing keystore path', 'Provide via flag or cache.');
-    }
+    final projectKeystorePath = projectKeystorePathArg ?? projectKeystorePathBuildConfig;
 
     final bundleIdAndroid =
         (argResults[_bundleIdAndroid] as String?) ?? cacheSessionData[bundleIdAndroidField] as String?;
@@ -69,6 +62,19 @@ class AppConfigureContext {
     if (bundleIdIos == null || bundleIdIos.isEmpty) {
       logger.err('Option "$_bundleIdIos" can not be empty.');
       throw UsageException('Missing iOS Bundle ID', 'Provide via flag or cache.');
+    }
+
+    if (projectKeystorePath == null || projectKeystorePath.isEmpty) {
+      logger.info('- No keystore path provided: skipping Firebase service account resolution.');
+
+      return AppConfigureContext(
+        workingDirectoryPath: workingDirectoryPath,
+        projectKeystorePath: null,
+        bundleIdAndroid: bundleIdAndroid,
+        bundleIdIos: bundleIdIos,
+        firebaseAccountId: null,
+        firebaseServiceAccountPath: null,
+      );
     }
 
     logger.info('- Keystore path: $projectKeystorePath');
@@ -103,9 +109,9 @@ class AppConfigureContext {
   }
 
   final String workingDirectoryPath;
-  final String projectKeystorePath;
+  final String? projectKeystorePath;
   final String bundleIdAndroid;
   final String bundleIdIos;
-  final String firebaseAccountId;
-  final String firebaseServiceAccountPath;
+  final String? firebaseAccountId;
+  final String? firebaseServiceAccountPath;
 }

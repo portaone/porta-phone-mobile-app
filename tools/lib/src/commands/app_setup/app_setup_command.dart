@@ -28,9 +28,9 @@ class AppSetupCommand extends Command<int> {
       ..addOption(
         _argKeystorePath,
         help: 'Path to the application keystore directory (absolute, or relative to the phone project directory). '
-            'Must be provided explicitly — do not rely on the cached path, '
-            'which may reference a different OS.',
-        mandatory: true,
+            'Must be provided explicitly — do not rely on the cached path, which may reference a different OS. '
+            'Optional: omitted entirely, this command skips flutterfire re-configuration (a local debug build '
+            'keeps whatever Firebase config files are already checked out).',
       )
       ..addOption(
         _argCacheSessionDataPath,
@@ -63,6 +63,15 @@ class AppSetupCommand extends Command<int> {
   @override
   Future<int> run() async {
     try {
+      final keystoreArg = argResults![_argKeystorePath] as String?;
+      if (keystoreArg == null || keystoreArg.isEmpty) {
+        _logger.info(
+          '- No --$_argKeystorePath provided: skipping configurator-setup. '
+          'flutterfire re-configuration needs the Firebase service account from a real keystore.',
+        );
+        return ExitCode.success.code;
+      }
+
       final context = AppSetupContext.fromArgs(argResults!, _logger);
 
       await (_firebaseSetupRunner ?? FirebaseSetupRunner(logger: _logger)).configure(context);

@@ -17,7 +17,7 @@ class LocalConfigProcessor {
 
   Future<void> writeBuildCache({
     required BundleApplication application,
-    required String projectKeystorePath,
+    required String? projectKeystorePath,
     required String? cachePathArg,
     required String Function(String) resolvePath,
   }) async {
@@ -29,7 +29,7 @@ class LocalConfigProcessor {
 
   Future<void> writeEnvironmentConfig({
     required BundleApplication application,
-    required String projectKeystorePath,
+    required String? projectKeystorePath,
     required String Function(String) resolvePath,
   }) async {
     final env = AppConfigFactory.createDartDefineEnv(application, projectKeystorePath);

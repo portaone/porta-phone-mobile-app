@@ -110,6 +110,17 @@ void main() {
     ]);
   }
 
+  Future<int?> runResourcesWithoutKeystore({String credential = _token}) async {
+    return commandRunner.run([
+      'configurator-resources',
+      '--applicationId',
+      _applicationId,
+      '--token',
+      credential,
+      checkout.path,
+    ]);
+  }
+
   File appConfig() => File(p.join(checkout.path, 'assets', 'themes', 'app.config.json'));
 
   test('a run says who it is and which era it writes for', () async {
@@ -292,6 +303,30 @@ app_version: 1.16.5+3
     await runResources();
 
     expect(settingsWereOnDisk, isTrue, reason: 'the picture was fetched before the settings were written');
+  });
+
+  test('a local debug build needs no keystore at all', () async {
+    // No production signing keystore, no SSL certificates directory - the brand
+    // is still fetched and written, only the keystore-dependent steps are skipped.
+    writePubspec('''
+name: webtrit_phone
+app_version: 1.16.5+3
+''');
+    backend
+      ..serveJson(bundlePath(), bundle())
+      ..serveBytes(
+        '/v1/translations/compose-arb/$_applicationId',
+        _archiveOf({'en.arb': '{"@@locale": "en", "greeting": "Hello"}'}),
+      );
+
+    final code = await runResourcesWithoutKeystore();
+
+    expect(code, ExitCode.success.code);
+    expect(appConfig().existsSync(), isTrue);
+
+    final cache =
+        jsonDecode(File(p.join(checkout.path, 'cache_session_data.json')).readAsStringSync()) as Map<String, Object?>;
+    expect(cache, isNot(contains('keystore_path')), reason: 'no keystore path was ever given');
   });
 }
 

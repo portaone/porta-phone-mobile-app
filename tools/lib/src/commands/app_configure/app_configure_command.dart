@@ -21,7 +21,8 @@ class AppConfigureCommand extends Command<int> {
     argParser
       ..addOption(
         _keystorePath,
-        help: "Path to the project's keystore folder.",
+        help: "Path to the project's keystore folder. Optional: needed only to resolve the Firebase "
+            'service account for a production build; omit it for a local debug build.',
       )
       ..addOption(
         _bundleIdAndroid,
@@ -61,7 +62,7 @@ class AppConfigureCommand extends Command<int> {
         ..info('- Platform identifier android: ${context.bundleIdAndroid}')
         ..info('- Platform identifier ios: ${context.bundleIdIos}')
         ..info('- Scripts working directory: ${context.workingDirectoryPath}')
-        ..info('- Service account path: ${context.firebaseServiceAccountPath}');
+        ..info('- Service account path: ${context.firebaseServiceAccountPath ?? 'not provided (skipped)'}');
 
       // Taken as an argument so a test can watch this step without starting a
       // build.

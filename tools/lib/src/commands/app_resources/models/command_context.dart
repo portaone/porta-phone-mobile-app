@@ -11,7 +11,7 @@ class CommandContext {
 
   final String workingDirectoryPath;
   final String applicationId;
-  final String projectKeystorePath;
+  final String? projectKeystorePath;
   final Map<String, String> authHeader;
   final String? cachePathArg;
 
