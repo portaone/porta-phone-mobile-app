@@ -42,3 +42,16 @@ const _$BalanceTypeEnumMap = {
   BalanceType.prepaid: 'prepaid',
   BalanceType.postpaid: 'postpaid',
 };
+
+Pagination _$PaginationFromJson(Map<String, dynamic> json) => Pagination(
+  page: (json['page'] as num?)?.toInt(),
+  itemsPerPage: (json['items_per_page'] as num?)?.toInt(),
+  itemsTotal: (json['items_total'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$PaginationToJson(Pagination instance) =>
+    <String, dynamic>{
+      'page': instance.page,
+      'items_per_page': instance.itemsPerPage,
+      'items_total': instance.itemsTotal,
+    };

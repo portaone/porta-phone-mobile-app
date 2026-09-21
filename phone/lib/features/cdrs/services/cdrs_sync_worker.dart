@@ -97,7 +97,7 @@ class CdrsSyncWorker implements PollingWorker {
     final fetchedCdrs = <CdrRecord>[];
 
     while (true) {
-      final newCdrs = await remoteRepo.getHistory(from: lastUpdate, page: page, limit: pageSize);
+      final newCdrs = await remoteRepo.getHistory(timeFrom: lastUpdate, page: page, limit: pageSize);
       _logger.fine('New CDRs fetched from page $page: ${newCdrs.length}');
       fetchedCdrs.addAll(newCdrs);
 
