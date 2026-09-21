@@ -513,13 +513,16 @@ melos:
       description: >
         Fetch this brand from the configurator backend, generate the app's icons, splash and
         identifiers from it, and run flutterfire configure for all platforms.
-        Reads APP_ID and CONFIGURATOR_TOKEN from .env file.
+        Reads APP_ID and CONFIGURATOR_TOKEN from .env file. A production signing keystore is
+        optional: present it under KEYSTORES_ROOT/<APP_ID> to also carry SSL certificates and
+        re-run flutterfire configure; a local debug build works without one.
       run: |
         set -eo pipefail
         [ -f .env ] || { echo "ERROR: .env not found. Copy .env.example to .env and fill in your credentials." >&2; exit 1; }
         APP_ID=$(grep -E '^(export[[:space:]]+)?APP_ID=' .env | cut -d '=' -f2-)
         CONFIGURATOR_TOKEN=$(grep -E '^(export[[:space:]]+)?CONFIGURATOR_TOKEN=' .env | cut -d '=' -f2-)
-        KEYSTORE_APP_PATH="../webtrit_phone_keystores/applications/${APP_ID:?APP_ID not found in .env}"
+        KEYSTORES_ROOT=../keystores/applications
+        KEYSTORE_APP_PATH="$KEYSTORES_ROOT/${APP_ID:?APP_ID not found in .env}"
         # `dart run` streams a "Running build hooks..." progress fragment on stderr, and melos
         # labels everything a script writes to stderr as ERROR - which reads as a failed run even
         # though the command succeeded. Strip just that fragment; any other stderr text, the exit
@@ -528,13 +531,21 @@ melos:
           { dart run ../tools/bin/webtrit_phone_tools.dart "$@" 2>&1 1>&3 \
             | sed -e 's/Running build hooks\.\.\.//g' -e '/^[[:space:]]*$/d' >&2; } 3>&1
         }
+        # Everything below is keystore-optional: --keystores-path / --keystore-path are omitted
+        # entirely unless a real keystore for this app is checked out locally, so a debug build
+        # never needs one.
+        RESOURCES_ARGS=(--applicationId="$APP_ID" --token="${CONFIGURATOR_TOKEN:?CONFIGURATOR_TOKEN not found in .env}")
+        KEYSTORE_ARGS=()
+        if [ -d "$KEYSTORE_APP_PATH" ]; then
+          RESOURCES_ARGS+=(--keystores-path="$KEYSTORES_ROOT")
+          KEYSTORE_ARGS+=(--keystore-path="$KEYSTORE_APP_PATH")
+        fi
         phone_tools \
           configurator-resources \
-          --applicationId="$APP_ID" \
-          --keystores-path=../keystores/applications \
-          --token="${CONFIGURATOR_TOKEN:?CONFIGURATOR_TOKEN not found in .env}"
+          "${RESOURCES_ARGS[@]}"
         phone_tools \
-          configurator-generate
+          configurator-generate \
+          "${KEYSTORE_ARGS[@]}"
         # This project's own generators, the same three the build workflow asks
         # for. The rename goes last: the icons and the splash are written into
         # the platform folders it then rewrites.
@@ -545,7 +556,7 @@ melos:
           configurator-setup \
           --platform ios \
           --platform android \
-          --keystore-path="$KEYSTORE_APP_PATH"
+          "${KEYSTORE_ARGS[@]}"
 
     # ===========================
     # Localization - melos run l10n:generate | l10n:check | l10n:pull | l10n:fetch

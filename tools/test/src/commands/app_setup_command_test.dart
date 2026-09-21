@@ -136,6 +136,18 @@ void main() {
       verify(() => mockRunner.configure(any())).called(1);
     });
 
+    test('skips entirely and succeeds when --keystore-path is not provided', () async {
+      final result = await commandRunner.run([
+        'configurator-setup',
+        '--platform',
+        'android',
+        tempDir.path,
+      ]);
+
+      expect(result, equals(ExitCode.success.code));
+      verifyNever(() => mockRunner.configure(any()));
+    });
+
     test('returns data exit code when runner throws', () async {
       when(() => mockRunner.configure(any())).thenThrow(Exception('flutterfire failed'));
 
