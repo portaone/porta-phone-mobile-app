@@ -12,6 +12,7 @@ under "Documentation".
 | Call                               | [UX](call_ux.md) / [Architecture](call_arch.md) | Active - UI redesign in progress                 |
 | Call history                       | [Overview](call_history.md)                     | Active - reached by walking back in date slices  |
 | Conference                         | [Overview](call_conference.md)                  | Active - the room, its legs and their mute       |
+| Conversation mute                  | [Overview](conversation_mute.md)                | Active - per capability, expiry derived locally  |
 | Feature access / runtime config    | [Overview](feature_access.md)                   | Active - session pin semantics                   |
 | Presence                           | [Overview](presence.md)                         | Active - badge redesign under discussion         |
 | Session tracking                   | [Overview](session_tracking.md)                 | Active - requires core >=0.35.0                  |
