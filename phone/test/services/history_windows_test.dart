@@ -20,22 +20,31 @@ void main() {
     test('widens each slice up to the ceiling', () {
       final walk = _walk(_windows(), _now, take: 6);
 
-      expect(walk.map((window) => window.width), [
+      // Each slice covers its own width and reaches one tick into the previous
+      // one, so the ground it holds is the width plus that overlap.
+      expect(walk.map((window) => window.timeTo.difference(window.timeFrom)), [
         const Duration(days: 7),
-        const Duration(days: 14),
-        const Duration(days: 28),
-        const Duration(days: 56),
-        const Duration(days: 90),
-        const Duration(days: 90),
+        const Duration(days: 14, seconds: 1),
+        const Duration(days: 28, seconds: 1),
+        const Duration(days: 56, seconds: 1),
+        const Duration(days: 90, seconds: 1),
+        const Duration(days: 90, seconds: 1),
       ]);
     });
 
-    test('slices are contiguous and walk backwards from the cursor', () {
+    test('slices overlap by a tick and walk backwards from the cursor', () {
+      // A backend may read both bounds as exclusive, and a record stamped
+      // exactly on a boundary would then belong to no slice at all. Overlapping
+      // costs one repeated record, which the caller recognises by its id.
       final walk = _walk(_windows(), _now, take: 4);
 
       expect(walk.first.timeTo, _now);
       for (var i = 1; i < walk.length; i++) {
-        expect(walk[i].timeTo, walk[i - 1].timeFrom, reason: 'slice $i must start where slice ${i - 1} ended');
+        expect(
+          walk[i].timeTo,
+          walk[i - 1].timeFrom.add(const Duration(seconds: 1)),
+          reason: 'slice $i must reach one tick into slice ${i - 1}',
+        );
         expect(walk[i].timeFrom.isBefore(walk[i].timeTo), isTrue);
       }
     });
@@ -52,7 +61,12 @@ void main() {
       final walk = _walk(_windows(horizon: const Duration(days: 30)), _now);
 
       expect(walk.last.timeFrom, _now.subtract(const Duration(days: 30)));
-      expect(walk.fold(Duration.zero, (sum, window) => sum + window.width), const Duration(days: 30));
+      // Every day between the cursor and the horizon is covered; the overlaps
+      // are what make the total a little more than the horizon itself.
+      expect(walk.first.timeTo, _now);
+      for (var i = 1; i < walk.length; i++) {
+        expect(walk[i].timeTo.isAfter(walk[i - 1].timeFrom), isTrue, reason: 'no day falls between two slices');
+      }
     });
 
     test('a cursor already past the horizon yields nothing', () {
@@ -73,8 +87,10 @@ void main() {
 
       expect(walk.first.width, const Duration(days: 30));
       // Only the last slice is narrower, and only because the horizon cut it.
-      expect(walk.take(walk.length - 1).map((window) => window.width).toSet(), {const Duration(days: 30)});
-      expect(walk.last.width, lessThanOrEqualTo(const Duration(days: 30)));
+      expect(walk.take(walk.length - 1).skip(1).map((window) => window.width).toSet(), {
+        const Duration(days: 30, seconds: 1),
+      });
+      expect(walk.last.width, lessThanOrEqualTo(const Duration(days: 30, seconds: 1)));
     });
 
     test('a non-positive width yields nothing instead of looping forever', () {

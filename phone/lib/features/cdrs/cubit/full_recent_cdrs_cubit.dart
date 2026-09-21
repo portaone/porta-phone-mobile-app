@@ -11,6 +11,7 @@ class FullRecentCdrsCubit extends CdrsListCubit {
     this.syncRunner, {
     super.pageSize,
     super.historyWindows,
+    super.walkQueue,
   });
 
   final PollingTaskRunner syncRunner;

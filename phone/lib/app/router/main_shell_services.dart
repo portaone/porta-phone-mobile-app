@@ -57,6 +57,7 @@ class MainShellServices extends StatelessWidget {
           ),
         if (featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>()?.supportsCallHistory == true)
           Provider<CdrsSync>(create: _createCdrsSync, dispose: (context, sync) => sync.dispose(), lazy: false),
+        Provider<CdrsHistoryWalkQueue>(create: (_) => CdrsHistoryWalkQueue()),
         if (featureAccess.systemNotificationsConfig.systemNotificationsSupport) ...[
           Provider<SystemNotificationsSync>(
             create: _createSystemNotificationsSync,

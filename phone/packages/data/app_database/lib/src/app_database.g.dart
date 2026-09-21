@@ -14778,6 +14778,212 @@ class CdrRecordDataCompanion extends UpdateCompanion<CdrRecordData> {
   }
 }
 
+class $CdrHistoryWalkTableTable extends CdrHistoryWalkTable
+    with TableInfo<$CdrHistoryWalkTableTable, CdrHistoryWalkData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CdrHistoryWalkTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _walkedToUsecMeta = const VerificationMeta(
+    'walkedToUsec',
+  );
+  @override
+  late final GeneratedColumn<int> walkedToUsec = GeneratedColumn<int>(
+    'walked_to_usec',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, walkedToUsec];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cdr_history_walk';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CdrHistoryWalkData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('walked_to_usec')) {
+      context.handle(
+        _walkedToUsecMeta,
+        walkedToUsec.isAcceptableOrUnknown(
+          data['walked_to_usec']!,
+          _walkedToUsecMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_walkedToUsecMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CdrHistoryWalkData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CdrHistoryWalkData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      walkedToUsec: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}walked_to_usec'],
+      )!,
+    );
+  }
+
+  @override
+  $CdrHistoryWalkTableTable createAlias(String alias) {
+    return $CdrHistoryWalkTableTable(attachedDatabase, alias);
+  }
+}
+
+class CdrHistoryWalkData extends DataClass
+    implements Insertable<CdrHistoryWalkData> {
+  /// Always 0: the table stores a single global watermark.
+  final int id;
+  final int walkedToUsec;
+  const CdrHistoryWalkData({required this.id, required this.walkedToUsec});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['walked_to_usec'] = Variable<int>(walkedToUsec);
+    return map;
+  }
+
+  CdrHistoryWalkDataCompanion toCompanion(bool nullToAbsent) {
+    return CdrHistoryWalkDataCompanion(
+      id: Value(id),
+      walkedToUsec: Value(walkedToUsec),
+    );
+  }
+
+  factory CdrHistoryWalkData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CdrHistoryWalkData(
+      id: serializer.fromJson<int>(json['id']),
+      walkedToUsec: serializer.fromJson<int>(json['walkedToUsec']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'walkedToUsec': serializer.toJson<int>(walkedToUsec),
+    };
+  }
+
+  CdrHistoryWalkData copyWith({int? id, int? walkedToUsec}) =>
+      CdrHistoryWalkData(
+        id: id ?? this.id,
+        walkedToUsec: walkedToUsec ?? this.walkedToUsec,
+      );
+  CdrHistoryWalkData copyWithCompanion(CdrHistoryWalkDataCompanion data) {
+    return CdrHistoryWalkData(
+      id: data.id.present ? data.id.value : this.id,
+      walkedToUsec: data.walkedToUsec.present
+          ? data.walkedToUsec.value
+          : this.walkedToUsec,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CdrHistoryWalkData(')
+          ..write('id: $id, ')
+          ..write('walkedToUsec: $walkedToUsec')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, walkedToUsec);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CdrHistoryWalkData &&
+          other.id == this.id &&
+          other.walkedToUsec == this.walkedToUsec);
+}
+
+class CdrHistoryWalkDataCompanion extends UpdateCompanion<CdrHistoryWalkData> {
+  final Value<int> id;
+  final Value<int> walkedToUsec;
+  const CdrHistoryWalkDataCompanion({
+    this.id = const Value.absent(),
+    this.walkedToUsec = const Value.absent(),
+  });
+  CdrHistoryWalkDataCompanion.insert({
+    this.id = const Value.absent(),
+    required int walkedToUsec,
+  }) : walkedToUsec = Value(walkedToUsec);
+  static Insertable<CdrHistoryWalkData> custom({
+    Expression<int>? id,
+    Expression<int>? walkedToUsec,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (walkedToUsec != null) 'walked_to_usec': walkedToUsec,
+    });
+  }
+
+  CdrHistoryWalkDataCompanion copyWith({
+    Value<int>? id,
+    Value<int>? walkedToUsec,
+  }) {
+    return CdrHistoryWalkDataCompanion(
+      id: id ?? this.id,
+      walkedToUsec: walkedToUsec ?? this.walkedToUsec,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (walkedToUsec.present) {
+      map['walked_to_usec'] = Variable<int>(walkedToUsec.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CdrHistoryWalkDataCompanion(')
+          ..write('id: $id, ')
+          ..write('walkedToUsec: $walkedToUsec')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CdrSyncCursorTableTable extends CdrSyncCursorTable
     with TableInfo<$CdrSyncCursorTableTable, CdrSyncCursorData> {
   @override
@@ -15051,6 +15257,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $CdrTableTable cdrTable = $CdrTableTable(this);
+  late final $CdrHistoryWalkTableTable cdrHistoryWalkTable =
+      $CdrHistoryWalkTableTable(this);
   late final $CdrSyncCursorTableTable cdrSyncCursorTable =
       $CdrSyncCursorTableTable(this);
   late final ContactsDao contactsDao = ContactsDao(this as AppDatabase);
@@ -15119,6 +15327,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     presenceInfoTable,
     dialogInfoTable,
     cdrTable,
+    cdrHistoryWalkTable,
     cdrSyncCursorTable,
   ];
   @override
@@ -27576,6 +27785,161 @@ typedef $$CdrTableTableProcessedTableManager =
       CdrRecordData,
       PrefetchHooks Function()
     >;
+typedef $$CdrHistoryWalkTableTableCreateCompanionBuilder =
+    CdrHistoryWalkDataCompanion Function({
+      Value<int> id,
+      required int walkedToUsec,
+    });
+typedef $$CdrHistoryWalkTableTableUpdateCompanionBuilder =
+    CdrHistoryWalkDataCompanion Function({
+      Value<int> id,
+      Value<int> walkedToUsec,
+    });
+
+class $$CdrHistoryWalkTableTableFilterComposer
+    extends Composer<_$AppDatabase, $CdrHistoryWalkTableTable> {
+  $$CdrHistoryWalkTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get walkedToUsec => $composableBuilder(
+    column: $table.walkedToUsec,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CdrHistoryWalkTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $CdrHistoryWalkTableTable> {
+  $$CdrHistoryWalkTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get walkedToUsec => $composableBuilder(
+    column: $table.walkedToUsec,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CdrHistoryWalkTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CdrHistoryWalkTableTable> {
+  $$CdrHistoryWalkTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get walkedToUsec => $composableBuilder(
+    column: $table.walkedToUsec,
+    builder: (column) => column,
+  );
+}
+
+class $$CdrHistoryWalkTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CdrHistoryWalkTableTable,
+          CdrHistoryWalkData,
+          $$CdrHistoryWalkTableTableFilterComposer,
+          $$CdrHistoryWalkTableTableOrderingComposer,
+          $$CdrHistoryWalkTableTableAnnotationComposer,
+          $$CdrHistoryWalkTableTableCreateCompanionBuilder,
+          $$CdrHistoryWalkTableTableUpdateCompanionBuilder,
+          (
+            CdrHistoryWalkData,
+            BaseReferences<
+              _$AppDatabase,
+              $CdrHistoryWalkTableTable,
+              CdrHistoryWalkData
+            >,
+          ),
+          CdrHistoryWalkData,
+          PrefetchHooks Function()
+        > {
+  $$CdrHistoryWalkTableTableTableManager(
+    _$AppDatabase db,
+    $CdrHistoryWalkTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CdrHistoryWalkTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CdrHistoryWalkTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CdrHistoryWalkTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> walkedToUsec = const Value.absent(),
+              }) => CdrHistoryWalkDataCompanion(
+                id: id,
+                walkedToUsec: walkedToUsec,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int walkedToUsec,
+              }) => CdrHistoryWalkDataCompanion.insert(
+                id: id,
+                walkedToUsec: walkedToUsec,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CdrHistoryWalkTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CdrHistoryWalkTableTable,
+      CdrHistoryWalkData,
+      $$CdrHistoryWalkTableTableFilterComposer,
+      $$CdrHistoryWalkTableTableOrderingComposer,
+      $$CdrHistoryWalkTableTableAnnotationComposer,
+      $$CdrHistoryWalkTableTableCreateCompanionBuilder,
+      $$CdrHistoryWalkTableTableUpdateCompanionBuilder,
+      (
+        CdrHistoryWalkData,
+        BaseReferences<
+          _$AppDatabase,
+          $CdrHistoryWalkTableTable,
+          CdrHistoryWalkData
+        >,
+      ),
+      CdrHistoryWalkData,
+      PrefetchHooks Function()
+    >;
 typedef $$CdrSyncCursorTableTableCreateCompanionBuilder =
     CdrSyncCursorDataCompanion Function({
       Value<int> id,
@@ -27852,6 +28216,8 @@ class $AppDatabaseManager {
       $$DialogInfoTableTableTableManager(_db, _db.dialogInfoTable);
   $$CdrTableTableTableManager get cdrTable =>
       $$CdrTableTableTableManager(_db, _db.cdrTable);
+  $$CdrHistoryWalkTableTableTableManager get cdrHistoryWalkTable =>
+      $$CdrHistoryWalkTableTableTableManager(_db, _db.cdrHistoryWalkTable);
   $$CdrSyncCursorTableTableTableManager get cdrSyncCursorTable =>
       $$CdrSyncCursorTableTableTableManager(_db, _db.cdrSyncCursorTable);
 }

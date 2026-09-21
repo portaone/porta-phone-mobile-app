@@ -101,13 +101,23 @@ class CdrsSyncWorker implements PollingWorker {
 
   /// Fills an empty store: slices of history walked back until one holds
   /// records, or until the horizon says there are none.
+  ///
+  /// Each slice is recorded as walked, so the lists that open afterwards resume
+  /// where this left off instead of asking for the same days again.
   Future<void> _refreshInitialHistory() async {
     for (final window in historyWindows.backFrom(clock.now())) {
       final initialCdrs = await _fetchWindow(window);
       _logger.fine('Initial CDRs fetched from $window: ${initialCdrs.length}');
-      if (initialCdrs.isEmpty) continue;
+      if (initialCdrs.isEmpty) {
+        await localRepo.markHistoryWalkedTo(window.timeFrom);
+        continue;
+      }
 
       await localRepo.upsertCdrs(initialCdrs.reversed.toList());
+      // Only the part of the slice this page covers: the rest of it is still
+      // for a list to walk.
+      final oldest = initialCdrs.map((cdr) => cdr.connectTime).reduce((a, b) => a.isBefore(b) ? a : b);
+      await localRepo.markHistoryWalkedTo(oldest);
       return;
     }
 

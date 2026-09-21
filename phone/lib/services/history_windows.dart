@@ -52,7 +52,12 @@ class HistoryWindow {
 /// widening - an hour at a time against a horizon of a year - and is out of
 /// reach of the shipped ones.
 class HistoryWindows {
-  const HistoryWindows({required this.firstWidth, required this.maxWidth, required this.horizon});
+  const HistoryWindows({
+    required this.firstWidth,
+    required this.maxWidth,
+    required this.horizon,
+    this.overlap = const Duration(seconds: 1),
+  });
 
   /// Slices one walk may produce, whatever it was configured with. Ten times
   /// what the shipped widths need for a year, so reaching it means the widths
@@ -65,18 +70,28 @@ class HistoryWindows {
   /// Ceiling the width doubles up to.
   final Duration maxWidth;
 
+  /// How far each slice reaches back past where the previous one began. The
+  /// backend behind this app stamps a record to the second, so one second is
+  /// the smallest overlap that can cover a boundary.
+  final Duration overlap;
+
   /// How far back the walk may reach, measured from now. [Duration.zero] means
   /// "do not walk at all" and yields nothing - the caller then asks the single
   /// question it asked before there was a walk.
   final Duration horizon;
 
-  /// Slices going back from [cursor], newest first, contiguous, ending at the
-  /// horizon.
+  /// Slices going back from [cursor], newest first, overlapping by [overlap],
+  /// ending at the horizon.
   ///
-  /// Each slice ends where the previous one began, so the walk advances by the
-  /// SLICE and never by what the server returned - a range that comes back
-  /// empty, or that returns the same boundary record again, moves the cursor
-  /// just as far as a full one.
+  /// Each slice ends a tick AFTER the previous one began. A backend is free to
+  /// read both bounds as exclusive, and then a record stamped exactly on a
+  /// boundary would belong to neither slice and be lost without a trace, while
+  /// the walk moved past it; a record returned twice only has to be recognised,
+  /// which the caller does by its id.
+  ///
+  /// The walk still advances by the SLICE and never by what the server
+  /// returned - a range that comes back empty, or that returns the same
+  /// boundary record again, moves the cursor just as far as a full one.
   Iterable<HistoryWindow> backFrom(DateTime cursor) sync* {
     final floor = clock.now().subtract(horizon);
 
@@ -89,7 +104,11 @@ class HistoryWindows {
       var timeFrom = timeTo.subtract(width);
       if (!timeFrom.isAfter(floor)) timeFrom = floor;
 
-      yield HistoryWindow(timeFrom: timeFrom, timeTo: timeTo, endsAtHorizon: timeFrom.isAtSameMomentAs(floor));
+      yield HistoryWindow(
+        timeFrom: timeFrom,
+        timeTo: produced == 0 ? timeTo : timeTo.add(overlap),
+        endsAtHorizon: timeFrom.isAtSameMomentAs(floor),
+      );
 
       timeTo = timeFrom;
       produced++;

@@ -47,6 +47,19 @@ abstract class CdrsLocalRepository {
   /// Retrieves the timestamp of the first record in the Call Detail Records (CDRs).
   Future<DateTime?> getFirstRecordTime();
 
+  /// How far BACK the archive has been fetched, or null while nobody has
+  /// walked it.
+  ///
+  /// What was ASKED FOR, not what came back: a stretch of days holding no calls
+  /// moves it as far as a full one. It belongs to the store rather than to a
+  /// list, so a second list - or the same screen opened again - reads what the
+  /// first walk already covered instead of asking for it again.
+  Future<DateTime?> getHistoryWalkedTo();
+
+  /// Moves the watermark to [time] when that reaches further back than where it
+  /// stands; never forward.
+  Future<void> markHistoryWalkedTo(DateTime time);
+
   /// Time of the last successfully completed remote sync cycle, or null if the
   /// initial sync has never finished. Its presence distinguishes "synced,
   /// genuinely empty" from "never synced yet" (still loading).
@@ -111,6 +124,16 @@ class CdrsLocalRepositoryDriftImpl with CdrDriftMapper implements CdrsLocalRepos
   @override
   Future<DateTime?> getFirstRecordTime() async {
     return await _dao.getFirstRecordTime();
+  }
+
+  @override
+  Future<DateTime?> getHistoryWalkedTo() async {
+    return await _dao.getHistoryWalkedTo();
+  }
+
+  @override
+  Future<void> markHistoryWalkedTo(DateTime time) async {
+    await _dao.markHistoryWalkedTo(time);
   }
 
   @override
