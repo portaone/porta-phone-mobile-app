@@ -129,6 +129,16 @@ class FeatureAccess extends Equatable {
   /// Whether passing a message on to a colleague is offered.
   bool get voicemailForwardAvailable => voicemailAvailable && coreSupport.supportsVoicemailForward;
 
+  /// Whether muting one conversation's notifications is offered.
+  ///
+  /// Asked of messaging as a whole, the way the voicemail controls above are
+  /// asked of voicemail: the control sits in a chat's info and in an SMS
+  /// thread's menu, and whichever of the two a deployment runs, the capability
+  /// answers the same. False means the control is absent, not shown switched
+  /// off - a core that does not advertise the mute does not answer its events
+  /// either, so there is no state behind the control and nothing to switch.
+  bool get conversationMuteAvailable => messagingConfig.anyMessagingEnabled && coreSupport.supportsConversationMute;
+
   static FeatureAccess create(
     AppConfig appConfig,
     List<EmbeddedResource> embeddedResources,
