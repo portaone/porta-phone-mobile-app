@@ -49,7 +49,7 @@ class FullRecentCdrsCubit extends CdrsListCubit {
       final oldestLocal = state.records.lastOrNull?.connectTime;
       var history = await queryLocal(olderThan: oldestLocal);
       if (history.isEmpty) {
-        history = await remoteRepository.getHistory(timeTo: oldestLocal, limit: pageSize);
+        history = (await remoteRepository.getHistory(timeTo: oldestLocal, limit: pageSize)).records;
         await localRepository.upsertCdrs(history, silent: true);
       }
       if (isClosed) return;
