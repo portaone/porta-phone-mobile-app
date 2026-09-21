@@ -34,6 +34,9 @@ CdrRecord _record(String id, int minute) => CdrRecord(
   duration: const Duration(seconds: 10),
 );
 
+CdrHistoryPage _page(List<CdrRecord> records, {int? itemsTotal}) =>
+    CdrHistoryPage(records: records, itemsTotal: itemsTotal);
+
 void main() {
   setUpAll(() => registerFallbackValue(FakePollingRegistration()));
 
@@ -60,7 +63,7 @@ void main() {
       final older = _record('older', 1);
       final completedAt = DateTime.utc(2026, 1, 2);
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
-      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => [newer, older]);
+      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => _page([newer, older]));
 
       await withClock(Clock.fixed(completedAt), worker.refresh);
 
@@ -72,7 +75,7 @@ void main() {
 
     test('marks a successful initial cycle even when the remote history is empty', () async {
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
-      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => []);
+      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => const CdrHistoryPage.empty());
 
       await worker.refresh();
 
@@ -93,8 +96,8 @@ void main() {
         ),
       ).thenAnswer((invocation) async {
         return switch (invocation.namedArguments[#page]) {
-          1 => page1,
-          2 => page2,
+          1 => _page(page1),
+          2 => _page(page2),
           _ => throw StateError('Unexpected page'),
         };
       });
@@ -120,9 +123,9 @@ void main() {
         ),
       ).thenAnswer((invocation) async {
         return switch (invocation.namedArguments[#page]) {
-          1 => [_record('4', 4), _record('3', 3)],
-          2 => [_record('2', 2), _record('1', 1)],
-          3 => <CdrRecord>[],
+          1 => _page([_record('4', 4), _record('3', 3)]),
+          2 => _page([_record('2', 2), _record('1', 1)]),
+          3 => const CdrHistoryPage.empty(),
           _ => throw StateError('Unexpected page'),
         };
       });
@@ -148,7 +151,7 @@ void main() {
         ),
       ).thenAnswer((invocation) async {
         if (invocation.namedArguments[#page] == 1) {
-          return [_record('2', 2), _record('1', 1)];
+          return _page([_record('2', 2), _record('1', 1)]);
         }
         throw error;
       });
@@ -164,7 +167,8 @@ void main() {
       final lastUpdate = DateTime.utc(2026, 1, 1);
       var markerRead = 0;
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => lastUpdate);
-      when(() => remoteRepository.getHistory(timeFrom: lastUpdate, page: 1, limit: 2)).thenAnswer((_) async => []);
+      when(() => remoteRepository.getHistory(timeFrom: lastUpdate, page: 1, limit: 2))
+          .thenAnswer((_) async => const CdrHistoryPage.empty());
       when(() => localRepository.getLastSyncTime()).thenAnswer((_) async {
         markerRead++;
         return markerRead == 1 ? DateTime.utc(2026, 1, 1) : null;
@@ -182,7 +186,7 @@ void main() {
       final stackTrace = StackTrace.current;
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
       when(() => remoteRepository.getHistory(page: 1, limit: 2))
-          .thenAnswer((_) => Future<List<CdrRecord>>.error(error, stackTrace));
+          .thenAnswer((_) => Future<CdrHistoryPage>.error(error, stackTrace));
 
       Object? caughtError;
       StackTrace? caughtStackTrace;
@@ -202,7 +206,7 @@ void main() {
     test('reports and rethrows a local persistence failure', () async {
       final error = Exception('database unavailable');
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
-      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => [_record('1', 1)]);
+      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => _page([_record('1', 1)]));
       when(() => localRepository.upsertCdrs(any())).thenThrow(error);
 
       await expectLater(worker.refresh(), throwsA(same(error)));
