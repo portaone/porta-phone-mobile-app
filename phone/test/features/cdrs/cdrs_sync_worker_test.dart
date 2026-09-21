@@ -37,6 +37,14 @@ CdrRecord _record(String id, int minute) => CdrRecord(
 CdrHistoryPage _page(List<CdrRecord> records, {int? itemsTotal}) =>
     CdrHistoryPage(records: records, itemsTotal: itemsTotal);
 
+/// Fixed slices, so a test says which slice it is answering rather than
+/// depending on how the deployment is configured.
+const _windows = HistoryWindows(
+  firstWidth: Duration(days: 7),
+  maxWidth: Duration(days: 90),
+  horizon: Duration(days: 365),
+);
+
 void main() {
   setUpAll(() => registerFallbackValue(FakePollingRegistration()));
 
@@ -47,7 +55,7 @@ void main() {
   setUp(() {
     localRepository = MockCdrsLocalRepository();
     remoteRepository = MockCdrsRemoteRepository();
-    worker = CdrsSyncWorker(localRepository, remoteRepository, pageSize: 2);
+    worker = CdrsSyncWorker(localRepository, remoteRepository, pageSize: 2, historyWindows: _windows);
 
     when(() => localRepository.upsertCdrs(any())).thenAnswer((_) async {});
     when(() => localRepository.getLastSyncTime()).thenAnswer((_) async => null);
@@ -58,29 +66,84 @@ void main() {
   tearDown(() => worker.dispose());
 
   group('CdrsSyncWorker.refresh', () {
-    test('stores the initial page oldest first and marks the completed cycle', () async {
+    test('stores the newest page it finds and marks the completed cycle', () async {
       final newer = _record('newer', 2);
       final older = _record('older', 1);
       final completedAt = DateTime.utc(2026, 1, 2);
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
-      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => _page([newer, older]));
+      _answerWindows(remoteRepository, [
+        [newer, older],
+      ]);
 
       await withClock(Clock.fixed(completedAt), worker.refresh);
 
-      verify(() => remoteRepository.getHistory(page: 1, limit: 2)).called(1);
+      expect(_windowsAsked(remoteRepository), 1, reason: 'the first slice held records, so the walk stops there');
       verify(() => localRepository.upsertCdrs([older, newer])).called(1);
       verify(() => localRepository.markSyncCompleted(completedAt)).called(1);
       verifyNever(() => localRepository.notifyInitialSyncFailed());
     });
 
-    test('marks a successful initial cycle even when the remote history is empty', () async {
+    test('walks past the days that hold nothing instead of filling nothing', () async {
+      // The reason the cycle walks at all: a request that names no range is
+      // answered about recent history alone, so a first launch after a quiet
+      // week used to store an empty list and call it a day.
+      final found = _record('older-than-a-week', 1);
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
-      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => const CdrHistoryPage.empty());
+      _answerWindows(remoteRepository, [
+        [],
+        [],
+        [found],
+      ]);
 
       await worker.refresh();
 
-      verify(() => localRepository.upsertCdrs([])).called(1);
+      expect(_windowsAsked(remoteRepository), 3);
+      verify(() => localRepository.upsertCdrs([found])).called(1);
+    });
+
+    test('marks a successful initial cycle even when the whole horizon is empty', () async {
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
+      _answerWindows(remoteRepository, const []);
+
+      await worker.refresh();
+
+      expect(_windowsAsked(remoteRepository), 7, reason: 'a year of silence is seven slices');
+      verifyNever(() => localRepository.upsertCdrs(any()));
       verify(() => localRepository.markSyncCompleted(any())).called(1);
+    });
+
+    test('an account that stays empty is asked about the most recent slice only', () async {
+      // Nothing to be incremental from, but no reason to re-walk the archive
+      // every five minutes either.
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
+      when(() => localRepository.getLastSyncTime()).thenAnswer((_) async => DateTime.utc(2026, 1, 1));
+      _answerWindows(remoteRepository, const []);
+
+      await worker.refresh();
+
+      expect(_windowsAsked(remoteRepository), 1);
+    });
+
+    test('with the walk switched off the first cycle asks for no range at all', () async {
+      final worker = CdrsSyncWorker(
+        localRepository,
+        remoteRepository,
+        pageSize: 2,
+        historyWindows: const HistoryWindows(
+          firstWidth: Duration(days: 7),
+          maxWidth: Duration(days: 90),
+          horizon: Duration.zero,
+        ),
+      );
+      addTearDown(worker.dispose);
+      final record = _record('1', 1);
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
+      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => _page([record]));
+
+      await worker.refresh();
+
+      verify(() => remoteRepository.getHistory(page: 1, limit: 2)).called(1);
+      verify(() => localRepository.upsertCdrs([record])).called(1);
     });
 
     test('drains incremental pages in order and stops after a partial page', () async {
@@ -185,8 +248,14 @@ void main() {
       final error = Exception('offline');
       final stackTrace = StackTrace.current;
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
-      when(() => remoteRepository.getHistory(page: 1, limit: 2))
-          .thenAnswer((_) => Future<CdrHistoryPage>.error(error, stackTrace));
+      when(
+        () => remoteRepository.getHistory(
+          timeFrom: any(named: 'timeFrom'),
+          timeTo: any(named: 'timeTo'),
+          page: 1,
+          limit: 2,
+        ),
+      ).thenAnswer((_) => Future<CdrHistoryPage>.error(error, stackTrace));
 
       Object? caughtError;
       StackTrace? caughtStackTrace;
@@ -206,7 +275,9 @@ void main() {
     test('reports and rethrows a local persistence failure', () async {
       final error = Exception('database unavailable');
       when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
-      when(() => remoteRepository.getHistory(page: 1, limit: 2)).thenAnswer((_) async => _page([_record('1', 1)]));
+      _answerWindows(remoteRepository, [
+        [_record('1', 1)],
+      ]);
       when(() => localRepository.upsertCdrs(any())).thenThrow(error);
 
       await expectLater(worker.refresh(), throwsA(same(error)));
@@ -313,3 +384,29 @@ void main() {
     });
   });
 }
+
+/// Answers the walk slice by slice: [slices] in order, then empty.
+void _answerWindows(MockCdrsRemoteRepository remote, List<List<CdrRecord>> slices) {
+  var asked = 0;
+  when(
+    () => remote.getHistory(
+      timeFrom: any(named: 'timeFrom'),
+      timeTo: any(named: 'timeTo'),
+      page: any(named: 'page'),
+      limit: any(named: 'limit'),
+    ),
+  ).thenAnswer((_) async {
+    final records = asked < slices.length ? slices[asked] : const <CdrRecord>[];
+    asked++;
+    return _page(records, itemsTotal: records.length);
+  });
+}
+
+int _windowsAsked(MockCdrsRemoteRepository remote) => verify(
+  () => remote.getHistory(
+    timeFrom: any(named: 'timeFrom'),
+    timeTo: any(named: 'timeTo'),
+    page: any(named: 'page'),
+    limit: any(named: 'limit'),
+  ),
+).callCount;
