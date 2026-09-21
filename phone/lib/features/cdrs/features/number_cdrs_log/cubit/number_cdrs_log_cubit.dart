@@ -8,6 +8,7 @@ class NumberCdrsLogCubit extends CdrsListCubit {
     super.remoteRepository,
     super.syncStateSource, {
     super.pageSize,
+    super.historyWindows,
   });
 
   final String number;

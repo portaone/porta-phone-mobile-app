@@ -278,13 +278,15 @@ void main() {
       when(() => local.upsertCdrs(any(), silent: any(named: 'silent'))).thenAnswer((_) async {});
       when(
         () => remote.getHistory(
+          timeFrom: any(named: 'timeFrom'),
           timeTo: any(named: 'timeTo'),
+          page: any(named: 'page'),
           limit: any(named: 'limit'),
         ),
       ).thenAnswer((_) async => const CdrHistoryPage.empty());
     });
 
-    test('empty cache without a sync cursor stays loading until the sync completes and the scan runs', () async {
+    test('empty cache without a sync cursor stays loading until the sync completes and the walk runs', () async {
       final cubit = MissedRecentCdrsCubit(local, remote, sync, sync);
       await cubit.init();
 
@@ -298,7 +300,7 @@ void main() {
       await cubit.close();
     });
 
-    test('empty cache with an existing sync cursor resolves and scans immediately', () async {
+    test('empty cache with an existing sync cursor resolves and walks immediately', () async {
       when(() => local.getLastSyncTime()).thenAnswer((_) async => DateTime(2026, 1, 1));
 
       final cubit = MissedRecentCdrsCubit(local, remote, sync, sync);
@@ -323,7 +325,7 @@ void main() {
       await cubit.close();
     });
 
-    test('a failed initial sync resolves loading; a later success still runs the scan', () async {
+    test('a failed initial sync resolves loading; a later success still runs the walk', () async {
       final cubit = MissedRecentCdrsCubit(local, remote, sync, sync);
       await cubit.init();
       expect(cubit.state.isLoading, isTrue);
@@ -335,19 +337,23 @@ void main() {
       expect(cubit.state.isLoading, isFalse);
       verifyNever(
         () => remote.getHistory(
+          timeFrom: any(named: 'timeFrom'),
           timeTo: any(named: 'timeTo'),
+          page: any(named: 'page'),
           limit: any(named: 'limit'),
         ),
       );
 
       // ...but nothing is persisted, so the eventual success still triggers
-      // the one-shot missed-calls scan.
+      // the one-shot missed-calls walk.
       events.add(CdrsInitialSyncCompleted());
       await Future<void>.delayed(const Duration(milliseconds: 10));
 
       verify(
         () => remote.getHistory(
+          timeFrom: any(named: 'timeFrom'),
           timeTo: any(named: 'timeTo'),
+          page: any(named: 'page'),
           limit: any(named: 'limit'),
         ),
       ).called(greaterThan(0));
@@ -387,13 +393,15 @@ void main() {
       when(() => local.upsertCdrs(any(), silent: any(named: 'silent'))).thenAnswer((_) async {});
       when(
         () => remote.getHistory(
+          timeFrom: any(named: 'timeFrom'),
           timeTo: any(named: 'timeTo'),
+          page: any(named: 'page'),
           limit: any(named: 'limit'),
         ),
       ).thenAnswer((_) async => const CdrHistoryPage.empty());
     });
 
-    test('empty cache without a sync cursor stays loading until the sync completes and the scan runs', () async {
+    test('empty cache without a sync cursor stays loading until the sync completes and the walk runs', () async {
       final cubit = NumberCdrsLogCubit('2000', local, remote, sync);
       await cubit.init();
 

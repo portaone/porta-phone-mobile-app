@@ -86,7 +86,15 @@ extension CdrRecordIterableExtension on Iterable<CdrRecord> {
     return where((n) => n.callId != callId);
   }
 
+  /// Appends older records, keeping the first version of a call id already in
+  /// the list.
+  ///
+  /// A record can arrive twice: the boundary of one history range is the edge
+  /// of the next, and a range boundary on the wire is only as precise as the
+  /// backend's own resolution. Appending it a second time would show the call
+  /// twice.
   Iterable<CdrRecord> mergeWithHistory(Iterable<CdrRecord> history) {
-    return [...this, ...history];
+    final seen = map((cdr) => cdr.callId).toSet();
+    return [...this, ...history.where((cdr) => seen.add(cdr.callId))];
   }
 }
