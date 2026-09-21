@@ -171,17 +171,24 @@ extension PhoenixChannelExt on PhoenixChannel {
     }
   }
 
-  /// Asynchronously retrieves the chat conversation.
+  /// Asynchronously retrieves the chat conversation and the requester's mute
+  /// on it.
   ///
-  /// This getter returns a [Future] that completes with a [Chat] object
-  /// representing the chat conversation.
-  Future<Chat> get chatConversation async {
+  /// The two travel together in this reply and nowhere else: the mute is about
+  /// the asking user alone, so it is absent from `chat_info_update`, which
+  /// every member receives. They come back in a [ChatConversationSnapshot]
+  /// rather than merged, because they are stored apart - see
+  /// [ChatsRepository.upsertChatMute].
+  Future<ChatConversationSnapshot> get chatConversation async {
     try {
       final req = await push('chat:get', {}).future;
       final response = req.response;
 
       if (req.isOk && response is Map<String, dynamic>) {
-        return ChatPhxMapper.fromMap(response);
+        return ChatConversationSnapshot(
+          chat: ChatPhxMapper.fromMap(response),
+          mute: NotificationMutePhxMapper.fromMapOrNull(response),
+        );
       }
 
       throw req;
@@ -190,17 +197,23 @@ extension PhoenixChannelExt on PhoenixChannel {
     }
   }
 
-  /// A getter that asynchronously retrieves an [SmsConversation].
+  /// A getter that asynchronously retrieves an [SmsConversation] and the
+  /// requester's mute on it.
   ///
-  /// This method returns a [Future] that completes with an [SmsConversation].
-  /// It can be used to fetch the conversation details for SMS messaging.
-  Future<SmsConversation> get smsConversation async {
+  /// As with [chatConversation], the mute rides on this reply because it
+  /// belongs to the asking user - a shared number can put several users on one
+  /// conversation - and comes back beside the conversation, not inside it,
+  /// because it is stored apart.
+  Future<SmsConversationSnapshot> get smsConversation async {
     try {
       final req = await push('sms:conversation:get', {}).future;
       final response = req.response;
 
       if (req.isOk && response is Map<String, dynamic>) {
-        return SmsConversationPhxMapper.fromMap(response);
+        return SmsConversationSnapshot(
+          conversation: SmsConversationPhxMapper.fromMap(response),
+          mute: NotificationMutePhxMapper.fromMapOrNull(response),
+        );
       }
 
       throw req;

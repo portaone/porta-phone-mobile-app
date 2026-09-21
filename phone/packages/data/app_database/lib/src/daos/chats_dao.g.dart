@@ -13,6 +13,8 @@ mixin _$ChatsDaoMixin on DatabaseAccessor<AppDatabase> {
       attachedDatabase.chatMessageSyncCursorTable;
   $ChatMessageReadCursorTableTable get chatMessageReadCursorTable =>
       attachedDatabase.chatMessageReadCursorTable;
+  $ChatUserSettingsTableTable get chatUserSettingsTable =>
+      attachedDatabase.chatUserSettingsTable;
   $ChatOutboxMessageTableTable get chatOutboxMessageTable =>
       attachedDatabase.chatOutboxMessageTable;
   $ChatOutboxMessageEditTableTable get chatOutboxMessageEditTable =>
@@ -50,6 +52,11 @@ class ChatsDaoManager {
       $$ChatMessageReadCursorTableTableTableManager(
         _db.attachedDatabase,
         _db.chatMessageReadCursorTable,
+      );
+  $$ChatUserSettingsTableTableTableManager get chatUserSettingsTable =>
+      $$ChatUserSettingsTableTableTableManager(
+        _db.attachedDatabase,
+        _db.chatUserSettingsTable,
       );
   $$ChatOutboxMessageTableTableTableManager get chatOutboxMessageTable =>
       $$ChatOutboxMessageTableTableTableManager(

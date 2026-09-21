@@ -17,6 +17,7 @@ import 'package:app_database/src/migrations/generated/schema_v24.dart' as v24;
 import 'package:app_database/src/migrations/generated/schema_v25.dart' as v25;
 import 'package:app_database/src/migrations/generated/schema_v26.dart' as v26;
 import 'package:app_database/src/migrations/generated/schema_v27.dart' as v27;
+import 'package:app_database/src/migrations/generated/schema_v28.dart' as v28;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -439,6 +440,70 @@ void main() {
       }
     });
   });
+  group('migration v28 data integrity', () {
+    test('keeps stored conversations and knows no mute until the next sync', () async {
+      final schema = await verifier.schemaAt(27);
+      try {
+        final oldDb = v27.DatabaseAtV27(schema.newConnection());
+        await oldDb.customStatement("""
+          INSERT INTO chats (id, type, name, created_at_remote, updated_at_remote)
+          VALUES (42, 'group', 'engineering', 1756684800, 1756684800)
+        """);
+        await oldDb.customStatement("""
+          INSERT INTO sms_conversations (id, first_phone_number, second_phone_number,
+            created_at_remote, updated_at_remote)
+          VALUES (7, '123010', '123009', 1756684800, 1756684800)
+        """);
+        await oldDb.close();
+
+        final appDatabase = AppDatabase(schema.newConnection());
+        await verifier.migrateAndValidate(appDatabase, 28);
+        await appDatabase.close();
+
+        final checkDb = v28.DatabaseAtV28(schema.newConnection());
+
+        final chats = await checkDb.customSelect('SELECT id, name FROM chats').get();
+        expect(chats, hasLength(1));
+        expect(chats.single.read<String>('name'), 'engineering');
+        expect(await checkDb.customSelect('SELECT id FROM sms_conversations').get(), hasLength(1));
+
+        // Nothing is backfilled. A mute is the core's to report and rides on
+        // every chat:get, so an upgraded install learns what is muted on its
+        // next sync; writing "not muted" rows here would claim knowledge this
+        // client does not have.
+        expect(await checkDb.customSelect('SELECT * FROM chat_user_settings').get(), isEmpty);
+        expect(await checkDb.customSelect('SELECT * FROM sms_conversation_user_settings').get(), isEmpty);
+
+        await checkDb.close();
+      } finally {
+        schema.close();
+      }
+    });
+
+    test('a mute cannot outlive the conversation it hangs off', () async {
+      final schema = await verifier.schemaAt(28);
+      try {
+        final db = v28.DatabaseAtV28(schema.newConnection());
+        await db.customStatement('PRAGMA foreign_keys = ON');
+        await db.customStatement("""
+          INSERT INTO chats (id, type, name, created_at_remote, updated_at_remote)
+          VALUES (42, 'group', 'engineering', 1756684800, 1756684800)
+        """);
+        await db.customStatement("""
+          INSERT INTO chat_user_settings (chat_id, muted, muted_until_usec)
+          VALUES (42, 1, NULL)
+        """);
+
+        await db.customStatement('DELETE FROM chats WHERE id = 42');
+
+        expect(await db.customSelect('SELECT * FROM chat_user_settings').get(), isEmpty);
+        await db.close();
+      } finally {
+        schema.close();
+      }
+    });
+  });
+
   group('migration v27 data integrity', () {
     test('the stored cursor becomes the sync row and nothing claims a walk', () async {
       final schema = await verifier.schemaAt(26);

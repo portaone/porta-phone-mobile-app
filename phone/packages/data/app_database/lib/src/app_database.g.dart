@@ -5301,6 +5301,279 @@ class ChatMessageReadCursorDataCompanion
   }
 }
 
+class $ChatUserSettingsTableTable extends ChatUserSettingsTable
+    with TableInfo<$ChatUserSettingsTableTable, ChatUserSettingsData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ChatUserSettingsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _chatIdMeta = const VerificationMeta('chatId');
+  @override
+  late final GeneratedColumn<int> chatId = GeneratedColumn<int>(
+    'chat_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES chats (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _mutedMeta = const VerificationMeta('muted');
+  @override
+  late final GeneratedColumn<bool> muted = GeneratedColumn<bool>(
+    'muted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("muted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _mutedUntilUsecMeta = const VerificationMeta(
+    'mutedUntilUsec',
+  );
+  @override
+  late final GeneratedColumn<int> mutedUntilUsec = GeneratedColumn<int>(
+    'muted_until_usec',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [chatId, muted, mutedUntilUsec];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'chat_user_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ChatUserSettingsData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('chat_id')) {
+      context.handle(
+        _chatIdMeta,
+        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
+      );
+    }
+    if (data.containsKey('muted')) {
+      context.handle(
+        _mutedMeta,
+        muted.isAcceptableOrUnknown(data['muted']!, _mutedMeta),
+      );
+    }
+    if (data.containsKey('muted_until_usec')) {
+      context.handle(
+        _mutedUntilUsecMeta,
+        mutedUntilUsec.isAcceptableOrUnknown(
+          data['muted_until_usec']!,
+          _mutedUntilUsecMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {chatId};
+  @override
+  ChatUserSettingsData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ChatUserSettingsData(
+      chatId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}chat_id'],
+      )!,
+      muted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}muted'],
+      )!,
+      mutedUntilUsec: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}muted_until_usec'],
+      ),
+    );
+  }
+
+  @override
+  $ChatUserSettingsTableTable createAlias(String alias) {
+    return $ChatUserSettingsTableTable(attachedDatabase, alias);
+  }
+}
+
+class ChatUserSettingsData extends DataClass
+    implements Insertable<ChatUserSettingsData> {
+  final int chatId;
+
+  /// Whether the user muted this chat's notifications.
+  final bool muted;
+
+  /// When the mute lapses, or null when it was set to last forever.
+  ///
+  /// Nothing runs at that moment - the core sends no event - so a reader has
+  /// to compare it against the current time rather than trust [muted] alone.
+  final int? mutedUntilUsec;
+  const ChatUserSettingsData({
+    required this.chatId,
+    required this.muted,
+    this.mutedUntilUsec,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['chat_id'] = Variable<int>(chatId);
+    map['muted'] = Variable<bool>(muted);
+    if (!nullToAbsent || mutedUntilUsec != null) {
+      map['muted_until_usec'] = Variable<int>(mutedUntilUsec);
+    }
+    return map;
+  }
+
+  ChatUserSettingsDataCompanion toCompanion(bool nullToAbsent) {
+    return ChatUserSettingsDataCompanion(
+      chatId: Value(chatId),
+      muted: Value(muted),
+      mutedUntilUsec: mutedUntilUsec == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mutedUntilUsec),
+    );
+  }
+
+  factory ChatUserSettingsData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ChatUserSettingsData(
+      chatId: serializer.fromJson<int>(json['chatId']),
+      muted: serializer.fromJson<bool>(json['muted']),
+      mutedUntilUsec: serializer.fromJson<int?>(json['mutedUntilUsec']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'chatId': serializer.toJson<int>(chatId),
+      'muted': serializer.toJson<bool>(muted),
+      'mutedUntilUsec': serializer.toJson<int?>(mutedUntilUsec),
+    };
+  }
+
+  ChatUserSettingsData copyWith({
+    int? chatId,
+    bool? muted,
+    Value<int?> mutedUntilUsec = const Value.absent(),
+  }) => ChatUserSettingsData(
+    chatId: chatId ?? this.chatId,
+    muted: muted ?? this.muted,
+    mutedUntilUsec: mutedUntilUsec.present
+        ? mutedUntilUsec.value
+        : this.mutedUntilUsec,
+  );
+  ChatUserSettingsData copyWithCompanion(ChatUserSettingsDataCompanion data) {
+    return ChatUserSettingsData(
+      chatId: data.chatId.present ? data.chatId.value : this.chatId,
+      muted: data.muted.present ? data.muted.value : this.muted,
+      mutedUntilUsec: data.mutedUntilUsec.present
+          ? data.mutedUntilUsec.value
+          : this.mutedUntilUsec,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ChatUserSettingsData(')
+          ..write('chatId: $chatId, ')
+          ..write('muted: $muted, ')
+          ..write('mutedUntilUsec: $mutedUntilUsec')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(chatId, muted, mutedUntilUsec);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ChatUserSettingsData &&
+          other.chatId == this.chatId &&
+          other.muted == this.muted &&
+          other.mutedUntilUsec == this.mutedUntilUsec);
+}
+
+class ChatUserSettingsDataCompanion
+    extends UpdateCompanion<ChatUserSettingsData> {
+  final Value<int> chatId;
+  final Value<bool> muted;
+  final Value<int?> mutedUntilUsec;
+  const ChatUserSettingsDataCompanion({
+    this.chatId = const Value.absent(),
+    this.muted = const Value.absent(),
+    this.mutedUntilUsec = const Value.absent(),
+  });
+  ChatUserSettingsDataCompanion.insert({
+    this.chatId = const Value.absent(),
+    this.muted = const Value.absent(),
+    this.mutedUntilUsec = const Value.absent(),
+  });
+  static Insertable<ChatUserSettingsData> custom({
+    Expression<int>? chatId,
+    Expression<bool>? muted,
+    Expression<int>? mutedUntilUsec,
+  }) {
+    return RawValuesInsertable({
+      if (chatId != null) 'chat_id': chatId,
+      if (muted != null) 'muted': muted,
+      if (mutedUntilUsec != null) 'muted_until_usec': mutedUntilUsec,
+    });
+  }
+
+  ChatUserSettingsDataCompanion copyWith({
+    Value<int>? chatId,
+    Value<bool>? muted,
+    Value<int?>? mutedUntilUsec,
+  }) {
+    return ChatUserSettingsDataCompanion(
+      chatId: chatId ?? this.chatId,
+      muted: muted ?? this.muted,
+      mutedUntilUsec: mutedUntilUsec ?? this.mutedUntilUsec,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (chatId.present) {
+      map['chat_id'] = Variable<int>(chatId.value);
+    }
+    if (muted.present) {
+      map['muted'] = Variable<bool>(muted.value);
+    }
+    if (mutedUntilUsec.present) {
+      map['muted_until_usec'] = Variable<int>(mutedUntilUsec.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ChatUserSettingsDataCompanion(')
+          ..write('chatId: $chatId, ')
+          ..write('muted: $muted, ')
+          ..write('mutedUntilUsec: $mutedUntilUsec')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ChatOutboxMessageTableTable extends ChatOutboxMessageTable
     with TableInfo<$ChatOutboxMessageTableTable, ChatOutboxMessageData> {
   @override
@@ -7155,6 +7428,293 @@ class SmsConversationDataCompanion
           ..write('secondPhoneNumber: $secondPhoneNumber, ')
           ..write('createdAtRemote: $createdAtRemote, ')
           ..write('updatedAtRemote: $updatedAtRemote')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SmsConversationUserSettingsTableTable
+    extends SmsConversationUserSettingsTable
+    with
+        TableInfo<
+          $SmsConversationUserSettingsTableTable,
+          SmsConversationUserSettingsData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SmsConversationUserSettingsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
+    'conversationId',
+  );
+  @override
+  late final GeneratedColumn<int> conversationId = GeneratedColumn<int>(
+    'conversation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES sms_conversations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _mutedMeta = const VerificationMeta('muted');
+  @override
+  late final GeneratedColumn<bool> muted = GeneratedColumn<bool>(
+    'muted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("muted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _mutedUntilUsecMeta = const VerificationMeta(
+    'mutedUntilUsec',
+  );
+  @override
+  late final GeneratedColumn<int> mutedUntilUsec = GeneratedColumn<int>(
+    'muted_until_usec',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [conversationId, muted, mutedUntilUsec];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sms_conversation_user_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SmsConversationUserSettingsData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('conversation_id')) {
+      context.handle(
+        _conversationIdMeta,
+        conversationId.isAcceptableOrUnknown(
+          data['conversation_id']!,
+          _conversationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('muted')) {
+      context.handle(
+        _mutedMeta,
+        muted.isAcceptableOrUnknown(data['muted']!, _mutedMeta),
+      );
+    }
+    if (data.containsKey('muted_until_usec')) {
+      context.handle(
+        _mutedUntilUsecMeta,
+        mutedUntilUsec.isAcceptableOrUnknown(
+          data['muted_until_usec']!,
+          _mutedUntilUsecMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {conversationId};
+  @override
+  SmsConversationUserSettingsData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SmsConversationUserSettingsData(
+      conversationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}conversation_id'],
+      )!,
+      muted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}muted'],
+      )!,
+      mutedUntilUsec: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}muted_until_usec'],
+      ),
+    );
+  }
+
+  @override
+  $SmsConversationUserSettingsTableTable createAlias(String alias) {
+    return $SmsConversationUserSettingsTableTable(attachedDatabase, alias);
+  }
+}
+
+class SmsConversationUserSettingsData extends DataClass
+    implements Insertable<SmsConversationUserSettingsData> {
+  final int conversationId;
+
+  /// Whether the user muted this conversation's notifications.
+  final bool muted;
+
+  /// When the mute lapses, or null when it was set to last forever.
+  final int? mutedUntilUsec;
+  const SmsConversationUserSettingsData({
+    required this.conversationId,
+    required this.muted,
+    this.mutedUntilUsec,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['conversation_id'] = Variable<int>(conversationId);
+    map['muted'] = Variable<bool>(muted);
+    if (!nullToAbsent || mutedUntilUsec != null) {
+      map['muted_until_usec'] = Variable<int>(mutedUntilUsec);
+    }
+    return map;
+  }
+
+  SmsConversationUserSettingsDataCompanion toCompanion(bool nullToAbsent) {
+    return SmsConversationUserSettingsDataCompanion(
+      conversationId: Value(conversationId),
+      muted: Value(muted),
+      mutedUntilUsec: mutedUntilUsec == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mutedUntilUsec),
+    );
+  }
+
+  factory SmsConversationUserSettingsData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SmsConversationUserSettingsData(
+      conversationId: serializer.fromJson<int>(json['conversationId']),
+      muted: serializer.fromJson<bool>(json['muted']),
+      mutedUntilUsec: serializer.fromJson<int?>(json['mutedUntilUsec']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'conversationId': serializer.toJson<int>(conversationId),
+      'muted': serializer.toJson<bool>(muted),
+      'mutedUntilUsec': serializer.toJson<int?>(mutedUntilUsec),
+    };
+  }
+
+  SmsConversationUserSettingsData copyWith({
+    int? conversationId,
+    bool? muted,
+    Value<int?> mutedUntilUsec = const Value.absent(),
+  }) => SmsConversationUserSettingsData(
+    conversationId: conversationId ?? this.conversationId,
+    muted: muted ?? this.muted,
+    mutedUntilUsec: mutedUntilUsec.present
+        ? mutedUntilUsec.value
+        : this.mutedUntilUsec,
+  );
+  SmsConversationUserSettingsData copyWithCompanion(
+    SmsConversationUserSettingsDataCompanion data,
+  ) {
+    return SmsConversationUserSettingsData(
+      conversationId: data.conversationId.present
+          ? data.conversationId.value
+          : this.conversationId,
+      muted: data.muted.present ? data.muted.value : this.muted,
+      mutedUntilUsec: data.mutedUntilUsec.present
+          ? data.mutedUntilUsec.value
+          : this.mutedUntilUsec,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SmsConversationUserSettingsData(')
+          ..write('conversationId: $conversationId, ')
+          ..write('muted: $muted, ')
+          ..write('mutedUntilUsec: $mutedUntilUsec')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(conversationId, muted, mutedUntilUsec);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SmsConversationUserSettingsData &&
+          other.conversationId == this.conversationId &&
+          other.muted == this.muted &&
+          other.mutedUntilUsec == this.mutedUntilUsec);
+}
+
+class SmsConversationUserSettingsDataCompanion
+    extends UpdateCompanion<SmsConversationUserSettingsData> {
+  final Value<int> conversationId;
+  final Value<bool> muted;
+  final Value<int?> mutedUntilUsec;
+  const SmsConversationUserSettingsDataCompanion({
+    this.conversationId = const Value.absent(),
+    this.muted = const Value.absent(),
+    this.mutedUntilUsec = const Value.absent(),
+  });
+  SmsConversationUserSettingsDataCompanion.insert({
+    this.conversationId = const Value.absent(),
+    this.muted = const Value.absent(),
+    this.mutedUntilUsec = const Value.absent(),
+  });
+  static Insertable<SmsConversationUserSettingsData> custom({
+    Expression<int>? conversationId,
+    Expression<bool>? muted,
+    Expression<int>? mutedUntilUsec,
+  }) {
+    return RawValuesInsertable({
+      if (conversationId != null) 'conversation_id': conversationId,
+      if (muted != null) 'muted': muted,
+      if (mutedUntilUsec != null) 'muted_until_usec': mutedUntilUsec,
+    });
+  }
+
+  SmsConversationUserSettingsDataCompanion copyWith({
+    Value<int>? conversationId,
+    Value<bool>? muted,
+    Value<int?>? mutedUntilUsec,
+  }) {
+    return SmsConversationUserSettingsDataCompanion(
+      conversationId: conversationId ?? this.conversationId,
+      muted: muted ?? this.muted,
+      mutedUntilUsec: mutedUntilUsec ?? this.mutedUntilUsec,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (conversationId.present) {
+      map['conversation_id'] = Variable<int>(conversationId.value);
+    }
+    if (muted.present) {
+      map['muted'] = Variable<bool>(muted.value);
+    }
+    if (mutedUntilUsec.present) {
+      map['muted_until_usec'] = Variable<int>(mutedUntilUsec.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SmsConversationUserSettingsDataCompanion(')
+          ..write('conversationId: $conversationId, ')
+          ..write('muted: $muted, ')
+          ..write('mutedUntilUsec: $mutedUntilUsec')
           ..write(')'))
         .toString();
   }
@@ -15034,6 +15594,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ChatMessageSyncCursorTableTable(this);
   late final $ChatMessageReadCursorTableTable chatMessageReadCursorTable =
       $ChatMessageReadCursorTableTable(this);
+  late final $ChatUserSettingsTableTable chatUserSettingsTable =
+      $ChatUserSettingsTableTable(this);
   late final $ChatOutboxMessageTableTable chatOutboxMessageTable =
       $ChatOutboxMessageTableTable(this);
   late final $ChatOutboxMessageEditTableTable chatOutboxMessageEditTable =
@@ -15044,6 +15606,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ChatOutboxReadCursorsTableTable(this);
   late final $SmsConversationsTableTable smsConversationsTable =
       $SmsConversationsTableTable(this);
+  late final $SmsConversationUserSettingsTableTable
+  smsConversationUserSettingsTable = $SmsConversationUserSettingsTableTable(
+    this,
+  );
   late final $SmsMessagesTableTable smsMessagesTable = $SmsMessagesTableTable(
     this,
   );
@@ -15123,11 +15689,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     chatMessagesTable,
     chatMessageSyncCursorTable,
     chatMessageReadCursorTable,
+    chatUserSettingsTable,
     chatOutboxMessageTable,
     chatOutboxMessageEditTable,
     chatOutboxMessageDeleteTable,
     chatOutboxReadCursorsTable,
     smsConversationsTable,
+    smsConversationUserSettingsTable,
     smsMessagesTable,
     smsMessageSyncCursorTable,
     smsMessageReadCursorTable,
@@ -15206,6 +15774,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         'chats',
         limitUpdateKind: UpdateKind.delete,
       ),
+      result: [TableUpdate('chat_user_settings', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'chats',
+        limitUpdateKind: UpdateKind.delete,
+      ),
       result: [TableUpdate('chat_outbox_messages', kind: UpdateKind.delete)],
     ),
     WritePropagation(
@@ -15233,6 +15808,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       ),
       result: [
         TableUpdate('chat_outbox_read_cursors', kind: UpdateKind.delete),
+      ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'sms_conversations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('sms_conversation_user_settings', kind: UpdateKind.delete),
       ],
     ),
     WritePropagation(
@@ -17857,6 +18441,34 @@ final class $$ChatsTableTableReferences
   }
 
   static MultiTypedResultKey<
+    $ChatUserSettingsTableTable,
+    List<ChatUserSettingsData>
+  >
+  _chatUserSettingsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.chatUserSettingsTable,
+        aliasName: $_aliasNameGenerator(
+          db.chatsTable.id,
+          db.chatUserSettingsTable.chatId,
+        ),
+      );
+
+  $$ChatUserSettingsTableTableProcessedTableManager
+  get chatUserSettingsTableRefs {
+    final manager = $$ChatUserSettingsTableTableTableManager(
+      $_db,
+      $_db.chatUserSettingsTable,
+    ).filter((f) => f.chatId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _chatUserSettingsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
     $ChatOutboxMessageTableTable,
     List<ChatOutboxMessageData>
   >
@@ -18099,6 +18711,32 @@ class $$ChatsTableTableFilterComposer
               }) => $$ChatMessageReadCursorTableTableFilterComposer(
                 $db: $db,
                 $table: $db.chatMessageReadCursorTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> chatUserSettingsTableRefs(
+    Expression<bool> Function($$ChatUserSettingsTableTableFilterComposer f) f,
+  ) {
+    final $$ChatUserSettingsTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.chatUserSettingsTable,
+          getReferencedColumn: (t) => t.chatId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ChatUserSettingsTableTableFilterComposer(
+                $db: $db,
+                $table: $db.chatUserSettingsTable,
                 $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
                 joinBuilder: joinBuilder,
                 $removeJoinBuilderFromRootComposer:
@@ -18390,6 +19028,32 @@ class $$ChatsTableTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> chatUserSettingsTableRefs<T extends Object>(
+    Expression<T> Function($$ChatUserSettingsTableTableAnnotationComposer a) f,
+  ) {
+    final $$ChatUserSettingsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.chatUserSettingsTable,
+          getReferencedColumn: (t) => t.chatId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ChatUserSettingsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.chatUserSettingsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> chatOutboxMessageTableRefs<T extends Object>(
     Expression<T> Function($$ChatOutboxMessageTableTableAnnotationComposer a) f,
   ) {
@@ -18522,6 +19186,7 @@ class $$ChatsTableTableTableManager
             bool chatMessagesTableRefs,
             bool chatMessageSyncCursorTableRefs,
             bool chatMessageReadCursorTableRefs,
+            bool chatUserSettingsTableRefs,
             bool chatOutboxMessageTableRefs,
             bool chatOutboxMessageEditTableRefs,
             bool chatOutboxMessageDeleteTableRefs,
@@ -18581,6 +19246,7 @@ class $$ChatsTableTableTableManager
                 chatMessagesTableRefs = false,
                 chatMessageSyncCursorTableRefs = false,
                 chatMessageReadCursorTableRefs = false,
+                chatUserSettingsTableRefs = false,
                 chatOutboxMessageTableRefs = false,
                 chatOutboxMessageEditTableRefs = false,
                 chatOutboxMessageDeleteTableRefs = false,
@@ -18595,6 +19261,7 @@ class $$ChatsTableTableTableManager
                       db.chatMessageSyncCursorTable,
                     if (chatMessageReadCursorTableRefs)
                       db.chatMessageReadCursorTable,
+                    if (chatUserSettingsTableRefs) db.chatUserSettingsTable,
                     if (chatOutboxMessageTableRefs) db.chatOutboxMessageTable,
                     if (chatOutboxMessageEditTableRefs)
                       db.chatOutboxMessageEditTable,
@@ -18684,6 +19351,27 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatMessageReadCursorTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.chatId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (chatUserSettingsTableRefs)
+                        await $_getPrefetchedData<
+                          ChatData,
+                          $ChatsTableTable,
+                          ChatUserSettingsData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ChatsTableTableReferences
+                              ._chatUserSettingsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ChatsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).chatUserSettingsTableRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.chatId == item.id,
@@ -18799,6 +19487,7 @@ typedef $$ChatsTableTableProcessedTableManager =
         bool chatMessagesTableRefs,
         bool chatMessageSyncCursorTableRefs,
         bool chatMessageReadCursorTableRefs,
+        bool chatUserSettingsTableRefs,
         bool chatOutboxMessageTableRefs,
         bool chatOutboxMessageEditTableRefs,
         bool chatOutboxMessageDeleteTableRefs,
@@ -20221,6 +20910,305 @@ typedef $$ChatMessageReadCursorTableTableProcessedTableManager =
       ChatMessageReadCursorData,
       PrefetchHooks Function({bool chatId})
     >;
+typedef $$ChatUserSettingsTableTableCreateCompanionBuilder =
+    ChatUserSettingsDataCompanion Function({
+      Value<int> chatId,
+      Value<bool> muted,
+      Value<int?> mutedUntilUsec,
+    });
+typedef $$ChatUserSettingsTableTableUpdateCompanionBuilder =
+    ChatUserSettingsDataCompanion Function({
+      Value<int> chatId,
+      Value<bool> muted,
+      Value<int?> mutedUntilUsec,
+    });
+
+final class $$ChatUserSettingsTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ChatUserSettingsTableTable,
+          ChatUserSettingsData
+        > {
+  $$ChatUserSettingsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
+      db.chatsTable.createAlias(
+        $_aliasNameGenerator(db.chatUserSettingsTable.chatId, db.chatsTable.id),
+      );
+
+  $$ChatsTableTableProcessedTableManager get chatId {
+    final $_column = $_itemColumn<int>('chat_id')!;
+
+    final manager = $$ChatsTableTableTableManager(
+      $_db,
+      $_db.chatsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_chatIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ChatUserSettingsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ChatUserSettingsTableTable> {
+  $$ChatUserSettingsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<bool> get muted => $composableBuilder(
+    column: $table.muted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get mutedUntilUsec => $composableBuilder(
+    column: $table.mutedUntilUsec,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ChatsTableTableFilterComposer get chatId {
+    final $$ChatsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.chatId,
+      referencedTable: $db.chatsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ChatsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.chatsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ChatUserSettingsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ChatUserSettingsTableTable> {
+  $$ChatUserSettingsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<bool> get muted => $composableBuilder(
+    column: $table.muted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get mutedUntilUsec => $composableBuilder(
+    column: $table.mutedUntilUsec,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ChatsTableTableOrderingComposer get chatId {
+    final $$ChatsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.chatId,
+      referencedTable: $db.chatsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ChatsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.chatsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ChatUserSettingsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ChatUserSettingsTableTable> {
+  $$ChatUserSettingsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<bool> get muted =>
+      $composableBuilder(column: $table.muted, builder: (column) => column);
+
+  GeneratedColumn<int> get mutedUntilUsec => $composableBuilder(
+    column: $table.mutedUntilUsec,
+    builder: (column) => column,
+  );
+
+  $$ChatsTableTableAnnotationComposer get chatId {
+    final $$ChatsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.chatId,
+      referencedTable: $db.chatsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ChatsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.chatsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ChatUserSettingsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ChatUserSettingsTableTable,
+          ChatUserSettingsData,
+          $$ChatUserSettingsTableTableFilterComposer,
+          $$ChatUserSettingsTableTableOrderingComposer,
+          $$ChatUserSettingsTableTableAnnotationComposer,
+          $$ChatUserSettingsTableTableCreateCompanionBuilder,
+          $$ChatUserSettingsTableTableUpdateCompanionBuilder,
+          (ChatUserSettingsData, $$ChatUserSettingsTableTableReferences),
+          ChatUserSettingsData,
+          PrefetchHooks Function({bool chatId})
+        > {
+  $$ChatUserSettingsTableTableTableManager(
+    _$AppDatabase db,
+    $ChatUserSettingsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ChatUserSettingsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ChatUserSettingsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ChatUserSettingsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> chatId = const Value.absent(),
+                Value<bool> muted = const Value.absent(),
+                Value<int?> mutedUntilUsec = const Value.absent(),
+              }) => ChatUserSettingsDataCompanion(
+                chatId: chatId,
+                muted: muted,
+                mutedUntilUsec: mutedUntilUsec,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> chatId = const Value.absent(),
+                Value<bool> muted = const Value.absent(),
+                Value<int?> mutedUntilUsec = const Value.absent(),
+              }) => ChatUserSettingsDataCompanion.insert(
+                chatId: chatId,
+                muted: muted,
+                mutedUntilUsec: mutedUntilUsec,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ChatUserSettingsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({chatId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (chatId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.chatId,
+                                referencedTable:
+                                    $$ChatUserSettingsTableTableReferences
+                                        ._chatIdTable(db),
+                                referencedColumn:
+                                    $$ChatUserSettingsTableTableReferences
+                                        ._chatIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ChatUserSettingsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ChatUserSettingsTableTable,
+      ChatUserSettingsData,
+      $$ChatUserSettingsTableTableFilterComposer,
+      $$ChatUserSettingsTableTableOrderingComposer,
+      $$ChatUserSettingsTableTableAnnotationComposer,
+      $$ChatUserSettingsTableTableCreateCompanionBuilder,
+      $$ChatUserSettingsTableTableUpdateCompanionBuilder,
+      (ChatUserSettingsData, $$ChatUserSettingsTableTableReferences),
+      ChatUserSettingsData,
+      PrefetchHooks Function({bool chatId})
+    >;
 typedef $$ChatOutboxMessageTableTableCreateCompanionBuilder =
     ChatOutboxMessageDataCompanion Function({
       required String idKey,
@@ -21637,6 +22625,34 @@ final class $$SmsConversationsTableTableReferences
     super.$_typedResult,
   );
 
+  static MultiTypedResultKey<
+    $SmsConversationUserSettingsTableTable,
+    List<SmsConversationUserSettingsData>
+  >
+  _smsConversationUserSettingsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.smsConversationUserSettingsTable,
+        aliasName: $_aliasNameGenerator(
+          db.smsConversationsTable.id,
+          db.smsConversationUserSettingsTable.conversationId,
+        ),
+      );
+
+  $$SmsConversationUserSettingsTableTableProcessedTableManager
+  get smsConversationUserSettingsTableRefs {
+    final manager = $$SmsConversationUserSettingsTableTableTableManager(
+      $_db,
+      $_db.smsConversationUserSettingsTable,
+    ).filter((f) => f.conversationId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _smsConversationUserSettingsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$SmsMessagesTableTable, List<SmsMessageData>>
   _smsMessagesTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.smsMessagesTable,
@@ -21834,6 +22850,35 @@ class $$SmsConversationsTableTableFilterComposer
     column: $table.updatedAtRemote,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> smsConversationUserSettingsTableRefs(
+    Expression<bool> Function(
+      $$SmsConversationUserSettingsTableTableFilterComposer f,
+    )
+    f,
+  ) {
+    final $$SmsConversationUserSettingsTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.smsConversationUserSettingsTable,
+          getReferencedColumn: (t) => t.conversationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SmsConversationUserSettingsTableTableFilterComposer(
+                $db: $db,
+                $table: $db.smsConversationUserSettingsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 
   Expression<bool> smsMessagesTableRefs(
     Expression<bool> Function($$SmsMessagesTableTableFilterComposer f) f,
@@ -22064,6 +23109,35 @@ class $$SmsConversationsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  Expression<T> smsConversationUserSettingsTableRefs<T extends Object>(
+    Expression<T> Function(
+      $$SmsConversationUserSettingsTableTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$SmsConversationUserSettingsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.smsConversationUserSettingsTable,
+          getReferencedColumn: (t) => t.conversationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SmsConversationUserSettingsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.smsConversationUserSettingsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> smsMessagesTableRefs<T extends Object>(
     Expression<T> Function($$SmsMessagesTableTableAnnotationComposer a) f,
   ) {
@@ -22240,6 +23314,7 @@ class $$SmsConversationsTableTableTableManager
           (SmsConversationData, $$SmsConversationsTableTableReferences),
           SmsConversationData,
           PrefetchHooks Function({
+            bool smsConversationUserSettingsTableRefs,
             bool smsMessagesTableRefs,
             bool smsMessageSyncCursorTableRefs,
             bool smsMessageReadCursorTableRefs,
@@ -22308,6 +23383,7 @@ class $$SmsConversationsTableTableTableManager
               .toList(),
           prefetchHooksCallback:
               ({
+                smsConversationUserSettingsTableRefs = false,
                 smsMessagesTableRefs = false,
                 smsMessageSyncCursorTableRefs = false,
                 smsMessageReadCursorTableRefs = false,
@@ -22318,6 +23394,8 @@ class $$SmsConversationsTableTableTableManager
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
+                    if (smsConversationUserSettingsTableRefs)
+                      db.smsConversationUserSettingsTable,
                     if (smsMessagesTableRefs) db.smsMessagesTable,
                     if (smsMessageSyncCursorTableRefs)
                       db.smsMessageSyncCursorTable,
@@ -22332,6 +23410,30 @@ class $$SmsConversationsTableTableTableManager
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
                     return [
+                      if (smsConversationUserSettingsTableRefs)
+                        await $_getPrefetchedData<
+                          SmsConversationData,
+                          $SmsConversationsTableTable,
+                          SmsConversationUserSettingsData
+                        >(
+                          currentTable: table,
+                          referencedTable:
+                              $$SmsConversationsTableTableReferences
+                                  ._smsConversationUserSettingsTableRefsTable(
+                                    db,
+                                  ),
+                          managerFromTypedResult: (p0) =>
+                              $$SmsConversationsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).smsConversationUserSettingsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.conversationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (smsMessagesTableRefs)
                         await $_getPrefetchedData<
                           SmsConversationData,
@@ -22485,6 +23587,7 @@ typedef $$SmsConversationsTableTableProcessedTableManager =
       (SmsConversationData, $$SmsConversationsTableTableReferences),
       SmsConversationData,
       PrefetchHooks Function({
+        bool smsConversationUserSettingsTableRefs,
         bool smsMessagesTableRefs,
         bool smsMessageSyncCursorTableRefs,
         bool smsMessageReadCursorTableRefs,
@@ -22492,6 +23595,321 @@ typedef $$SmsConversationsTableTableProcessedTableManager =
         bool smsOutboxMessageDeleteTableRefs,
         bool smsOutboxReadCursorsTableRefs,
       })
+    >;
+typedef $$SmsConversationUserSettingsTableTableCreateCompanionBuilder =
+    SmsConversationUserSettingsDataCompanion Function({
+      Value<int> conversationId,
+      Value<bool> muted,
+      Value<int?> mutedUntilUsec,
+    });
+typedef $$SmsConversationUserSettingsTableTableUpdateCompanionBuilder =
+    SmsConversationUserSettingsDataCompanion Function({
+      Value<int> conversationId,
+      Value<bool> muted,
+      Value<int?> mutedUntilUsec,
+    });
+
+final class $$SmsConversationUserSettingsTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $SmsConversationUserSettingsTableTable,
+          SmsConversationUserSettingsData
+        > {
+  $$SmsConversationUserSettingsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
+      db.smsConversationsTable.createAlias(
+        $_aliasNameGenerator(
+          db.smsConversationUserSettingsTable.conversationId,
+          db.smsConversationsTable.id,
+        ),
+      );
+
+  $$SmsConversationsTableTableProcessedTableManager get conversationId {
+    final $_column = $_itemColumn<int>('conversation_id')!;
+
+    final manager = $$SmsConversationsTableTableTableManager(
+      $_db,
+      $_db.smsConversationsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_conversationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SmsConversationUserSettingsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SmsConversationUserSettingsTableTable> {
+  $$SmsConversationUserSettingsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<bool> get muted => $composableBuilder(
+    column: $table.muted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get mutedUntilUsec => $composableBuilder(
+    column: $table.mutedUntilUsec,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SmsConversationsTableTableFilterComposer get conversationId {
+    final $$SmsConversationsTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.conversationId,
+          referencedTable: $db.smsConversationsTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SmsConversationsTableTableFilterComposer(
+                $db: $db,
+                $table: $db.smsConversationsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$SmsConversationUserSettingsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SmsConversationUserSettingsTableTable> {
+  $$SmsConversationUserSettingsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<bool> get muted => $composableBuilder(
+    column: $table.muted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get mutedUntilUsec => $composableBuilder(
+    column: $table.mutedUntilUsec,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SmsConversationsTableTableOrderingComposer get conversationId {
+    final $$SmsConversationsTableTableOrderingComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.conversationId,
+          referencedTable: $db.smsConversationsTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SmsConversationsTableTableOrderingComposer(
+                $db: $db,
+                $table: $db.smsConversationsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$SmsConversationUserSettingsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SmsConversationUserSettingsTableTable> {
+  $$SmsConversationUserSettingsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<bool> get muted =>
+      $composableBuilder(column: $table.muted, builder: (column) => column);
+
+  GeneratedColumn<int> get mutedUntilUsec => $composableBuilder(
+    column: $table.mutedUntilUsec,
+    builder: (column) => column,
+  );
+
+  $$SmsConversationsTableTableAnnotationComposer get conversationId {
+    final $$SmsConversationsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.conversationId,
+          referencedTable: $db.smsConversationsTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SmsConversationsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.smsConversationsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$SmsConversationUserSettingsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SmsConversationUserSettingsTableTable,
+          SmsConversationUserSettingsData,
+          $$SmsConversationUserSettingsTableTableFilterComposer,
+          $$SmsConversationUserSettingsTableTableOrderingComposer,
+          $$SmsConversationUserSettingsTableTableAnnotationComposer,
+          $$SmsConversationUserSettingsTableTableCreateCompanionBuilder,
+          $$SmsConversationUserSettingsTableTableUpdateCompanionBuilder,
+          (
+            SmsConversationUserSettingsData,
+            $$SmsConversationUserSettingsTableTableReferences,
+          ),
+          SmsConversationUserSettingsData,
+          PrefetchHooks Function({bool conversationId})
+        > {
+  $$SmsConversationUserSettingsTableTableTableManager(
+    _$AppDatabase db,
+    $SmsConversationUserSettingsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SmsConversationUserSettingsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SmsConversationUserSettingsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SmsConversationUserSettingsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> conversationId = const Value.absent(),
+                Value<bool> muted = const Value.absent(),
+                Value<int?> mutedUntilUsec = const Value.absent(),
+              }) => SmsConversationUserSettingsDataCompanion(
+                conversationId: conversationId,
+                muted: muted,
+                mutedUntilUsec: mutedUntilUsec,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> conversationId = const Value.absent(),
+                Value<bool> muted = const Value.absent(),
+                Value<int?> mutedUntilUsec = const Value.absent(),
+              }) => SmsConversationUserSettingsDataCompanion.insert(
+                conversationId: conversationId,
+                muted: muted,
+                mutedUntilUsec: mutedUntilUsec,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SmsConversationUserSettingsTableTableReferences(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({conversationId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (conversationId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.conversationId,
+                                referencedTable:
+                                    $$SmsConversationUserSettingsTableTableReferences
+                                        ._conversationIdTable(db),
+                                referencedColumn:
+                                    $$SmsConversationUserSettingsTableTableReferences
+                                        ._conversationIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SmsConversationUserSettingsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SmsConversationUserSettingsTableTable,
+      SmsConversationUserSettingsData,
+      $$SmsConversationUserSettingsTableTableFilterComposer,
+      $$SmsConversationUserSettingsTableTableOrderingComposer,
+      $$SmsConversationUserSettingsTableTableAnnotationComposer,
+      $$SmsConversationUserSettingsTableTableCreateCompanionBuilder,
+      $$SmsConversationUserSettingsTableTableUpdateCompanionBuilder,
+      (
+        SmsConversationUserSettingsData,
+        $$SmsConversationUserSettingsTableTableReferences,
+      ),
+      SmsConversationUserSettingsData,
+      PrefetchHooks Function({bool conversationId})
     >;
 typedef $$SmsMessagesTableTableCreateCompanionBuilder =
     SmsMessageDataCompanion Function({
@@ -27796,6 +29214,8 @@ class $AppDatabaseManager {
         _db,
         _db.chatMessageReadCursorTable,
       );
+  $$ChatUserSettingsTableTableTableManager get chatUserSettingsTable =>
+      $$ChatUserSettingsTableTableTableManager(_db, _db.chatUserSettingsTable);
   $$ChatOutboxMessageTableTableTableManager get chatOutboxMessageTable =>
       $$ChatOutboxMessageTableTableTableManager(
         _db,
@@ -27821,6 +29241,12 @@ class $AppDatabaseManager {
       );
   $$SmsConversationsTableTableTableManager get smsConversationsTable =>
       $$SmsConversationsTableTableTableManager(_db, _db.smsConversationsTable);
+  $$SmsConversationUserSettingsTableTableTableManager
+  get smsConversationUserSettingsTable =>
+      $$SmsConversationUserSettingsTableTableTableManager(
+        _db,
+        _db.smsConversationUserSettingsTable,
+      );
   $$SmsMessagesTableTableTableManager get smsMessagesTable =>
       $$SmsMessagesTableTableTableManager(_db, _db.smsMessagesTable);
   $$SmsMessageSyncCursorTableTableTableManager get smsMessageSyncCursorTable =>

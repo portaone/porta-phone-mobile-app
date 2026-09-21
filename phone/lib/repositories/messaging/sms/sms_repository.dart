@@ -46,13 +46,44 @@ class SmsRepository with SmsDriftMapper {
 
   Future<void> upsertConversation(SmsConversation conversation) async {
     final conversationData = conversationToDrift(conversation);
-    _smsDao.upsertConversation(conversationData);
+    await _smsDao.upsertConversation(conversationData);
     _addEvent(SmsConversationUpdate(conversation));
   }
 
   Future<void> deleteConversationById(int conversationId) async {
     await _smsDao.deleteConversationById(conversationId);
     _addEvent(SmsConversationRemove(conversationId));
+  }
+
+  /// What the user holds about [conversationId], or
+  /// [ConversationUserSettings.none] when this client has not been told of
+  /// anything.
+  Future<ConversationUserSettings> getConversationUserSettings(int conversationId) async {
+    final data = await _smsDao.getConversationUserSettings(conversationId);
+    return data != null ? userSettingsFromDrift(data) : ConversationUserSettings.none;
+  }
+
+  /// Every conversation's user settings, keyed by conversation; one stream for
+  /// the whole row, as on [ChatsRepository.watchChatUserSettings].
+  Stream<Map<int, ConversationUserSettings>> watchConversationUserSettings() {
+    return _smsDao.watchConversationUserSettings().map((rows) {
+      return {for (final row in rows) row.conversationId: userSettingsFromDrift(row)};
+    });
+  }
+
+  /// Stores the mute the core reported; kept out of [upsertConversation],
+  /// skipped for a conversation not stored yet, and off the bus, for the
+  /// reasons given on [ChatsRepository.upsertChatMute].
+  Future<void> upsertConversationMute(int conversationId, NotificationMute mute) {
+    return _smsDao.transaction(() async {
+      if (!await _smsDao.conversationExists(conversationId)) return;
+
+      await _smsDao.upsertConversationNotificationMute(
+        conversationId,
+        muted: mute.muted,
+        mutedUntilUsec: mute.mutedUntil?.microsecondsSinceEpoch,
+      );
+    });
   }
 
   Future<SmsMessage?> getMessageById(int messageId) async {

@@ -6,6 +6,7 @@ part 'sms_dao.g.dart';
 @DriftAccessor(
   tables: [
     SmsConversationsTable,
+    SmsConversationUserSettingsTable,
     SmsMessagesTable,
     SmsMessageSyncCursorTable,
     SmsMessageReadCursorTable,
@@ -248,6 +249,51 @@ class SmsDao extends DatabaseAccessor<AppDatabase> with _$SmsDaoMixin {
     });
   }
 
+  // User settings
+
+  Future<SmsConversationUserSettingsData?> getConversationUserSettings(int conversationId) {
+    return (select(
+      smsConversationUserSettingsTable,
+    )..where((t) => t.conversationId.equals(conversationId))).getSingleOrNull();
+  }
+
+  /// Every conversation's settings, for readers that ask about conversations
+  /// they do not have open - the list and the unread totals.
+  Stream<List<SmsConversationUserSettingsData>> watchConversationUserSettings() {
+    return select(smsConversationUserSettingsTable).watch();
+  }
+
+  Future<bool> conversationExists(int conversationId) async {
+    final q = selectOnly(smsConversationsTable)
+      ..addColumns([smsConversationsTable.id])
+      ..where(smsConversationsTable.id.equals(conversationId));
+    return await q.getSingleOrNull() != null;
+  }
+
+  /// Writes the mute the core last reported and nothing else, and returns
+  /// whether anything changed; see [ChatsDao.upsertChatNotificationMute] for
+  /// why only two columns are touched and why the answer matters.
+  Future<bool> upsertConversationNotificationMute(
+    int conversationId, {
+    required bool muted,
+    int? mutedUntilUsec,
+  }) async {
+    final written = await into(smsConversationUserSettingsTable).insertReturningOrNull(
+      SmsConversationUserSettingsDataCompanion.insert(
+        conversationId: Value(conversationId),
+        muted: Value(muted),
+        mutedUntilUsec: Value(mutedUntilUsec),
+      ),
+      onConflict: DoUpdate(
+        (_) => SmsConversationUserSettingsDataCompanion(muted: Value(muted), mutedUntilUsec: Value(mutedUntilUsec)),
+        // IS NOT, not <>: the expiry is nullable, and `NULL <> 1` is NULL in
+        // SQL, which would read as "unchanged".
+        where: (old) => old.muted.isNotValue(muted) | old.mutedUntilUsec.isNotExp(Variable(mutedUntilUsec)),
+      ),
+    );
+    return written != null;
+  }
+
   Future<void> wipeData() async {
     await transaction(() async {
       await delete(smsConversationsTable).go();
@@ -255,6 +301,7 @@ class SmsDao extends DatabaseAccessor<AppDatabase> with _$SmsDaoMixin {
       await delete(smsOutboxMessagesTable).go();
       await delete(smsMessageSyncCursorTable).go();
       await delete(smsMessageReadCursorTable).go();
+      await delete(smsConversationUserSettingsTable).go();
     });
   }
 

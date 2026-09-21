@@ -6,6 +6,8 @@ part of 'sms_dao.dart';
 mixin _$SmsDaoMixin on DatabaseAccessor<AppDatabase> {
   $SmsConversationsTableTable get smsConversationsTable =>
       attachedDatabase.smsConversationsTable;
+  $SmsConversationUserSettingsTableTable get smsConversationUserSettingsTable =>
+      attachedDatabase.smsConversationUserSettingsTable;
   $SmsMessagesTableTable get smsMessagesTable =>
       attachedDatabase.smsMessagesTable;
   $SmsMessageSyncCursorTableTable get smsMessageSyncCursorTable =>
@@ -30,6 +32,12 @@ class SmsDaoManager {
       $$SmsConversationsTableTableTableManager(
         _db.attachedDatabase,
         _db.smsConversationsTable,
+      );
+  $$SmsConversationUserSettingsTableTableTableManager
+  get smsConversationUserSettingsTable =>
+      $$SmsConversationUserSettingsTableTableTableManager(
+        _db.attachedDatabase,
+        _db.smsConversationUserSettingsTable,
       );
   $$SmsMessagesTableTableTableManager get smsMessagesTable =>
       $$SmsMessagesTableTableTableManager(
