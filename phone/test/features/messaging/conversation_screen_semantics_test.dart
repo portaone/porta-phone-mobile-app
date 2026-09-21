@@ -4,6 +4,7 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/messaging/features/chat_conversation/view/conversation_screen.dart';
 import 'package:webtrit_phone/features/messaging/features/chat_conversation/widgets/dialog_info.dart';
 import 'package:webtrit_phone/features/messaging/features/sms_conversation/view/sms_conversation_screen.dart';
+import 'package:webtrit_phone/models/models.dart';
 
 import '../../helpers/helpers.dart';
 import 'conversation_screen_harness.dart';
@@ -105,6 +106,51 @@ void main() {
       await tapViaSemantics(tester, find.bySemanticsIdentifier(conversationMenuId));
       await settle(tester);
 
+      expect(find.text('Delete dialog'), findsOneWidget);
+
+      handle.dispose();
+    });
+
+    testWidgets('offers the mute in its menu once the core has it and the conversation exists', (tester) async {
+      final handle = tester.ensureSemantics();
+      harness.withMuteAvailable();
+      harness.withSmsConversationReady(conversationId: 7);
+      harness.withSmsConversationMute(7, const NotificationMute(muted: true));
+
+      await tester.pumpWidget(harness.wrap(const SmsConversationScreen()));
+      await settle(tester);
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(conversationMenuId));
+      await settle(tester);
+
+      // A text conversation has no info screen, so the row sits in the menu
+      // beside the delete, and says what the mute is now. Its id and its tap
+      // have to sit on one node, or a reader hears an unnamed entry and a
+      // flow that finds it by id cannot press it.
+      expectTapTargetSemantics(
+        tester,
+        find.bySemanticsIdentifier(chatInfoNotificationsId),
+        identifier: chatInfoNotificationsId,
+      );
+      expect(find.text('Muted'), findsOneWidget);
+      expect(find.text('Delete dialog'), findsOneWidget);
+
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(chatInfoNotificationsId));
+      await settle(tester);
+      expect(find.bySemanticsIdentifier(notificationMuteSheetId), findsOneWidget);
+
+      handle.dispose();
+    });
+
+    testWidgets('keeps the mute out of the menu on a core without it', (tester) async {
+      final handle = tester.ensureSemantics();
+      harness.withSmsConversationReady(conversationId: 7);
+
+      await tester.pumpWidget(harness.wrap(const SmsConversationScreen()));
+      await settle(tester);
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(conversationMenuId));
+      await settle(tester);
+
+      expect(find.bySemanticsIdentifier(chatInfoNotificationsId), findsNothing);
       expect(find.text('Delete dialog'), findsOneWidget);
 
       handle.dispose();

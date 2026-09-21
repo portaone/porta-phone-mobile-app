@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -36,20 +37,31 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     final state = conversationCubit.state;
     final isDialog = state.credentials.participantId != null;
     final isGroup = state is CVSReady && state.chat?.type == ChatType.group;
+    // The sheet sits on its own route, so what it needs from this screen's
+    // scope goes with it: the conversation, the user's settings on it, and
+    // whether the core can answer a mute at all.
+    final isMuteEnabled = context.read<FeatureAccess>().conversationMuteAvailable;
+    final userSettingsCubit = context.read<ConversationUserSettingsCubit?>();
+
+    Widget provide(Widget info) {
+      final withConversation = BlocProvider.value(value: conversationCubit, child: info);
+      if (userSettingsCubit == null) return withConversation;
+      return BlocProvider.value(value: userSettingsCubit, child: withConversation);
+    }
 
     if (isDialog) {
       context.showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
-        builder: (context) => BlocProvider.value(
-          value: conversationCubit,
-          child: ClipRRect(
+        builder: (context) => provide(
+          ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: DialogChatInfo(
               userId,
               state.credentials.participantId!,
               isAudioCallEnabled: true,
               isVideoCallEnabled: messagingBloc.state.messagingConfig.contactInfoVideoCallSupport,
+              isMuteEnabled: isMuteEnabled,
             ),
           ),
         ),
@@ -60,11 +72,10 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       context.showModalBottomSheet(
         useSafeArea: true,
         isScrollControlled: true,
-        builder: (context) => BlocProvider.value(
-          value: conversationCubit,
-          child: ClipRRect(
+        builder: (context) => provide(
+          ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: GroupChatInfo(userId),
+            child: GroupChatInfo(userId, isMuteEnabled: isMuteEnabled),
           ),
         ),
       );
