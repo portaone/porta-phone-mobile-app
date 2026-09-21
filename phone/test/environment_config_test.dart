@@ -102,6 +102,36 @@ void main() {
       expect(EnvironmentConfig.CDRS_REPOSITORY_POLLING_INTERVAL_SECONDS, 300);
     });
 
+    group('call history walk', () {
+      test('the slice widths are configurable in days and reject a non-positive value', () {
+        const firstName = EnvironmentConfig.CDRS_HISTORY_FIRST_WINDOW_DAYS__NAME;
+        const maxName = EnvironmentConfig.CDRS_HISTORY_MAX_WINDOW_DAYS__NAME;
+
+        EnvironmentConfig.applyOverrides({firstName: '2', maxName: '30'});
+        expect(EnvironmentConfig.CDRS_HISTORY_FIRST_WINDOW_DAYS, 2);
+        expect(EnvironmentConfig.CDRS_HISTORY_MAX_WINDOW_DAYS, 30);
+
+        // A day is the smallest unit on offer, so zero is not a narrower slice
+        // - it is a misconfiguration, and the default stands.
+        EnvironmentConfig.applyOverrides({firstName: '0', maxName: '-1'});
+        expect(EnvironmentConfig.CDRS_HISTORY_FIRST_WINDOW_DAYS, 7);
+        expect(EnvironmentConfig.CDRS_HISTORY_MAX_WINDOW_DAYS, 90);
+      });
+
+      test('the horizon takes zero, because zero is how the walk is switched off', () {
+        const name = EnvironmentConfig.CDRS_HISTORY_HORIZON_DAYS__NAME;
+
+        EnvironmentConfig.applyOverrides({name: '30'});
+        expect(EnvironmentConfig.CDRS_HISTORY_HORIZON_DAYS, 30);
+
+        EnvironmentConfig.applyOverrides({name: '0'});
+        expect(EnvironmentConfig.CDRS_HISTORY_HORIZON_DAYS, 0);
+
+        EnvironmentConfig.applyOverrides({name: '-5'});
+        expect(EnvironmentConfig.CDRS_HISTORY_HORIZON_DAYS, 365);
+      });
+    });
+
     group('external contacts polling interval by presence mode', () {
       const offName = EnvironmentConfig.EXTERNAL_CONTACTS_REPOSITORY_POLLING_INTERVAL_SECONDS__NAME;
       const onName = EnvironmentConfig.EXTERNAL_CONTACTS_HYBRID_PRESENCE_POLLING_INTERVAL_SECONDS__NAME;

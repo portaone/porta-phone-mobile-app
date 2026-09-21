@@ -372,6 +372,53 @@ class EnvironmentConfig {
     const int.fromEnvironment(CDRS_REPOSITORY_POLLING_INTERVAL_SECONDS__NAME, defaultValue: 300),
   );
 
+  /// Width of the first slice the call history is walked back by, in positive
+  /// whole days. The slices widen from here, so this is the resolution of the
+  /// recent past rather than a limit on how far back the walk reaches. A
+  /// non-positive value falls back to a week.
+  static const CDRS_HISTORY_FIRST_WINDOW_DAYS__NAME = 'WEBTRIT_APP_CDRS_HISTORY_FIRST_WINDOW_DAYS';
+  static int get CDRS_HISTORY_FIRST_WINDOW_DAYS => _positiveDays(
+    CDRS_HISTORY_FIRST_WINDOW_DAYS__NAME,
+    const int.fromEnvironment(CDRS_HISTORY_FIRST_WINDOW_DAYS__NAME, defaultValue: 7),
+    fallback: 7,
+  );
+
+  /// Ceiling the history slice widens up to, in positive whole days. It bounds
+  /// what a single request may ask the backend to look through, which is the
+  /// cost the wide end of the walk pays. A non-positive value falls back to 90
+  /// days.
+  static const CDRS_HISTORY_MAX_WINDOW_DAYS__NAME = 'WEBTRIT_APP_CDRS_HISTORY_MAX_WINDOW_DAYS';
+  static int get CDRS_HISTORY_MAX_WINDOW_DAYS => _positiveDays(
+    CDRS_HISTORY_MAX_WINDOW_DAYS__NAME,
+    const int.fromEnvironment(CDRS_HISTORY_MAX_WINDOW_DAYS__NAME, defaultValue: 90),
+    fallback: 90,
+  );
+
+  /// A width in positive whole days: a non-positive build value takes
+  /// [fallback], and a non-positive override takes the validated build value.
+  ///
+  /// A day is the unit of all three history knobs, so a deployment reads them
+  /// against each other without converting anything.
+  static int _positiveDays(String name, int compileTime, {required int fallback}) {
+    final validBuild = compileTime > 0 ? compileTime : fallback;
+    final days = _env.integer(name, validBuild);
+    return days > 0 ? days : validBuild;
+  }
+
+  /// How far back the call history may be walked, in whole days. Zero switches
+  /// the walk off entirely - the app then asks for history the way it did
+  /// before the walk existed - so a build with this define is the way back to
+  /// the previous behaviour without a code change. A negative value falls back
+  /// to a year.
+  static const CDRS_HISTORY_HORIZON_DAYS__NAME = 'WEBTRIT_APP_CDRS_HISTORY_HORIZON_DAYS';
+  static int get CDRS_HISTORY_HORIZON_DAYS {
+    const defaultDays = 365;
+    const compileTime = int.fromEnvironment(CDRS_HISTORY_HORIZON_DAYS__NAME, defaultValue: defaultDays);
+    const fallback = compileTime >= 0 ? compileTime : defaultDays;
+    final days = _env.integer(CDRS_HISTORY_HORIZON_DAYS__NAME, fallback);
+    return days >= 0 ? days : fallback;
+  }
+
   static const VOICEMAIL_REPOSITORY_POLLING_INTERVAL_SECONDS__NAME =
       'WEBTRIT_APP_VOICEMAIL_REPOSITORY_POLLING_INTERVAL_SECONDS';
   static int get VOICEMAIL_REPOSITORY_POLLING_INTERVAL_SECONDS => _pollingSeconds(
