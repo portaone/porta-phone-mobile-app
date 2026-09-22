@@ -543,6 +543,7 @@ overridden by the matching dart-define.
 | `SystemNotificationsSyncWorker` (via `SystemNotificationsSync`) | 10 s | Core offers system notifications and the app configuration allows them |
 | `SystemNotificationsOutboxWorker` (via `SystemNotificationsOutbox`) | 300 s | Same gate as the sync; the interval is a safety net, a read receipt asks for a send at once |
 | `VoicemailRepository` | 300 s | Voicemail is available for the session |
+| `CallQueuesRepository` | 10 s | ONLY while the call center screen is open - the page registers the task on mount and unregisters it on dispose, because every read reaches the PBX |
 | `CallerIdSettingsRepository` | 300 s | Remote implementation is active |
 | `FavoritesRepository` | 300 s | Syncable implementation is active |
 | `SipSubscriptionsRepository` | 300 s | Syncable implementation is active |
