@@ -1,5 +1,6 @@
 export 'active_session_mapper.dart';
 export 'cdr_mapper.dart';
+export 'call_queue_mapper.dart';
 export 'caller_id_settings_mapper.dart';
 export 'external_contact_mapper.dart';
 export 'favorite_api_mapper.dart';

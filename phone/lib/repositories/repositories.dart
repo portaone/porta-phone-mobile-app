@@ -8,6 +8,7 @@ export 'auth/auth.dart';
 export 'autocomplete_history/autocomplete_history_repository.dart';
 export 'call_logs/call_logs_repository.dart';
 export 'call_to_actions/call_to_actions_repository.dart';
+export 'call_queues/call_queues.dart';
 export 'caller_id_settings/caller_id_settings_repository.dart';
 export 'cdrs/cdrs_local_repository.dart';
 export 'cdrs/cdrs_remote_repository.dart';
