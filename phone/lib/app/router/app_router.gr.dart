@@ -137,6 +137,22 @@ class CacheManagementScreenPageRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [CallCenterScreenPage]
+class CallCenterScreenPageRoute extends PageRouteInfo<void> {
+  const CallCenterScreenPageRoute({List<PageRouteInfo>? children})
+    : super(CallCenterScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'CallCenterScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return const CallCenterScreenPage();
+    },
+  );
+}
+
+/// generated route for
 /// [CallLogScreenPage]
 class CallLogScreenPageRoute extends PageRouteInfo<CallLogScreenPageRouteArgs> {
   CallLogScreenPageRoute({

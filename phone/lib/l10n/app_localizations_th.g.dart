@@ -2892,6 +2892,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settings_ListViewTileTitle_self_config => 'หน้าตั้งค่าด้วยตนเอง';
 
   @override
+  String get settings_ListViewTileTitle_callCenter => 'คอลเซ็นเตอร์';
+
+  @override
   String get settings_ListViewTileTitle_sessions => 'เซสชัน';
 
   @override

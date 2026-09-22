@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/features/call_center/call_center.dart';
 import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dart';
 import 'package:webtrit_phone/features/register_status/register_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
@@ -23,13 +24,27 @@ export 'settings_screen_style.dart';
 export 'settings_screen_styles.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key, required this.sections, required this.sessionsEnabled, this.style});
+  const SettingsScreen({
+    super.key,
+    required this.sections,
+    required this.sessionsEnabled,
+    required this.callCenterEnabled,
+    this.style,
+  });
 
   final List<SettingsSection> sections;
 
   /// Whether the backend can list and revoke sessions; the row is not part of
   /// [sections] because it is not configurable.
   final bool sessionsEnabled;
+
+  /// Whether this deployment offers the call center queues.
+  ///
+  /// Half of the gate: the row also needs this user to be an agent of at least
+  /// one queue, which only the list can say, so the row below asks the cubit
+  /// for that half. Like the sessions row, it is not configurable - it is
+  /// there when the backend has something behind it.
+  final bool callCenterEnabled;
 
   final SettingScreenStyle? style;
 
@@ -154,6 +169,33 @@ class SettingsScreen extends StatelessWidget {
                               );
                             },
                           ),
+                        if (callCenterEnabled)
+                          Builder(
+                            builder: (context) {
+                              final queues = context.select<CallQueuesCubit, CallQueuesState>((cubit) => cubit.state);
+                              // An empty list is the backend saying this user
+                              // is not an agent, so the row is absent rather
+                              // than leading to a screen with nothing on it.
+                              if (!queues.isAgent) return const SizedBox.shrink();
+
+                              return SettingsTile(
+                                title: context.l10n.settings_ListViewTileTitle_callCenter,
+                                icon: Icons.headset_mic_outlined,
+                                iconColor: effectiveStyle?.leadingIconsColor,
+                                trailing: Text(
+                                  context.l10n.callCenter_Text_loggedInOfTotal(
+                                    queues.loggedInCount,
+                                    queues.queues.length,
+                                  ),
+                                  style: effectiveStyle?.itemTextStyle,
+                                ),
+                                textStyle: effectiveStyle?.itemTextStyle,
+                                showSeparator: showSeparators,
+                                separatorColor: effectiveStyle?.separatorColor,
+                                onTap: () => _onCallCenterTap(context),
+                              );
+                            },
+                          ),
                         for (final section in sections) ...[
                           GroupTitleListTile(
                             titleData: context.parseL10n(section.titleL10n),
@@ -245,6 +287,8 @@ class SettingsScreen extends StatelessWidget {
   void _onDiagnosticTap(BuildContext context) => context.router.navigate(const DiagnosticScreenPageRoute());
 
   void _onSessionsTap(BuildContext context) => context.router.navigate(const SessionsScreenPageRoute());
+
+  void _onCallCenterTap(BuildContext context) => context.router.navigate(const CallCenterScreenPageRoute());
 
   /// A failure rolls the switch back, so it must be explained: without a
   /// message the flip-back reads as the app ignoring the tap.

@@ -119,7 +119,14 @@ void main() {
                 BlocProvider<RegisterStatusCubit>.value(value: registerStatusCubit),
                 BlocProvider<SessionsCubit>.value(value: sessionsCubit),
               ],
-              child: _presence(SettingsScreen(sections: const [], sessionsEnabled: sessionsEnabled, style: style)),
+              child: _presence(
+                SettingsScreen(
+                  sections: const [],
+                  sessionsEnabled: sessionsEnabled,
+                  callCenterEnabled: false,
+                  style: style,
+                ),
+              ),
             ),
           ),
         ),

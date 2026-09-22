@@ -2574,6 +2574,10 @@
   "@settings_ListViewTileTitle_registered": {},
   "settings_ListViewTileTitle_self_config": "Self-config page",
   "@settings_ListViewTileTitle_self_config": {},
+  "settings_ListViewTileTitle_callCenter": "Call center",
+  "@settings_ListViewTileTitle_callCenter": {
+    "description": "Title of the settings row that opens the call center queues."
+  },
   "settings_ListViewTileTitle_sessions": "Sessions",
   "@settings_ListViewTileTitle_sessions": {},
   "settings_ListViewTileTitle_settings": "SETTINGS",
