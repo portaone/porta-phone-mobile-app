@@ -126,6 +126,16 @@ class FeatureAccess extends Equatable {
   /// its user's messages occupying the mailbox with nothing able to reach them.
   bool get voicemailTrashAvailable => voicemailAvailable && coreSupport.supportsVoicemailTrash;
 
+  /// Whether the call center queues run for this session.
+  ///
+  /// This answers the deployment's half of the question only. Whether the
+  /// person signed in is an agent of any queue is the other half, and it cannot
+  /// be answered here: the list is what carries it, an empty one meaning "not
+  /// an agent", and reading it takes an authorised request that this object is
+  /// built long before. So a placement gated on this alone must still hide
+  /// itself once the list comes back empty.
+  bool get callCenterAvailable => coreSupport.supportsCallCenter;
+
   /// Whether passing a message on to a colleague is offered.
   bool get voicemailForwardAvailable => voicemailAvailable && coreSupport.supportsVoicemailForward;
 

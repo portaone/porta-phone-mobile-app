@@ -27,6 +27,9 @@ abstract class CoreSupport {
   /// Whether a voicemail can be passed on to another user of the same backend.
   bool get supportsVoicemailForward;
 
+  /// Check if the call center queues feature is supported by remote system.
+  bool get supportsCallCenter;
+
   /// Check if the SMS messaging feature is supported by remote system.
   bool get supportsSms;
 
@@ -81,6 +84,9 @@ class CoreSupportImpl extends Equatable implements CoreSupport {
 
   @override
   bool get supportsVoicemailForward => _has(kVoicemailForwardFeatureFlag);
+
+  @override
+  bool get supportsCallCenter => _has(kCallCenterFeatureFlag);
 
   @override
   bool get supportsSms => _has(kSmsMessagingFeatureFlag);
