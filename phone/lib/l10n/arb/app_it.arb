@@ -1319,6 +1319,8 @@
   "@main_Button_cancelPicking": {
     "description": "Leaves the banner asking the person to choose somebody, giving up on whatever asked for one."
   },
+  "main_BottomNavigationBarItemLabel_callCenter": "Call center",
+  "@main_BottomNavigationBarItemLabel_callCenter": {},
   "main_BottomNavigationBarItemLabel_chats": "Le chat",
   "@main_BottomNavigationBarItemLabel_chats": {},
   "main_Text_blindTransferInitiated": "Trasferimento senza vedere",

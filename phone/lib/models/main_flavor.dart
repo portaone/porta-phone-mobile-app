@@ -1,1 +1,1 @@
-enum MainFlavor { favorites, recents, contacts, keypad, embedded, messaging, voicemail }
+enum MainFlavor { favorites, recents, contacts, keypad, embedded, messaging, voicemail, callCenter }

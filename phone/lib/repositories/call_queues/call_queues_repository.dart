@@ -37,13 +37,22 @@ class CallQueuesRepositoryApiImpl with CallQueueApiMapper implements CallQueuesR
     required api.WebtritApiClient apiClient,
     required String token,
     required SessionGuard sessionGuard,
+    void Function(bool isAgent)? onAgentKnown,
   }) : _apiClient = apiClient,
        _token = token,
-       _sessionGuard = sessionGuard;
+       _sessionGuard = sessionGuard,
+       _onAgentKnown = onAgentKnown;
 
   final api.WebtritApiClient _apiClient;
   final String _token;
   final SessionGuard _sessionGuard;
+
+  /// Told what the backend answered about this user being an agent.
+  ///
+  /// The bottom-menu section is decided before a session can ask, so somebody
+  /// has to remember the last answer; the repository reports it and leaves
+  /// where it is kept to whoever built it.
+  final void Function(bool isAgent)? _onAgentKnown;
 
   final _snapshot = BehaviorSubject<CallQueuesSnapshot>.seeded(const CallQueuesSnapshot());
 
@@ -110,6 +119,7 @@ class CallQueuesRepositoryApiImpl with CallQueueApiMapper implements CallQueuesR
     }
 
     _apply(callQueuesFromApi(response.items));
+    _onAgentKnown?.call(snapshot.isAgent);
   }
 
   /// Whether this refusal means the route is not there at all.
@@ -244,6 +254,7 @@ class CallQueuesRepositoryApiImpl with CallQueueApiMapper implements CallQueuesR
   void _deactivate() {
     _active = false;
     _emit(const CallQueuesSnapshot(known: true));
+    _onAgentKnown?.call(false);
   }
 
   void _emit(CallQueuesSnapshot next) {

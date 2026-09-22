@@ -48,6 +48,16 @@ class MainShellServices extends StatelessWidget {
           dispose: (context, service) => service.dispose(),
           lazy: false,
         ),
+        // Declared after the service it reads: a provider in this list can
+        // only reach the ones above it.
+        Provider<CallQueuesPollingOwner>(
+          create: (context) => CallQueuesPollingOwner(
+            pollingService: context.read<PollingService>(),
+            repository: context.read<CallQueuesRepository>(),
+            interval: Duration(seconds: EnvironmentConfig.CALL_QUEUES_REPOSITORY_POLLING_INTERVAL_SECONDS),
+          ),
+          dispose: (context, owner) => owner.dispose(),
+        ),
         Provider<UserInfoSync>(create: _createUserInfoSync, dispose: (context, sync) => sync.dispose(), lazy: false),
         if (featureAccess.coreSupport.supportsExtensions)
           Provider<ExternalContactsSync>(

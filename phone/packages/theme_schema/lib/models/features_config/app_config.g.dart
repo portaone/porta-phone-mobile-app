@@ -873,6 +873,42 @@ const _$VoicemailTabSchemeJsonSchema = {
   'required': ['titleL10n', 'icon'],
 };
 
+CallCenterTabScheme _$CallCenterTabSchemeFromJson(Map<String, dynamic> json) =>
+    CallCenterTabScheme(
+      enabled: json['enabled'] as bool? ?? true,
+      initial: json['initial'] as bool? ?? false,
+      titleL10n: json['titleL10n'] as String,
+      icon: json['icon'] as String,
+      type: json['type'] as String? ?? 'callCenter',
+    );
+
+Map<String, dynamic> _$CallCenterTabSchemeToJson(
+  CallCenterTabScheme instance,
+) => <String, dynamic>{
+  'enabled': instance.enabled,
+  'initial': instance.initial,
+  'titleL10n': instance.titleL10n,
+  'icon': instance.icon,
+  'type': instance.type,
+};
+
+const _$CallCenterTabSchemeJsonSchema = {
+  r'$schema': 'https://json-schema.org/draft/2020-12/schema',
+  'type': 'object',
+  'properties': {
+    'enabled': {'type': 'boolean', 'default': true},
+    'initial': {'type': 'boolean', 'default': false},
+    'titleL10n': {'type': 'string'},
+    'icon': {'type': 'string'},
+    'type': {
+      'type': 'string',
+      'description': 'The discriminator. Always `callCenter`.',
+      'default': 'callCenter',
+    },
+  },
+  'required': ['titleL10n', 'icon'],
+};
+
 EmbeddedTabScheme _$EmbeddedTabSchemeFromJson(Map<String, dynamic> json) =>
     EmbeddedTabScheme(
       enabled: json['enabled'] as bool? ?? true,

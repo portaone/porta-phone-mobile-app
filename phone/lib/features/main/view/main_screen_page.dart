@@ -170,6 +170,8 @@ class _MainScreenPageState extends State<MainScreenPage> {
           return contactsRouteOf(tab);
         case VoicemailBottomMenuTab():
           return const VoicemailRouterPageRoute();
+        case CallCenterBottomMenuTab():
+          return const CallCenterTabPageRoute();
         case EmbeddedBottomMenuTab():
           return EmbeddedTabPageRoute(id: tab.id);
       }

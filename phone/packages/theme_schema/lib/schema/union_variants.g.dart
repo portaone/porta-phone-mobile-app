@@ -17,6 +17,7 @@ const unionVariants = <String, Map<String, Map<String, Object?>>>{
     'KeypadTabScheme': KeypadTabScheme.jsonSchema,
     'MessagingTabScheme': MessagingTabScheme.jsonSchema,
     'VoicemailTabScheme': VoicemailTabScheme.jsonSchema,
+    'CallCenterTabScheme': CallCenterTabScheme.jsonSchema,
     'EmbeddedTabScheme': EmbeddedTabScheme.jsonSchema,
   },
   'PageBackground': {

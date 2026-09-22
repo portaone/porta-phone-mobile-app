@@ -2596,6 +2596,12 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get main_Button_cancelPicking;
 
+  /// Caption of the bottom menu section that opens the call center queues.
+  ///
+  /// In en, this message translates to:
+  /// **'Call center'**
+  String get main_BottomNavigationBarItemLabel_callCenter;
+
   /// No description provided for @main_BottomNavigationBarItemLabel_chats.
   ///
   /// In en, this message translates to:

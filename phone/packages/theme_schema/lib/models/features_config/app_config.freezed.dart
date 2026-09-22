@@ -3981,6 +3981,196 @@ case _:
 
 
 /// @nodoc
+mixin _$CallCenterTabScheme {
+
+ bool get enabled; bool get initial; String get titleL10n; String get icon; String get type;
+/// Create a copy of CallCenterTabScheme
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CallCenterTabSchemeCopyWith<CallCenterTabScheme> get copyWith => _$CallCenterTabSchemeCopyWithImpl<CallCenterTabScheme>(this as CallCenterTabScheme, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallCenterTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.type, type) || other.type == type));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,type);
+
+@override
+String toString() {
+  return 'CallCenterTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, type: $type)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CallCenterTabSchemeCopyWith<$Res>  {
+  factory $CallCenterTabSchemeCopyWith(CallCenterTabScheme value, $Res Function(CallCenterTabScheme) _then) = _$CallCenterTabSchemeCopyWithImpl;
+@useResult
+$Res call({
+ bool enabled, bool initial, String titleL10n, String icon, String type
+});
+
+
+
+
+}
+/// @nodoc
+class _$CallCenterTabSchemeCopyWithImpl<$Res>
+    implements $CallCenterTabSchemeCopyWith<$Res> {
+  _$CallCenterTabSchemeCopyWithImpl(this._self, this._then);
+
+  final CallCenterTabScheme _self;
+  final $Res Function(CallCenterTabScheme) _then;
+
+/// Create a copy of CallCenterTabScheme
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? enabled = null,Object? initial = null,Object? titleL10n = null,Object? icon = null,Object? type = null,}) {
+  return _then(CallCenterTabScheme(
+enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool,initial: null == initial ? _self.initial : initial // ignore: cast_nullable_to_non_nullable
+as bool,titleL10n: null == titleL10n ? _self.titleL10n : titleL10n // ignore: cast_nullable_to_non_nullable
+as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [CallCenterTabScheme].
+extension CallCenterTabSchemePatterns on CallCenterTabScheme {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+
+}
+
+
+/// @nodoc
 mixin _$EmbeddedTabScheme {
 
  bool get enabled; bool get initial; String get titleL10n; String get icon; String get embeddedResourceId; String get type;

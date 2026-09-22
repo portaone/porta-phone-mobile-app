@@ -14,6 +14,15 @@ import 'package:webtrit_phone/services/services.dart';
 import '../mocks/mocks.dart';
 import '../helpers/helpers.dart';
 
+class _StubSessionRepository extends Mock implements SessionRepository {
+  _StubSessionRepository(this._session);
+
+  final Session _session;
+
+  @override
+  Session getCurrent() => _session;
+}
+
 void main() {
   late MockAppThemes mockAppThemes;
   late MockSystemInfoRepository mockSystemInfoRepository;
@@ -55,6 +64,8 @@ void main() {
       appThemes: mockAppThemes,
       systemInfoRepository: mockSystemInfoRepository,
       remoteConfigService: mockRemoteConfigService,
+      appPreferences: MockAppPreferences(),
+      sessionRepository: _StubSessionRepository(const Session()),
     );
   });
 
@@ -327,6 +338,8 @@ void main() {
       appThemes: mockAppThemes,
       systemInfoRepository: mockSystemInfoRepository,
       remoteConfigService: mockRemoteConfigService,
+      appPreferences: MockAppPreferences(),
+      sessionRepository: _StubSessionRepository(const Session()),
     );
     final queue = StreamQueue(sessionFactory.create());
     expect((await queue.next).loggingConfig.remoteLoggingEnabled, isTrue);
@@ -372,6 +385,8 @@ void main() {
       appThemes: mockAppThemes,
       systemInfoRepository: mockSystemInfoRepository,
       remoteConfigService: mockRemoteConfigService,
+      appPreferences: MockAppPreferences(),
+      sessionRepository: _StubSessionRepository(const Session()),
     );
     final queue = StreamQueue(sessionFactory.create());
     expect((await queue.next).loggingConfig.anonymizationEnabled, isTrue);

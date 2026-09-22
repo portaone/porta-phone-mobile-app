@@ -541,6 +541,14 @@ sealed class BottomMenuTabScheme {
     String type,
   }) = VoicemailTabScheme;
 
+  const factory BottomMenuTabScheme.callCenter({
+    bool enabled,
+    bool initial,
+    required String titleL10n,
+    required String icon,
+    String type,
+  }) = CallCenterTabScheme;
+
   const factory BottomMenuTabScheme.embedded({
     bool enabled,
     bool initial,
@@ -557,6 +565,7 @@ sealed class BottomMenuTabScheme {
     'keypad' => KeypadTabScheme.fromJson(json),
     'messaging' => MessagingTabScheme.fromJson(json),
     'voicemail' => VoicemailTabScheme.fromJson(json),
+    'callCenter' => CallCenterTabScheme.fromJson(json),
     'embedded' => EmbeddedTabScheme.fromJson(json),
     final unknown => throw CheckedFromJsonException(
       json,
@@ -834,6 +843,46 @@ class VoicemailTabScheme extends BottomMenuTabScheme with _$VoicemailTabScheme {
   Map<String, Object?> toJson() => _$VoicemailTabSchemeToJson(this);
 
   static const Map<String, Object?> jsonSchema = _$VoicemailTabSchemeJsonSchema;
+}
+
+/// The call center tab: the queues this user serves as an agent.
+///
+/// Configured like any other section, and shown only where the backend
+/// advertises the call center functionality and the person signed in is an
+/// agent of at least one queue.
+@freezed
+@JsonSerializable(explicitToJson: true, createJsonSchema: true)
+class CallCenterTabScheme extends BottomMenuTabScheme with _$CallCenterTabScheme {
+  const CallCenterTabScheme({
+    this.enabled = true,
+    this.initial = false,
+    required this.titleL10n,
+    required this.icon,
+    this.type = 'callCenter',
+  });
+
+  @override
+  final bool enabled;
+
+  @override
+  final bool initial;
+
+  @override
+  final String titleL10n;
+
+  @override
+  final String icon;
+
+  /// The discriminator. Always `callCenter`.
+  @override
+  final String type;
+
+  factory CallCenterTabScheme.fromJson(Map<String, Object?> json) => _$CallCenterTabSchemeFromJson(json);
+
+  @override
+  Map<String, Object?> toJson() => _$CallCenterTabSchemeToJson(this);
+
+  static const Map<String, Object?> jsonSchema = _$CallCenterTabSchemeJsonSchema;
 }
 
 /// A tab showing an embedded resource.

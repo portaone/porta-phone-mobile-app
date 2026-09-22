@@ -621,6 +621,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'logRecordsConsole_PopupMenuItem_clear' =>
         logRecordsConsole_PopupMenuItem_clear,
       'main_Button_cancelPicking' => main_Button_cancelPicking,
+      'main_BottomNavigationBarItemLabel_callCenter' =>
+        main_BottomNavigationBarItemLabel_callCenter,
       'main_BottomNavigationBarItemLabel_chats' =>
         main_BottomNavigationBarItemLabel_chats,
       'main_Text_blindTransferInitiated' => main_Text_blindTransferInitiated,
