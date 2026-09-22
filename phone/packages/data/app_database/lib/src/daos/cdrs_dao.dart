@@ -3,7 +3,7 @@ import 'package:app_database/src/app_database.dart';
 
 part 'cdrs_dao.g.dart';
 
-@DriftAccessor(tables: [CdrTable, CdrSyncCursorTable])
+@DriftAccessor(tables: [CdrTable, CdrSyncCursorTable, CdrHistoryWalkTable])
 class CdrsDao extends DatabaseAccessor<AppDatabase> with _$CdrsDaoMixin {
   CdrsDao(super.db);
 
@@ -93,10 +93,32 @@ class CdrsDao extends DatabaseAccessor<AppDatabase> with _$CdrsDaoMixin {
     ).insertOnConflictUpdate(CdrSyncCursorData(id: 0, timestampUsec: time.microsecondsSinceEpoch));
   }
 
+  /// How far back the archive has been fetched, or null when nobody has walked
+  /// it yet.
+  Future<DateTime?> getHistoryWalkedTo() async {
+    final result = await select(cdrHistoryWalkTable).getSingleOrNull();
+    return result != null ? DateTime.fromMicrosecondsSinceEpoch(result.walkedToUsec) : null;
+  }
+
+  /// Moves the watermark to [time] if that reaches further back than where it
+  /// already stands.
+  ///
+  /// Only backwards: a walk resumed from a newer cursor - a second list, a
+  /// screen opened again - must not shorten what another one already covered.
+  Future<void> markHistoryWalkedTo(DateTime time) {
+    final usec = time.microsecondsSinceEpoch;
+    return transaction(() async {
+      final current = await select(cdrHistoryWalkTable).getSingleOrNull();
+      if (current != null && current.walkedToUsec <= usec) return;
+      await into(cdrHistoryWalkTable).insertOnConflictUpdate(CdrHistoryWalkData(id: 0, walkedToUsec: usec));
+    });
+  }
+
   Future<void> wipeData() async {
     await transaction(() async {
       await delete(cdrTable).go();
       await delete(cdrSyncCursorTable).go();
+      await delete(cdrHistoryWalkTable).go();
     });
   }
 }
