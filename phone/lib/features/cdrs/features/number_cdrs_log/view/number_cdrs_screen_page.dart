@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/data/feature_access.dart';
 import 'package:webtrit_phone/environment_config.dart';
+import 'package:webtrit_phone/features/cdrs/services/cdrs_history_walk.dart';
 import 'package:webtrit_phone/features/cdrs/services/cdrs_sync_worker.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -27,6 +28,7 @@ class NumberCdrsScreenPage extends StatelessWidget {
         context.read<CdrsLocalRepository>(),
         context.read<CdrsRemoteRepository>(),
         context.read<CdrsSync>(),
+        historyWalk: context.read<CdrsHistoryWalk>(),
       )..init(),
       child: NumberCdrsScreen(title: Text(EnvironmentConfig.APP_NAME), videoVisible: videoVisible),
     );
