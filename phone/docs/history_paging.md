@@ -27,7 +27,7 @@ things:
 |---|---|---|
 | `HistoryWindows` | `lib/services/history_windows.dart` | turns a cursor into the sequence of ranges to ask for |
 | `cdr_history_walk` | `packages/data/app_database` (one row) | how far back the store has been asked, surviving screens and launches |
-| `CdrsHistoryWalkQueue` | `lib/features/cdrs/services/` | one walk at a time over one store |
+| `CdrsHistoryWalk` | `lib/features/cdrs/services/` | owns the walk: which slices, which pages, when to stop, and one walk at a time over one store |
 
 ## A walk, step by step
 
@@ -60,7 +60,11 @@ Three properties make this work, and each is a defect that happened:
 2. **The cursor belongs to the store, not to a list.** Two lists share one
    archive and one cache; a per-list cursor had them walking the same slices
    side by side, and a re-opened screen re-walking days it had already walked.
-   It only ever moves further back, and a wipe clears it with the records.
+   It only ever moves further back, and a wipe clears it with the records. The
+   walk itself belongs to the store for the same reason: a list says which
+   records it wants and how to show them, and `CdrsHistoryWalk` does the
+   walking - including making the second list wait for the first, which a
+   watermark alone cannot do because it cannot say that a walk is in flight.
 3. **Slices overlap by one backend tick.** A backend may read both bounds as
    exclusive, and a record stamped exactly on a boundary would then belong to no
    slice at all. A record returned twice only has to be recognised, which
@@ -114,7 +118,7 @@ What to look for when it misbehaves:
 | Symptom | What it means |
 |---|---|
 | a request with no `time_from` | the walk is off (horizon 0), or it is the sync cycle's incremental pass, which names a lower bound only |
-| the same range twice in the same second | two walks are running at once - the queue is not shared between the lists |
+| the same range twice in the same second | two walks are running at once - the lists were handed different `CdrsHistoryWalk` instances instead of the shell's |
 | the same range and page again and again | the backend is ignoring `page`; the per-walk budget should cut it off |
 | widths not doubling | each `fetchHistory` starts a fresh sequence at the first width; several narrow slices in a row are several gestures, not one |
 | the list stops with records still on the server | check `historyEndReached` against the horizon, and the watermark: `cdr_history_walk` may already be at the floor |

@@ -10,8 +10,7 @@ class MissedRecentCdrsCubit extends CdrsListCubit {
     super.syncStateSource,
     this.syncRunner, {
     super.pageSize,
-    super.historyWindows,
-    super.walkQueue,
+    super.historyWalk,
   });
 
   final PollingTaskRunner syncRunner;

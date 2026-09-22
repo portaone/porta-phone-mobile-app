@@ -245,14 +245,18 @@ void main() {
     await syncHandle.dispose();
   });
 
-  FullRecentCdrsCubit fullCubit(CdrsRemoteRepository remote, {HistoryWindows? windows}) => FullRecentCdrsCubit(
-    local,
-    remote,
-    syncHandle,
-    syncHandle,
-    pageSize: _pageSize,
-    historyWindows: windows ?? _windows,
-  );
+  CdrsHistoryWalk walkOver(CdrsRemoteRepository remote, {HistoryWindows? windows}) =>
+      CdrsHistoryWalk(local, remote, windows: windows ?? _windows, pageSize: _pageSize);
+
+  FullRecentCdrsCubit fullCubit(CdrsRemoteRepository remote, {HistoryWindows? windows, CdrsHistoryWalk? walk}) =>
+      FullRecentCdrsCubit(
+        local,
+        remote,
+        syncHandle,
+        syncHandle,
+        pageSize: _pageSize,
+        historyWalk: walk ?? walkOver(remote, windows: windows),
+      );
 
   /// Waits out a fetch the cubit started on its own, so a test never races the
   /// list filling itself.
@@ -361,7 +365,7 @@ void main() {
         syncHandle,
         syncHandle,
         pageSize: _pageSize,
-        historyWindows: _windows,
+        historyWalk: walkOver(remote),
       );
       await cubit.init();
       await scrollToTheEnd(cubit);
@@ -418,7 +422,7 @@ void main() {
       final cubit = fullCubit(remote);
       await cubit.init();
       await settle(cubit);
-      final cursorAfterFirstWalk = cubit.state.historyCursor;
+      final cursorAfterFirstWalk = await local.getHistoryWalkedTo();
       expect(cursorAfterFirstWalk, isNotNull);
       expect(cubit.state.historyEndReached, isFalse, reason: 'the page filled before the horizon');
 
@@ -522,7 +526,7 @@ void main() {
         syncHandle,
         syncHandle,
         pageSize: _pageSize,
-        historyWindows: _windows,
+        historyWalk: walkOver(remote),
       );
       await cubit.init();
       await settle(cubit);
@@ -552,7 +556,7 @@ void main() {
         syncHandle,
         syncHandle,
         pageSize: _pageSize,
-        historyWindows: _windows,
+        historyWalk: walkOver(remote),
       );
       await cubit.init();
       await settle(cubit);
@@ -580,7 +584,14 @@ void main() {
       final remote = FakeAdapterRemoteRepository(archive);
       await local.markSyncCompleted(_now);
 
-      final cubit = FullRecentCdrsCubit(local, remote, syncHandle, syncHandle, pageSize: 3, historyWindows: _windows);
+      final cubit = FullRecentCdrsCubit(
+        local,
+        remote,
+        syncHandle,
+        syncHandle,
+        pageSize: 3,
+        historyWalk: CdrsHistoryWalk(local, remote, windows: _windows, pageSize: 3),
+      );
       await cubit.init();
       await settle(cubit);
       expect(cubit.state.records, hasLength(3), reason: 'the page filled with n-1, n-2 and one leg');
@@ -613,10 +624,15 @@ void main() {
         syncHandle,
         syncHandle,
         pageSize: _pageSize,
-        historyWindows: const HistoryWindows(
-          firstWidth: Duration(days: 7),
-          maxWidth: Duration(days: 90),
-          horizon: Duration.zero,
+        historyWalk: CdrsHistoryWalk(
+          local,
+          remote,
+          pageSize: _pageSize,
+          windows: const HistoryWindows(
+            firstWidth: Duration(days: 7),
+            maxWidth: Duration(days: 90),
+            horizon: Duration.zero,
+          ),
         ),
       );
       await cubit.init();
@@ -646,7 +662,14 @@ void main() {
       await local.upsertCdrs([shown], silent: true);
       await local.markSyncCompleted(_now);
 
-      final cubit = FullRecentCdrsCubit(local, remote, syncHandle, syncHandle, pageSize: 3, historyWindows: _windows);
+      final cubit = FullRecentCdrsCubit(
+        local,
+        remote,
+        syncHandle,
+        syncHandle,
+        pageSize: 3,
+        historyWalk: CdrsHistoryWalk(local, remote, windows: _windows, pageSize: 3),
+      );
       await cubit.init();
       await settle(cubit);
 
@@ -666,14 +689,7 @@ void main() {
       final gate = Completer<void>();
       remote.beforeAnswer = () => gate.future;
 
-      final cubit = FullRecentCdrsCubit(
-        local,
-        remote,
-        syncHandle,
-        syncHandle,
-        pageSize: _pageSize,
-        historyWindows: _windows,
-      );
+      final cubit = fullCubit(remote);
       await cubit.init(); // starts a walk: the store is short
       await Future<void>.delayed(Duration.zero);
       expect(remote.requests, isNotEmpty, reason: 'the first slice is in flight');
@@ -686,7 +702,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(local.stored, isEmpty, reason: 'the pre-wipe answer must not land in the wiped store');
-      expect(cubit.state.historyCursor, isNull, reason: 'nor may its cursor land on the fresh state');
+      expect(await local.getHistoryWalkedTo(), isNull, reason: 'nor may its watermark survive the wipe');
       await cubit.close();
     }),
   );
@@ -705,17 +721,22 @@ void main() {
         syncHandle,
         syncHandle,
         pageSize: _pageSize,
-        historyWindows: const HistoryWindows(
-          firstWidth: Duration(hours: 1),
-          maxWidth: Duration(hours: 1),
-          horizon: Duration(days: 365),
+        historyWalk: CdrsHistoryWalk(
+          local,
+          remote,
+          pageSize: _pageSize,
+          windows: const HistoryWindows(
+            firstWidth: Duration(hours: 1),
+            maxWidth: Duration(hours: 1),
+            horizon: Duration(days: 365),
+          ),
         ),
       );
       await cubit.init();
       await settle(cubit);
 
       expect(cubit.state.historyEndReached, isFalse);
-      expect(cubit.state.historyCursor, isNotNull);
+      expect(await local.getHistoryWalkedTo(), isNotNull, reason: 'the walk kept what it covered');
       await cubit.close();
     }),
   );
@@ -744,7 +765,7 @@ void main() {
         syncHandle,
         syncHandle,
         pageSize: _pageSize,
-        historyWindows: _windows,
+        historyWalk: walkOver(remote),
       );
       await missed.init();
       await settle(missed);
@@ -770,25 +791,16 @@ void main() {
       ];
       final remote = FakeAdapterRemoteRepository(archive);
       await local.markSyncCompleted(_now);
-      final queue = CdrsHistoryWalkQueue();
+      final shared = walkOver(remote);
 
-      final full = FullRecentCdrsCubit(
-        local,
-        remote,
-        syncHandle,
-        syncHandle,
-        pageSize: _pageSize,
-        historyWindows: _windows,
-        walkQueue: queue,
-      );
+      final full = FullRecentCdrsCubit(local, remote, syncHandle, syncHandle, pageSize: _pageSize, historyWalk: shared);
       final missed = MissedRecentCdrsCubit(
         local,
         remote,
         syncHandle,
         syncHandle,
         pageSize: _pageSize,
-        historyWindows: _windows,
-        walkQueue: queue,
+        historyWalk: shared,
       );
 
       // Mounted together, as the Recents screen mounts them.
@@ -949,7 +961,7 @@ void main() {
         syncHandle,
         syncHandle,
         pageSize: _pageSize,
-        historyWindows: _windows,
+        historyWalk: walkOver(remote),
       );
       await cubit.init();
       await scrollToTheEnd(cubit);
