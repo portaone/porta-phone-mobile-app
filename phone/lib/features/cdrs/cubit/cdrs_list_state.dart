@@ -4,6 +4,10 @@ class CdrsListState extends Equatable {
   final List<CdrRecord> records;
   final bool isLoading;
   final bool fetchingHistory;
+
+  /// Whether the history has been walked as far back as it may go. It is the
+  /// horizon that ends a list, never an answer that came back empty: a stretch
+  /// of days without a call is a quiet week, not the end of the archive.
   final bool historyEndReached;
 
   const CdrsListState({
@@ -27,6 +31,7 @@ class CdrsListState extends Equatable {
 
   @override
   String toString() {
-    return 'CdrsListState(records: $records, isLoading: $isLoading, fetchingHistory: $fetchingHistory, historyEndReached: $historyEndReached)';
+    return 'CdrsListState(records: $records, isLoading: $isLoading, fetchingHistory: $fetchingHistory, '
+        'historyEndReached: $historyEndReached)';
   }
 }

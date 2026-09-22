@@ -17,6 +17,7 @@ class RecentCdrsScreenPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final featureAccess = context.read<FeatureAccess>();
     final cdrsSync = context.read<CdrsSync>();
+    final historyWalk = context.read<CdrsHistoryWalk>();
 
     return MultiBlocProvider(
       providers: [
@@ -26,6 +27,7 @@ class RecentCdrsScreenPage extends StatelessWidget {
             context.read<CdrsRemoteRepository>(),
             cdrsSync,
             cdrsSync,
+            historyWalk: historyWalk,
           )..init(),
         ),
         BlocProvider(
@@ -34,6 +36,7 @@ class RecentCdrsScreenPage extends StatelessWidget {
             context.read<CdrsRemoteRepository>(),
             cdrsSync,
             cdrsSync,
+            historyWalk: historyWalk,
           )..init(),
         ),
       ],
