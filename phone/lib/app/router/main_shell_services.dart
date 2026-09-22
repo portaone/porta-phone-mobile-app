@@ -57,6 +57,7 @@ class MainShellServices extends StatelessWidget {
           ),
         if (featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>()?.supportsCallHistory == true)
           Provider<CdrsSync>(create: _createCdrsSync, dispose: (context, sync) => sync.dispose(), lazy: false),
+        Provider<CdrsHistoryWalk>(create: _createCdrsHistoryWalk),
         if (featureAccess.systemNotificationsConfig.systemNotificationsSupport) ...[
           Provider<SystemNotificationsSync>(
             create: _createSystemNotificationsSync,
@@ -170,6 +171,11 @@ class MainShellServices extends StatelessWidget {
       postCallRefreshDelay: Duration(seconds: EnvironmentConfig.POST_CALL_REFRESH_DELAY_SECONDS),
     );
   }
+
+  /// One walk for the whole store: the lists share it, so they share the
+  /// slices, the watermark and the rule that only one of them walks at a time.
+  CdrsHistoryWalk _createCdrsHistoryWalk(BuildContext context) =>
+      CdrsHistoryWalk(context.read<CdrsLocalRepository>(), context.read<CdrsRemoteRepository>());
 
   SystemNotificationsSync _createSystemNotificationsSync(BuildContext context) {
     final worker = SystemNotificationsSyncWorker(
