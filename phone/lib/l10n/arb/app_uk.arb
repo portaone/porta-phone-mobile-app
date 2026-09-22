@@ -2454,6 +2454,8 @@
   "@settings_ListViewTileTitle_registered": {},
   "settings_ListViewTileTitle_self_config": "Сторінка спец-налаштувань",
   "@settings_ListViewTileTitle_self_config": {},
+  "settings_ListViewTileTitle_callCenter": "Кол-центр",
+  "@settings_ListViewTileTitle_callCenter": {},
   "settings_ListViewTileTitle_sessions": "Сесії",
   "@settings_ListViewTileTitle_sessions": {},
   "settings_ListViewTileTitle_settings": "НАЛАШТУВАННЯ",

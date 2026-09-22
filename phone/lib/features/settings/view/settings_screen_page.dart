@@ -16,7 +16,8 @@ class SettingsScreenPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settingsFeature = context.read<FeatureAccess>().settingsConfig;
+    final featureAccess = context.read<FeatureAccess>();
+    final settingsFeature = featureAccess.settingsConfig;
 
     return BlocProvider(
       create: (context) {
@@ -29,7 +30,11 @@ class SettingsScreenPage extends StatelessWidget {
         );
       },
       child: _RefreshSessionIssuesOnResume(
-        child: SettingsScreen(sections: settingsFeature.sections, sessionsEnabled: settingsFeature.sessionsEnabled),
+        child: SettingsScreen(
+          sections: settingsFeature.sections,
+          sessionsEnabled: settingsFeature.sessionsEnabled,
+          callCenterEnabled: featureAccess.callCenterAvailable,
+        ),
       ),
     );
   }

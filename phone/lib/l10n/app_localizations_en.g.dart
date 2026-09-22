@@ -2909,6 +2909,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_ListViewTileTitle_self_config => 'Self-config page';
 
   @override
+  String get settings_ListViewTileTitle_callCenter => 'Call center';
+
+  @override
   String get settings_ListViewTileTitle_sessions => 'Sessions';
 
   @override

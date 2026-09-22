@@ -115,7 +115,7 @@ void main() {
                 BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
                 BlocProvider<RegisterStatusCubit>.value(value: registerStatusCubit),
               ],
-              child: _presence(const SettingsScreen(sections: [], sessionsEnabled: false)),
+              child: _presence(const SettingsScreen(sections: [], sessionsEnabled: false, callCenterEnabled: false)),
             ),
           ),
         ),

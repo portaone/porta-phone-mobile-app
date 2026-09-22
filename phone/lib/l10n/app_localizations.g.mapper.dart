@@ -1334,6 +1334,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_ListViewTileTitle_registered,
       'settings_ListViewTileTitle_self_config' =>
         settings_ListViewTileTitle_self_config,
+      'settings_ListViewTileTitle_callCenter' =>
+        settings_ListViewTileTitle_callCenter,
       'settings_ListViewTileTitle_sessions' =>
         settings_ListViewTileTitle_sessions,
       'settings_ListViewTileTitle_settings' =>

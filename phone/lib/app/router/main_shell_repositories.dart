@@ -178,6 +178,28 @@ class MainShellRepositories extends StatelessWidget {
           ),
           dispose: disposeIfDisposable,
         ),
+        RepositoryProvider<CallQueuesRepository>(
+          create: (context) {
+            if (!featureAccess.callCenterAvailable) return const EmptyCallQueuesRepository();
+
+            // One read at the start of the session, so that whether this user
+            // is an agent at all is known before they open the settings list.
+            // The recurring reads are the screen's own polling task - they
+            // reach the PBX, so they last exactly as long as the screen does.
+            return CallQueuesRepositoryApiImpl(
+              apiClient: context.read<WebtritApiClient>(),
+              token: context.read<AppBloc>().state.session.token!,
+              sessionGuard: sessionGuard,
+            )..prime();
+          },
+          // Built with the session rather than at its first reader, which is
+          // what makes the read at the top of it actually happen: the section
+          // of the bottom menu is drawn from the answer it stores, and a
+          // repository nobody touched would leave a new agent without that
+          // section until they happened to open their settings.
+          lazy: false,
+          dispose: disposeIfDisposable,
+        ),
         RepositoryProvider<VoicemailRepository>(
           create: (context) {
             final isVoicemailsEnabled = featureAccess.voicemailAvailable;

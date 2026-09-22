@@ -180,6 +180,14 @@ class CallQueuesRepositoryApiImpl with CallQueueApiMapper implements CallQueuesR
     return result;
   }
 
+  /// Reads the queues once, for a caller that only wants the answer to exist.
+  ///
+  /// The session start uses it: by the time the person opens their settings,
+  /// whether they are an agent at all has been answered. Nobody is waiting on
+  /// this read, so its failure is logged and dropped - the screen has not been
+  /// opened yet, and the poll behind it will ask again.
+  void prime() => unawaited(_refreshQuietly());
+
   /// A read asked for by a failed write rather than by the poll.
   ///
   /// Its failure is not the caller's: they are already being told that their

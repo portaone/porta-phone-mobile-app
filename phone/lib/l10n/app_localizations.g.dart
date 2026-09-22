@@ -5323,6 +5323,12 @@ abstract class AppLocalizations {
   /// **'Self-config page'**
   String get settings_ListViewTileTitle_self_config;
 
+  /// Title of the settings row that opens the call center queues.
+  ///
+  /// In en, this message translates to:
+  /// **'Call center'**
+  String get settings_ListViewTileTitle_callCenter;
+
   /// No description provided for @settings_ListViewTileTitle_sessions.
   ///
   /// In en, this message translates to:

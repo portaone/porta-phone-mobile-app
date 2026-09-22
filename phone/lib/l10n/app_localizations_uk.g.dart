@@ -2945,6 +2945,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_ListViewTileTitle_self_config => 'Сторінка спец-налаштувань';
 
   @override
+  String get settings_ListViewTileTitle_callCenter => 'Кол-центр';
+
+  @override
   String get settings_ListViewTileTitle_sessions => 'Сесії';
 
   @override
