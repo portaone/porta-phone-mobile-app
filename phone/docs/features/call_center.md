@@ -42,6 +42,17 @@ builds the repository wherever the capability is on, reads once at its start,
 and the row reads the answer from the cubit. An empty list is not an error - it
 is the backend saying "not an agent" - and the row is absent for them.
 
+The **bottom-menu section** cannot wait for a request: the tab set is built
+before one can be made. It is drawn from what the backend last answered for
+this account, which the repository reports after every read and
+`AppPreferences.getCallCenterAgent` keeps, keyed by user id so a device two
+people sign into in turn does not hand one the other's sections. The trade is
+one session of lag in both directions: somebody made an agent today gets the
+section at the next start, and the settings row is there for them meanwhile;
+somebody who stops being one keeps a section that says so until then. An
+account nothing is remembered about gets no section, which is the honest
+default - nothing has been asked yet.
+
 Where the feature is not offered at all the endpoints answer `501`, which the
 repository treats as terminal: it stops being active, and the polling service
 unregisters it on the next attempt.

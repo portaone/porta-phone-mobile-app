@@ -24,7 +24,9 @@ void main() {
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: BlocProvider(create: (context) => CallQueuesCubit(repository), child: const CallCenterScreen()),
+        home: Scaffold(
+          body: BlocProvider(create: (context) => CallQueuesCubit(repository), child: const CallCenterBody()),
+        ),
       ),
     );
     await tester.pump();
@@ -130,6 +132,23 @@ void main() {
     });
   });
 
+  group('the control for every queue', () {
+    testWidgets('refuses while a single row is being written', (tester) async {
+      // It cannot act then - the repository turns it down - so a control that
+      // still looked live would swallow the tap without a word.
+      await pumpScreen(
+        tester,
+        CallQueuesSnapshot(known: true, queues: [testQueue('0111'), testQueue('0222')], pendingIds: const {'0111'}),
+      );
+
+      expect(find.descendant(of: find.byKey(callCenterMasterSwitchKey), matching: find.byType(Switch)), findsNothing);
+      expect(
+        find.descendant(of: find.byKey(callCenterMasterSwitchKey), matching: find.byType(CircularProgressIndicator)),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('acting on one queue', () {
     testWidgets('sends the opposite of what the row shows', (tester) async {
       await pumpScreen(tester, CallQueuesSnapshot(known: true, queues: [testQueue('0111', loggedIn: true)]));
@@ -173,6 +192,25 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('That queue is no longer yours. The list has been refreshed.'), findsOneWidget);
+    });
+  });
+
+  group('when a read fails', () {
+    testWidgets('the screen says so instead of spinning forever', (tester) async {
+      await pumpScreen(tester, const CallQueuesSnapshot(readFailed: true));
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('Could not load your queues.'), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+    });
+
+    testWidgets('asking again goes back to the backend', (tester) async {
+      await pumpScreen(tester, const CallQueuesSnapshot(readFailed: true));
+
+      await tester.tap(find.text('Try again'));
+      await tester.pumpAndSettle();
+
+      expect(repository.refreshCount, 1);
     });
   });
 

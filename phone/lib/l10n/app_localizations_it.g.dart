@@ -1461,6 +1461,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get main_Button_cancelPicking => 'Annulla';
 
   @override
+  String get main_BottomNavigationBarItemLabel_callCenter => 'Call center';
+
+  @override
   String get main_BottomNavigationBarItemLabel_chats => 'Le chat';
 
   @override

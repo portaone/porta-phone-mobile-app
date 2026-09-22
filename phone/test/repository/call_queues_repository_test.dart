@@ -39,6 +39,7 @@ void main() {
   late MockWebtritApiClient apiClient;
   late _RecordingSessionGuard sessionGuard;
   late CallQueuesRepository repository;
+  late List<bool> agentAnswers;
 
   setUpAll(() {
     registerFallbackValue(const api.RequestOptions());
@@ -47,7 +48,13 @@ void main() {
   setUp(() {
     apiClient = MockWebtritApiClient();
     sessionGuard = _RecordingSessionGuard();
-    repository = CallQueuesRepositoryApiImpl(apiClient: apiClient, token: 'token_1', sessionGuard: sessionGuard);
+    agentAnswers = [];
+    repository = CallQueuesRepositoryApiImpl(
+      apiClient: apiClient,
+      token: 'token_1',
+      sessionGuard: sessionGuard,
+      onAgentKnown: agentAnswers.add,
+    );
   });
 
   tearDown(() => repository.dispose());
@@ -189,6 +196,50 @@ void main() {
 
       await expectLater(repository.refresh(), throwsA(same(unauthorized)));
       expect(sessionGuard.unauthorized, [same(unauthorized)]);
+    });
+  });
+
+  group('what the next session start is told', () {
+    // The bottom-menu section is decided before a session can ask anything, so
+    // the answer has to survive to the next start - and be right about a
+    // person who stops being an agent as well as one who becomes one.
+    test('a non-empty list says this user is an agent', () async {
+      stubRead([_apiQueue('0111')]);
+
+      await repository.refresh();
+
+      expect(agentAnswers, [true]);
+    });
+
+    test('an empty list says they are not', () async {
+      stubRead(const []);
+
+      await repository.refresh();
+
+      expect(agentAnswers, [false]);
+    });
+
+    test('a deployment that does not offer the feature says they are not', () async {
+      stubReadFailing(
+        api.EndpointNotSupportedException(
+          url: Uri.https('demo.webtrit.com'),
+          requestId: 'r',
+          statusCode: 501,
+          recognizedNotSupportedCodes: const ['404', '501'],
+        ),
+      );
+
+      await repository.refresh();
+
+      expect(agentAnswers, [false]);
+    });
+
+    test('a failed read says nothing at all', () async {
+      stubReadFailing(_failure(500));
+
+      await expectLater(repository.refresh(), throwsA(isA<api.RequestFailure>()));
+
+      expect(agentAnswers, isEmpty);
     });
   });
 

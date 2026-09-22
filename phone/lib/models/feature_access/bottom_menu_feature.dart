@@ -120,6 +120,19 @@ final class VoicemailBottomMenuTab extends BottomMenuTab {
   MainFlavor get flavor => MainFlavor.voicemail;
 }
 
+final class CallCenterBottomMenuTab extends BottomMenuTab {
+  const CallCenterBottomMenuTab({
+    required super.enabled,
+    required super.initial,
+    required super.titleL10n,
+    required super.icon,
+    super.data,
+  });
+
+  @override
+  MainFlavor get flavor => MainFlavor.callCenter;
+}
+
 final class ContactsBottomMenuTab extends BottomMenuTab {
   static const unifiedSegment = 'unified';
 

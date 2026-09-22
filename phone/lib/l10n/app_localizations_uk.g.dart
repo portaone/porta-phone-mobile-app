@@ -1477,6 +1477,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get main_Button_cancelPicking => 'Скасувати';
 
   @override
+  String get main_BottomNavigationBarItemLabel_callCenter => 'Кол-центр';
+
+  @override
   String get main_BottomNavigationBarItemLabel_chats => 'Чати';
 
   @override

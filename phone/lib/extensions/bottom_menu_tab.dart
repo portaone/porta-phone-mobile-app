@@ -22,6 +22,7 @@ extension BottomMenuTabNavBarX on BottomMenuTab {
     KeypadBottomMenuTab() => keypadNavBarId,
     MessagingBottomMenuTab() => messagingNavBarId,
     VoicemailBottomMenuTab() => voicemailNavBarId,
+    CallCenterBottomMenuTab() => callCenterNavBarId,
     EmbeddedBottomMenuTab(:final id) => embeddedNavBarId(id),
   };
 
@@ -34,6 +35,7 @@ extension BottomMenuTabNavBarX on BottomMenuTab {
     KeypadBottomMenuTab() => keypadNavBarKey,
     MessagingBottomMenuTab() => messagingNavBarKey,
     VoicemailBottomMenuTab() => voicemailNavBarKey,
+    CallCenterBottomMenuTab() => callCenterNavBarKey,
     EmbeddedBottomMenuTab(:final id) => embeddedNavBarKey(id),
   };
 }
