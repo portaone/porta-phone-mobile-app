@@ -25,6 +25,8 @@ MainFlavor? mainFlavorOfTabRoute(String routeName) {
       return MainFlavor.messaging;
     case VoicemailRouterPageRoute.name:
       return MainFlavor.voicemail;
+    case CallCenterTabPageRoute.name:
+      return MainFlavor.callCenter;
     case EmbeddedTabPageRoute.name:
       return MainFlavor.embedded;
     default:
@@ -46,6 +48,7 @@ extension LoginTypeLoginSegmentKey on MainFlavor {
       MainFlavor.keypad => keypadNavBarKey,
       MainFlavor.messaging => messagingNavBarKey,
       MainFlavor.voicemail => voicemailNavBarKey,
+      MainFlavor.callCenter => callCenterNavBarKey,
       // An embedded tab carries no key of its kind: several sections can be
       // configured at once, and each entry is keyed by its section id via
       // embeddedNavBarKey(id) in lib/app/keys.dart.

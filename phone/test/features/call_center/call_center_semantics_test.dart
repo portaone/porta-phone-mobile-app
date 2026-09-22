@@ -22,7 +22,9 @@ void main() {
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: BlocProvider(create: (context) => CallQueuesCubit(repository), child: const CallCenterScreen()),
+        home: Scaffold(
+          body: BlocProvider(create: (context) => CallQueuesCubit(repository), child: const CallCenterBody()),
+        ),
       ),
     );
     await tester.pump();

@@ -1434,6 +1434,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get main_Button_cancelPicking => 'ยกเลิก';
 
   @override
+  String get main_BottomNavigationBarItemLabel_callCenter => 'คอลเซ็นเตอร์';
+
+  @override
   String get main_BottomNavigationBarItemLabel_chats => 'แชท';
 
   @override

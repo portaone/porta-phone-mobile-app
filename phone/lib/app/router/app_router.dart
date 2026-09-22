@@ -239,6 +239,7 @@ class AppRouter extends RootStackRouter {
                 // Embedded flavors
                 AutoRoute(page: EmbeddedTabPageRoute.page, path: 'embedded/:id', usesPathAsKey: true),
                 AutoRoute(page: ConversationsScreenPageRoute.page, path: MainFlavor.messaging.name),
+                AutoRoute(page: CallCenterTabPageRoute.page, path: MainFlavor.callCenter.name),
                 AutoRoute(
                   page: VoicemailRouterPageRoute.page,
                   path: MainFlavor.voicemail.name,
@@ -526,6 +527,7 @@ class AppRouter extends RootStackRouter {
               // Embedded tab
               EmbeddedBottomMenuTab(id: final id) => EmbeddedTabPageRoute(id: id),
               // Other standard tabs
+              CallCenterBottomMenuTab() => const CallCenterTabPageRoute(),
               FavoritesBottomMenuTab() => const FavoritesRouterPageRoute(),
               KeypadBottomMenuTab() => const KeypadScreenPageRoute(),
               MessagingBottomMenuTab() => const ConversationsScreenPageRoute(),

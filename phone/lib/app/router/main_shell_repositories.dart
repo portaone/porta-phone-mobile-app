@@ -186,10 +186,17 @@ class MainShellRepositories extends StatelessWidget {
             // is an agent at all is known before they open the settings list.
             // The recurring reads are the screen's own polling task - they
             // reach the PBX, so they last exactly as long as the screen does.
+            final session = context.read<AppBloc>().state.session;
+            final appPreferences = context.read<AppPreferences>();
+
             return CallQueuesRepositoryApiImpl(
               apiClient: context.read<WebtritApiClient>(),
-              token: context.read<AppBloc>().state.session.token!,
+              token: session.token!,
               sessionGuard: sessionGuard,
+              // Remembered for the NEXT session start, which is when the
+              // bottom-menu section is decided - nothing can ask the backend
+              // that early.
+              onAgentKnown: (isAgent) => appPreferences.setCallCenterAgent(session.userId, isAgent),
             )..prime();
           },
           // Built with the session rather than at its first reader, which is

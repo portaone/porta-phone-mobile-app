@@ -128,6 +128,8 @@ const String messagingNavBarId = 'messagingNavBar';
 const messagingNavBarKey = Key(messagingNavBarId);
 const String voicemailNavBarId = 'voicemailNavBar';
 const voicemailNavBarKey = Key(voicemailNavBarId);
+const String callCenterNavBarId = 'callCenterNavBar';
+const callCenterNavBarKey = Key(callCenterNavBarId);
 const String embeddedNavBarIdPrefix = 'embeddedNavBar';
 
 /// Id of the bottom navigation entry that opens the embedded section [id].

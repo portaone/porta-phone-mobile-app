@@ -15,11 +15,15 @@ class FeatureAccessStreamFactory {
   final AppThemes appThemes;
   final SystemInfoRepository systemInfoRepository;
   final RemoteConfigService remoteConfigService;
+  final AppPreferences appPreferences;
+  final SessionRepository sessionRepository;
 
   FeatureAccessStreamFactory({
     required this.appThemes,
     required this.systemInfoRepository,
     required this.remoteConfigService,
+    required this.appPreferences,
+    required this.sessionRepository,
   }) {
     _startupOverrides = FeatureOverridesFactory.create(remoteConfigService.startupSnapshot);
     _startupAnonymizationEnabled = LoggingMapper.map(appThemes.appConfig, _startupOverrides).anonymizationEnabled;
@@ -51,7 +55,25 @@ class FeatureAccessStreamFactory {
     final coreSupport = CoreSupportFactory.create(systemInfo);
     final overrides = _applySessionPrivacyPolicy(FeatureOverridesFactory.create(remoteConfig));
 
-    return FeatureAccess.create(appThemes.appConfig, appThemes.embeddedResources, coreSupport, systemInfo, overrides);
+    return FeatureAccess.create(
+      appThemes.appConfig,
+      appThemes.embeddedResources,
+      coreSupport,
+      systemInfo,
+      overrides,
+      callCenterAgent: _callCenterAgent(),
+    );
+  }
+
+  /// What the backend last answered about this account being an agent.
+  ///
+  /// False for an account it has never answered for: a section that turns out
+  /// to lead nowhere is worse than one that appears at the next start.
+  bool _callCenterAgent() {
+    final userId = sessionRepository.getCurrent().userId;
+    if (userId.isEmpty) return false;
+
+    return appPreferences.getCallCenterAgent(userId) ?? false;
   }
 
   FeatureOverrides _applySessionPrivacyPolicy(FeatureOverrides current) {

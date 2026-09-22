@@ -153,6 +153,22 @@ class CallCenterScreenPageRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [CallCenterTabPage]
+class CallCenterTabPageRoute extends PageRouteInfo<void> {
+  const CallCenterTabPageRoute({List<PageRouteInfo>? children})
+    : super(CallCenterTabPageRoute.name, initialChildren: children);
+
+  static const String name = 'CallCenterTabPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return CallCenterTabPage();
+    },
+  );
+}
+
+/// generated route for
 /// [CallLogScreenPage]
 class CallLogScreenPageRoute extends PageRouteInfo<CallLogScreenPageRouteArgs> {
   CallLogScreenPageRoute({
