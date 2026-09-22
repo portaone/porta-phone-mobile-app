@@ -128,6 +128,8 @@ const String messagingNavBarId = 'messagingNavBar';
 const messagingNavBarKey = Key(messagingNavBarId);
 const String voicemailNavBarId = 'voicemailNavBar';
 const voicemailNavBarKey = Key(voicemailNavBarId);
+const String callCenterNavBarId = 'callCenterNavBar';
+const callCenterNavBarKey = Key(callCenterNavBarId);
 const String embeddedNavBarIdPrefix = 'embeddedNavBar';
 
 /// Id of the bottom navigation entry that opens the embedded section [id].
@@ -140,6 +142,20 @@ String embeddedNavBarId(String id) => '$embeddedNavBarIdPrefix${_capitalize(id)}
 /// Key of the same entry, built from [embeddedNavBarId] so the widget-test
 /// anchor and the accessibility anchor cannot drift apart.
 Key embeddedNavBarKey(String id) => Key(embeddedNavBarId(id));
+
+const String callCenterMasterSwitchId = 'callCenterMasterSwitch';
+const callCenterMasterSwitchKey = Key(callCenterMasterSwitchId);
+const String callCenterQueueSwitchIdPrefix = 'callCenterQueueSwitch';
+
+/// Id of the control that takes this agent on or off the queue [queueId].
+///
+/// Every row is the same control over a different queue, and the queue number
+/// is what tells them apart to a reader and to an automated run alike.
+String callCenterQueueSwitchId(String queueId) => '$callCenterQueueSwitchIdPrefix${_capitalize(queueId)}';
+
+/// Key of the same control, built from [callCenterQueueSwitchId] so the widget
+/// test anchor and the accessibility anchor cannot drift apart.
+Key callCenterQueueSwitchKey(String queueId) => Key(callCenterQueueSwitchId(queueId));
 
 // Screen anchors: identify the screen itself, so a flow can tell where it is
 // before touching a control. Login needs them because the visible captions

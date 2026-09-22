@@ -39,6 +39,18 @@ extension AppLocalizationsExtension on AppLocalizations {
       'autoprovision_ReloginDialog_title' => autoprovision_ReloginDialog_title,
       'autoprovision_successSnackBar_used' =>
         autoprovision_successSnackBar_used,
+      'callCenter_AppBarTitle' => callCenter_AppBarTitle,
+      'callCenter_Button_retry' => callCenter_Button_retry,
+      'callCenter_Snackbar_changeFailed' => callCenter_Snackbar_changeFailed,
+      'callCenter_Snackbar_queueGone' => callCenter_Snackbar_queueGone,
+      'callCenter_Snackbar_readOnly' => callCenter_Snackbar_readOnly,
+      'callCenter_Switch_allQueues' => callCenter_Switch_allQueues,
+      'callCenter_Text_loadFailed' => callCenter_Text_loadFailed,
+      'callCenter_Text_callersWaitingUnknown' =>
+        callCenter_Text_callersWaitingUnknown,
+      'callCenter_Text_noQueues' => callCenter_Text_noQueues,
+      'callCenter_Text_offline' => callCenter_Text_offline,
+      'callCenter_Text_online' => callCenter_Text_online,
       'callTileActions_contact' => callTileActions_contact,
       'callTileActions_history' => callTileActions_history,
       'callTileActions_message' => callTileActions_message,
@@ -609,6 +621,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'logRecordsConsole_PopupMenuItem_clear' =>
         logRecordsConsole_PopupMenuItem_clear,
       'main_Button_cancelPicking' => main_Button_cancelPicking,
+      'main_BottomNavigationBarItemLabel_callCenter' =>
+        main_BottomNavigationBarItemLabel_callCenter,
       'main_BottomNavigationBarItemLabel_chats' =>
         main_BottomNavigationBarItemLabel_chats,
       'main_Text_blindTransferInitiated' => main_Text_blindTransferInitiated,
@@ -1322,6 +1336,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_ListViewTileTitle_registered,
       'settings_ListViewTileTitle_self_config' =>
         settings_ListViewTileTitle_self_config,
+      'settings_ListViewTileTitle_callCenter' =>
+        settings_ListViewTileTitle_callCenter,
       'settings_ListViewTileTitle_sessions' =>
         settings_ListViewTileTitle_sessions,
       'settings_ListViewTileTitle_settings' =>
@@ -1854,6 +1870,28 @@ extension AppLocalizationsExtension on AppLocalizations {
       'agoTicker_secondsAgo' => switch (args) {
         [final num seconds] => agoTicker_secondsAgo(seconds),
         _ => throw ArgumentError('agoTicker_secondsAgo requires 1 arguments'),
+      },
+      'callCenter_Text_agentsOfTotal' => switch (args) {
+        [final int loggedIn, final int total] => callCenter_Text_agentsOfTotal(
+          loggedIn,
+          total,
+        ),
+        _ => throw ArgumentError(
+          'callCenter_Text_agentsOfTotal requires 2 arguments',
+        ),
+      },
+      'callCenter_Text_callersWaiting' => switch (args) {
+        [final int count] => callCenter_Text_callersWaiting(count),
+        _ => throw ArgumentError(
+          'callCenter_Text_callersWaiting requires 1 arguments',
+        ),
+      },
+      'callCenter_Text_loggedInOfTotal' => switch (args) {
+        [final int loggedIn, final int total] =>
+          callCenter_Text_loggedInOfTotal(loggedIn, total),
+        _ => throw ArgumentError(
+          'callCenter_Text_loggedInOfTotal requires 2 arguments',
+        ),
       },
       'cacheManagement_Label_itemsCount' => switch (args) {
         [final int count] => cacheManagement_Label_itemsCount(count),

@@ -20,6 +20,7 @@ void main() {
       expect(cs.supportsCallToActions, isFalse);
       expect(cs.supportsCallHistory, isFalse);
       expect(cs.supportsExtensions, isFalse);
+      expect(cs.supportsCallCenter, isFalse);
     });
 
     test('call-to-actions only', () {
@@ -36,6 +37,14 @@ void main() {
       expect(cs.supportsExtensions, isTrue);
       expect(cs.supportsVoicemail, isFalse);
       expect(cs.supportsSms, isFalse);
+    });
+
+    test('call center only', () {
+      final cs = createCoreSupportWithFlags([kCallCenterFeatureFlag]);
+
+      expect(cs.supportsCallCenter, isTrue);
+      expect(cs.supportsVoicemail, isFalse);
+      expect(cs.supportsCallHistory, isFalse);
     });
 
     test('voicemail only', () {

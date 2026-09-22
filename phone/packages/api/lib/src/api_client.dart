@@ -92,6 +92,12 @@ class WebtritApiClient {
     failures: [voicemailNotConfiguredRule, voicemailMessageGoneRule],
   );
 
+  // The call queue endpoints: optional like the voicemail ones, and the only
+  // ones that can report a queue the caller is not an agent of. The flag and the
+  // rule answer two different questions - "is this route here at all" reads the
+  // ABSENCE of a code, "is this queue yours" reads a code that is present.
+  static final _callQueuesEndpoint = ResponseOptions(optionalEndpoint: true, failures: [callQueueNotFoundRule]);
+
   static final _voicemailEndpointBytes = ResponseOptions(
     responseType: ResponseType.bytes,
     optionalEndpoint: true,
@@ -922,6 +928,81 @@ class WebtritApiClient {
       queryParameters: fileFormat.isNotEmpty ? {'file_format': fileFormat} : null,
     );
     return url.toString();
+  }
+
+  /// The call queues the current user serves as an agent, with their load.
+  ///
+  /// An empty list is the per-user gate rather than an error: the deployment
+  /// offers the feature, this user is not a call center agent. A deployment
+  /// that does not offer it at all answers 501, which arrives as
+  /// [EndpointNotSupportedException].
+  ///
+  /// There is no push channel behind any of this, so a screen showing the
+  /// counters asks again on a timer while it is visible.
+  Future<CallQueueListResponse> getUserCallQueues(
+    String token, {
+    String? locale,
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    final responseJson = await _httpClientExecuteGet(
+      [..._apiBasePathSegmentsV1, 'user', 'queues'],
+      locale != null ? {'Accept-Language': locale} : null,
+      token,
+      requestOptions: options,
+      responseOptions: _callQueuesEndpoint,
+    );
+
+    return CallQueueListResponse.fromJson(responseJson);
+  }
+
+  /// Logs the user in to every one of their queues, or out of every one.
+  ///
+  /// One request to the PBX rather than one per queue, and the answer carries
+  /// the whole list in its new state - including the agent counts, which will
+  /// have moved meanwhile on a busy queue. Render that rather than the switch
+  /// that was tapped: the same flag is changed by the dial codes and by
+  /// self-care, so the client never owns it.
+  Future<CallQueueListResponse> updateUserCallQueues(
+    String token, {
+    required bool loggedIn,
+    String? locale,
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    final responseJson = await _httpClientExecutePatch(
+      [..._apiBasePathSegmentsV1, 'user', 'queues'],
+      locale != null ? {'Accept-Language': locale} : null,
+      token,
+      {'logged_in': loggedIn},
+      requestOptions: options,
+      responseOptions: _callQueuesEndpoint,
+    );
+
+    return CallQueueListResponse.fromJson(responseJson);
+  }
+
+  /// Logs the user in to one queue, or out of it.
+  ///
+  /// [queueId] is the queue's number, the same string the list reports as its
+  /// id. Answers with that queue alone in its new state; a queue the user is
+  /// not an agent of is refused with [CallQueueNotFoundException], which means
+  /// the list on screen is stale rather than that the write failed.
+  Future<CallQueue> updateUserCallQueue(
+    String token,
+    String queueId, {
+    required bool loggedIn,
+    String? locale,
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    final responseJson = await _httpClientExecutePatch(
+      [..._apiBasePathSegmentsV1, 'user', 'queues', queueId],
+      locale != null ? {'Accept-Language': locale} : null,
+      token,
+      {'logged_in': loggedIn},
+      requestOptions: options,
+      responseOptions: _callQueuesEndpoint,
+    );
+
+    return CallQueue.fromJson(responseJson);
   }
 
   Future<SystemNotificationResponce> getSystemNotificationsHistory(

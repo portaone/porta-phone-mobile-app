@@ -123,6 +123,12 @@
         "items": [
           {
             "enabled": true,
+            "type": "callCenter",
+            "titleL10n": "settings_ListViewTileTitle_callCenter",
+            "icon": "0xf0ee"
+          },
+          {
+            "enabled": true,
             "type": "voicemail",
             "titleL10n": "settings_ListViewTileTitle_voicemail",
             "icon": "0xe6c1"

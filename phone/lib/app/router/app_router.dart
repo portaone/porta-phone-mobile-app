@@ -239,6 +239,7 @@ class AppRouter extends RootStackRouter {
                 // Embedded flavors
                 AutoRoute(page: EmbeddedTabPageRoute.page, path: 'embedded/:id', usesPathAsKey: true),
                 AutoRoute(page: ConversationsScreenPageRoute.page, path: MainFlavor.messaging.name),
+                AutoRoute(page: CallCenterTabPageRoute.page, path: MainFlavor.callCenter.name),
                 AutoRoute(
                   page: VoicemailRouterPageRoute.page,
                   path: MainFlavor.voicemail.name,
@@ -285,6 +286,11 @@ class AppRouter extends RootStackRouter {
                 AutoRoute(page: ThemeModeScreenPageRoute.page, path: 'theme-mode'),
                 AutoRoute(page: DevToolsScreenPageRoute.page, path: 'dev-tools'),
                 AutoRoute(page: DiagnosticScreenPageRoute.page, path: 'diagnostic'),
+                // Declared whatever the deployment offers: the route table is
+                // built once, before system-info is known, and a route left
+                // out here can never be navigated to later. What decides
+                // whether the call center is reachable is the settings row.
+                AutoRoute(page: CallCenterScreenPageRoute.page, path: 'call-center'),
                 AutoRoute(
                   page: VoicemailScreenPageRoute.page,
                   path: 'voicemail',
@@ -521,6 +527,7 @@ class AppRouter extends RootStackRouter {
               // Embedded tab
               EmbeddedBottomMenuTab(id: final id) => EmbeddedTabPageRoute(id: id),
               // Other standard tabs
+              CallCenterBottomMenuTab() => const CallCenterTabPageRoute(),
               FavoritesBottomMenuTab() => const FavoritesRouterPageRoute(),
               KeypadBottomMenuTab() => const KeypadScreenPageRoute(),
               MessagingBottomMenuTab() => const ConversationsScreenPageRoute(),

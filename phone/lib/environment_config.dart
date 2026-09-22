@@ -419,6 +419,19 @@ class EnvironmentConfig {
     return days >= 0 ? days : fallback;
   }
 
+  static const CALL_QUEUES_REPOSITORY_POLLING_INTERVAL_SECONDS__NAME =
+      'WEBTRIT_APP_CALL_QUEUES_REPOSITORY_POLLING_INTERVAL_SECONDS';
+
+  /// How often the call queues are re-read while their screen is open.
+  ///
+  /// Ten seconds is the slow end of what the backend contract allows, and the
+  /// one to prefer: every read reaches the PBX, and the adapter re-reads the
+  /// customer's whole hunt group list on each one.
+  static int get CALL_QUEUES_REPOSITORY_POLLING_INTERVAL_SECONDS => _pollingSeconds(
+    CALL_QUEUES_REPOSITORY_POLLING_INTERVAL_SECONDS__NAME,
+    const int.fromEnvironment(CALL_QUEUES_REPOSITORY_POLLING_INTERVAL_SECONDS__NAME, defaultValue: 10),
+  );
+
   static const VOICEMAIL_REPOSITORY_POLLING_INTERVAL_SECONDS__NAME =
       'WEBTRIT_APP_VOICEMAIL_REPOSITORY_POLLING_INTERVAL_SECONDS';
   static int get VOICEMAIL_REPOSITORY_POLLING_INTERVAL_SECONDS => _pollingSeconds(

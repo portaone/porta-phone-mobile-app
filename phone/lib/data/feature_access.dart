@@ -126,6 +126,16 @@ class FeatureAccess extends Equatable {
   /// its user's messages occupying the mailbox with nothing able to reach them.
   bool get voicemailTrashAvailable => voicemailAvailable && coreSupport.supportsVoicemailTrash;
 
+  /// Whether the call center queues run for this session.
+  ///
+  /// This answers the deployment's half of the question only. Whether the
+  /// person signed in is an agent of any queue is the other half, and it cannot
+  /// be answered here: the list is what carries it, an empty one meaning "not
+  /// an agent", and reading it takes an authorised request that this object is
+  /// built long before. So a placement gated on this alone must still hide
+  /// itself once the list comes back empty.
+  bool get callCenterAvailable => coreSupport.supportsCallCenter;
+
   /// Whether passing a message on to a colleague is offered.
   bool get voicemailForwardAvailable => voicemailAvailable && coreSupport.supportsVoicemailForward;
 
@@ -144,8 +154,9 @@ class FeatureAccess extends Equatable {
     List<EmbeddedResource> embeddedResources,
     CoreSupport coreSupport,
     WebtritSystemInfo? systemInfo,
-    FeatureOverrides featureOverrides,
-  ) {
+    FeatureOverrides featureOverrides, {
+    bool callCenterAgent = false,
+  }) {
     try {
       // Initialize basic features
       final embeddedConfig = EmbeddedMapper.map(embeddedResources);
@@ -155,7 +166,13 @@ class FeatureAccess extends Equatable {
       final termsConfig = TermsMapper.map(embeddedResources);
 
       final loginConfig = LoginMapper.map(appConfig, embeddedConfig.embeddedResources);
-      final bottomMenuConfig = BottomMenuMapper.map(appConfig, embeddedConfig, coreSupport, featureOverrides);
+      final bottomMenuConfig = BottomMenuMapper.map(
+        appConfig,
+        embeddedConfig,
+        coreSupport,
+        featureOverrides,
+        callCenterAgent: callCenterAgent,
+      );
       final settingsConfig = SettingsMapper.map(appConfig, embeddedResources, coreSupport, termsConfig, systemInfo);
       final callConfig = CallMapper.map(appConfig, featureOverrides, systemInfo);
       final messagingConfig = MessagingMapper.map(appConfig, coreSupport);
@@ -266,8 +283,9 @@ abstract final class BottomMenuMapper {
     AppConfig appConfig,
     EmbeddedConfig embeddedConfig,
     CoreSupport coreSupport,
-    FeatureOverrides overrides,
-  ) {
+    FeatureOverrides overrides, {
+    bool callCenterAgent = false,
+  }) {
     final bottomMenu = appConfig.mainConfig.bottomMenu;
 
     if (bottomMenu.tabs.isEmpty) {
@@ -282,6 +300,15 @@ abstract final class BottomMenuMapper {
         // A section the server cannot fill would draw an entry that leads to a
         // screen saying the feature is unavailable - worse than no entry.
         .where((tab) => !(tab is VoicemailBottomMenuTab && !coreSupport.supportsVoicemail))
+        // Same reason as voicemail above, and with the second half of the
+        // gate: a section that says "you are not an agent of any queue" is a
+        // section nobody wants. Whether this person is an agent takes an
+        // authorised request, which is made long after the tab set is built,
+        // so what is read here is what the backend last answered for this
+        // account - see AppPreferences.getCallCenterAgent. Someone who becomes
+        // an agent mid-session gets the section at the next start; the settings
+        // row, which asks live, is there for them in the meantime.
+        .where((tab) => !(tab is CallCenterBottomMenuTab && !(coreSupport.supportsCallCenter && callCenterAgent)))
         // Two entries of one identity would render with one widget key and
         // bring the bar down with a duplicate-key crash. A config that
         // repeats a section keeps only its first entry, every property of
@@ -326,6 +353,12 @@ abstract final class BottomMenuMapper {
       RecentsTabScheme() => RecentsBottomMenuTab(
         supportsCallHistory:
             (overrides.isCallHistoryEnabled ?? tab.supportsCallHistory) && coreSupport.supportsCallHistory,
+        enabled: tab.enabled,
+        initial: tab.initial,
+        titleL10n: tab.titleL10n,
+        icon: tab.icon.toIconData(),
+      ),
+      CallCenterTabScheme() => CallCenterBottomMenuTab(
         enabled: tab.enabled,
         initial: tab.initial,
         titleL10n: tab.titleL10n,
@@ -434,7 +467,11 @@ abstract final class SettingsMapper {
   }
 
   static bool _isFeatureSupportedByCore(SettingsFlavor flavor, CoreSupport coreSupport) {
-    return flavor != SettingsFlavor.voicemail || coreSupport.supportsVoicemail;
+    return switch (flavor) {
+      SettingsFlavor.voicemail => coreSupport.supportsVoicemail,
+      SettingsFlavor.callCenter => coreSupport.supportsCallCenter,
+      _ => true,
+    };
   }
 
   static EmbeddedData? _getEmbeddedDataResource(

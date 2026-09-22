@@ -6,6 +6,7 @@ export 'cache/cache_section.dart';
 export 'call/call.dart';
 export 'call_direction.dart';
 export 'call_log_entry.dart';
+export 'call_queues/call_queues.dart';
 export 'call_to_action.dart';
 export 'caller_id_settings.dart';
 export 'cdr/cdr.dart';

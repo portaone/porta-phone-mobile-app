@@ -57,7 +57,11 @@ class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpos
     // to offer and is left out rather than showing a control that would refuse
     // everything typed into it.
     MainFlavor.contacts || MainFlavor.favorites || MainFlavor.recents => true,
-    MainFlavor.keypad || MainFlavor.messaging || MainFlavor.embedded || MainFlavor.voicemail => false,
+    MainFlavor.keypad ||
+    MainFlavor.messaging ||
+    MainFlavor.embedded ||
+    MainFlavor.voicemail ||
+    MainFlavor.callCenter => false,
   };
 
   @override

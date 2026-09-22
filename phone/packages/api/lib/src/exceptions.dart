@@ -76,6 +76,22 @@ class VoicemailMessageGoneException extends RequestFailure {
   }) : super();
 }
 
+/// The user is not an agent of the call queue this was about.
+///
+/// The queue was taken away from them, or the list on screen is older than the
+/// PBX. Named because it says something about the list rather than about the
+/// request: whoever asked can read their queues again instead of leaving a row
+/// that no longer exists switched the way they left it.
+class CallQueueNotFoundException extends RequestFailure {
+  CallQueueNotFoundException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.token,
+    super.error,
+  }) : super();
+}
+
 /// The backend failed on its own side, and nothing follows from it about what
 /// the request did.
 ///

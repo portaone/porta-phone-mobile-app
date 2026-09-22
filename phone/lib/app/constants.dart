@@ -105,6 +105,13 @@ const kVoicemailFeatureFlag = 'voicemail';
 const kVoicemailSaveFeatureFlag = 'voicemailSave';
 const kVoicemailTrashFeatureFlag = 'voicemailTrash';
 const kVoicemailForwardFeatureFlag = 'voicemailForward';
+
+/// Adapter capability for the call center queues an agent serves.
+///
+/// It says the deployment offers the feature, not that this user is an agent of
+/// anything: who is an agent is answered by the queue list itself, and only an
+/// authorised request can answer it.
+const kCallCenterFeatureFlag = 'callCenter';
 const kSystemNotificationsFeatureFlag = 'notifications';
 const kSystemNotificationsPushFeatureFlag = 'notificationsPush';
 const kSipPresenceFeatureFlag = 'sipPresence';

@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/features/call_center/call_center.dart';
 import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dart';
 import 'package:webtrit_phone/features/register_status/register_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
@@ -188,6 +189,37 @@ class SettingsScreen extends StatelessWidget {
                                   separatorColor: effectiveStyle?.separatorColor,
                                   onTap: () => _onItemTap(context, item),
                                 ),
+                            ] else if (item.flavor == SettingsFlavor.callCenter) ...[
+                              Builder(
+                                builder: (context) {
+                                  final queues = context.select<CallQueuesCubit, CallQueuesState>(
+                                    (cubit) => cubit.state,
+                                  );
+                                  // An empty list is the backend saying this
+                                  // user is not an agent, so the row is absent
+                                  // rather than leading to a screen with
+                                  // nothing on it. The capability is the
+                                  // section mapper's half of the gate.
+                                  if (!queues.isAgent) return const SizedBox.shrink();
+
+                                  return SettingsTile(
+                                    title: context.parseL10n(item.titleL10n),
+                                    icon: item.icon,
+                                    iconColor: item.iconColor ?? effectiveStyle?.leadingIconsColor,
+                                    trailing: Text(
+                                      context.l10n.callCenter_Text_loggedInOfTotal(
+                                        queues.loggedInCount,
+                                        queues.queues.length,
+                                      ),
+                                      style: effectiveStyle?.itemTextStyle,
+                                    ),
+                                    textStyle: effectiveStyle?.itemTextStyle,
+                                    showSeparator: showSeparators,
+                                    separatorColor: effectiveStyle?.separatorColor,
+                                    onTap: () => _onItemTap(context, item),
+                                  );
+                                },
+                              ),
                             ] else if (item.flavor == SettingsFlavor.voicemail) ...[
                               UnreadVoicemailCountBuilder(
                                 builder: (context, unreadCount) => SettingsTile(
@@ -285,6 +317,8 @@ class SettingsScreen extends StatelessWidget {
         context.router.navigate(const CacheManagementScreenPageRoute());
       case SettingsFlavor.voicemail:
         context.router.navigate(const VoicemailScreenPageRoute());
+      case SettingsFlavor.callCenter:
+        context.router.navigate(const CallCenterScreenPageRoute());
       case SettingsFlavor.callerId:
         context.router.navigate(const CallerIdSettingsScreenPageRoute());
       case SettingsFlavor.presence:

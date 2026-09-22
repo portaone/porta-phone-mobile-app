@@ -11,6 +11,15 @@ abstract class AppPreferences {
 
   Future<void> setFcmPushToken(String value);
 
+  /// What the backend last said about [userId] being a call center agent.
+  ///
+  /// Null where it has never answered for this account. The bottom-menu
+  /// section is drawn from this, because whether to draw it has to be decided
+  /// before the session can ask - see `BottomMenuMapper`.
+  bool? getCallCenterAgent(String userId);
+
+  Future<void> setCallCenterAgent(String userId, bool value);
+
   String? getString(String key);
 
   Future<void> setString(String key, String value);
@@ -53,6 +62,16 @@ class AppPreferencesImpl implements AppPreferences {
 
   @override
   Future<void> setFcmPushToken(String value) => setString(_fcmPushTokenKey, value);
+
+  @override
+  bool? getCallCenterAgent(String userId) => getBool(_callCenterAgentKey(userId));
+
+  @override
+  Future<void> setCallCenterAgent(String userId, bool value) => setBool(_callCenterAgentKey(userId), value);
+
+  // Keyed by account: the answer is about a person, and a device that two of
+  // them sign into in turn must not hand one the other's sections.
+  static String _callCenterAgentKey(String userId) => 'call-center-agent:$userId';
 
   @override
   String? getString(String key) => _sharedPreferences.getString(key);

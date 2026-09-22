@@ -182,6 +182,24 @@ final FailureRule voicemailNotConfiguredRule = FailureRule(
   ),
 );
 
+/// A queue the user is not an agent of.
+///
+/// Declared by the call queue endpoints, and by the error code rather than by
+/// the status, for the same reason the voicemail rules are: these calls are
+/// optional, so a bare 404 is how a deployment says it has no such route. The
+/// code is what tells "this queue is not yours" from "this backend cannot do
+/// this at all".
+final FailureRule callQueueNotFoundRule = FailureRule(
+  code: 'call_queue_not_found',
+  build: (f) => CallQueueNotFoundException(
+    url: f.url,
+    requestId: f.requestId,
+    statusCode: f.statusCode,
+    token: f.token,
+    error: f.error,
+  ),
+);
+
 /// Creating a session was refused because the credentials are wrong.
 ///
 /// Declared on that endpoint rather than globally: everywhere else a 401 is

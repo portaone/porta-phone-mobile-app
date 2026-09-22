@@ -32,7 +32,7 @@ class BlindTransferPurpose extends Equatable implements DestinationPickPurpose {
     // A conversation, an embedded page and a list of voice messages have
     // nobody to hand a call to: the person who left a message is a number the
     // call history already offers.
-    MainFlavor.messaging || MainFlavor.embedded || MainFlavor.voicemail => false,
+    MainFlavor.messaging || MainFlavor.embedded || MainFlavor.voicemail || MainFlavor.callCenter => false,
   };
 
   @override

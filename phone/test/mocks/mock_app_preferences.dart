@@ -21,6 +21,12 @@ class MockAppPreferences implements AppPreferences {
   Future<void> setFcmPushToken(String value) => setString('fcm-push-token', value);
 
   @override
+  bool? getCallCenterAgent(String userId) => getBool('call-center-agent:$userId');
+
+  @override
+  Future<void> setCallCenterAgent(String userId, bool value) => setBool('call-center-agent:$userId', value);
+
+  @override
   String? getString(String key) => _storage[key] as String?;
 
   @override

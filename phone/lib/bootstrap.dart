@@ -155,7 +155,7 @@ Future<AppDependencies> _bootstrap({
     ),
   );
 
-  deps.share<SessionRepository>(
+  final sessionRepository = deps.share<SessionRepository>(
     SessionRepositoryImpl(
       secureStorage: secureStorage,
       sessionCleanupWorker: sessionCleanupWorker,
@@ -178,6 +178,8 @@ Future<AppDependencies> _bootstrap({
       appThemes: appThemes,
       systemInfoRepository: systemInfoRepository,
       remoteConfigService: cachedRemoteConfigService,
+      appPreferences: appPreferences,
+      sessionRepository: sessionRepository,
     ),
   );
   // Initialize the immutable feature configuration snapshot.

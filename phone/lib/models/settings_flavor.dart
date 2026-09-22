@@ -11,6 +11,7 @@ enum SettingsFlavor {
   mediaSettings,
   cacheManagement,
   voicemail,
+  callCenter,
   callerId,
   presence,
 }

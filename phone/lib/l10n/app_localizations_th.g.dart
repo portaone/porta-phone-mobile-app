@@ -97,6 +97,54 @@ class AppLocalizationsTh extends AppLocalizations {
   String get autoprovision_successSnackBar_used => 'ดึงการตั้งค่าของคุณสำเร็จแล้ว แอปพร้อมใช้งาน';
 
   @override
+  String get callCenter_AppBarTitle => 'คิวของฉัน';
+
+  @override
+  String get callCenter_Button_retry => 'ลองอีกครั้ง';
+
+  @override
+  String get callCenter_Snackbar_changeFailed => 'ไม่สามารถเปลี่ยนสถานะของคุณในคิวได้ โปรดลองอีกครั้ง';
+
+  @override
+  String get callCenter_Snackbar_queueGone => 'คิวนี้ไม่ใช่ของคุณอีกต่อไป รายการได้รับการรีเฟรชแล้ว';
+
+  @override
+  String get callCenter_Snackbar_readOnly => 'ขณะนี้เซิร์ฟเวอร์อยู่ในโหมดอ่านอย่างเดียว จึงไม่สามารถเปลี่ยนสถานะคิวได้';
+
+  @override
+  String get callCenter_Switch_allQueues => 'ทุกคิว';
+
+  @override
+  String callCenter_Text_agentsOfTotal(int loggedIn, int total) {
+    return 'เจ้าหน้าที่ $loggedIn จาก $total คน';
+  }
+
+  @override
+  String get callCenter_Text_loadFailed => 'ไม่สามารถโหลดคิวของคุณได้';
+
+  @override
+  String callCenter_Text_callersWaiting(int count) {
+    return 'รออยู่ $count สาย';
+  }
+
+  @override
+  String get callCenter_Text_callersWaitingUnknown => 'รออยู่ — สาย';
+
+  @override
+  String callCenter_Text_loggedInOfTotal(int loggedIn, int total) {
+    return 'รับสายอยู่ $loggedIn จาก $total คิว';
+  }
+
+  @override
+  String get callCenter_Text_noQueues => 'คุณไม่ได้เป็นเจ้าหน้าที่ของคิวใด';
+
+  @override
+  String get callCenter_Text_offline => 'ออฟไลน์';
+
+  @override
+  String get callCenter_Text_online => 'ออนไลน์';
+
+  @override
   String get callTileActions_contact => 'รายชื่อติดต่อ';
 
   @override
@@ -1384,6 +1432,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get main_Button_cancelPicking => 'ยกเลิก';
+
+  @override
+  String get main_BottomNavigationBarItemLabel_callCenter => 'คอลเซ็นเตอร์';
 
   @override
   String get main_BottomNavigationBarItemLabel_chats => 'แชท';
@@ -2842,6 +2893,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get settings_ListViewTileTitle_self_config => 'หน้าตั้งค่าด้วยตนเอง';
+
+  @override
+  String get settings_ListViewTileTitle_callCenter => 'คอลเซ็นเตอร์';
 
   @override
   String get settings_ListViewTileTitle_sessions => 'เซสชัน';
