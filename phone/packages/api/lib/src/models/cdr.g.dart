@@ -63,7 +63,13 @@ CdrHistoryResponse _$CdrHistoryResponseFromJson(Map<String, dynamic> json) =>
       items: (json['items'] as List<dynamic>)
           .map((e) => CdrRecord.fromJson(e as Map<String, dynamic>))
           .toList(),
+      pagination: json['pagination'] == null
+          ? null
+          : Pagination.fromJson(json['pagination'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$CdrHistoryResponseToJson(CdrHistoryResponse instance) =>
-    <String, dynamic>{'items': instance.items.map((e) => e.toJson()).toList()};
+    <String, dynamic>{
+      'items': instance.items.map((e) => e.toJson()).toList(),
+      'pagination': instance.pagination?.toJson(),
+    };

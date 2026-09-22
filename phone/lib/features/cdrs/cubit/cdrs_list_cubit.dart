@@ -9,22 +9,34 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/services/services.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
+import '../services/cdrs_history_walk.dart';
+
 part 'cdrs_list_state.dart';
 
 /// Base for the CDR list cubits (full, missed, per-number). Owns the shared
 /// lifecycle: the initial load with its loading gate (an empty cache only
 /// means "loading" while the first remote sync can still complete), the
-/// repository event handling, and the remote scan used by the filtered lists.
+/// repository event handling, and the walk back through the remote history.
 /// Subclasses provide the local query and the event predicate, and may override
 /// the history fetching strategy.
 abstract class CdrsListCubit extends Cubit<CdrsListState> {
-  CdrsListCubit(this.localRepository, this.remoteRepository, this.syncStateSource, {this.pageSize = 50})
-    : super(const CdrsListState());
+  CdrsListCubit(
+    this.localRepository,
+    this.remoteRepository,
+    this.syncStateSource, {
+    this.pageSize = 50,
+    CdrsHistoryWalk? historyWalk,
+  }) : historyWalk = historyWalk ?? CdrsHistoryWalk(localRepository, remoteRepository, pageSize: pageSize),
+       super(const CdrsListState());
 
   final CdrsLocalRepository localRepository;
   final CdrsRemoteRepository remoteRepository;
   final PollingTaskStateSource syncStateSource;
   final int pageSize;
+
+  /// Shared with the other lists over the same store: one walk at a time, one
+  /// watermark, one set of slices.
+  final CdrsHistoryWalk historyWalk;
 
   late final Logger logger = Logger(runtimeType.toString());
 
@@ -32,16 +44,11 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
   StreamSubscription<PollingTaskState>? _syncStatesSub;
   bool _initialSyncHandled = false;
 
-  /// Local query backing this list; [from] is the pagination watermark.
-  Future<List<CdrRecord>> queryLocal({DateTime? from});
+  /// Local query backing this list; [olderThan] is the pagination watermark.
+  Future<List<CdrRecord>> queryLocal({DateTime? olderThan});
 
   /// Whether an upserted record belongs to this list.
   bool matches(CdrRecord cdr);
-
-  /// Whether [init] should immediately fetch more when the cache holds fewer
-  /// than [pageSize] records. The scan-driven lists do; plain scroll
-  /// pagination does not.
-  bool get fetchesOnShortInit => true;
 
   Future<void> init() async {
     logger.info('Loading CDRs');
@@ -68,7 +75,11 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
         }
       } else {
         _initialSyncHandled = true;
-        if (fetchesOnShortInit && cached.length < pageSize) fetchHistory();
+        // A list shorter than the screen cannot be scrolled, so its pagination
+        // listener never fires and the user has no way to ask for more; it has
+        // to fill itself. A short list is the ordinary case now that what fills
+        // the store first is one page of one slice, not a page of the archive.
+        if (cached.length < pageSize) fetchHistory();
       }
     } catch (e, s) {
       logger.severe('Failed to initialize', e, s);
@@ -111,61 +122,31 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
     if (state.isLoading) emit(state.copyWith(isLoading: false));
   }
 
-  /// Brings the list up to date after the initial sync. Defaults to
-  /// [fetchHistory] (local re-read plus remote scan); override when a plain
-  /// local re-read is enough.
+  /// Brings the list up to date after the initial sync: the local re-read, and
+  /// the walk when that leaves the list too short to scroll.
   Future<void> resolveInitialLoad() => fetchHistory();
 
-  /// Loads more records into the list. The default implementation reads the
-  /// next local page and, when it comes up short, scans remote history
-  /// (persisting fetched pages silently) for records matching this list.
+  /// Loads more records into the list: what the store already holds, and then
+  /// the history walked further back.
   ///
-  /// The scan is a rough workaround for the missing dedicated API filters and
-  /// is limited to 10 pages to avoid excessive data fetching.
+  /// The walk itself belongs to [historyWalk], which is one object for the
+  /// whole store. What this list contributes is what it is FOR: which records
+  /// it wants, how it shows them, and when it has stopped caring.
   Future<void> fetchHistory() async {
     if (state.fetchingHistory || state.historyEndReached) return;
 
     emit(state.copyWith(fetchingHistory: true));
+    final generation = _walkGeneration;
     try {
-      final oldestLocal = state.records.lastOrNull?.connectTime;
-      List<CdrRecord> history = await queryLocal(from: oldestLocal);
-      if (isClosed) return;
-      emit(state.copyWith(records: state.records.mergeWithHistory(history).toList()));
-
-      if (history.length < pageSize) {
-        logger.info('No more local CDRs, scanning remote history');
-        DateTime? oldestSynced = await localRepository.getFirstRecordTime();
-        List<CdrRecord> scanResult = [];
-        int scannedPages = 0;
-
-        while (!isClosed && scannedPages < 10 && scanResult.length < pageSize) {
-          logger.info('Scanning remote CDRs iteration: $scannedPages time: $oldestSynced');
-
-          final scanPage = await remoteRepository.getHistory(to: oldestSynced, limit: pageSize);
-          if (scanPage.isEmpty) {
-            logger.info('No more remote CDRs to scan, stopping search');
-            break;
-          }
-          await localRepository.upsertCdrs(scanPage, silent: true);
-          if (isClosed) return;
-          oldestSynced = scanPage.last.connectTime;
-          final matched = scanPage.where(matches);
-          logger.info('Found matching CDRs: ${matched.length} in ${scanPage.length} scanned');
-
-          scanResult.addAll(matched);
-          scannedPages++;
-
-          emit(state.copyWith(records: state.records.mergeWithHistory(matched).toList()));
-        }
-
-        history.addAll(scanResult);
-      }
-      if (isClosed) return;
-      if (history.isEmpty) {
-        emit(state.copyWith(fetchingHistory: false, historyEndReached: true));
-      } else {
-        emit(state.copyWith(fetchingHistory: false));
-      }
+      final result = await historyWalk.forList(
+        wanted: pageSize,
+        matches: matches,
+        takeWhatIsStored: _takeLocalPage,
+        show: _show,
+        cancelled: () => isClosed || generation != _walkGeneration,
+      );
+      if (isClosed || generation != _walkGeneration) return;
+      emit(state.copyWith(fetchingHistory: false, historyEndReached: result.reachedHorizon ? true : null));
     } catch (e, s) {
       logger.severe('Failed to load CDRs', e, s);
       CrashlyticsUtils.recordError(
@@ -182,6 +163,34 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
     }
   }
 
+  /// Reads the next local page into the list and answers with how many rows it
+  /// GAINED - records already listed add nothing to scroll through.
+  ///
+  /// The generation is checked like every other await in the fetch path: a wipe
+  /// landing while this query is in flight leaves it holding rows the store no
+  /// longer has, and emitting them would put deleted calls back on screen.
+  Future<int> _takeLocalPage() async {
+    final generation = _walkGeneration;
+    final oldestLocal = state.records.lastOrNull?.connectTime;
+    final localPage = await queryLocal(olderThan: oldestLocal);
+    if (isClosed || generation != _walkGeneration || localPage.isEmpty) return 0;
+
+    return _show(localPage);
+  }
+
+  /// Puts a batch on screen and answers with the rows the list actually gained:
+  /// a record already there - a boundary repeat, or one another list fetched
+  /// first - adds nothing to scroll through.
+  int _show(List<CdrRecord> records) {
+    final before = state.records.length;
+    emit(state.copyWith(records: state.records.mergeWithHistory(records).toList()));
+    return state.records.length - before;
+  }
+
+  /// Bumped by a wipe. A walk that started before it must not write what it
+  /// fetched onto the fresh state.
+  int _walkGeneration = 0;
+
   void _handleEvent(CdrRecordsEvent event) {
     if (event is CdrRecordUpserted && matches(event.cdr)) {
       final records = state.records.mergeWithUpdate(event.cdr).toList();
@@ -195,10 +204,12 @@ abstract class CdrsListCubit extends Cubit<CdrsListState> {
     }
     if (event is CdrRecordsWiped) {
       // A wipe clears the sync cursor as well, returning the store to its
-      // pre-initial-sync state: drop the in-memory records and re-arm the
-      // loading gate until the next sync cycle reports the fresh state.
+      // pre-initial-sync state: drop the in-memory records, the walk cursor
+      // with them, and re-arm the loading gate until the next sync cycle
+      // reports the fresh state.
       _initialSyncHandled = false;
-      emit(state.copyWith(records: const [], isLoading: true, historyEndReached: false));
+      _walkGeneration++;
+      emit(const CdrsListState());
       _releaseInitialLoadingIfUnavailable(syncStateSource.state);
     }
   }

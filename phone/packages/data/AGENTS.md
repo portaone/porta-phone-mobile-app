@@ -18,8 +18,8 @@ dart test test/contacts_dao_test.dart
 
 ## Architecture
 
-- `lib/src/tables/` — 27 Drift table definitions
-- `lib/src/daos/` — 13 DAOs (one per domain area)
+- `lib/src/tables/` — 34 Drift table definitions
+- `lib/src/daos/` — 18 DAOs
 - `lib/src/migrations/` — one file per schema version (`migration_v2.dart` … `migration_vN.dart`)
 - `lib/src/migrations/generated/` — generated schema helpers (do not edit)
 - `lib/src/drift_schemas/` — JSON schema snapshots (do not edit)
@@ -40,9 +40,23 @@ dart test test/contacts_dao_test.dart
 4. Run `dart run bin/create_new_schema_dump_and_test_migration.dart`.
 5. Add migration tests in `test/migrations_test.dart` using `SchemaVerifier`.
 
+A migration builds the schema of **its own version**, never the current one:
+`m.createTable(vN.SomeTable(db))` from `generated/schema_vN.dart`, not
+`m.createTable(db.someTable)`. The second reads identically while a table never
+changes shape, and is wrong the moment one does — an install arriving from the
+version before gets the table created already reshaped, and the later migration
+then reshapes it again. It cost 74 red migration tests once; every migration
+here now pins its version.
+
+These tests are **not in the pre-push gate** — `phone-test` runs `flutter test`
+in `phone/` and stops there. Run `dart test` in this package by hand after any
+schema change.
+
 ### Table Conventions
 
-- Enums: `intEnum<T>()`.
+- Enums: `textEnum<T>()`, which stores the name — an enum can then gain a value, or be
+  reordered, without rewriting stored rows. `intEnum` survives in three old columns
+  (`contacts.source_type`, `contacts.kind`, `call_logs.direction`); do not add a fourth.
 - Foreign keys: `customConstraint('NOT NULL REFERENCES table_name(id) ON DELETE CASCADE')`.
 - Timestamps: `insertedAt` / `updatedAt`; do not update `updatedAt` manually — triggers handle it.
 - Prefer `insertReturning` with `onConflict: DoUpdate(...)` for upserts.
@@ -86,7 +100,7 @@ for the rare case where local priority is intentional.
 | Notifications | active_message_notifications, system_notifications, outbox                    | ActiveMessageNotificationsDao, SystemNotificationsDao  |
 | Presence      | presence_info                                                                  | PresenceInfoDao                                        |
 | Favorites     | favorites                                                                      | FavoritesDao                                           |
-| CDR           | cdr                                                                            | CdrsDao                                                |
+| CDR           | cdr, cdr_sync_cursors (one row per watermark kind)                             | CdrsDao                                                |
 
 ### Outbox Pattern
 

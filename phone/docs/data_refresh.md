@@ -97,8 +97,13 @@ behind the app bar. Both populated and empty scrollables use always-scrollable
 physics so a short list can still recognize the gesture. A list's pagination
 listener ignores positions at or beyond its leading edge, including negative
 iOS bounce overscroll, so a pull cannot start `fetchHistory()` beside the
-polling cycle. Scrolling toward the bottom remains a separate action: it loads
-older pages through `CdrsListCubit.fetchHistory()`.
+polling cycle. Scrolling toward the bottom remains a separate action: it walks
+further back through `CdrsListCubit.fetchHistory()`, which asks for slices of
+history by date rather than for the next page number - the backend volunteers
+only recent history to a request that names no range, so a day without calls
+would otherwise read as the end of the archive. How far it reaches, and what
+ends a list, is in [`features/call_history.md`](features/call_history.md)
+and [`history_paging.md`](history_paging.md).
 
 The local-recents screen cannot be refreshed by hand and has nothing remote to
 refresh: its list is written by the app itself and watched live.

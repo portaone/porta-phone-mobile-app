@@ -3,6 +3,7 @@ export 'connectivity_lifecycle_service.dart';
 export 'connectivity_service.dart';
 export 'crashlytics_context/crashlytics_context.dart';
 export 'diagnostic/diagnostic.dart';
+export 'history_windows.dart';
 export 'polling_service.dart';
 export 'polling_task_handle.dart';
 export 'polling_worker.dart';

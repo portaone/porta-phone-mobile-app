@@ -8,13 +8,14 @@ class NumberCdrsLogCubit extends CdrsListCubit {
     super.remoteRepository,
     super.syncStateSource, {
     super.pageSize,
+    super.historyWalk,
   });
 
   final String number;
 
   @override
-  Future<List<CdrRecord>> queryLocal({DateTime? from}) =>
-      localRepository.getHistory(number: number, from: from, limit: pageSize);
+  Future<List<CdrRecord>> queryLocal({DateTime? olderThan}) =>
+      localRepository.getHistory(number: number, olderThan: olderThan, limit: pageSize);
 
   @override
   bool matches(CdrRecord cdr) => cdr.callerNumber == number || cdr.calleeNumber == number;
