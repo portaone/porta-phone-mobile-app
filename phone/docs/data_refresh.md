@@ -102,7 +102,8 @@ further back through `CdrsListCubit.fetchHistory()`, which asks for slices of
 history by date rather than for the next page number - the backend volunteers
 only recent history to a request that names no range, so a day without calls
 would otherwise read as the end of the archive. How far it reaches, and what
-ends a list, is in [`features/call_history.md`](features/call_history.md).
+ends a list, is in [`features/call_history.md`](features/call_history.md)
+and [`history_paging.md`](history_paging.md).
 
 The local-recents screen cannot be refreshed by hand and has nothing remote to
 refresh: its list is written by the app itself and watched live.
