@@ -98,4 +98,49 @@ void main() {
 
     expect(stored.single.recordingId, '36495', reason: 'a recording that shows up later must land');
   });
+  group('history walk watermark', () {
+    test('absent until a walk marks it', () async {
+      expect(await database.cdrsDao.getHistoryWalkedTo(), isNull);
+    });
+
+    test('moves only further back', () async {
+      // The column holds an instant, so read it back as one: the getter returns
+      // it in the local zone, as the sync cursor's does.
+      final older = DateTime.utc(2026, 6, 1);
+      final newer = DateTime.utc(2026, 9, 1);
+
+      await database.cdrsDao.markHistoryWalkedTo(newer);
+      expect((await database.cdrsDao.getHistoryWalkedTo())?.toUtc(), newer);
+
+      await database.cdrsDao.markHistoryWalkedTo(older);
+      expect((await database.cdrsDao.getHistoryWalkedTo())?.toUtc(), older);
+
+      // A second list resuming from a newer cursor must not shorten what the
+      // first one already covered.
+      await database.cdrsDao.markHistoryWalkedTo(newer);
+      expect((await database.cdrsDao.getHistoryWalkedTo())?.toUtc(), older);
+    });
+
+    test('a wipe clears it with the records', () async {
+      await database.cdrsDao.markHistoryWalkedTo(DateTime.utc(2026, 6, 1));
+      await database.cdrsDao.setSyncCursor(DateTime.utc(2026, 9, 1));
+
+      await database.cdrsDao.wipeData();
+
+      expect(await database.cdrsDao.getHistoryWalkedTo(), isNull);
+      expect(await database.cdrsDao.getSyncCursor(), isNull);
+    });
+
+    test('the sync cursor and the watermark do not disturb each other', () async {
+      // They are two rows of one table now, told apart by their kind, so this
+      // is what keeps that from being a merge. The sync cursor's PRESENCE means
+      // the first cycle completed; a walk that runs before any cycle must not
+      // be able to claim that.
+      await database.cdrsDao.markHistoryWalkedTo(DateTime.utc(2026, 6, 1));
+      expect(await database.cdrsDao.getSyncCursor(), isNull);
+
+      await database.cdrsDao.setSyncCursor(DateTime.utc(2026, 9, 1));
+      expect((await database.cdrsDao.getHistoryWalkedTo())?.toUtc(), DateTime.utc(2026, 6, 1));
+    });
+  });
 }
