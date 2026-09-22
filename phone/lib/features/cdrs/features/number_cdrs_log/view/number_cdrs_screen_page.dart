@@ -28,7 +28,7 @@ class NumberCdrsScreenPage extends StatelessWidget {
         context.read<CdrsLocalRepository>(),
         context.read<CdrsRemoteRepository>(),
         context.read<CdrsSync>(),
-        walkQueue: context.read<CdrsHistoryWalkQueue>(),
+        historyWalk: context.read<CdrsHistoryWalk>(),
       )..init(),
       child: NumberCdrsScreen(title: Text(EnvironmentConfig.APP_NAME), videoVisible: videoVisible),
     );

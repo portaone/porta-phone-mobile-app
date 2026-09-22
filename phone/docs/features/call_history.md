@@ -59,7 +59,7 @@ same way.
 | Incremental sync | `cdrs_sync_worker.dart` `_refreshIncrementalHistory` | `time_from` = newest local record, every page to now |
 | First fill of an empty store | `_refreshInitialHistory` | slices back from now, stopping at the first that holds records; stores that newest page |
 | Empty store after the first walk | `_refreshRecentHistory` | the most recent slice only - nothing to be incremental from, but no reason to re-walk the archive every five minutes |
-| Scrolling to the bottom | `CdrsListCubit.fetchHistory` | the next local page, then slices back from the watermark until this list has a page worth of records or the horizon ends it |
+| Scrolling to the bottom | `CdrsListCubit.fetchHistory` -> `CdrsHistoryWalk` | the next local page, then slices back from the watermark until this list has a page worth of records or the horizon ends it |
 | A list that opens short | `CdrsListCubit.init`, `resolveInitialLoad` | the same walk, without waiting to be scrolled - a list shorter than the screen has no scroll extent, so its pagination listener never fires and the user has no way to ask for more |
 
 How a slice is paged through, when the walk stops inside one and where it picks
