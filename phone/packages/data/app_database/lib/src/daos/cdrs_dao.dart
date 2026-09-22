@@ -82,20 +82,47 @@ class CdrsDao extends DatabaseAccessor<AppDatabase> with _$CdrsDaoMixin {
   /// Time of the last successfully completed remote sync cycle, or null if the
   /// initial sync has never finished (distinguishes it from a synced-but-empty
   /// history, which keeps a cursor while having no records).
-  Future<DateTime?> getSyncCursor() async {
-    final result = await select(cdrSyncCursorTable).getSingleOrNull();
-    return result != null ? DateTime.fromMicrosecondsSinceEpoch(result.timestampUsec) : null;
+  Future<DateTime?> getSyncCursor() => _cursor(CdrCursorKindEnum.sync);
+
+  Future<void> setSyncCursor(DateTime time) => _writeCursor(CdrCursorKindEnum.sync, time);
+
+  /// How far back the archive has been fetched, or null when nobody has walked
+  /// it yet.
+  Future<DateTime?> getHistoryWalkedTo() => _cursor(CdrCursorKindEnum.historyWalk);
+
+  /// Moves the watermark to [time] if that reaches further back than where it
+  /// already stands.
+  ///
+  /// Only backwards: a walk resumed from a newer cursor - a second list, a
+  /// screen opened again - must not shorten what another one already covered.
+  Future<void> markHistoryWalkedTo(DateTime time) {
+    final usec = time.microsecondsSinceEpoch;
+    return transaction(() async {
+      final current = await _cursorRow(CdrCursorKindEnum.historyWalk);
+      if (current != null && current.timestampUsec <= usec) return;
+      await _writeCursor(CdrCursorKindEnum.historyWalk, time);
+    });
   }
 
-  Future<void> setSyncCursor(DateTime time) {
+  Future<CdrSyncCursorData?> _cursorRow(CdrCursorKindEnum kind) {
+    return (select(cdrSyncCursorTable)..where((t) => t.kind.equals(kind.name))).getSingleOrNull();
+  }
+
+  Future<DateTime?> _cursor(CdrCursorKindEnum kind) async {
+    final row = await _cursorRow(kind);
+    return row != null ? DateTime.fromMicrosecondsSinceEpoch(row.timestampUsec) : null;
+  }
+
+  Future<void> _writeCursor(CdrCursorKindEnum kind, DateTime time) {
     return into(
       cdrSyncCursorTable,
-    ).insertOnConflictUpdate(CdrSyncCursorData(id: 0, timestampUsec: time.microsecondsSinceEpoch));
+    ).insertOnConflictUpdate(CdrSyncCursorData(kind: kind, timestampUsec: time.microsecondsSinceEpoch));
   }
 
   Future<void> wipeData() async {
     await transaction(() async {
       await delete(cdrTable).go();
+      // One delete takes both watermarks: they are rows of one table.
       await delete(cdrSyncCursorTable).go();
     });
   }
