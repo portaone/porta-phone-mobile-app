@@ -16,6 +16,7 @@ import 'package:app_database/src/migrations/generated/schema_v23.dart' as v23;
 import 'package:app_database/src/migrations/generated/schema_v24.dart' as v24;
 import 'package:app_database/src/migrations/generated/schema_v25.dart' as v25;
 import 'package:app_database/src/migrations/generated/schema_v26.dart' as v26;
+import 'package:app_database/src/migrations/generated/schema_v27.dart' as v27;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -438,6 +439,59 @@ void main() {
       }
     });
   });
+  group('migration v27 data integrity', () {
+    test('the stored cursor becomes the sync row and nothing claims a walk', () async {
+      final schema = await verifier.schemaAt(26);
+      try {
+        final oldDb = v26.DatabaseAtV26(schema.newConnection());
+        await oldDb.customStatement('''
+          INSERT INTO cdrs (call_id, callee, callee_number, caller, caller_number, connect_time_usec,
+                            disconnect_time_usec, disconnect_reason, duration_seconds, direction, status)
+          VALUES ('cdr-1', '1000', '1000', '2000', '2000', 1758000000000000,
+                  1758000060000000, 'normal', 60, 'incoming', 'accepted')
+        ''');
+        await oldDb.customStatement('INSERT INTO cdr_sync_cursors (id, timestamp_usec) VALUES (0, 1758000100000000)');
+        await oldDb.close();
+
+        final appDatabase = AppDatabase(schema.newConnection());
+        await verifier.migrateAndValidate(appDatabase, 27);
+        await appDatabase.close();
+
+        final checkDb = v27.DatabaseAtV27(schema.newConnection());
+        final cdrs = await checkDb.customSelect('SELECT call_id FROM cdrs').get();
+        expect(cdrs.single.read<String>('call_id'), 'cdr-1');
+
+        // The one row an old store held is the sync cursor, and it has to
+        // survive AS that: its presence is what says a cycle completed.
+        final rows = await checkDb.customSelect('SELECT kind, timestamp_usec FROM cdr_sync_cursors').get();
+        expect(rows, hasLength(1), reason: 'no second row appears from nowhere');
+        expect(rows.single.read<String>('kind'), 'sync');
+        expect(rows.single.read<int>('timestamp_usec'), 1758000100000000);
+        await checkDb.close();
+      } finally {
+        schema.close();
+      }
+    });
+
+    test('an empty table migrates to an empty one', () async {
+      final schema = await verifier.schemaAt(26);
+      try {
+        final appDatabase = AppDatabase(schema.newConnection());
+        await verifier.migrateAndValidate(appDatabase, 27);
+        await appDatabase.close();
+
+        // A store that never completed a cycle must not come out of the
+        // migration claiming it did.
+        final checkDb = v27.DatabaseAtV27(schema.newConnection());
+        final rows = await checkDb.customSelect('SELECT kind FROM cdr_sync_cursors').get();
+        expect(rows, isEmpty);
+        await checkDb.close();
+      } finally {
+        schema.close();
+      }
+    });
+  });
+
   group('migration v26 data integrity', () {
     test('keeps stored voicemails and leaves both new flags null', () async {
       final schema = await verifier.schemaAt(25);

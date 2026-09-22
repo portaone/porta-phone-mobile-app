@@ -14784,15 +14784,17 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $CdrSyncCursorTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+  late final GeneratedColumnWithTypeConverter<CdrCursorKindEnum, String> kind =
+      GeneratedColumn<String>(
+        'kind',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<CdrCursorKindEnum>(
+        $CdrSyncCursorTableTable.$converterkind,
+      );
   static const VerificationMeta _timestampUsecMeta = const VerificationMeta(
     'timestampUsec',
   );
@@ -14805,7 +14807,7 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, timestampUsec];
+  List<GeneratedColumn> get $columns => [kind, timestampUsec];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -14818,9 +14820,6 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
     if (data.containsKey('timestamp_usec')) {
       context.handle(
         _timestampUsecMeta,
@@ -14836,15 +14835,17 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {kind};
   @override
   CdrSyncCursorData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CdrSyncCursorData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
+      kind: $CdrSyncCursorTableTable.$converterkind.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}kind'],
+        )!,
+      ),
       timestampUsec: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}timestamp_usec'],
@@ -14856,25 +14857,31 @@ class $CdrSyncCursorTableTable extends CdrSyncCursorTable
   $CdrSyncCursorTableTable createAlias(String alias) {
     return $CdrSyncCursorTableTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<CdrCursorKindEnum, String, String> $converterkind =
+      const EnumNameConverter<CdrCursorKindEnum>(CdrCursorKindEnum.values);
 }
 
 class CdrSyncCursorData extends DataClass
     implements Insertable<CdrSyncCursorData> {
-  /// Always 0: the table stores a single global cursor row.
-  final int id;
+  final CdrCursorKindEnum kind;
   final int timestampUsec;
-  const CdrSyncCursorData({required this.id, required this.timestampUsec});
+  const CdrSyncCursorData({required this.kind, required this.timestampUsec});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    {
+      map['kind'] = Variable<String>(
+        $CdrSyncCursorTableTable.$converterkind.toSql(kind),
+      );
+    }
     map['timestamp_usec'] = Variable<int>(timestampUsec);
     return map;
   }
 
   CdrSyncCursorDataCompanion toCompanion(bool nullToAbsent) {
     return CdrSyncCursorDataCompanion(
-      id: Value(id),
+      kind: Value(kind),
       timestampUsec: Value(timestampUsec),
     );
   }
@@ -14885,7 +14892,9 @@ class CdrSyncCursorData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CdrSyncCursorData(
-      id: serializer.fromJson<int>(json['id']),
+      kind: $CdrSyncCursorTableTable.$converterkind.fromJson(
+        serializer.fromJson<String>(json['kind']),
+      ),
       timestampUsec: serializer.fromJson<int>(json['timestampUsec']),
     );
   }
@@ -14893,19 +14902,21 @@ class CdrSyncCursorData extends DataClass
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'kind': serializer.toJson<String>(
+        $CdrSyncCursorTableTable.$converterkind.toJson(kind),
+      ),
       'timestampUsec': serializer.toJson<int>(timestampUsec),
     };
   }
 
-  CdrSyncCursorData copyWith({int? id, int? timestampUsec}) =>
+  CdrSyncCursorData copyWith({CdrCursorKindEnum? kind, int? timestampUsec}) =>
       CdrSyncCursorData(
-        id: id ?? this.id,
+        kind: kind ?? this.kind,
         timestampUsec: timestampUsec ?? this.timestampUsec,
       );
   CdrSyncCursorData copyWithCompanion(CdrSyncCursorDataCompanion data) {
     return CdrSyncCursorData(
-      id: data.id.present ? data.id.value : this.id,
+      kind: data.kind.present ? data.kind.value : this.kind,
       timestampUsec: data.timestampUsec.present
           ? data.timestampUsec.value
           : this.timestampUsec,
@@ -14915,61 +14926,74 @@ class CdrSyncCursorData extends DataClass
   @override
   String toString() {
     return (StringBuffer('CdrSyncCursorData(')
-          ..write('id: $id, ')
+          ..write('kind: $kind, ')
           ..write('timestampUsec: $timestampUsec')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, timestampUsec);
+  int get hashCode => Object.hash(kind, timestampUsec);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CdrSyncCursorData &&
-          other.id == this.id &&
+          other.kind == this.kind &&
           other.timestampUsec == this.timestampUsec);
 }
 
 class CdrSyncCursorDataCompanion extends UpdateCompanion<CdrSyncCursorData> {
-  final Value<int> id;
+  final Value<CdrCursorKindEnum> kind;
   final Value<int> timestampUsec;
+  final Value<int> rowid;
   const CdrSyncCursorDataCompanion({
-    this.id = const Value.absent(),
+    this.kind = const Value.absent(),
     this.timestampUsec = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   CdrSyncCursorDataCompanion.insert({
-    this.id = const Value.absent(),
+    required CdrCursorKindEnum kind,
     required int timestampUsec,
-  }) : timestampUsec = Value(timestampUsec);
+    this.rowid = const Value.absent(),
+  }) : kind = Value(kind),
+       timestampUsec = Value(timestampUsec);
   static Insertable<CdrSyncCursorData> custom({
-    Expression<int>? id,
+    Expression<String>? kind,
     Expression<int>? timestampUsec,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (kind != null) 'kind': kind,
       if (timestampUsec != null) 'timestamp_usec': timestampUsec,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   CdrSyncCursorDataCompanion copyWith({
-    Value<int>? id,
+    Value<CdrCursorKindEnum>? kind,
     Value<int>? timestampUsec,
+    Value<int>? rowid,
   }) {
     return CdrSyncCursorDataCompanion(
-      id: id ?? this.id,
+      kind: kind ?? this.kind,
       timestampUsec: timestampUsec ?? this.timestampUsec,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (kind.present) {
+      map['kind'] = Variable<String>(
+        $CdrSyncCursorTableTable.$converterkind.toSql(kind.value),
+      );
     }
     if (timestampUsec.present) {
       map['timestamp_usec'] = Variable<int>(timestampUsec.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -14977,8 +15001,9 @@ class CdrSyncCursorDataCompanion extends UpdateCompanion<CdrSyncCursorData> {
   @override
   String toString() {
     return (StringBuffer('CdrSyncCursorDataCompanion(')
-          ..write('id: $id, ')
-          ..write('timestampUsec: $timestampUsec')
+          ..write('kind: $kind, ')
+          ..write('timestampUsec: $timestampUsec, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -27578,13 +27603,15 @@ typedef $$CdrTableTableProcessedTableManager =
     >;
 typedef $$CdrSyncCursorTableTableCreateCompanionBuilder =
     CdrSyncCursorDataCompanion Function({
-      Value<int> id,
+      required CdrCursorKindEnum kind,
       required int timestampUsec,
+      Value<int> rowid,
     });
 typedef $$CdrSyncCursorTableTableUpdateCompanionBuilder =
     CdrSyncCursorDataCompanion Function({
-      Value<int> id,
+      Value<CdrCursorKindEnum> kind,
       Value<int> timestampUsec,
+      Value<int> rowid,
     });
 
 class $$CdrSyncCursorTableTableFilterComposer
@@ -27596,9 +27623,10 @@ class $$CdrSyncCursorTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
+  ColumnWithTypeConverterFilters<CdrCursorKindEnum, CdrCursorKindEnum, String>
+  get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<int> get timestampUsec => $composableBuilder(
@@ -27616,8 +27644,8 @@ class $$CdrSyncCursorTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -27636,8 +27664,8 @@ class $$CdrSyncCursorTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumnWithTypeConverter<CdrCursorKindEnum, String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
 
   GeneratedColumn<int> get timestampUsec => $composableBuilder(
     column: $table.timestampUsec,
@@ -27685,19 +27713,23 @@ class $$CdrSyncCursorTableTableTableManager
               ),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<CdrCursorKindEnum> kind = const Value.absent(),
                 Value<int> timestampUsec = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => CdrSyncCursorDataCompanion(
-                id: id,
+                kind: kind,
                 timestampUsec: timestampUsec,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                required CdrCursorKindEnum kind,
                 required int timestampUsec,
+                Value<int> rowid = const Value.absent(),
               }) => CdrSyncCursorDataCompanion.insert(
-                id: id,
+                kind: kind,
                 timestampUsec: timestampUsec,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
