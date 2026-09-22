@@ -184,6 +184,90 @@ abstract class AppLocalizations {
   /// **'Successfully retrieved your settings, your app is ready to use'**
   String get autoprovision_successSnackBar_used;
 
+  /// Title of the call center screen listing the agent queues.
+  ///
+  /// In en, this message translates to:
+  /// **'My queues'**
+  String get callCenter_AppBarTitle;
+
+  /// Asks for the queue list again after a failed read.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get callCenter_Button_retry;
+
+  /// Shown when logging in to or out of a queue failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change your status in the queue. Please try again.'**
+  String get callCenter_Snackbar_changeFailed;
+
+  /// Shown when the queue the agent acted on is not theirs any more.
+  ///
+  /// In en, this message translates to:
+  /// **'That queue is no longer yours. The list has been refreshed.'**
+  String get callCenter_Snackbar_queueGone;
+
+  /// Shown while the PBX site is read-only: queues can be read but not changed.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is read-only right now, so queue status cannot be changed.'**
+  String get callCenter_Snackbar_readOnly;
+
+  /// Caption of the control that logs the agent in to or out of every queue at once.
+  ///
+  /// In en, this message translates to:
+  /// **'All queues'**
+  String get callCenter_Switch_allQueues;
+
+  /// How many of a queue agents are logged in.
+  ///
+  /// In en, this message translates to:
+  /// **'{loggedIn} of {total} agents'**
+  String callCenter_Text_agentsOfTotal(int loggedIn, int total);
+
+  /// Shown when the queue list could not be read at all.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your queues.'**
+  String get callCenter_Text_loadFailed;
+
+  /// How many callers are queued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} waiting'**
+  String callCenter_Text_callersWaiting(int count);
+
+  /// Shown instead of the number of waiting callers when the PBX does not report it.
+  ///
+  /// In en, this message translates to:
+  /// **'— waiting'**
+  String get callCenter_Text_callersWaitingUnknown;
+
+  /// How many of their queues the agent is taking calls from.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking calls from {loggedIn} of {total} queues'**
+  String callCenter_Text_loggedInOfTotal(int loggedIn, int total);
+
+  /// Shown when the user serves no call queues at all.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not an agent of any call queue.'**
+  String get callCenter_Text_noQueues;
+
+  /// Queue state when the agent is not taking its calls.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get callCenter_Text_offline;
+
+  /// Queue state when the agent is taking its calls.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get callCenter_Text_online;
+
   /// Label of the expanded call tile action that opens the contact details screen.
   ///
   /// In en, this message translates to:

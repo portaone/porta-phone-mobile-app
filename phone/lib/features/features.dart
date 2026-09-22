@@ -3,6 +3,7 @@ export 'call/call.dart';
 export 'call_log/call_log.dart';
 export 'call_pull/call_pull.dart';
 export 'call_routing/call_routing.dart';
+export 'call_center/call_center.dart';
 export 'call_to_actions/call_to_actions.dart';
 export 'cdrs/cdrs.dart';
 export 'contact/contact.dart';
