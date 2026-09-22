@@ -12,9 +12,12 @@ import 'package:webtrit_phone/utils/view_params/view_params.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 class GroupChatInfo extends StatefulWidget {
-  const GroupChatInfo(this.userId, {super.key});
+  const GroupChatInfo(this.userId, {required this.isMuteEnabled, super.key});
 
   final String userId;
+
+  /// Whether the core can answer a mute at all; see [DialogChatInfo.isMuteEnabled].
+  final bool isMuteEnabled;
   @override
   State<GroupChatInfo> createState() => _GroupChatInfoState();
 }
@@ -104,9 +107,17 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
     if (value.length > 3) conversationCubit.setGroupName(value);
   }
 
+  void onMuteChoice(MuteChoice choice) =>
+      choice.dispatch(mute: conversationCubit.muteFor, unmute: conversationCubit.unmute);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Absent on a core without the mute, and showing the mute in force now -
+    // see the contact info for the same row.
+    final muteAvailable = widget.isMuteEnabled;
+    final userSettings =
+        context.watch<ConversationUserSettingsCubit?>()?.state ?? const ConversationUserSettingsState();
 
     return BlocBuilder<ConversationCubit, ConversationState>(
       builder: (context, state) {
@@ -162,6 +173,10 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
                       const SizedBox(height: 24),
                       nameField(chat, canChangeName),
                       const SizedBox(height: 24),
+                      if (muteAvailable) ...[
+                        NotificationMuteTile(mute: userSettings.activeChatMute(chat.id), onChoice: onMuteChoice),
+                        const SizedBox(height: 8),
+                      ],
                       SizedBox(
                         width: double.infinity,
                         child: Text(

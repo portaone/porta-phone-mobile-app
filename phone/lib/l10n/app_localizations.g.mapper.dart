@@ -766,6 +766,20 @@ extension AppLocalizationsExtension on AppLocalizations {
       'messaging_MessageView_textcopy' => messaging_MessageView_textcopy,
       'messaging_MessageView_today' => messaging_MessageView_today,
       'messaging_MessageView_yesterday' => messaging_MessageView_yesterday,
+      'messaging_NotificationMute_title' => messaging_NotificationMute_title,
+      'messaging_NotificationMute_on' => messaging_NotificationMute_on,
+      'messaging_NotificationMute_muted' => messaging_NotificationMute_muted,
+      'messaging_NotificationMute_sheetTitle' =>
+        messaging_NotificationMute_sheetTitle,
+      'messaging_NotificationMute_forOneHour' =>
+        messaging_NotificationMute_forOneHour,
+      'messaging_NotificationMute_forEightHours' =>
+        messaging_NotificationMute_forEightHours,
+      'messaging_NotificationMute_forTwoDays' =>
+        messaging_NotificationMute_forTwoDays,
+      'messaging_NotificationMute_forever' =>
+        messaging_NotificationMute_forever,
+      'messaging_NotificationMute_unmute' => messaging_NotificationMute_unmute,
       'messaging_ParticipantName_unknown' => messaging_ParticipantName_unknown,
       'messaging_ParticipantName_you' => messaging_ParticipantName_you,
       'messaging_SmsSendingStatus_delivered' =>
@@ -1780,6 +1794,7 @@ extension AppLocalizationsExtension on AppLocalizations {
         messaging_SemanticsLabel_conversationDetails,
       'messaging_SemanticsLabel_conversationOptions' =>
         messaging_SemanticsLabel_conversationOptions,
+      'messaging_SemanticsLabel_muted' => messaging_SemanticsLabel_muted,
       'messaging_SemanticsLabel_replying' => messaging_SemanticsLabel_replying,
       'messaging_SemanticsLabel_editing' => messaging_SemanticsLabel_editing,
       'messaging_SemanticsLabel_forwarding' =>
@@ -2101,6 +2116,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final int id] => messaging_GroupInfo_titlePrefix(id),
         _ => throw ArgumentError(
           'messaging_GroupInfo_titlePrefix requires 1 arguments',
+        ),
+      },
+      'messaging_NotificationMute_mutedUntil' => switch (args) {
+        [final String time] => messaging_NotificationMute_mutedUntil(time),
+        _ => throw ArgumentError(
+          'messaging_NotificationMute_mutedUntil requires 1 arguments',
         ),
       },
       'notifications_errorSnackBar_signalingDisconnectWithCodeName' =>

@@ -1720,6 +1720,38 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messaging_MessageView_yesterday => 'Ieri';
 
   @override
+  String get messaging_NotificationMute_title => 'Notifiche';
+
+  @override
+  String get messaging_NotificationMute_on => 'Attive';
+
+  @override
+  String get messaging_NotificationMute_muted => 'Silenziate';
+
+  @override
+  String messaging_NotificationMute_mutedUntil(String time) {
+    return 'Silenziate fino a $time';
+  }
+
+  @override
+  String get messaging_NotificationMute_sheetTitle => 'Silenzia le notifiche';
+
+  @override
+  String get messaging_NotificationMute_forOneHour => 'Per 1 ora';
+
+  @override
+  String get messaging_NotificationMute_forEightHours => 'Per 8 ore';
+
+  @override
+  String get messaging_NotificationMute_forTwoDays => 'Per 2 giorni';
+
+  @override
+  String get messaging_NotificationMute_forever => 'Per sempre';
+
+  @override
+  String get messaging_NotificationMute_unmute => 'Riattiva';
+
+  @override
   String get messaging_ParticipantName_unknown => 'Utente sconosciuto';
 
   @override
@@ -3890,6 +3922,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get messaging_SemanticsLabel_conversationOptions => 'Opzioni della conversazione';
+
+  @override
+  String get messaging_SemanticsLabel_muted => 'Notifiche silenziate';
 
   @override
   String get messaging_SemanticsLabel_replying => 'In risposta a';

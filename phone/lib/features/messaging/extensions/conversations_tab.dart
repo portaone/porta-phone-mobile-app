@@ -36,7 +36,8 @@ extension ConversationsTabX on ConversationsTab {
     ConversationsTab.sms => l10n.messaging_ConversationsScreen_smses_title,
   };
 
-  /// How many conversations of this kind are unread.
+  /// How many conversations of this kind are unread (and not muted - the
+  /// totals already leave those out).
   int unreadCount(UnreadCountState state) => switch (this) {
     ConversationsTab.chat => state.chatsWithUnreadCount,
     ConversationsTab.sms => state.smsConversationsWithUnreadCount,

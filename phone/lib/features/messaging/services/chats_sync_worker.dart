@@ -132,6 +132,10 @@ class ChatsSyncWorker {
             case ChatConversationLeave _:
               await _conversationUnsubscribe(event.chatId);
               await chatsRepository.deleteChatById(event.chatId);
+            case ChatConversationMuteUpdate _:
+              // Also raised by this device's own mute, and possibly before the
+              // chat itself is stored; the repository answers both.
+              await chatsRepository.upsertChatMute(event.chatId, event.mute);
             case UserChannelDisconnect _:
               break eventsIterator;
             default:
@@ -156,10 +160,15 @@ class ChatsSyncWorker {
         // Buffer updates that may come in a gap between fetching and subscribing
         final eventsStream = channel.chatEvents.transform(BufferTransformer());
 
-        // Fetch chat conversation data
-        final conversation = await channel.chatConversation;
-        await chatsRepository.upsertChat(conversation);
-        yield conversation;
+        // Fetch chat conversation data, mute included: this reply is the only
+        // place the core reports it, and re-reading it on every reconnect is
+        // also how a mute that lapsed while offline stops being one. A core
+        // without the functionality reports no mute at all, and none is then
+        // stored - "not muted" would be a claim, not a fact.
+        final snapshot = await channel.chatConversation;
+        await chatsRepository.upsertChat(snapshot.chat);
+        if (snapshot.mute case final mute?) await chatsRepository.upsertChatMute(id, mute);
+        yield snapshot;
 
         // Fetch read cursors
         final cursors = await channel.chatCursors;

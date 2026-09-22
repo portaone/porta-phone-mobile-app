@@ -1,4 +1,5 @@
 export 'chat.dart';
+export 'chat_conversation_snapshot.dart';
 export 'chat_member.dart';
 export 'chat_message.dart';
 export 'chat_message_read_cursor.dart';

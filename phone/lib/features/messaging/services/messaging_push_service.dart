@@ -1,6 +1,7 @@
 // ignore_for_file: unused_element
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
 
@@ -137,6 +138,7 @@ class MessagingPushService {
       if (notification is ChatsMessagePush) {
         final chat = await _tryGetChat(notification.conversationId);
         if (chat != null && _shouldSkipChatPush(chat)) return;
+        if (await _isChatMuted(notification.conversationId)) return;
 
         final localPush = AppLocalPush(
           notification.messageId,
@@ -160,6 +162,7 @@ class MessagingPushService {
       if (notification is SmsMessagePush) {
         final conversation = await _tryGetSmsConversation(notification.conversationId);
         if (conversation != null && _shouldSkipSmsPush(conversation)) return;
+        if (await _isSmsConversationMuted(notification.conversationId)) return;
 
         final localPush = AppLocalPush(
           notification.messageId,
@@ -223,6 +226,25 @@ class MessagingPushService {
 
     _logger.info('Opening sms conversation with $firstNumber and $secondNumber');
     openSmsConversation(firstNumber, secondNumber);
+  }
+
+  /// The core sends no push for a muted conversation, so in the ordinary case
+  /// this never answers true. It is the window that matters: a mute made on
+  /// another device reaches this one as an event, and a push already on its
+  /// way when the mute was set still lands here. Read from storage rather
+  /// than from a cubit - this service lives outside the widget tree.
+  Future<bool> _isChatMuted(int chatId) async {
+    final settings = await chatsRepository.getChatUserSettings(chatId);
+    final muted = settings.mute.isActiveAt(clock.now());
+    if (muted) _logger.info('Chat $chatId is muted, skipping the push');
+    return muted;
+  }
+
+  Future<bool> _isSmsConversationMuted(int conversationId) async {
+    final settings = await smsRepository.getConversationUserSettings(conversationId);
+    final muted = settings.mute.isActiveAt(clock.now());
+    if (muted) _logger.info('Sms conversation $conversationId is muted, skipping the push');
+    return muted;
   }
 
   bool _shouldSkipChatPush(Chat chat) {

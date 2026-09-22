@@ -1574,6 +1574,37 @@
   "@messaging_MessageView_today": {},
   "messaging_MessageView_yesterday": "Yesterday",
   "@messaging_MessageView_yesterday": {},
+  "messaging_NotificationMute_title": "Notifications",
+  "@messaging_NotificationMute_title": {},
+  "messaging_NotificationMute_on": "On",
+  "@messaging_NotificationMute_on": {
+      "description": "Shown under the Notifications row while nothing is muted."
+  },
+  "messaging_NotificationMute_muted": "Muted",
+  "@messaging_NotificationMute_muted": {
+      "description": "Shown under the Notifications row while the conversation is muted with no end."
+  },
+  "messaging_NotificationMute_mutedUntil": "Muted until {time}",
+  "@messaging_NotificationMute_mutedUntil": {
+      "description": "Shown under the Notifications row while a timed mute is in force; {time} is the moment it ends, as a clock time today or as a day and a time otherwise.",
+      "placeholders": {
+          "time": {
+              "type": "String"
+          }
+      }
+  },
+  "messaging_NotificationMute_sheetTitle": "Mute notifications",
+  "@messaging_NotificationMute_sheetTitle": {},
+  "messaging_NotificationMute_forOneHour": "For 1 hour",
+  "@messaging_NotificationMute_forOneHour": {},
+  "messaging_NotificationMute_forEightHours": "For 8 hours",
+  "@messaging_NotificationMute_forEightHours": {},
+  "messaging_NotificationMute_forTwoDays": "For 2 days",
+  "@messaging_NotificationMute_forTwoDays": {},
+  "messaging_NotificationMute_forever": "Forever",
+  "@messaging_NotificationMute_forever": {},
+  "messaging_NotificationMute_unmute": "Unmute",
+  "@messaging_NotificationMute_unmute": {},
   "messaging_ParticipantName_unknown": "Unknown user",
   "@messaging_ParticipantName_unknown": {
     "description": "Shown when a participant in a conversation does not have a known or available name. Condition: the user's name is missing or cannot be retrieved."
@@ -3342,6 +3373,10 @@
   "messaging_SemanticsLabel_conversationOptions": "Conversation options",
   "@messaging_SemanticsLabel_conversationOptions": {
     "description": "Accessibility name of the button that opens what can be done with a text conversation."
+  },
+  "messaging_SemanticsLabel_muted": "Muted",
+  "@messaging_SemanticsLabel_muted": {
+      "description": "Spoken after the name of a conversation in the list whose notifications are muted; the icon beside the name says nothing on its own."
   },
   "messaging_SemanticsLabel_replying": "Replying to",
   "@messaging_SemanticsLabel_replying": {

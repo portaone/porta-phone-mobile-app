@@ -34,4 +34,22 @@ void main() {
     expect(ConversationsTab.chat.unreadCount(state), 2);
     expect(ConversationsTab.sms.unreadCount(state), 1);
   });
+
+  test('a tab counts the unread conversations that are not muted', () {
+    // The totals leave the muted ones out at the source; a tab only reads
+    // its own total and never learns about mutes.
+    final state = UnreadCountState.fromCountPerChat(
+      {1: 3, 2: 1},
+      {7: 5, 8: 2},
+      mutedChatIds: {2},
+      mutedSmsConversationIds: {7, 8},
+    );
+
+    expect(ConversationsTab.chat.unreadCount(state), 1);
+    expect(ConversationsTab.sms.unreadCount(state), 0);
+    // A muted conversation with nothing unread changes nothing either way.
+    expect(UnreadCountState.fromCountPerChat({1: 3, 2: 1}, {}, mutedChatIds: {9}).chatsWithUnreadCount, 2);
+    // The row's own count is whole.
+    expect(state.unreadCountForChatConversation(2), 1);
+  });
 }

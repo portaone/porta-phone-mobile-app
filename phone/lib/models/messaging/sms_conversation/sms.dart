@@ -1,4 +1,5 @@
 export 'sms_conversation.dart';
+export 'sms_conversation_snapshot.dart';
 export 'sms_events.dart';
 export 'sms_message.dart';
 export 'sms_message_read_cursor.dart';

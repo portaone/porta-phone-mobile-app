@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:logging/logging.dart';
@@ -105,6 +106,40 @@ class SmsConversationCubit extends Cubit<SmsConversationState> {
       _logger.warning('deleteConversation failed', e, s);
 
       CrashlyticsUtils.recordError(e, stack: s, reason: 'SmsConversationCubit.deleteConversation');
+      _releaseBusy();
+    }
+  }
+
+  /// Mutes this conversation's notifications for [duration], or for good
+  /// when it is null; see [ConversationCubit.muteFor].
+  Future<void> muteFor(Duration? duration) {
+    final until = duration == null ? null : clock.now().add(duration);
+    return _setMute('muteFor', (channel) => channel.muteSmsConversation(until));
+  }
+
+  Future<void> unmute() => _setMute('unmute', (channel) => channel.unmuteSmsConversation());
+
+  Future<void> _setMute(String reason, Future<NotificationMute> Function(PhoenixChannel channel) request) async {
+    final state = this.state;
+    if (state is! SCSReady || state.busy) return;
+
+    final conversationId = state.conversation?.id;
+    if (conversationId == null) return;
+
+    final channel = _client.getSmsConversationChannel(conversationId);
+    if (channel == null || channel.state != PhoenixChannelState.joined) return;
+
+    final busy = _acquireBusy();
+    if (busy == false) return;
+
+    try {
+      final mute = await request(channel);
+      await _repository.upsertConversationMute(conversationId, mute);
+    } catch (e, s) {
+      _logger.warning('$reason failed', e, s);
+
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'SmsConversationCubit.$reason');
+    } finally {
       _releaseBusy();
     }
   }

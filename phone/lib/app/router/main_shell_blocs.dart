@@ -244,12 +244,26 @@ class MainShellBlocs extends StatelessWidget {
             );
           },
         ),
+        // Eager for the same reason as the counters around it: the unread
+        // totals subtract the muted conversations from the first frame, and
+        // the expiry timer has to be running whether or not anyone has opened
+        // a screen that shows a mute. Before the counter, which reads it.
+        BlocProvider<ConversationUserSettingsCubit>(
+          lazy: false,
+          create: (context) {
+            return ConversationUserSettingsCubit(
+              chatsRepository: context.read<ChatsRepository>(),
+              smsRepository: context.read<SmsRepository>(),
+            )..init();
+          },
+        ),
         BlocProvider<UnreadCountCubit>(
           create: (context) {
             return UnreadCountCubit(
               chatsRepository: context.read<ChatsRepository>(),
               smsRepository: context.read<SmsRepository>(),
               sessionRepository: context.read<SessionRepository>(),
+              userSettings: context.read<ConversationUserSettingsCubit>(),
             )..init();
           },
         ),

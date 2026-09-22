@@ -17,6 +17,7 @@ class DialogChatInfo extends StatefulWidget {
     this.participantId, {
     required this.isAudioCallEnabled,
     required this.isVideoCallEnabled,
+    required this.isMuteEnabled,
     super.key,
   });
 
@@ -24,6 +25,11 @@ class DialogChatInfo extends StatefulWidget {
   final String participantId;
   final bool isAudioCallEnabled;
   final bool isVideoCallEnabled;
+
+  /// Whether the core can answer a mute at all. Decided by the screen that
+  /// opens this sheet, like the call buttons: the sheet sits on its own route,
+  /// above where the feature access lives.
+  final bool isMuteEnabled;
 
   @override
   State<DialogChatInfo> createState() => _DialogChatInfoState();
@@ -46,15 +52,26 @@ class _DialogChatInfoState extends State<DialogChatInfo> {
     _callController.createCall(destination: phone.number, displayName: contact.maybeName, video: video);
   }
 
+  void onMuteChoice(MuteChoice choice) =>
+      choice.dispatch(mute: conversationCubit.muteFor, unmute: conversationCubit.unmute);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     final participant = widget.participantId;
 
+    // The row is absent, not shown switched off, on a core without the mute.
+    // What it shows is the mute in force now, which lapses on its own clock.
+    final muteAvailable = widget.isMuteEnabled;
+    final userSettings =
+        context.watch<ConversationUserSettingsCubit?>()?.state ?? const ConversationUserSettingsState();
+
     return BlocBuilder<ConversationCubit, ConversationState>(
       builder: (context, state) {
         if (state is CVSReady) {
+          final chatId = state.chat?.id;
+
           return Stack(
             children: [
               Scaffold(
@@ -113,6 +130,10 @@ class _DialogChatInfoState extends State<DialogChatInfo> {
                             ),
                           ),
                           const SizedBox(height: 24),
+                          if (muteAvailable && chatId != null) ...[
+                            const Divider(),
+                            NotificationMuteTile(mute: userSettings.activeChatMute(chatId), onChoice: onMuteChoice),
+                          ],
                           if (contact != null && contact.kind == ContactKind.visible) ...[
                             const Divider(),
                             Expanded(

@@ -115,6 +115,25 @@ mixin ChatsDriftMapper {
     );
   }
 
+  /// Reads the chat's stored user settings.
+  ///
+  /// The mute's expiry is kept as microseconds, as every other time in this
+  /// database is, and comes back in UTC on purpose: the socket parses the
+  /// core's `...Z` timestamps into UTC values, and Dart's `DateTime.==` is
+  /// false between a UTC and a local value of the same instant. Read back as
+  /// local, a stored mute would never equal the mute it was stored from, and
+  /// every "unchanged?" comparison downstream would answer "changed".
+  ConversationUserSettings userSettingsFromDrift(ChatUserSettingsData data) {
+    final mutedUntilUsec = data.mutedUntilUsec;
+
+    return ConversationUserSettings(
+      mute: NotificationMute(
+        muted: data.muted,
+        mutedUntil: mutedUntilUsec != null ? DateTime.fromMicrosecondsSinceEpoch(mutedUntilUsec, isUtc: true) : null,
+      ),
+    );
+  }
+
   ChatMessageReadCursor messageReadCursorFromDrift(ChatMessageReadCursorData data) {
     return ChatMessageReadCursor(
       chatId: data.chatId,

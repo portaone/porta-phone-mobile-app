@@ -132,6 +132,10 @@ class SmsSyncWorker {
             case SmsConversationLeave smsEvent:
               await _conversationUnsubscribe(smsEvent.conversationId);
               await smsRepository.deleteConversationById(smsEvent.conversationId);
+            case SmsConversationMuteUpdate smsEvent:
+              // This device's own mute comes back here too, possibly before
+              // the conversation is stored; the repository answers both.
+              await smsRepository.upsertConversationMute(smsEvent.conversationId, smsEvent.mute);
             case UserChannelDisconnect _:
               break eventsIterator;
             default:
@@ -156,10 +160,12 @@ class SmsSyncWorker {
         // Buffer updates that may come in a gap between fetching and subscribing
         final eventsStream = channel.smsEvents.transform(BufferTransformer());
 
-        // Fetch sms conversation data
-        final conversation = await channel.smsConversation;
-        await smsRepository.upsertConversation(conversation);
-        yield conversation;
+        // Fetch sms conversation data, mute included - see the chats worker
+        // for why the reconnect re-read matters.
+        final snapshot = await channel.smsConversation;
+        await smsRepository.upsertConversation(snapshot.conversation);
+        if (snapshot.mute case final mute?) await smsRepository.upsertConversationMute(id, mute);
+        yield snapshot;
 
         // Fetch read cursors
         final cursors = await channel.smsCursors;

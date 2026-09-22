@@ -171,17 +171,24 @@ extension PhoenixChannelExt on PhoenixChannel {
     }
   }
 
-  /// Asynchronously retrieves the chat conversation.
+  /// Asynchronously retrieves the chat conversation and the requester's mute
+  /// on it.
   ///
-  /// This getter returns a [Future] that completes with a [Chat] object
-  /// representing the chat conversation.
-  Future<Chat> get chatConversation async {
+  /// The two travel together in this reply and nowhere else: the mute is about
+  /// the asking user alone, so it is absent from `chat_info_update`, which
+  /// every member receives. They come back in a [ChatConversationSnapshot]
+  /// rather than merged, because they are stored apart - see
+  /// [ChatsRepository.upsertChatMute].
+  Future<ChatConversationSnapshot> get chatConversation async {
     try {
       final req = await push('chat:get', {}).future;
       final response = req.response;
 
       if (req.isOk && response is Map<String, dynamic>) {
-        return ChatPhxMapper.fromMap(response);
+        return ChatConversationSnapshot(
+          chat: ChatPhxMapper.fromMap(response),
+          mute: NotificationMutePhxMapper.fromMapOrNull(response),
+        );
       }
 
       throw req;
@@ -190,17 +197,23 @@ extension PhoenixChannelExt on PhoenixChannel {
     }
   }
 
-  /// A getter that asynchronously retrieves an [SmsConversation].
+  /// A getter that asynchronously retrieves an [SmsConversation] and the
+  /// requester's mute on it.
   ///
-  /// This method returns a [Future] that completes with an [SmsConversation].
-  /// It can be used to fetch the conversation details for SMS messaging.
-  Future<SmsConversation> get smsConversation async {
+  /// As with [chatConversation], the mute rides on this reply because it
+  /// belongs to the asking user - a shared number can put several users on one
+  /// conversation - and comes back beside the conversation, not inside it,
+  /// because it is stored apart.
+  Future<SmsConversationSnapshot> get smsConversation async {
     try {
       final req = await push('sms:conversation:get', {}).future;
       final response = req.response;
 
       if (req.isOk && response is Map<String, dynamic>) {
-        return SmsConversationPhxMapper.fromMap(response);
+        return SmsConversationSnapshot(
+          conversation: SmsConversationPhxMapper.fromMap(response),
+          mute: NotificationMutePhxMapper.fromMapOrNull(response),
+        );
       }
 
       throw req;
@@ -793,6 +806,82 @@ extension PhoenixChannelExt on PhoenixChannel {
     }
   }
 
+  /// Mutes this chat's notifications for the current user until [until], or
+  /// indefinitely when it is null.
+  ///
+  /// Muting an already muted chat is not an error: it replaces the expiration,
+  /// which is what changing the duration does.
+  ///
+  /// Returns the state the core settled on, which is also broadcast to the
+  /// user's other devices - and back to this one.
+  Future<NotificationMute> muteChat(DateTime? until) async {
+    try {
+      final req = await push('chat:mute', NotificationMutePhxMapper.toMuteRequest(until)).future;
+      final response = req.response;
+
+      if (req.isOk && response is Map<String, dynamic>) {
+        return NotificationMutePhxMapper.fromMap(response);
+      }
+
+      throw req;
+    } catch (e) {
+      throw MessagingSocketException('Error muting chat until $until', details: _mapPhxErrorDetails(e), topic: topic);
+    }
+  }
+
+  /// Lifts the mute from this chat for the current user.
+  Future<NotificationMute> unmuteChat() async {
+    try {
+      final req = await push('chat:unmute', {}).future;
+      final response = req.response;
+
+      if (req.isOk && response is Map<String, dynamic>) {
+        return NotificationMutePhxMapper.fromMap(response);
+      }
+
+      throw req;
+    } catch (e) {
+      throw MessagingSocketException('Error unmuting chat', details: _mapPhxErrorDetails(e), topic: topic);
+    }
+  }
+
+  /// Mutes this SMS conversation's notifications for the current user until
+  /// [until], or indefinitely when it is null.
+  Future<NotificationMute> muteSmsConversation(DateTime? until) async {
+    try {
+      final req = await push('sms:conversation:mute', NotificationMutePhxMapper.toMuteRequest(until)).future;
+      final response = req.response;
+
+      if (req.isOk && response is Map<String, dynamic>) {
+        return NotificationMutePhxMapper.fromMap(response);
+      }
+
+      throw req;
+    } catch (e) {
+      throw MessagingSocketException(
+        'Error muting sms conversation until $until',
+        details: _mapPhxErrorDetails(e),
+        topic: topic,
+      );
+    }
+  }
+
+  /// Lifts the mute from this SMS conversation for the current user.
+  Future<NotificationMute> unmuteSmsConversation() async {
+    try {
+      final req = await push('sms:conversation:unmute', {}).future;
+      final response = req.response;
+
+      if (req.isOk && response is Map<String, dynamic>) {
+        return NotificationMutePhxMapper.fromMap(response);
+      }
+
+      throw req;
+    } catch (e) {
+      throw MessagingSocketException('Error unmuting sms conversation', details: _mapPhxErrorDetails(e), topic: topic);
+    }
+  }
+
   /// Remap Phoenix specific errors
   /// such as [ChannelTimeoutException], [PhoenixException] or [ChannelClosedError]
   /// or wrong responses [PushResponse] and other objects
@@ -847,6 +936,18 @@ sealed class UserChannelEvent {
         return SmsConversationJoin(int.parse(m.payload!['conversation_id'].toString()));
       case 'sms_conversation_left':
         return SmsConversationLeave(int.parse(m.payload!['conversation_id'].toString()));
+      case 'chat_mute_update':
+        final payload = m.payload as Map<String, dynamic>;
+        return ChatConversationMuteUpdate(
+          int.parse(payload['chat_id'].toString()),
+          NotificationMutePhxMapper.fromMap(payload),
+        );
+      case 'sms_conversation_mute_update':
+        final payload = m.payload as Map<String, dynamic>;
+        return SmsConversationMuteUpdate(
+          int.parse(payload['conversation_id'].toString()),
+          NotificationMutePhxMapper.fromMap(payload),
+        );
       case 'phx_error':
         return UserChannelDisconnect();
       default:
@@ -898,6 +999,40 @@ class SmsConversationLeave extends UserChannelEvent with EquatableMixin {
 
   @override
   List<Object?> get props => [conversationId];
+
+  @override
+  bool get stringify => true;
+}
+
+/// A chat's mute changed for this user, on this device or another one.
+///
+/// The device that made the change receives it too, so applying it has to be
+/// idempotent. The conversation topic carries nothing: a mute is the user's,
+/// not the conversation's, and an SMS conversation topic can hold several
+/// users of one shared number.
+class ChatConversationMuteUpdate extends UserChannelEvent with EquatableMixin {
+  ChatConversationMuteUpdate(this.chatId, this.mute);
+
+  final int chatId;
+  final NotificationMute mute;
+
+  @override
+  List<Object?> get props => [chatId, mute];
+
+  @override
+  bool get stringify => true;
+}
+
+/// An SMS conversation's mute changed for this user, on this device or another
+/// one. Idempotent for the same reason as [ChatConversationMuteUpdate].
+class SmsConversationMuteUpdate extends UserChannelEvent with EquatableMixin {
+  SmsConversationMuteUpdate(this.conversationId, this.mute);
+
+  final int conversationId;
+  final NotificationMute mute;
+
+  @override
+  List<Object?> get props => [conversationId, mute];
 
   @override
   bool get stringify => true;

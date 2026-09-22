@@ -6,7 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -35,8 +37,21 @@ class _SmsConversationScreenState extends State<SmsConversationScreen> {
     context.router.navigate(const MainScreenPageRoute(children: [ConversationsScreenPageRoute()]));
   }
 
+  /// A text conversation has no info screen of its own, so the mute lives in
+  /// the same menu as the delete; the sheet is the one the chat info opens.
+  Future<void> onNotifications(NotificationMute mute) async {
+    final choice = await NotificationMuteSheet.show(context, muted: mute.muted);
+    if (!mounted || choice == null) return;
+
+    choice.dispatch(mute: conversationCubit.muteFor, unmute: conversationCubit.unmute);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final muteAvailable = context.read<FeatureAccess>().conversationMuteAvailable;
+    final userSettings =
+        context.watch<ConversationUserSettingsCubit?>()?.state ?? const ConversationUserSettingsState();
+
     return BlocProvider(
       create: (context) => SmsTypingCubit(messagingBloc.state.client),
       child: BlocConsumer<SmsConversationCubit, SmsConversationState>(
@@ -59,6 +74,10 @@ class _SmsConversationScreenState extends State<SmsConversationScreen> {
               if (userNumber != null) recipientNumber = firstNumber == userNumber ? secondNumber : firstNumber;
 
               if (loading) return const SizedBox();
+
+              // Nothing to mute until the conversation exists on the core.
+              final conversationId = state is SCSReady ? state.conversation?.id : null;
+              final mute = conversationId != null ? userSettings.activeSmsConversationMute(conversationId) : null;
 
               return Scaffold(
                 extendBodyBehindAppBar: true,
@@ -111,6 +130,22 @@ class _SmsConversationScreenState extends State<SmsConversationScreen> {
                         tooltip: '',
                         itemBuilder: (context) {
                           return [
+                            if (muteAvailable && mute != null)
+                              // The id has to own the node the tap lives on -
+                              // see MessagingPopupMenuItem for why a plain id
+                              // around the tile would leave the entry unnamed.
+                              MessagingPopupMenuItem(
+                                identifier: chatInfoNotificationsId,
+                                onTap: () => onNotifications(mute),
+                                child: ListTile(
+                                  title: Text(context.l10n.messaging_NotificationMute_title),
+                                  subtitle: Text(notificationMuteSubtitle(context.l10n, mute)),
+                                  leading: Icon(
+                                    mute.muted ? Icons.notifications_off_outlined : Icons.notifications_outlined,
+                                  ),
+                                  dense: true,
+                                ),
+                              ),
                             PopupMenuItem(
                               onTap: onDeleteDialog,
                               child: ListTile(

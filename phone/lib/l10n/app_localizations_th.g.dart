@@ -1692,6 +1692,38 @@ class AppLocalizationsTh extends AppLocalizations {
   String get messaging_MessageView_yesterday => 'เมื่อวาน';
 
   @override
+  String get messaging_NotificationMute_title => 'การแจ้งเตือน';
+
+  @override
+  String get messaging_NotificationMute_on => 'เปิด';
+
+  @override
+  String get messaging_NotificationMute_muted => 'ปิดเสียง';
+
+  @override
+  String messaging_NotificationMute_mutedUntil(String time) {
+    return 'ปิดเสียงจนถึง $time';
+  }
+
+  @override
+  String get messaging_NotificationMute_sheetTitle => 'ปิดเสียงการแจ้งเตือน';
+
+  @override
+  String get messaging_NotificationMute_forOneHour => '1 ชั่วโมง';
+
+  @override
+  String get messaging_NotificationMute_forEightHours => '8 ชั่วโมง';
+
+  @override
+  String get messaging_NotificationMute_forTwoDays => '2 วัน';
+
+  @override
+  String get messaging_NotificationMute_forever => 'ตลอดไป';
+
+  @override
+  String get messaging_NotificationMute_unmute => 'เปิดเสียง';
+
+  @override
   String get messaging_ParticipantName_unknown => 'ผู้ใช้ที่ไม่รู้จัก';
 
   @override
@@ -3798,6 +3830,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get messaging_SemanticsLabel_conversationOptions => 'ตัวเลือกการสนทนา';
+
+  @override
+  String get messaging_SemanticsLabel_muted => 'ปิดเสียงการแจ้งเตือน';
 
   @override
   String get messaging_SemanticsLabel_replying => 'กำลังตอบกลับ';

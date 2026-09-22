@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:clock/clock.dart';
 import 'package:equatable/equatable.dart';
 import 'package:logging/logging.dart';
 import 'package:phoenix_socket/phoenix_socket.dart';
@@ -203,6 +204,40 @@ class ConversationCubit extends Cubit<ConversationState> {
       _logger.warning('setGroupName failed', e, s);
 
       CrashlyticsUtils.recordError(e, stack: s, reason: 'ConversationCubit.setGroupName');
+    } finally {
+      _releaseBusy();
+    }
+  }
+
+  /// Mutes this chat's notifications for [duration], or for good when it is
+  /// null. A mute set while another is in force replaces it.
+  Future<void> muteFor(Duration? duration) {
+    final until = duration == null ? null : clock.now().add(duration);
+    return _setMute('muteFor', (channel) => channel.muteChat(until));
+  }
+
+  Future<void> unmute() => _setMute('unmute', (channel) => channel.unmuteChat());
+
+  /// A direct request with the busy lock, like the group actions above, not
+  /// an outbox entry: the user is looking at the control and expects it to
+  /// answer. The reply is the state the core settled on and is stored at
+  /// once; the same value comes back on the personal topic a moment later and
+  /// is a no-op there.
+  Future<void> _setMute(String reason, Future<NotificationMute> Function(PhoenixChannel channel) request) async {
+    final channel = _getChannel();
+    final chatId = state.credentials.chatId;
+    if (channel == null || chatId == null) return;
+
+    final busy = _acquireBusy();
+    if (busy == false) return;
+
+    try {
+      final mute = await request(channel);
+      await _chatsRepository.upsertChatMute(chatId, mute);
+    } catch (e, s) {
+      _logger.warning('$reason failed', e, s);
+
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'ConversationCubit.$reason');
     } finally {
       _releaseBusy();
     }

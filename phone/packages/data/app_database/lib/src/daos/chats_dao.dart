@@ -20,6 +20,7 @@ class ChatDataWithMembers {
     ChatMessagesTable,
     ChatMessageSyncCursorTable,
     ChatMessageReadCursorTable,
+    ChatUserSettingsTable,
     ChatOutboxMessageTable,
     ChatOutboxMessageEditTable,
     ChatOutboxMessageDeleteTable,
@@ -340,6 +341,55 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
     )..where((t) => t.deletedAtRemoteUsec.isSmallerThanValue(staleTime.microsecondsSinceEpoch))).go();
   }
 
+  // User settings
+
+  Future<ChatUserSettingsData?> getChatUserSettings(int chatId) {
+    return (select(chatUserSettingsTable)..where((t) => t.chatId.equals(chatId))).getSingleOrNull();
+  }
+
+  /// Every chat's settings, for the readers that have to know them all at
+  /// once: the conversation list and the unread totals ask about chats they
+  /// do not have open.
+  Stream<List<ChatUserSettingsData>> watchChatUserSettings() {
+    return select(chatUserSettingsTable).watch();
+  }
+
+  Future<bool> chatExists(int chatId) async {
+    final q = selectOnly(chatsTable)
+      ..addColumns([chatsTable.id])
+      ..where(chatsTable.id.equals(chatId));
+    return await q.getSingleOrNull() != null;
+  }
+
+  /// Writes the mute the core last reported, and nothing else.
+  ///
+  /// Only the two mute columns are touched, so a setting added to this table
+  /// later is not clobbered by a mute arriving - the same mistake, one level
+  /// down, that keeping the mute off the chat row avoids.
+  ///
+  /// Plain last-writer-wins, unlike the read cursors next door, which only
+  /// move forward: a mute has no order to it. Returns whether anything
+  /// changed. The same value arrives twice in the ordinary case - the device
+  /// that made the change is also told about it on the personal topic, and a
+  /// reconnect re-reads every conversation - and a caller has to know that
+  /// nothing happened, or it announces a change that was not one.
+  Future<bool> upsertChatNotificationMute(int chatId, {required bool muted, int? mutedUntilUsec}) async {
+    final written = await into(chatUserSettingsTable).insertReturningOrNull(
+      ChatUserSettingsDataCompanion.insert(
+        chatId: Value(chatId),
+        muted: Value(muted),
+        mutedUntilUsec: Value(mutedUntilUsec),
+      ),
+      onConflict: DoUpdate(
+        (_) => ChatUserSettingsDataCompanion(muted: Value(muted), mutedUntilUsec: Value(mutedUntilUsec)),
+        // IS NOT, not <>: the expiry is nullable, and `NULL <> 1` is NULL in
+        // SQL, which would read as "unchanged".
+        where: (old) => old.muted.isNotValue(muted) | old.mutedUntilUsec.isNotExp(Variable(mutedUntilUsec)),
+      ),
+    );
+    return written != null;
+  }
+
   Future<void> wipeChatsData() async {
     await transaction(() async {
       await delete(chatsTable).go();
@@ -347,6 +397,7 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
       await delete(chatMessagesTable).go();
       await delete(chatMessageSyncCursorTable).go();
       await delete(chatMessageReadCursorTable).go();
+      await delete(chatUserSettingsTable).go();
     });
   }
 

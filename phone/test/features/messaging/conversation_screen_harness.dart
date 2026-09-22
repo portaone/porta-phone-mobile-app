@@ -5,12 +5,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:phoenix_socket/phoenix_socket.dart';
 
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 class MockMessagingBloc extends MockBloc<MessagingEvent, MessagingState> implements MessagingBloc {}
+
+class MockConversationUserSettingsCubit extends MockCubit<ConversationUserSettingsState>
+    implements ConversationUserSettingsCubit {}
+
+class MockFeatureAccess extends Mock implements FeatureAccess {}
 
 class MockConversationCubit extends MockCubit<ConversationState> implements ConversationCubit {}
 
@@ -71,6 +77,10 @@ class ConversationScreenHarness {
       ),
     );
     when(() => smsRepository.watchUserSmsNumbers()).thenAnswer((_) => const Stream<List<String>>.empty());
+    // A core without the mute, and nothing set on any conversation, unless a
+    // test says otherwise.
+    when(() => featureAccess.conversationMuteAvailable).thenReturn(false);
+    when(() => userSettingsCubit.state).thenReturn(const ConversationUserSettingsState());
   }
 
   final messagingBloc = MockMessagingBloc();
@@ -79,6 +89,33 @@ class ConversationScreenHarness {
   final socket = MockPhoenixSocket();
   final smsRepository = MockSmsRepository();
   final contactsRepository = MockContactsRepository();
+  final featureAccess = MockFeatureAccess();
+  final userSettingsCubit = MockConversationUserSettingsCubit();
+
+  /// The core advertises the mute, so the control is offered.
+  void withMuteAvailable() {
+    when(() => featureAccess.conversationMuteAvailable).thenReturn(true);
+  }
+
+  /// What the user holds on [chatId] right now, as the settings cubit would
+  /// answer it: the maps carry the stored value, the set says it is in force.
+  void withChatMute(int chatId, NotificationMute mute) {
+    when(() => userSettingsCubit.state).thenReturn(
+      ConversationUserSettingsState(
+        chatSettings: {chatId: ConversationUserSettings(mute: mute)},
+        mutedChatIds: {if (mute.muted) chatId},
+      ),
+    );
+  }
+
+  void withSmsConversationMute(int conversationId, NotificationMute mute) {
+    when(() => userSettingsCubit.state).thenReturn(
+      ConversationUserSettingsState(
+        smsConversationSettings: {conversationId: ConversationUserSettings(mute: mute)},
+        mutedSmsConversationIds: {if (mute.muted) conversationId},
+      ),
+    );
+  }
 
   /// A dialog with one other person, still loading: the menu has somewhere to
   /// go (the person's card) from the first frame.
@@ -124,6 +161,22 @@ class ConversationScreenHarness {
         .thenReturn(const SCSInit((firstNumber: '111', secondNumber: '222', recipientId: null)));
   }
 
+  /// A text conversation the core already holds, with nothing in it yet.
+  void withSmsConversationReady({int conversationId = 7}) {
+    when(() => smsConversationCubit.state).thenReturn(
+      SCSReady(
+        (firstNumber: '111', secondNumber: '222', recipientId: null),
+        conversation: SmsConversation(
+          id: conversationId,
+          firstPhoneNumber: '111',
+          secondPhoneNumber: '222',
+          createdAt: _created,
+          updatedAt: _created,
+        ),
+      ),
+    );
+  }
+
   Widget wrap(Widget screen) {
     return MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -132,12 +185,14 @@ class ConversationScreenHarness {
         providers: [
           RepositoryProvider<SmsRepository>.value(value: smsRepository),
           RepositoryProvider<ContactsRepository>.value(value: contactsRepository),
+          RepositoryProvider<FeatureAccess>.value(value: featureAccess),
         ],
         child: MultiBlocProvider(
           providers: [
             BlocProvider<MessagingBloc>.value(value: messagingBloc),
             BlocProvider<ConversationCubit>.value(value: conversationCubit),
             BlocProvider<SmsConversationCubit>.value(value: smsConversationCubit),
+            BlocProvider<ConversationUserSettingsCubit>.value(value: userSettingsCubit),
           ],
           child: screen,
         ),

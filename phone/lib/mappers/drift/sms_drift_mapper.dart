@@ -87,6 +87,20 @@ mixin SmsDriftMapper {
     );
   }
 
+  /// Reads the conversation's stored user settings; see
+  /// [ChatsDriftMapper.userSettingsFromDrift] for why the mute's expiry comes
+  /// back in UTC.
+  ConversationUserSettings userSettingsFromDrift(SmsConversationUserSettingsData data) {
+    final mutedUntilUsec = data.mutedUntilUsec;
+
+    return ConversationUserSettings(
+      mute: NotificationMute(
+        muted: data.muted,
+        mutedUntil: mutedUntilUsec != null ? DateTime.fromMicrosecondsSinceEpoch(mutedUntilUsec, isUtc: true) : null,
+      ),
+    );
+  }
+
   SmsMessageReadCursor messageReadCursorFromDrift(SmsMessageReadCursorData data) {
     return SmsMessageReadCursor(
       conversationId: data.conversationId,
