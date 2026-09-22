@@ -2457,6 +2457,8 @@
   "@settings_ListViewTileTitle_registered": {},
   "settings_ListViewTileTitle_self_config": "หน้าตั้งค่าด้วยตนเอง",
   "@settings_ListViewTileTitle_self_config": {},
+  "settings_ListViewTileTitle_callCenter": "คอลเซ็นเตอร์",
+  "@settings_ListViewTileTitle_callCenter": {},
   "settings_ListViewTileTitle_sessions": "เซสชัน",
   "@settings_ListViewTileTitle_sessions": {},
   "settings_ListViewTileTitle_settings": "การตั้งค่า",

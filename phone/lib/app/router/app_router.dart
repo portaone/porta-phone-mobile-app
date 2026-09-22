@@ -285,6 +285,11 @@ class AppRouter extends RootStackRouter {
                 AutoRoute(page: ThemeModeScreenPageRoute.page, path: 'theme-mode'),
                 AutoRoute(page: DevToolsScreenPageRoute.page, path: 'dev-tools'),
                 AutoRoute(page: DiagnosticScreenPageRoute.page, path: 'diagnostic'),
+                // Declared whatever the deployment offers: the route table is
+                // built once, before system-info is known, and a route left
+                // out here can never be navigated to later. What decides
+                // whether the call center is reachable is the settings row.
+                AutoRoute(page: CallCenterScreenPageRoute.page, path: 'call-center'),
                 AutoRoute(
                   page: VoicemailScreenPageRoute.page,
                   path: 'voicemail',

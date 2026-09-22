@@ -444,7 +444,11 @@ abstract final class SettingsMapper {
   }
 
   static bool _isFeatureSupportedByCore(SettingsFlavor flavor, CoreSupport coreSupport) {
-    return flavor != SettingsFlavor.voicemail || coreSupport.supportsVoicemail;
+    return switch (flavor) {
+      SettingsFlavor.voicemail => coreSupport.supportsVoicemail,
+      SettingsFlavor.callCenter => coreSupport.supportsCallCenter,
+      _ => true,
+    };
   }
 
   static EmbeddedData? _getEmbeddedDataResource(

@@ -182,7 +182,7 @@ The configuration is parsed into `BottomMenuTabScheme` union variants depending 
 |-------------|----------|---------|--------------------------------------------------------------------------------------------------------------|
 | `enabled`   | `bool`   | `true`  | Whether the tab is visible and active in the UI.                                                             |
 | `initial`   | `bool`   | `false` | Whether the tab should be selected by default at startup.                                                    |
-| `type`      | `string` | —       | Defines which tab variant to render (`favorites`, `recents`, `contacts`, `keypad`, `messaging`, `voicemail`, `embedded`). |
+| `type`      | `string` | —       | Defines which tab variant to render (`favorites`, `recents`, `contacts`, `keypad`, `messaging`, `voicemail`, `callCenter`, `embedded`). |
 | `titleL10n` | `string` | —       | Localization key for the tab title.                                                                          |
 | `icon`      | `string` | —       | Material icon codepoint (hex string).                                                                        |
 
@@ -326,6 +326,28 @@ This tab and the `voicemail` item of the settings list are configured independen
 may offer voicemail from either, from both, or from neither. Both lead to the same screen and share
 one local store, so what is read in one place is read in the other.
 
+### **CallCenterTabScheme**
+
+The call queues this user serves as an agent.
+
+```json
+{
+  "type": "callCenter",
+  "enabled": true,
+  "titleL10n": "main_BottomNavigationBarItemLabel_callCenter",
+  "icon": "0xf0ee"
+}
+```
+
+Shown only when the server advertises the `callCenter` capability AND the backend has already
+answered that this account is an agent of at least one queue - a section that could only say "you
+are not an agent" is worse than none. That answer is remembered per account from the previous
+session, because the tab set is built before a session can ask; someone made an agent today gets
+the section at the next start, with the settings item, which asks live, there for them meanwhile.
+
+This tab and the `callCenter` item of the settings list are configured independently, like the two
+voicemail placements, and lead to the same screen over one data layer.
+
 ### **EmbeddedTabScheme**
 
 Embedded web resource tab.
@@ -457,7 +479,7 @@ change there applies on the next startup rather than live.
 
 Each settings item includes:
 
-- `type`: Setting type (network, encoding, embedded)
+- `type`: Setting type (`network`, `mediaSettings`, `voicemail`, `callCenter`, `embedded`, ...)
 - `titleL10n`: Localized name
 - `icon`: Item icon
 

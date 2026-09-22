@@ -68,6 +68,11 @@ maintainability and enabling tools to parse configuration reliably.
   after calls, and a finished call already refreshes the list (see
   `WEBTRIT_APP_POST_CALL_REFRESH_DELAY_SECONDS`), so the timer only catches
   calls made elsewhere. Paused in the background like every polled task.
+- `WEBTRIT_APP_CALL_QUEUES_REPOSITORY_POLLING_INTERVAL_SECONDS` - Call queue
+  counters poll interval in positive whole seconds (default: **10**). Unlike
+  every other task here it runs only while the call center screen is open: each
+  read reaches the PBX and the adapter re-reads the customer's whole hunt group
+  list on it, and there is no push channel to replace it with.
 - `WEBTRIT_APP_EXTERNAL_CONTACTS_REPOSITORY_POLLING_INTERVAL_SECONDS` - Contacts
   poll interval in positive whole seconds when hybrid presence is off (default:
   **300**). Here the fetch is the presence source, so it stays fairly fresh.
