@@ -106,6 +106,55 @@ class AppLocalizationsUk extends AppLocalizations {
       'Ваші налаштування було успішно отримано, застосунок готовий до використання';
 
   @override
+  String get callCenter_AppBarTitle => 'Мої черги';
+
+  @override
+  String get callCenter_Button_retry => 'Спробувати ще раз';
+
+  @override
+  String get callCenter_Snackbar_changeFailed => 'Не вдалося змінити ваш статус у черзі. Спробуйте ще раз.';
+
+  @override
+  String get callCenter_Snackbar_queueGone => 'Ця черга більше не ваша. Список оновлено.';
+
+  @override
+  String get callCenter_Snackbar_readOnly =>
+      'Сервер зараз працює лише на читання, тож статус у черзі змінити не можна.';
+
+  @override
+  String get callCenter_Switch_allQueues => 'Усі черги';
+
+  @override
+  String callCenter_Text_agentsOfTotal(int loggedIn, int total) {
+    return 'агентів: $loggedIn з $total';
+  }
+
+  @override
+  String get callCenter_Text_loadFailed => 'Не вдалося завантажити ваші черги.';
+
+  @override
+  String callCenter_Text_callersWaiting(int count) {
+    return 'очікують: $count';
+  }
+
+  @override
+  String get callCenter_Text_callersWaitingUnknown => 'очікують: —';
+
+  @override
+  String callCenter_Text_loggedInOfTotal(int loggedIn, int total) {
+    return 'На лінії в $loggedIn з $total черг';
+  }
+
+  @override
+  String get callCenter_Text_noQueues => 'Ви не є агентом жодної черги дзвінків.';
+
+  @override
+  String get callCenter_Text_offline => 'Не на лінії';
+
+  @override
+  String get callCenter_Text_online => 'На лінії';
+
+  @override
   String get callTileActions_contact => 'Контакт';
 
   @override
