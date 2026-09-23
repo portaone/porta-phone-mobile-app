@@ -57,6 +57,25 @@ is not yet registered).
 
 `PhoneConnectionService.onStartCommand()` routes each intent by `ServiceAction` enum.
 
+**What an undelivered command means.** An app-side `startService` here never starts the
+incoming-call flow - Telecom does that, binding `:callkeep_core` itself (`BIND_AUTO_CREATE`)
+when a call is reported to it, and the manifest entry on `PhoneConnectionService` says so. It is
+an ordinary service start otherwise: it brings the process up when it is not running (a device
+log shows `ReplayConnectionStates` doing exactly that on delegate attach). So a command goes
+undelivered only when the system refuses the start - background-start restrictions on API 26+,
+an OEM throttle - and a refused command is lost, not a no-op. The two command families pay for
+that differently:
+
+- The **state commands** (`TearDown`, `TearDownConnections`, `CleanConnections`, `ReserveAnswer`,
+  `ReplayAudioState`, `ReplayConnectionStates`, `SetCallGroup`, `UnsetCallGroup`) go through
+  `PhoneConnectionService.command()`. A loss is logged at WARN with what the command carried.
+  `TearDownConnections` additionally acks itself with a synthesised `TearDownComplete`, so
+  `ForegroundService.tearDown()` does not wait out `TEAR_DOWN_ACK_TIMEOUT_MS` - the same as the
+  standalone sender. A lost `ReserveAnswer` is a lost Answer tap; the log line is the evidence.
+- The **per-call commands** go through `communicate()` and act on a call that exists by the time
+  they are sent. An undelivered one leaves that call hanging, so the sender ends it (`HungUp`)
+  rather than letting it sit.
+
 ## State Synchronization
 
 Because the two processes have independent JVM heaps, call state must be explicitly synchronized:
