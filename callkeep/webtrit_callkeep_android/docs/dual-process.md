@@ -57,6 +57,24 @@ is not yet registered).
 
 `PhoneConnectionService.onStartCommand()` routes each intent by `ServiceAction` enum.
 
+**These intents never start the service.** Telecom owns it: it binds the `:callkeep_core`
+process itself (`BIND_AUTO_CREATE`) when it has calls for it, which it does even where an OEM
+throttle would refuse an app-side start. An app-side `startService` here therefore speaks to a
+service that is already bound, and the manifest entry on `PhoneConnectionService` says so.
+
+What follows from that is the failure rule, and the two command families differ by it:
+
+- The **state commands** (`TearDownConnections`, `CleanConnections`, `ReserveAnswer`,
+  `ReplayAudioState`, `ReplayConnectionStates`, `SetCallGroup`, `UnsetCallGroup`) act on
+  connections. If one is not delivered, the bind is absent, and without it there are no
+  connections to act on - the command is a no-op in exactly the case where it cannot arrive.
+  Undelivered is an outcome, not an error.
+- The **per-call commands** act on a call that exists by the time they are sent. An undelivered
+  one leaves that call hanging, so the sender ends it (`HungUp`) rather than letting it sit.
+
+A command that has to START the core would break this reasoning; there is none, and adding one
+means revisiting the rule rather than the sender.
+
 ## State Synchronization
 
 Because the two processes have independent JVM heaps, call state must be explicitly synchronized:
