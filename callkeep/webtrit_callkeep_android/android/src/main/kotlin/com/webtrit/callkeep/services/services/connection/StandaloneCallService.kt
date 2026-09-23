@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.annotation.Keep
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.R
 import com.webtrit.callkeep.common.ActivityHolder
@@ -915,7 +916,7 @@ class StandaloneCallService : Service() {
                             putExtras(metadata.toBundle())
                         }
                     try {
-                        context.startForegroundService(intent)
+                        ContextCompat.startForegroundService(context, intent)
                         onSuccess()
                     } catch (e: Exception) {
                         Log.e(TAG, "startIncomingCall: startForegroundService failed for callId=${metadata.callId}", e)
@@ -947,7 +948,7 @@ class StandaloneCallService : Service() {
                     putExtras(metadata.toBundle())
                 }
             try {
-                context.startForegroundService(intent)
+                ContextCompat.startForegroundService(context, intent)
             } catch (e: Exception) {
                 Log.e(TAG, "startOutgoingCall: startForegroundService failed for callId=${metadata.callId}", e)
                 throw e
