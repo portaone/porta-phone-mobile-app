@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationManagerCompat
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -14,7 +13,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-import org.robolectric.util.ReflectionHelpers
 
 /**
  * The two-argument [Notification.Builder] constructor and the [android.app.NotificationChannel]
@@ -22,12 +20,11 @@ import org.robolectric.util.ReflectionHelpers
  * a NoSuchMethodError on every notification and a NoClassDefFoundError in Service.onCreate - an
  * incoming call that never appears.
  *
- * The module still declares minSdkVersion 26, and Robolectric parses the merged manifest before
- * it runs anything, so it refuses to boot at SDK 24 outright. The version is therefore forced on
- * [Build.VERSION] inside a sandbox booted at 26: the branch under test reads exactly that field,
- * and the pre-O calls it makes all exist in the android-all jar being used.
+ * The sandbox boots at the module's minSdkVersion or above, so the pre-O tests run on a real
+ * API 24 android-all jar through a per-test [Config]: the branch under test reads the platform
+ * it is actually on, and the pre-O calls it makes are the ones that platform has.
  *
- * That trick covers the builder and nothing else. The guard added to channel registration is not
+ * That covers the builder and nothing else. The guard added to channel registration is not
  * testable here at all: Robolectric cannot make an API 26 class missing, and below O the compat
  * wrapper declines to register whether the guard is there or not - so a test would pass either
  * way and say nothing. Its value shows on a device, where constructing the channel is the crash.
@@ -42,15 +39,6 @@ class NotificationChannelManagerBuilderTest {
         context = RuntimeEnvironment.getApplication()
     }
 
-    @After
-    fun restoreSdk() {
-        setSdkInt(Build.VERSION_CODES.O)
-    }
-
-    private fun setSdkInt(value: Int) {
-        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", value)
-    }
-
     @Test
     fun `binds the channel from API 26 on`() {
         val notification =
@@ -62,9 +50,8 @@ class NotificationChannelManagerBuilderTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
     fun `builds on API 24, where the channel constructor does not exist`() {
-        setSdkInt(Build.VERSION_CODES.N)
-
         val notification =
             NotificationChannelManager
                 .notificationBuilder(context, NotificationChannelManager.INCOMING_CALL_NOTIFICATION_CHANNEL_ID)
@@ -74,9 +61,8 @@ class NotificationChannelManagerBuilderTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
     fun `carries the incoming-call channel's silence on API 24`() {
-        setSdkInt(Build.VERSION_CODES.N)
-
         val notification =
             NotificationChannelManager
                 .notificationBuilder(context, NotificationChannelManager.INCOMING_CALL_NOTIFICATION_CHANNEL_ID)
@@ -93,9 +79,8 @@ class NotificationChannelManagerBuilderTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.N])
     fun `an ongoing-call channel stays low priority and keeps its tone on API 24`() {
-        setSdkInt(Build.VERSION_CODES.N)
-
         val notification =
             NotificationChannelManager
                 .notificationBuilder(context, NotificationChannelManager.ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID)

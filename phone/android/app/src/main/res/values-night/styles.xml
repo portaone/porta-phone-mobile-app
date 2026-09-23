@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is on -->
     <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <!-- Show a splash screen on the activity. Automatically removed when
              the Flutter engine draws its first frame -->
         <item name="android:windowBackground">@drawable/launch_background</item>
-        <item name="android:forceDarkAllowed">false</item>
+        <!-- Items marked tools:targetApi arrived after minSdk. A platform that does not know an
+             attribute never asks the theme for it, so below that level they are simply ignored;
+             the marker only tells lint that this is understood. -->
+        <item name="android:forceDarkAllowed" tools:targetApi="29">false</item>
         <item name="android:windowFullscreen">false</item>
         <!-- Edge-to-edge: the app paints its own background behind the system bars, so the
              window must draw their (transparent) backgrounds instead of letting the platform
@@ -16,9 +19,9 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <!-- No platform scrim behind the transparent bars; it reads as a grey band over the
              app's own background. Contrast comes from the app's surfaces instead. -->
-        <item name="android:enforceStatusBarContrast">false</item>
-        <item name="android:enforceNavigationBarContrast">false</item>
-        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="27">shortEdges</item>
     </style>
     <!-- Theme applied to the Android Window as soon as the process has started.
          This theme determines the color of the Android Window while your
@@ -33,7 +36,7 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:enforceStatusBarContrast">false</item>
-        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
     </style>
 </resources>
