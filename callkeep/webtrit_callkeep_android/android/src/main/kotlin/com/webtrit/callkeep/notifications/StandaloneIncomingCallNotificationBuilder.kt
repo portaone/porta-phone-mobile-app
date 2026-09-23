@@ -20,8 +20,9 @@ import com.webtrit.callkeep.services.services.connection.StandaloneCallService
 import com.webtrit.callkeep.services.services.connection.StandaloneServiceAction
 
 /**
- * Builds an incoming call notification for the standalone call path — used on devices that do
- * not expose the [android.software.telecom] system feature.
+ * Builds an incoming call notification for the standalone call path — the path taken wherever
+ * Telecom cannot host our calls: no [android.software.telecom] feature, or a release below
+ * API 26, where a self-managed `PhoneAccount` cannot be registered.
  *
  * Extends [NotificationBuilder] to reuse [buildOpenAppIntent] and keep behaviour consistent with
  * [IncomingCallNotificationBuilder]. Answer/Decline [PendingIntent]s are routed directly to

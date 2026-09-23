@@ -309,7 +309,9 @@ abstract class PHostPermissionsApi {
   PCallkeepAndroidBatteryMode getBatteryMode();
 
   /// How incoming calls are delivered: Telecom `ConnectionService` vs the
-  /// limited standalone foreground service (device without `android.software.telecom`).
+  /// standalone foreground service, used when Telecom cannot host our calls -
+  /// the device does not expose `android.software.telecom`, or it runs below
+  /// API 26, where a self-managed `PhoneAccount` cannot be registered.
   @async
   PCallkeepAndroidCallDeliveryMode getCallDeliveryMode();
 

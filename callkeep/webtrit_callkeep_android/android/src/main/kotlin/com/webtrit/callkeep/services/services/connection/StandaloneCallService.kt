@@ -36,12 +36,13 @@ import java.util.concurrent.atomic.AtomicLong
 import com.webtrit.callkeep.managers.AudioManager as CallkeepAudioManager
 
 /**
- * Standalone call management service for devices that do not expose the
- * `android.software.telecom` system feature (e.g. some tablets, Android Go builds,
- * certain custom OEM configurations).
+ * Standalone call management service for everything Telecom cannot host our calls on: a device
+ * that does not expose the `android.software.telecom` system feature (some tablets, Android Go
+ * builds, certain custom OEM configurations), and any release below API 26, where a
+ * self-managed `PhoneAccount` cannot be registered at all.
  *
- * On devices with Telecom support, [PhoneConnectionService] (a [android.telecom.ConnectionService])
- * handles call management through the Android Telecom framework. On devices without Telecom,
+ * Where Telecom can host them, [PhoneConnectionService] (a [android.telecom.ConnectionService])
+ * handles call management through the Android Telecom framework. Everywhere else,
  * this service acts as an independent call manager — tracking call state, managing audio
  * routing directly via [AudioManager], and dispatching the same [ConnectionEvent] broadcasts
  * that [PhoneConnectionService] produces in the Telecom path. This means [ForegroundService]

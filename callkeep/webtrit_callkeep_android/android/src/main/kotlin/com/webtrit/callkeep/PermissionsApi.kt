@@ -108,10 +108,11 @@ class PermissionsApi(
 
     /**
      * Reports whether incoming calls are delivered via the Telecom
-     * [android.telecom.ConnectionService] path or the limited standalone
-     * foreground-service path used when the device lacks
-     * `android.software.telecom`. Mirrors the same feature gate the router uses,
-     * so the value reflects the actually active delivery path.
+     * [android.telecom.ConnectionService] path or the standalone foreground-service
+     * path, used when the device lacks `android.software.telecom` or runs below
+     * API 26, where a self-managed PhoneAccount cannot be registered. Mirrors the
+     * same gate the router uses, so the value reflects the actually active delivery
+     * path.
      */
     override suspend fun getCallDeliveryMode(): PCallkeepAndroidCallDeliveryMode =
         if (TelephonyUtils.isTelecomSupported(context)) {

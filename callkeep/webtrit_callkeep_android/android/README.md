@@ -36,7 +36,8 @@ Defined in `AndroidManifest.xml`:
 **Used features:**
 
 - `android.hardware.telephony` (optional)
-- `android.software.telecom` (required)
+- `android.software.telecom` (optional - the manifest declares `required="false"`, and the
+  standalone backend covers its absence, as well as any release below API 26)
 
 ---
 
