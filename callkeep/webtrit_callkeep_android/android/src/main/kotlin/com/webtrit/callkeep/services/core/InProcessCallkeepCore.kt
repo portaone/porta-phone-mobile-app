@@ -393,13 +393,19 @@ class InProcessCallkeepCore internal constructor(
          *
          * Covers the persistent global subscriptions used by [ForegroundService] and
          * [IncomingCallService]. Per-call one-off receivers (OngoingCall, OutgoingFailure,
-         * TearDownComplete, IncomingFailure) are excluded — they stay as dynamic
-         * receivers registered via [registerConnectionEvents].
+         * TearDownComplete) are excluded — they stay as dynamic receivers registered via
+         * [registerConnectionEvents].
+         *
+         * IncomingFailure was listed among those until it was not: no dynamic receiver ever
+         * named it, so it was dispatched to nobody and a refused incoming call waited out the
+         * confirmation timeout. It is global because the listener is [ForegroundService], which
+         * holds the suspended host call it has to fail.
          */
 
         internal val GLOBAL_LISTENER_EVENTS: List<ConnectionEvent> =
             listOf(
                 CallLifecycleEvent.IncomingConnectionReported,
+                CallLifecycleEvent.IncomingFailure,
                 CallLifecycleEvent.ReplayIncomingCall,
                 CallLifecycleEvent.ConnectionStateChanged,
                 CallLifecycleEvent.DeclineCall,

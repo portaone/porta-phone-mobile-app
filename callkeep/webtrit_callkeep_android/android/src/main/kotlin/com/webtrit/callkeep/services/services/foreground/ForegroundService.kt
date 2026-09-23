@@ -142,6 +142,7 @@ class ForegroundService :
      * Cancels the associated safety timeout. Safe to call multiple times — only
      * the first call has any effect (the entry is removed atomically).
      */
+
     private fun resolvePendingIncomingCall(
         callId: String,
         result: Result<PIncomingCallError?>,
@@ -149,6 +150,60 @@ class ForegroundService :
         val cb = pendingIncomingCalls.remove(callId) ?: return
         pendingIncomingTimeouts.remove(callId)?.let { mainHandler.removeCallbacks(it) }
         cb.resumeIfActive(result)
+    }
+
+    /**
+     * Fails a [reportNewIncomingCall] still suspended on [callId] with CALL_REJECTED_BY_SYSTEM,
+     * and answers whether there was one.
+     *
+     * The three paths that can learn a call died before Flutter ever saw it - Telecom refusing
+     * the registration, a decline arriving first, and the confirmation timeout - all owe the
+     * same three steps, and they are here rather than repeated so they cannot drift apart:
+     * drain the pending slot, mark the call terminated and endCall-dispatched, then resume the
+     * suspended host call.
+     *
+     * Marking it dispatched is what keeps `performEndCall` from firing later for a call Flutter
+     * was never told about - neither from a late broadcast nor from the `endCall` Flutter makes
+     * on receiving the rejection.
+     *
+     * Returns false when nothing was waiting, which is not a failure: the caller is then holding
+     * an event about a call this process is not in the middle of registering.
+     */
+    private fun rejectBeforeConfirmation(
+        callId: String,
+        reason: String,
+    ): Boolean {
+        if (!pendingIncomingCalls.containsKey(callId)) return false
+        logger.w("rejectBeforeConfirmation: callId=$callId ($reason) — resolving with CALL_REJECTED_BY_SYSTEM")
+        core.removePending(callId)
+        core.clearAndMarkEndCallDispatched(callId)
+        resolvePendingIncomingCall(
+            callId,
+            Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM)),
+        )
+        return true
+    }
+
+    /**
+     * Telecom refused to register an incoming call in :callkeep_core.
+     *
+     * That process reports the refusal and decides nothing about it, because the state the
+     * decision needs is here: whether a [reportNewIncomingCall] is still suspended on this call.
+     * If one is, the call never reached Flutter and is failed now rather than left to the
+     * confirmation timeout. If none is, the refusal concerns a call this process is not
+     * registering - a stale callback - and nothing is done with it, in particular no
+     * `performEndCall`, which must never fire for a call Flutter was never told about.
+     */
+    private fun handleCSIncomingFailure(extras: Bundle?) {
+        val failure = extras?.let { FailureMetadata.fromBundle(it) }
+        val callId = failure?.callMetadata?.callId
+        if (callId == null) {
+            logger.w("handleCSIncomingFailure: no callId in failure metadata, ignoring (${failure?.message})")
+            return
+        }
+        if (!rejectBeforeConfirmation(callId, "Telecom refused the incoming registration")) {
+            logger.i("handleCSIncomingFailure: nothing suspended on callId=$callId, ignoring (${failure.message})")
+        }
     }
 
     /**
@@ -175,6 +230,10 @@ class ForegroundService :
         when (event) {
             CallLifecycleEvent.IncomingConnectionReported -> {
                 handleCSIncomingConnectionReported(data)
+            }
+
+            CallLifecycleEvent.IncomingFailure -> {
+                handleCSIncomingFailure(data)
             }
 
             CallLifecycleEvent.ConnectionStateChanged -> {
@@ -606,21 +665,17 @@ class ForegroundService :
         val timeoutRunnable: Runnable? =
             if (ownsPendingSlot) {
                 Runnable {
-                    logger.w("reportNewIncomingCall: Telecom confirmation timeout for callId=$callId, resolving with CALL_REJECTED_BY_SYSTEM")
                     pendingIncomingTimeouts.remove(callId)
-                    // pendingCallIds is owned by InProcessCallkeepCore.startIncomingCall now.
-                    // If we got here, neither onSuccess nor onError fired within 5 s — the
-                    // internal drain did not run, so we must drain explicitly. removePending
-                    // is idempotent.
-                    core.removePending(callId)
-                    // Mark terminated and endCallDispatched so that a late-arriving HungUp
-                    // broadcast (after the timeout) does not cause handleCSReportDeclineCall
-                    // to fire performEndCall for a call Flutter already got callRejectedBySystem for.
-                    core.clearAndMarkEndCallDispatched(callId)
-                    resolvePendingIncomingCall(
-                        callId,
-                        Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM)),
-                    )
+                    // The safety net, not the normal path: it fires when nothing else answered
+                    // for the call at all - a synchronous throw out of startIncomingCall, or a
+                    // backend that never came up. A Telecom refusal arrives as IncomingFailure
+                    // long before this.
+                    if (!rejectBeforeConfirmation(callId, "confirmation timeout")) {
+                        // Nothing was waiting: something answered for this call between the timer
+                        // being posted and it firing, and cancelling it lost the race. Said out
+                        // loud because a timer that fires and does nothing is otherwise invisible.
+                        logger.i("reportNewIncomingCall: confirmation timeout for callId=$callId arrived after it was resolved")
+                    }
                 }.also { r ->
                     pendingIncomingTimeouts[callId] = r
                     mainHandler.postDelayed(r, INCOMING_CALL_CONFIRMATION_TIMEOUT_MS)
@@ -1217,20 +1272,7 @@ class ForegroundService :
             // rejected the call before Flutter was ever notified of it. Resolve the Pigeon
             // call with CALL_REJECTED_BY_SYSTEM and return early — do NOT fire
             // performEndCall since Flutter never received a successful registration.
-            if (pendingIncomingCalls.containsKey(callId)) {
-                logger.w(
-                    "handleCSReportDeclineCall: Telecom rejected callId=$callId before Flutter confirmation — resolving with CALL_REJECTED_BY_SYSTEM",
-                )
-                core.removePending(callId)
-                // Mark terminated and endCallDispatched so that a subsequent endCall()
-                // by Flutter (after receiving callRejectedBySystem) does not re-fire
-                // performEndCall — performEndCall must never fire for a call that was
-                // never confirmed to Flutter.
-                core.clearAndMarkEndCallDispatched(callId)
-                resolvePendingIncomingCall(
-                    callId,
-                    Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM)),
-                )
+            if (rejectBeforeConfirmation(callId, "declined before confirmation")) {
                 return@let
             }
 

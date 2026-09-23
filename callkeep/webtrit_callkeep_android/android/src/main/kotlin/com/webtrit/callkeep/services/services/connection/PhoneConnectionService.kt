@@ -405,35 +405,29 @@ class PhoneConnectionService : ConnectionService() {
         val callMetadata = CallMetadata.fromBundleOrNull(request?.extras ?: Bundle.EMPTY)
         val callId = callMetadata?.callId
 
-        // Check before removing: if this callId was pending, the failure was for a real call
-        // that should be reported to Flutter as ended (e.g., rejected with BUSY because another
-        // incoming call was already ringing). If it was not pending, this is treated as a stale
-        // Telecom callback and routed to IncomingFailure.
-        //
-        // Since startIncomingCall reports directly via TelecomManager.addNewIncomingCall (no
-        // pre-registration in this process), wasPending can be false even for a genuine fresh
-        // rejection; in that case the main-process confirmation timeout in
-        // ForegroundService.reportNewIncomingCall is the authoritative resolver that fails the
-        // Pigeon callback with CALL_REJECTED_BY_SYSTEM, so the call is not left hung.
-        val wasPending = callId != null && connectionManager.isPending(callId)
         callId?.let { connectionManager.removePending(it) }
 
         val failureContext = "onCreateIncomingConnectionFailed"
-        val failureMessage = "$failureContext: callId=$callId wasPending=$wasPending account=$connectionManagerPhoneAccount"
+        val failureMessage = "$failureContext: callId=$callId account=$connectionManagerPhoneAccount"
 
         Log.e(TAG, "$failureMessage — Telecom rejected the incoming call registration")
 
-        if (wasPending) {
-            // callId comes off callMetadata, so wasPending being true makes both non-null.
-            // The pending slot is already dropped above; what is left is telling the main process
-            // the call ended, so it resolves the Pigeon callback waiting on this one. The metadata
-            // rather than the bare id, so receivers get the handle and display name with it.
-            Log.i(TAG, "onCreateIncomingConnectionFailed: firing HungUp for pending callId=$callId")
-            dispatcher.dispatch(baseContext, CallLifecycleEvent.HungUp, callMetadata!!.toBundle())
-        } else {
-            val failureMetadata = FailureMetadata(callMetadata, failureMessage).toBundle()
-            dispatcher.dispatch(baseContext, CallLifecycleEvent.IncomingFailure, failureMetadata)
-        }
+        // One fact leaves this process: Telecom refused this callId. What to do about it is not
+        // decided here, because nothing here can decide it - whether a reportNewIncomingCall is
+        // still suspended on this call, and whether Flutter ever heard of it, is main-process
+        // state, and this service runs in :callkeep_core with its own ConnectionManager instance.
+        //
+        // It used to be decided here, off isPending, which reads this process's pending set - a
+        // set the reporting process filled in its own JVM. The answer was therefore always false,
+        // the branch that would have reported the failure never ran, and the call was left to the
+        // five-second confirmation timeout in the main process. Measured on the stand: the
+        // refusal was known 4.98 s before the application heard of it.
+        Log.i(TAG, "onCreateIncomingConnectionFailed: dispatching IncomingFailure for callId=$callId")
+        dispatcher.dispatch(
+            baseContext,
+            CallLifecycleEvent.IncomingFailure,
+            FailureMetadata(callMetadata, failureMessage).toBundle(),
+        )
 
         phoneConnectionServiceDispatcher.dispatchLifecycle(ConnectionLifecycleAction.ConnectionChanged)
 
