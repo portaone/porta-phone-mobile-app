@@ -38,7 +38,7 @@ same new event therefore arrives there and vanishes on Telecom devices - test bo
 | `HungUp`                     | `callId`, disconnect cause                                  | Call disconnected from either side                                                                                                                                                                     |
 | `OngoingCall`                | `callId`, `CallMetadata` bundle                             | Outgoing connection dialing                                                                                                                                                                            |
 | `OutgoingFailure`            | `callId`, failure info                                      | Outgoing call could not be created                                                                                                                                                                     |
-| `IncomingFailure`            | `callId`, failure info                                      | Incoming call setup failed                                                                                                                                                                             |
+| `IncomingFailure`            | `callId`, failure info                                      | Telecom refused to register the incoming call. Carries the refusal only: whether anything is waiting on that call is main-process state, so `ForegroundService` decides what it means                  |
 | `ConnectionNotFound`         | `callId`                                                    | `PhoneConnection` not found — synthesized HungUp                                                                                                                                                       |
 
 ### Call Media Events (`:callkeep_core` -> main)
@@ -106,9 +106,10 @@ for `:callkeep_core` events — they subscribe through `CallkeepCore.addConnecti
 Two asymmetries the table cannot show. Traffic towards `:callkeep_core` is not broadcast at
 all: every `ServiceAction` arrives as a `startService` intent handled in
 `PhoneConnectionService.onStartCommand`, which is why that service registers no receiver.
-And `IncomingFailure` is dispatched by `PhoneConnectionService` but subscribed to by nobody -
-it is outside `GLOBAL_LISTENER_EVENTS` and no dynamic receiver names it, so a failed incoming
-call is resolved by the main process timing out rather than by this event.
+`IncomingFailure` was in exactly that position until 2026-09-23: dispatched by
+`PhoneConnectionService`, outside `GLOBAL_LISTENER_EVENTS`, and named by no dynamic receiver
+either, so a refused incoming call was resolved by the main process timing out five seconds
+later rather than by the event. It is a global listener event now.
 
 ## Related Components
 

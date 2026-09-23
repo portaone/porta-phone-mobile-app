@@ -135,7 +135,6 @@ registered `ConnectionEventListener`. `ForegroundService` does not register its 
 |--------------------|-----------------------------------|-------------------------------------|
 | `OngoingCall`      | `handleCSReportOngoingCall()`     | Promote outgoing call, notify Dart  |
 | `OutgoingFailure`  | `handleCSReportOutgoingFailure()` | `markTerminated()`, notify Dart     |
-| `IncomingFailure`  | `handleCSReportIncomingFailure()` | `markTerminated()`, notify Dart     |
 | `TearDownComplete` | Inline lambda                     | Completes the `tearDown()` deferred |
 
 ## Duplicate-Notification Guards

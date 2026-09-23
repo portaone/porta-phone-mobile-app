@@ -118,10 +118,11 @@ the first `addConnectionEventListener` call and unregistered when the last liste
 `OngoingCall`, `OutgoingFailure` (both in `ForegroundService.startCall`), `TearDownComplete`
 (tearDown ack).
 
-**Delivery gap**: `IncomingFailure` is dispatched by `PhoneConnectionService`
-(`onCreateIncomingConnectionFailed`) and is excluded from the global listener events, but no
-main-process receiver currently registers for it -- the event is dropped. Incoming-failure
-handling relies on the `HungUp`/`ConnectionNotFound` path instead.
+`IncomingFailure` is dispatched by `PhoneConnectionService`
+(`onCreateIncomingConnectionFailed`) and is a global listener event: `ForegroundService`
+handles it and fails the `reportNewIncomingCall` suspended on that call. It was excluded from
+the global list until 2026-09-23, and no dynamic receiver named it either, so the event went
+nowhere and a refused incoming call waited out the confirmation timeout.
 
 `notifyConnectionEvent` exists for `StandaloneCallService`, which runs in the main process: on
 certain OEM devices the system suppresses app-originated `sendBroadcast` calls entirely, so the

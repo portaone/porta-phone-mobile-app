@@ -80,16 +80,22 @@ second incoming call arrives while the first is still ringing, Telecom calls
         |
         v
 3.  Telecom --> PhoneConnectionService.onCreateIncomingConnectionFailed(callId=id2)
-        |   ConnectionManager.isPending(id2) == true  (was registered in step 2)
-        |   broadcast: HungUp(id2)
+        |   broadcast: IncomingFailure(id2)  — the refusal, and nothing decided about it:
+        |   whether anything is waiting on this call is main-process state, and this
+        |   service runs in :callkeep_core with its own ConnectionManager instance
         v
-4.  ForegroundService.handleCSReportDeclineCall()
+4.  ForegroundService.handleCSIncomingFailure()
         |   pendingIncomingCalls[id2] exists (host call still suspended)
         |   reply with PIncomingCallError(callRejectedBySystem)
         |   (performEndCall is NOT fired — call was never confirmed to Flutter)
         v
 5.  Dart receives reportNewIncomingCall() result = callRejectedBySystem
 ```
+
+> Until 2026-09-23 step 3 read `isPending(id2) == true (was registered in step 2)`,
+> and step 2 registers it in the *reporting* process. The read always answered false,
+> no event was sent that anyone received, and the call was resolved by the five-second
+> confirmation timeout instead — measured on the stand at 4.98 s late.
 
 **Key consequences**:
 
