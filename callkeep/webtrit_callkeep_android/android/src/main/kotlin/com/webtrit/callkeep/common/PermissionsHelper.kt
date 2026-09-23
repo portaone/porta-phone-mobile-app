@@ -209,16 +209,6 @@ class PermissionsHelper(
         return microphonePermission == PackageManager.PERMISSION_GRANTED
     }
 
-    /**
-     * Checks if notification permission is granted on Android 13+ (API level 33).
-     */
-    fun hasNotificationPermission(): Boolean =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
-
     companion object {
         private const val TAG = "PermissionsHelper"
 
