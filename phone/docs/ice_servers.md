@@ -112,3 +112,47 @@ outlive the session, and the cost is one fetch after a cold start.
   wiring.
 - `IceSettings` (the transport/network filters under media settings) is a separate concern and does not
   interact with this.
+
+## Seeing why gathering failed
+
+Nothing in Dart reports what the native ICE stack did. A peer connection publishes its state, not
+the reasons behind it, so a server that never answers - or one whose TLS certificate libwebrtc
+refuses - looks exactly like candidates that simply never arrived, with no error logged anywhere.
+
+`WEBTRIT_APP_WEBRTC_NATIVE_LOG_SEVERITY` bridges libwebrtc's own log into the application log under
+the `WebRTC.Native` logger, so it reaches the device log file and the remote sink like every other
+record. `none`, `error`, `warning`, `info` (the default), `verbose`.
+
+The default is `info` rather than something quieter because of where this library draws the line,
+measured on one gathering round against a TURN server that refuses the handshake:
+
+| Threshold | Failure visible | Lines per round |
+|---|---|---|
+| `none` | no | 0 |
+| `warning` | **no** - codec and socket housekeeping only | 99 |
+| `info` | yes | ~700 |
+| `verbose` | yes, with the TLS exchange | ~990 |
+
+So `warning` buys noise without the answer: nothing about ICE or TURN is written above `info`.
+
+```sh
+flutter run --dart-define-from-file=dart_define.json \
+  --dart-define=WEBTRIT_APP_WEBRTC_NATIVE_LOG_SEVERITY=verbose
+```
+
+What a gathering round looks like when it is on:
+
+```
+Port[...:relay:Net[wlan0...]]: Starting TURN host lookup for turn.example.com:5349
+Port[...]: Trying to connect to TURN server via tls @ turn.example.com:5349
+OpenSSLAdapter::BeginSSL: turn.example.com
+Port[...]: TURN allocate request sent, id=...
+Port[...]: Received TURN allocate error response, code=401      <- the normal challenge
+Port[...]: TURN allocate requested successfully, code=0
+Port[...]: Gathered candidate: Cand[...:relay:...]
+```
+
+Android and iOS only: on web there is no native stack to log - WebRTC there is the browser's - so
+the value is ignored. Keep it off outside an investigation - `verbose` writes several hundred lines per round. The
+severity is read once, when the native factory is created, so it cannot be raised on a running
+process; `initializeNativeWebrtcLogging` is called between `bootstrap` and `runApp` for that reason.

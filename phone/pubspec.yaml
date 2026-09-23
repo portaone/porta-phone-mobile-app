@@ -85,6 +85,9 @@ dependencies:
   json_annotation: ^4.12.0
   just_audio: ^0.10.5
   linkify: ^5.0.0
+  # Used only to bridge libwebrtc's native log into package:logging - the plugin's
+  # injectable sink takes this package's Logger and nothing else.
+  logger: ^2.8.0
   logging: ^1.3.0
   logging_appenders: ^2.0.0+1
   mask_text_input_formatter: ^2.9.0

@@ -49,6 +49,10 @@ void main() {
 
       final dependencies = await startupTrace.measure('bootstrap', () => bootstrap(startupTrace: startupTrace));
 
+      // After bootstrap so the application logger exists, and long before the
+      // first peer connection is built - see initializeNativeWebrtcLogging.
+      initializeNativeWebrtcLogging();
+
       if (!kIsWeb && kDebugMode) {
         FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
         await FirebaseCrashlytics.instance.deleteUnsentReports();
