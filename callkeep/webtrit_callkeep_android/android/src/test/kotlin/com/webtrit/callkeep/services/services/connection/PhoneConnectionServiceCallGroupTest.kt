@@ -22,13 +22,13 @@ class PhoneConnectionServiceCallGroupTest {
 
     @Before
     fun setUp() {
-        PhoneConnectionService.connectionManager = ConnectionManager()
+        ConnectionManager.instance = ConnectionManager()
         service = Robolectric.buildService(PhoneConnectionService::class.java).create().get()
         calls =
             listOf("A", "B", "C", "D").associateWith { id ->
                 PhoneConnection(service, { _, _ -> }, CallMetadata(callId = id), {}).also {
                     it.setActive()
-                    PhoneConnectionService.connectionManager.addConnection(id, it)
+                    ConnectionManager.instance.addConnection(id, it)
                 }
             }
     }
@@ -147,6 +147,7 @@ class PhoneConnectionServiceCallGroupTest {
         // managed call and the platform dialer would draw the room.
         assertTrue(calls.values.all { it.conference == null })
     }
+
     @Test
     fun `duplicate ids cannot keep a lone member grouped`() {
         initialGroup("A", "B")

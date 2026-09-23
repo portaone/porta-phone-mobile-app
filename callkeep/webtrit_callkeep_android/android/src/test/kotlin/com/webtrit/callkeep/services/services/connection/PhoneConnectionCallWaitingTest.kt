@@ -36,7 +36,7 @@ class PhoneConnectionCallWaitingTest {
     @Before
     fun setUp() {
         ContextHolder.init(context)
-        PhoneConnectionService.connectionManager = ConnectionManager()
+        ConnectionManager.instance = ConnectionManager()
     }
 
     private fun createConnectionWithAudio(audioManager: AudioManager): PhoneConnection =
@@ -93,7 +93,7 @@ class PhoneConnectionCallWaitingTest {
 
     @Test
     fun `onShowIncomingCallUi plays call-waiting tone when a call is active`() {
-        PhoneConnectionService.connectionManager = managerWithActiveCall()
+        ConnectionManager.instance = managerWithActiveCall()
         val mockAudio = mock(AudioManager::class.java)
         val connection = createConnectionWithAudio(mockAudio)
 
@@ -105,7 +105,7 @@ class PhoneConnectionCallWaitingTest {
 
     @Test
     fun `onShowIncomingCallUi plays call-waiting tone when a call is on hold`() {
-        PhoneConnectionService.connectionManager = managerWithHeldCall()
+        ConnectionManager.instance = managerWithHeldCall()
         val mockAudio = mock(AudioManager::class.java)
         val connection = createConnectionWithAudio(mockAudio)
 
@@ -119,7 +119,7 @@ class PhoneConnectionCallWaitingTest {
     fun `onShowIncomingCallUi plays ringtone after active call disconnects`() {
         val manager = managerWithActiveCall()
         manager.getActiveConnection()?.setDisconnected(DisconnectCause(DisconnectCause.REMOTE))
-        PhoneConnectionService.connectionManager = manager
+        ConnectionManager.instance = manager
 
         val mockAudio = mock(AudioManager::class.java)
         val connection = createConnectionWithAudio(mockAudio)

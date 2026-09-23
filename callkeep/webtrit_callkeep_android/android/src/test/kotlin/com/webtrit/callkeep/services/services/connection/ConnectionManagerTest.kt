@@ -47,7 +47,7 @@ class ConnectionManagerTest {
     fun setUp() {
         ContextHolder.init(context)
         // Reset the global manager used by validateConnectionAddition
-        PhoneConnectionService.connectionManager = createManager()
+        ConnectionManager.instance = createManager()
     }
 
     // -------------------------------------------------------------------------
@@ -234,7 +234,7 @@ class ConnectionManagerTest {
         val conn = createRingingConnection("call-1")
         manager.addConnection("call-1", conn)
         conn.setDisconnected(DisconnectCause(DisconnectCause.LOCAL))
-        PhoneConnectionService.connectionManager = manager
+        ConnectionManager.instance = manager
 
         var success = false
         ConnectionManager.validateConnectionAddition(
@@ -250,7 +250,7 @@ class ConnectionManagerTest {
     fun `validateConnectionAddition calls onError ALREADY_EXISTS for an active ringing callId`() {
         val manager = createManager()
         manager.addConnection("call-1", createRingingConnection("call-1"))
-        PhoneConnectionService.connectionManager = manager
+        ConnectionManager.instance = manager
 
         var errorEnum: PIncomingCallErrorEnum? = null
         ConnectionManager.validateConnectionAddition(
@@ -266,7 +266,7 @@ class ConnectionManagerTest {
     fun `validateConnectionAddition error result is non-null`() {
         val manager = createManager()
         manager.addConnection("call-1", createRingingConnection("call-1"))
-        PhoneConnectionService.connectionManager = manager
+        ConnectionManager.instance = manager
 
         var errorResult: com.webtrit.callkeep.PIncomingCallError? = null
         ConnectionManager.validateConnectionAddition(
@@ -320,7 +320,7 @@ class ConnectionManagerTest {
 
         // Step 4: main process CallBloc calls reportNewIncomingCall again.
         var errorEnum: PIncomingCallErrorEnum? = null
-        PhoneConnectionService.connectionManager = manager
+        ConnectionManager.instance = manager
         ConnectionManager.validateConnectionAddition(
             metadata = CallMetadata(callId = callId),
             onSuccess = { },
@@ -360,7 +360,7 @@ class ConnectionManagerTest {
 
         // Step 4: second report hits pendingCallIds branch first → wrong error code.
         var errorEnum: PIncomingCallErrorEnum? = null
-        PhoneConnectionService.connectionManager = manager
+        ConnectionManager.instance = manager
         ConnectionManager.validateConnectionAddition(
             metadata = CallMetadata(callId = callId),
             onSuccess = { },

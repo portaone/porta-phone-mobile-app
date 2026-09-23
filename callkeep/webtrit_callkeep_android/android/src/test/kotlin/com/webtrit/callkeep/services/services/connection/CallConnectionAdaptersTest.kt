@@ -31,7 +31,7 @@ class CallConnectionAdaptersTest {
         StandaloneCallService.ringingIncomingCallIds.clear()
         StandaloneCallService.pendingAnswers.clear()
         StandaloneCallService.callGroup = CallGroup.empty
-        PhoneConnectionService.connectionManager = ConnectionManager()
+        ConnectionManager.instance = ConnectionManager()
         service = Robolectric.buildService(StandaloneCallService::class.java).create().get()
     }
 
@@ -80,8 +80,8 @@ class CallConnectionAdaptersTest {
         phone.setActive()
         val other = PhoneConnection(service, { _, _ -> }, CallMetadata(callId = "b"), {})
         other.setActive()
-        PhoneConnectionService.connectionManager.addConnection("a", phone)
-        PhoneConnectionService.connectionManager.addConnection("b", other)
+        ConnectionManager.instance.addConnection("a", phone)
+        ConnectionManager.instance.addConnection("b", other)
         PhoneConnectionService.applyCallGroup(setOf("a", "b"))
         phone.onHold()
         assertEquals(Connection.STATE_HOLDING, phone.state)
