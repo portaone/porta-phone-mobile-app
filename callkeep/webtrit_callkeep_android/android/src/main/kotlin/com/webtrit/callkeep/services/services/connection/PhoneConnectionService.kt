@@ -29,6 +29,7 @@ import com.webtrit.callkeep.services.broadcaster.CallCommandEvent
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.broadcaster.ConnectionEvent
 import com.webtrit.callkeep.services.broadcaster.ConnectionServicePerformBroadcaster
+import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.services.connection.dispatchers.ConnectionLifecycleAction
 import com.webtrit.callkeep.services.services.connection.dispatchers.PhoneConnectionServiceDispatcher
 import com.webtrit.callkeep.services.services.foreground.ForegroundService
@@ -674,49 +675,26 @@ class PhoneConnectionService : ConnectionService() {
             communicate(context, ServiceAction.AudioDeviceSet, metadata)
         }
 
-        fun tearDown(context: Context) {
-            communicate(context, ServiceAction.TearDown, null)
-        }
+        fun tearDown(context: Context) = command(context, ServiceAction.TearDown)
 
         /**
-         * Sends a [ServiceAction.TearDownConnections] command to this service via [startService].
-         *
-         * Using an explicit [startService] intent (instead of a broadcast) guarantees that:
-         * - Only this app can trigger the action (explicit intents are not interceptable by others).
-         * - The command is queued and processed after [onCreate] completes, so it is never dropped
-         *   even if the service is starting up concurrently.
-         *
-         * The service will hang up all active [PhoneConnection]s, call [ConnectionManager.cleanConnections],
-         * and reply with [CallCommandEvent.TearDownComplete].
+         * Sends [ServiceAction.TearDownConnections]: the service hangs up every active
+         * [PhoneConnection], calls [ConnectionManager.cleanConnections] and replies with
+         * [CallCommandEvent.TearDownComplete]. If the command cannot be delivered, [command]
+         * synthesises that reply so the caller does not wait out its ack timeout.
          */
-        fun sendTearDownConnections(context: Context) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.TearDownConnections.action
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "sendTearDownConnections: startService failed: $e") }
-        }
+        fun sendTearDownConnections(context: Context) = command(context, ServiceAction.TearDownConnections)
 
         /**
-         * Sends a [ServiceAction.ReserveAnswer] command with [callId] to this service via [startService].
-         *
-         * Using an explicit [startService] intent guarantees delivery even if the service is still
-         * starting up (the intent is queued to [onStartCommand] after [onCreate] completes), which
-         * closes the race where a broadcast could be dropped before [commandReceiver] is registered.
+         * Sends [ServiceAction.ReserveAnswer] with [callId]: the service calls
+         * [ConnectionManager.reserveAnswer] so the answer is applied when the connection for
+         * [callId] is created. The connection does not exist yet when this is sent, which is the
+         * point of it, and also why a lost one is a lost Answer tap rather than a no-op.
          */
         fun sendReserveAnswer(
             context: Context,
             callId: String,
-        ) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.ReserveAnswer.action
-                    putExtras(CallMetadata(callId = callId).toBundle())
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "sendReserveAnswer: startService failed for callId=$callId: $e") }
-        }
+        ) = command(context, ServiceAction.ReserveAnswer, CallMetadata(callId = callId).toBundle(), "callId=$callId")
 
         /**
          * Sends a [ServiceAction.CleanConnections] command to this service via [startService].
@@ -725,14 +703,7 @@ class PhoneConnectionService : ConnectionService() {
          * from injecting a fake CleanConnections command on API < 33 where broadcast receivers
          * registered without a permission are effectively exported.
          */
-        fun sendCleanConnections(context: Context) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.CleanConnections.action
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "sendCleanConnections: startService failed: $e") }
-        }
+        fun sendCleanConnections(context: Context) = command(context, ServiceAction.CleanConnections)
 
         /**
          * Sends [ServiceAction.ReplayAudioState] to [PhoneConnectionService].
@@ -740,14 +711,7 @@ class PhoneConnectionService : ConnectionService() {
          * which re-emits audio device and mute state broadcasts back to the main process.
          * Used by [ForegroundService.onDelegateSet] to restore Flutter UI after hot restart.
          */
-        fun replayAudioState(context: Context) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.ReplayAudioState.action
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "replayAudioState: startService failed: $e") }
-        }
+        fun replayAudioState(context: Context) = command(context, ServiceAction.ReplayAudioState)
 
         /**
          * Sends [ServiceAction.ReplayConnectionStates] to [PhoneConnectionService].
@@ -756,14 +720,7 @@ class PhoneConnectionService : ConnectionService() {
          * ([ForegroundService]) populate [MainProcessConnectionTracker.connectionStates] even
          * when it starts after the AnswerCall broadcast was originally emitted (cold-start race).
          */
-        fun replayConnectionStates(context: Context) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.ReplayConnectionStates.action
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "replayConnectionStates: startService failed: $e") }
-        }
+        fun replayConnectionStates(context: Context) = command(context, ServiceAction.ReplayConnectionStates)
 
         /**
          * Handles new outgoing calls and starts the connection service if the service is not running.
@@ -852,14 +809,37 @@ class PhoneConnectionService : ConnectionService() {
             context: Context,
             action: ServiceAction,
             callIds: List<String>,
+        ) = command(context, action, Bundle().apply { putStringArray(CallDataConst.CALL_IDS, callIds.toTypedArray()) }, "callIds=$callIds")
+
+        /**
+         * Sends [action] to this service.
+         *
+         * An app-side startService here never starts the incoming-call flow - Telecom does that,
+         * binding `:callkeep_core` itself when it reports a call - but it is an ordinary service
+         * start otherwise and will bring the process up if it is not running. The system may
+         * refuse it (background-start restrictions, an OEM throttle), and a refused command is
+         * lost. What that costs is the command's own business: a lost
+         * [ServiceAction.TearDownConnections] is acked here with [CallCommandEvent.TearDownComplete]
+         * so [ForegroundService.tearDown] does not wait out its timeout, as
+         * [StandaloneCallService.communicate] does on its side; every loss is logged with what it
+         * carried. See docs/dual-process.md, "Explicit startService intents".
+         *
+         * [communicate] is the per-call counterpart: it acts on a call that exists by the time it
+         * is sent, so it ends that call instead of letting it hang.
+         */
+        private fun command(
+            context: Context,
+            action: ServiceAction,
+            extras: Bundle? = null,
+            detail: String = "",
         ) {
-            val intent = Intent(context, PhoneConnectionService::class.java)
-            intent.action = action.action
-            intent.putExtra(CallDataConst.CALL_IDS, callIds.toTypedArray())
             try {
-                context.startService(intent)
+                context.startService(intent(context, action, extras))
             } catch (e: Exception) {
-                Log.w(TAG, "startCallGroup: failed to start service for ${action.name}: $e")
+                Log.w(TAG, "command: ${action.name} lost, startService refused ${detail.ifEmpty { "it" }}: $e")
+                if (action == ServiceAction.TearDownConnections) {
+                    CallkeepCore.instance.notifyConnectionEvent(CallCommandEvent.TearDownComplete)
+                }
             }
         }
 
@@ -868,12 +848,8 @@ class PhoneConnectionService : ConnectionService() {
             action: ServiceAction,
             metadata: CallMetadata?,
         ) {
-            val intent = Intent(context, PhoneConnectionService::class.java)
-            intent.action = action.action
-            metadata?.toBundle()?.let { intent.putExtras(it) }
-
             try {
-                context.startService(intent)
+                context.startService(intent(context, action, metadata?.toBundle()))
             } catch (e: Exception) {
                 val reportDispatcher = ConnectionServicePerformBroadcaster.handle
 
@@ -886,6 +862,15 @@ class PhoneConnectionService : ConnectionService() {
                 reportDispatcher.dispatch(context, CallLifecycleEvent.HungUp, metadata?.toBundle())
                 Log.d(TAG, "Failed to start service with action: ${action.name}, error: $e")
             }
+        }
+
+        private fun intent(
+            context: Context,
+            action: ServiceAction,
+            extras: Bundle?,
+        ) = Intent(context, PhoneConnectionService::class.java).apply {
+            this.action = action.action
+            extras?.let { putExtras(it) }
         }
     }
 }
