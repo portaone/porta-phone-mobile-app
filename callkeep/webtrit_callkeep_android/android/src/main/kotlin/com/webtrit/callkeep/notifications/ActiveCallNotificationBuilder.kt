@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.drawable.Icon
 import com.webtrit.callkeep.R
 import com.webtrit.callkeep.common.ContextHolder.context
+import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.managers.NotificationChannelManager.ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.NotificationAction
@@ -37,8 +38,8 @@ class ActiveCallNotificationBuilder : NotificationBuilder() {
                 ).build()
 
         val notificationBuilder =
-            Notification
-                .Builder(
+            NotificationChannelManager
+                .notificationBuilder(
                     context,
                     ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID,
                 ).apply {

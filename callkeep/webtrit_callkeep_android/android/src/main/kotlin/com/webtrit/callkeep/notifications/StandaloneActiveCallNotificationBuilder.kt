@@ -10,6 +10,7 @@ import androidx.core.app.NotificationCompat
 import com.webtrit.callkeep.R
 import com.webtrit.callkeep.common.CallDataConst
 import com.webtrit.callkeep.common.ContextHolder.context
+import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.managers.NotificationChannelManager.ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.StandaloneCallService
@@ -91,7 +92,7 @@ internal class StandaloneActiveCallNotificationBuilder : NotificationBuilder() {
         val hangUpIntent = if (isGrouped) createHangUpGroupIntent(groupMembers) else createHangUpIntent(meta)
 
         val builder =
-            Notification.Builder(context, ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID).apply {
+            NotificationChannelManager.notificationBuilder(context, ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID).apply {
                 setSmallIcon(if (meta.hasVideo == true) R.drawable.ic_notification_video else R.drawable.ic_notification)
                 setCategory(NotificationCompat.CATEGORY_CALL)
                 setContentTitle(context.getString(R.string.push_notification_active_call_channel_title))
