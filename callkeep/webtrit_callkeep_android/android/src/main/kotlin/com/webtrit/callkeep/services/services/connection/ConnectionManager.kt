@@ -1,6 +1,9 @@
 package com.webtrit.callkeep.services.services.connection
 
+import android.os.Build
 import android.telecom.Connection
+import androidx.annotation.ChecksSdkIntAtLeast
+import androidx.annotation.RequiresApi
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.Log
@@ -65,7 +68,10 @@ class ConnectionManager {
                 }
 
                 connections.containsKey(callId) -> {
-                    val answered = connections[callId]?.hasAnswered == true
+                    // A connection exists only in :callkeep_core, which Telecom starts and
+                    // Telecom only runs this backend from API 26 - so below that this branch is
+                    // unreachable, and the version check says so where a reader can see it.
+                    val answered = isApi26 && connections[callId]?.hasAnswered == true
                     val snapshot = connections.entries.joinToString { (id, c) -> "$id:state=${c.state}" }
                     logger.w("checkAndReservePending: $callId → ${if (answered) "CALL_ID_ALREADY_EXISTS_AND_ANSWERED" else "CALL_ID_ALREADY_EXISTS"} (active in :callkeep_core) connections=[$snapshot]")
                     if (answered) {
@@ -195,6 +201,7 @@ class ConnectionManager {
     /**
      * Check if available video connections.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun hasVideoConnections(): Boolean {
         synchronized(connectionResourceLock) {
             return connections.any { it.value.hasVideo }
@@ -273,6 +280,7 @@ class ConnectionManager {
      * on [connectionResourceLock], eliminating the TOCTOU gap between checking for a
      * connection and reserving the deferred answer.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun reserveOrGetConnectionToAnswer(callId: String): PhoneConnection? {
         synchronized(connectionResourceLock) {
             val connection = connections[callId]
@@ -359,7 +367,7 @@ class ConnectionManager {
      * @param id the identifier of the connection to check.
      * @return `true` if the connection has been answered, `false` otherwise.
      */
-    fun isConnectionAnswered(id: String): Boolean = connections[id]?.hasAnswered == true
+    fun isConnectionAnswered(id: String): Boolean = isApi26 && connections[id]?.hasAnswered == true
 
     override fun toString(): String {
         synchronized(connectionResourceLock) {
@@ -379,6 +387,11 @@ class ConnectionManager {
     }
 
     companion object {
+        /** True where a [PhoneConnection] can exist at all: Telecom hosts this backend from API 26. */
+        @get:ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
+        private val isApi26: Boolean
+            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+
         /**
          * The registry of this process.
          *

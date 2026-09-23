@@ -10,6 +10,8 @@ import android.telecom.PhoneAccount
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
 import android.telephony.TelephonyManager
+import androidx.annotation.ChecksSdkIntAtLeast
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.PhoneConnectionService
@@ -29,6 +31,7 @@ class TelephonyUtils(
         getTelecomManager().placeCall(uri, extras)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun addNewIncomingCall(metadata: CallMetadata) {
         val telecomManager = getTelecomManager()
         val isInCall = runCatching { telecomManager.isInCall }.getOrNull()
@@ -41,6 +44,7 @@ class TelephonyUtils(
         logger.i("addNewIncomingCall: callId=${metadata.callId} — addNewIncomingCall dispatched to Telecom")
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun registerPhoneAccount() {
         val appName: String = getApplicationName()
         val phoneAccountBuilder = PhoneAccount.Builder(getPhoneAccountHandle(), appName)
@@ -138,6 +142,7 @@ class TelephonyUtils(
          * Android Go builds) do not have Telecom infrastructure and should use the standalone
          * call path instead.
          */
+        @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
         fun isTelecomSupported(context: Context): Boolean {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 logger.i(

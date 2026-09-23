@@ -6,11 +6,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import androidx.annotation.Keep
+import androidx.annotation.RequiresApi
 import com.webtrit.callkeep.PAudioDevice
 import com.webtrit.callkeep.PCallRequestError
 import com.webtrit.callkeep.PCallRequestErrorEnum
@@ -246,6 +248,7 @@ class ForegroundService :
         applySetupOptions(options)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun registerPhoneAccountWithRetry() {
         val maxAttempts = 5
         val retryDelayMs = 500L
