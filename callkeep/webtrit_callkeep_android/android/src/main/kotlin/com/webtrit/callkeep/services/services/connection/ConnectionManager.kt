@@ -202,16 +202,6 @@ class ConnectionManager {
     }
 
     /**
-     * Check if available video connections.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun hasVideoConnections(): Boolean {
-        synchronized(connectionResourceLock) {
-            return connections.any { it.value.hasVideo }
-        }
-    }
-
-    /**
      * Marks a call ID as having had HungUp dispatched, so that a subsequent endCall
      * for the same ID can be detected as a duplicate and rejected with an error.
      * Called when ConnectionNotFound fires for a callId that has no connection object.
@@ -363,18 +353,6 @@ class ConnectionManager {
             pendingAnswers.clear()
         }
     }
-
-    /**
-     * Checks whether the connection with the specified ID has been answered.
-     *
-     * @param id the identifier of the connection to check.
-     * @return `true` if the connection has been answered, `false` otherwise.
-     *
-     * Reads a connection, which exists only where Telecom created one - see
-     * [checkAndReservePending] for why that is below the API level lint asks about.
-     */
-    @SuppressLint("NewApi")
-    fun isConnectionAnswered(id: String): Boolean = connections[id]?.hasAnswered == true
 
     override fun toString(): String {
         synchronized(connectionResourceLock) {
