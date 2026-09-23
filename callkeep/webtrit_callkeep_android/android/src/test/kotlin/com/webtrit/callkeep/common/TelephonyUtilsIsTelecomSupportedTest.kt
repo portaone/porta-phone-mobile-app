@@ -12,6 +12,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
+import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
@@ -27,6 +28,19 @@ class TelephonyUtilsIsTelecomSupportedTest {
         Shadows
             .shadowOf(context.packageManager)
             .setSystemFeature("android.software.telecom", enabled)
+    }
+
+    /**
+     * The sandbox boots at the module's minSdkVersion or above - Robolectric refuses an older
+     * manifest outright - so an older release is played by moving the field the gate reads.
+     */
+    private fun setSdkInt(value: Int) {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", value)
+    }
+
+    @org.junit.After
+    fun restoreSdkInt() {
+        setSdkInt(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     }
 
     private fun setPhoneType(phoneType: Int) {
@@ -53,5 +67,34 @@ class TelephonyUtilsIsTelecomSupportedTest {
         setFeatureFlag(false)
         setPhoneType(TelephonyManager.PHONE_TYPE_NONE)
         assertFalse(TelephonyUtils.isTelecomSupported(context))
+    }
+
+    @Test
+    fun `returns false below API 26 even when the feature flag is present`() {
+        setFeatureFlag(true)
+        setSdkInt(Build.VERSION_CODES.N)
+
+        // The flag branch would answer yes on its own. It is not reached: a self-managed
+        // PhoneAccount cannot be registered here, so Telecom would take the call and lose it.
+        assertFalse(TelephonyUtils.isTelecomSupported(context))
+    }
+
+    @Test
+    fun `returns false below API 26 on a phone the OEM fallback would accept`() {
+        setFeatureFlag(false)
+        setPhoneType(TelephonyManager.PHONE_TYPE_GSM)
+        setSdkInt(Build.VERSION_CODES.N_MR1)
+
+        // This is the Android 7 handset the customer asked about: real telephony, so both
+        // branches below would say yes, and both are wrong before self-managed exists.
+        assertFalse(TelephonyUtils.isTelecomSupported(context))
+    }
+
+    @Test
+    fun `still answers the device from API 26 on`() {
+        setFeatureFlag(true)
+        setSdkInt(Build.VERSION_CODES.O)
+
+        assertTrue(TelephonyUtils.isTelecomSupported(context))
     }
 }
