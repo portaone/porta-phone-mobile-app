@@ -2,6 +2,8 @@ package com.webtrit.callkeep.services.core
 
 import android.Manifest
 import android.content.Context
+import android.os.Build
+import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.annotation.RequiresPermission
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.common.TelephonyUtils
@@ -29,6 +31,7 @@ class CallServiceRouter(
     context: Context,
 ) {
     /** True when Telecom can host our calls on this device and release. Immutable after construction. */
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
     val isTelecomSupported: Boolean = TelephonyUtils.isTelecomSupported(context)
 
     private val ctx: Context = context.applicationContext

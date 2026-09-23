@@ -1,6 +1,8 @@
 package com.webtrit.callkeep.models
 
+import android.os.Build
 import android.telecom.DisconnectCause
+import androidx.annotation.RequiresApi
 import com.webtrit.callkeep.PAudioDevice
 import com.webtrit.callkeep.PAudioDeviceType
 import com.webtrit.callkeep.PCallkeepConnection
@@ -16,6 +18,7 @@ fun PHandle.toCallHandle(): CallHandle = CallHandle(value)
 
 fun CallHandle.toPHandle(): PHandle = PHandle(value = number, type = PHandleTypeEnum.NUMBER)
 
+@RequiresApi(Build.VERSION_CODES.O)
 fun PhoneConnection.toPConnection(): PCallkeepConnection? {
     val disconnectCause = disconnectCause ?: DisconnectCause(DisconnectCause.UNKNOWN)
 

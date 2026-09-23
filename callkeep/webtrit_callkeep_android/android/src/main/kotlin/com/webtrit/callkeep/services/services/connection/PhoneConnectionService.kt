@@ -4,12 +4,14 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.telecom.Connection
 import android.telecom.ConnectionRequest
 import android.telecom.ConnectionService
 import android.telecom.DisconnectCause
 import android.telecom.PhoneAccountHandle
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
@@ -39,6 +41,7 @@ import com.webtrit.callkeep.services.services.foreground.ForegroundService
  *
  * @constructor Creates a new instance of `PhoneConnectionService`.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 class PhoneConnectionService : ConnectionService() {
     private lateinit var phoneConnectionServiceDispatcher: PhoneConnectionServiceDispatcher
 

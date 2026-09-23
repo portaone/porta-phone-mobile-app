@@ -36,6 +36,7 @@ import java.util.concurrent.Executors
 /**
  * Manages an individual phone connection, handling state transitions and audio routing.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 class PhoneConnection internal constructor(
     private val context: Context,
     private val dispatcher: PerformDispatchHandle,
