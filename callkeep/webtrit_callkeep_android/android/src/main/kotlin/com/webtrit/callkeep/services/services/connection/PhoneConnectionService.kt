@@ -607,7 +607,9 @@ class PhoneConnectionService : ConnectionService() {
                 _isRunning = value
             }
 
-        var connectionManager: ConnectionManager = ConnectionManager()
+        /** Local name for [ConnectionManager.instance], which this service is the busiest user of. */
+        private val connectionManager: ConnectionManager
+            get() = ConnectionManager.instance
 
         /** The calls that stand as the one group, read off the connections that carry it. */
         fun currentCallGroup(): Set<String> =

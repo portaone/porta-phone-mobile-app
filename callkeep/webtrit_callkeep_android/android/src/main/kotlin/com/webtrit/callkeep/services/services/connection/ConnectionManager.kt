@@ -379,14 +379,28 @@ class ConnectionManager {
     }
 
     companion object {
+        /**
+         * The registry of this process.
+         *
+         * One instance per process, and each process uses it for something different: in
+         * `:callkeep_core` it holds the live [PhoneConnection] objects Telecom created, while in
+         * the main process it holds nothing but the pending-call reservations both backends make
+         * before a connection exists. That second role is why it lives here rather than on
+         * [PhoneConnectionService], where it used to: the standalone backend reserves and
+         * releases calls through it on devices and releases that have no Telecom to speak of,
+         * and a registry both backends need should not be reached through the one they do not
+         * share.
+         *
+         * A `var` because tests swap it to isolate one case from the next.
+         */
+        var instance: ConnectionManager = ConnectionManager()
+
         fun validateConnectionAddition(
             metadata: CallMetadata,
             onSuccess: () -> Unit,
             onError: (PIncomingCallError) -> Unit,
         ) {
-            val errorEnum =
-                PhoneConnectionService.connectionManager
-                    .checkAndReservePending(metadata.callId)
+            val errorEnum = instance.checkAndReservePending(metadata.callId)
 
             if (errorEnum == null) {
                 onSuccess()

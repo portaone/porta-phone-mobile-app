@@ -6,7 +6,6 @@ import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.ConnectionManager
-import com.webtrit.callkeep.services.services.connection.PhoneConnectionService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -183,7 +182,7 @@ class InProcessCallkeepCoreTest {
     @Test
     fun `clearAndMarkEndCallDispatched — terminates, drops the CM reservation, dedups the dispatch`() {
         // The composite touches TWO objects: the tracker (markTerminated + endCallDispatched)
-        // and the main-process PhoneConnectionService.connectionManager, whose pendingCallIds
+        // and the main-process ConnectionManager.instance, whose pendingCallIds
         // reservation (created by checkAndReservePending during startIncomingCall) must be
         // dropped from the main process — otherwise a blind transfer-back reusing the same
         // callId is permanently rejected as CALL_ID_ALREADY_EXISTS. This is the ONE sanctioned
@@ -192,8 +191,8 @@ class InProcessCallkeepCoreTest {
         // Swap in a fresh ConnectionManager so the process-wide singleton state cannot leak
         // between tests.
         val cm = ConnectionManager()
-        val previousCm = PhoneConnectionService.connectionManager
-        PhoneConnectionService.connectionManager = cm
+        val previousCm = ConnectionManager.instance
+        ConnectionManager.instance = cm
         try {
             // Full registration: CM reservation + tracker lifecycle up to a promoted call.
             assertNull(cm.checkAndReservePending("call-1"))
@@ -214,7 +213,7 @@ class InProcessCallkeepCoreTest {
             // Second dispatch for the same callId: already dispatched, returns false.
             assertFalse(core.clearAndMarkEndCallDispatched("call-1"))
         } finally {
-            PhoneConnectionService.connectionManager = previousCm
+            ConnectionManager.instance = previousCm
         }
     }
 

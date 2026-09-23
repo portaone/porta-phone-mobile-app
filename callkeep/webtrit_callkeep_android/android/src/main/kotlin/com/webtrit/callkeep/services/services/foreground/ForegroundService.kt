@@ -544,7 +544,7 @@ class ForegroundService :
         // Query tracker state BEFORE addPending, which resets lifecycle flags (answeredCallIds).
         // MainProcessConnectionTracker is the authoritative view of call state in the main process,
         // updated via broadcasts from :callkeep_core. In contrast, checkAndReservePending (inside
-        // startIncomingCall) only checks PhoneConnectionService.connectionManager, which is isolated
+        // startIncomingCall) only checks ConnectionManager.instance, which is isolated
         // from :callkeep_core and is never updated with answered/terminated transitions.
         //
         // exists() is also checked here to short-circuit duplicate detection without a Telecom

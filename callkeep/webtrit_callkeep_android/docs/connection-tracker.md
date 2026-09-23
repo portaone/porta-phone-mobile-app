@@ -231,8 +231,8 @@ What is deliberately NOT atomic:
   not. Same behavior as before; accepted.
 - **The facade composite** `clearAndMarkEndCallDispatched` spans two objects: one atomic
   tracker transition (`markTerminated` + the dispatch mark) plus
-  `PhoneConnectionService.connectionManager.removePending`. That second call is the ONE
-  sanctioned main-process use of `connectionManager`: the "never call `connectionManager.*`
+  `ConnectionManager.instance.removePending`. That second call is the ONE
+  sanctioned main-process use of the registry: the "never call `ConnectionManager.instance.*`
   from the main process" rule (AGENTS.md, [dual-process.md](dual-process.md)) is about
   connection state, which lives only in the `:callkeep_core` heap, while the `pendingCallIds`
   pre-registration is populated in the MAIN-process heap by `checkAndReservePending` during

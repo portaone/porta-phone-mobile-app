@@ -16,7 +16,7 @@ The implementation runs across **two OS processes**:
 
 IPC between processes uses app-scoped broadcasts and explicit `startService` intents.
 All main-process code that reads call state or sends Telecom commands goes through
-`CallkeepCore.instance` — never through `PhoneConnectionService.connectionManager` directly
+`CallkeepCore.instance` — never through `ConnectionManager.instance` directly
 (it is an empty object in the main JVM heap).
 
 Full architecture documentation lives in [`docs/`](docs/):
@@ -124,7 +124,7 @@ dart format --line-length 120 --set-exit-if-changed lib test
   them).
 - `CallMetadata` must NOT implement `Parcelable` — `system_server` would fail to deserialize it.
   Use `toBundle()` / `fromBundle()` instead.
-- Never call `PhoneConnectionService.connectionManager.*` from the main process.
+- Never call `ConnectionManager.instance.*` from the main process.
   Use `CallkeepCore.instance`.
 - All Pigeon host API implementations run on the platform thread — do not block.
 - Never import Kotlin-layer constants or classes into the Dart layer directly; go through Pigeon.
