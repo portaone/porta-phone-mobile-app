@@ -689,14 +689,7 @@ class PhoneConnectionService : ConnectionService() {
          * The service will hang up all active [PhoneConnection]s, call [ConnectionManager.cleanConnections],
          * and reply with [CallCommandEvent.TearDownComplete].
          */
-        fun sendTearDownConnections(context: Context) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.TearDownConnections.action
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "sendTearDownConnections: startService failed: $e") }
-        }
+        fun sendTearDownConnections(context: Context) = command(context, ServiceAction.TearDownConnections)
 
         /**
          * Sends a [ServiceAction.ReserveAnswer] command with [callId] to this service via [startService].
@@ -708,15 +701,7 @@ class PhoneConnectionService : ConnectionService() {
         fun sendReserveAnswer(
             context: Context,
             callId: String,
-        ) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.ReserveAnswer.action
-                    putExtras(CallMetadata(callId = callId).toBundle())
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "sendReserveAnswer: startService failed for callId=$callId: $e") }
-        }
+        ) = command(context, ServiceAction.ReserveAnswer, CallMetadata(callId = callId).toBundle())
 
         /**
          * Sends a [ServiceAction.CleanConnections] command to this service via [startService].
@@ -725,14 +710,7 @@ class PhoneConnectionService : ConnectionService() {
          * from injecting a fake CleanConnections command on API < 33 where broadcast receivers
          * registered without a permission are effectively exported.
          */
-        fun sendCleanConnections(context: Context) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.CleanConnections.action
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "sendCleanConnections: startService failed: $e") }
-        }
+        fun sendCleanConnections(context: Context) = command(context, ServiceAction.CleanConnections)
 
         /**
          * Sends [ServiceAction.ReplayAudioState] to [PhoneConnectionService].
@@ -740,14 +718,7 @@ class PhoneConnectionService : ConnectionService() {
          * which re-emits audio device and mute state broadcasts back to the main process.
          * Used by [ForegroundService.onDelegateSet] to restore Flutter UI after hot restart.
          */
-        fun replayAudioState(context: Context) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.ReplayAudioState.action
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "replayAudioState: startService failed: $e") }
-        }
+        fun replayAudioState(context: Context) = command(context, ServiceAction.ReplayAudioState)
 
         /**
          * Sends [ServiceAction.ReplayConnectionStates] to [PhoneConnectionService].
@@ -756,14 +727,7 @@ class PhoneConnectionService : ConnectionService() {
          * ([ForegroundService]) populate [MainProcessConnectionTracker.connectionStates] even
          * when it starts after the AnswerCall broadcast was originally emitted (cold-start race).
          */
-        fun replayConnectionStates(context: Context) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.ReplayConnectionStates.action
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "replayConnectionStates: startService failed: $e") }
-        }
+        fun replayConnectionStates(context: Context) = command(context, ServiceAction.ReplayConnectionStates)
 
         /**
          * Handles new outgoing calls and starts the connection service if the service is not running.
@@ -852,15 +816,39 @@ class PhoneConnectionService : ConnectionService() {
             context: Context,
             action: ServiceAction,
             callIds: List<String>,
+        ) = command(context, action, Bundle().apply { putStringArray(CallDataConst.CALL_IDS, callIds.toTypedArray()) })
+
+        /**
+         * Sends [action] to this service, and treats an undelivered command as nothing to do.
+         *
+         * Telecom owns this service: it binds the process itself (BIND_AUTO_CREATE) when it has
+         * calls for it, and the manifest entry states the rule these commands live under - an
+         * app-side startService here speaks to an already-bound service and never starts the
+         * call flow. So a delivery that does not happen can only mean the bind is not there, and
+         * without it there are no connections for any of these commands to act on: nothing to
+         * tear down, nothing to clean, no call waiting on a deferred answer, no state to replay,
+         * no calls to group. The command is a no-op in exactly the case where it cannot arrive,
+         * which is why this is logged as an outcome rather than reported as a failure.
+         *
+         * A command that must instead START the core would break that reasoning and does not
+         * belong here.
+         *
+         * [communicate] is the other half and keeps a fallback of its own: it carries the
+         * per-call actions, which act on a call that exists by the time they are sent, so for
+         * them an undelivered command is a call left hanging rather than a no-op.
+         */
+        private fun command(
+            context: Context,
+            action: ServiceAction,
+            extras: Bundle? = null,
         ) {
-            val intent = Intent(context, PhoneConnectionService::class.java)
-            intent.action = action.action
-            intent.putExtra(CallDataConst.CALL_IDS, callIds.toTypedArray())
-            try {
-                context.startService(intent)
-            } catch (e: Exception) {
-                Log.w(TAG, "startCallGroup: failed to start service for ${action.name}: $e")
-            }
+            val intent =
+                Intent(context, PhoneConnectionService::class.java).apply {
+                    this.action = action.action
+                    extras?.let { putExtras(it) }
+                }
+            runCatching { context.startService(intent) }
+                .onFailure { e -> Log.d(TAG, "command: ${action.name} not delivered, :callkeep_core is not bound — nothing to do ($e)") }
         }
 
         private fun communicate(
