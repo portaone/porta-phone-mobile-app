@@ -1,5 +1,7 @@
 package com.webtrit.callkeep.services.services.connection.dispatchers
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
@@ -28,6 +30,7 @@ enum class ConnectionLifecycleAction {
  * @property dispatcher Callback invoked when a connection is not found.
  * @property proximitySensorManager Controls proximity sensor behavior.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 class PhoneConnectionServiceDispatcher(
     private val connectionManager: ConnectionManager,
     private val dispatcher: PerformDispatchHandle,

@@ -1,6 +1,9 @@
 package com.webtrit.callkeep.services.services.connection
 
+import android.annotation.SuppressLint
+import android.os.Build
 import android.telecom.Connection
+import androidx.annotation.RequiresApi
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.Log
@@ -65,6 +68,12 @@ class ConnectionManager {
                 }
 
                 connections.containsKey(callId) -> {
+                    // A connection exists only in :callkeep_core, which Telecom starts, and
+                    // Telecom runs this backend from API 26 - so this branch is unreachable
+                    // below that and the read is safe. Said to lint rather than to the runtime:
+                    // a version check here would decide the error code, and on a JVM that
+                    // reports no SDK level at all it would decide it wrongly.
+                    @SuppressLint("NewApi")
                     val answered = connections[callId]?.hasAnswered == true
                     val snapshot = connections.entries.joinToString { (id, c) -> "$id:state=${c.state}" }
                     logger.w("checkAndReservePending: $callId → ${if (answered) "CALL_ID_ALREADY_EXISTS_AND_ANSWERED" else "CALL_ID_ALREADY_EXISTS"} (active in :callkeep_core) connections=[$snapshot]")
@@ -195,6 +204,7 @@ class ConnectionManager {
     /**
      * Check if available video connections.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun hasVideoConnections(): Boolean {
         synchronized(connectionResourceLock) {
             return connections.any { it.value.hasVideo }
@@ -273,6 +283,7 @@ class ConnectionManager {
      * on [connectionResourceLock], eliminating the TOCTOU gap between checking for a
      * connection and reserving the deferred answer.
      */
+    @RequiresApi(Build.VERSION_CODES.O)
     fun reserveOrGetConnectionToAnswer(callId: String): PhoneConnection? {
         synchronized(connectionResourceLock) {
             val connection = connections[callId]
@@ -358,7 +369,11 @@ class ConnectionManager {
      *
      * @param id the identifier of the connection to check.
      * @return `true` if the connection has been answered, `false` otherwise.
+     *
+     * Reads a connection, which exists only where Telecom created one - see
+     * [checkAndReservePending] for why that is below the API level lint asks about.
      */
+    @SuppressLint("NewApi")
     fun isConnectionAnswered(id: String): Boolean = connections[id]?.hasAnswered == true
 
     override fun toString(): String {
@@ -379,14 +394,29 @@ class ConnectionManager {
     }
 
     companion object {
+        /**
+         * The registry of this process.
+         *
+         * One instance per process, and each process uses it for something different: in
+         * `:callkeep_core` it holds the live [PhoneConnection] objects Telecom created, while in
+         * the main process it holds nothing but the pending-call reservations both backends make
+         * before a connection exists. That second role is why it lives here rather than on
+         * [PhoneConnectionService], where it used to: the standalone backend reserves and
+         * releases calls through it on devices and releases that have no Telecom to speak of,
+         * and a registry both backends need should not be reached through the one they do not
+         * share.
+         *
+         * A `var` only so a test can swap it to isolate one case from the next; production code
+         * reads it and never assigns it.
+         */
+        var instance: ConnectionManager = ConnectionManager()
+
         fun validateConnectionAddition(
             metadata: CallMetadata,
             onSuccess: () -> Unit,
             onError: (PIncomingCallError) -> Unit,
         ) {
-            val errorEnum =
-                PhoneConnectionService.connectionManager
-                    .checkAndReservePending(metadata.callId)
+            val errorEnum = instance.checkAndReservePending(metadata.callId)
 
             if (errorEnum == null) {
                 onSuccess()

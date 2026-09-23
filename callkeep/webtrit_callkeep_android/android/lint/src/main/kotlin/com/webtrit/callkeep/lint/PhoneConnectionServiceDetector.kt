@@ -37,11 +37,7 @@ class PhoneConnectionServiceDetector :
                 val method = node.resolve() ?: return
                 val containingClass = method.containingClass?.qualifiedName ?: return
 
-                val isPhoneConnectionService =
-                    containingClass == PHONE_CONNECTION_SERVICE_FQN ||
-                        containingClass == "$PHONE_CONNECTION_SERVICE_FQN.Companion"
-
-                if (!isPhoneConnectionService) return
+                if (containingClass !in GUARDED_CLASSES) return
 
                 val filePath = context.file.path
                 if (ALLOWED_PATH_SEGMENTS.any { filePath.contains(it) }) return
@@ -50,7 +46,7 @@ class PhoneConnectionServiceDetector :
                     ISSUE,
                     node,
                     context.getNameLocation(node),
-                    "Direct call to `PhoneConnectionService` from the main process. " +
+                    "Direct call to `:callkeep_core` call state from the main process. " +
                         "Use `CallkeepCore.instance` instead to keep `MainProcessConnectionTracker` in sync.",
                 )
             }
@@ -59,6 +55,25 @@ class PhoneConnectionServiceDetector :
     companion object {
         private const val PHONE_CONNECTION_SERVICE_FQN =
             "com.webtrit.callkeep.services.services.connection.PhoneConnectionService"
+
+        private const val CONNECTION_MANAGER_FQN =
+            "com.webtrit.callkeep.services.services.connection.ConnectionManager"
+
+        /**
+         * The classes whose call state belongs to `:callkeep_core`.
+         *
+         * [ConnectionManager] is here because the registry moved onto it: the connections it
+         * holds are created in the other process, so reading them from the main process answers
+         * from an empty map. Watching only the service it used to hang off would have left that
+         * unguarded the moment the field moved.
+         */
+        private val GUARDED_CLASSES =
+            setOf(
+                PHONE_CONNECTION_SERVICE_FQN,
+                "$PHONE_CONNECTION_SERVICE_FQN.Companion",
+                CONNECTION_MANAGER_FQN,
+                "$CONNECTION_MANAGER_FQN.Companion",
+            )
 
         private val ALLOWED_PATH_SEGMENTS =
             listOf(

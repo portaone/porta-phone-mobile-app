@@ -86,9 +86,9 @@ the backend; the facade adds one composite:
 | `markEndedWithoutFlutterState` / `wasEndedWithoutFlutterState` | `reportEndCall(MISSED_WHILE_CONNECTING)` / `reportNewIncomingCall`                                                             | Sticky ghost-re-presentation guard                                                                                                  |
 
 `clearAndMarkEndCallDispatched` is the one sanctioned main-process touch of
-`PhoneConnectionService.connectionManager`: it drops the `pendingCallIds` reservation that
+`ConnectionManager.instance`: it drops the `pendingCallIds` reservation that
 `checkAndReservePending` created in the MAIN-process heap, so a transfer-back with the same
-callId is not rejected as a duplicate. The general "never call `connectionManager.*` from the
+callId is not rejected as a duplicate. The general "never call the registry from the
 main process" rule concerns connection state, which exists only in the `:callkeep_core` heap --
 see the note in [connection-tracker.md](connection-tracker.md).
 

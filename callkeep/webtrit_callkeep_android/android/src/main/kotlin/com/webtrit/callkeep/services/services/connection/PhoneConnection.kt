@@ -36,6 +36,7 @@ import java.util.concurrent.Executors
 /**
  * Manages an individual phone connection, handling state transitions and audio routing.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 class PhoneConnection internal constructor(
     private val context: Context,
     private val dispatcher: PerformDispatchHandle,
@@ -213,7 +214,7 @@ class PhoneConnection internal constructor(
     override fun onShowIncomingCallUi() {
         logger.d("Showing incoming call UI for callId: $callId")
         notificationManager.showIncomingCallNotification(metadata)
-        if (PhoneConnectionService.connectionManager.hasActiveOrHoldingConnection()) {
+        if (ConnectionManager.instance.hasActiveOrHoldingConnection()) {
             logger.d("Active call detected — playing call-waiting tone instead of ringtone for callId: $callId")
             audioManager.startCallWaitingTone()
         } else {
@@ -276,7 +277,7 @@ class PhoneConnection internal constructor(
         // If we forced MODE_IN_COMMUNICATION in onActiveConnection(), restore NORMAL mode now
         // that this call is gone. Only reset if no other active/holding calls remain so we
         // don't disrupt a concurrent call that also needs the VoIP audio path.
-        if (audioModeForced && !PhoneConnectionService.connectionManager.hasActiveOrHoldingConnection()) {
+        if (audioModeForced && !ConnectionManager.instance.hasActiveOrHoldingConnection()) {
             val sysAm = context.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager
             sysAm.mode = android.media.AudioManager.MODE_NORMAL
             logger.d("onDisconnect: reset audio mode to MODE_NORMAL (last active call ended)")

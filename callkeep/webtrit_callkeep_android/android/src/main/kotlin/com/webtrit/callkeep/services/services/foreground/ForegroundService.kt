@@ -6,11 +6,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import androidx.annotation.Keep
+import androidx.annotation.RequiresApi
 import com.webtrit.callkeep.PAudioDevice
 import com.webtrit.callkeep.PCallRequestError
 import com.webtrit.callkeep.PCallRequestErrorEnum
@@ -246,6 +248,7 @@ class ForegroundService :
         applySetupOptions(options)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun registerPhoneAccountWithRetry() {
         val maxAttempts = 5
         val retryDelayMs = 500L
@@ -544,7 +547,7 @@ class ForegroundService :
         // Query tracker state BEFORE addPending, which resets lifecycle flags (answeredCallIds).
         // MainProcessConnectionTracker is the authoritative view of call state in the main process,
         // updated via broadcasts from :callkeep_core. In contrast, checkAndReservePending (inside
-        // startIncomingCall) only checks PhoneConnectionService.connectionManager, which is isolated
+        // startIncomingCall) only checks ConnectionManager.instance, which is isolated
         // from :callkeep_core and is never updated with answered/terminated transitions.
         //
         // exists() is also checked here to short-circuit duplicate detection without a Telecom

@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * This allows [ForegroundService] and [com.webtrit.callkeep.ConnectionsApi] to query connection
  * state without crossing a process boundary. The main process never reads
- * [com.webtrit.callkeep.services.services.connection.PhoneConnectionService.connectionManager]
+ * [com.webtrit.callkeep.services.services.connection.ConnectionManager.instance]
  * directly — that object lives in the `:callkeep_core` JVM and is empty in the main process.
  * Call state is mirrored via a combination of main-process updates (pending registration and
  * local guards) and IPC broadcasts from `:callkeep_core` for lifecycle transitions.
@@ -247,7 +247,7 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
     private fun releaseLoneGroupMembers() = applyGroup(groupSnapshot())
 
     // -------------------------------------------------------------------------
-    // Read operations — replaces PhoneConnectionService.connectionManager.* reads
+    // Read operations — replaces ConnectionManager.instance.* reads
     // -------------------------------------------------------------------------
 
     /** Returns true if an active connection record exists for [callId]. */

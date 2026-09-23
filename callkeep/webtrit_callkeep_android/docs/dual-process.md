@@ -73,7 +73,7 @@ Because the two processes have independent JVM heaps, call state must be explici
 
 ## Critical Rules
 
-1. **Never read connection state from `PhoneConnectionService.connectionManager` in the main
+1. **Never read connection state from `ConnectionManager.instance` in the main
    process.** Its connections exist only in the `:callkeep_core` JVM; in the main process the
    object holds no connections. All main-process call operations go through `CallkeepCore`.
    The one sanctioned main-process touch is dropping the `pendingCallIds` pre-registration

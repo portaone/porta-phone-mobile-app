@@ -899,7 +899,7 @@ class StandaloneCallService : Service() {
          * Starts an incoming call in standalone mode.
          *
          * Reuses [ConnectionManager.validateConnectionAddition] (which operates on the
-         * main-process [PhoneConnectionService.connectionManager] instance) for deduplication,
+         * main-process [ConnectionManager.instance]) for deduplication,
          * matching the same validation path used by [PhoneConnectionService.startIncomingCall].
          */
         fun startIncomingCall(
@@ -921,7 +921,7 @@ class StandaloneCallService : Service() {
                         onSuccess()
                     } catch (e: Exception) {
                         Log.e(TAG, "startIncomingCall: startForegroundService failed for callId=${metadata.callId}", e)
-                        PhoneConnectionService.connectionManager.removePending(metadata.callId)
+                        ConnectionManager.instance.removePending(metadata.callId)
                         onError(null)
                     }
                 },

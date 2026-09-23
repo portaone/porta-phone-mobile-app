@@ -69,7 +69,7 @@ membership rules. Telecom and standalone retain their own platform effects and p
 
 ## Key Design Constraints
 
-- **Never touch connection state via `PhoneConnectionService.connectionManager` from the main
+- **Never touch connection state via `ConnectionManager.instance` from the main
   process.** The connections live only in the `:callkeep_core` JVM. Use `CallkeepCore.instance`
   instead. One sanctioned exception: dropping the main-process `pendingCallIds` pre-registration
   in `clearAndMarkEndCallDispatched` (see [connection-tracker.md](connection-tracker.md)).
