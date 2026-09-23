@@ -354,18 +354,6 @@ class ConnectionManager {
         }
     }
 
-    /**
-     * Checks whether the connection with the specified ID has been answered.
-     *
-     * @param id the identifier of the connection to check.
-     * @return `true` if the connection has been answered, `false` otherwise.
-     *
-     * Reads a connection, which exists only where Telecom created one - see
-     * [checkAndReservePending] for why that is below the API level lint asks about.
-     */
-    @SuppressLint("NewApi")
-    fun isConnectionAnswered(id: String): Boolean = connections[id]?.hasAnswered == true
-
     override fun toString(): String {
         synchronized(connectionResourceLock) {
             val connectionsInfo =

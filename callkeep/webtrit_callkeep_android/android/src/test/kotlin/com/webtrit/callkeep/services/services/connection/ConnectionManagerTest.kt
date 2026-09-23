@@ -179,22 +179,6 @@ class ConnectionManagerTest {
     }
 
     // -------------------------------------------------------------------------
-    // isConnectionAnswered
-    // -------------------------------------------------------------------------
-
-    @Test
-    fun `isConnectionAnswered returns false for a freshly created connection`() {
-        val manager = createManager()
-        manager.addConnection("call-1", createRingingConnection())
-        assertFalse(manager.isConnectionAnswered("call-1"))
-    }
-
-    @Test
-    fun `isConnectionAnswered returns false for unknown callId`() {
-        assertFalse(createManager().isConnectionAnswered("unknown"))
-    }
-
-    // -------------------------------------------------------------------------
     // cleanConnections
     // -------------------------------------------------------------------------
 
@@ -316,7 +300,7 @@ class ConnectionManagerTest {
 
         // Step 3: push isolate answers the call.
         conn.onAnswer()
-        assertTrue("connection must be marked as answered", manager.isConnectionAnswered(callId))
+        assertTrue("connection must be marked as answered", conn.hasAnswered)
 
         // Step 4: main process CallBloc calls reportNewIncomingCall again.
         var errorEnum: PIncomingCallErrorEnum? = null
