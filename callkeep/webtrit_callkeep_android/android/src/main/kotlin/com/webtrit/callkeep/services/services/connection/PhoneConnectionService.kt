@@ -424,10 +424,12 @@ class PhoneConnectionService : ConnectionService() {
         Log.e(TAG, "$failureMessage — Telecom rejected the incoming call registration")
 
         if (wasPending) {
-            // wasPending = callId != null && isPending(callId), so both are non-null here.
-            // Notify Flutter that this call ended so it can clean up its call state.
+            // callId comes off callMetadata, so wasPending being true makes both non-null.
+            // The pending slot is already dropped above; what is left is telling the main process
+            // the call ended, so it resolves the Pigeon callback waiting on this one. The metadata
+            // rather than the bare id, so receivers get the handle and display name with it.
             Log.i(TAG, "onCreateIncomingConnectionFailed: firing HungUp for pending callId=$callId")
-            dispatchHungUpAndRemovePending(callId!!, callMetadata!!, removePending = false)
+            dispatcher.dispatch(baseContext, CallLifecycleEvent.HungUp, callMetadata!!.toBundle())
         } else {
             val failureMetadata = FailureMetadata(callMetadata, failureMessage).toBundle()
             dispatcher.dispatch(baseContext, CallLifecycleEvent.IncomingFailure, failureMetadata)
@@ -470,28 +472,6 @@ class PhoneConnectionService : ConnectionService() {
         } else {
             Log.d(TAG, "handleReserveAnswer: no connection yet, deferred answer reserved for callId=$callId")
         }
-    }
-
-    /**
-     * Removes [callId] from [connectionManager]'s pending set (when [removePending] is true)
-     * and dispatches [CallLifecycleEvent.HungUp] so the main process resolves the pending
-     * Pigeon callback for this call.
-     *
-     * Centralises the removePending + HungUp dispatch pattern used by the incoming-call failure
-     * paths (e.g. [onCreateIncomingConnectionFailed]) so each site cannot accidentally omit one
-     * of the two steps.
-     *
-     * [metadata] is used as the bundle payload when available, giving receivers full call
-     * context (handle, displayName, etc.). Pass [removePending] = false when the pending
-     * slot was never added (e.g. [addPendingForIncomingCall] returned false).
-     */
-    private fun dispatchHungUpAndRemovePending(
-        callId: String,
-        metadata: CallMetadata,
-        removePending: Boolean = true,
-    ) {
-        if (removePending) connectionManager.removePending(callId)
-        dispatcher.dispatch(baseContext, CallLifecycleEvent.HungUp, metadata.toBundle())
     }
 
     private fun handleCleanConnections() {
