@@ -145,6 +145,16 @@ class EnvironmentConfig {
   static String? get REMOTE_LOGZIO_LOGGING_URL =>
       _env.stringOrNull(REMOTE_LOGZIO_LOGGING_URL__NAME, _REMOTE_LOGZIO_LOGGING_URL_ENV);
 
+  // Severity of libwebrtc's own log, bridged into the application log.
+  // 'none', 'error', 'warning', 'info' (default) or 'verbose'. A threshold, not a selection.
+  // 'info' is the first level that carries ICE and TURN, which is the whole reason this is on:
+  // at 'warning' libwebrtc says nothing about either. Measured cost - see docs/ice_servers.md.
+  static const WEBRTC_NATIVE_LOG_SEVERITY__NAME = 'WEBTRIT_APP_WEBRTC_NATIVE_LOG_SEVERITY';
+  static String get WEBRTC_NATIVE_LOG_SEVERITY => _env.string(
+    WEBRTC_NATIVE_LOG_SEVERITY__NAME,
+    const String.fromEnvironment(WEBRTC_NATIVE_LOG_SEVERITY__NAME, defaultValue: 'info'),
+  );
+
   // LOGZIO service-specific configuration.
   // If additional logging services are introduced, consider moving these to a separate logging configuration file.
   static const REMOTE_LOGZIO_LOG_LEVEL__NAME = 'WEBTRIT_APP_REMOTE_LOGZIO_LOG_LEVEL';

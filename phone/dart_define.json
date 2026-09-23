@@ -15,6 +15,8 @@
   "_WEBTRIT_APP_FCM_VAPID_KEY": "",
   "__WEBTRIT_APP_FCM_VAPID_KEY_DESCRIPTION": "Optional public VAPID key used for Web Push notifications with Firebase Cloud Messaging (FCM). Required only for web platform to authenticate push subscription with FCM. Not used on mobile platforms (Android/iOS).",
   "WEBTRIT_APP_REMOTE_LOGZIO_LOG_LEVEL": "INFO",
+  "WEBTRIT_APP_WEBRTC_NATIVE_LOG_SEVERITY": "info",
+  "__WEBTRIT_APP_WEBRTC_NATIVE_LOG_SEVERITY_DESCRIPTION": "Severity of libwebrtc's own log, bridged into the application log under the 'WebRTC.Native' logger: 'none', 'error', 'warning', 'info' (default) or 'verbose'. A threshold, not a selection. 'info' is the first level that carries anything about ICE or TURN - at 'warning' libwebrtc reports only codec and socket housekeeping - so it is the lowest setting at which a failure inside gathering leaves a trace at all. It costs roughly 700 lines per gathering round. Set 'none' where that is unacceptable, accepting that such a failure then shows up as candidates that never arrive with nothing logged to say why. Android and iOS only; web has no native stack to log.",
   "__WEBTRIT_APP_REMOTE_LOGZIO_LOG_LEVEL_DESCRIPTION": "Sets the minimum log level for remote logging to Logz.io. Acceptable values include: OFF, SHOUT, SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST, and ALL. Logs with a lower severity than the specified level will be ignored. Use 'FINE' or lower for detailed debugging, and 'INFO' or higher for production environments.",
   "_WEBTRIT_APP_REMOTE_LOGZIO_LOGGING_URL": "",
   "_WEBTRIT_APP_REMOTE_LOGZIO_LOGGING_TOKEN": "",
