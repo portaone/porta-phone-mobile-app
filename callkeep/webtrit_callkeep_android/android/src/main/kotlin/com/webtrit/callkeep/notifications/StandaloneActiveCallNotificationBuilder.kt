@@ -17,8 +17,9 @@ import com.webtrit.callkeep.services.services.connection.StandaloneCallService
 import com.webtrit.callkeep.services.services.connection.StandaloneServiceAction
 
 /**
- * Builds the ongoing (answered) call notification for the standalone call path - used on devices
- * that do not expose the [android.software.telecom] system feature.
+ * Builds the ongoing (answered) call notification for the standalone call path - the path taken
+ * wherever Telecom cannot host our calls: no [android.software.telecom] feature, or a release
+ * below API 26, where a self-managed `PhoneAccount` cannot be registered.
  *
  * Counterpart of [StandaloneIncomingCallNotificationBuilder]: once a call is answered or
  * established, [StandaloneCallService] replaces its foreground incoming-call notification (which

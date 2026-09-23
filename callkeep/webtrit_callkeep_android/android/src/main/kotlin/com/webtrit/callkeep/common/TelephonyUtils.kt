@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.telecom.PhoneAccount
 import android.telecom.PhoneAccountHandle
@@ -113,9 +114,17 @@ class TelephonyUtils(
         fun buildOutgoingUri(number: String): Uri = OutgoingCallUri.of(number)
 
         /**
-         * Returns true if the device supports the Android Telecom framework.
+         * Returns true when calls can be delivered through the Android Telecom framework.
          *
-         * Checks the `android.software.telecom` system feature first. If that flag is absent,
+         * The question is not whether Telecom exists - it has since API 21 - but whether it can
+         * host calls that are ours. This plugin registers a self-managed PhoneAccount, and
+         * self-managed arrived in API 26: below it the capability cannot be declared, the
+         * account is refused, and every call routed to Telecom is simply lost. So the version
+         * is asked first, and an older release is answered no however capable its hardware -
+         * which is what sends it down the standalone path, the only one that works there.
+         *
+         * Above that line the device is asked. Checks the `android.software.telecom` system
+         * feature first. If that flag is absent,
          * falls back to inspecting [TelephonyManager.getPhoneType]: any device whose phone
          * type is not [TelephonyManager.PHONE_TYPE_NONE] is treated as having Telecom
          * infrastructure available, regardless of whether the OEM advertises the feature flag.
@@ -130,6 +139,14 @@ class TelephonyUtils(
          * call path instead.
          */
         fun isTelecomSupported(context: Context): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                logger.i(
+                    "isTelecomSupported: API ${Build.VERSION.SDK_INT} is below 26, " +
+                        "where a self-managed PhoneAccount cannot be registered — standalone call path",
+                )
+                return false
+            }
+
             if (context.packageManager.hasSystemFeature(FEATURE_TELECOM)) return true
 
             // Fallback for OEMs that have Telecom infrastructure but omit the feature flag.

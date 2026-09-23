@@ -1498,7 +1498,9 @@ class PHostPermissionsApi {
   }
 
   /// How incoming calls are delivered: Telecom `ConnectionService` vs the
-  /// limited standalone foreground service (device without `android.software.telecom`).
+  /// standalone foreground service, used when Telecom cannot host our calls -
+  /// the device does not expose `android.software.telecom`, or it runs below
+  /// API 26, where a self-managed `PhoneAccount` cannot be registered.
   Future<PCallkeepAndroidCallDeliveryMode> getCallDeliveryMode() async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostPermissionsApi.getCallDeliveryMode$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(

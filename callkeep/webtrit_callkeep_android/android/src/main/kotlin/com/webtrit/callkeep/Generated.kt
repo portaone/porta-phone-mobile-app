@@ -1507,7 +1507,9 @@ interface PHostPermissionsApi {
   suspend fun getBatteryMode(): PCallkeepAndroidBatteryMode
   /**
    * How incoming calls are delivered: Telecom `ConnectionService` vs the
-   * limited standalone foreground service (device without `android.software.telecom`).
+   * standalone foreground service, used when Telecom cannot host our calls -
+   * the device does not expose `android.software.telecom`, or it runs below
+   * API 26, where a self-managed `PhoneAccount` cannot be registered.
    */
   suspend fun getCallDeliveryMode(): PCallkeepAndroidCallDeliveryMode
   suspend fun requestPermissions(permissions: List<PCallkeepPermission>): List<PPermissionResult>

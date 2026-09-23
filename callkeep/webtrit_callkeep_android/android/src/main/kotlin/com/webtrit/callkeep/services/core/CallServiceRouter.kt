@@ -14,9 +14,10 @@ import com.webtrit.callkeep.services.services.connection.StandaloneServiceAction
 /**
  * Single routing point between the Telecom-backed and standalone call management backends.
  *
- * On devices that support `android.software.telecom`, commands are forwarded to
+ * On devices that can host our calls in Telecom, commands are forwarded to
  * [PhoneConnectionService], which integrates with the Android Telecom framework.
- * On devices that do not (e.g. some tablets, Android Go builds, certain OEM configs),
+ * On devices that cannot (e.g. some tablets, Android Go builds, certain OEM configs,
+ * and every release below API 26, where a self-managed PhoneAccount does not exist),
  * commands are forwarded to [StandaloneCallService], which manages calls independently
  * via [android.media.AudioManager].
  *
@@ -27,7 +28,7 @@ import com.webtrit.callkeep.services.services.connection.StandaloneServiceAction
 class CallServiceRouter(
     context: Context,
 ) {
-    /** True when the device exposes `android.software.telecom`. Immutable after construction. */
+    /** True when Telecom can host our calls on this device and release. Immutable after construction. */
     val isTelecomSupported: Boolean = TelephonyUtils.isTelecomSupported(context)
 
     private val ctx: Context = context.applicationContext

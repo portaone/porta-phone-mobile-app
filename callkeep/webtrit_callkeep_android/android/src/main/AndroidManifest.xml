@@ -42,7 +42,8 @@
     <!--
         Declare android.software.telecom as optional so Play Store filters and device
         compatibility checks correctly reflect that the app works without the Telecom
-        subsystem. On devices where this feature is absent, StandaloneCallService is used
+        subsystem. Where this feature is absent - and on any release below API 26, where a
+        self-managed PhoneAccount cannot be registered - StandaloneCallService is used
         instead of PhoneConnectionService for call management.
     -->
     <uses-feature
@@ -73,7 +74,9 @@
         </service>
 
         <!--
-          Standalone call management service for devices without android.software.telecom.
+          Standalone call management service for everything Telecom cannot host our calls on:
+          no android.software.telecom feature, or a release below API 26 with no self-managed
+          PhoneAccount.
           Runs in the main process (not :callkeep_core) because some OEM devices (e.g. Lenovo
           TB300FU, Android 13) block foreground service starts for secondary processes,
           permanently marking the process as "bad" and preventing all subsequent service starts.

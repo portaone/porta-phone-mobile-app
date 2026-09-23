@@ -238,7 +238,7 @@ class ForegroundService :
     override suspend fun setUp(options: POptions) {
         logger.i("setUp")
         if (!TelephonyUtils.isTelecomSupported(baseContext)) {
-            logger.i("setUp: android.software.telecom not available on this device — skipping phone account registration, using standalone call mode")
+            logger.i("setUp: Telecom cannot host our calls here (no android.software.telecom, or API below 26 where a self-managed PhoneAccount does not exist) — skipping phone account registration, using standalone call mode")
             applySetupOptions(options)
             return
         }

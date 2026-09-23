@@ -131,12 +131,16 @@ handlers. Both backends therefore feed the same event pipeline and the same trac
 ## Command Dispatch API
 
 Commands go through `CallServiceRouter`, which picks the backend once at construction via
-`TelephonyUtils.isTelecomSupported`: Telecom is considered supported when the
-`android.software.telecom` feature flag is present, OR -- fallback for OEM builds that omit the
-flag despite having full Telecom -- when `TelephonyManager.phoneType != PHONE_TYPE_NONE`. Only
-devices with no telephony at all (Wi-Fi-only tablets, Android Go builds) route to
-`StandaloneCallService` in the main process; everything else uses `PhoneConnectionService`
-(startService intents into `:callkeep_core`).
+`TelephonyUtils.isTelecomSupported`. That asks the release before it asks the device: below
+API 26 the answer is no whatever the hardware, because this plugin registers a **self-managed**
+`PhoneAccount` and self-managed does not exist there - Telecom would accept the call and lose
+it. From API 26 up, Telecom is considered supported when the `android.software.telecom` feature
+flag is present, OR -- fallback for OEM builds that omit the flag despite having full Telecom --
+when `TelephonyManager.phoneType != PHONE_TYPE_NONE`.
+
+So `StandaloneCallService` (main process) takes devices with no telephony at all (Wi-Fi-only
+tablets, Android Go builds) **and** every release below API 26; everything else uses
+`PhoneConnectionService` (startService intents into `:callkeep_core`).
 
 ### Call Setup
 
