@@ -1,6 +1,5 @@
 package com.webtrit.callkeep.services.services.connection
 
-import android.app.Notification
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -10,6 +9,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.annotation.Keep
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.R
 import com.webtrit.callkeep.common.ActivityHolder
@@ -341,8 +341,8 @@ class StandaloneCallService : Service() {
     private fun promoteToForeground() {
         if (isForeground) return
         val placeholder =
-            Notification
-                .Builder(this, NotificationChannelManager.FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID)
+            NotificationChannelManager
+                .notificationBuilder(this, NotificationChannelManager.FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setOngoing(true)
@@ -916,7 +916,7 @@ class StandaloneCallService : Service() {
                             putExtras(metadata.toBundle())
                         }
                     try {
-                        context.startForegroundService(intent)
+                        ContextCompat.startForegroundService(context, intent)
                         onSuccess()
                     } catch (e: Exception) {
                         Log.e(TAG, "startIncomingCall: startForegroundService failed for callId=${metadata.callId}", e)
@@ -948,7 +948,7 @@ class StandaloneCallService : Service() {
                     putExtras(metadata.toBundle())
                 }
             try {
-                context.startForegroundService(intent)
+                ContextCompat.startForegroundService(context, intent)
             } catch (e: Exception) {
                 Log.e(TAG, "startOutgoingCall: startForegroundService failed for callId=${metadata.callId}", e)
                 throw e

@@ -12,6 +12,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import androidx.annotation.Keep
+import androidx.core.content.ContextCompat
 import com.webtrit.callkeep.PDelegateBackgroundRegisterFlutterApi
 import com.webtrit.callkeep.PDelegateBackgroundServiceFlutterApi
 import com.webtrit.callkeep.R
@@ -227,14 +228,17 @@ class IncomingCallService :
             }
 
             NotificationAction.Decline.action -> {
-                if (metadata != null) reportHungUpToConnectionService(metadata)
-                else {
+                if (metadata != null) {
+                    reportHungUpToConnectionService(metadata)
+                } else {
                     Log.w(TAG, "onStartCommand: Decline action missing metadata")
                     START_NOT_STICKY
                 }
             }
 
-            else -> handleUnknownAction(action)
+            else -> {
+                handleUnknownAction(action)
+            }
         }
     }
 
@@ -543,7 +547,8 @@ class IncomingCallService :
             metadata: CallMetadata,
         ) {
             Log.d(TAG, "Starting IncomingCallService with metadata: $metadata")
-            context.startForegroundService(
+            ContextCompat.startForegroundService(
+                context,
                 Intent(context, IncomingCallService::class.java).apply {
                     this.action = PushNotificationServiceEnums.IC_INITIALIZE.name
                     metadata.toBundle().let(::putExtras)
