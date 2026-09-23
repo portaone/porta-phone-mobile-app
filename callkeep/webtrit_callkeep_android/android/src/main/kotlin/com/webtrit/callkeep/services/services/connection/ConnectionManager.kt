@@ -106,7 +106,7 @@ class ConnectionManager {
      * :callkeep_core process has its own instance whose [pendingCallIds] is populated here, called
      * from [PhoneConnectionService.onCreateIncomingConnection] once Telecom binds the service - the
      * incoming call is reported directly via [TelephonyUtils.addNewIncomingCall], so the slot is
-     * not pre-registered in this process. A [ServiceAction.NotifyPending] IPC may also populate it.
+     * not pre-registered in this process - this is the only thing that registers it here.
      *
      * Returning false signals that [cleanConnections] already ran for the session that owns this
      * callId, so this is a stale post-tearDown callback. The caller (onCreateIncomingConnection)

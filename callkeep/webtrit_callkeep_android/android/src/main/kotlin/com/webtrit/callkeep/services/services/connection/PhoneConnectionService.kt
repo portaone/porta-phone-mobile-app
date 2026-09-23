@@ -131,10 +131,6 @@ class PhoneConnectionService : ConnectionService() {
                     handleReserveAnswer(command.callId)
                 }
 
-                is PhoneServiceCommand.Pending -> {
-                    handleNotifyPending(command.callId)
-                }
-
                 is PhoneServiceCommand.Clean -> {
                     handleCleanConnections()
                 }
@@ -297,24 +293,17 @@ class PhoneConnectionService : ConnectionService() {
             }
         Log.i(TAG, "onCreateIncomingConnection: entry callId=${metadata.callId} account=$connectionManagerPhoneAccount")
 
-        // Register the pending slot here and guard against stale Telecom callbacks after a tearDown.
+        // This is where the pending slot is registered, and the only place that registers it in
+        // this process: startIncomingCall reports the call straight to TelecomManager from the
+        // reporting process, whose ConnectionManager is a different JVM instance, and Telecom then
+        // binds this service and calls here on the main thread.
         //
-        // startIncomingCall reports the call via TelecomManager.addNewIncomingCall from the
-        // reporting process, so the pending slot is NOT pre-registered in this :callkeep_core
-        // process (its ConnectionManager is a separate JVM instance). Telecom then binds this
-        // service and fires onCreateIncomingConnection on the main thread, where we register it.
-        //
-        // Strategy:
-        //   - isPending == true  : already registered (e.g. a NotifyPending IPC ran first) - proceed.
-        //   - isPending == false AND isForcedTerminated : stale post-tearDown callback - reject.
-        //   - isPending == false AND NOT isForcedTerminated : normal path - register the slot.
-        if (!connectionManager.isPending(metadata.callId)) {
-            if (connectionManager.isForcedTerminated(metadata.callId)) {
-                Log.w(TAG, "onCreateIncomingConnection: callId=${metadata.callId} force-terminated by tearDown, rejecting stale callback")
-                return Connection.createFailedConnection(DisconnectCause(DisconnectCause.LOCAL))
-            }
-            Log.d(TAG, "onCreateIncomingConnection: callId=${metadata.callId} not pending yet, registering pending slot")
-            connectionManager.addPendingForIncomingCall(metadata.callId)
+        // A refusal means cleanConnections already captured this callId - a stale callback that
+        // arrived after a tearDown - so the connection is refused rather than created into a
+        // session that is already closed.
+        if (!connectionManager.addPendingForIncomingCall(metadata.callId)) {
+            Log.w(TAG, "onCreateIncomingConnection: callId=${metadata.callId} force-terminated by tearDown, rejecting stale callback")
+            return Connection.createFailedConnection(DisconnectCause(DisconnectCause.LOCAL))
         }
 
         // Check if a connection with the same ID already exists.
@@ -483,20 +472,6 @@ class PhoneConnectionService : ConnectionService() {
         } else {
             Log.d(TAG, "handleReserveAnswer: no connection yet, deferred answer reserved for callId=$callId")
         }
-    }
-
-    /**
-     * Registers [callId] as pending in :callkeep_core's [ConnectionManager].
-     *
-     * Called via a [ServiceAction.NotifyPending] startService intent sent by the main process
-     * just before [TelephonyUtils.addNewIncomingCall] is called. This ensures that
-     * [onCreateIncomingConnection]'s isPending gate accepts the incoming connection even though
-     * [ConnectionManager.checkAndReservePending] ran in the main-process JVM (a separate
-     * [ConnectionManager] instance).
-     */
-    private fun handleNotifyPending(callId: String) {
-        Log.i(TAG, "handleNotifyPending: callId=$callId")
-        connectionManager.addPendingForIncomingCall(callId)
     }
 
     /**
@@ -761,27 +736,6 @@ class PhoneConnectionService : ConnectionService() {
                 }
             runCatching { context.startService(intent) }
                 .onFailure { e -> Log.w(TAG, "sendTearDownConnections: startService failed: $e") }
-        }
-
-        /**
-         * Sends a [ServiceAction.NotifyPending] command with [callId] to this service via [startService].
-         *
-         * Best-effort pre-registration of the pending slot in :callkeep_core. The incoming call
-         * path ([startIncomingCall]) does NOT depend on this: it reports directly via
-         * [TelephonyUtils.addNewIncomingCall] and [onCreateIncomingConnection] registers the pending
-         * slot itself once Telecom binds the service.
-         */
-        fun sendNotifyPending(
-            context: Context,
-            callId: String,
-        ) {
-            val intent =
-                Intent(context, PhoneConnectionService::class.java).apply {
-                    action = ServiceAction.NotifyPending.action
-                    putExtras(CallMetadata(callId = callId).toBundle())
-                }
-            runCatching { context.startService(intent) }
-                .onFailure { e -> Log.w(TAG, "sendNotifyPending: startService failed for callId=$callId: $e") }
         }
 
         /**

@@ -54,7 +54,6 @@ is not yet registered).
   `ReplayAudioState`, `ReplayConnectionStates`, and per-call commands (`AnswerCall`, `DeclineCall`,
   `HungUpCall`, `EstablishCall`, `UpdateCall`, `MuteCall`, `HoldCall`, `SpeakerCall`,
   `SetAudioDevice`, `SendDtmf`).
-- `:callkeep_core` → main: `NotifyPending` (incoming call pending before PhoneConnection exists).
 
 `PhoneConnectionService.onStartCommand()` routes each intent by `ServiceAction` enum.
 

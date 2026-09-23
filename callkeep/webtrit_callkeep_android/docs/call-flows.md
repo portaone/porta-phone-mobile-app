@@ -17,15 +17,12 @@ Triggered by an FCM message or a direct Dart call to `reportNewIncomingCall`.
         v
 3.  IncomingCallService  (starts as foreground service)
         |
-        |  startService intent: NotifyPending
         v
-4.  PhoneConnectionService.onStartCommand()
-        |   ConnectionManager.addPendingForIncomingCall(callId, meta)
+4.  TelephonyUtils.addNewIncomingCall()  -->  Android Telecom
+        |   Reported straight to Telecom, which binds the ConnectionService itself
         v
-5.  TelephonyUtils.addNewIncomingCall()  -->  Android Telecom
-        |
-        v
-6.  Telecom --> PhoneConnectionService.onCreateIncomingConnection()
+5.  Telecom --> PhoneConnectionService.onCreateIncomingConnection()
+        |   ConnectionManager.addPendingForIncomingCall(callId)  (the only registration)
         |   PhoneConnection created (STATE_RINGING)
         |   broadcast: IncomingConnectionReported
         v

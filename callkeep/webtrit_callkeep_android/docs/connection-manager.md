@@ -35,12 +35,12 @@ fun addPendingForIncomingCall(callId: String): Boolean
 fun removePending(callId: String)
 ```
 
-Both run inside `:callkeep_core`. `PhoneConnectionService.onCreateIncomingConnection`
-registers the slot itself when Telecom delivers a call it has not seen, and the
-`NotifyPending` service action registers one ahead of time when the main process gets the
-chance. Neither is guaranteed to come first, which is why registration is idempotent.
+Both run inside `:callkeep_core`, where `PhoneConnectionService.onCreateIncomingConnection`
+is the only thing that registers a slot: the call is reported straight to Telecom from the
+other process, so nothing arrives here ahead of Telecom's own callback.
 `addPendingForIncomingCall` returns `false` when `cleanConnections()` has already captured
-this callId as force-terminated, i.e. the call is a zombie and must not be re-registered.
+this callId as force-terminated, i.e. the call is a zombie and must not be re-registered -
+which is what the caller refuses the connection on.
 
 ```kotlin
 fun checkAndReservePending(callId: String): PIncomingCallErrorEnum?
