@@ -7,13 +7,6 @@ import 'package:webtrit_phone/models/models.dart' hide Contact;
 
 import 'local_contacts_repository.dart';
 
-// Hides synthetic raw_contacts created by messaging apps (WhatsApp, Viber,
-// Telegram). Mirrors the 1.x `mimetypes.contains('phone_v2') OR account.type
-// == 'com.google'` filter using RawContact.dataMimetypes (from the WebTrit
-// fork of flutter_contacts). Android only; iOS contacts have no equivalent.
-const _phoneV2Mimetype = 'vnd.android.cursor.item/phone_v2';
-const _googleAccountType = 'com.google';
-
 class LocalContactsRepository implements ILocalContactsRepository {
   LocalContactsRepository() {
     _controller = StreamController<List<LocalContact>>.broadcast(
@@ -55,20 +48,19 @@ class LocalContactsRepository implements ILocalContactsRepository {
   ///
   /// Drops contacts without a stable id (can't build a [LocalContact]). On
   /// Android additionally hides synthetic raw_contacts written by messaging
-  /// apps (WhatsApp, Viber, Telegram, ...) that do not carry a `phone_v2`
-  /// data row and are not in a trusted account family - mirrors the 1.x
-  /// `account.mimetypes.contains('phone_v2') OR account.type == 'com.google'`
-  /// behaviour. Empty `rawContacts` is treated as a device-local contact and
-  /// passes (some vendor ROMs do not expose account info for those).
+  /// apps (WhatsApp, Viber, Telegram, ...): those register a contact under
+  /// their own mimetype and never write a `vnd.android.cursor.item/phone_v2`
+  /// data row, so nothing reaches [Contact.phones]. Phones are aggregated
+  /// across every raw contact of a contact, so a number held by any of them -
+  /// Google-synced, SIM or device-local - still passes.
+  ///
+  /// A contact with no number at all is of no use to a softphone, which is why
+  /// the emptiness of [Contact.phones] is the whole filter. iOS keeps every
+  /// contact, as it did before.
   bool _shouldIncludeContact(Contact contact) {
     if (contact.id == null) return false;
     if (!Platform.isAndroid) return true;
-    final rawContacts = contact.android?.identifiers?.rawContacts ?? const [];
-    if (rawContacts.isEmpty) return true;
-    return rawContacts.any(
-      (rawContact) =>
-          rawContact.dataMimetypes.contains(_phoneV2Mimetype) || rawContact.account?.type == _googleAccountType,
-    );
+    return contact.phones.isNotEmpty;
   }
 
   /// Resolves the human-readable text for a `flutter_contacts` [Label].
@@ -82,13 +74,7 @@ class LocalContactsRepository implements ILocalContactsRepository {
 
   Future<List<LocalContact>> _listContacts() async {
     final contacts = await FlutterContacts.getAll(
-      properties: {
-        ContactProperty.name,
-        ContactProperty.phone,
-        ContactProperty.email,
-        ContactProperty.photoThumbnail,
-        if (Platform.isAndroid) ...{ContactProperty.identifiers, ContactProperty.dataMimetypes},
-      },
+      properties: {ContactProperty.name, ContactProperty.phone, ContactProperty.email, ContactProperty.photoThumbnail},
     );
     return contacts
         .where(_shouldIncludeContact)
