@@ -39,8 +39,6 @@ Its responsibilities:
 ### `onCreate()`
 
 - Initializes `ConnectionManager`, `PhoneConnectionServiceDispatcher`, `TelephonyUtils`.
-- Registers a broadcast receiver for `NotifyPending` intents (main process pre-registers calls
-  before Telecom delivers `onCreateIncomingConnection`).
 - Initializes `ActivityWakelockManager` and `ProximitySensorManager`.
 
 ### `onCreateIncomingConnection(phoneAccountHandle, request)`
@@ -88,7 +86,6 @@ encoded as a string extra.
 | `SpeakerCall`            | Route audio to speaker                                                               |
 | `SetAudioDevice`         | Select audio device                                                                  |
 | `SendDtmf`               | Send DTMF tone                                                                       |
-| `NotifyPending`          | Register callId as pending before `onCreateIncomingConnection` arrives               |
 | `SetCallGroup`           | `handleCallGroup()`: declare the listed calls to be the one group                    |
 | `UnsetCallGroup`         | `handleCallGroup()`: take the listed calls out of the group                          |
 

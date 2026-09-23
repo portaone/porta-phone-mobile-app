@@ -17,7 +17,7 @@ import com.webtrit.callkeep.models.CallMetadata
  *
  * With this factory each command type owns exactly the data it needs:
  *  - lifecycle commands carry nothing and never touch the extras;
- *  - [Reserve] / [Pending] carry a non-null `callId`;
+ *  - [Reserve] carries a non-null `callId`;
  *  - [CallOp] carries the raw [ServiceAction] plus nullable metadata for the dispatcher path.
  */
 sealed class PhoneServiceCommand {
@@ -30,10 +30,6 @@ sealed class PhoneServiceCommand {
     data object ReplayConnections : PhoneServiceCommand()
 
     data class Reserve(
-        val callId: String,
-    ) : PhoneServiceCommand()
-
-    data class Pending(
         val callId: String,
     ) : PhoneServiceCommand()
 
@@ -74,10 +70,6 @@ sealed class PhoneServiceCommand {
 
                 ServiceAction.ReserveAnswer -> {
                     intent.extras?.getString(CallDataConst.CALL_ID)?.let { Reserve(it) }
-                }
-
-                ServiceAction.NotifyPending -> {
-                    intent.extras?.getString(CallDataConst.CALL_ID)?.let { Pending(it) }
                 }
 
                 ServiceAction.SetCallGroup,

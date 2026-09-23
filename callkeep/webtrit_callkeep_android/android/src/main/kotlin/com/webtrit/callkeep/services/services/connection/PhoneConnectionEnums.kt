@@ -17,7 +17,6 @@ enum class ServiceAction {
     CleanConnections,
     ReplayAudioState,
     ReplayConnectionStates,
-    NotifyPending,
     SetCallGroup,
     UnsetCallGroup,
     ;

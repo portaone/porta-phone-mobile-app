@@ -57,15 +57,6 @@ same new event therefore arrives there and vanishes on Telecom devices - test bo
 |--------------------|---------|------------------------------------------------|
 | `TearDownComplete` | —       | All connections torn down; tearDown can finish |
 
-### Pending Registration Commands (main -> `:callkeep_core`, via explicit intent)
-
-| `ServiceAction` | Description                                                                  |
-|-----------------|------------------------------------------------------------------------------|
-| `NotifyPending` | Register callId + metadata before Telecom fires `onCreateIncomingConnection` |
-
-Note: Most main -> `:callkeep_core` commands are `startService` intents, not broadcasts. The
-`NotifyPending` action is the only one also used as a direct intent to `PhoneConnectionService`.
-
 ## Broadcast Transport
 
 Sender — `Context.sendInternalBroadcast` in `common/Extensions.kt`, called from
@@ -106,15 +97,15 @@ RECEIVER_NOT_EXPORTED)` on API 33+ and the equivalent on older versions.
 | `ForegroundService` (via `ConnectionEventListener`)   | Global events routed by `CallkeepCore`                                                 |
 | `IncomingCallService` (via `ConnectionEventListener`) | Global events routed by `CallkeepCore`                                                 |
 | Per-call dynamic receivers in `ForegroundService`     | `OngoingCall` and `OutgoingFailure` while a call is being placed; `TearDownComplete`   |
-| `PhoneConnectionService`                              | nothing - it registers no receiver; see the note below on `NotifyPending`              |
+| `PhoneConnectionService`                              | nothing - it registers no receiver; everything towards it arrives as an intent         |
 
 `InProcessCallkeepCore` maintains a single `globalReceiver` registered via
 `ConnectionServicePerformBroadcaster`. Individual services no longer register their own receivers
 for `:callkeep_core` events — they subscribe through `CallkeepCore.addConnectionEventListener()`.
 
 Two asymmetries the table cannot show. Traffic towards `:callkeep_core` is not broadcast at
-all: `NotifyPending` and the rest of `ServiceAction` arrive as `startService` intents handled
-in `PhoneConnectionService.onStartCommand`, which is why that service registers no receiver.
+all: every `ServiceAction` arrives as a `startService` intent handled in
+`PhoneConnectionService.onStartCommand`, which is why that service registers no receiver.
 And `IncomingFailure` is dispatched by `PhoneConnectionService` but subscribed to by nobody -
 it is outside `GLOBAL_LISTENER_EVENTS` and no dynamic receiver names it, so a failed incoming
 call is resolved by the main process timing out rather than by this event.
