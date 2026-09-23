@@ -47,9 +47,9 @@ object CallDiagnostics {
     private fun getServiceStates(context: Context) =
         mapOf(
             "isForegroundServiceRunning" to ForegroundService.isRunning,
-            // PhoneConnectionService.isRunning is a JVM-static companion field — it is always
-            // false when read from a different OS process (e.g. the main process). Query the OS
-            // via ActivityManager to correctly detect it regardless of process boundaries.
+            // Asked of the OS rather than of the service: PhoneConnectionService runs in
+            // :callkeep_core, and a flag it kept in its own companion would be read here as the
+            // main process's copy of that field - false, whatever the other process is doing.
             "isPhoneConnectionServiceRunning" to isServiceRunning(context, PhoneConnectionService::class.java),
             "isLockScreen" to Platform.isLockScreen(context),
             "trackerState" to
@@ -60,8 +60,8 @@ object CallDiagnostics {
 
     /**
      * Returns true if the given service class is currently running in any process of this app.
-     * Uses [ActivityManager] because companion-object `isRunning` flags are JVM-process-local
-     * and cannot be read across Android process boundaries.
+     * Uses [ActivityManager] because a companion-object flag is JVM-process-local and cannot
+     * be read across Android process boundaries.
      *
      * Both class name and package name are matched to avoid false positives from other apps
      * that might expose a service with the same class name.

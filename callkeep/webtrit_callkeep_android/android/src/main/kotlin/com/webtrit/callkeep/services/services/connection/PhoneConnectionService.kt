@@ -60,8 +60,6 @@ class PhoneConnectionService : ConnectionService() {
         // may throw IllegalStateException, which is caught inside getRingtone() and causes
         // a fallback to the system default ringtone.
         AssetCacheManager.init(applicationContext)
-        // Set the service state to true when the system starts the service.
-        isRunning = true
 
         val proximitySensorManager =
             ProximitySensorManager(applicationContext, PhoneConnectionConsts())
@@ -560,30 +558,18 @@ class PhoneConnectionService : ConnectionService() {
     }
 
     /**
-     * Initiates cleanup of resources and active connections by updating service state
-     * and dispatching a ServiceDestroyed lifecycle event to the dispatcher.
+     * Dispatches a ServiceDestroyed lifecycle event to the dispatcher.
      *
      * This unifies the cleanup flow for both onDestroy and onTaskRemoved. Actual resource
      * release and disconnection of active calls are performed by the
      * phoneConnectionServiceDispatcher in response to the ServiceDestroyed event.
      */
     private fun cleanupResources() {
-        // Update service state
-        isRunning = false
         phoneConnectionServiceDispatcher.dispatchLifecycle(ConnectionLifecycleAction.ServiceDestroyed)
     }
 
     companion object {
         private const val TAG = "PhoneConnectionService"
-
-        // The service state is used to determine if the service is running. This is useful to avoid invoking onStartCommand when the service is down.
-        private var _isRunning = false
-
-        var isRunning: Boolean
-            get() = _isRunning
-            private set(value) {
-                _isRunning = value
-            }
 
         /** Local name for [ConnectionManager.instance], which this service is the busiest user of. */
         private val connectionManager: ConnectionManager
