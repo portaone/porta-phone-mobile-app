@@ -341,8 +341,8 @@ class StandaloneCallService : Service() {
     private fun promoteToForeground() {
         if (isForeground) return
         val placeholder =
-            Notification
-                .Builder(this, NotificationChannelManager.FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID)
+            NotificationChannelManager
+                .notificationBuilder(this, NotificationChannelManager.FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setOngoing(true)

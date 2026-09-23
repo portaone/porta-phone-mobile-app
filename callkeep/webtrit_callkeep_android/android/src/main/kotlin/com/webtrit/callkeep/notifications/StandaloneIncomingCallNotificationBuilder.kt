@@ -13,6 +13,7 @@ import com.webtrit.callkeep.common.ContextHolder.context
 import com.webtrit.callkeep.common.PermissionsHelper
 import com.webtrit.callkeep.common.Platform
 import com.webtrit.callkeep.common.StorageDelegate
+import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.managers.NotificationChannelManager.INCOMING_CALL_NOTIFICATION_CHANNEL_ID
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.StandaloneCallService
@@ -81,7 +82,7 @@ internal class StandaloneIncomingCallNotificationBuilder : NotificationBuilder()
         text: String,
         smallIcon: Int = R.drawable.ic_notification,
     ): Notification.Builder =
-        Notification.Builder(context, INCOMING_CALL_NOTIFICATION_CHANNEL_ID).apply {
+        NotificationChannelManager.notificationBuilder(context, INCOMING_CALL_NOTIFICATION_CHANNEL_ID).apply {
             setSmallIcon(smallIcon)
             setCategory(NotificationCompat.CATEGORY_CALL)
             setContentTitle(title)

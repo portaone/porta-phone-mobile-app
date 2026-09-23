@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import com.webtrit.callkeep.R
 
@@ -15,6 +16,45 @@ object NotificationChannelManager {
     const val INCOMING_CALL_NOTIFICATION_CHANNEL_ID = "INCOMING_CALL_NOTIFICATION_CHANNEL_ID"
     const val FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID = "FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID"
     const val ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID = "ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL"
+
+    /**
+     * A notification builder bound to [channelId] on every supported API level.
+     *
+     * Channels arrived in API 26, and so did the two-argument [Notification.Builder]
+     * constructor that names one. Below that only `Notification.Builder(Context)` exists, so
+     * calling the channel constructor unconditionally is a `NoSuchMethodError` on API 24-25 -
+     * thrown for every notification this plugin posts, which on the standalone path means an
+     * incoming call that never appears.
+     *
+     * It lives here rather than among the generic extensions because what it does is degrade a
+     * channel, and the channels are declared a few lines above: with nothing to read the
+     * channel from, its importance has to travel on the notification as a priority, and the
+     * incoming-call channel's silence - it is registered with `setSound(null, null)` so the app
+     * can ring itself - has to be said again. Without that an incoming call on API 24-25 would
+     * arrive as an ordinary, silent, flat line in the shade.
+     */
+    @Suppress("DEPRECATION")
+    fun notificationBuilder(
+        context: Context,
+        channelId: String,
+    ): Notification.Builder {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return Notification.Builder(context, channelId)
+        }
+        return Notification.Builder(context).apply {
+            when (channelId) {
+                INCOMING_CALL_NOTIFICATION_CHANNEL_ID -> {
+                    setPriority(Notification.PRIORITY_HIGH)
+                    setSound(null)
+                    setDefaults(0)
+                }
+
+                else -> {
+                    setPriority(Notification.PRIORITY_LOW)
+                }
+            }
+        }
+    }
 
     /**
      * Registers all necessary notification channels.
