@@ -59,7 +59,6 @@ fun getConnections(): List<PhoneConnection>
 fun isConnectionAlreadyExists(callId: String): Boolean
 fun isConnectionDisconnected(callId: String): Boolean
 fun isConnectionAnswered(id: String): Boolean
-fun hasVideoConnections(): Boolean
 ```
 
 There is no `removeConnection`. An entry leaves the map in two ways: `cleanConnections()`

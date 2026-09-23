@@ -202,16 +202,6 @@ class ConnectionManager {
     }
 
     /**
-     * Check if available video connections.
-     */
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun hasVideoConnections(): Boolean {
-        synchronized(connectionResourceLock) {
-            return connections.any { it.value.hasVideo }
-        }
-    }
-
-    /**
      * Marks a call ID as having had HungUp dispatched, so that a subsequent endCall
      * for the same ID can be detected as a duplicate and rejected with an error.
      * Called when ConnectionNotFound fires for a callId that has no connection object.
