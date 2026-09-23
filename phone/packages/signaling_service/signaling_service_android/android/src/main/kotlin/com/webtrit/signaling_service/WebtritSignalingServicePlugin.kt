@@ -80,9 +80,9 @@ class WebtritSignalingServicePlugin : FlutterPlugin, PSignalingServiceHostApi {
     override fun startService() {
         Log.d(TAG, "startService isRunning=${SignalingForegroundService.isRunning} instance=${SignalingForegroundService.instance != null} _stopRequested=${_stopRequested.get()}")
         _stopRequested.set(false)
-        Log.d(TAG, "startService: calling startForegroundService()")
+        Log.d(TAG, "startService: starting SignalingForegroundService")
         SignalingForegroundService.start(context)
-        Log.d(TAG, "startService: startForegroundService() returned")
+        Log.d(TAG, "startService: SignalingForegroundService.start returned")
     }
 
     override fun stopService() {

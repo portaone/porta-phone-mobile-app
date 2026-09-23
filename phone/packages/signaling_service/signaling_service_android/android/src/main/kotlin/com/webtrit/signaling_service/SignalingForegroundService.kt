@@ -15,6 +15,7 @@ import android.util.Log
 import androidx.annotation.Keep
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.BinaryMessenger
 
 /// Foreground service that manages the background Flutter engine for signaling.
@@ -602,7 +603,9 @@ class SignalingForegroundService : Service() {
 
         fun start(context: Context) {
             val intent = Intent(context, SignalingForegroundService::class.java)
-            context.startForegroundService(intent)
+            // Context.startForegroundService exists from API 26; below that this is a plain
+            // startService, which Android 7 allows from any context and never times out.
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun stop(context: Context) {
