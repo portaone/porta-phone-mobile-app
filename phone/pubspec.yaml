@@ -150,8 +150,8 @@ dependencies:
   # Git forks, sorted by name.
   flutter_webrtc:
     git:
-      url: https://github.com/WebTrit/flutter-webrtc.git
-      ref: main_ext_rebase_11.08.26
+      url: https://github.com/portaone/flutter-webrtc.git
+      ref: po/1.6.2+hotfix.3-2
 
 dev_dependencies:
   # Reached directly by the hub replay tests, which drive the Android hub and the
