@@ -119,12 +119,7 @@ class IncomingCallHandler(
             return
         }
         Log.d(TAG, "detachForegroundNotification: leaving foreground, removing notification $currentNotificationId")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            service.stopForeground(Service.STOP_FOREGROUND_REMOVE)
-        } else {
-            @Suppress("DEPRECATION")
-            service.stopForeground(true)
-        }
+        service.stopForeground(Service.STOP_FOREGROUND_REMOVE)
         notifier.cancel(currentNotificationId)
     }
 

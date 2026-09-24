@@ -122,9 +122,7 @@ object CallDiagnostics {
                 }
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                info["defaultDialerPackage"] = tm.defaultDialerPackage
-            }
+            info["defaultDialerPackage"] = tm.defaultDialerPackage
         } catch (e: Exception) {
             info["telecomErrorMessage"] = "${e::class.simpleName}: ${e.message}"
         }
@@ -134,14 +132,8 @@ object CallDiagnostics {
     private fun getPowerManagementInfo(context: Context): Map<String, Any?> =
         try {
             val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-            val isIgnoringOptimizations =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    pm.isIgnoringBatteryOptimizations(context.packageName)
-                } else {
-                    true
-                }
             mapOf(
-                "isIgnoringBatteryOptimizations" to isIgnoringOptimizations,
+                "isIgnoringBatteryOptimizations" to pm.isIgnoringBatteryOptimizations(context.packageName),
                 "isPowerSaveMode" to pm.isPowerSaveMode,
                 "isInteractive" to pm.isInteractive,
             )
