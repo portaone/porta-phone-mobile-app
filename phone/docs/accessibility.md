@@ -166,7 +166,10 @@ to get wrong on your own.
   the message in a `SemanticId`, so a flow can wait for the snackbar by id, and
   keeps a snackbar that carries an action on screen until it is dismissed:
   three seconds is not enough to notice an action, let alone reach it with a
-  screen reader.
+  screen reader. A notification may ask otherwise (`Notification.persist`
+  false) when its action is an offer rather than a question - Undo after a
+  move to the trash - and then the bar leaves like any confirmation; under a
+  screen reader it still waits, whatever was asked.
 - **`keypadKeyId(text)`** (`lib/app/keys.dart`) - the shape to copy for a family
   of repeated controls: one prefix constant plus a function, instead of one
   constant per instance.

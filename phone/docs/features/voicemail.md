@@ -104,7 +104,10 @@ Nothing of this is decided on screen. The row that was tapped is usually gone by
 the time there is anything to say - the list has been re-read and the message is
 no longer in it - so the mailbox says it through the app's notifications channel
 (`models/notifications.dart`), which is also where the way back after a move to
-the trash is offered. The list only asks.
+the trash is offered. That one is a confirmation, not a refusal, so it leaves on
+its own after three seconds like a deleted recent or favorite (`persist` false;
+a bar with an action would otherwise wait to be answered, see
+`docs/accessibility.md`). The list only asks.
 
 The line between the last two is the point. A refusal that names the message
 tells us something about the state and the list can be put right. A server that
