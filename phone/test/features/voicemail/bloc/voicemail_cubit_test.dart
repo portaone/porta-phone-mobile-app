@@ -186,6 +186,9 @@ void main() {
       // Said where anything else about the mailbox is said, not by the row -
       // which by then has left the list along with the message.
       expect(said, [isA<VoicemailMovedToTrashNotification>()]);
+      // A confirmation, not a refusal: it leaves on its own like the ones
+      // around it, and the way back is an offer while it is there.
+      expect((said.single as VoicemailMovedToTrashNotification).persist, isFalse);
       (said.single as VoicemailMovedToTrashNotification).onUndo();
       await pumpEventQueue();
       verify(() => repository.restoreVoicemail('1')).called(1);
