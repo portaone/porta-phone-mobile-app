@@ -15,23 +15,29 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 /// before the await, this outlives that - the messenger sits above the route,
 /// not inside the list.
 class AppSnackBars {
-  const AppSnackBars._(this._messenger, this._theme);
+  const AppSnackBars._(this._messenger, this._theme, this._screenReaderOn);
 
   final ScaffoldMessengerState _messenger;
   final ThemeData _theme;
+
+  /// Whether a screen reader was on when this was taken. Read once, here,
+  /// because the widget that asked is usually gone by the time the bar shows.
+  final bool _screenReaderOn;
 
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> show(
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 3),
+    bool? persist,
   }) {
-    return _show(content: data, action: action, duration: duration);
+    return _show(content: data, action: action, duration: duration, persist: persist);
   }
 
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showError(
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 5),
+    bool? persist,
   }) {
     final styles = _theme.extension<SnackBarStyles>()?.primary;
 
@@ -39,6 +45,7 @@ class AppSnackBars {
       content: data,
       action: action,
       duration: duration,
+      persist: persist,
       backgroundColor: styles?.errorBackgroundColor ?? _theme.colorScheme.error,
     );
   }
@@ -47,6 +54,7 @@ class AppSnackBars {
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 5),
+    bool? persist,
   }) {
     final styles = _theme.extension<SnackBarStyles>()?.primary;
 
@@ -54,6 +62,7 @@ class AppSnackBars {
       content: data,
       action: action,
       duration: duration,
+      persist: persist,
       backgroundColor: styles?.successBackgroundColor ?? _theme.colorScheme.tertiary,
     );
   }
@@ -62,8 +71,15 @@ class AppSnackBars {
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 1),
+    bool? persist,
   }) {
-    return _show(content: data, action: action, duration: duration, behavior: SnackBarBehavior.floating);
+    return _show(
+      content: data,
+      action: action,
+      duration: duration,
+      persist: persist,
+      behavior: SnackBarBehavior.floating,
+    );
   }
 
   /// Shows the one snack bar the app has, so every message is announced the
@@ -71,15 +87,23 @@ class AppSnackBars {
   ///
   /// A message that offers something to do waits for the answer instead of
   /// timing out (and gets a close button, so it can always be dismissed):
-  /// three seconds is not enough to notice an action, let alone to reach it
-  /// with a screen reader.
+  /// three seconds is not enough to notice an action, let alone to reach it.
+  /// [persist] false is for a message whose action is an offer rather than a
+  /// question - an undo after a confirmation - which goes away with the
+  /// messages around it. Under a screen reader a message with an action waits
+  /// whatever was asked, because there three seconds is not enough to reach
+  /// anything. A message with nothing to do never waits: there would be
+  /// nothing to close it with.
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> _show({
     required String content,
     required SnackBarAction? action,
     required Duration duration,
+    required bool? persist,
     Color? backgroundColor,
     SnackBarBehavior? behavior,
   }) {
+    final waits = action != null && ((persist ?? true) || _screenReaderOn);
+
     return (_messenger..removeCurrentSnackBar()).showSnackBar(
       SnackBar(
         content: SemanticId(identifier: appSnackBarId, child: Text(content)),
@@ -87,6 +111,7 @@ class AppSnackBars {
         backgroundColor: backgroundColor,
         behavior: behavior,
         duration: duration,
+        persist: waits,
         showCloseIcon: action != null,
       ),
     );
@@ -95,7 +120,8 @@ class AppSnackBars {
 
 extension BuildContextSnackBar on BuildContext {
   /// The screen's snack bar, to keep past an await. See [AppSnackBars].
-  AppSnackBars get snackBars => AppSnackBars._(ScaffoldMessenger.of(this), Theme.of(this));
+  AppSnackBars get snackBars =>
+      AppSnackBars._(ScaffoldMessenger.of(this), Theme.of(this), MediaQuery.maybeAccessibleNavigationOf(this) ?? false);
 
   void removeCurrentSnackBar() {
     ScaffoldMessenger.of(this).removeCurrentSnackBar();
@@ -109,32 +135,36 @@ extension BuildContextSnackBar on BuildContext {
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 3),
+    bool? persist,
   }) {
-    return snackBars.show(data, action: action, duration: duration);
+    return snackBars.show(data, action: action, duration: duration, persist: persist);
   }
 
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showErrorSnackBar(
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 5),
+    bool? persist,
   }) {
-    return snackBars.showError(data, action: action, duration: duration);
+    return snackBars.showError(data, action: action, duration: duration, persist: persist);
   }
 
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showFloatingSnackBar(
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 1),
+    bool? persist,
   }) {
-    return snackBars.showFloating(data, action: action, duration: duration);
+    return snackBars.showFloating(data, action: action, duration: duration, persist: persist);
   }
 
   ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showSuccessSnackBar(
     String data, {
     SnackBarAction? action,
     Duration duration = const Duration(seconds: 5),
+    bool? persist,
   }) {
-    return snackBars.showSuccess(data, action: action, duration: duration);
+    return snackBars.showSuccess(data, action: action, duration: duration, persist: persist);
   }
 
   T? readOrNull<T>() {

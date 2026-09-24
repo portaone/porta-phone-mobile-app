@@ -25,6 +25,14 @@ sealed class Notification {
 
   SnackBarAction? action(BuildContext context) => null;
 
+  /// Whether the bar stays until it is answered.
+  ///
+  /// Null leaves it to the presenter, which keeps a message with something to
+  /// do on screen and lets the rest go (see [AppSnackBars]). False is for a
+  /// message whose [action] is an offer rather than a question - an undo after
+  /// a confirmation - which goes away like the confirmations around it.
+  bool? get persist => null;
+
   List<NotificationScope> scopes() => NotificationScope.values;
 }
 
