@@ -54,6 +54,11 @@ A filter the mailbox cannot serve is absent rather than greyed out: nothing
 promises a list that would come back empty for a reason the person cannot see.
 Without the trash, a delete is final and the dialog says so.
 
+On the wire the two read the other way round from their names: a plain `DELETE`
+deletes for good, and `trash=true` is what moves a message to the trash. A client
+that offers no trash controls therefore deletes by saying nothing, instead of
+filling a mailbox it gives its user no way to empty (see `deleteUserVoicemail`).
+
 ## The list and its filters
 
 `VoicemailCubit` holds the mailbox as it is stored plus what the trash returned,
