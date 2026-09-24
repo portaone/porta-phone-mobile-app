@@ -54,6 +54,12 @@ A filter the mailbox cannot serve is absent rather than greyed out: nothing
 promises a list that would come back empty for a reason the person cannot see.
 Without the trash, a delete is final and the dialog says so.
 
+On the wire the two read the other way round from their names: a plain `DELETE`
+is the permanent one and `trash=true` asks for the reversible move, so that a
+client built before the trash existed goes on deleting rather than filling a
+mailbox it cannot empty. `permanent=true` is not a parameter - it existed while
+the trash was the default and was removed with it (see `deleteUserVoicemail`).
+
 ## The list and its filters
 
 `VoicemailCubit` holds the mailbox as it is stored plus what the trash returned,

@@ -52,9 +52,9 @@ void main() {
 
   group('deleting', () {
     test('a move to the trash asks for the trash by name', () async {
-      // Not the default any more: a delete that says nothing is becoming
-      // permanent, so that clients built before the trash existed keep
-      // deleting. Saying the word is what keeps the message reachable.
+      // Not the default any more: a delete that says nothing is the permanent
+      // one, so that clients built before the trash existed keep deleting.
+      // Saying the word is what keeps the message reachable.
       late Request captured;
       final apiClient = clientCapturing((request) => captured = request);
 
@@ -65,14 +65,17 @@ void main() {
       expect(captured.url.queryParameters.containsKey('permanent'), isFalse);
     });
 
-    test('a permanent delete says that instead', () async {
+    test('a permanent delete says nothing at all', () async {
+      // There is no parameter for it. `permanent=true` existed for the few days
+      // the trash was the default and went away with it, and a backend on the
+      // current contract refuses it as an unexpected field.
       late Request captured;
       final apiClient = clientCapturing((request) => captured = request);
 
       await apiClient.deleteUserVoicemail(token, 'vm-1', permanent: true);
 
-      expect(captured.url.queryParameters['permanent'], 'true');
-      expect(captured.url.queryParameters.containsKey('trash'), isFalse);
+      expect(captured.url.path, endsWith('/user/voicemails/vm-1'));
+      expect(captured.url.queryParameters, isEmpty);
     });
   });
 

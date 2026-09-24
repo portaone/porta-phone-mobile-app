@@ -749,17 +749,22 @@ class WebtritApiClient {
   /// Space is freed only by a permanent delete or by emptying the trash;
   /// nothing in there expires on its own.
   ///
-  /// Which way a plain delete goes is the thing the backend changed. It used to
-  /// mean "to the trash" wherever there was one, and is becoming permanent, so
-  /// that a client built before the trash existed goes on deleting rather than
-  /// quietly filling a mailbox nobody empties. A move to the trash therefore
-  /// asks for the trash by name.
+  /// The wire reads the other way round from the names here, and that is the
+  /// backend's contract rather than an accident: a plain `DELETE` is the
+  /// permanent one, and `trash=true` is what asks for the reversible move. It
+  /// was turned around so that a client built before the trash existed goes on
+  /// deleting rather than quietly filling a mailbox it offers no way to empty.
   ///
-  /// A backend that has not made that change yet declares no such parameter and
-  /// refuses the request outright. That refusal is left to be seen rather than
-  /// worked around here: a client quietly speaking two contracts hides which
-  /// one the backend speaks, and the answer to a backend that has not shipped
-  /// the change is a release that waits for it, not a second request.
+  /// So [permanent] sends no parameter at all. There is no `permanent=true`:
+  /// it existed for the few days the trash was the default and was removed
+  /// with it, and a backend carrying the current contract refuses it as an
+  /// unexpected field, which is how this was found.
+  ///
+  /// Against a backend that predates the turn, sending nothing is read as "to
+  /// the trash", so a message the person asked to be rid of is recoverable
+  /// instead of gone. That is the failure mode of a client ahead of its
+  /// backend, and the one worth having of the two - the alternative, speaking
+  /// both contracts at once, hides which one the backend speaks.
   Future<void> deleteUserVoicemail(
     String token,
     String messageId, {
@@ -771,7 +776,7 @@ class WebtritApiClient {
       [..._apiBasePathSegmentsV1, 'user', 'voicemails', messageId],
       locale != null ? {'Accept-Language': locale} : null,
       token,
-      queryParameters: permanent ? {'permanent': 'true'} : {'trash': 'true'},
+      queryParameters: permanent ? null : const {'trash': 'true'},
       requestOptions: options,
       responseOptions: _voicemailEndpoint,
     );
