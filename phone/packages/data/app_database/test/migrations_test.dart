@@ -489,10 +489,10 @@ void main() {
           INSERT INTO chats (id, type, name, created_at_remote, updated_at_remote)
           VALUES (42, 'group', 'engineering', 1756684800, 1756684800)
         """);
-        await db.customStatement("""
+        await db.customStatement('''
           INSERT INTO chat_user_settings (chat_id, muted, muted_until_usec)
           VALUES (42, 1, NULL)
-        """);
+        ''');
 
         await db.customStatement('DELETE FROM chats WHERE id = 42');
 
