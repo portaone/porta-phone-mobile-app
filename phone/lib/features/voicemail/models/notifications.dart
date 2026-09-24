@@ -27,6 +27,14 @@ final class VoicemailMovedToTrashNotification extends MessageNotification {
   @override
   SnackBarAction? action(BuildContext context) =>
       SnackBarAction(label: context.l10n.voicemail_Label_undo, onPressed: onUndo);
+
+  /// The way back is an offer, not a question: the message went where it was
+  /// sent, and this says so like any other confirmation - a deleted recent, a
+  /// deleted favorite - and leaves with them, three seconds later. A bar that
+  /// waits reads as a failure that has not passed. Under a screen reader it
+  /// waits anyway (see [AppSnackBars]).
+  @override
+  bool? get persist => false;
 }
 
 /// Says why the row a person acted on has gone.
