@@ -8,7 +8,6 @@ import 'package:logging/logging.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import '../models/models.dart';
-import 'native_audio_restart.dart' if (dart.library.js_interop) 'native_audio_restart_web.dart';
 
 final _logger = Logger('CallMediaManager');
 
@@ -35,19 +34,13 @@ class CallMediaManager {
   final Callkeep _callkeep;
   final _callkeepSound = WebtritCallkeepSound();
 
-  // Audio device priority for voice calls on Android.
-  // AudioSwitch selects the first available device from this list on activate().
-  // Earpiece before Speakerphone ensures voice calls start on earpiece.
-  // Video calls override this via onVideoEnabled() after stream setup.
-  static const _voiceCallOutputOrder = [
-    AndroidAudioOutputDevice.bluetooth,
-    AndroidAudioOutputDevice.wiredHeadset,
-    AndroidAudioOutputDevice.earpiece,
-    AndroidAudioOutputDevice.speakerphone,
-  ];
-
-  // Sets Android audio output priority and enables iOS manual AVAudioSession
-  // management so CallKit controls activation instead of WebRTC doing it automatically.
+  // Enables iOS manual AVAudioSession management so CallKit controls activation
+  // instead of WebRTC doing it automatically.
+  //
+  // Android output priority is not set here. AudioSwitch is built with the
+  // earpiece ahead of the speaker as soon as setSpeakerphoneOn(false) runs,
+  // which happens on the first call of a session before getUserMedia, so a
+  // voice call still starts on the earpiece without an explicit order.
   void _configure() {
     if (kIsWeb) {
       // TODO(web): no native audio routing on web; the browser owns the audio device.
@@ -57,9 +50,7 @@ class CallMediaManager {
     if (Platform.isAndroid) {
       // manageAudioFocus: false — Telecom owns audio focus for VoIP calls.
       // Dual ownership with AudioSwitch leaves volume stuck in call mode on older MIUI (WT-1429).
-      AndroidNativeAudioManagement.setAndroidAudioConfiguration(
-        AndroidAudioConfiguration(preferredOutputOrder: _voiceCallOutputOrder, manageAudioFocus: false),
-      );
+      AndroidNativeAudioManagement.setAndroidAudioConfiguration(AndroidAudioConfiguration(manageAudioFocus: false));
     }
     if (Platform.isIOS) AppleNativeAudioManagement.setUseManualAudio(true);
   }
@@ -111,7 +102,7 @@ class CallMediaManager {
         // marked active before the engine starts
         //
         // Solves bug with hold/unhold silence after introducing RTCAudioDeviceModuleTypeAudioEngine on pc init:
-        await nativeRestartAudio();
+        await AppleNativeAudioManagement.restartAudio();
       } catch (e, st) {
         _logger.warning('didActivateAudioSession failed', e, st);
       }
