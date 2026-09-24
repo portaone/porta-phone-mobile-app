@@ -1,3 +1,2 @@
 rename remaining webtrit* packages, classes and references: phone itself, callkeep, tools, analysis
 add new app CD trigger api to configurator after migration to jenkins
-change webrtc and flutter_contacts references after migration to new git
