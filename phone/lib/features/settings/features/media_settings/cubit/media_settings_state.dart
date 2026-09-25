@@ -10,6 +10,7 @@ class MediaSettingsState with EquatableMixin {
     required this.videoCapturingSettings,
     required this.iceSettings,
     required this.pearConnectionSettings,
+    this.certificateVerificationConfigurable = false,
   });
 
   final EncodingSettings encodingSettings;
@@ -22,6 +23,11 @@ class MediaSettingsState with EquatableMixin {
   final IceSettings iceSettings;
   final PeerConnectionSettings pearConnectionSettings;
 
+  /// Whether this deployment offers the certificate policy control at all.
+  /// Fixed for the life of the screen - it comes from the build, not from
+  /// anything the person can change here.
+  final bool certificateVerificationConfigurable;
+
   MediaSettingsState copyWithEncodingPresets(EncodingPreset? preset) {
     return MediaSettingsState(
       encodingSettings: encodingSettings,
@@ -30,6 +36,7 @@ class MediaSettingsState with EquatableMixin {
       videoCapturingSettings: videoCapturingSettings,
       iceSettings: iceSettings,
       pearConnectionSettings: pearConnectionSettings,
+      certificateVerificationConfigurable: certificateVerificationConfigurable,
     );
   }
 
@@ -41,6 +48,7 @@ class MediaSettingsState with EquatableMixin {
       videoCapturingSettings: videoCapturingSettings,
       iceSettings: iceSettings,
       pearConnectionSettings: pearConnectionSettings,
+      certificateVerificationConfigurable: certificateVerificationConfigurable,
     );
   }
 
@@ -52,6 +60,7 @@ class MediaSettingsState with EquatableMixin {
       videoCapturingSettings: videoCapturingSettings,
       iceSettings: iceSettings,
       pearConnectionSettings: pearConnectionSettings,
+      certificateVerificationConfigurable: certificateVerificationConfigurable,
     );
   }
 
@@ -63,6 +72,7 @@ class MediaSettingsState with EquatableMixin {
       videoCapturingSettings: settings,
       iceSettings: iceSettings,
       pearConnectionSettings: pearConnectionSettings,
+      certificateVerificationConfigurable: certificateVerificationConfigurable,
     );
   }
 
@@ -74,6 +84,7 @@ class MediaSettingsState with EquatableMixin {
       videoCapturingSettings: videoCapturingSettings,
       iceSettings: settings,
       pearConnectionSettings: pearConnectionSettings,
+      certificateVerificationConfigurable: certificateVerificationConfigurable,
     );
   }
 
@@ -85,6 +96,7 @@ class MediaSettingsState with EquatableMixin {
       videoCapturingSettings: videoCapturingSettings,
       iceSettings: iceSettings,
       pearConnectionSettings: settings,
+      certificateVerificationConfigurable: certificateVerificationConfigurable,
     );
   }
 
@@ -96,6 +108,7 @@ class MediaSettingsState with EquatableMixin {
     videoCapturingSettings,
     iceSettings,
     pearConnectionSettings,
+    certificateVerificationConfigurable,
   ];
 
   @override
