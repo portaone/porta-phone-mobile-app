@@ -3,7 +3,7 @@
 Where the STUN/TURN servers used for WebRTC come from, how they are cached, and what happens when
 the deployment offers none.
 
-Last reviewed: 2026-09-25
+Last reviewed: 2026-09-25 (anchors measured against a live deployment)
 
 ## Why it exists
 
@@ -144,6 +144,13 @@ place of the compiled-in list. libwebrtc hands the verifier a SINGLE certificate
 chain, so **the anchor has to be the issuer, not the root**: supply the intermediate that signed the
 server's certificate. Serving them from the backend rather than building them into the app is what
 keeps a CA rotation from needing an application release.
+
+What a deployment puts there is the chain its TURN server already presents - with certbot, the
+`chain.pem` written beside the certificate coturn is given. There is nothing to collect and nothing
+to choose, and it follows a renewal by itself. Measured against a real deployment: the direct issuer
+alone is enough, a root in the file is simply unused, and extra certificates cost nothing - which is
+why the advice is the whole chain rather than a hand-picked entry. Assembling a CA's intermediates
+by hand is the fallback, for a private CA or a chain that is not on the same host.
 
 An empty list must never reach the plugin, which is why the key is written only when the deployment
 sent something: a verifier holding no anchor of its own replaces the library's verdict and would
