@@ -1019,6 +1019,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallSignalingEventUpdated() => __onCallSignalingEventUpdated(event, emit),
       _CallSignalingEventPeerMediaState() => __onCallSignalingEventPeerMediaState(event, emit),
       _CallSignalingEventPeerConferenceMute() => __onCallSignalingEventPeerConferenceMute(event, emit),
+      _CallSignalingEventPeerConferenceHostAway() => __onCallSignalingEventPeerConferenceHostAway(event, emit),
       _CallSignalingEventTransfer() => __onCallSignalingEventTransfer(event, emit),
       _CallSignalingEventTransferring() => __onCallSignalingEventTransfering(event, emit),
       _CallSignalingEventTransferAccepted() => __onCallSignalingEventTransferAccepted(event, emit),
@@ -1299,6 +1300,19 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     if (state.retrieveActiveCall(event.callId) == null) return;
     emit(
       state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(peerReportedConferenceMute: event.muted)),
+    );
+  }
+
+  /// The other party of this call says they have stepped aside from the room
+  /// they host, or come back. Recorded on that call as their claim; see
+  /// [ActiveCall.peerReportedConferenceHostAway].
+  Future<void> __onCallSignalingEventPeerConferenceHostAway(
+    _CallSignalingEventPeerConferenceHostAway event,
+    Emitter<CallState> emit,
+  ) async {
+    if (state.retrieveActiveCall(event.callId) == null) return;
+    emit(
+      state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(peerReportedConferenceHostAway: event.away)),
     );
   }
 
@@ -4426,6 +4440,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           add(_CallSignalingEvent.peerMediaState(line: e.line, callId: e.callId, video: e.video));
         case ConferenceMutePeerMessageEvent e:
           add(_CallSignalingEvent.peerConferenceMute(line: e.line, callId: e.callId, muted: e.muted));
+        case ConferenceHostAwayPeerMessageEvent e:
+          add(_CallSignalingEvent.peerConferenceHostAway(line: e.line, callId: e.callId, away: e.away));
         case UnknownPeerMessageEvent e:
           _logger.info('[SIG] PeerMessageEvent: ignoring unknown type "${e.type}"');
       }
@@ -4781,6 +4797,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     await _quietLegs([e.callId]);
     if (!state.conference.isPresent) return;
     emit(state.copyWith(conference: state.conference.copyWith(legs: {...state.conference.legs, e.callId: line})));
+    // After the room has been found to be still there, and after the call is
+    // one of its legs: told any earlier, a call whose room fell away while it
+    // was being quieted would be left saying the host had stepped out of a room
+    // it never joined, with nothing to ever correct it.
+    if (_conferencePeerConnection.isParked) _tellLegsTheRoomIsParked([e.callId], true);
   }
 
   /// A room-wide mute of one participant. Accepted by the server only once
@@ -4855,6 +4876,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         _logger.warning('__onMutationReconcileConferenceAudio: applying roomMustPark=$roomMustPark failed', error);
       }),
     );
+    _tellLegsTheRoomIsParked(state.conference.legIds, roomMustPark);
   }
 
   /// The host ends the conference, and with it every leg: a room is not
@@ -5182,6 +5204,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     );
     await _quietLegs(adopted);
     _tellLegsTheirRoomMute(muteChanges);
+    if (_conferencePeerConnection.isParked) {
+      if (adopted.isNotEmpty) _tellLegsTheRoomIsParked(adopted, true);
+      // A leg the room drops while it stands aside carries on as an ordinary
+      // call, and the later unpark goes only to the legs the room still has -
+      // so this is its only chance to hear that the host is back. The same hole
+      // the room ending closes for the legs it releases.
+      if (vanished.isNotEmpty) _tellLegsTheRoomIsParked(vanished, false);
+    }
     // The group is the first thing the operating system is told about these
     // calls, and the hold the server took them off is not published at all.
     // CallKit does not keep two ungrouped calls active at once - it ends one -
@@ -5225,6 +5255,37 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             ),
           )
           ?.catchError((Object e) => _logger.info('_tellLegsTheirRoomMute: $e'));
+    }
+  }
+
+  /// Tells [callIds] that the host has stepped aside from the room, or come
+  /// back.
+  ///
+  /// Cosmetic, and best effort on the same terms as [_tellLegsTheirRoomMute]:
+  /// nothing on the far side can check it and nothing functional hangs on it.
+  /// Sent when the parking changes, to a leg as it joins, and as `false` when
+  /// the room ends - a leg that carries on as an ordinary call must not be left
+  /// showing a host who stepped away from a room that no longer exists. A
+  /// participant whose socket was down for it learns nothing until the next
+  /// change; there is no way to notice that from here, and a heartbeat for a
+  /// caption is not worth the traffic.
+  void _tellLegsTheRoomIsParked(Iterable<String> callIds, bool away) {
+    // An older core closes the signaling socket with 4600 on a request it does
+    // not know; the same reason as in [_tellLegsTheirRoomMute].
+    if (!capabilities.isPeerMessageEnabled) return;
+    for (final callId in callIds) {
+      final line = state.conference.legs[callId] ?? state.retrieveActiveCall(callId)?.line;
+      if (line == null) continue;
+      _signalingModule
+          .execute(
+            ConferenceHostAwayPeerMessageRequest(
+              transaction: WebtritSignalingClient.generateTransactionId(),
+              line: line,
+              callId: callId,
+              away: away,
+            ),
+          )
+          ?.catchError((Object e) => _logger.info('_tellLegsTheRoomIsParked: $e'));
     }
   }
 
@@ -5283,6 +5344,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       for (final callId in legIds)
         if (state.conference.participantMuted(callId)) callId: false,
     };
+    // Same reason, for the room standing aside: a leg that carries on as an
+    // ordinary call would otherwise keep showing a host away from a room that
+    // is gone. Read before the teardown forgets it.
+    final wasParked = _conferencePeerConnection.isParked;
     // Not waited on: the mixer's connection serialises its own work, so a
     // teardown asked for while it is still opening runs after that and
     // closes it - but waiting here would hold the queue for exactly as long
@@ -5294,6 +5359,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (error != null) _logger.warning('_leaveRoom: unsetCallGroup error: $error');
     }
     _tellLegsTheirRoomMute(wereMuted);
+    if (wasParked) _tellLegsTheRoomIsParked(legIds, false);
     emit(state.copyWith(conference: const ConferenceState()));
     if (!restoreLegs) return const [];
     final restored = <String>[];

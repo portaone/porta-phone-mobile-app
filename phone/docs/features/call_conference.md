@@ -184,10 +184,20 @@ the room either silent for good or carrying a private conversation. An
 nobody to be private with, and standing aside for a ringing call would cut the
 room off for an incoming call the host may well decline.
 
-Neither the server nor the participants are told. The host's own mute is local
-too (§14: far ends learn nothing of a conference), so a participant sees a live
-microphone for a host who has stepped aside; telling them is a `peer_message`
-of its own, not this.
+The server is not told - the host's own mute is local too (§14: far ends learn
+nothing of a conference) - but the participants are, over the same app-to-app
+envelope the mute hint uses: a `conference_host_away {away}` goes to every leg
+when the parking changes, to a leg as it joins a room already standing aside,
+and as `false` both when the room ends and when the server drops a leg out of a
+room that is standing aside - a leg that carries on as an ordinary call must not
+be left showing a host away from a room it is no longer in. Core relays the
+envelope without reading it, so nothing on the server side changes for a new
+inner type.
+
+It is a claim on the same terms as the mute hint, and carries the same limit: it
+is not replayed, and a participant whose socket was down for it learns nothing
+until the host's next change. Nothing functional hangs on it - it is a line of
+text under the name.
 
 ## Telling the muted participant
 

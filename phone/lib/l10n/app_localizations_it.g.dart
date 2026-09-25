@@ -467,6 +467,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get call_description_peerReportsMuted => 'L\'altra parte dice che sei disattivato';
 
   @override
+  String get call_description_peerReportsHostAway => 'L\'altra parte dice di essere in un\'altra chiamata';
+
+  @override
   String get call_description_incoming => 'Chiamata in arrivo';
 
   @override

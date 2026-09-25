@@ -434,6 +434,8 @@
   "@call_description_held": {},
   "call_description_peerReportsMuted": "Співрозмовник повідомив, що вас заглушено",
   "@call_description_peerReportsMuted": {},
+  "call_description_peerReportsHostAway": "Співрозмовник повідомив, що він в іншому дзвінку",
+  "@call_description_peerReportsHostAway": {},
   "call_description_incoming": "Вхідний дзвінок",
   "@call_description_incoming": {},
   "call_description_inviteToAttendedTransfer": "Вас запросили приєднатися до керованої переадресації",

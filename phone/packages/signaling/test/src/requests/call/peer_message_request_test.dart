@@ -43,6 +43,25 @@ void main() {
     expect(PeerMessageRequest.fromJson(request.toJson()), request);
   });
 
+  test('ConferenceHostAwayPeerMessageRequest: toJson', () {
+    const request = ConferenceHostAwayPeerMessageRequest(transaction: 't-1', line: 1, callId: 'qwerty', away: true);
+
+    expect(request.toJson(), {
+      Request.typeKey: 'peer_message',
+      'transaction': 't-1',
+      'line': 1,
+      'call_id': 'qwerty',
+      'type': 'conference_host_away',
+      'data': {'away': true},
+    });
+  });
+
+  test('ConferenceHostAwayPeerMessageRequest: fromJson round trip via PeerMessageRequest', () {
+    const request = ConferenceHostAwayPeerMessageRequest(transaction: 't-1', line: 1, callId: 'qwerty', away: false);
+
+    expect(PeerMessageRequest.fromJson(request.toJson()), request);
+  });
+
   test('PeerMessageRequest: unknown type throws', () {
     expect(
       () => PeerMessageRequest.fromJson({

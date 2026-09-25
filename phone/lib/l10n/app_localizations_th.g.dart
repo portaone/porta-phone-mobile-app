@@ -454,6 +454,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_description_peerReportsMuted => 'อีกฝ่ายแจ้งว่าคุณถูกปิดเสียง';
 
   @override
+  String get call_description_peerReportsHostAway => 'อีกฝ่ายแจ้งว่ากำลังอยู่ในสายอื่น';
+
+  @override
   String get call_description_incoming => 'สายเรียกเข้า';
 
   @override
