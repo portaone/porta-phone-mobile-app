@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui' show IsolateNameServer;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logging/logging.dart';
@@ -338,7 +341,8 @@ void main() {
       nativePath = '${tempDir.path}/app_native.log';
       logger = Logger('test.native');
       captured = [];
-      logger.onRecord.listen(captured.add);
+      // Without hierarchical logging every logger's onRecord is the root stream.
+      logger.onRecord.where((r) => r.loggerName == logger.fullName).listen(captured.add);
       forwarder = NativeLogForwarder(nativeLogFilePath: nativePath, logger: logger);
     });
 
@@ -402,6 +406,104 @@ void main() {
       File(nativePath).writeAsStringSync('2026-01-01 00:00:00.000 I Tag: after dispose\n');
       await Future<void>.delayed(const Duration(milliseconds: 300));
       expect(captured, isEmpty);
+    });
+  });
+
+  // Each forwarder stands in for one isolate of the process; they share the name server.
+  group('NativeLogForwarder ownership', () {
+    const portName = 'native_log_forwarder_ownership_test';
+    late Directory tempDir;
+    late String nativePath;
+    final forwarders = <NativeLogForwarder>[];
+    final subscriptions = <StreamSubscription<LogRecord>>[];
+
+    setUp(() {
+      tempDir = Directory.systemTemp.createTempSync('native_log_forwarder_ownership_test_');
+      nativePath = '${tempDir.path}/app_native.log';
+      File(nativePath).writeAsStringSync('');
+    });
+
+    tearDown(() async {
+      for (final f in forwarders) {
+        await f.dispose();
+      }
+      forwarders.clear();
+      for (final s in subscriptions) {
+        await s.cancel();
+      }
+      subscriptions.clear();
+      IsolateNameServer.removePortNameMapping(portName);
+      if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
+    });
+
+    List<String> startForwarder(String name, {bool takeOver = false}) {
+      final lines = <String>[];
+      final logger = Logger('test.ownership.$name');
+      subscriptions.add(
+        logger.onRecord.where((r) => r.loggerName == logger.fullName).listen((r) => lines.add(r.message)),
+      );
+      forwarders.add(
+        NativeLogForwarder(
+          nativeLogFilePath: nativePath,
+          logger: logger,
+          takeOver: takeOver,
+          portName: portName,
+          probeTimeout: const Duration(milliseconds: 50),
+        )..start(),
+      );
+      return lines;
+    }
+
+    Future<void> append(String message) async {
+      File(nativePath).writeAsStringSync('2026-01-01 00:00:00.000 I Tag: $message\n', mode: FileMode.append);
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+
+    test('two background forwarders forward each line once between them', () async {
+      final first = startForwarder('fcm');
+      final second = startForwarder('push');
+      await append('one');
+      await append('two');
+      expect([...first, ...second], hasLength(2));
+      expect(first, hasLength(2));
+    });
+
+    test('the UI forwarder takes over from a background one', () async {
+      final background = startForwarder('fcm');
+      await append('before');
+      final ui = startForwarder('ui', takeOver: true);
+      await append('after');
+      expect(background.where((m) => m.endsWith('before')), hasLength(1));
+      expect(background.where((m) => m.endsWith('after')), isEmpty);
+      expect(ui.where((m) => m.endsWith('after')), hasLength(1));
+    });
+
+    test('a background forwarder started after the UI one stands by', () async {
+      final ui = startForwarder('ui', takeOver: true);
+      final background = startForwarder('fcm');
+      await append('line');
+      expect(ui, hasLength(1));
+      expect(background, isEmpty);
+    });
+
+    test('a standby forwarder resumes once the owner is disposed', () async {
+      final ui = startForwarder('ui', takeOver: true);
+      final background = startForwarder('fcm');
+      await append('while owned');
+      await forwarders.first.dispose();
+      await append('after dispose');
+      expect(ui, hasLength(1));
+      expect(background.where((m) => m.endsWith('while owned')), isEmpty);
+      expect(background.where((m) => m.endsWith('after dispose')), hasLength(1));
+    });
+
+    test('a standby forwarder claims the name from a holder that died without dispose', () async {
+      final dead = ReceivePort();
+      IsolateNameServer.registerPortWithName(dead.sendPort, portName);
+      dead.close();
+      final background = startForwarder('fcm');
+      await append('line');
+      expect(background, hasLength(1));
     });
   });
 }
