@@ -11,10 +11,15 @@ import 'package:webtrit_phone/utils/utils.dart';
 part 'network_tester_state.dart';
 
 class NetworkTesterCubit extends Cubit<NetworkTesterState> {
-  NetworkTesterCubit({required this.iceChecker, IceServersResolver? iceServersResolver, Connectivity? connectivity})
-    : _iceServersResolver = iceServersResolver,
-      _connectivity = connectivity ?? Connectivity(),
-      super(const NetworkTesterState()) {
+  NetworkTesterCubit({
+    required this.iceChecker,
+    IceServersResolver? iceServersResolver,
+    TurnCertificateVerificationResolver? certificateVerificationResolver,
+    Connectivity? connectivity,
+  }) : _iceServersResolver = iceServersResolver,
+       _certificateVerificationResolver = certificateVerificationResolver,
+       _connectivity = connectivity ?? Connectivity(),
+       super(const NetworkTesterState()) {
     _connectivity.checkConnectivity().then(_onConnectivityChanged);
     _connectivitySub = _connectivity.onConnectivityChanged.listen(_onConnectivityChanged);
   }
@@ -23,6 +28,11 @@ class NetworkTesterCubit extends Cubit<NetworkTesterState> {
   /// reflect the servers a real call would use. `null` falls back to the public
   /// STUN server.
   final IceServersResolver? _iceServersResolver;
+
+  /// The certificate policy the next call would use. Null falls back to
+  /// [TurnCertificateVerification.verify], which is what an unconfigured
+  /// deployment does anyway.
+  final TurnCertificateVerificationResolver? _certificateVerificationResolver;
 
   final IceChecker iceChecker;
   final Connectivity _connectivity;
@@ -51,7 +61,10 @@ class NetworkTesterCubit extends Cubit<NetworkTesterState> {
     if (isClosed) return;
 
     _gatherSub = iceChecker
-        .gatherCandidates(iceServers: iceServers)
+        .gatherCandidates(
+          iceServers: iceServers,
+          verification: _certificateVerificationResolver?.call() ?? TurnCertificateVerification.verify,
+        )
         .listen(
           (candidate) => emit(state.copyWith(candidates: [...state.candidates, candidate])),
           onDone: () => emit(state.copyWith(gatheringStatus: IceGatheringStatus.complete)),
@@ -59,12 +72,14 @@ class NetworkTesterCubit extends Cubit<NetworkTesterState> {
         );
   }
 
-  Future<List<Map<String, dynamic>>> _resolveIceServers() async {
+  Future<IceServersConfig> _resolveIceServers() async {
     final resolver = _iceServersResolver;
-    if (resolver == null) return kFallbackRtcIceServers;
+    if (resolver == null) return IceServersConfig.fallback();
 
-    final iceServers = await resolver();
-    return iceServers.isEmpty ? kFallbackRtcIceServers : iceServers;
+    // The repository already answers a fallback rather than an empty list; this
+    // keeps the guarantee at this boundary too, for a resolver that does not.
+    final config = await resolver();
+    return config.servers.isEmpty ? IceServersConfig.fallback() : config;
   }
 
   @override

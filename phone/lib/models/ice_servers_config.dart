@@ -17,7 +17,15 @@ const kFallbackRtcIceServers = <Map<String, dynamic>>[
 /// The deployment's STUN/TURN configuration together with the moment its
 /// credentials stop working.
 class IceServersConfig extends Equatable {
-  IceServersConfig({required this.servers, required DateTime expiresAt}) : expiresAt = expiresAt.toUtc();
+  IceServersConfig({required this.servers, required DateTime expiresAt, this.trustedCertificates = const []})
+    : expiresAt = expiresAt.toUtc();
+
+  /// The compiled-in fallback: the public STUN server, no credentials and no
+  /// anchors, dated so that the next poll replaces it.
+  IceServersConfig.fallback()
+    : servers = kFallbackRtcIceServers,
+      trustedCertificates = const [],
+      expiresAt = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
   /// The servers as flutter_webrtc wants them - `RTCIceServer` dictionaries,
   /// ready to hand to a peer connection without further mapping.
@@ -25,6 +33,15 @@ class IceServersConfig extends Equatable {
 
   /// When the credentials expire, in UTC.
   final DateTime expiresAt;
+
+  /// Certificates the deployment asks this client to trust when verifying its
+  /// TURN server, PEM encoded, one certificate per entry.
+  ///
+  /// Usually empty, and empty must stay harmless: it means "decide the way you
+  /// always have", not "trust nothing". A deployment serves these when its
+  /// `turns:` certificate comes from an authority libwebrtc's own compiled-in
+  /// root list does not carry - Let's Encrypt being the case that prompted it.
+  final List<String> trustedCertificates;
 
   /// How long before [expiresAt] the configuration is renewed.
   ///
@@ -39,7 +56,7 @@ class IceServersConfig extends Equatable {
   bool isDueForRefresh(DateTime now) => !now.toUtc().isBefore(expiresAt.subtract(renewalLeadTime));
 
   @override
-  List<Object?> get props => [servers, expiresAt];
+  List<Object?> get props => [servers, expiresAt, trustedCertificates];
 
   @override
   bool get stringify => true;

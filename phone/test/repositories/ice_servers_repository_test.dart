@@ -46,9 +46,9 @@ void main() {
       when(() => apiClient.getUserIceServers(token)).thenAnswer((_) async => response());
 
       await withClock(Clock.fixed(now), repository.refresh);
-      final servers = await withClock(Clock.fixed(now), repository.resolveIceServers);
+      final config = await withClock(Clock.fixed(now), repository.resolveIceServers);
 
-      expect(servers, hasLength(2));
+      expect(config.servers, hasLength(2));
       verify(() => apiClient.getUserIceServers(token)).called(1);
     });
 
@@ -76,9 +76,9 @@ void main() {
       when(() => apiClient.getUserIceServers(token)).thenAnswer((_) async => response(servers: const []));
 
       await withClock(Clock.fixed(now), repository.refresh);
-      final servers = await withClock(Clock.fixed(now), repository.resolveIceServers);
+      final config = await withClock(Clock.fixed(now), repository.resolveIceServers);
 
-      expect(servers, kFallbackRtcIceServers);
+      expect(config.servers, kFallbackRtcIceServers);
     });
 
     test('reports a transport failure without throwing, and the next tick retries', () async {
@@ -96,9 +96,9 @@ void main() {
     test('returns the fetched servers when nothing is cached yet', () async {
       when(() => apiClient.getUserIceServers(token)).thenAnswer((_) async => response());
 
-      final servers = await withClock(Clock.fixed(now), repository.resolveIceServers);
+      final config = await withClock(Clock.fixed(now), repository.resolveIceServers);
 
-      expect(servers, [
+      expect(config.servers, [
         {
           'urls': ['stun:host:3478'],
         },
@@ -122,9 +122,9 @@ void main() {
     test('falls back to the public STUN server when the fetch fails', () async {
       when(() => apiClient.getUserIceServers(token)).thenThrow(Exception('offline'));
 
-      final servers = await withClock(Clock.fixed(now), repository.resolveIceServers);
+      final config = await withClock(Clock.fixed(now), repository.resolveIceServers);
 
-      expect(servers, kFallbackRtcIceServers);
+      expect(config.servers, kFallbackRtcIceServers);
     });
 
     test('falls back when the fetch outlives the first-fetch timeout', () {
@@ -134,7 +134,7 @@ void main() {
 
         List<Map<String, dynamic>>? servers;
         withClock(Clock.fixed(now), () {
-          repository.resolveIceServers().then((value) => servers = value);
+          repository.resolveIceServers().then((value) => servers = value.servers);
         });
         async.elapse(kIceServersFirstFetchTimeout);
         async.flushMicrotasks();
@@ -152,9 +152,9 @@ void main() {
 
       // Past the renewal point but before the declared expiration: the cached
       // credentials still work, so the call must not wait for the refetch.
-      final servers = await withClock(Clock.fixed(renewalPoint(now)), repository.resolveIceServers);
+      final config = await withClock(Clock.fixed(renewalPoint(now)), repository.resolveIceServers);
 
-      expect(servers, hasLength(2));
+      expect(config.servers, hasLength(2));
       verify(() => apiClient.getUserIceServers(token)).called(2);
     });
 
@@ -174,7 +174,7 @@ void main() {
     test('always resolves the fallback and cannot be polled', () async {
       const empty = EmptyIceServersRepository();
 
-      expect(await empty.resolveIceServers(), kFallbackRtcIceServers);
+      expect((await empty.resolveIceServers()).servers, kFallbackRtcIceServers);
       expect(empty, isNot(isA<Refreshable>()));
     });
   });

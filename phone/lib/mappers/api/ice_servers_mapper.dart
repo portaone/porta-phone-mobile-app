@@ -23,6 +23,9 @@ mixin IceServersApiMapper {
       // model carries is what a peer connection is given.
       servers: response.iceServers.where((server) => server.urls.isNotEmpty).map(rtcIceServerFromApi).toList(),
       expiresAt: response.expiresAt ?? (ttlSeconds != null ? now.add(Duration(seconds: ttlSeconds)) : now),
+      // Absent for almost every deployment, and absent reads as empty, which is
+      // what leaves the client's own trust decision untouched.
+      trustedCertificates: List<String>.unmodifiable(response.trustedCertificates),
     );
   }
 

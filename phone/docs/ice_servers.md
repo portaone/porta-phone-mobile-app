@@ -3,7 +3,7 @@
 Where the STUN/TURN servers used for WebRTC come from, how they are cached, and what happens when
 the deployment offers none.
 
-Last reviewed: 2026-08-31
+Last reviewed: 2026-09-25
 
 ## Why it exists
 
@@ -30,12 +30,17 @@ there and keeps the public STUN server as its fallback.
     {"username": "1788215689:8", "urls": ["turn:host:3478?transport=udp"], "credential": "..."},
     {"username": "1788215689:8", "urls": ["turns:host:443?transport=tcp"], "credential": "..."}
   ],
-  "expires_at": "2026-08-31T22:34:49.607820Z"
+  "expires_at": "2026-08-31T22:34:49.607820Z",
+  "trusted_certificates": ["-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"]
 }
 ```
 
 The TURN credentials expire (twelve hours in the example), so a session that outlives the window has
 to fetch them again.
+
+`trusted_certificates` is optional and absent from almost every response - see
+[Trusting a `turns:` certificate](#trusting-a-turns-certificate) for what it is for and why a
+deployment might serve it.
 
 ## Pieces
 
@@ -45,7 +50,10 @@ to fetch them again.
 | `IceServersConfig` | [`../lib/models/ice_servers_config.dart`](../lib/models/ice_servers_config.dart) | the servers, already in `RTCIceServer` shape, plus the single instant their credentials expire |
 | `IceServersRepository` | [`../lib/repositories/ice_servers/`](../lib/repositories/ice_servers/) | fetch, cache, renew, and the fallback |
 | `CoreSupport.supportsBundledIceServers` | [`../lib/utils/core_support.dart`](../lib/utils/core_support.dart) | the capability flag, read from `core.ice_servers_configured` |
-| `IceServersResolver` | [`../lib/features/call/utils/peer_connection_factory.dart`](../lib/features/call/utils/peer_connection_factory.dart) | how a consumer asks for the current servers |
+| `IceServersResolver` | [`../lib/features/call/utils/peer_connection_factory.dart`](../lib/features/call/utils/peer_connection_factory.dart) | how a consumer asks for the current configuration |
+| `rtcConfigurationFrom` | the same file | the one place the map handed to `createPeerConnection` is built - servers, anchors and certificate policy together |
+| `TurnCertificateVerification` | [`../lib/models/ice_settings.dart`](../lib/models/ice_settings.dart) | `verify` or `disabled`, stored per device |
+| `IceConfig` | [`../lib/models/feature_access/ice_config.dart`](../lib/models/feature_access/ice_config.dart) | what the build decided: the default policy, and whether the control is offered at all |
 
 ## Resolution
 
@@ -110,8 +118,69 @@ outlive the session, and the cost is one fetch after a cold start.
   on its existing connection and keeps the servers it was created with.
 - Background isolates never create peer connections (`CallBloc` is the only site), so they need no ICE
   wiring.
-- `IceSettings` (the transport/network filters under media settings) is a separate concern and does not
-  interact with this.
+- `IceSettings` also carries the certificate policy described below, so media settings and this
+  configuration meet in one place. Its other members - the transport and network filters - remain a
+  separate concern.
+
+## Trusting a `turns:` certificate
+
+A `turns:` server presents a certificate, and **libwebrtc does not consult the platform trust store
+to judge it.** It verifies against a root list compiled into the shared object, and that list holds
+no Let's Encrypt root - measured on `android-150.7871.01.aar`, zero ISRG entries against 62 older
+roots present. A TURN server secured the way the rest of the deployment is secured is therefore
+refused with a fatal `unknown_ca`, no relay candidate is gathered, and nothing reports an error:
+coturn logs a closed socket, the core was never involved, and the app logs nothing at all.
+
+The app's own `packages/ssl_certificates` cannot help. That builds a `dart:io` `SecurityContext`,
+which reaches the Dart VM's TLS stack - the REST client and the signaling socket - and has no path
+to the BoringSSL inside `libjingle_peerconnection_so.so`. The two are separate TLS clients in one
+process, which is why the API works against a certificate the relay connection refuses.
+
+Two independent mechanisms address it, and neither is a default.
+
+**Trust anchors.** Whatever arrives in `trusted_certificates` is installed as an Android
+`SSLCertificateVerifier` for the connection. Verification is kept - the supplied anchors decide in
+place of the compiled-in list. libwebrtc hands the verifier a SINGLE certificate rather than a
+chain, so **the anchor has to be the issuer, not the root**: supply the intermediate that signed the
+server's certificate. Serving them from the backend rather than building them into the app is what
+keeps a CA rotation from needing an application release.
+
+An empty list must never reach the plugin, which is why the key is written only when the deployment
+sent something: a verifier holding no anchor of its own replaces the library's verdict and would
+refuse what the built-in list accepts.
+
+**The anchors decide the chain and nothing else.** libwebrtc still checks the hostname afterwards,
+and does it itself - measured: a certificate naming only `turn.example.com`, reached at the server's
+IP address, is refused with `Error(ContinueSSL, -1)` even though the supplied anchor accepted its
+chain and the library logged `Validated certificate chain using custom callback`; the same build
+reaches a relay the moment the address matches the name. So supplying a public CA as an anchor does
+not amount to trusting every certificate that CA has ever issued.
+
+**Certificate policy.** `TurnCertificateVerification`, stored in `IceSettings`:
+
+| Value | Effect |
+|---|---|
+| `verify` | writes no `tlsCertPolicy`, leaving the native default, which already verifies |
+| `disabled` | writes `tlsCertPolicy: insecure_no_check` on every entry, and withholds the anchors |
+
+There is no third value stating `secure`: the native builder already initialises that field to
+`TLS_CERT_POLICY_SECURE`, so writing it would say nothing `verify` does not.
+
+`disabled` is wider than it reads. Measured: it drops the **hostname** check as well as the chain,
+so any certificate for any name is accepted - a `turns:` host dialled by IP accepted a certificate
+whose SAN named only a different hostname. Media stays protected by DTLS-SRTP either way, and the
+Janus fingerprint arrives over the signaling socket, which is verified properly; what an attacker on
+that connection gains is the TURN credentials, short-lived and scoped to one subscriber.
+
+The default comes from the build (`callConfig.ice` in the app config, see
+[application_config.md](application_config.md)) and a device overrides it in media settings, where
+the section appears only if the deployment asked for it. The stored value is nullable so that "never
+touched" and "chose the same as the default" stay distinguishable, and a later change of the brand
+default still moves everyone who never touched it.
+
+Both the call path and the diagnostic network test resolve the policy through the same
+`IceSettingsRepository` method, so the screen cannot report a different verdict from the one a call
+would get.
 
 ## Seeing why gathering failed
 

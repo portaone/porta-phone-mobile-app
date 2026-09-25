@@ -135,6 +135,22 @@ class _MediaSettingsScreenState extends State<MediaSettingsScreen> {
                 ),
                 body: Padding(padding: sectionPadding, child: PeerConnectionSettingsContent()),
               ),
+              // Read from the state rather than from the widget tree so the
+              // panel values stay stable: 5 exists only where the deployment
+              // asked for it, and `initialOpenSection` is an index into this
+              // list.
+              if (cubit.state.certificateVerificationConfigurable)
+                ExpansionPanelRadio(
+                  value: 5,
+                  canTapOnHeader: true,
+                  headerBuilder: (_, isExpanded) => HeadingSection(
+                    title: l10n.settings_certificateVerification_Section_title,
+                    tooltip: l10n.settings_certificateVerification_Section_tooltip,
+                    icon: const Icon(Icons.verified_user_outlined),
+                    selected: isExpanded,
+                  ),
+                  body: Padding(padding: sectionPadding, child: const CertificateVerificationContent()),
+                ),
             ],
           ),
         ),

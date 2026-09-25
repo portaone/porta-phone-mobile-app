@@ -41,6 +41,9 @@ class DiagnosticScreenPage extends StatelessWidget {
           create: (context) => NetworkTesterCubit(
             iceChecker: IceCheckerFlutterWebrtcImpl(),
             iceServersResolver: context.read<IceServersRepository>().resolveIceServers,
+            certificateVerificationResolver: () => context.read<IceSettingsRepository>().resolveCertificateVerification(
+              context.read<FeatureAccess>().callConfig.ice.certificateVerification,
+            ),
           ),
         ),
       ],

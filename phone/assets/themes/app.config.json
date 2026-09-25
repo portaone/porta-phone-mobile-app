@@ -276,6 +276,10 @@
       "negotiation": {
         "includeInactiveVideoInOfferAnswer": false
       }
+    },
+    "ice": {
+      "certificateVerification": "verify",
+      "certificateVerificationConfigurable": true
     }
   },
   "contacts": {
