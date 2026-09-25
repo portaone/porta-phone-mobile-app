@@ -3,15 +3,22 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import 'package:webtrit_phone/features/call/utils/peer_connection_factory.dart' show rtcConfigurationFrom;
+import 'package:webtrit_phone/models/models.dart';
+
 abstract interface class IceChecker {
-  Stream<CandidateInfo> gatherCandidates({required List<Map<String, dynamic>> iceServers});
+  /// Gathers with the deployment's own configuration, anchors included, so the
+  /// diagnostic screen exercises the same trust decision a real call makes. A
+  /// screen that verified differently from the call would answer the one
+  /// question it exists to answer wrongly.
+  Stream<CandidateInfo> gatherCandidates({required IceServersConfig iceServers});
 }
 
 class IceCheckerFlutterWebrtcImpl implements IceChecker {
   const IceCheckerFlutterWebrtcImpl();
 
   @override
-  Stream<CandidateInfo> gatherCandidates({required List<Map<String, dynamic>> iceServers}) {
+  Stream<CandidateInfo> gatherCandidates({required IceServersConfig iceServers}) {
     RTCPeerConnection? pc;
 
     final controller = StreamController<CandidateInfo>(
@@ -22,7 +29,7 @@ class IceCheckerFlutterWebrtcImpl implements IceChecker {
     );
 
     Future<void> start() async {
-      pc = await createPeerConnection({'iceServers': iceServers});
+      pc = await createPeerConnection(rtcConfigurationFrom(iceServers));
 
       pc!.onIceCandidate = (candidate) {
         if (controller.isClosed) return;

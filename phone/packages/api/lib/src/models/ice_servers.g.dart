@@ -17,6 +17,11 @@ IceServersResponse _$IceServersResponseFromJson(Map<String, dynamic> json) =>
       expiresAt: json['expires_at'] == null
           ? null
           : DateTime.parse(json['expires_at'] as String),
+      trustedCertificates:
+          (json['trusted_certificates'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$IceServersResponseToJson(IceServersResponse instance) =>
@@ -24,6 +29,7 @@ Map<String, dynamic> _$IceServersResponseToJson(IceServersResponse instance) =>
       'ice_servers': instance.iceServers.map((e) => e.toJson()).toList(),
       'ttl': instance.ttl,
       'expires_at': instance.expiresAt?.toIso8601String(),
+      'trusted_certificates': instance.trustedCertificates,
     };
 
 IceServer _$IceServerFromJson(Map<String, dynamic> json) => IceServer(

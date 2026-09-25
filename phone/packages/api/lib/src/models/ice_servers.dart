@@ -14,7 +14,7 @@ part 'ice_servers.g.dart';
 @freezed
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class IceServersResponse with _$IceServersResponse {
-  const IceServersResponse({this.iceServers = const [], this.ttl, this.expiresAt});
+  const IceServersResponse({this.iceServers = const [], this.ttl, this.expiresAt, this.trustedCertificates = const []});
 
   @override
   final List<IceServer> iceServers;
@@ -26,6 +26,15 @@ class IceServersResponse with _$IceServersResponse {
   /// Absolute expiration of the returned credentials. `null` = not declared.
   @override
   final DateTime? expiresAt;
+
+  /// Certificates to trust when verifying the TURN server's own certificate,
+  /// PEM encoded, one certificate per entry.
+  ///
+  /// Empty for almost every deployment: a client with a current trust store
+  /// needs nothing here. It is served by deployments whose `turns:` certificate
+  /// comes from an authority the client's own store may not carry.
+  @override
+  final List<String> trustedCertificates;
 
   factory IceServersResponse.fromJson(Map<String, Object?> json) => _$IceServersResponseFromJson(json);
 
