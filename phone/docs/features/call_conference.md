@@ -153,6 +153,42 @@ else is somebody's intention. The value alone cannot decide, because the
 platform does not wait for the report before the command returns, so a report
 can still be in flight when the host asks for the opposite.
 
+## A call outside the room
+
+While a call outside the room stands, the room is **parked**: nothing is sent to
+the mix and nothing of it is heard. Without that the room carries the host's
+half of that call to every participant, and its own mix into his ear over the
+person he is talking to - the microphone is one pooled track lent to every
+connection, so no per-call mute can silence it for the room, and only the
+room's own channel can be.
+
+Parking is not a mute, and the two are kept apart in
+`ConferencePeerConnection`: a mute is what the host asked for and what the
+panel shows, parking is the room standing aside, and the room speaks only when
+neither holds it back. So a mute set before the outside call outlives it with
+nothing to restore, and there is no "who asked for this" to work out.
+
+Both halves are applied in one place. The outbound half takes the microphone
+off the room's sender; the inbound half disables the **receiver's** track,
+which is the only handle on what is heard - the mixed audio plays natively and
+no stream of it is kept. That track exists only once a remote description has
+been set, so the state is applied again after every answer: a room parked while
+it was still assembling would otherwise come up audible.
+
+When to park is [`CallState.conferenceMustPark`], planned in `onChange` off the
+state rather than commanded from the paths that accept and end calls. Four
+places mark a call accepted, the handshake restore after a reconnect among
+them, and a command from one of them that the others do not send would leave
+the room either silent for good or carrying a private conversation. An
+**accepted** call is the boundary, not a ringing one: before the answer there is
+nobody to be private with, and standing aside for a ringing call would cut the
+room off for an incoming call the host may well decline.
+
+Neither the server nor the participants are told. The host's own mute is local
+too (§14: far ends learn nothing of a conference), so a participant sees a live
+microphone for a host who has stepped aside; telling them is a `peer_message`
+of its own, not this.
+
 ## Telling the muted participant
 
 The server tells a muted participant nothing: every conference message is

@@ -31,6 +31,19 @@ extension RTCPeerConnectionAudioSender on RTCPeerConnection {
   }
 }
 
+/// Finds the track this connection plays for the remote audio.
+///
+/// It appears only once a remote description has been set - before that the
+/// transceiver has no receiver track - and a connection that keeps no remote
+/// stream of its own has nothing else to hold what is heard by.
+extension RTCPeerConnectionAudioReceiver on RTCPeerConnection {
+  Future<MediaStreamTrack?> audioReceiverTrack() async {
+    final transceivers = await getTransceivers();
+    final audio = transceivers.firstWhereOrNull((transceiver) => transceiver.receiver.track?.kind == 'audio');
+    return audio?.receiver.track;
+  }
+}
+
 /// Mutes one connection without touching the microphone behind it.
 ///
 /// The app captures one track and lends the same one to every call, so the

@@ -376,6 +376,16 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       }
     }
 
+    // The room gives its audio up while a call outside it stands, and takes it
+    // back afterwards; the rule itself is [CallState.conferenceMustPark]. It is
+    // planned here, off the state, rather than commanded from the paths that
+    // accept and end calls: a call is marked accepted in four of them, the
+    // handshake restore after a reconnect included, and one that forgot to
+    // command it would leave the room carrying a private conversation.
+    if (!isClosed && change.nextState.conferenceMustPark != _conferencePeerConnection.isParked) {
+      add(const _CallMutationEvent.reconcileConferenceAudio());
+    }
+
     final currentActiveCallUuids = Set.from(change.currentState.activeCalls.map((e) => e.callId));
     _logger.fine('onChange currentActiveCallUuids: $currentActiveCallUuids');
     final nextActiveCallUuids = Set.from(change.nextState.activeCalls.map((e) => e.callId));
@@ -2182,6 +2192,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventConferenceLost() => __onMutationConferenceLost(event, emit),
       _CallMutationEventConferenceAnswered() => __onMutationConferenceAnswered(event, emit),
       _CallMutationEventConferenceAnswerFailed() => __onMutationConferenceAnswerFailed(event, emit),
+      _CallMutationEventReconcileConferenceAudio() => __onMutationReconcileConferenceAudio(event, emit),
     };
   }
 
@@ -2619,6 +2630,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     } catch (e, stackTrace) {
       // A fault in this client, not a refused request.
       _endCallAfterFailedHold(event.callId, e, stackTrace);
+    } finally {
+      // However it went, the call is no longer between the room and being an
+      // ordinary one: either the server took the hold, or it refused and the
+      // call is live outside the room, which the room must stand aside for.
+      if (state.retrieveActiveCall(event.callId)?.leavingRoom == true) {
+        emit(state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(leavingRoom: false)));
+      }
     }
   }
 
@@ -2794,7 +2812,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   Future<void> __onMutationControlSetHeld(_CallMutationEventControlSetHeld e, Emitter<CallState> emit) async {
     final error = await callkeep.setHeld(e.callId, onHold: e.onHold);
-    if (error != null) _logger.warning('__onMutationControlSetHeld error: $error');
+    if (error == null) return;
+    _logger.warning('__onMutationControlSetHeld error: $error');
+    // No perform event will follow a request the platform refused, so nothing
+    // else would clear a call the room released: left marked, it would keep the
+    // room from ever standing aside for it.
+    if (state.retrieveActiveCall(e.callId)?.leavingRoom == true) {
+      emit(state.copyWithMappedActiveCall(e.callId, (call) => call.copyWith(leavingRoom: false)));
+    }
   }
 
   Future<void> __onMutationControlSetMuted(_CallMutationEventControlSetMuted e, Emitter<CallState> emit) async {
@@ -4799,6 +4824,39 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     await _legMutes.apply(state.conference.legIds, muted);
   }
 
+  /// Brings the room's own audio into line with the state: parked while a call
+  /// outside it stands, carrying again once that call is gone.
+  ///
+  /// What is wanted is read here rather than carried in the event, because the
+  /// request was planned when the state changed and this runs behind whatever
+  /// was already queued - which can have ended the room or given the call back
+  /// in the meantime. Idempotent for the same reason: the plan is made on every
+  /// state change, so the same request can be queued twice before it runs once.
+  Future<void> __onMutationReconcileConferenceAudio(
+    _CallMutationEventReconcileConferenceAudio e,
+    Emitter<CallState> emit,
+  ) async {
+    final roomMustPark = state.conferenceMustPark;
+    if (_conferencePeerConnection.isParked == roomMustPark) return;
+    _logger.info('__onMutationReconcileConferenceAudio: roomMustPark=$roomMustPark');
+    // Not awaited: the mixer's connection serialises its own work, so a park
+    // asked for while a room is still being answered queues behind that answer
+    // - and waiting here would hold the mutation queue for as long, with the
+    // room's own End and its assembly deadline behind it. Same reason as the
+    // teardown in [_leaveRoom].
+    unawaited(
+      _conferencePeerConnection.setParked(roomMustPark).catchError((Object error) {
+        // Only logged, and that is all there is to do here: applying is the
+        // connection's own business, and one that cannot be applied gives the
+        // room up through [ConferencePeerConnection.onConnectionLost] - which
+        // arrives as a conferenceLost event and hands the legs back. Nothing is
+        // re-planned from here: what is wanted is already what [isParked] says,
+        // so there would be no change to plan.
+        _logger.warning('__onMutationReconcileConferenceAudio: applying roomMustPark=$roomMustPark failed', error);
+      }),
+    );
+  }
+
   /// The host ends the conference, and with it every leg: a room is not
   /// unwound into separate calls. The room is dropped here rather than at
   /// the server's confirmation, so the legs end as ordinary calls and the
@@ -5107,7 +5165,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     };
     emit(
       state
-          .copyWithMappedActiveCalls((call) => unheld.contains(call.callId) ? call.copyWith(held: false) : call)
+          .copyWithMappedActiveCalls((call) {
+            if (unheld.contains(call.callId)) return call.copyWith(held: false);
+            // A leg the server dropped is on its way to being an ordinary held
+            // call, and the hold can only be asked for once the group has been
+            // re-declared below. Marked rather than held: `held` means a hold
+            // the server took, and claiming one it has not would show the user
+            // a call on hold that is in fact live - with the room, seeing a
+            // held call, carrying his microphone into it.
+            if (vanished.contains(call.callId)) return call.copyWith(leavingRoom: true);
+            return call;
+          })
           .copyWith(
             conference: state.conference.copyWith(legs: legs, participants: participants),
           ),

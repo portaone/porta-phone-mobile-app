@@ -47,7 +47,8 @@ class CallBlocHarness {
     CallkeepConnections? callkeepConnections,
     CallCapabilitiesConfig capabilities = const CallCapabilitiesConfig(),
     Duration conferenceAssemblyTimeout = const Duration(seconds: 20),
-  }) {
+    FakePeerConnectionFactory? peerConnectionFactory,
+  }) : peerFactory = peerConnectionFactory ?? FakePeerConnectionFactory() {
     TestWidgetsFlutterBinding.ensureInitialized();
     installPlatformStubs();
     bloc = CallBloc(
@@ -81,7 +82,10 @@ class CallBlocHarness {
   final FakeCallkeep callkeep = FakeCallkeep();
   final FakeQueuedTerminationRequestsRepository terminationQueue = FakeQueuedTerminationRequestsRepository();
   final RecordingCallErrorReporter errors = RecordingCallErrorReporter();
-  final FakePeerConnectionFactory peerFactory = FakePeerConnectionFactory();
+
+  /// The factory both the calls and the room's connection are built from. A
+  /// test that needs a connection which misbehaves passes its own.
+  final FakePeerConnectionFactory peerFactory;
   final FakeUserMediaBuilder media = FakeUserMediaBuilder();
   late final CallPeerConnectionManager peers = CallPeerConnectionManager(factory: peerFactory);
 
@@ -107,7 +111,10 @@ class CallBlocHarness {
       'remote-$callId',
       tracks: [FakeMediaStreamTrack(kind: 'audio', id: 'far-$callId')],
     );
-    final peer = FakePeerConnection(audioTrack: localStream.getAudioTracks().single);
+    // Described: this stands for a call that is up, and on a real connection
+    // that means the remote description has been set and the receiver has its
+    // track.
+    final peer = FakePeerConnection(audioTrack: localStream.getAudioTracks().single, remoteDescribed: true);
     final call = ActiveCall(
       direction: direction,
       line: line,
@@ -326,13 +333,19 @@ class FakeCallkeep extends Fake implements Callkeep {
 /// A peer connection that records what it was asked and answers every
 /// negotiation step with a placeholder description.
 class FakePeerConnection extends Fake implements RTCPeerConnection {
-  FakePeerConnection({MediaStreamTrack? audioTrack}) {
+  FakePeerConnection({MediaStreamTrack? audioTrack, bool remoteDescribed = false})
+    : _remoteDescribed = remoteDescribed {
     if (audioTrack != null) {
       final sender = FakeRtpSender(audioTrack);
       _senders.add(sender);
       _kinds[sender] = 'audio';
     }
   }
+
+  /// Whether a remote description has been set. Until it is, a receiver has no
+  /// track - as on a real connection, which is why a seeded established call
+  /// starts described and a freshly opened one does not.
+  bool _remoteDescribed;
 
   /// The kind each sender was created for, so the audio one is still
   /// recognisable once its track has been taken off.
@@ -371,11 +384,27 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   @override
   Future<List<RTCRtpSender>> getSenders() async => List.of(_senders);
 
+  /// Kept per sender, not built on demand: a real connection hands out the
+  /// same transceiver every time, and so the same receiver track. A fresh one
+  /// per call would hide anything done to what is heard.
+  final Map<FakeRtpSender, FakeRtpTransceiver> _transceivers = {};
+
+  /// The transceivers as the application sees them, in sender order.
+  List<FakeRtpTransceiver> get fakeTransceivers {
+    final transceivers = <FakeRtpTransceiver>[];
+    for (final sender in _senders) {
+      final transceiver = _transceivers[sender] ??= FakeRtpTransceiver(
+        sender: sender,
+        kind: _kinds[sender] ?? sender.track?.kind ?? 'audio',
+      );
+      if (_remoteDescribed) transceiver.receiver.describe();
+      transceivers.add(transceiver);
+    }
+    return transceivers;
+  }
+
   @override
-  Future<List<RTCRtpTransceiver>> getTransceivers() async => [
-    for (final sender in _senders)
-      FakeRtpTransceiver(sender: sender, kind: _kinds[sender] ?? sender.track?.kind ?? 'audio'),
-  ];
+  Future<List<RTCRtpTransceiver>> getTransceivers() async => fakeTransceivers;
 
   @override
   Future<List<RTCRtpSender>> get senders => getSenders();
@@ -392,6 +421,7 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   @override
   Future<void> setRemoteDescription(RTCSessionDescription description) async {
     remoteDescriptions.add(description);
+    _remoteDescribed = true;
   }
 
   @override
@@ -416,14 +446,22 @@ class FakeRtpTransceiver extends Fake implements RTCRtpTransceiver {
   final RTCRtpSender sender;
 
   @override
-  final RTCRtpReceiver receiver;
+  final FakeRtpReceiver receiver;
 }
 
 class FakeRtpReceiver extends Fake implements RTCRtpReceiver {
-  FakeRtpReceiver(String kind) : track = FakeMediaStreamTrack(kind: kind, id: 'remote-$kind');
+  FakeRtpReceiver(this._kind);
+
+  final String _kind;
+
+  FakeMediaStreamTrack? _track;
 
   @override
-  final MediaStreamTrack? track;
+  FakeMediaStreamTrack? get track => _track;
+
+  /// A remote description has arrived: from now on the receiver has a track,
+  /// and always the same one.
+  void describe() => _track ??= FakeMediaStreamTrack(kind: _kind, id: 'remote-$_kind');
 }
 
 class FakeRtpSender extends Fake implements RTCRtpSender {

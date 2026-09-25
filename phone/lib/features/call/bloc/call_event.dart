@@ -1509,6 +1509,14 @@ sealed class _CallMutationEvent extends CallEvent {
 
   /// The mixer's offer could not be answered, or the answer never left.
   const factory _CallMutationEvent.conferenceAnswerFailed() = _CallMutationEventConferenceAnswerFailed;
+
+  /// Bring the room's own audio into line with the state: parked while a call
+  /// outside it stands, carrying again once that call is gone.
+  ///
+  /// A request, not a fact, and it carries no value - what is wanted is
+  /// [CallState.conferenceMustPark], read when this runs. It is an event so
+  /// that it takes its turn in the same queue as the room's own work.
+  const factory _CallMutationEvent.reconcileConferenceAudio() = _CallMutationEventReconcileConferenceAudio;
 }
 
 // ── perform variants ─────────────────────────────────────────────────────────
@@ -1930,6 +1938,12 @@ class _CallMutationEventConferenceAnswered extends _CallMutationEvent {
 
 class _CallMutationEventConferenceAnswerFailed extends _CallMutationEvent {
   const _CallMutationEventConferenceAnswerFailed();
+  @override
+  List<Object?> get props => const [];
+}
+
+class _CallMutationEventReconcileConferenceAudio extends _CallMutationEvent {
+  const _CallMutationEventReconcileConferenceAudio();
   @override
   List<Object?> get props => const [];
 }
