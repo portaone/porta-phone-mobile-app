@@ -682,6 +682,12 @@ abstract class AppLocalizations {
   /// **'Host'**
   String get call_ConferencePanel_hostStatus;
 
+  /// Status on the host row of the conference panel while the host is on a call outside the room, so the room neither hears him nor is heard
+  ///
+  /// In en, this message translates to:
+  /// **'On another call'**
+  String get call_ConferencePanel_hostStatusAside;
+
   /// Status line of a participant row in the conference panel.
   ///
   /// In en, this message translates to:

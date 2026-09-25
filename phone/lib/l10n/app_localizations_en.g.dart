@@ -381,6 +381,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call_ConferencePanel_hostStatus => 'Host';
 
   @override
+  String get call_ConferencePanel_hostStatusAside => 'On another call';
+
+  @override
   String get call_ConferencePanel_participantStatus => 'In the conference';
 
   @override

@@ -26,6 +26,7 @@ class ConferencePanel extends StatelessWidget {
     super.key,
     required this.conference,
     required this.calls,
+    required this.roomParked,
     required this.onSelfMutedChanged,
     required this.onParticipantMutedChanged,
     required this.onParticipantHangup,
@@ -40,6 +41,12 @@ class ConferencePanel extends StatelessWidget {
   /// Every call the bloc holds; the legs are looked up here for their name and
   /// the moment they were answered.
   final List<ActiveCall> calls;
+
+  /// Whether the room has stood aside for a call the host took outside it
+  /// ([CallState.conferenceMustPark]): it neither hears him nor is heard, so
+  /// the host's row says so and its microphone is not his to press - lifting a
+  /// mute would change nothing while the room is silent either way.
+  final bool roomParked;
 
   /// Mutes the host's own microphone towards the room. Nobody in the room is
   /// told; it is the local microphone, not a room-wide mute.
@@ -73,19 +80,25 @@ class ConferencePanel extends StatelessWidget {
         CallRowHeader(label: context.l10n.call_ConferencePanel_header(legs.length), style: style),
         CallRowFrame(
           name: context.l10n.call_ConferencePanel_you,
-          status: context.l10n.call_ConferencePanel_hostStatus,
+          status: roomParked
+              ? context.l10n.call_ConferencePanel_hostStatusAside
+              : context.l10n.call_ConferencePanel_hostStatus,
           style: style,
           listStyle: listStyle,
           focused: true,
           leading: CallRowSelfAvatar(style: style),
           trailing: [
             _MuteToggle(
-              muted: conference.selfMuted,
+              // A room that has stood aside hears nothing of the host either
+              // way, so the icon says so rather than reporting an intent the
+              // room is not acting on. The intent itself is not touched: it
+              // comes back as it was when he does.
+              muted: conference.selfMuted || roomParked,
               identifier: conferenceSelfMuteId,
-              label: conference.selfMuted
+              label: conference.selfMuted || roomParked
                   ? context.l10n.call_SemanticsLabel_conferenceSelfUnmute
                   : context.l10n.call_SemanticsLabel_conferenceSelfMute,
-              onPressed: () => onSelfMutedChanged(!conference.selfMuted),
+              onPressed: roomParked ? null : () => onSelfMutedChanged(!conference.selfMuted),
               style: statusStyle,
             ),
           ],
