@@ -6,6 +6,7 @@ export 'contact_details_config.dart';
 export 'contacts_config.dart';
 export 'embedded_config.dart';
 export 'encoding_config.dart';
+export 'ice_config.dart';
 export 'feature_flag.dart';
 export 'feature_overrides.dart';
 export 'login_config.dart';

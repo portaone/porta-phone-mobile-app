@@ -19,6 +19,10 @@ mixin IceSettingsJsonMapper {
       iceNetworkFilter: map['iceNetworkFilter'] != null
           ? IceNetworkFilter.values.byName(map['iceNetworkFilter'])
           : null,
+      // `tryParse` rather than `byName`: a value written by a newer build, or
+      // one dropped from the enum, must read as "no choice on this device"
+      // instead of throwing on every settings read.
+      certificateVerification: TurnCertificateVerification.tryParse(map['certificateVerification'] as String?),
     );
   }
 
@@ -26,6 +30,7 @@ mixin IceSettingsJsonMapper {
     return {
       'iceTransportFilter': settings.iceTransportFilter?.name,
       'iceNetworkFilter': settings.iceNetworkFilter?.name,
+      'certificateVerification': settings.certificateVerification?.name,
     };
   }
 }

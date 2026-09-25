@@ -248,6 +248,23 @@ const _$AppConfigJsonSchema = {
         },
       },
     },
+    'AppConfigIce': {
+      'type': 'object',
+      'properties': {
+        'certificateVerification': {
+          'type': 'string',
+          'description':
+              "How a `turns:` certificate is verified: `auto`, `enabled` or `disabled`.\n\n`auto` - the default and the only value that changes nothing - verifies\nusing whatever trust anchors the deployment serves beside its ICE servers,\nand leaves the media library's own decision in place when it serves none.\n`disabled` stops verifying that connection ENTIRELY, hostname included; it\nexists for a deployment whose TURN certificate the library will not accept\nand whose calls cannot wait for that to be fixed properly.\n\nA value this build does not recognise reads as `auto`.",
+          'default': 'auto',
+        },
+        'certificateVerificationConfigurable': {
+          'type': 'boolean',
+          'description':
+              'Whether media settings offers the control, so a person can change\n[certificateVerification] on their own device.\n\nOff by default: a switch that turns off certificate verification does not\nbelong in every build, only in one whose operator asked for it.',
+          'default': false,
+        },
+      },
+    },
     'AppConfigCall': {
       'type': 'object',
       'properties': {
@@ -255,6 +272,7 @@ const _$AppConfigJsonSchema = {
         'transfer': {r'$ref': r'#/$defs/AppConfigTransfer'},
         'encoding': {r'$ref': r'#/$defs/AppConfigEncoding'},
         'peerConnection': {r'$ref': r'#/$defs/AppConfigPeerConnection'},
+        'ice': {r'$ref': r'#/$defs/AppConfigIce'},
       },
     },
     'AppConfigContactDetailsActions': {
@@ -511,6 +529,9 @@ AppConfigCall _$AppConfigCallFromJson(
       : AppConfigPeerConnection.fromJson(
           json['peerConnection'] as Map<String, dynamic>,
         ),
+  ice: json['ice'] == null
+      ? const AppConfigIce()
+      : AppConfigIce.fromJson(json['ice'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$AppConfigCallToJson(AppConfigCall instance) =>
@@ -519,6 +540,7 @@ Map<String, dynamic> _$AppConfigCallToJson(AppConfigCall instance) =>
       'transfer': instance.transfer.toJson(),
       'encoding': instance.encoding.toJson(),
       'peerConnection': instance.peerConnection.toJson(),
+      'ice': instance.ice.toJson(),
     };
 
 AppConfigTransfer _$AppConfigTransferFromJson(Map<String, dynamic> json) =>
@@ -547,6 +569,19 @@ Map<String, dynamic> _$AppConfigEncodingToJson(AppConfigEncoding instance) =>
     <String, dynamic>{
       'bypassConfig': instance.bypassConfig,
       'defaultPresetOverride': instance.defaultPresetOverride.toJson(),
+    };
+
+AppConfigIce _$AppConfigIceFromJson(Map<String, dynamic> json) => AppConfigIce(
+  certificateVerification: json['certificateVerification'] as String? ?? 'auto',
+  certificateVerificationConfigurable:
+      json['certificateVerificationConfigurable'] as bool? ?? false,
+);
+
+Map<String, dynamic> _$AppConfigIceToJson(AppConfigIce instance) =>
+    <String, dynamic>{
+      'certificateVerification': instance.certificateVerification,
+      'certificateVerificationConfigurable':
+          instance.certificateVerificationConfigurable,
     };
 
 AppConfigPeerConnection _$AppConfigPeerConnectionFromJson(

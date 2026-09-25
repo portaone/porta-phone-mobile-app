@@ -317,6 +317,7 @@ class AppConfigCall with _$AppConfigCall {
     this.transfer = const AppConfigTransfer(enableBlindTransfer: true, enableAttendedTransfer: true),
     this.encoding = const AppConfigEncoding(),
     this.peerConnection = const AppConfigPeerConnection(),
+    this.ice = const AppConfigIce(),
   });
 
   @override
@@ -330,6 +331,9 @@ class AppConfigCall with _$AppConfigCall {
 
   @override
   final AppConfigPeerConnection peerConnection;
+
+  @override
+  final AppConfigIce ice;
 
   factory AppConfigCall.fromJson(Map<String, Object?> json) => _$AppConfigCallFromJson(json);
 
@@ -369,6 +373,38 @@ class AppConfigEncoding with _$AppConfigEncoding {
   factory AppConfigEncoding.fromJson(Map<String, Object?> json) => _$AppConfigEncodingFromJson(json);
 
   Map<String, Object?> toJson() => _$AppConfigEncodingToJson(this);
+}
+
+@freezed
+@JsonSerializable(explicitToJson: true)
+class AppConfigIce with _$AppConfigIce {
+  const AppConfigIce({this.certificateVerification = 'verify', this.certificateVerificationConfigurable = false});
+
+  /// How a `turns:` certificate is verified: `verify` or `disabled`.
+  ///
+  /// `verify` - the default and the only value that changes nothing - checks
+  /// the certificate using whatever trust anchors the deployment serves beside
+  /// its ICE servers, and leaves the media library's own decision in place when
+  /// it serves none. `disabled` stops verifying that connection ENTIRELY,
+  /// hostname included; it exists for a deployment whose TURN certificate the
+  /// library will not accept and whose calls cannot wait for that to be fixed
+  /// properly.
+  ///
+  /// A value this build does not recognise reads as `verify`.
+  @override
+  final String certificateVerification;
+
+  /// Whether media settings offers the control, so a person can change
+  /// [certificateVerification] on their own device.
+  ///
+  /// Off by default: a switch that turns off certificate verification does not
+  /// belong in every build, only in one whose operator asked for it.
+  @override
+  final bool certificateVerificationConfigurable;
+
+  factory AppConfigIce.fromJson(Map<String, Object?> json) => _$AppConfigIceFromJson(json);
+
+  Map<String, Object?> toJson() => _$AppConfigIceToJson(this);
 }
 
 @freezed
