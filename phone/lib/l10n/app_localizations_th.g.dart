@@ -371,6 +371,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_ConferencePanel_hostStatus => 'ผู้ดำเนินการ';
 
   @override
+  String get call_ConferencePanel_hostStatusAside => 'อยู่ในสายอื่น';
+
+  @override
   String get call_ConferencePanel_participantStatus => 'อยู่ในการประชุมสาย';
 
   @override

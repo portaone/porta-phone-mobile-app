@@ -117,6 +117,17 @@ void main() {
       expect(refused.conferenceMustPark, isTrue);
     });
 
+    test('the room stands aside for the outside call, and the grid acts on it', () {
+      final parked = _state([_call('a', line: 0), _call('b', line: 1), _call('c', line: 2)], legs: {'a': 0, 'b': 1});
+      final back = _state(
+        [_call('a', line: 0), _call('b', line: 1), _call('c', line: 2, held: true)],
+        legs: {'a': 0, 'b': 1},
+      );
+
+      expect(parked.focusedCall?.callId, 'c', reason: 'the conversation the host is in');
+      expect(back.focusedCall?.callId, 'a', reason: 'the room again, by its first line');
+    });
+
     test('without a room there is nothing to stand aside', () {
       expect(_state([_call('c', line: 0)]).conferenceMustPark, isFalse);
     });

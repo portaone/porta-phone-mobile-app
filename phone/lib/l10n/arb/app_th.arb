@@ -321,6 +321,8 @@
   "@call_ConferencePanel_hostStatus": {
     "description": "Status line of the host's own row in the conference panel."
   },
+  "call_ConferencePanel_hostStatusAside": "อยู่ในสายอื่น",
+  "@call_ConferencePanel_hostStatusAside": {},
   "call_ConferencePanel_participantStatus": "อยู่ในการประชุมสาย",
   "@call_ConferencePanel_participantStatus": {
     "description": "Status line of a participant row in the conference panel."
