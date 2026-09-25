@@ -165,6 +165,7 @@ Widget buildCallScaffold(
   bool canMerge = false,
   bool canAdd = false,
   ConferenceState conference = const ConferenceState(),
+  bool conferenceParked = false,
 }) {
   Widget scaffold = BlocProvider<CallBloc>.value(
     value: callBloc,
@@ -178,6 +179,7 @@ Widget buildCallScaffold(
       canMerge: canMerge,
       canAdd: canAdd,
       conference: conference,
+      conferenceParked: conferenceParked,
       localePlaceholderBuilder: null,
       remotePlaceholderBuilder: null,
       keepControlsVisible: keepControlsVisible,

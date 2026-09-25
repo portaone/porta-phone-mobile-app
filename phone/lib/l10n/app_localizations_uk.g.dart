@@ -401,6 +401,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_ConferencePanel_hostStatus => 'Ведучий';
 
   @override
+  String get call_ConferencePanel_hostStatusAside => 'В іншому дзвінку';
+
+  @override
   String get call_ConferencePanel_participantStatus => 'У конференції';
 
   @override

@@ -48,7 +48,12 @@ void main() {
     hangups = [];
   });
 
-  Widget subject({ConferenceState? conference, List<ActiveCall>? calls, bool scrollable = false}) => MaterialApp(
+  Widget subject({
+    ConferenceState? conference,
+    List<ActiveCall>? calls,
+    bool scrollable = false,
+    bool roomParked = false,
+  }) => MaterialApp(
     locale: const Locale('en'),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
@@ -60,6 +65,7 @@ void main() {
         ConferencePanel(
           conference: conference ?? _room(),
           calls: calls ?? [_call('a', displayName: 'Anna Marchenko'), _call('b', line: 1, displayName: 'Boris Klein')],
+          roomParked: roomParked,
           onSelfMutedChanged: selfMutes.add,
           onParticipantMutedChanged: (callId, muted) => participantMutes.add((callId: callId, muted: muted)),
           onParticipantHangup: hangups.add,
@@ -81,6 +87,37 @@ void main() {
       // Ordered by line, whatever order the legs were recorded in.
       final names = tester.widgetList<Text>(find.byType(Text)).map((text) => text.data).toList();
       expect(names.indexOf('Anna Marchenko'), lessThan(names.indexOf('Boris Klein')));
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('the host microphone says what the room hears, not what he intended', (tester) async {
+      // A room standing aside hears nothing of him either way, so an unstruck
+      // microphone there would claim the room hears him while nobody does.
+      await tester.pumpWidget(subject());
+      expect(find.byIcon(Icons.mic_off), findsNothing, reason: 'nobody is muted in the room itself');
+
+      await tester.pumpWidget(subject(roomParked: true));
+      expect(
+        find.byIcon(Icons.mic_off),
+        findsOneWidget,
+        reason: "the host's own row, and only his - the participants are still heard by each other",
+      );
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('says the host is elsewhere while the room stands aside, and offers no mute of it', (tester) async {
+      // The room neither hears him nor is heard (CallState.conferenceMustPark),
+      // so a mute of it would change nothing - and a row that said nothing
+      // would read as a conference that had quietly died.
+      await tester.pumpWidget(subject(roomParked: true));
+      final context = tester.element(find.byType(ConferencePanel));
+
+      expect(find.text(context.l10n.call_ConferencePanel_hostStatusAside), findsOneWidget);
+      expect(find.text(context.l10n.call_ConferencePanel_hostStatus), findsNothing);
+
+      await tester.tap(find.bySemanticsIdentifier(conferenceSelfMuteId));
+      await tester.pump();
+      expect(selfMutes, isEmpty, reason: 'the control is not the host\'s to press while the room is silent');
       await tester.pumpWidget(const SizedBox());
     });
 
