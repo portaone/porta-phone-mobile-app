@@ -47,7 +47,13 @@ class Log(
     companion object {
         private const val GLOBAL_PREFIX = "WebtritCallkeep"
 
+        // Not thread-safe; only touched under [writeLock].
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+
+        // Serialises writers within this process. The file lock below only excludes other
+        // processes: a second lock() on the same file from another thread of this process
+        // throws OverlappingFileLockException instead of waiting.
+        private val writeLock = Any()
 
         @Volatile
         private var logFilePath: String? = null
@@ -109,25 +115,22 @@ class Log(
                         LogType.ERROR -> "E"
                         LogType.VERBOSE -> "V"
                     }
-                val timestamp = dateFormat.format(Date())
-                val line =
-                    if (throwable != null) {
-                        "$timestamp $level $tag: $message\n${AndroidLog.getStackTraceString(throwable)}\n"
-                    } else {
-                        "$timestamp $level $tag: $message\n"
-                    }
-                val bytes = line.toByteArray(Charsets.UTF_8)
-                // Lock on a dedicated lock file so rotation and write are atomic
-                // across OS processes (main + callkeep_core). FileChannel.lock() is
-                // OS-level and works across processes, unlike @Synchronized.
-                FileOutputStream(lockFile, true).use { lockFos ->
-                    lockFos.channel.lock().use {
-                        LogFileRotator.rotateIfNeeded(logFile)
-                        FileOutputStream(logFile, true).use { fos ->
-                            fos.write(bytes)
-                            fos.flush()
-                            if (type == LogType.ERROR || type == LogType.WARN) {
-                                fos.fd.sync()
+                val stackTrace = throwable?.let { "${AndroidLog.getStackTraceString(it)}\n" } ?: ""
+                synchronized(writeLock) {
+                    val timestamp = dateFormat.format(Date())
+                    val bytes = "$timestamp $level $tag: $message\n$stackTrace".toByteArray(Charsets.UTF_8)
+                    // Lock on a dedicated lock file so rotation and write are atomic
+                    // across OS processes (main + callkeep_core); writeLock covers the
+                    // threads of this one.
+                    FileOutputStream(lockFile, true).use { lockFos ->
+                        lockFos.channel.lock().use {
+                            LogFileRotator.rotateIfNeeded(logFile)
+                            FileOutputStream(logFile, true).use { fos ->
+                                fos.write(bytes)
+                                fos.flush()
+                                if (type == LogType.ERROR || type == LogType.WARN) {
+                                    fos.fd.sync()
+                                }
                             }
                         }
                     }
