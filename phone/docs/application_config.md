@@ -15,6 +15,7 @@ navigation structure, and screen-specific behaviors.
   - [Tab Variants](#tab-variants)
 - [Call Configuration](#call-configuration)
   - [Transfer Configuration](#transfer-configuration)
+  - [ICE Configuration](#ice-configuration)
   - [Call Pull Video Strategy](#call-pull-video-strategy)
 - [Settings Configuration](#settings-configuration)
   - [Settings Sections](#settings-sections)
@@ -381,6 +382,10 @@ Embedded web resource tab.
     "transfer": {
       "enableBlindTransfer": true,
       "enableAttendedTransfer": true
+    },
+    "ice": {
+      "certificateVerification": "verify",
+      "certificateVerificationConfigurable": true
     }
   }
 }
@@ -388,11 +393,28 @@ Embedded web resource tab.
 
 - `videoEnabled`: Enables video calls
 - `transfer`: Call forwarding settings
+- `ice`: How the certificate of a `turns:` relay is verified
 
 ### Transfer Configuration
 
 - `enableBlindTransfer`: Enables blind call transfer.
 - `enableAttendedTransfer`: Enables attended call transfer.
+
+### ICE Configuration
+
+- `certificateVerification`: `verify` (default) or `disabled`. An unrecognised value reads as
+  `verify`, so a configuration naming a policy this build does not know cannot stop it starting.
+- `certificateVerificationConfigurable`: whether media settings offers the control, letting a person
+  change the value on their own device. The device's choice wins; where none was made, the value
+  above applies, and a later change of it still reaches everyone who never touched the control.
+
+`verify` checks the certificate using whatever trust anchors the deployment serves beside its ICE
+servers, and leaves the media library's own decision in place when it serves none. `disabled` stops
+verifying that connection entirely - **hostname included**, so any certificate for any name is
+accepted. It exists for a deployment whose TURN certificate libwebrtc will not accept and whose
+calls cannot wait for that to be fixed properly; call audio and video stay protected by DTLS-SRTP
+either way. Why the library refuses such a certificate at all, and what the anchors are, is in
+[ice_servers.md](ice_servers.md).
 
 ### Call Pull Video Strategy
 
