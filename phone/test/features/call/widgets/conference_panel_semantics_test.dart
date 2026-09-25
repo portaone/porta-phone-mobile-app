@@ -49,6 +49,7 @@ void main() {
           _call('a', displayName: 'Anna Marchenko'),
           _call('b', line: 1, displayName: 'Boris Klein'),
         ],
+        roomParked: false,
         onSelfMutedChanged: (muted) => acted.add('self:$muted'),
         onParticipantMutedChanged: (callId, muted) => acted.add('mute:$callId:$muted'),
         onParticipantHangup: (callId) => acted.add('hangup:$callId'),

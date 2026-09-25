@@ -143,14 +143,29 @@ class CallState with _$CallState {
   /// The call the action area should act on: the explicitly [selectedCallId]
   /// when it still maps to a live call, otherwise the derived `current`.
   ///
-  /// Returns `null` only when there are no active calls. Behavior is identical
-  /// to `activeCalls.current` until something dispatches
-  /// [CallControlEvent.callSelected], so this is a no-op seam for existing UI.
+  /// With a room up, an accepted selection is not consulted. There the focus is
+  /// not a preference but a fact - the conversation that is audible, the room
+  /// or the call it stands aside for - and the two blocks on that screen frame
+  /// themselves from the same rule. A selection would let the frame sit on a
+  /// call held long before the room existed, or on one whose hold the server
+  /// refused. A call that is still ringing keeps the focus it was given: it
+  /// demands a decision, and it is in neither conversation.
+  ///
+  /// Returns `null` only when there are no active calls.
   ActiveCall? get focusedCall {
     if (activeCalls.isEmpty) return null;
     final selected = selectedCallId == null ? null : retrieveActiveCall(selectedCallId!);
-    return selected ?? _firstLeg ?? activeCalls.current;
+    if (selected != null && !(conference.isPresent && selected.wasAccepted)) return selected;
+    return _callTheRoomIsParkedFor ?? _firstLeg ?? selected ?? activeCalls.current;
   }
+
+  /// While the room stands aside for a call outside it, that call is what the
+  /// action area acts on: its microphone, its hold, its hangup. Left on a leg,
+  /// the grid would offer a mute of a room nobody can hear, and a hangup that
+  /// ends the room while the host is talking to somebody else.
+  ///
+  /// The most recent one, as `current` reads a set of calls elsewhere.
+  ActiveCall? get _callTheRoomIsParkedFor => conferenceMustPark ? liveCallsOutsideRoom.lastOrNull : null;
 
   /// With a room up, the call the action area acts on by default is the
   /// room's first leg by line: the legs are what the user is in.

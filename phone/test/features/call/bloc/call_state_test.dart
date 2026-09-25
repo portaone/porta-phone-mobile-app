@@ -606,19 +606,44 @@ void main() {
       expect(CallState(activeCalls: [legA, legB]).callIdsToHoldBeforeOutgoing, ['leg-a', 'leg-b'], reason: 'no room');
     });
 
-    test('focusedCall is the first leg by line unless a call was selected', () {
+    test('focusedCall is the first leg by line while the room is the only conversation', () {
       // The first leg by line is deliberately NOT what `current` would pick:
-      // that is the last call not held, which here is the outside one. The
-      // room is what the screen acts on while it stands.
-      final legs = state.copyWith(activeCalls: [legB, legA, outside.copyWith(held: false)]);
+      // that is the last call not held, which here would be the outside one.
+      final legs = state.copyWith(activeCalls: [legB, legA, outside]);
 
       expect(legs.focusedCall?.callId, 'leg-a');
-      expect(legs.activeCalls.current.callId, 'outside', reason: 'without a room this is what would be focused');
-      expect(legs.copyWith(selectedCallId: 'outside').focusedCall?.callId, 'outside');
+      expect(
+        legs.copyWith(selectedCallId: 'outside').focusedCall?.callId,
+        'leg-a',
+        reason: 'a held call chosen before the room existed is not the conversation in use',
+      );
       expect(
         CallState(activeCalls: [legB, legA, outside.copyWith(held: false)]).focusedCall?.callId,
         'outside',
         reason: 'no room: current = last not held',
+      );
+    });
+
+    test('a live call outside the room takes the focus from it', () {
+      // The room stands aside for it (conferenceMustPark), so the grid must
+      // act on the conversation the host is in: its microphone, its hold, its
+      // hangup. Acting on the room there would offer a mute nobody can hear
+      // and a hangup that ends the room mid-sentence with somebody else.
+      final live = state.copyWith(activeCalls: [legB, legA, outside.copyWith(held: false)]);
+
+      expect(live.focusedCall?.callId, 'outside');
+      // And a selection does not move it off the audio: the hold that would put
+      // the room back can be refused, leaving the grid on a room nobody hears.
+      expect(
+        live.copyWith(selectedCallId: 'leg-b').focusedCall?.callId,
+        'outside',
+        reason: 'with a room up the focus follows what is audible, not what was tapped',
+      );
+      final ringing = _makeCall(callId: 'ringing', line: 4, processingStatus: CallProcessingStatus.incomingFromOffer);
+      expect(
+        live.copyWith(activeCalls: [...live.activeCalls, ringing], selectedCallId: 'ringing').focusedCall?.callId,
+        'ringing',
+        reason: 'a ringing call demands a decision and is in neither conversation',
       );
     });
 

@@ -26,6 +26,7 @@ class CallInfoBlock extends StatelessWidget {
     required this.focusedCall,
     required this.onCallSelected,
     this.conference = const ConferenceState(),
+    this.conferenceParked = false,
     this.onSelfMutedChanged,
     this.onParticipantMutedChanged,
     this.onParticipantHangup,
@@ -44,6 +45,7 @@ class CallInfoBlock extends StatelessWidget {
       focusedCall = params.focusedCall,
       onCallSelected = params.onCallSelected,
       conference = params.conference,
+      conferenceParked = params.conferenceParked,
       onSelfMutedChanged = params.onConferenceSelfMuted,
       onParticipantMutedChanged = params.onConferenceParticipantMuted,
       onParticipantHangup = params.onConferenceParticipantHangup,
@@ -61,6 +63,9 @@ class CallInfoBlock extends StatelessWidget {
 
   /// The room, when there is one; see [ConferencePanel].
   final ConferenceState conference;
+
+  /// Whether that room has stood aside for a call outside it.
+  final bool conferenceParked;
 
   final ValueChanged<bool>? onSelfMutedChanged;
   final void Function(String callId, bool muted)? onParticipantMutedChanged;
@@ -100,6 +105,7 @@ class CallInfoBlock extends StatelessWidget {
           ConferencePanel(
             conference: conference,
             calls: activeCalls,
+            roomParked: conferenceParked,
             onSelfMutedChanged: onSelfMutedChanged ?? (_) {},
             onParticipantMutedChanged: onParticipantMutedChanged ?? (_, _) {},
             onParticipantHangup: onParticipantHangup ?? (_) {},

@@ -80,6 +80,7 @@ class _CallScreenState extends State<CallScreen> with AutoRouteAwareStateMixin {
               availableAudioDevices: state.availableAudioDevices,
               callConfig: widget.callConfig,
               canMerge: state.canMerge(isConferenceEnabled: widget.callConfig.isConferenceEnabled),
+              conferenceParked: state.conferenceMustPark,
               canAdd: state.canAdd(isConferenceEnabled: widget.callConfig.isConferenceEnabled),
               conference: state.conference,
               localePlaceholderBuilder: widget.localePlaceholderBuilder,

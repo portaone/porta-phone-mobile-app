@@ -145,6 +145,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_SemanticsLabel_add' => call_SemanticsLabel_add,
       'call_ConferencePanel_you' => call_ConferencePanel_you,
       'call_ConferencePanel_hostStatus' => call_ConferencePanel_hostStatus,
+      'call_ConferencePanel_hostStatusAside' =>
+        call_ConferencePanel_hostStatusAside,
       'call_ConferencePanel_participantStatus' =>
         call_ConferencePanel_participantStatus,
       'call_ConferencePanel_participantMuted' =>
