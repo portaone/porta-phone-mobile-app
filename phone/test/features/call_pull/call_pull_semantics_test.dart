@@ -129,6 +129,33 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets('and take the call over from it', (tester) async {
+    final handle = tester.ensureSemantics();
+    when(() => callBloc.capabilities).thenReturn(const CallCapabilitiesConfig());
+
+    await pumpBadge(tester, [buildDialog(pullable: true, name: 'Anna')]);
+    await tapViaSemantics(tester, find.bySemanticsIdentifier(callPullBadgeId));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tapViaSemantics(tester, find.bySemanticsIdentifier(callPullPickupId));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // The list closes and the call is dialled as a replacement of the one
+    // running on the other device.
+    expect(find.bySemanticsIdentifier(callPullDialogId), findsNothing);
+    verify(
+      () => callBloc.add(
+        const CallControlEvent.started(
+          number: '555002',
+          video: false,
+          replaces: 'call-dialog-1;from-tag=local;to-tag=remote',
+          displayName: 'Anna',
+        ),
+      ),
+    ).called(1);
+
+    handle.dispose();
+  });
+
   testWidgets('each call in the list is picked up by name', (tester) async {
     final handle = tester.ensureSemantics();
 
