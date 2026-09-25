@@ -4639,6 +4639,36 @@ abstract class AppLocalizations {
   /// **'Preferred video codec'**
   String get settings_call_codecs_preferred_video_title;
 
+  /// No description provided for @settings_certificateVerification_Section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'TURN certificate verification'**
+  String get settings_certificateVerification_Section_title;
+
+  /// No description provided for @settings_certificateVerification_Section_tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'How the relay server\'s certificate is checked. Change this only if calls will not connect and support asked you to.'**
+  String get settings_certificateVerification_Section_tooltip;
+
+  /// No description provided for @settings_certificateVerification_verify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get settings_certificateVerification_verify;
+
+  /// No description provided for @settings_certificateVerification_disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not verify'**
+  String get settings_certificateVerification_disabled;
+
+  /// No description provided for @settings_certificateVerification_warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Without verification the connection to the relay server can be intercepted. Call audio and video stay encrypted either way. Turn it back on once the server is fixed.'**
+  String get settings_certificateVerification_warning;
+
   /// No description provided for @settings_callerId_cancel_button.
   ///
   /// In en, this message translates to:

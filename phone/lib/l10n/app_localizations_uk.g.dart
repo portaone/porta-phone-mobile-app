@@ -2584,6 +2584,23 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_call_codecs_preferred_video_title => 'Бажаний відеокодек';
 
   @override
+  String get settings_certificateVerification_Section_title => 'Перевірка сертифіката TURN';
+
+  @override
+  String get settings_certificateVerification_Section_tooltip =>
+      'Як перевіряється сертифікат сервера ретрансляції. Змінюйте, лише якщо дзвінки не з\'єднуються і підтримка попросила це зробити.';
+
+  @override
+  String get settings_certificateVerification_verify => 'Перевіряти';
+
+  @override
+  String get settings_certificateVerification_disabled => 'Не перевіряти';
+
+  @override
+  String get settings_certificateVerification_warning =>
+      'Без перевірки з\'єднання із сервером ретрансляції можна перехопити. Звук і відео дзвінка лишаються зашифрованими в обох випадках. Увімкніть назад, щойно сервер виправлять.';
+
+  @override
   String get settings_callerId_cancel_button => 'Скасувати';
 
   @override
