@@ -37,6 +37,68 @@ void main() {
       expect(rendered.containsKey('trustedCertificates'), isFalse);
     });
 
+    test('writes no policy under verify, leaving the native default alone', () {
+      final rendered = rtcConfigurationFrom(configWith());
+
+      expect((rendered['iceServers'] as List).single, isNot(contains('tlsCertPolicy')));
+    });
+
+    test('drops the anchors when verification is off, since nothing would verify them', () {
+      final rendered = rtcConfigurationFrom(
+        configWith(anchors: [anchor]),
+        verification: TurnCertificateVerification.disabled,
+      );
+
+      expect((rendered['iceServers'] as List).single, containsPair('tlsCertPolicy', 'insecure_no_check'));
+      expect(rendered.containsKey('trustedCertificates'), isFalse);
+    });
+
+    test('leaves an entry alone when it has no turns: url to govern', () {
+      // `insecure_no_check` on a STUN entry decides nothing, and reads in a log
+      // like a connection that gave up more than it did.
+      final rendered = rtcConfigurationFrom(
+        IceServersConfig(
+          servers: const [
+            {
+              'urls': ['stun:stun.example.com:3478'],
+            },
+            {
+              'urls': ['turn:turn.example.com:3478?transport=udp', 'turns:turn.example.com:5349'],
+            },
+          ],
+          expiresAt: DateTime.utc(2030),
+        ),
+        verification: TurnCertificateVerification.disabled,
+      );
+      final servers = (rendered['iceServers'] as List).cast<Map<String, dynamic>>();
+
+      expect(servers.first.containsKey('tlsCertPolicy'), isFalse);
+      expect(servers.last, containsPair('tlsCertPolicy', 'insecure_no_check'));
+    });
+
+    test('stamps the legacy singular url spelling too', () {
+      final rendered = rtcConfigurationFrom(
+        IceServersConfig(
+          servers: const [
+            {'url': 'turns:turn.example.com:5349'},
+          ],
+          expiresAt: DateTime.utc(2030),
+        ),
+        verification: TurnCertificateVerification.disabled,
+      );
+
+      expect((rendered['iceServers'] as List).single, containsPair('tlsCertPolicy', 'insecure_no_check'));
+    });
+
+    test('keeps the username and credential of the entry it stamps', () {
+      final rendered = rtcConfigurationFrom(configWith(), verification: TurnCertificateVerification.disabled);
+      final server = (rendered['iceServers'] as List).single as Map<String, dynamic>;
+
+      expect(server['username'], 'user');
+      expect(server['credential'], 'secret');
+      expect(server['urls'], ['turns:turn.example.com:5349']);
+    });
+
     test('passes the servers through untouched', () {
       final rendered = rtcConfigurationFrom(configWith(anchors: [anchor]));
       final server = (rendered['iceServers'] as List).single as Map<String, dynamic>;

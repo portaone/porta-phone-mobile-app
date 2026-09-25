@@ -64,6 +64,7 @@ AppConfig createMockAppConfig() {
   final encoding = MockAppConfigEncoding();
   final preset = MockEncodingDefaultPresetOverride();
   final peerConnection = MockAppConfigPeerConnection();
+  final ice = MockAppConfigIce();
   final negotiation = MockAppConfigNegotiation();
   final contacts = MockAppConfigContacts();
   final contactDetails = MockAppConfigContactDetails();
@@ -95,6 +96,9 @@ AppConfig createMockAppConfig() {
   when(() => call.peerConnection).thenReturn(peerConnection);
   when(() => peerConnection.negotiation).thenReturn(negotiation);
   when(() => negotiation.includeInactiveVideoInOfferAnswer).thenReturn(false);
+  when(() => call.ice).thenReturn(ice);
+  when(() => ice.certificateVerification).thenReturn('verify');
+  when(() => ice.certificateVerificationConfigurable).thenReturn(false);
 
   when(() => contacts.details).thenReturn(contactDetails);
   when(() => contactDetails.actions).thenReturn(contactActions);

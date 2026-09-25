@@ -4,6 +4,7 @@ import '../call/call_trigger_config.dart';
 import 'call_pull_video_strategy.dart';
 import '../peer_connection_settings.dart';
 import 'encoding_config.dart';
+import 'ice_config.dart';
 
 /// Configuration for call-related features, including encoding,
 /// transfer capabilities, and PeerConnection settings.
@@ -13,17 +14,21 @@ class CallConfig extends Equatable {
     required this.encoding,
     required this.peerConnection,
     required this.triggerConfig,
+    this.ice = const IceConfig(),
   });
 
   final CallCapabilitiesConfig capabilities;
   final EncodingConfig encoding;
   final PeerConnectionSettings peerConnection;
 
+  /// What this deployment decided about `turns:` certificate verification.
+  final IceConfig ice;
+
   /// Configuration for how incoming calls are triggered.
   final CallTriggerConfig triggerConfig;
 
   @override
-  List<Object?> get props => [capabilities, encoding, peerConnection, triggerConfig];
+  List<Object?> get props => [capabilities, encoding, peerConnection, triggerConfig, ice];
 }
 
 /// UI-level configuration for call features.
