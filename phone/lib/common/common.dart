@@ -4,5 +4,6 @@ export 'db/db.dart';
 export 'disposable.dart';
 export 'isolate_context.dart';
 export 'logging/logging.dart';
+export 'process_role.dart';
 export 'refreshable.dart';
 export 'suspendable.dart';
