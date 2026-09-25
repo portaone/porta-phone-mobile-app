@@ -42,6 +42,7 @@ class ActiveCall with _$ActiveCall implements CallEntry {
     this.remoteCameraEnabled,
     this.leavingRoom = false,
     this.peerReportedConferenceMute,
+    this.peerReportedConferenceHostAway,
     this.speakerOnBeforeMinimize,
     this.iceCandidates = const [],
     this.iceConnectionIssue,
@@ -157,6 +158,15 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// the call; nothing functional hangs on it.
   @override
   final bool? peerReportedConferenceMute;
+
+  /// Whether the other party of this call says they have stepped aside from
+  /// the room they host, for a call of their own.
+  ///
+  /// A claim about this call on the same terms as [peerReportedConferenceMute]:
+  /// nothing here can check it, it is shown as somebody's word, and it ends
+  /// with the call.
+  @override
+  final bool? peerReportedConferenceHostAway;
 
   @override
   final bool? speakerOnBeforeMinimize;

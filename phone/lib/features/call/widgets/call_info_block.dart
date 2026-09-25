@@ -167,6 +167,7 @@ class CallInfoBlock extends StatelessWidget {
       isIncoming: focusedCall.isIncoming,
       held: focusedCall.held,
       peerReportedConferenceMute: focusedCall.peerReportedConferenceMute,
+      peerReportedConferenceHostAway: focusedCall.peerReportedConferenceHostAway,
       number: focusedCall.handle.value,
       username: focusedCall.displayName,
       acceptedTime: focusedCall.acceptedTime,

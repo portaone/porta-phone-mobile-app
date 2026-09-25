@@ -434,6 +434,8 @@
   "@call_description_held": {},
   "call_description_peerReportsMuted": "L'altra parte dice che sei disattivato",
   "@call_description_peerReportsMuted": {},
+  "call_description_peerReportsHostAway": "L'altra parte dice di essere in un'altra chiamata",
+  "@call_description_peerReportsHostAway": {},
   "call_description_incoming": "Chiamata in arrivo",
   "@call_description_incoming": {},
   "call_description_inviteToAttendedTransfer": "Sei stato invitato a unirti a una chiamata di trasferimento assistito",

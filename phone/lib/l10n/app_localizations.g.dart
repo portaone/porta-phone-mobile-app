@@ -808,6 +808,12 @@ abstract class AppLocalizations {
   /// **'The other side says you are muted'**
   String get call_description_peerReportsMuted;
 
+  /// Status of a call whose other party hosts a conference and reports having stepped aside from it for a call of their own, so the room neither carries nor plays their audio
+  ///
+  /// In en, this message translates to:
+  /// **'The other side says they are on another call'**
+  String get call_description_peerReportsHostAway;
+
   /// No description provided for @call_description_incoming.
   ///
   /// In en, this message translates to:

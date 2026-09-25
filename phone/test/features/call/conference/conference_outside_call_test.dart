@@ -133,6 +133,105 @@ void main() {
     });
   });
 
+  group('telling the participants', () {
+    Future<CallBlocHarness> room({bool peerMessages = true}) async {
+      final h = CallBlocHarness(
+        capabilities: CallCapabilitiesConfig(isConferenceEnabled: true, isPeerMessageEnabled: peerMessages),
+      );
+      h.seedEstablishedCall('a', line: 0);
+      h.seedEstablishedCall('b', line: 1);
+      h.bloc.add(const CallControlEvent.merged(['a', 'b']));
+      await pumpEventQueue();
+      h.signaling.emit(
+        ConferenceOfferEvent(
+          room: 7,
+          jsep: const {'type': 'offer', 'sdp': 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n'},
+          participants: [_participant('a', 0), _participant('b', 1)],
+        ),
+      );
+      await pumpEventQueue();
+      return h;
+    }
+
+    List<ConferenceHostAwayPeerMessageRequest> told(CallBlocHarness h) =>
+        h.signaling.requests.whereType<ConferenceHostAwayPeerMessageRequest>().toList();
+
+    test('every leg is told when the host steps aside, and when he is back', () async {
+      // The server tells the participants nothing of a room standing aside, so
+      // their clients would show a host who has simply gone quiet.
+      final h = await room();
+      addTearDown(h.close);
+
+      h.seedEstablishedCall('c', line: 2, number: '300');
+      await _settle(() => told(h).length == 2);
+
+      expect(told(h).map((r) => (r.callId, r.line, r.away)), [('a', 0, true), ('b', 1, true)]);
+
+      h.signaling.emit(const HangupEvent(line: 2, callId: 'c', code: 200, reason: 'Normal Clearing'));
+      await _settle(() => told(h).length == 4);
+
+      expect(told(h).map((r) => (r.callId, r.away)), [('a', true), ('b', true), ('a', false), ('b', false)]);
+    });
+
+    test('a leg the room drops while the host is aside is told he is back', () async {
+      // The later unpark goes only to the legs the room still has, so this is
+      // that leg's only chance to hear it - and it carries on as an ordinary
+      // call, where a stale caption would sit for the rest of its life.
+      final h = await room();
+      addTearDown(h.close);
+      h.seedEstablishedCall('c', line: 2, number: '300');
+      await _settle(() => told(h).length == 2);
+
+      h.signaling.emit(ConferenceUpdatedEvent(room: 7, participants: [_participant('a', 0)]));
+      await _settle(() => told(h).length == 3);
+
+      expect(told(h).skip(2).map((r) => (r.callId, r.away)), [('b', false)]);
+    });
+
+    test('a room that ends while the host is aside says he is not', () async {
+      // The leg carries on as an ordinary call; left as it was, it would show
+      // a host away from a room that no longer exists.
+      final h = await room();
+      addTearDown(h.close);
+      h.seedEstablishedCall('c', line: 2, number: '300');
+      await _settle(() => told(h).length == 2);
+
+      h.signaling.emit(const ConferenceTerminatedEvent(room: 7));
+      await _settle(() => told(h).length == 4);
+
+      expect(told(h).skip(2).map((r) => (r.callId, r.away)), [('a', false), ('b', false)]);
+    });
+
+    test('a core that does not take peer messages is told nothing', () async {
+      // An older core closes the signaling socket with 4600 on a request it
+      // does not know: a caption is not worth the session the room is in.
+      final h = await room(peerMessages: false);
+      addTearDown(h.close);
+      final mixer = h.peerFactory.created.single;
+
+      h.seedEstablishedCall('c', line: 2, number: '300');
+      // Waited on the parking itself, not on the rule: the rule is true the
+      // moment the call is in the state, and the hint would go out later - a
+      // test that stopped at the rule would pass on a hint never suppressed.
+      await _settle(() => mixer.fakeSenders.single.track == null);
+
+      expect(mixer.fakeSenders.single.track, isNull, reason: 'the room did stand aside');
+      expect(told(h), isEmpty);
+    });
+
+    test('what the other side says about stepping aside is a claim on that call alone', () async {
+      final h = CallBlocHarness();
+      addTearDown(h.close);
+      h.seedEstablishedCall('x', line: 0);
+
+      h.signaling.emit(const ConferenceHostAwayPeerMessageEvent(line: 0, callId: 'x', away: true));
+      await pumpEventQueue();
+
+      expect(h.bloc.state.retrieveActiveCall('x')!.peerReportedConferenceHostAway, isTrue);
+      expect(h.bloc.state.conference.isPresent, isFalse, reason: 'no room is invented from somebody\'s word');
+    });
+  });
+
   group('the wiring', () {
     test('a hold the server refuses leaves the released call live, not falsely held', () async {
       // `held` means a hold the server took. Claiming one it refused would show

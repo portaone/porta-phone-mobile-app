@@ -24,6 +24,7 @@ class CallInfo extends StatefulWidget {
     required this.isIncoming,
     required this.held,
     this.peerReportedConferenceMute,
+    this.peerReportedConferenceHostAway,
     required this.number,
     this.username,
     this.acceptedTime,
@@ -41,6 +42,10 @@ class CallInfo extends StatefulWidget {
   /// What the other party says about a room-wide mute of this call, if they
   /// have said anything. A claim of theirs, shown as one.
   final bool? peerReportedConferenceMute;
+
+  /// Whether the other party says they have stepped aside from the room they
+  /// host; see [ActiveCall.peerReportedConferenceHostAway].
+  final bool? peerReportedConferenceHostAway;
   final String number;
   final String? username;
   final DateTime? acceptedTime;
@@ -189,6 +194,10 @@ class _CallInfoState extends State<CallInfo> {
       // Above the duration, because a person who cannot be heard needs to
       // know that before they need to know how long they have been talking.
       return context.l10n.call_description_peerReportsMuted;
+    } else if (widget.peerReportedConferenceHostAway ?? false) {
+      // Below the mute, which is the stronger thing to know: a mute keeps them
+      // from being heard by everyone and outlasts the host's return.
+      return context.l10n.call_description_peerReportsHostAway;
     } else {
       return duration.format();
     }
