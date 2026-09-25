@@ -205,6 +205,14 @@ sealed class _CallSignalingEvent extends CallEvent {
     required bool muted,
   }) = _CallSignalingEventPeerConferenceMute;
 
+  /// What the other party of this call says about having stepped aside from the
+  /// room they host.
+  const factory _CallSignalingEvent.peerConferenceHostAway({
+    required int? line,
+    required String callId,
+    required bool away,
+  }) = _CallSignalingEventPeerConferenceHostAway;
+
   const factory _CallSignalingEvent.updating({required int? line, required String callId}) =
       _CallSignalingEventUpdating;
 
@@ -410,6 +418,15 @@ class _CallSignalingEventPeerConferenceMute extends _CallSignalingEvent {
   final bool muted;
   @override
   List<Object?> get props => [line, callId, muted];
+}
+
+class _CallSignalingEventPeerConferenceHostAway extends _CallSignalingEvent {
+  const _CallSignalingEventPeerConferenceHostAway({required this.line, required this.callId, required this.away});
+  final int? line;
+  final String callId;
+  final bool away;
+  @override
+  List<Object?> get props => [line, callId, away];
 }
 
 class _CallSignalingEventCallUpdating extends _CallSignalingEvent {
