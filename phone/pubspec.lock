@@ -806,8 +806,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "po/1.6.2+hotfix.3-3"
-      resolved-ref: b35aef71767b9cb1213ec768c8ecbeb7576d9494
+      ref: "po/1.6.2+hotfix.3-5"
+      resolved-ref: "60c2a5666bed210ac53302558a7c51e599352e4a"
       url: "https://github.com/portaone/flutter-webrtc.git"
     source: git
     version: "1.6.2+hotfix.3"
