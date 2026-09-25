@@ -9,6 +9,7 @@ import 'media_settings_state.dart';
 class MediaSettingsCubit extends Cubit<MediaSettingsState> {
   MediaSettingsCubit(
     this._defaultPeerConnectionSettings,
+    this._iceConfig,
     this._audioProcessingSettingsRepository,
     this._encodingPresetRepository,
     this._iceSettingsRepository,
@@ -19,11 +20,17 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
   }) : _crashlyticsContext = crashlyticsContext,
        super(
          MediaSettingsState(
+           certificateVerificationConfigurable: _iceConfig.certificateVerificationConfigurable,
            encodingSettings: _encodingSettingsRepository.getEncodingSettings(),
            encodingPreset: _encodingPresetRepository.getEncodingPreset(),
            audioProcessingSettings: _audioProcessingSettingsRepository.getAudioProcessingSettings(),
            videoCapturingSettings: _videoCapturingSettingsRepository.getVideoCapturingSettings(),
-           iceSettings: _iceSettingsRepository.getIceSettings(),
+           // Resolved rather than stored: the control has to show what the next
+           // call will do, which for an untouched device is the deployment's own
+           // default and not "nothing selected".
+           iceSettings: _iceSettingsRepository.getIceSettings().copyWithCertificateVerification(
+             _iceSettingsRepository.resolveCertificateVerification(_iceConfig.certificateVerification),
+           ),
            pearConnectionSettings: _peerConnectionSettingsRepository.getPeerConnectionSettings(
              defaultValue: _defaultPeerConnectionSettings,
            ),
@@ -31,6 +38,7 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
        );
 
   final PeerConnectionSettings _defaultPeerConnectionSettings;
+  final IceConfig _iceConfig;
   final AudioProcessingSettingsRepository _audioProcessingSettingsRepository;
   final EncodingPresetRepository _encodingPresetRepository;
   final IceSettingsRepository _iceSettingsRepository;
@@ -57,6 +65,13 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
   void setVideoCapturingSettings(VideoCapturingSettings settings) {
     emit(state.copyWithVideoCapturingSettings(settings));
     _videoCapturingSettingsRepository.setVideoCapturingSettings(settings);
+  }
+
+  void setCertificateVerification(TurnCertificateVerification? verification) {
+    // Null cannot reach here from the UI - the control always has one of the
+    // three selected - but it is the stored shape, so it is honoured: writing
+    // null puts the device back to following the deployment's default.
+    setIceSettings(state.iceSettings.copyWithCertificateVerification(verification));
   }
 
   void setIceSettings(IceSettings settings) {
@@ -93,7 +108,10 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
         encodingSettings: EncodingSettings.blank(),
         audioProcessingSettings: AudioProcessingSettings.blank(),
         videoCapturingSettings: VideoCapturingSettings.blank(),
-        iceSettings: IceSettings.blank(),
+        // Back to the deployment's default rather than to a hard-coded one,
+        // for the same reason the peer connection settings are: reset must not
+        // quietly overwrite what the brand decided.
+        iceSettings: IceSettings.blank().copyWithCertificateVerification(_iceConfig.certificateVerification),
         pearConnectionSettings: _defaultPeerConnectionSettings,
       ),
     );

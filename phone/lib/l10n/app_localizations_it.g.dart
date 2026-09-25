@@ -2574,6 +2574,26 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_call_codecs_preferred_video_title => 'Codec video preferito';
 
   @override
+  String get settings_certificateVerification_Section_title => 'TURN certificate verification';
+
+  @override
+  String get settings_certificateVerification_Section_tooltip =>
+      'How the relay server\'s certificate is checked. Change this only if calls will not connect and support asked you to.';
+
+  @override
+  String get settings_certificateVerification_auto => 'Automatic';
+
+  @override
+  String get settings_certificateVerification_enabled => 'Always verify';
+
+  @override
+  String get settings_certificateVerification_disabled => 'Do not verify';
+
+  @override
+  String get settings_certificateVerification_warning =>
+      'Without verification the connection to the relay server can be intercepted. Call audio and video stay encrypted either way. Turn it back on once the server is fixed.';
+
+  @override
   String get settings_callerId_cancel_button => 'Annulla';
 
   @override
