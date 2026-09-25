@@ -151,7 +151,7 @@ dependencies:
   flutter_webrtc:
     git:
       url: https://github.com/portaone/flutter-webrtc.git
-      ref: po/1.6.2+hotfix.3-3
+      ref: po/1.6.2+hotfix.3-5
 
 dev_dependencies:
   # Reached directly by the hub replay tests, which drive the Android hub and the
