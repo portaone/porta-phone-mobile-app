@@ -59,12 +59,14 @@ class NetworkTesterCubit extends Cubit<NetworkTesterState> {
         );
   }
 
-  Future<List<Map<String, dynamic>>> _resolveIceServers() async {
+  Future<IceServersConfig> _resolveIceServers() async {
     final resolver = _iceServersResolver;
-    if (resolver == null) return kFallbackRtcIceServers;
+    if (resolver == null) return IceServersConfig.fallback();
 
-    final iceServers = await resolver();
-    return iceServers.isEmpty ? kFallbackRtcIceServers : iceServers;
+    // The repository already answers a fallback rather than an empty list; this
+    // keeps the guarantee at this boundary too, for a resolver that does not.
+    final config = await resolver();
+    return config.servers.isEmpty ? IceServersConfig.fallback() : config;
   }
 
   @override

@@ -16,13 +16,14 @@ import 'package:webtrit_phone/utils/utils.dart';
 /// short-lived TURN credentials, so the configuration is fetched, cached, and
 /// renewed inside the session rather than read once at startup.
 abstract interface class IceServersRepository {
-  /// ICE servers for a peer connection about to be created, in the
-  /// `RTCIceServer` shape flutter_webrtc expects.
+  /// The deployment's ICE configuration for a peer connection about to be
+  /// created: servers in the `RTCIceServer` shape flutter_webrtc expects, plus
+  /// any trust anchors the deployment serves for its own TURN certificate.
   ///
-  /// Never throws and never returns an empty list: when the deployment offers
-  /// no configuration, or it cannot be reached in time, the public STUN
+  /// Never throws and never answers an empty server list: when the deployment
+  /// offers no configuration, or it cannot be reached in time, the public STUN
   /// fallback is returned so call setup proceeds.
-  Future<List<Map<String, dynamic>>> resolveIceServers();
+  Future<IceServersConfig> resolveIceServers();
 }
 
 final _logger = Logger('IceServersRepository');
@@ -55,10 +56,10 @@ class IceServersRepositoryImpl with IceServersApiMapper implements IceServersRep
   bool get isActive => true;
 
   @override
-  Future<List<Map<String, dynamic>>> resolveIceServers() async {
+  Future<IceServersConfig> resolveIceServers() async {
     final cached = _config;
     if (cached != null && !cached.isDueForRefresh(clock.now())) {
-      return cached.servers;
+      return cached;
     }
 
     // A cached-but-due configuration is still usable, so only a cold cache is
@@ -66,7 +67,7 @@ class IceServersRepositoryImpl with IceServersApiMapper implements IceServersRep
     // call uses what is already there.
     if (cached != null) {
       unawaited(_fetch());
-      return cached.servers;
+      return cached;
     }
 
     // A fetch reports its own failures and answers null, so the only thing
@@ -79,10 +80,10 @@ class IceServersRepositoryImpl with IceServersApiMapper implements IceServersRep
     }
 
     if (config != null && !config.isEmpty) {
-      return config.servers;
+      return config;
     }
 
-    return kFallbackRtcIceServers;
+    return IceServersConfig.fallback();
   }
 
   /// Polling hook: renews the configuration only when the cached one is due,
@@ -143,7 +144,7 @@ class EmptyIceServersRepository implements IceServersRepository, Disposable {
   const EmptyIceServersRepository();
 
   @override
-  Future<List<Map<String, dynamic>>> resolveIceServers() async => kFallbackRtcIceServers;
+  Future<IceServersConfig> resolveIceServers() async => IceServersConfig.fallback();
 
   @override
   Future<void> dispose() async {}

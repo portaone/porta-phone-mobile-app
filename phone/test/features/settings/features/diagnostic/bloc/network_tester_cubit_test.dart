@@ -36,6 +36,8 @@ CandidateInfo _candidate({
 );
 
 void main() {
+  setUpAll(() => registerFallbackValue(IceServersConfig.fallback()));
+
   group('NetworkTesterCubit', () {
     late _MockConnectivity connectivity;
     late _MockIceChecker iceChecker;
@@ -267,13 +269,17 @@ void main() {
             .thenAnswer((_) => gatherController.stream);
         when(() => connectivity.checkConnectivity()).thenAnswer((_) async => [ConnectivityResult.wifi]);
 
-        const bundled = [
-          {
-            'urls': ['turn:host:3478?transport=udp'],
-            'username': 'user',
-            'credential': 'secret',
-          },
-        ];
+        final bundled = IceServersConfig(
+          servers: const [
+            {
+              'urls': ['turn:host:3478?transport=udp'],
+              'username': 'user',
+              'credential': 'secret',
+            },
+          ],
+          expiresAt: DateTime.utc(2030),
+          trustedCertificates: const ['-----BEGIN CERTIFICATE-----\nanchor\n-----END CERTIFICATE-----'],
+        );
         final cubit = NetworkTesterCubit(
           iceChecker: iceChecker,
           connectivity: connectivity,
@@ -281,6 +287,8 @@ void main() {
         );
         await Future<void>.delayed(Duration.zero);
 
+        // The anchors travel with the servers: the diagnostic screen must make
+        // the same trust decision a real call does, or it reports the wrong thing.
         verify(() => iceChecker.gatherCandidates(iceServers: bundled)).called(1);
 
         await gatherController.close();
@@ -296,11 +304,18 @@ void main() {
         final cubit = NetworkTesterCubit(
           iceChecker: iceChecker,
           connectivity: connectivity,
-          iceServersResolver: () async => const [],
+          iceServersResolver: () async => IceServersConfig(servers: const [], expiresAt: DateTime.utc(2030)),
         );
         await Future<void>.delayed(Duration.zero);
 
-        verify(() => iceChecker.gatherCandidates(iceServers: kFallbackRtcIceServers)).called(1);
+        verify(
+          () => iceChecker.gatherCandidates(
+            iceServers: any(
+              named: 'iceServers',
+              that: isA<IceServersConfig>().having((c) => c.servers, 'servers', kFallbackRtcIceServers),
+            ),
+          ),
+        ).called(1);
 
         await gatherController.close();
         await cubit.close();
@@ -314,7 +329,14 @@ void main() {
         final cubit = buildCubit(initialNetworks: [ConnectivityResult.wifi]);
         await Future<void>.delayed(Duration.zero);
 
-        verify(() => iceChecker.gatherCandidates(iceServers: kFallbackRtcIceServers)).called(1);
+        verify(
+          () => iceChecker.gatherCandidates(
+            iceServers: any(
+              named: 'iceServers',
+              that: isA<IceServersConfig>().having((c) => c.servers, 'servers', kFallbackRtcIceServers),
+            ),
+          ),
+        ).called(1);
 
         await gatherController.close();
         await cubit.close();

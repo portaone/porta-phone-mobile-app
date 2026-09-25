@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import 'package:webtrit_phone/models/models.dart';
@@ -6,7 +9,25 @@ import 'package:webtrit_phone/models/models.dart';
 ///
 /// Resolved per connection rather than captured once, so a connection created
 /// after the deployment's TURN credentials were renewed uses the new ones.
-typedef IceServersResolver = Future<List<Map<String, dynamic>>> Function();
+typedef IceServersResolver = Future<IceServersConfig> Function();
+
+/// Renders the deployment's configuration as the map `createPeerConnection`
+/// takes.
+///
+/// [IceServersConfig.trustedCertificates] becomes `trustedCertificates`, which
+/// the plugin installs as an Android `SSLCertificateVerifier` for `turns:`.
+/// libwebrtc otherwise verifies against a root list compiled into itself, and
+/// that list carries no Let's Encrypt root, so a TURN server secured that way
+/// is refused with `unknown_ca` and no relay candidate is ever gathered.
+///
+/// The key is written only when the deployment sent certificates. An empty list
+/// must not reach the plugin: a verifier holding no anchor of its own REPLACES
+/// the library's verdict and would refuse what the built-in list accepts.
+Map<String, dynamic> rtcConfigurationFrom(IceServersConfig config) => <String, dynamic>{
+  'iceServers': config.servers.isEmpty ? kFallbackRtcIceServers : config.servers,
+  if (config.trustedCertificates.isNotEmpty)
+    'trustedCertificates': config.trustedCertificates.map((pem) => Uint8List.fromList(utf8.encode(pem))).toList(),
+};
 
 /// Abstract factory to create [RTCPeerConnection] instances.
 abstract interface class PeerConnectionFactory {
@@ -45,9 +66,6 @@ class DefaultPeerConnectionFactory implements PeerConnectionFactory {
     final resolver = _iceServersResolver;
     if (resolver == null) return _defaultConfiguration;
 
-    final iceServers = await resolver();
-    if (iceServers.isEmpty) return _defaultConfiguration;
-
-    return {..._defaultConfiguration, 'iceServers': iceServers};
+    return {..._defaultConfiguration, ...rtcConfigurationFrom(await resolver())};
   }
 }

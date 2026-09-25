@@ -39,6 +39,25 @@ void main() {
       expect(config.isDueForRefresh(now), isTrue);
     });
 
+    test('carries the trust anchors the deployment serves', () {
+      final config = withClock(
+        Clock.fixed(now),
+        () => mapper.iceServersConfigFromApi(
+          const api.IceServersResponse(
+            trustedCertificates: ['-----BEGIN CERTIFICATE-----\nfirst\n-----END CERTIFICATE-----'],
+          ),
+        ),
+      );
+
+      expect(config.trustedCertificates, ['-----BEGIN CERTIFICATE-----\nfirst\n-----END CERTIFICATE-----']);
+    });
+
+    test('leaves the anchors empty when the deployment serves none, so the client decides as before', () {
+      final config = withClock(Clock.fixed(now), () => mapper.iceServersConfigFromApi(const api.IceServersResponse()));
+
+      expect(config.trustedCertificates, isEmpty);
+    });
+
     test('renders entries as RTCIceServer maps, with credentials only where the backend sent them', () {
       final config = withClock(
         Clock.fixed(now),
