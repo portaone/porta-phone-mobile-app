@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui' show IsolateNameServer;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logging/logging.dart';
@@ -338,7 +341,8 @@ void main() {
       nativePath = '${tempDir.path}/app_native.log';
       logger = Logger('test.native');
       captured = [];
-      logger.onRecord.listen(captured.add);
+      // Without hierarchical logging every logger's onRecord is the root stream.
+      logger.onRecord.where((r) => r.loggerName == logger.fullName).listen(captured.add);
       forwarder = NativeLogForwarder(nativeLogFilePath: nativePath, logger: logger);
     });
 
@@ -402,6 +406,179 @@ void main() {
       File(nativePath).writeAsStringSync('2026-01-01 00:00:00.000 I Tag: after dispose\n');
       await Future<void>.delayed(const Duration(milliseconds: 300));
       expect(captured, isEmpty);
+    });
+  });
+
+  // Each forwarder stands in for one isolate of the process. The role protocol itself is
+  // covered by the ProcessRole group below; these check the forwarder is wired to it.
+  group('NativeLogForwarder ownership', () {
+    const roleName = 'native_log_forwarder_ownership_test';
+    late Directory tempDir;
+    late String nativePath;
+    final forwarders = <NativeLogForwarder>[];
+    final subscriptions = <StreamSubscription<LogRecord>>[];
+
+    setUp(() {
+      tempDir = Directory.systemTemp.createTempSync('native_log_forwarder_ownership_test_');
+      nativePath = '${tempDir.path}/app_native.log';
+      File(nativePath).writeAsStringSync('');
+    });
+
+    tearDown(() async {
+      for (final f in forwarders) {
+        await f.dispose();
+      }
+      forwarders.clear();
+      for (final s in subscriptions) {
+        await s.cancel();
+      }
+      subscriptions.clear();
+      IsolateNameServer.removePortNameMapping(roleName);
+      if (tempDir.existsSync()) tempDir.deleteSync(recursive: true);
+    });
+
+    List<String> startForwarder(String name, {bool inUiIsolate = false}) {
+      final lines = <String>[];
+      final logger = Logger('test.ownership.$name');
+      subscriptions.add(
+        logger.onRecord.where((r) => r.loggerName == logger.fullName).listen((r) => lines.add(r.message)),
+      );
+      final role = ProcessRole(roleName, probeTimeout: const Duration(milliseconds: 50));
+      final forwarder = inUiIsolate
+          ? NativeLogForwarder.inUiIsolate(nativeLogFilePath: nativePath, logger: logger, role: role)
+          : NativeLogForwarder(nativeLogFilePath: nativePath, logger: logger, role: role);
+      forwarders.add(forwarder..start());
+      return lines;
+    }
+
+    Future<void> append(String message) async {
+      File(nativePath).writeAsStringSync('2026-01-01 00:00:00.000 I Tag: $message\n', mode: FileMode.append);
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+
+    test('two background forwarders forward each line once between them', () async {
+      final first = startForwarder('fcm');
+      final second = startForwarder('push');
+      await append('one');
+      await append('two');
+      expect([...first, ...second], hasLength(2));
+      expect(first, hasLength(2));
+    });
+
+    test('the UI forwarder takes over from a background one', () async {
+      final background = startForwarder('fcm');
+      await append('before');
+      final ui = startForwarder('ui', inUiIsolate: true);
+      await append('after');
+      expect(background.where((m) => m.endsWith('before')), hasLength(1));
+      expect(background.where((m) => m.endsWith('after')), isEmpty);
+      expect(ui.where((m) => m.endsWith('after')), hasLength(1));
+    });
+
+    test('the UI forwarder takes the role back from a background one that reclaimed it', () async {
+      final ui = startForwarder('ui', inUiIsolate: true);
+      // A background forwarder that timed its probe out while the UI isolate was busy.
+      IsolateNameServer.removePortNameMapping(roleName);
+      final background = ProcessRole(roleName)..claimIfFree();
+      addTearDown(background.release);
+      await append('after the steal');
+      expect(ui.where((m) => m.endsWith('after the steal')), hasLength(1));
+      expect(background.isHeld, isFalse);
+    });
+
+    test('a standby forwarder resumes once the owner is disposed', () async {
+      final ui = startForwarder('ui', inUiIsolate: true);
+      final background = startForwarder('fcm');
+      await append('while owned');
+      await forwarders.first.dispose();
+      await append('after dispose');
+      expect(ui, hasLength(1));
+      expect(background.where((m) => m.endsWith('while owned')), isEmpty);
+      expect(background.where((m) => m.endsWith('after dispose')), hasLength(1));
+    });
+  });
+
+  // Each ProcessRole stands in for one isolate of the process; they share the name server.
+  group('ProcessRole', () {
+    const name = 'process_role_test';
+    final roles = <ProcessRole>[];
+
+    ProcessRole candidate() {
+      final role = ProcessRole(name, probeTimeout: const Duration(milliseconds: 50));
+      roles.add(role);
+      return role;
+    }
+
+    // Lets a yield message sent to a holder's port be delivered.
+    Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 20));
+
+    tearDown(() async {
+      for (final role in roles) {
+        await role.release();
+      }
+      roles.clear();
+      IsolateNameServer.removePortNameMapping(name);
+    });
+
+    test('the first candidate claims a free role, the second does not', () {
+      final first = candidate();
+      final second = candidate();
+      expect(first.claimIfFree(), isTrue);
+      expect(second.claimIfFree(), isFalse);
+      expect(first.isHeld, isTrue);
+      expect(second.isHeld, isFalse);
+    });
+
+    test('takeOver moves the role and the previous holder lets go', () async {
+      final background = candidate()..claimIfFree();
+      final ui = candidate()..takeOver();
+      await settle();
+      expect(ui.isHeld, isTrue);
+      expect(background.isHeld, isFalse);
+    });
+
+    test('holdOrReclaim leaves a live holder alone', () async {
+      final holder = candidate()..claimIfFree();
+      final standby = candidate();
+      expect(await standby.holdOrReclaim(), isFalse);
+      expect(holder.isHeld, isTrue);
+    });
+
+    test('holdOrReclaim takes the role once the holder released it', () async {
+      final holder = candidate()..claimIfFree();
+      final standby = candidate();
+      await holder.release();
+      expect(await standby.holdOrReclaim(), isTrue);
+    });
+
+    test('holdOrReclaim takes the role from a holder that died without release', () async {
+      final dead = ReceivePort();
+      IsolateNameServer.registerPortWithName(dead.sendPort, name);
+      dead.close();
+      final standby = candidate();
+      expect(standby.claimIfFree(), isFalse);
+      expect(await standby.holdOrReclaim(), isTrue);
+    });
+
+    test('a holder displaced in the name server no longer holds the role', () async {
+      final first = candidate()..claimIfFree();
+      // Two candidates acting at once: the other one removes and replaces the mapping
+      // without the first ever being told to let go.
+      IsolateNameServer.removePortNameMapping(name);
+      final second = candidate()..claimIfFree();
+      expect(first.isHeld, isFalse);
+      expect(await first.holdOrReclaim(), isFalse);
+      expect(second.isHeld, isTrue);
+    });
+
+    test('release does not remove a mapping someone else took over', () async {
+      final background = candidate()..claimIfFree();
+      final ui = candidate()..takeOver();
+      await settle();
+      await background.release();
+      final third = candidate();
+      expect(third.claimIfFree(), isFalse);
+      expect(ui.isHeld, isTrue);
     });
   });
 }

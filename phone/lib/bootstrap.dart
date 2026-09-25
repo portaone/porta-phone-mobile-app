@@ -249,7 +249,7 @@ Future<AppDependencies> _bootstrap({
     );
   }
   final nativeLogForwarder = deps.share(
-    NativeLogForwarder(nativeLogFilePath: appPath.nativeLogFilePath, logger: Logger('callkeep')),
+    NativeLogForwarder.inUiIsolate(nativeLogFilePath: appPath.nativeLogFilePath, logger: Logger('callkeep')),
   );
   // FileSystemEntity.watch is not supported on iOS: the Dart SDK only implements
   // it for Android/Linux (inotify), Windows, and macOS (FSEvents). Calling it on
