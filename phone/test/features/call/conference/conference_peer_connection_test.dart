@@ -117,6 +117,195 @@ void main() {
     expect(connection.room, isNull);
   });
 
+  test('parking silences the room both ways and gives it back', () async {
+    await connection.answer(room: 1, offer: _offer);
+    final peer = factory.created.single;
+
+    expect(peer.fakeSenders.single.track, media.microphone);
+    expect(peer.fakeTransceivers.single.receiver.track!.enabled, isTrue);
+
+    await connection.setParked(true);
+    expect(connection.isParked, isTrue);
+    expect(peer.fakeSenders.single.track, isNull, reason: 'the room hears nothing of the host');
+    expect(peer.fakeTransceivers.single.receiver.track!.enabled, isFalse, reason: 'and the host nothing of it');
+    // What is parked is the channel, never the microphone: it is the call
+    // outside the room that the host is talking into.
+    expect(media.microphone.enabled, isTrue);
+
+    await connection.setParked(false);
+    expect(peer.fakeSenders.single.track, media.microphone);
+    expect(peer.fakeTransceivers.single.receiver.track!.enabled, isTrue);
+  });
+
+  test('a room parked before its offer comes up silent', () async {
+    // The receiver has no track until a remote description is set, so the
+    // inbound half of the parking can only be applied once the offer has been
+    // answered - the room is parked while it is still assembling whenever the
+    // outside call started first.
+    await connection.setParked(true);
+    await connection.answer(room: 1, offer: _offer);
+
+    final peer = factory.created.single;
+    expect(peer.fakeSenders.single.track, isNull);
+    expect(peer.fakeTransceivers.single.receiver.track!.enabled, isFalse);
+  });
+
+  test('parking and the self mute hold the microphone back independently', () async {
+    await connection.answer(room: 1, offer: _offer);
+    final peer = factory.created.single;
+
+    await connection.setSelfMuted(true);
+    await connection.setParked(true);
+    await connection.setParked(false);
+
+    expect(peer.fakeSenders.single.track, isNull, reason: 'the mute the host asked for outlived the outside call');
+    expect(peer.fakeTransceivers.single.receiver.track!.enabled, isTrue, reason: 'a muted host still hears the room');
+
+    await connection.setParked(true);
+    await connection.setSelfMuted(false);
+    expect(peer.fakeSenders.single.track, isNull, reason: 'unmuting does not unpark');
+    expect(peer.fakeTransceivers.single.receiver.track!.enabled, isFalse);
+
+    await connection.setParked(false);
+    expect(peer.fakeSenders.single.track, media.microphone);
+  });
+
+  test('parking is kept across a rebuilt connection and forgotten with the room', () async {
+    await connection.answer(room: 1, offer: _offer);
+    await connection.setParked(true);
+
+    await connection.answer(room: 2, offer: _offer);
+    expect(factory.created.last.fakeSenders.single.track, isNull, reason: 'the new room is parked too');
+    expect(factory.created.last.fakeTransceivers.single.receiver.track!.enabled, isFalse);
+
+    await connection.teardown();
+    expect(connection.isParked, isFalse, reason: 'the next room is planned from the state, not from this one');
+  });
+
+  test('a park that cannot be applied at all gives the room up', () async {
+    // Nothing here can be reached - not even the sender - so there is nothing
+    // to half-do. What matters is that the intent stands: the next apply, from
+    // a renegotiation or the next request, carries it out. (An earlier round
+    // had this answer `false` so the owner would plan it again; that turned out
+    // to drop transitions, because the owner plans while an apply is still in
+    // flight. Reconciling is this object's own job now.)
+    var lost = 0;
+    final failing = _FailingTransceiverFactory();
+    final connection = ConferencePeerConnection(
+      factory: failing,
+      userMediaBuilder: media,
+      onLocalCandidate: gathered.add,
+      onConnectionLost: () => lost++,
+    );
+    await connection.answer(room: 1, offer: _offer);
+    failing.created.single.failTransceivers = true;
+
+    await expectLater(connection.setParked(true), throwsA(isA<StateError>()));
+
+    expect(connection.isParked, isTrue);
+    expect(lost, 1, reason: 'and the room is given up rather than left undescribable');
+  });
+
+  test('a park whose first attempt fails is finished by the retry', () async {
+    // The host is on a call outside the room, which is why the park was asked
+    // for. Nothing outside will come back to finish an apply that threw - the
+    // owner plans against what this object says it is doing - so the second
+    // attempt belongs here.
+    final failing = _FailingTransceiverFactory();
+    final connection = ConferencePeerConnection(
+      factory: failing,
+      userMediaBuilder: media,
+      onLocalCandidate: gathered.add,
+      onConnectionLost: () {},
+    );
+    await connection.answer(room: 1, offer: _offer);
+    final peer = failing.created.single;
+    // The sender is found, its track comes off, and the receiver lookup then
+    // fails - once, the way a blip does.
+    peer.failTransceiversAfter = 1;
+
+    await connection.setParked(true);
+
+    expect(peer.fakeSenders.single.track, isNull);
+    expect(peer.fakeTransceivers.single.receiver.track!.enabled, isFalse, reason: 'the retry finished the job');
+    expect(connection.isParked, isTrue);
+  });
+
+  test('a park that keeps failing gives the room up', () async {
+    // Both attempts gone. Nothing outside will come back to finish this - the
+    // owner plans against what the room is to be, which is already this - so a
+    // room left in a state nobody can describe would stay that way: possibly
+    // with the host's microphone still in the mix. It is given up instead.
+    var lost = 0;
+    final failing = _FailingTransceiverFactory();
+    final connection = ConferencePeerConnection(
+      factory: failing,
+      userMediaBuilder: media,
+      onLocalCandidate: gathered.add,
+      onConnectionLost: () => lost++,
+    );
+    await connection.answer(room: 1, offer: _offer);
+    final peer = failing.created.single;
+    peer.failTransceiversAfter = 1;
+    peer.failAfterRetry = true;
+
+    await expectLater(connection.setParked(true), throwsA(isA<StateError>()));
+
+    expect(lost, 1, reason: 'the owner is told to give the room up');
+    expect(peer.fakeSenders.single.track, isNull, reason: 'and the room was never given the host back');
+  });
+
+  test('a retry does not put the microphone back on a room being torn down', () async {
+    // The first attempt has taken the microphone off and is waiting on the
+    // receiver when the user ends the conference. The teardown is queued behind
+    // it, so the connection is still there - and the retry, if it did not look,
+    // would apply what is wanted now (nothing parked) and hand the closing room
+    // the microphone back.
+    final failing = _FailingTransceiverFactory();
+    final connection = ConferencePeerConnection(
+      factory: failing,
+      userMediaBuilder: media,
+      onLocalCandidate: gathered.add,
+      onConnectionLost: () {},
+    );
+    await connection.answer(room: 1, offer: _offer);
+    final peer = failing.created.single;
+    peer.failTransceiversAfter = 1;
+    final held = Completer<void>();
+    peer.holdFailure = held;
+
+    final parking = connection.setParked(true);
+    await pumpEventQueue();
+    expect(peer.fakeSenders.single.track, isNull, reason: 'the microphone is off before the lookup');
+
+    final tearing = connection.teardown();
+    held.complete();
+    await parking.catchError((Object _) {});
+    await tearing;
+
+    expect(peer.fakeSenders.single.track, isNull, reason: 'the closing room never got it back');
+    expect(connection.isUp, isFalse);
+  });
+
+  test('the last intent is what the room ends up with', () async {
+    // Park, the outside call held (back to the room), then resumed (aside
+    // again) - all recorded before the first one has run. What the connection
+    // ends up doing is the last of them, because every apply reads what is
+    // wanted at the time it runs rather than a value captured when it was asked
+    // for. That capture is what used to let a late failure turn the park off.
+    await connection.answer(room: 1, offer: _offer);
+    final peer = factory.created.single;
+
+    final first = connection.setParked(true);
+    final second = connection.setParked(false);
+    final third = connection.setParked(true);
+    await Future.wait([first, second, third]);
+
+    expect(peer.fakeSenders.single.track, isNull);
+    expect(peer.fakeTransceivers.single.receiver.track!.enabled, isFalse);
+    expect(connection.isParked, isTrue);
+  });
+
   test('teardown closes the connection, returns the microphone and forgets the candidates', () async {
     await connection.answer(room: 1, offer: _offer);
     await connection.teardown();
@@ -225,5 +414,53 @@ class _FailingMediaBuilder extends Fake implements UserMediaBuilder {
   @override
   Future<MediaStream> build({required bool video, bool? frontCamera, bool allowAudioFallback = false}) async {
     throw UserMediaError('no microphone');
+  }
+}
+
+/// A connection whose transceivers can be made to fail, so a park can be
+/// asked for on one that cannot take it.
+class _FailingPeerConnection extends FakePeerConnection {
+  _FailingPeerConnection() : super(remoteDescribed: false);
+
+  bool failTransceivers = false;
+
+  /// Lets this many lookups through, then fails the next one and only it.
+  int? failTransceiversAfter;
+
+  /// Keeps failing once [failTransceiversAfter] has fired, so a retry fails too.
+  bool failAfterRetry = false;
+
+  /// Held open before the failing lookup throws, so something else can happen
+  /// while an apply is halfway through.
+  Completer<void>? holdFailure;
+
+  @override
+  Future<List<RTCRtpTransceiver>> getTransceivers() async {
+    if (failTransceivers) throw StateError('connection is gone');
+    final after = failTransceiversAfter;
+    if (after != null) {
+      if (after > 0) {
+        failTransceiversAfter = after - 1;
+      } else {
+        if (!failAfterRetry) failTransceiversAfter = null;
+        await holdFailure?.future;
+        throw StateError('transceivers went away');
+      }
+    }
+    return super.getTransceivers();
+  }
+}
+
+class _FailingTransceiverFactory implements PeerConnectionFactory {
+  final List<_FailingPeerConnection> created = [];
+
+  @override
+  Future<RTCPeerConnection> create([
+    Map<String, dynamic> configuration = const {},
+    Map<String, dynamic> constraints = const {},
+  ]) async {
+    final peerConnection = _FailingPeerConnection();
+    created.add(peerConnection);
+    return peerConnection;
   }
 }
