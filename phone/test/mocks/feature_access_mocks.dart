@@ -40,6 +40,8 @@ class MockAppConfigEncoding extends Mock implements AppConfigEncoding {}
 
 class MockAppConfigPeerConnection extends Mock implements AppConfigPeerConnection {}
 
+class MockAppConfigIce extends Mock implements AppConfigIce {}
+
 class MockAppConfigNegotiation extends Mock implements AppConfigNegotiationSettingsOverride {}
 
 class MockAppConfigContacts extends Mock implements AppConfigContacts {}

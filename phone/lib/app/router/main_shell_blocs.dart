@@ -163,6 +163,11 @@ class MainShellBlocs extends StatelessWidget {
               // a renewed TURN credential is picked up without rebuilding the bloc.
               factory: DefaultPeerConnectionFactory(
                 iceServersResolver: context.read<IceServersRepository>().resolveIceServers,
+                // Read per connection, not captured: the escape hatch is only
+                // useful if flipping it reaches the next call.
+                certificateVerificationResolver: () => iceSettingsRepository.resolveCertificateVerification(
+                  featureAccess.callConfig.ice.certificateVerification,
+                ),
               ),
               retrieveTimeout: kPeerConnectionRetrieveTimeout,
               monitorCheckInterval: monitorInterval,

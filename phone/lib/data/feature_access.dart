@@ -511,6 +511,7 @@ abstract final class CallMapper {
     final transferConfig = rawCallConfig.transfer;
     final encodingConfig = rawCallConfig.encoding;
     final peerConnectionConfig = rawCallConfig.peerConnection;
+    final iceConfig = rawCallConfig.ice;
     final defaultPresetOverride = encodingConfig.defaultPresetOverride;
 
     // Determine if the media settings UI should be accessible
@@ -571,6 +572,14 @@ abstract final class CallMapper {
           removeTWCCFeedback: defaultPresetOverride.removeTWCCFeedback,
           removeExtmaps: _parseExtmapList(defaultPresetOverride.removeExtmaps),
         ),
+      ),
+      // An unrecognised value reads as `auto` rather than raising: a build must
+      // not refuse to start because a configuration names a policy it does not
+      // know, and `auto` is the answer that changes nothing.
+      ice: IceConfig(
+        certificateVerification:
+            TurnCertificateVerification.tryParse(iceConfig.certificateVerification) ?? TurnCertificateVerification.auto,
+        certificateVerificationConfigurable: iceConfig.certificateVerificationConfigurable,
       ),
       peerConnection: PeerConnectionSettings(
         negotiationSettings: NegotiationSettings(
