@@ -145,6 +145,11 @@ chain, so **the anchor has to be the issuer, not the root**: supply the intermed
 server's certificate. Serving them from the backend rather than building them into the app is what
 keeps a CA rotation from needing an application release.
 
+A deployment serves the chain its TURN server presents - with certbot, the `chain.pem` beside the
+certificate coturn is given, rewritten on every renewal. The direct issuer is the anchor that
+decides; a root in the file goes unused, and extra certificates are harmless. A private CA, or a
+chain that is not on the same host, is assembled by hand instead.
+
 An empty list must never reach the plugin, which is why the key is written only when the deployment
 sent something: a verifier holding no anchor of its own replaces the library's verdict and would
 refuse what the built-in list accepts.
