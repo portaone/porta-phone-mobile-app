@@ -26,6 +26,8 @@ sealed class PeerMessageEvent extends CallEvent {
         MediaStatePeerMessageEvent.fromJson(json),
       ConferenceMutePeerMessageEvent.messageType when data is Map<String, dynamic> && data['muted'] is bool =>
         ConferenceMutePeerMessageEvent.fromJson(json),
+      ConferenceHostAwayPeerMessageEvent.messageType when data is Map<String, dynamic> && data['away'] is bool =>
+        ConferenceHostAwayPeerMessageEvent.fromJson(json),
       _ => UnknownPeerMessageEvent.fromJson(json),
     };
   }
@@ -111,6 +113,53 @@ final class ConferenceMutePeerMessageEvent extends PeerMessageEvent {
       callId: json['call_id'],
       sender: json['sender'],
       muted: json['data']['muted'],
+    );
+  }
+}
+
+/// What the other party of this call says about having stepped aside from the
+/// room they host (`data: {away: bool}`).
+///
+/// A conference is the host's alone: while he is on a call outside it the room
+/// carries nothing of him and plays nothing to him, and the server tells the
+/// participants none of that. This is the host saying so over the one channel
+/// the two of them share.
+///
+/// It is a claim, not a fact, on the same terms as
+/// [ConferenceMutePeerMessageEvent]: it belongs to this call, ends with it, and
+/// nothing functional hangs on it. Not replayed either - a participant whose
+/// socket was down for it learns nothing until the host's next change.
+final class ConferenceHostAwayPeerMessageEvent extends PeerMessageEvent {
+  const ConferenceHostAwayPeerMessageEvent({
+    super.transaction,
+    required super.line,
+    required super.callId,
+    super.sender,
+    required this.away,
+  });
+
+  static const messageType = 'conference_host_away';
+
+  final bool away;
+
+  @override
+  List<Object?> get props => [...super.props, sender, away];
+
+  @override
+  Map<String, dynamic> toJson() => {
+    ...callBaseJson(PeerMessageEvent.typeValue),
+    'type': messageType,
+    'data': {'away': away},
+    if (sender != null) 'sender': sender,
+  };
+
+  factory ConferenceHostAwayPeerMessageEvent.fromJson(Map<String, dynamic> json) {
+    return ConferenceHostAwayPeerMessageEvent(
+      transaction: json['transaction'],
+      line: json['line'],
+      callId: json['call_id'],
+      sender: json['sender'],
+      away: json['data']['away'],
     );
   }
 }
