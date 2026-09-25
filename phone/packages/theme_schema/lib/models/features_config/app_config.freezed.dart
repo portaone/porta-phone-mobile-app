@@ -1706,7 +1706,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigCall {
 
- bool get videoEnabled; AppConfigTransfer get transfer; AppConfigEncoding get encoding; AppConfigPeerConnection get peerConnection;
+ bool get videoEnabled; AppConfigTransfer get transfer; AppConfigEncoding get encoding; AppConfigPeerConnection get peerConnection; AppConfigIce get ice;
 /// Create a copy of AppConfigCall
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1717,16 +1717,16 @@ $AppConfigCallCopyWith<AppConfigCall> get copyWith => _$AppConfigCallCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigCall&&(identical(other.videoEnabled, videoEnabled) || other.videoEnabled == videoEnabled)&&(identical(other.transfer, transfer) || other.transfer == transfer)&&(identical(other.encoding, encoding) || other.encoding == encoding)&&(identical(other.peerConnection, peerConnection) || other.peerConnection == peerConnection));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigCall&&(identical(other.videoEnabled, videoEnabled) || other.videoEnabled == videoEnabled)&&(identical(other.transfer, transfer) || other.transfer == transfer)&&(identical(other.encoding, encoding) || other.encoding == encoding)&&(identical(other.peerConnection, peerConnection) || other.peerConnection == peerConnection)&&(identical(other.ice, ice) || other.ice == ice));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,videoEnabled,transfer,encoding,peerConnection);
+int get hashCode => Object.hash(runtimeType,videoEnabled,transfer,encoding,peerConnection,ice);
 
 @override
 String toString() {
-  return 'AppConfigCall(videoEnabled: $videoEnabled, transfer: $transfer, encoding: $encoding, peerConnection: $peerConnection)';
+  return 'AppConfigCall(videoEnabled: $videoEnabled, transfer: $transfer, encoding: $encoding, peerConnection: $peerConnection, ice: $ice)';
 }
 
 
@@ -1737,7 +1737,7 @@ abstract mixin class $AppConfigCallCopyWith<$Res>  {
   factory $AppConfigCallCopyWith(AppConfigCall value, $Res Function(AppConfigCall) _then) = _$AppConfigCallCopyWithImpl;
 @useResult
 $Res call({
- bool videoEnabled, AppConfigTransfer transfer, AppConfigEncoding encoding, AppConfigPeerConnection peerConnection
+ bool videoEnabled, AppConfigTransfer transfer, AppConfigEncoding encoding, AppConfigPeerConnection peerConnection, AppConfigIce ice
 });
 
 
@@ -1754,13 +1754,14 @@ class _$AppConfigCallCopyWithImpl<$Res>
 
 /// Create a copy of AppConfigCall
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? videoEnabled = null,Object? transfer = null,Object? encoding = null,Object? peerConnection = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? videoEnabled = null,Object? transfer = null,Object? encoding = null,Object? peerConnection = null,Object? ice = null,}) {
   return _then(AppConfigCall(
 videoEnabled: null == videoEnabled ? _self.videoEnabled : videoEnabled // ignore: cast_nullable_to_non_nullable
 as bool,transfer: null == transfer ? _self.transfer : transfer // ignore: cast_nullable_to_non_nullable
 as AppConfigTransfer,encoding: null == encoding ? _self.encoding : encoding // ignore: cast_nullable_to_non_nullable
 as AppConfigEncoding,peerConnection: null == peerConnection ? _self.peerConnection : peerConnection // ignore: cast_nullable_to_non_nullable
-as AppConfigPeerConnection,
+as AppConfigPeerConnection,ice: null == ice ? _self.ice : ice // ignore: cast_nullable_to_non_nullable
+as AppConfigIce,
   ));
 }
 
@@ -2143,6 +2144,193 @@ as EncodingDefaultPresetOverride,
 
 /// Adds pattern-matching-related methods to [AppConfigEncoding].
 extension AppConfigEncodingPatterns on AppConfigEncoding {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+
+}
+
+
+/// @nodoc
+mixin _$AppConfigIce {
+
+ String get certificateVerification; bool get certificateVerificationConfigurable;
+/// Create a copy of AppConfigIce
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AppConfigIceCopyWith<AppConfigIce> get copyWith => _$AppConfigIceCopyWithImpl<AppConfigIce>(this as AppConfigIce, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigIce&&(identical(other.certificateVerification, certificateVerification) || other.certificateVerification == certificateVerification)&&(identical(other.certificateVerificationConfigurable, certificateVerificationConfigurable) || other.certificateVerificationConfigurable == certificateVerificationConfigurable));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,certificateVerification,certificateVerificationConfigurable);
+
+@override
+String toString() {
+  return 'AppConfigIce(certificateVerification: $certificateVerification, certificateVerificationConfigurable: $certificateVerificationConfigurable)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AppConfigIceCopyWith<$Res>  {
+  factory $AppConfigIceCopyWith(AppConfigIce value, $Res Function(AppConfigIce) _then) = _$AppConfigIceCopyWithImpl;
+@useResult
+$Res call({
+ String certificateVerification, bool certificateVerificationConfigurable
+});
+
+
+
+
+}
+/// @nodoc
+class _$AppConfigIceCopyWithImpl<$Res>
+    implements $AppConfigIceCopyWith<$Res> {
+  _$AppConfigIceCopyWithImpl(this._self, this._then);
+
+  final AppConfigIce _self;
+  final $Res Function(AppConfigIce) _then;
+
+/// Create a copy of AppConfigIce
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? certificateVerification = null,Object? certificateVerificationConfigurable = null,}) {
+  return _then(AppConfigIce(
+certificateVerification: null == certificateVerification ? _self.certificateVerification : certificateVerification // ignore: cast_nullable_to_non_nullable
+as String,certificateVerificationConfigurable: null == certificateVerificationConfigurable ? _self.certificateVerificationConfigurable : certificateVerificationConfigurable // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AppConfigIce].
+extension AppConfigIcePatterns on AppConfigIce {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:

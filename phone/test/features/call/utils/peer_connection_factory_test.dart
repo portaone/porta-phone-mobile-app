@@ -37,6 +37,31 @@ void main() {
       expect(rendered.containsKey('trustedCertificates'), isFalse);
     });
 
+    test('writes no policy under verify, leaving the native default alone', () {
+      final rendered = rtcConfigurationFrom(configWith());
+
+      expect((rendered['iceServers'] as List).single, isNot(contains('tlsCertPolicy')));
+    });
+
+    test('drops the anchors when verification is off, since nothing would verify them', () {
+      final rendered = rtcConfigurationFrom(
+        configWith(anchors: [anchor]),
+        verification: TurnCertificateVerification.disabled,
+      );
+
+      expect((rendered['iceServers'] as List).single, containsPair('tlsCertPolicy', 'insecure_no_check'));
+      expect(rendered.containsKey('trustedCertificates'), isFalse);
+    });
+
+    test('keeps the username and credential of the entry it stamps', () {
+      final rendered = rtcConfigurationFrom(configWith(), verification: TurnCertificateVerification.disabled);
+      final server = (rendered['iceServers'] as List).single as Map<String, dynamic>;
+
+      expect(server['username'], 'user');
+      expect(server['credential'], 'secret');
+      expect(server['urls'], ['turns:turn.example.com:5349']);
+    });
+
     test('passes the servers through untouched', () {
       final rendered = rtcConfigurationFrom(configWith(anchors: [anchor]));
       final server = (rendered['iceServers'] as List).single as Map<String, dynamic>;

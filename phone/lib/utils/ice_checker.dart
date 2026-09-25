@@ -7,18 +7,24 @@ import 'package:webtrit_phone/features/call/utils/peer_connection_factory.dart' 
 import 'package:webtrit_phone/models/models.dart';
 
 abstract interface class IceChecker {
-  /// Gathers with the deployment's own configuration, anchors included, so the
-  /// diagnostic screen exercises the same trust decision a real call makes. A
-  /// screen that verified differently from the call would answer the one
-  /// question it exists to answer wrongly.
-  Stream<CandidateInfo> gatherCandidates({required IceServersConfig iceServers});
+  /// Gathers with the deployment's own configuration, anchors and certificate
+  /// policy included, so the diagnostic screen exercises the same trust
+  /// decision a real call makes. A screen that verified differently from the
+  /// call would answer the one question it exists to answer wrongly.
+  Stream<CandidateInfo> gatherCandidates({
+    required IceServersConfig iceServers,
+    TurnCertificateVerification verification = TurnCertificateVerification.verify,
+  });
 }
 
 class IceCheckerFlutterWebrtcImpl implements IceChecker {
   const IceCheckerFlutterWebrtcImpl();
 
   @override
-  Stream<CandidateInfo> gatherCandidates({required IceServersConfig iceServers}) {
+  Stream<CandidateInfo> gatherCandidates({
+    required IceServersConfig iceServers,
+    TurnCertificateVerification verification = TurnCertificateVerification.verify,
+  }) {
     RTCPeerConnection? pc;
 
     final controller = StreamController<CandidateInfo>(
@@ -29,7 +35,7 @@ class IceCheckerFlutterWebrtcImpl implements IceChecker {
     );
 
     Future<void> start() async {
-      pc = await createPeerConnection(rtcConfigurationFrom(iceServers));
+      pc = await createPeerConnection(rtcConfigurationFrom(iceServers, verification: verification));
 
       pc!.onIceCandidate = (candidate) {
         if (controller.isClosed) return;
