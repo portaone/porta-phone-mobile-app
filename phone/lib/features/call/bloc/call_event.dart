@@ -738,6 +738,12 @@ sealed class CallControlEvent extends CallEvent {
   /// sets [CallState.selectedCallId] so the action area acts on that call.
   const factory CallControlEvent.callSelected(String callId) = _CallControlEventCallSelected;
 
+  /// The user tapped one of the two conversations the screen shows while a room
+  /// stands: the room itself (any of its rows) or a call outside it. Unlike
+  /// [callSelected] this acts - see the handler for why selection alone would
+  /// be misleading there.
+  const factory CallControlEvent.conversationSwitched(String callId) = _CallControlEventConversationSwitched;
+
   /// Answers [callId] after ending every other active call - the "End & Answer"
   /// action for a second incoming call, as a single intent.
   const factory CallControlEvent.answeredEndingOthers(String callId) = _CallControlEventAnsweredEndingOthers;
@@ -844,6 +850,13 @@ class _CallControlEventAnswered extends CallControlEvent {
 
   final String callId;
 
+  @override
+  List<Object?> get props => [callId];
+}
+
+class _CallControlEventConversationSwitched extends CallControlEvent {
+  const _CallControlEventConversationSwitched(this.callId);
+  final String callId;
   @override
   List<Object?> get props => [callId];
 }

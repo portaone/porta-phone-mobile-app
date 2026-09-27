@@ -318,6 +318,162 @@ void main() {
       );
     });
 
+    test('tapping the room holds the call outside it, and tapping that call brings it back', () async {
+      // The way back used to be pressing Hold on the outside call and knowing
+      // that it meant "return to the conference"; the room's own rows did
+      // nothing at all.
+      final h = CallBlocHarness(capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true));
+      addTearDown(h.close);
+      h.seedEstablishedCall('a', line: 0);
+      h.seedEstablishedCall('b', line: 1);
+      h.bloc.add(const CallControlEvent.merged(['a', 'b']));
+      await pumpEventQueue();
+      h.signaling.emit(
+        ConferenceOfferEvent(
+          room: 7,
+          jsep: const {'type': 'offer', 'sdp': 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n'},
+          participants: [_participant('a', 0), _participant('b', 1)],
+        ),
+      );
+      await pumpEventQueue();
+      final mixer = h.peerFactory.created.single;
+      h.seedEstablishedCall('c', line: 2, number: '300');
+      await _settle(() => mixer.fakeSenders.single.track == null);
+
+      // Into the room: the call outside it is what keeps the room aside.
+      h.bloc.add(const CallControlEvent.conversationSwitched('a'));
+      await _settle(() => h.callkeep.held.any((r) => r.callId == 'c' && r.onHold));
+
+      expect(
+        h.callkeep.held.where((r) => r.callId == 'c' && r.onHold),
+        isNotEmpty,
+        reason: 'the outside call is asked to hold',
+      );
+      await _confirmHolds(h);
+      await _settle(() => h.bloc.state.retrieveActiveCall('c')!.held);
+      expect(h.bloc.state.focusedCall!.callId, 'a', reason: 'and the grid acts on the room again');
+
+      // And back out to it.
+      h.bloc.add(const CallControlEvent.conversationSwitched('c'));
+      await _settle(() => h.callkeep.held.length > 1);
+      await _confirmHolds(h, from: 1);
+      await _settle(() => !h.bloc.state.retrieveActiveCall('c')!.held);
+
+      expect(h.bloc.state.focusedCall!.callId, 'c');
+    });
+
+    test('the tap that came last is the one that decides, whichever way', () async {
+      // Both directions used to be read off the settled state, which the switch
+      // in flight had not changed yet: the second tap found nothing left to do
+      // and the first one's request then landed, leaving the user on the
+      // conversation they had just left.
+      final h = await _roomOfTwoWithOutsideCall();
+      final gate = Completer<void>();
+      h.signaling.gate = gate;
+
+      // Into the room: the hold of the outside call is on its way to the server.
+      h.bloc.add(const CallControlEvent.conversationSwitched('a'));
+      await _settle(() => h.callkeep.held.isNotEmpty);
+      await _confirmHolds(h);
+      await _settle(() => h.signaling.requests.whereType<HoldRequest>().isNotEmpty);
+      expect(h.bloc.state.retrieveActiveCall('c')!.held, isFalse, reason: 'the server has not answered it yet');
+
+      // And back out to that call before the answer arrives.
+      h.bloc.add(const CallControlEvent.conversationSwitched('c'));
+      await pumpEventQueue();
+
+      h.signaling.gate = null;
+      gate.complete();
+      await _settle(() => h.callkeep.held.length > 1);
+      await _confirmHolds(h, from: 1);
+      await _settle(() => h.signaling.requests.whereType<UnholdRequest>().isNotEmpty);
+      await pumpEventQueue();
+
+      expect(h.bloc.state.retrieveActiveCall('c')!.held, isFalse, reason: 'the last tap asked for that call');
+      expect(h.bloc.state.conferenceMustPark, isTrue, reason: 'so the room stands aside for it');
+      expect(h.bloc.state.focusedCall!.callId, 'c');
+    });
+
+    test('a tap back into the room outranks a resume that has not landed', () async {
+      // The other direction: a call being resumed still reads held, so the
+      // live-call rule alone found nothing to hold and let that call come up
+      // after the room was meant to be back.
+      final h = await _roomOfTwoWithOutsideCall(outsideHeld: true);
+      final gate = Completer<void>();
+      h.signaling.gate = gate;
+
+      h.bloc.add(const CallControlEvent.conversationSwitched('c'));
+      await _settle(() => h.callkeep.held.isNotEmpty);
+      await _confirmHolds(h);
+      await _settle(() => h.signaling.requests.whereType<UnholdRequest>().isNotEmpty);
+      expect(h.bloc.state.retrieveActiveCall('c')!.held, isTrue, reason: 'it still reads held');
+
+      // Back into the room before that resume lands: a call reading held is not
+      // a call that will stay held.
+      h.bloc.add(const CallControlEvent.conversationSwitched('a'));
+      await pumpEventQueue();
+
+      h.signaling.gate = null;
+      gate.complete();
+      await _settle(() => h.callkeep.held.length > 1);
+      await _confirmHolds(h, from: 1);
+      await _settle(() => h.bloc.state.retrieveActiveCall('c')!.held);
+      await pumpEventQueue();
+
+      expect(h.bloc.state.retrieveActiveCall('c')!.held, isTrue, reason: 'the last tap asked for the room');
+      expect(h.bloc.state.conferenceMustPark, isFalse, reason: 'so the room is the conversation in use');
+      expect(h.bloc.state.focusedCall!.callId, 'a');
+    });
+
+    test('a refused hold leaves the grid on the call that is still heard', () async {
+      // The tap used to take the focus with it before the hold had succeeded,
+      // so a refusal left the bottom controls on a room nobody could hear -
+      // with End on them ending that room while the host was still talking.
+      final h = await _roomOfTwoWithOutsideCall();
+      h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'hold refused');
+
+      h.bloc.add(const CallControlEvent.conversationSwitched('a'));
+      await _settle(() => h.callkeep.held.isNotEmpty);
+      await _confirmHolds(h);
+      await _settle(() => h.signaling.requests.whereType<HoldRequest>().isNotEmpty);
+      await pumpEventQueue();
+
+      expect(h.bloc.state.retrieveActiveCall('c')!.held, isFalse, reason: 'the server kept the call live');
+      expect(h.bloc.state.conferenceMustPark, isTrue, reason: 'so the room still stands aside');
+      expect(h.bloc.state.focusedCall!.callId, 'c', reason: 'and the grid stays on what is audible');
+    });
+
+    test('a tap on the conversation already in use asks for nothing', () async {
+      final h = await _roomOfTwoWithOutsideCall();
+
+      h.bloc.add(const CallControlEvent.conversationSwitched('c'));
+      await pumpEventQueue();
+
+      expect(h.callkeep.held, isEmpty, reason: 'that call already is the one in use');
+
+      // Two rows of the room are one conversation, so the second tap has
+      // nothing of its own to ask for either.
+      h.bloc.add(const CallControlEvent.conversationSwitched('a'));
+      h.bloc.add(const CallControlEvent.conversationSwitched('b'));
+      await _settle(() => h.callkeep.held.isNotEmpty);
+      await pumpEventQueue();
+
+      expect(h.callkeep.held, hasLength(1));
+    });
+
+    test('a tap is only a selection where there is no room', () async {
+      final h = CallBlocHarness();
+      addTearDown(h.close);
+      h.seedEstablishedCall('x', line: 0);
+      h.seedEstablishedCall('y', line: 1, held: true, number: '200');
+
+      h.bloc.add(const CallControlEvent.conversationSwitched('y'));
+      await pumpEventQueue();
+
+      expect(h.bloc.state.selectedCallId, 'y');
+      expect(h.bloc.state.retrieveActiveCall('y')!.held, isTrue, reason: 'nothing was resumed for it');
+    });
+
     test('a participant leaving does not make the room stand aside', () async {
       final h = CallBlocHarness(capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true));
       addTearDown(h.close);
@@ -427,6 +583,45 @@ void main() {
       expect(h.bloc.state.conference.selfMuted, isTrue);
     });
   });
+}
+
+/// A room of 'a' and 'b' with its connection answered, and a call 'c' outside
+/// it: the two conversations a switch moves between. [outsideHeld] decides
+/// which of them starts as the one in use - the room while 'c' is held, 'c'
+/// while it is live and the room stands aside.
+Future<CallBlocHarness> _roomOfTwoWithOutsideCall({bool outsideHeld = false}) async {
+  final h = CallBlocHarness(capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true));
+  addTearDown(h.close);
+  h.seedEstablishedCall('a', line: 0);
+  h.seedEstablishedCall('b', line: 1);
+  h.bloc.add(const CallControlEvent.merged(['a', 'b']));
+  await pumpEventQueue();
+  h.signaling.emit(
+    ConferenceOfferEvent(
+      room: 7,
+      jsep: const {'type': 'offer', 'sdp': 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n'},
+      participants: [_participant('a', 0), _participant('b', 1)],
+    ),
+  );
+  await pumpEventQueue();
+  final mixer = h.peerFactory.created.single;
+  h.seedEstablishedCall('c', line: 2, held: outsideHeld, number: '300');
+  await _settle(() => (mixer.fakeSenders.single.track == null) != outsideHeld);
+  // Only what a switch asks for is of interest, not the assembly of the room.
+  h.signaling.requests.clear();
+  h.callkeep.held.clear();
+  return h;
+}
+
+/// Plays the native answer for each hold the OS was asked for, as the platform
+/// does - [FakeCallkeep] records a request but delivers no callback. It returns
+/// once the answers are dispatched, not once the server has acknowledged them;
+/// [from] skips the ones already answered.
+Future<void> _confirmHolds(CallBlocHarness h, {int from = 0}) async {
+  for (final request in List.of(h.callkeep.held).skip(from)) {
+    await h.bloc.performSetHeld(request.callId, request.onHold);
+  }
+  await pumpEventQueue();
 }
 
 /// Pumps until [done], or gives up after enough turns for anything the bloc
