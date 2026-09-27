@@ -187,6 +187,26 @@ hold and mute callbacks; a successful explicit resume restores the leg's audio
 with its own mute intent preserved. Rejoining a room transfers isolation back
 to conference membership, and ending a call removes its barrier.
 
+Moving between the two is a tap on either of them: any row of the room leads
+back into it, and the row of the call outside leads out to that call. The tap
+acts rather than merely taking the focus - it holds the conversation left behind
+and resumes the wanted one, and the room's own audio follows from the rule. A tap
+that only took the focus would hand the user the room's controls while the room
+was still silent, which is what the screen did before: the way back was to press
+Hold on the other call and know what that meant. Without a room there is one
+conversation and a tap stays a selection.
+
+The hold is all the tap commands. Which conversation the screen frames, and which
+one the bottom controls act on, is read off the audio by
+[`CallState.focusedCall`] - so a hold the server refuses leaves both on the call
+that is still heard, rather than on a room nobody can hear. Nor is the settled
+state asked whether a switch is needed: between a tap and the server's answer the
+calls still read the way they did before it, so a second tap would find nothing
+to do and the first one's request would land unopposed. The conversation the last
+tap asked for is held in `CallBloc._conversationSwitchInFlight` until that hold
+or unhold settles, refusal included; the requests are ordered by the mutation
+queue, so the tap that came last is the one that settles last.
+
 When to park is [`CallState.conferenceMustPark`], planned in `onChange` off the
 state rather than commanded from the paths that accept and end calls. Four
 places mark a call accepted, the handshake restore after a reconnect among
