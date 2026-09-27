@@ -169,6 +169,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// tells this client's own echoes from a person pressing mute.
   late final LegMuteSync _legMutes = LegMuteSync(callkeep);
 
+  /// Former legs kept locally silent while the host stays on an outside call.
+  /// A hold request can be delayed or refused, so only a successful resume
+  /// releases this barrier. User mute intent remains independent of it.
+  final Set<String> _parkedFormerLegs = {};
+
   final ConnectivityService _connectivityService;
 
   CallBloc({
@@ -392,6 +397,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _logger.fine('onChange nextActiveCallUuids: $nextActiveCallUuids');
 
     for (final removeUuid in currentActiveCallUuids.difference(nextActiveCallUuids)) {
+      _parkedFormerLegs.remove(removeUuid);
       // Disposal is intentionally not awaited to avoid blocking the Bloc processing loop.
       // The CallPeerConnectionManager implements an internal "disposal barrier" (via _pendingDisposals)
       // which guarantees that any subsequent createPeerConnection() for this CallId will
@@ -2597,32 +2603,31 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       return;
     }
     try {
-      await state.performOnActiveCall(event.callId, (activeCall) {
-        if (event.onHold) {
-          return _signalingModule.execute(
-            HoldRequest(
-              transaction: WebtritSignalingClient.generateTransactionId(),
+      final activeCall = state.retrieveActiveCall(event.callId);
+      if (activeCall == null) return;
+      final transaction = WebtritSignalingClient.generateTransactionId();
+      final request = event.onHold
+          ? HoldRequest(
+              transaction: transaction,
               line: activeCall.line,
               callId: activeCall.callId,
               direction: HoldDirection.inactive,
-            ),
-          );
-        } else {
-          return _signalingModule.execute(
-            UnholdRequest(
-              transaction: WebtritSignalingClient.generateTransactionId(),
-              line: activeCall.line,
-              callId: activeCall.callId,
-            ),
-          );
-        }
-      });
+            )
+          : UnholdRequest(transaction: transaction, line: activeCall.line, callId: activeCall.callId);
+      final pending = _signalingModule.execute(request);
+      // No future means nothing was sent, not an acknowledged transition.
+      // In particular, it must not release a former leg's local isolation.
+      if (pending == null) return;
+      await pending;
 
       emit(
         state.copyWithMappedActiveCall(event.callId, (activeCall) {
           return activeCall.copyWith(held: event.onHold);
         }),
       );
+      if (!event.onHold && _parkedFormerLegs.remove(event.callId)) {
+        await _restoreLegAudio(event.callId);
+      }
     } on NotConnectedException {
       _logger.warning('__onMutationPerformSetHeld: not connected, let call survive');
     } on WebtritSignalingTransactionTimeoutException {
@@ -4023,6 +4028,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _PeerConnectionEventStreamAdded event,
     Emitter<CallState> emit,
   ) async {
+    if (_parkedFormerLegs.contains(event.callId)) {
+      for (final track in event.stream.getAudioTracks()) {
+        track.enabled = false;
+      }
+    }
     final currentStream = state.retrieveActiveCall(event.callId)?.remoteStream;
     final sameRef = identical(currentStream, event.stream);
     _logger.info(
@@ -5109,6 +5119,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// own connection and the far end's audio stops playing.
   Future<void> _quietLegs(Iterable<String> callIds) async {
     for (final callId in callIds) {
+      // A rejoined leg is now isolated by the room's own membership again.
+      _parkedFormerLegs.remove(callId);
       final call = state.retrieveActiveCall(callId);
       if (call == null) continue;
       await _setMicrophoneAttached(callId, attached: false);
@@ -5124,6 +5136,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// muted that call. Returns whether there was a call to restore - nothing
   /// is done for one that is gone or going.
   Future<bool> _restoreLegAudio(String callId) async {
+    if (_parkedFormerLegs.contains(callId)) return false;
     final call = state.retrieveActiveCall(callId);
     if (call == null || call.wasHungUp || call.processingStatus == CallProcessingStatus.disconnecting) return false;
     // Hearing the far end again is independent of talking to them: a failure
@@ -5297,6 +5310,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// at once. Detaching it from a sender stops only what that connection
   /// sends.
   Future<void> _setMicrophoneAttached(String callId, {required bool attached}) async {
+    if (attached && _parkedFormerLegs.contains(callId)) return;
     try {
       final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
       if (peerConnection == null) return;
@@ -5330,8 +5344,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   /// Drops the room: its connection, the OS grouping and the state. With
   /// [restoreLegs] the legs still up become ordinary calls again - audio
-  /// back on each, and all but the focused one on hold, since the server
-  /// leaves them all active. Returns the ids of the legs restored.
+  /// back on each, and all but the focused one on hold. During an outside
+  /// call every former leg stays locally silent and is asked to hold instead.
+  /// Returns the ids of the surviving legs.
   Future<List<String>> _leaveRoom(Emitter<CallState> emit, {required bool restoreLegs}) async {
     _conferenceAssemblyTimer?.cancel();
     _conferenceAttempt++;
@@ -5360,11 +5375,21 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
     _tellLegsTheirRoomMute(wereMuted);
     if (wasParked) _tellLegsTheRoomIsParked(legIds, false);
+    final keepLegsParked = state.liveCallsOutsideRoom.isNotEmpty;
     emit(state.copyWith(conference: const ConferenceState()));
     if (!restoreLegs) return const [];
     final restored = <String>[];
     for (final callId in legIds) {
-      if (await _restoreLegAudio(callId)) restored.add(callId);
+      if (keepLegsParked) {
+        final call = state.retrieveActiveCall(callId);
+        if (call == null || call.wasHungUp || call.processingStatus == CallProcessingStatus.disconnecting) continue;
+        // Keep the room's existing isolation until an explicit resume succeeds;
+        // neither requesting nor confirming hold needs the microphone restored.
+        _parkedFormerLegs.add(callId);
+        restored.add(callId);
+      } else if (await _restoreLegAudio(callId)) {
+        restored.add(callId);
+      }
     }
     if (restored.isEmpty) return restored;
     // One of them carries on, the rest go on hold. Which one is the focused
@@ -5372,7 +5397,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // leave the room all active on the server, so a client that only ever
     // added holds would leave every one of them held and the user in
     // silence. A leg merged while it was held is resumed the same way.
-    final live = restored.contains(focused) ? focused! : restored.first;
+    final live = keepLegsParked ? null : (restored.contains(focused) ? focused! : restored.first);
     for (final callId in restored) {
       add(CallControlEvent.setHeld(callId, callId != live));
     }
