@@ -174,6 +174,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// releases this barrier. User mute intent remains independent of it.
   final Set<String> _parkedFormerLegs = {};
 
+  /// The conversation the last tap on the room's screen asked for, while the
+  /// hold or unhold it dispatched is still in flight; `null` when nothing is.
+  ///
+  /// Two things need it. A second tap on the same conversation must not ask
+  /// again, and a tap back to the room must hold a call that a switch has not
+  /// finished resuming - such a call still reads held, so the live-call rule
+  /// alone would leave it to come up after the room was meant to be back.
+  ConversationTarget? _conversationSwitchInFlight;
+
   final ConnectivityService _connectivityService;
 
   CallBloc({
@@ -389,6 +398,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // command it would leave the room carrying a private conversation.
     if (!isClosed && change.nextState.conferenceMustPark != _conferencePeerConnection.isParked) {
       add(const _CallMutationEvent.reconcileConferenceAudio());
+    }
+
+    // No room, no two conversations to move between.
+    if (!change.nextState.conference.isPresent) {
+      _conversationSwitchInFlight = null;
     }
 
     final currentActiveCallUuids = Set.from(change.currentState.activeCalls.map((e) => e.callId));
@@ -1614,6 +1628,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     return switch (event) {
       _CallControlEventStarted() => __onCallControlEventStarted(event, emit),
       _CallControlEventCallSelected() => __onCallControlEventCallSelected(event, emit),
+      _CallControlEventConversationSwitched() => __onCallControlEventConversationSwitched(event, emit),
       _CallControlEventAnswered() => __onCallControlEventAnswered(event, emit),
       _CallControlEventAnsweredEndingOthers() => __onCallControlEventAnsweredEndingOthers(event, emit),
       _CallControlEventAnsweredHoldingOthers() => __onCallControlEventAnsweredHoldingOthers(event, emit),
@@ -1677,6 +1692,67 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// a live call via [CallState.copyWithSelectedCall] (no media side effects).
   Future<void> __onCallControlEventCallSelected(_CallControlEventCallSelected event, Emitter<CallState> emit) async {
     emit(state.copyWithSelectedCall(event.callId));
+  }
+
+  /// Moves the user between the two conversations a room's screen shows: the
+  /// room and a call outside it.
+  ///
+  /// A tap there cannot mean selection alone. The room stands aside for a live
+  /// call outside it, so a row that only took the focus would hand the user
+  /// controls for a conference that is still silent - which is what the screen
+  /// looked like before this existed: the way back was to press Hold on the
+  /// other call and know that it meant "return to the conference".
+  ///
+  /// So the tap does what it reads as: the conversation asked for is resumed and
+  /// the one left behind is held, and the room's own audio follows from
+  /// [CallState.conferenceMustPark] without being commanded here. Without a
+  /// room there is only one conversation and a tap stays a selection.
+  ///
+  /// It commands the hold and nothing else. The focus is not moved here: it is
+  /// read off the audio by [CallState.focusedCall], so a hold the server refuses
+  /// leaves the grid on the conversation that is still audible instead of on a
+  /// silent one. Nor is the settled state asked whether the switch is needed - a
+  /// tap arriving while the previous one is still in flight would read the state
+  /// it has not changed yet and do nothing, leaving the user on the conversation
+  /// they just left. What the last tap asked for is kept in
+  /// [_conversationSwitchInFlight]; the requests are ordered by the mutation
+  /// queue, so the tap that came last is the one that settles last.
+  Future<void> __onCallControlEventConversationSwitched(
+    _CallControlEventConversationSwitched event,
+    Emitter<CallState> emit,
+  ) async {
+    if (!state.conference.isPresent) {
+      add(CallControlEvent.callSelected(event.callId));
+      return;
+    }
+    final switchInFlight = _conversationSwitchInFlight;
+    if (state.conference.isLeg(event.callId)) {
+      const switchToRoom = ConversationTarget.room();
+      if (switchInFlight == switchToRoom) return;
+      // What keeps the room aside is a call outside it that is heard - the live
+      // ones, and one an unsettled switch is in the middle of resuming.
+      final callIdsToHold = <String>{
+        for (final call in state.liveCallsOutsideRoom) call.callId,
+        if (switchInFlight?.callId != null) switchInFlight!.callId!,
+      };
+      // Nothing outside the room is heard, so the room already is in use.
+      if (callIdsToHold.isEmpty) return;
+      _conversationSwitchInFlight = switchToRoom;
+      for (final callId in callIdsToHold) {
+        add(CallControlEvent.setHeld(callId, true));
+      }
+      return;
+    }
+    final outsideCall = state.retrieveActiveCall(event.callId);
+    if (outsideCall == null) return;
+    final switchToOutsideCall = ConversationTarget.outside(event.callId);
+    if (switchInFlight == switchToOutsideCall) return;
+    // Live with nothing in flight: that call already is the conversation.
+    if (switchInFlight == null && !outsideCall.held) return;
+    _conversationSwitchInFlight = switchToOutsideCall;
+    // Resuming it is what parks the room, and the existing plan holds whatever
+    // else is live - the legs are not among them.
+    add(CallControlEvent.resumedHoldingOthers(event.callId));
   }
 
   // Combined-action intents. Each re-dispatches the ordered primitive events
@@ -2656,6 +2732,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (state.retrieveActiveCall(event.callId)?.leavingRoom == true) {
         emit(state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(leavingRoom: false)));
       }
+      // A switch that reached the server has settled, refusal included, so the
+      // next tap asking for the same conversation is a fresh request rather
+      // than a repeat of one in flight.
+      _conversationSwitchInFlight = null;
     }
   }
 
