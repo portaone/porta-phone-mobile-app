@@ -1117,6 +1117,16 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_call_codecs_preferred_video_tip,
       'settings_call_codecs_preferred_video_title' =>
         settings_call_codecs_preferred_video_title,
+      'settings_certificateVerification_Section_title' =>
+        settings_certificateVerification_Section_title,
+      'settings_certificateVerification_Section_tooltip' =>
+        settings_certificateVerification_Section_tooltip,
+      'settings_certificateVerification_verify' =>
+        settings_certificateVerification_verify,
+      'settings_certificateVerification_disabled' =>
+        settings_certificateVerification_disabled,
+      'settings_certificateVerification_warning' =>
+        settings_certificateVerification_warning,
       'settings_callerId_cancel_button' => settings_callerId_cancel_button,
       'settings_callerId_defaultTitle' => settings_callerId_defaultTitle,
       'settings_callerId_dialcode' => settings_callerId_dialcode,
