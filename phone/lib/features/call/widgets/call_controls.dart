@@ -44,6 +44,7 @@ class CallControlsParams {
     required this.dtmfInput,
     this.conference = const ConferenceState(),
     this.conferenceParked = false,
+    this.onConversationSwitched,
     this.onMerge,
     this.onConferenceAdd,
     this.onConferenceSelfMuted,
@@ -106,6 +107,10 @@ class CallControlsParams {
   /// own for it - the focus has already moved to that call - but the panel says
   /// so, and the room's own mute is not offered while it is silent anyway.
   final bool conferenceParked;
+
+  /// Moves the user between the room and a call outside it; `null` where the
+  /// screen has no room to move between.
+  final ValueChanged<String>? onConversationSwitched;
 
   /// Brings the calls outside the room into it; `null` while none of them
   /// can join, which shows the control disabled rather than hiding it.

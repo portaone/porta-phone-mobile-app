@@ -41,11 +41,13 @@ void main() {
   late List<bool> selfMutes;
   late List<({String callId, bool muted})> participantMutes;
   late List<String> hangups;
+  late List<String> switched;
 
   setUp(() {
     selfMutes = [];
     participantMutes = [];
     hangups = [];
+    switched = [];
   });
 
   Widget subject({
@@ -66,6 +68,7 @@ void main() {
           conference: conference ?? _room(),
           calls: calls ?? [_call('a', displayName: 'Anna Marchenko'), _call('b', line: 1, displayName: 'Boris Klein')],
           roomParked: roomParked,
+          onSwitchToConference: switched.add,
           onSelfMutedChanged: selfMutes.add,
           onParticipantMutedChanged: (callId, muted) => participantMutes.add((callId: callId, muted: muted)),
           onParticipantHangup: hangups.add,
@@ -102,6 +105,37 @@ void main() {
         findsOneWidget,
         reason: "the host's own row, and only his - the participants are still heard by each other",
       );
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('the room carries the frame only while it is the conversation in use', (tester) async {
+      // Both blocks drew it at once once the rows became tappable: the room's
+      // own row asked for the frame unconditionally, so a user on the outside
+      // call saw two selected conversations that differed only in wording.
+      await tester.pumpWidget(subject());
+      expect(tester.widget<CallRowFrame>(find.byType(CallRowFrame).first).focused, isTrue);
+
+      await tester.pumpWidget(subject(roomParked: true));
+      expect(
+        tester.widget<CallRowFrame>(find.byType(CallRowFrame).first).focused,
+        isFalse,
+        reason: 'the frame belongs to the call the room stood aside for',
+      );
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('any row of the room is the way back into it', (tester) async {
+      // The room's rows used to do nothing at all, so the only way back from a
+      // call outside it was pressing Hold on that call.
+      await tester.pumpWidget(subject(roomParked: true));
+
+      await tester.tap(find.text('Anna Marchenko'));
+      await tester.pump();
+      expect(switched, ['a'], reason: 'a leg row names its own leg');
+
+      await tester.tap(find.byType(CallRowSelfAvatar));
+      await tester.pump();
+      expect(switched, ['a', 'a'], reason: "the host's own row leads back too");
       await tester.pumpWidget(const SizedBox());
     });
 

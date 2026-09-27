@@ -27,6 +27,7 @@ class ConferencePanel extends StatelessWidget {
     required this.conference,
     required this.calls,
     required this.roomParked,
+    required this.onSwitchToConference,
     required this.onSelfMutedChanged,
     required this.onParticipantMutedChanged,
     required this.onParticipantHangup,
@@ -47,6 +48,11 @@ class ConferencePanel extends StatelessWidget {
   /// the host's row says so and its microphone is not his to press - lifting a
   /// mute would change nothing while the room is silent either way.
   final bool roomParked;
+
+  /// Takes the user back into the room from a call they took outside it: any
+  /// row of the room is that way in. `null` where there is nothing to come
+  /// back from.
+  final ValueChanged<String>? onSwitchToConference;
 
   /// Mutes the host's own microphone towards the room. Nobody in the room is
   /// told; it is the local microphone, not a room-wide mute.
@@ -80,12 +86,16 @@ class ConferencePanel extends StatelessWidget {
         CallRowHeader(label: context.l10n.call_ConferencePanel_header(legs.length), style: style),
         CallRowFrame(
           name: context.l10n.call_ConferencePanel_you,
+          onTap: onSwitchToConference == null ? null : () => onSwitchToConference!(legs.first.key),
           status: roomParked
               ? context.l10n.call_ConferencePanel_hostStatusAside
               : context.l10n.call_ConferencePanel_hostStatus,
           style: style,
           listStyle: listStyle,
-          focused: true,
+          // The room is a conversation like the call outside it, and only one
+          // of the two can be the one the user is in: while the room stands
+          // aside, the frame belongs to that other call.
+          focused: !roomParked,
           leading: CallRowSelfAvatar(style: style),
           trailing: [
             _MuteToggle(
@@ -114,6 +124,7 @@ class ConferencePanel extends StatelessWidget {
             // participant to appear in a list of its own.
             ready: conference.isReady(leg.key),
             muted: conference.participantMuted(leg.key),
+            onTap: onSwitchToConference == null ? null : () => onSwitchToConference!(leg.key),
             onMutedChanged: (muted) => onParticipantMutedChanged(leg.key, muted),
             onHangup: () => onParticipantHangup(leg.key),
             contactResolver: contactResolver,
@@ -136,6 +147,7 @@ class _ParticipantRow extends StatelessWidget {
     required this.callId,
     required this.ready,
     required this.muted,
+    required this.onTap,
     required this.onMutedChanged,
     required this.onHangup,
     required this.contactResolver,
@@ -152,6 +164,7 @@ class _ParticipantRow extends StatelessWidget {
   final String callId;
   final bool ready;
   final bool muted;
+  final VoidCallback? onTap;
   final ValueChanged<bool> onMutedChanged;
   final VoidCallback onHangup;
   final ContactResolver? contactResolver;
@@ -177,6 +190,7 @@ class _ParticipantRow extends StatelessWidget {
 
     return CallRowFrame(
       name: name,
+      onTap: onTap,
       // The picture of whoever this leg is with, the same as a roster row -
       // a leg of a room is still a call with somebody. No state badge: the
       // row says in words whether they are muted for everyone.

@@ -27,6 +27,7 @@ class CallInfoBlock extends StatelessWidget {
     required this.onCallSelected,
     this.conference = const ConferenceState(),
     this.conferenceParked = false,
+    this.onConversationSwitched,
     this.onSelfMutedChanged,
     this.onParticipantMutedChanged,
     this.onParticipantHangup,
@@ -46,6 +47,7 @@ class CallInfoBlock extends StatelessWidget {
       onCallSelected = params.onCallSelected,
       conference = params.conference,
       conferenceParked = params.conferenceParked,
+      onConversationSwitched = params.onConversationSwitched,
       onSelfMutedChanged = params.onConferenceSelfMuted,
       onParticipantMutedChanged = params.onConferenceParticipantMuted,
       onParticipantHangup = params.onConferenceParticipantHangup,
@@ -66,6 +68,11 @@ class CallInfoBlock extends StatelessWidget {
 
   /// Whether that room has stood aside for a call outside it.
   final bool conferenceParked;
+
+  /// Moves the user between the room and a call outside it. While a room
+  /// stands, a row is tapped to go to that conversation rather than merely to
+  /// point the controls at it.
+  final ValueChanged<String>? onConversationSwitched;
 
   final ValueChanged<bool>? onSelfMutedChanged;
   final void Function(String callId, bool muted)? onParticipantMutedChanged;
@@ -106,6 +113,7 @@ class CallInfoBlock extends StatelessWidget {
             conference: conference,
             calls: activeCalls,
             roomParked: conferenceParked,
+            onSwitchToConference: onConversationSwitched,
             onSelfMutedChanged: onSelfMutedChanged ?? (_) {},
             onParticipantMutedChanged: onParticipantMutedChanged ?? (_, _) {},
             onParticipantHangup: onParticipantHangup ?? (_) {},
@@ -129,7 +137,9 @@ class CallInfoBlock extends StatelessWidget {
               contactResolver: contactResolver,
               style: style?.callInfo,
               listStyle: style?.list,
-              onCallTap: onCallSelected,
+              // Under a room this list is the other conversation, so a tap
+              // goes to it rather than only pointing the controls at it.
+              onCallTap: onConversationSwitched ?? onCallSelected,
             ),
         ],
       );

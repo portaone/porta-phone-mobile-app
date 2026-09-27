@@ -441,6 +441,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                       onConferenceAdd: widget.canAdd ? _addToConference : null,
                       conference: widget.conference,
                       conferenceParked: widget.conferenceParked,
+                      onConversationSwitched: (callId) => _callBloc.add(CallControlEvent.conversationSwitched(callId)),
                       onConferenceSelfMuted: (muted) => _callBloc.add(CallControlEvent.conferenceSelfMuted(muted)),
                       onConferenceParticipantMuted: (callId, muted) =>
                           _callBloc.add(CallControlEvent.conferenceParticipantMuted(callId, muted)),
