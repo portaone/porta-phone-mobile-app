@@ -3,7 +3,7 @@
 Merging the calls a person already holds into one room where everybody hears
 everybody. The room is the server's - a Janus AudioBridge the backend builds
 and owns - and this client asks for it, joins it, and follows what it says.
-Last reviewed: 2026-09-17.
+Last reviewed: 2026-09-27.
 
 The wire format, every refusal reason and the obligations this client is held
 to are in
@@ -174,6 +174,18 @@ which is the only handle on what is heard - the mixed audio plays natively and
 no stream of it is kept. That track exists only once a remote description has
 been set, so the state is applied again after every answer: a room parked while
 it was still assembling would otherwise come up audible.
+
+If both attempts to apply parking fail, the connection gives the room up.
+The failure is checked against the current request after the await as well as
+before it: an obsolete failure cannot terminate a room whose audio intent has
+already changed.
+
+When a room is lost or terminated during an outside call, every surviving leg
+stays locally silent and is asked to hold. None is automatically resumed into
+the private conversation. This local barrier survives a delayed or refused
+hold and mute callbacks; a successful explicit resume restores the leg's audio
+with its own mute intent preserved. Rejoining a room transfers isolation back
+to conference membership, and ending a call removes its barrier.
 
 When to park is [`CallState.conferenceMustPark`], planned in `onChange` off the
 state rather than commanded from the paths that accept and end calls. Four
