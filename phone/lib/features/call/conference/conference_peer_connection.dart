@@ -193,6 +193,9 @@ class ConferencePeerConnection {
           await _applyAudioState();
           return;
         } catch (e) {
+          // The await can outlive this request, including on its last attempt.
+          // Only a failure of the current intent can give the room up.
+          if (request != _parkRequest) return;
           _logger.warning('setParked: applying the room audio failed (attempt $attempt of $_parkAttempts)', e);
           if (attempt == _parkAttempts) {
             _giveUpUnappliedRoom();
