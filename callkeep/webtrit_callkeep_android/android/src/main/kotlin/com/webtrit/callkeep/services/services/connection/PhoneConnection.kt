@@ -85,6 +85,15 @@ class PhoneConnection internal constructor(
 
     private var lastKnownState: Int? = null
 
+    /**
+     * The mute Telecom last reported for this call. It is the system's value, not the call's:
+     * [changeMuteState] never reaches Telecom, so a call muted from the app still reads unmuted
+     * here, and Telecom re-announces that stale value whenever it re-describes the call - a call
+     * leaving a group, for one. Only a change of this value is somebody pressing mute on the
+     * system's side (a headset button, a car); a repeat must not undo the app's own mute.
+     */
+    private var systemMute = false
+
     val callId: String
         get() = metadata.callId
 
@@ -507,11 +516,17 @@ class PhoneConnection internal constructor(
     }
 
     /**
-     * Syncs system mute state changes for API 34+.
+     * Syncs system mute state changes for API 34+. Only a change of the system's value is
+     * applied; see [systemMute] for why a repeat is ignored.
      */
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onMuteStateChanged(isMuted: Boolean) {
         super.onMuteStateChanged(isMuted)
+        if (isMuted == systemMute) {
+            logger.d("Mute state repeated via system: $isMuted, call keeps mute: $isMute")
+            return
+        }
+        systemMute = isMuted
         logger.d("Mute state changed via system: $isMuted")
         callConnection.setMuted(isMuted)
         dispatcher(CallMediaEvent.AudioMuting, metadata.copy(hasMute = isMute))
