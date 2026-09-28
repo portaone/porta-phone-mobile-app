@@ -137,11 +137,7 @@ class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBinding
     );
   }
 
-  Future<void> _refreshContacts() async {
-    final tabBloc = context.read<ContactsLocalTabBloc>();
-    tabBloc.add(const ContactsLocalTabRefreshed());
-    await tabBloc.stream.firstWhere((state) => state.status != ContactsLocalTabStatus.inProgress);
-  }
+  Future<void> _refreshContacts() => context.read<ContactsLocalTabBloc>().refresh();
 
   @override
   void dispose() {

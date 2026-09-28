@@ -12,7 +12,18 @@ class LocalContactsSyncStarted extends LocalContactsSyncEvent {
 }
 
 class LocalContactsSyncRefreshed extends LocalContactsSyncEvent {
-  const LocalContactsSyncRefreshed();
+  LocalContactsSyncRefreshed();
+
+  final _completed = Completer<void>();
+
+  Future<void> get completed => _completed.future;
+
+  void complete() {
+    if (!_completed.isCompleted) _completed.complete();
+  }
+
+  @override
+  List<Object?> get props => [_completed];
 }
 
 class _LocalContactsSyncUpdated extends LocalContactsSyncEvent {

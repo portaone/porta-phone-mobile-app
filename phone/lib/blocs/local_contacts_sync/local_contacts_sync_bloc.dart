@@ -29,7 +29,9 @@ class LocalContactsSyncBloc extends Bloc<LocalContactsSyncEvent, LocalContactsSy
     required this.requestContactPermission,
   }) : super(const LocalContactsSyncInitial()) {
     on<LocalContactsSyncStarted>(_onStarted, transformer: sequential());
-    on<LocalContactsSyncRefreshed>(_onRefreshed, transformer: droppable());
+    // No droppable here: a dropped event never reaches the handler that
+    // completes it, and the caller of refresh() would wait forever.
+    on<LocalContactsSyncRefreshed>(_onRefreshed);
     on<_LocalContactsSyncUpdated>(_onUpdated, transformer: droppable());
   }
 
@@ -42,6 +44,22 @@ class LocalContactsSyncBloc extends Bloc<LocalContactsSyncEvent, LocalContactsSy
   final AsyncCallback requestContactPermission;
 
   StreamSubscription<List<LocalContact>>? _contactsSubscription;
+
+  /// Refreshes the device contacts and completes once the refresh has been
+  /// handled: a gate turned it down, or the device contacts were read (the
+  /// sync into the database follows through the repository stream), or the
+  /// read failed. The future never fails.
+  ///
+  /// Await this rather than the next state: a gate that turns a refresh down
+  /// re-emits a state equal to the current one, the bloc drops it, and no next
+  /// state ever comes.
+  Future<void> refresh() {
+    if (isClosed) return Future.value();
+
+    final event = LocalContactsSyncRefreshed();
+    add(event);
+    return event.completed;
+  }
 
   void _onStarted(LocalContactsSyncStarted event, Emitter<LocalContactsSyncState> emit) async {
     _logger.finer('_onStarted');
@@ -69,12 +87,20 @@ class LocalContactsSyncBloc extends Bloc<LocalContactsSyncEvent, LocalContactsSy
 
     _initContactsSubscription();
 
-    add(const LocalContactsSyncRefreshed());
+    add(LocalContactsSyncRefreshed());
   }
 
-  void _onRefreshed(LocalContactsSyncRefreshed event, Emitter<LocalContactsSyncState> emit) async {
+  Future<void> _onRefreshed(LocalContactsSyncRefreshed event, Emitter<LocalContactsSyncState> emit) async {
     _logger.finer('_onRefreshed');
 
+    try {
+      await _refresh(emit);
+    } finally {
+      event.complete();
+    }
+  }
+
+  Future<void> _refresh(Emitter<LocalContactsSyncState> emit) async {
     final featureEnabled = await isFeatureEnabled();
     if (isClosed) return;
     if (!featureEnabled) {
