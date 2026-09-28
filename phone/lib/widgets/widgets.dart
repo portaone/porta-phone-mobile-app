@@ -15,6 +15,7 @@ export 'count_badge.dart';
 export 'destination_picking.dart';
 export 'destination_pick_report_presenter.dart';
 export 'diagnostic_report_dialog.dart';
+export 'dropdown_menu_semantics.dart';
 export 'embedded_request_error.dart';
 export 'extended_text.dart';
 export 'extended_text_form_field.dart';

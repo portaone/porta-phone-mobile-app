@@ -52,6 +52,25 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('each preset of the open menu is a control of its own', (tester) async {
+      final harness = PresenceSettingsHarness();
+      await harness.pump(tester);
+      final handle = tester.ensureSemantics();
+
+      final chooser = tester.getSemantics(find.bySemanticsIdentifier(presenceSettingsPresetId));
+      chooser.owner!.performAction(chooser.id, SemanticsAction.expand);
+      await tester.pumpAndSettle();
+
+      final entry = find.bySemanticsLabel('Do not disturb');
+      expectReachesPlatform(tester, entry);
+
+      await tapViaSemantics(tester, entry);
+      await tester.pumpAndSettle();
+      expect(harness.settings.dndMode, isTrue);
+
+      handle.dispose();
+    });
+
     testWidgets('the section of controls carries an id on the row that opens it', (tester) async {
       final harness = PresenceSettingsHarness();
       await harness.pump(tester);
@@ -136,6 +155,7 @@ void main() {
       node.owner!.performAction(node.id, SemanticsAction.expand);
       await tester.pumpAndSettle();
       expect(find.text('In a meeting').hitTestable(), findsWidgets);
+      expectReachesPlatform(tester, find.bySemanticsLabel('In a meeting'));
 
       handle.dispose();
     });
@@ -301,4 +321,34 @@ void main() {
       handle.dispose();
     });
   });
+}
+
+/// Fails when the open menu [entry] belongs to would never reach the platform.
+///
+/// The menu lives in the overlay, and reaches the platform only as the
+/// traversal children of the chooser's own node. Merged into a wrapper, that
+/// node is never sent, and the entries are drawn with nothing to hear or pick -
+/// while framework-side they still look like nodes of their own.
+void expectReachesPlatform(WidgetTester tester, Finder entry) {
+  SemanticsNode? child = tester.getSemantics(entry);
+  while (child != null && child.traversalChildIdentifier == null) {
+    child = child.parent;
+  }
+  expect(child, isNotNull, reason: 'the menu is not tied to the chooser in traversal order');
+  final parents = <SemanticsNode>[];
+  void collect(SemanticsNode node) {
+    if (node.traversalParentIdentifier == child!.traversalChildIdentifier) parents.add(node);
+    node.visitChildren((c) {
+      collect(c);
+      return true;
+    });
+  }
+
+  var root = child!;
+  while (root.parent != null) {
+    root = root.parent!;
+  }
+  collect(root);
+  expect(parents, hasLength(1));
+  expect(parents.single.isMergedIntoParent, isFalse, reason: 'the chooser node is merged away');
 }

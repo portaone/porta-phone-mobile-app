@@ -95,94 +95,92 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
                           // says what the choice is about: the caption beside it
                           // is a node of its own, and the frame around it reads
                           // "Custom".
-                          child: SemanticAction(
+                          child: DropdownMenuSemantics(
                             label: l10n.presenceSettings_SemanticsLabel_preset,
                             identifier: presenceSettingsPresetId,
-                            // The chosen preset is spoken here rather than left
-                            // to the field inside the chooser: on the web the
-                            // framework drops that field from the tree, and the
-                            // choice would go silent with it.
-                            child: Semantics(
-                              value: isBlank
-                                  ? l10n.presence_settings_presets_label
-                                  : selectedPreset?.name ?? l10n.presence_settings_presets_label_custom,
-                              child: DropdownMenu<PresenceSettingsPreset?>(
-                                // The chooser offers a list and nothing else: it
-                                // is not a field to type into, and off mobile it
-                                // would otherwise become one.
-                                selectOnly: true,
-                                key: ValueKey('${equalKey}preset'),
-                                controller: TextEditingController(),
-                                dropdownMenuEntries: presets
-                                    .map(
-                                      (e) => DropdownMenuEntry(
-                                        value: e,
-                                        label: e.name,
-                                        style: _menuEntryStyle(),
-                                        labelWidget: Row(
-                                          children: [
-                                            SizedBox(
-                                              width: _presetMarkSide,
-                                              height: _presetMarkSide,
-                                              child: SipPresenceIndicator(
-                                                presenceInfo: [
-                                                  PresenceInfo(
-                                                    id: 'id',
-                                                    number: 'number',
-                                                    available: e.available,
-                                                    note: e.note,
-                                                    activities: [if (e.activity != null) e.activity!],
-                                                    statusIcon: null,
-                                                    device: 'device',
-                                                    timeOffsetMin: 0,
-                                                    timestamp: DateTime.now(),
-                                                    source: PresenceInfoSource.direct,
-                                                    arrivalTime: DateTime.now(),
-                                                  ),
-                                                ],
-                                                presenceRect: Rect.fromLTWH(0, 0, _presetMarkSide, _presetMarkSide),
-                                                dialogInfo: [],
-                                              ),
+                            value: isBlank
+                                ? l10n.presence_settings_presets_label
+                                : selectedPreset?.name ?? l10n.presence_settings_presets_label_custom,
+                            child: DropdownMenu<PresenceSettingsPreset?>(
+                              // The chooser offers a list and nothing else: it
+                              // is not a field to type into, and off mobile it
+                              // would otherwise become one.
+                              selectOnly: true,
+                              key: ValueKey('${equalKey}preset'),
+                              controller: TextEditingController(),
+                              dropdownMenuEntries: presets
+                                  .map(
+                                    (e) => DropdownMenuEntry(
+                                      value: e,
+                                      label: e.name,
+                                      style: _menuEntryStyle(),
+                                      labelWidget: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: _presetMarkSide,
+                                            height: _presetMarkSide,
+                                            child: SipPresenceIndicator(
+                                              presenceInfo: [
+                                                PresenceInfo(
+                                                  id: 'id',
+                                                  number: 'number',
+                                                  available: e.available,
+                                                  note: e.note,
+                                                  activities: [if (e.activity != null) e.activity!],
+                                                  statusIcon: null,
+                                                  device: 'device',
+                                                  timeOffsetMin: 0,
+                                                  timestamp: DateTime.now(),
+                                                  source: PresenceInfoSource.direct,
+                                                  arrivalTime: DateTime.now(),
+                                                ),
+                                              ],
+                                              presenceRect: Rect.fromLTWH(0, 0, _presetMarkSide, _presetMarkSide),
+                                              dialogInfo: [],
                                             ),
-                                            SizedBox(width: 8),
-                                            Flexible(
-                                              child: Text(
-                                                e.name,
-                                                style: TextStyle(fontSize: 14),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              e.name,
+                                              style: TextStyle(fontSize: 14),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                    )
-                                    .toList(),
-                                initialSelection: selectedPreset,
-                                onSelected: (value) {
-                                  if (value == null) return;
-                                  final update = state
-                                      .copyWithAvailable(value.available)
-                                      .copyWithNote(value.note)
-                                      .copyWithActivity(value.activity)
-                                      .copyWithDndMode(value.dndMode);
-                                  cubit.setPresenceSettings(update);
-                                  setState(() => equalKey = DateTime.now().microsecondsSinceEpoch.toString());
-                                },
-                                label: isBlank
+                                    ),
+                                  )
+                                  .toList(),
+                              initialSelection: selectedPreset,
+                              onSelected: (value) {
+                                if (value == null) return;
+                                final update = state
+                                    .copyWithAvailable(value.available)
+                                    .copyWithNote(value.note)
+                                    .copyWithActivity(value.activity)
+                                    .copyWithDndMode(value.dndMode);
+                                cubit.setPresenceSettings(update);
+                                setState(() => equalKey = DateTime.now().microsecondsSinceEpoch.toString());
+                              },
+                              label: DropdownMenuCaption(
+                                label: l10n.presenceSettings_SemanticsLabel_preset,
+                                identifier: presenceSettingsPresetId,
+                                child: isBlank
                                     ? Text(l10n.presence_settings_presets_label)
                                     : Text(l10n.presence_settings_presets_label_custom),
-                                menuStyle: MenuStyle(
-                                  backgroundColor: WidgetStateProperty.all(colorScheme.surfaceBright),
-                                  // The framework pads the popup 8 dp top and
-                                  // bottom, which reads as a gap above the
-                                  // first row and below the last.
-                                  padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 4)),
-                                ),
-                                inputDecorationTheme: InputDecorationTheme(
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                  isCollapsed: true,
-                                ),
+                              ),
+                              menuStyle: MenuStyle(
+                                backgroundColor: WidgetStateProperty.all(colorScheme.surfaceBright),
+                                // The framework pads the popup 8 dp top and
+                                // bottom, which reads as a gap above the
+                                // first row and below the last.
+                                padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 4)),
+                              ),
+                              inputDecorationTheme: InputDecorationTheme(
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                isCollapsed: true,
                               ),
                             ),
                           ),
@@ -274,7 +272,7 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
                                     // The caption of the frame around this one is
                                     // read out with it, so it needs no name of its
                                     // own - only an id to be found by.
-                                    child: SemanticAction(
+                                    child: DropdownMenuSemantics(
                                       identifier: presenceSettingsActivityId,
                                       child: DropdownMenu<PresenceActivity?>(
                                         dropdownMenuEntries: [
@@ -347,7 +345,10 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
                                         onSelected: (value) {
                                           cubit.setPresenceSettings(state.copyWithActivity(value));
                                         },
-                                        label: Text(l10n.presence_settings_activity_label),
+                                        label: DropdownMenuCaption(
+                                          identifier: presenceSettingsActivityId,
+                                          child: Text(l10n.presence_settings_activity_label),
+                                        ),
                                         menuStyle: MenuStyle(
                                           backgroundColor: WidgetStateProperty.all(colorScheme.surfaceBright),
                                           padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 4)),
