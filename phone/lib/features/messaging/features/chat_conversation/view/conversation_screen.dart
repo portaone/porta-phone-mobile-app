@@ -8,6 +8,7 @@ import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
+import 'package:webtrit_phone/features/messaging/features/conversations/view/conversations_screen_styles.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/theme/theme.dart';
@@ -99,9 +100,14 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
           return Scaffold(
             extendBodyBehindAppBar: true,
             appBar: AppBar(
-              flexibleSpace: BlurredSurface.adaptive(context),
-              // Themes that configure no bar color keep the historic translucent bar
-              // (the adaptive frost on top), instead of the opaque framework default.
+              // A thread is part of the conversations section, so its bar is
+              // frosted the way the conversations list is.
+              flexibleSpace: BlurredSurface.forPage(
+                context,
+                Theme.of(context).extension<ConversationsScreenStyles>()?.primary?.appBarBlurredSurface,
+              ),
+              // Themes that configure no bar color keep a translucent bar instead
+              // of the opaque framework default.
               backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.transparent,
               centerTitle: true,
               title: FadeIn(

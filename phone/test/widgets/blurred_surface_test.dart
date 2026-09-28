@@ -69,4 +69,40 @@ void main() {
       expect(await adaptiveFor(tester, const Color(0xFF14284B)), isNull);
     });
   });
+
+  group('BlurredSurface.forPage', () {
+    Future<BlurredSurface?> forPage(WidgetTester tester, {Color? bar, BlurredSurfaceStyle? pageTint}) async {
+      BlurredSurface? result;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(appBarTheme: AppBarTheme(backgroundColor: bar)),
+          home: Builder(
+            builder: (context) {
+              result = BlurredSurface.forPage(context, pageTint);
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      return result;
+    }
+
+    testWidgets('takes the page tint when the page has one', (tester) async {
+      final surface = await forPage(
+        tester,
+        bar: const Color(0xCA50173F),
+        pageTint: const BlurredSurfaceStyle(color: Colors.red),
+      );
+      expect(surface?.color, Colors.red);
+    });
+
+    testWidgets('leaves a coloured bar alone when the page has no tint', (tester) async {
+      expect(await forPage(tester, bar: const Color(0xCA50173F)), isNull);
+    });
+
+    testWidgets('keeps the adaptive frost when neither has a colour', (tester) async {
+      final surface = await forPage(tester);
+      expect(surface?.color?.a, closeTo(0x96 / 255, 0.01));
+    });
+  });
 }
