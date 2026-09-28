@@ -187,6 +187,12 @@ hold and mute callbacks; a successful explicit resume restores the leg's audio
 with its own mute intent preserved. Rejoining a room transfers isolation back
 to conference membership, and ending a call removes its barrier.
 
+While the room is the one standing aside, its participants' controls step back
+to half weight - the hangups especially, which would otherwise shout from a
+conversation the user is not in. They are dimmed and never disabled: a room-wide
+mute and a hangup still reach the room while the host is elsewhere, and the
+semantics are untouched, so a screen reader offers both exactly as before.
+
 Moving between the two is a tap on either of them: any row of the room leads
 back into it, and the row of the call outside leads out to that call. The tap
 acts rather than merely taking the focus - it holds the conversation left behind

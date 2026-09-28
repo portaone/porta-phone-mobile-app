@@ -108,6 +108,21 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets("a participant's controls step back while the room is not in use, and still work", (tester) async {
+      // Dimmed rather than disabled on purpose: a room-wide mute and a hangup
+      // still reach the room while the host is on another call, so taking them
+      // away would cost a real capability to tidy the screen.
+      await tester.pumpWidget(subject(roomParked: true));
+      final dimmed = tester.widgetList<Opacity>(find.byType(Opacity)).map((o) => o.opacity).toSet();
+
+      expect(dimmed.contains(1.0), isFalse, reason: 'every participant control is stepped back');
+
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantMuteId, 0)));
+      await tester.pump();
+      expect(participantMutes, [(callId: 'a', muted: true)], reason: 'and it still acts');
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('the room carries the frame only while it is the conversation in use', (tester) async {
       // Both blocks drew it at once once the rows became tappable: the room's
       // own row asked for the frame unconditionally, so a user on the outside
