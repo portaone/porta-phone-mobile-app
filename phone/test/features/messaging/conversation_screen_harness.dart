@@ -177,8 +177,9 @@ class ConversationScreenHarness {
     );
   }
 
-  Widget wrap(Widget screen) {
+  Widget wrap(Widget screen, {ThemeData? theme}) {
     return MaterialApp(
+      theme: theme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: MultiRepositoryProvider(

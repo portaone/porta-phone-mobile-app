@@ -21,6 +21,20 @@ class BlurredSurface extends StatelessWidget {
     return BlurredSurface(color: style.color, sigmaX: style.sigmaX ?? 10, sigmaY: style.sigmaY ?? 10);
   }
 
+  /// The frost of a screen that takes its tint from a page style of the theme.
+  ///
+  /// [pageTint] is that page's `appBarBlurredSurface`. When the page has one,
+  /// it is used, as the page's own screens use it. When it has none, what the
+  /// bar shows depends on whether the theme gives the bar a colour: a bar with
+  /// a colour of its own is left to show it, like the page's screens do, and a
+  /// bar with none keeps the [adaptive] frost, because these screens draw the
+  /// bar transparent and without it the content would run under the title.
+  static BlurredSurface? forPage(BuildContext context, BlurredSurfaceStyle? pageTint) {
+    if (pageTint != null) return fromStyle(pageTint);
+    if (Theme.of(context).appBarTheme.backgroundColor != null) return null;
+    return adaptive(context);
+  }
+
   /// Frosted-glass fallback for app bars that have no configured blur style.
   ///
   /// Returns the blur only while the themed app bar background is translucent,
