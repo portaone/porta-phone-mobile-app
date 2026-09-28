@@ -105,6 +105,19 @@ that ended is over, a member that ended or was replaced is left out - so neither
 waited in the queue nor a late answer records anything but what is still live, asks an
 invalidated provider for anything, or touches the next session's groups.
 
+The members of a group share one hold, and it follows the calls outside the group. CallKit keeps
+one active and one held call, and grouping leaves each member on the hold it had as a separate
+call - usually one active and one held, since the first call was held for the second to be
+placed. The next call that went active then made CallKit end the active member ("Ending current
+active call ... because call ... is going to go active"), and a room lost a participant. So the
+plugin keeps every member held while a call outside the group is active or going active, and
+resumed once none is. The hold changes ride in the same transaction as the request that moves a
+call outside - `setCallGroup`, `startCall`, `answerCall`, `setHeld`, `endCall` - and follow a call
+that ends on the far side as soon as CallKit reports it. They are the plugin's own and are
+fulfilled without reaching the delegate. For this the native side keeps its own copy of the
+membership, set by `setCallGroup`, emptied once CallKit has taken an ungrouping (a refused one
+leaves the group standing, and its hold with it), and by the end of a member.
+
 ---
 
 ## iOS-only API
