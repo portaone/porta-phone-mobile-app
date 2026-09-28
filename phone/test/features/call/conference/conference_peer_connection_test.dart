@@ -12,6 +12,13 @@ import '../bloc/call_bloc_harness.dart';
 final _offer = RTCSessionDescription('v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n', 'offer');
 final _candidate = RTCIceCandidate('candidate:1 1 udp 1 10.0.0.1 5000 typ host', '0', 0);
 
+/// The three intents a room is ever asked for. Which reason produced one -
+/// the host's own mute, or the room standing aside - is [CallState.roomAudio]'s
+/// business; the connection is told the outcome and nothing else.
+const _carrying = CallAudio(microphone: true, audible: true);
+const _muted = CallAudio(microphone: false, audible: true);
+const _parked = CallAudio.silent();
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -98,7 +105,7 @@ void main() {
   });
 
   test('self mute takes the microphone off the room and is kept across a rebuilt connection', () async {
-    await connection.setSelfMuted(true);
+    await connection.apply(_muted);
     await connection.answer(room: 1, offer: _offer);
     expect(factory.created.single.fakeSenders.single.track, isNull);
     // The microphone itself is every call's; the room mutes by letting go of
@@ -108,7 +115,7 @@ void main() {
     await connection.answer(room: 2, offer: _offer);
     expect(factory.created.last.fakeSenders.single.track, isNull, reason: 'the new room starts muted too');
 
-    await connection.setSelfMuted(false);
+    await connection.apply(_carrying);
     expect(factory.created.last.fakeSenders.single.track, media.microphone);
 
     await connection.teardown();
@@ -124,7 +131,7 @@ void main() {
     expect(peer.fakeSenders.single.track, media.microphone);
     expect(peer.fakeTransceivers.single.receiver.track!.enabled, isTrue);
 
-    await connection.setParked(true);
+    await connection.apply(_parked);
     expect(connection.isParked, isTrue);
     expect(peer.fakeSenders.single.track, isNull, reason: 'the room hears nothing of the host');
     expect(peer.fakeTransceivers.single.receiver.track!.enabled, isFalse, reason: 'and the host nothing of it');
@@ -132,7 +139,7 @@ void main() {
     // outside the room that the host is talking into.
     expect(media.microphone.enabled, isTrue);
 
-    await connection.setParked(false);
+    await connection.apply(_carrying);
     expect(peer.fakeSenders.single.track, media.microphone);
     expect(peer.fakeTransceivers.single.receiver.track!.enabled, isTrue);
   });
@@ -142,7 +149,7 @@ void main() {
     // inbound half of the parking can only be applied once the offer has been
     // answered - the room is parked while it is still assembling whenever the
     // outside call started first.
-    await connection.setParked(true);
+    await connection.apply(_parked);
     await connection.answer(room: 1, offer: _offer);
 
     final peer = factory.created.single;
@@ -150,29 +157,28 @@ void main() {
     expect(peer.fakeTransceivers.single.receiver.track!.enabled, isFalse);
   });
 
-  test('parking and the self mute hold the microphone back independently', () async {
+  test('a muted room is still heard, a parked one is not', () async {
+    // Two reasons, one intent: which of them silenced the sender is
+    // [CallState.roomAudio]'s business, and the difference the connection
+    // knows is that a mute closes one direction and parking closes both.
     await connection.answer(room: 1, offer: _offer);
     final peer = factory.created.single;
 
-    await connection.setSelfMuted(true);
-    await connection.setParked(true);
-    await connection.setParked(false);
-
-    expect(peer.fakeSenders.single.track, isNull, reason: 'the mute the host asked for outlived the outside call');
+    await connection.apply(_muted);
+    expect(peer.fakeSenders.single.track, isNull, reason: 'the room hears nothing of the host');
     expect(peer.fakeTransceivers.single.receiver.track!.enabled, isTrue, reason: 'a muted host still hears the room');
 
-    await connection.setParked(true);
-    await connection.setSelfMuted(false);
-    expect(peer.fakeSenders.single.track, isNull, reason: 'unmuting does not unpark');
+    await connection.apply(_parked);
     expect(peer.fakeTransceivers.single.receiver.track!.enabled, isFalse);
 
-    await connection.setParked(false);
+    await connection.apply(_carrying);
     expect(peer.fakeSenders.single.track, media.microphone);
+    expect(peer.fakeTransceivers.single.receiver.track!.enabled, isTrue);
   });
 
   test('parking is kept across a rebuilt connection and forgotten with the room', () async {
     await connection.answer(room: 1, offer: _offer);
-    await connection.setParked(true);
+    await connection.apply(_parked);
 
     await connection.answer(room: 2, offer: _offer);
     expect(factory.created.last.fakeSenders.single.track, isNull, reason: 'the new room is parked too');
@@ -200,7 +206,7 @@ void main() {
     await connection.answer(room: 1, offer: _offer);
     failing.created.single.failTransceivers = true;
 
-    await expectLater(connection.setParked(true), throwsA(isA<StateError>()));
+    await expectLater(connection.apply(_parked), throwsA(isA<StateError>()));
 
     expect(connection.isParked, isTrue);
     expect(lost, 1, reason: 'and the room is given up rather than left undescribable');
@@ -224,7 +230,7 @@ void main() {
     // fails - once, the way a blip does.
     peer.failTransceiversAfter = 1;
 
-    await connection.setParked(true);
+    await connection.apply(_parked);
 
     expect(peer.fakeSenders.single.track, isNull);
     expect(peer.fakeTransceivers.single.receiver.track!.enabled, isFalse, reason: 'the retry finished the job');
@@ -249,7 +255,7 @@ void main() {
     peer.failTransceiversAfter = 1;
     peer.failAfterRetry = true;
 
-    await expectLater(connection.setParked(true), throwsA(isA<StateError>()));
+    await expectLater(connection.apply(_parked), throwsA(isA<StateError>()));
 
     expect(lost, 1, reason: 'the owner is told to give the room up');
     expect(peer.fakeSenders.single.track, isNull, reason: 'and the room was never given the host back');
@@ -274,7 +280,7 @@ void main() {
     final held = Completer<void>();
     peer.holdFailure = held;
 
-    final parking = connection.setParked(true);
+    final parking = connection.apply(_parked);
     await pumpEventQueue();
     expect(peer.fakeSenders.single.track, isNull, reason: 'the microphone is off before the lookup');
 
@@ -296,9 +302,9 @@ void main() {
     await connection.answer(room: 1, offer: _offer);
     final peer = factory.created.single;
 
-    final first = connection.setParked(true);
-    final second = connection.setParked(false);
-    final third = connection.setParked(true);
+    final first = connection.apply(_parked);
+    final second = connection.apply(_carrying);
+    final third = connection.apply(_parked);
     await Future.wait([first, second, third]);
 
     expect(peer.fakeSenders.single.track, isNull);
