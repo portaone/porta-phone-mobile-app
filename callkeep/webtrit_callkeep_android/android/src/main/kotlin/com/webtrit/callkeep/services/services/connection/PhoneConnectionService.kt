@@ -6,6 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.telecom.Connection
 import android.telecom.ConnectionRequest
 import android.telecom.ConnectionService
@@ -546,6 +548,63 @@ class PhoneConnectionService : ConnectionService() {
     companion object {
         private const val TAG = "PhoneConnectionService"
 
+        /**
+         * How long Telecom's focus takes to leave a call it has just seen go on hold or end.
+         *
+         * Telecom moves its focus on its own handler, after the state change, and a call that
+         * reached DISCONNECTED is still active for it for a few milliseconds more (a survivor made
+         * active in that window was disconnected 12 ms later). A call made active before the focus
+         * has moved is arbitrated against the old focus as if nothing had changed.
+         */
+        internal const val GROUP_FOCUS_SETTLE_MS = 300L
+
+        private val mainHandler = Handler(Looper.getMainLooper())
+
+        /** Runs [block] once [GROUP_FOCUS_SETTLE_MS] has passed. */
+        private fun afterFocusSettles(block: () -> Unit) {
+            mainHandler.postDelayed(block, GROUP_FOCUS_SETTLE_MS)
+        }
+
+        /** Calls outside the group waiting to go active; the group is not resumed meanwhile. */
+        private val pendingActivations = mutableMapOf<PhoneConnection, Runnable>()
+
+        /**
+         * Makes [connection] active once Telecom's focus has left the members just held for it.
+         *
+         * A resume scheduled by the hold of this same call a moment ago (a quick tap back to it)
+         * would otherwise raise a member first, and the call would then go active against it.
+         * The wait can be called off - see [cancelActivation] - and a new request replaces one
+         * still waiting.
+         */
+        internal fun activateAfterFocusSettles(connection: PhoneConnection) {
+            cancelActivation(connection)
+            val activation =
+                Runnable {
+                    pendingActivations.remove(connection)
+                    if (connection.state == Connection.STATE_DISCONNECTED) return@Runnable
+                    if (holdCallGroup()) {
+                        // A member went active in between: hold it and give the focus the time again.
+                        activateAfterFocusSettles(connection)
+                    } else {
+                        connection.setActive()
+                    }
+                }
+            pendingActivations[connection] = activation
+            mainHandler.postDelayed(activation, GROUP_FOCUS_SETTLE_MS)
+        }
+
+        /**
+         * Calls off an activation of [connection] still waiting for the focus, because the call
+         * was held or ended before it got the place. Its state says nothing about that - a call
+         * resumed from hold is still HOLDING while it waits, and held again it stays HOLDING - so
+         * the request is dropped by name, and the place goes back to the group.
+         */
+        internal fun cancelActivation(connection: PhoneConnection) {
+            val activation = pendingActivations.remove(connection) ?: return
+            mainHandler.removeCallbacks(activation)
+            resumeCallGroupLater()
+        }
+
         /** Local name for [ConnectionManager.instance], which this service is the busiest user of. */
         private val connectionManager: ConnectionManager
             get() = ConnectionManager.instance
@@ -566,13 +625,14 @@ class PhoneConnectionService : ConnectionService() {
          *
          * Nothing else is touched. Telecom's own idea of which call is active is left exactly as
          * it stands, because taking a held call off hold while another is active is not a swap
-         * here - it ends the call. `CallsManager.holdActiveCallForNewCall` first asks whether the
-         * active call can be held, and a self-managed connection of ours advertises
-         * CAPABILITY_SUPPORT_HOLD without CAPABILITY_HOLD, so it cannot; the same-source branch
-         * then disconnects the held call of this account outright ("Disconnect held call %s
-         * before holding active call %s") - measured, a leg of a room gone 20 ms after
-         * `setActive()`. Membership does not need it either way: a held member carries the room
-         * like any other, because the room is mixed off the device.
+         * here - it can end a call. `CallsManager.holdActiveCallForNewCall` holds the active call
+         * of ours to make room, and where it cannot (the connections advertised
+         * CAPABILITY_SUPPORT_HOLD without CAPABILITY_HOLD until 7d8caafbdf7) or on builds that
+         * ignore the capability (EMUI 12) it disconnects the held call of this account outright -
+         * measured, a leg of a room gone 20 ms after `setActive()`. Membership does not need it
+         * either way: a held member carries the room like any other, because the room is mixed
+         * off the device. The group's hold is managed around the calls outside it instead - see
+         * [holdCallGroup] and [resumeCallGroupLater].
          *
          * A call on the way out is left held as well, even though the application believes it is
          * speaking. Asking "is anything else active" first is not enough: a call whose connection
@@ -591,6 +651,46 @@ class PhoneConnectionService : ConnectionService() {
                 Log.i(TAG, "applyCallGroup: ${connection.callId} ${if (belongs) "joins" else "leaves"} the group")
                 connection.isGrouped = belongs
             }
+        }
+
+        /**
+         * Holds every active member of the group in Telecom's books, before a call outside the
+         * group goes active - see [PhoneConnection.activate]. Returns whether any member was held.
+         *
+         * The members' own hold means nothing beyond Telecom (see [PhoneConnection.isGrouped]): the
+         * room keeps its audio, and the application is not told.
+         */
+        fun holdCallGroup(): Boolean {
+            val active = connectionManager.getConnections().filter { it.isGrouped && it.state == Connection.STATE_ACTIVE }
+            active.forEach {
+                Log.i(TAG, "holdCallGroup: ${it.callId} held for a call outside the group")
+                it.setOnHold()
+            }
+            return active.isNotEmpty()
+        }
+
+        /**
+         * Gives the active place back to the group once every call outside it is held or gone.
+         *
+         * One member is made active, not all: two calls of ours are never both active for
+         * Telecom, and raising a second member would make it hold the first again - with the
+         * call outside on hold that is two held calls when the arbitration runs, and one of them
+         * goes. Waiting [GROUP_FOCUS_SETTLE_MS] lets Telecom's focus leave the call that just
+         * gave the place up, so the member goes active with nothing of ours to arbitrate with.
+         */
+        fun resumeCallGroupLater() {
+            afterFocusSettles(::resumeCallGroupIfIdle)
+        }
+
+        private fun resumeCallGroupIfIdle() {
+            val connections = connectionManager.getConnections()
+            val members = connections.filter { it.isGrouped }
+            if (pendingActivations.isNotEmpty()) return
+            if (members.isEmpty() || members.any { it.state == Connection.STATE_ACTIVE }) return
+            if (connections.any { !it.isGrouped && it.state != Connection.STATE_HOLDING }) return
+            val member = members.first()
+            Log.i(TAG, "resumeCallGroupIfIdle: ${member.callId} made active, nothing outside the group is")
+            member.setActive()
         }
 
         /**

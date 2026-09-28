@@ -195,7 +195,25 @@ class PhoneConnection internal constructor(
     fun establish() {
         logger.d("Establishing connection for callId: $callId")
         context.startActivity(Platform.getLaunchActivity(context))
-        setActive()
+        activate()
+    }
+
+    /**
+     * Makes this call active, standing a call group aside first when this call is not in it.
+     *
+     * Telecom arbitrates whenever a call goes active while another call of ours is: it holds the
+     * active one, and on some builds (EMUI 12, measured) it disconnects a call of ours that is
+     * already on hold to make room - a member of a room held since before the merge, which the
+     * room then loses. With every member held first there is no active call of ours to arbitrate
+     * with. The members are held in Telecom's books only (see [isGrouped]); this call goes active
+     * a moment later, once Telecom's focus has left them.
+     */
+    private fun activate() {
+        if (isGrouped || !PhoneConnectionService.holdCallGroup()) {
+            setActive()
+            return
+        }
+        PhoneConnectionService.activateAfterFocusSettles(this)
     }
 
     /**
@@ -252,7 +270,7 @@ class PhoneConnection internal constructor(
         logger.i("Answering call: $metadata")
         super.onAnswer()
         callConnection.answer()
-        setActive()
+        activate()
         dispatcher(CallLifecycleEvent.AnswerCall, metadata)
         ActivityHolder.start(context)
     }
@@ -308,6 +326,8 @@ class PhoneConnection internal constructor(
     override fun onHold() {
         logger.d("Putting call on hold: $callId")
         super.onHold()
+        // A resume of this call still waiting for Telecom's focus is over: the call is held again.
+        PhoneConnectionService.cancelActivation(this)
         setOnHold()
         if (isGrouped) {
             logger.i("onHold: $callId is in a group, Telecom is answered but the application is not told")
@@ -323,11 +343,12 @@ class PhoneConnection internal constructor(
     override fun onUnhold() {
         logger.d("Taking call off hold: $callId")
         super.onUnhold()
-        setActive()
         if (isGrouped) {
+            setActive()
             logger.i("onUnhold: $callId is in a group, Telecom is answered but the application is not told")
             return
         }
+        activate()
         callConnection.setHeld(false)
         dispatcher(CallMediaEvent.ConnectionHolding, metadata.copy(hasHold = false))
     }
@@ -357,6 +378,8 @@ class PhoneConnection internal constructor(
             }
         logger.v("Connection state is now: $stateText for callId: $callId")
         super.onStateChanged(state)
+        val wasGrouped = isGrouped
+        if (state == STATE_DISCONNECTED) PhoneConnectionService.cancelActivation(this)
         val observed = telecomConnectionState(state)
         if (observed != null && (!isGrouped || (state != STATE_ACTIVE && state != STATE_HOLDING))) {
             callConnection.transitionTo(observed)
@@ -383,6 +406,11 @@ class PhoneConnection internal constructor(
         telecomConnectionState(state)
             ?.takeIf { it != CallConnectionState.DISCONNECTED }
             ?.let { dispatcher(CallLifecycleEvent.ConnectionStateChanged, metadata.copy(connectionState = it)) }
+
+        // A call outside the group gave up being active: the group may take the place back.
+        if (!wasGrouped && lastKnownState == STATE_ACTIVE && (state == STATE_HOLDING || state == STATE_DISCONNECTED)) {
+            PhoneConnectionService.resumeCallGroupLater()
+        }
 
         lastKnownState = state
     }
