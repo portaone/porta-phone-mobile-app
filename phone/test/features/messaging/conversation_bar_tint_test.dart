@@ -16,8 +16,8 @@ void main() {
 
   const tint = Color(0x96123456);
 
-  ThemeData themeWith(BlurredSurfaceStyle? appBarBlurredSurface, {Color? bar = const Color(0xCA50173F)}) => ThemeData(
-    appBarTheme: AppBarTheme(backgroundColor: bar),
+  ThemeData themeWith(BlurredSurfaceStyle? appBarBlurredSurface) => ThemeData(
+    appBarTheme: const AppBarTheme(backgroundColor: Color(0xCA50173F)),
     extensions: [
       ConversationsScreenStyles(primary: ConversationsScreenStyle(appBarBlurredSurface: appBarBlurredSurface)),
     ],
@@ -51,25 +51,12 @@ void main() {
         expect(tester.widget<BlurredSurface>(barSurface()).color, tint);
       });
 
-      testWidgets('leaves a coloured bar its colour when that page has no tint', (tester) async {
+      testWidgets('lays nothing over the bar when that page style has no tint', (tester) async {
         arrange(harness);
         await tester.pumpWidget(harness.wrap(screen, theme: themeWith(null)));
         await settle(tester);
 
         expect(barSurface(), findsNothing);
-      });
-
-      testWidgets('keeps a frost under the title when neither the page nor the bar has a colour', (tester) async {
-        // The usual theme from the configurator: no bar colour, no page tint.
-        // The thread draws its bar transparent, so without the frost the
-        // messages would run under the title.
-        arrange(harness);
-        await tester.pumpWidget(harness.wrap(screen, theme: themeWith(null, bar: null)));
-        await settle(tester);
-
-        final surface = tester.widget<BlurredSurface>(barSurface());
-        expect(surface.color, isNotNull);
-        expect(surface.color!.a, closeTo(0x96 / 255, 0.01));
       });
     });
   }

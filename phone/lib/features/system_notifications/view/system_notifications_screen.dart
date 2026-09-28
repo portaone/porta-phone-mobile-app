@@ -55,8 +55,7 @@ class _SystemNotificationsScreenState extends State<SystemNotificationsScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(context.l10n.system_notifications_screen_title),
-        flexibleSpace: BlurredSurface.forPage(
-          context,
+        flexibleSpace: BlurredSurface.fromStyle(
           Theme.of(context).extension<SystemNotificationsScreenStyles>()?.primary?.appBarBlurredSurface,
         ),
         // Themes that configure no bar color keep a translucent bar instead of

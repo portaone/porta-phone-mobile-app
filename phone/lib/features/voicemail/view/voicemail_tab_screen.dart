@@ -26,8 +26,7 @@ class VoicemailTabScreen extends StatelessWidget {
       appBar: MainAppBar(
         title: Text(EnvironmentConfig.APP_NAME),
         context: context,
-        flexibleSpace: BlurredSurface.forPage(
-          context,
+        flexibleSpace: BlurredSurface.fromStyle(
           Theme.of(context).extension<VoicemailScreenStyles>()?.primary?.appBarBlurredSurface,
         ),
         actions: const [VoicemailRestoreAction(), VoicemailDeleteAction(offersDeleteAll: false)],

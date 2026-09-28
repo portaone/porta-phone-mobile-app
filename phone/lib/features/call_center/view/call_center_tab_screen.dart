@@ -20,8 +20,7 @@ class CallCenterTabScreen extends StatelessWidget {
       appBar: MainAppBar(
         title: Text(EnvironmentConfig.APP_NAME),
         context: context,
-        flexibleSpace: BlurredSurface.forPage(
-          context,
+        flexibleSpace: BlurredSurface.fromStyle(
           Theme.of(context).extension<CallCenterScreenStyles>()?.primary?.appBarBlurredSurface,
         ),
       ),
