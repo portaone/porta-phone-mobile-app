@@ -163,6 +163,15 @@ final class LoginUserNotFoundNotification extends MessageNotification {
   }
 }
 
+final class LoginAddonRequiredNotification extends MessageNotification {
+  const LoginAddonRequiredNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.login_RequestFailureAddonRequiredError;
+  }
+}
+
 final class LoginUnconfiguredBundleIdNotification extends MessageNotification {
   const LoginUnconfiguredBundleIdNotification();
 

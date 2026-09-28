@@ -1221,6 +1221,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get login_RequestFailureAddonRequiredError =>
+      'Your account does not include access to this app. Contact your service provider';
+
+  @override
   String get login_RequestFailureDeliveryChannelUnspecifiedError =>
       'This account has no contact method configured to receive the verification code';
 

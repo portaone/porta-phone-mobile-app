@@ -1243,6 +1243,10 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get login_RequestFailureAddonRequiredError =>
+      'Ваш обліковий запис не має доступу до цього застосунку. Зверніться до свого постачальника послуг';
+
+  @override
   String get login_RequestFailureDeliveryChannelUnspecifiedError =>
       'Цей обліковий запис не має налаштованого способу зв\'язку для отримання коду підтвердження';
 

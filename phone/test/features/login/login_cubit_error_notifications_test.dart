@@ -90,6 +90,15 @@ void main() {
     expect(notificationsBloc.state.lastNotification, isA<LoginEmptyEmailNotification>());
   });
 
+  test('maps addon_required to a visible notification', () async {
+    final cubit = buildCubit();
+
+    cubit.handleError(_requestFailure('addon_required', statusCode: 403), StackTrace.current, 'test');
+    await pumpEventQueue();
+
+    expect(notificationsBloc.state.lastNotification, isA<LoginAddonRequiredNotification>());
+  });
+
   test('names refused credentials even though the backend sent no code', () async {
     final cubit = buildCubit();
 

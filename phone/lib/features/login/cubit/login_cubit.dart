@@ -649,6 +649,7 @@ class LoginCubit extends Cubit<LoginState> {
         'incorrect_credentials' => const LoginIncorrectCredentialsNotification(),
         'user_not_found' => const LoginUserNotFoundNotification(),
         'unconfigured_bundle_id' => const LoginUnconfiguredBundleIdNotification(),
+        'addon_required' => const LoginAddonRequiredNotification(),
         'validation_error' => const LoginValidationErrorNotification(),
         'parameters_apply_issue' => const LoginParametersApplyIssueNotification(),
         'empty_email' => const LoginEmptyEmailNotification(),

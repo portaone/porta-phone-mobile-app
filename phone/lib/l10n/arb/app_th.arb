@@ -1102,6 +1102,10 @@
       }
     }
   },
+  "login_RequestFailureAddonRequiredError": "บัญชีของคุณไม่มีสิทธิ์ใช้งานแอปนี้ โปรดติดต่อผู้ให้บริการของคุณ",
+  "@login_RequestFailureAddonRequiredError": {
+    "description": "Shown during sign-in when the server refuses the account because it lacks the add-on the installation requires for this app. Condition: the session request is rejected with HTTP 403 and the error code addon_required."
+  },
   "login_RequestFailureDeliveryChannelUnspecifiedError": "บัญชีนี้ไม่มีช่องทางติดต่อที่ตั้งค่าไว้สำหรับรับรหัสยืนยัน",
   "@login_RequestFailureDeliveryChannelUnspecifiedError": {
     "description": "Shown during OTP sign-in when the requested account has no configured delivery channel to receive the one-time verification code and the advertised sign-in identifiers do not allow a more specific wording. Condition: the server rejects the OTP request because no delivery channel is set up for the account."

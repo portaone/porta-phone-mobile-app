@@ -1229,6 +1229,10 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get login_RequestFailureAddonRequiredError =>
+      'Il tuo account non include l\'accesso a questa app. Contatta il tuo fornitore di servizi';
+
+  @override
   String get login_RequestFailureDeliveryChannelUnspecifiedError =>
       'Questo account non ha alcun metodo di contatto configurato per ricevere il codice di verifica';
 
