@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
 import 'package:webtrit_phone/theme/extension/extension.dart';
+import 'package:webtrit_phone/theme/factory/styles/call_center_screen_style_factory.dart';
 import 'package:webtrit_phone/theme/factory/styles/conversations_screen_style_factory.dart';
 import 'package:webtrit_phone/theme/factory/styles/embedded_screen_style_factory.dart';
 import 'package:webtrit_phone/theme/factory/styles/favorites_screen_style_factory.dart';
 import 'package:webtrit_phone/theme/factory/styles/recents_screen_style_factory.dart';
+import 'package:webtrit_phone/theme/factory/styles/system_notifications_screen_style_factory.dart';
+import 'package:webtrit_phone/theme/factory/styles/voicemail_screen_style_factory.dart';
 
 import './styles/styles.dart';
 import '../models/models.dart';
@@ -164,6 +167,21 @@ class ThemeStyleFactoryProvider {
       pageConfig.conversations,
       appBarTheme: _pageAppBarTheme(pageConfig.conversations.appBarStyle),
     );
+    final voicemailScreenStyleFactory = VoicemailScreenStyleFactory(
+      colorScheme,
+      pageConfig.voicemail,
+      appBarTheme: _pageAppBarTheme(pageConfig.voicemail.appBarStyle),
+    );
+    final callCenterScreenStyleFactory = CallCenterScreenStyleFactory(
+      colorScheme,
+      pageConfig.callCenter,
+      appBarTheme: _pageAppBarTheme(pageConfig.callCenter.appBarStyle),
+    );
+    final systemNotificationsScreenStyleFactory = SystemNotificationsScreenStyleFactory(
+      colorScheme,
+      pageConfig.systemNotifications,
+      appBarTheme: _pageAppBarTheme(pageConfig.systemNotifications.appBarStyle),
+    );
     final embeddedScreenStyleFactory = EmbeddedScreenStyleFactory(
       colorScheme,
       pageConfig.embedded,
@@ -218,6 +236,9 @@ class ThemeStyleFactoryProvider {
       recentsScreenStyleFactory.create(),
       favoritesScreenStyleFactory.create(),
       conversationsScreenStyleFactory.create(),
+      voicemailScreenStyleFactory.create(),
+      callCenterScreenStyleFactory.create(),
+      systemNotificationsScreenStyleFactory.create(),
       embeddedScreenStyleFactory.create(),
       numberCdrsScreenStyleFactory.create(),
       loginCoreUrlAssignScreenStyleFactory.create(),

@@ -4,6 +4,7 @@ import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../widgets/widgets.dart';
+import 'voicemail_screen_styles.dart';
 
 /// Voicemail as a section of the bottom menu: the same list under the bar
 /// every section carries.
@@ -19,15 +20,16 @@ class VoicemailTabScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ThemedScaffold(
-      // The configured bar is transparent, and the sections that have a page
-      // style of their own put the tint back through appBarBlurredSurface.
-      // This one has no page style, so it takes the same recipe from the
-      // adaptive fallback - without it the bar reads as part of the background.
+      // The configured bar is transparent; the tint that keeps it from reading
+      // as part of the background comes from this section's page style.
       extendBodyBehindAppBar: true,
       appBar: MainAppBar(
         title: Text(EnvironmentConfig.APP_NAME),
         context: context,
-        flexibleSpace: BlurredSurface.adaptive(context),
+        flexibleSpace: BlurredSurface.forPage(
+          context,
+          Theme.of(context).extension<VoicemailScreenStyles>()?.primary?.appBarBlurredSurface,
+        ),
         actions: const [VoicemailRestoreAction(), VoicemailDeleteAction(offersDeleteAll: false)],
         bottom: const VoicemailFilterRow(),
       ),

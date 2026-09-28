@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ThemePageConfig {
 
- LoginPageConfig get login; AboutPageConfig get about; CallPageConfig get dialing; KeypadPageConfig get keypad; SettingsPageConfig get settings; ContactsPageConfig get contacts; EmbeddedPageConfig get embedded; FavoritesPageConfig get favorites; ConversationsPageConfig get conversations; RecentsPageConfig get recents; NumberCdrsPageConfig get numberCdrs;
+ LoginPageConfig get login; AboutPageConfig get about; CallPageConfig get dialing; KeypadPageConfig get keypad; SettingsPageConfig get settings; ContactsPageConfig get contacts; EmbeddedPageConfig get embedded; FavoritesPageConfig get favorites; ConversationsPageConfig get conversations; RecentsPageConfig get recents; NumberCdrsPageConfig get numberCdrs; VoicemailPageConfig get voicemail; CallCenterPageConfig get callCenter; SystemNotificationsPageConfig get systemNotifications;
 /// Create a copy of ThemePageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +26,16 @@ $ThemePageConfigCopyWith<ThemePageConfig> get copyWith => _$ThemePageConfigCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemePageConfig&&(identical(other.login, login) || other.login == login)&&(identical(other.about, about) || other.about == about)&&(identical(other.dialing, dialing) || other.dialing == dialing)&&(identical(other.keypad, keypad) || other.keypad == keypad)&&(identical(other.settings, settings) || other.settings == settings)&&(identical(other.contacts, contacts) || other.contacts == contacts)&&(identical(other.embedded, embedded) || other.embedded == embedded)&&(identical(other.favorites, favorites) || other.favorites == favorites)&&(identical(other.conversations, conversations) || other.conversations == conversations)&&(identical(other.recents, recents) || other.recents == recents)&&(identical(other.numberCdrs, numberCdrs) || other.numberCdrs == numberCdrs));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemePageConfig&&(identical(other.login, login) || other.login == login)&&(identical(other.about, about) || other.about == about)&&(identical(other.dialing, dialing) || other.dialing == dialing)&&(identical(other.keypad, keypad) || other.keypad == keypad)&&(identical(other.settings, settings) || other.settings == settings)&&(identical(other.contacts, contacts) || other.contacts == contacts)&&(identical(other.embedded, embedded) || other.embedded == embedded)&&(identical(other.favorites, favorites) || other.favorites == favorites)&&(identical(other.conversations, conversations) || other.conversations == conversations)&&(identical(other.recents, recents) || other.recents == recents)&&(identical(other.numberCdrs, numberCdrs) || other.numberCdrs == numberCdrs)&&(identical(other.voicemail, voicemail) || other.voicemail == voicemail)&&(identical(other.callCenter, callCenter) || other.callCenter == callCenter)&&(identical(other.systemNotifications, systemNotifications) || other.systemNotifications == systemNotifications));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,login,about,dialing,keypad,settings,contacts,embedded,favorites,conversations,recents,numberCdrs);
+int get hashCode => Object.hash(runtimeType,login,about,dialing,keypad,settings,contacts,embedded,favorites,conversations,recents,numberCdrs,voicemail,callCenter,systemNotifications);
 
 @override
 String toString() {
-  return 'ThemePageConfig(login: $login, about: $about, dialing: $dialing, keypad: $keypad, settings: $settings, contacts: $contacts, embedded: $embedded, favorites: $favorites, conversations: $conversations, recents: $recents, numberCdrs: $numberCdrs)';
+  return 'ThemePageConfig(login: $login, about: $about, dialing: $dialing, keypad: $keypad, settings: $settings, contacts: $contacts, embedded: $embedded, favorites: $favorites, conversations: $conversations, recents: $recents, numberCdrs: $numberCdrs, voicemail: $voicemail, callCenter: $callCenter, systemNotifications: $systemNotifications)';
 }
 
 
@@ -46,7 +46,7 @@ abstract mixin class $ThemePageConfigCopyWith<$Res>  {
   factory $ThemePageConfigCopyWith(ThemePageConfig value, $Res Function(ThemePageConfig) _then) = _$ThemePageConfigCopyWithImpl;
 @useResult
 $Res call({
- LoginPageConfig login, AboutPageConfig about, CallPageConfig dialing, KeypadPageConfig keypad, SettingsPageConfig settings, ContactsPageConfig contacts, EmbeddedPageConfig embedded, FavoritesPageConfig favorites, ConversationsPageConfig conversations, RecentsPageConfig recents, NumberCdrsPageConfig numberCdrs
+ LoginPageConfig login, AboutPageConfig about, CallPageConfig dialing, KeypadPageConfig keypad, SettingsPageConfig settings, ContactsPageConfig contacts, EmbeddedPageConfig embedded, FavoritesPageConfig favorites, ConversationsPageConfig conversations, RecentsPageConfig recents, NumberCdrsPageConfig numberCdrs, VoicemailPageConfig voicemail, CallCenterPageConfig callCenter, SystemNotificationsPageConfig systemNotifications
 });
 
 
@@ -63,7 +63,7 @@ class _$ThemePageConfigCopyWithImpl<$Res>
 
 /// Create a copy of ThemePageConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? login = null,Object? about = null,Object? dialing = null,Object? keypad = null,Object? settings = null,Object? contacts = null,Object? embedded = null,Object? favorites = null,Object? conversations = null,Object? recents = null,Object? numberCdrs = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? login = null,Object? about = null,Object? dialing = null,Object? keypad = null,Object? settings = null,Object? contacts = null,Object? embedded = null,Object? favorites = null,Object? conversations = null,Object? recents = null,Object? numberCdrs = null,Object? voicemail = null,Object? callCenter = null,Object? systemNotifications = null,}) {
   return _then(ThemePageConfig(
 login: null == login ? _self.login : login // ignore: cast_nullable_to_non_nullable
 as LoginPageConfig,about: null == about ? _self.about : about // ignore: cast_nullable_to_non_nullable
@@ -76,7 +76,10 @@ as EmbeddedPageConfig,favorites: null == favorites ? _self.favorites : favorites
 as FavoritesPageConfig,conversations: null == conversations ? _self.conversations : conversations // ignore: cast_nullable_to_non_nullable
 as ConversationsPageConfig,recents: null == recents ? _self.recents : recents // ignore: cast_nullable_to_non_nullable
 as RecentsPageConfig,numberCdrs: null == numberCdrs ? _self.numberCdrs : numberCdrs // ignore: cast_nullable_to_non_nullable
-as NumberCdrsPageConfig,
+as NumberCdrsPageConfig,voicemail: null == voicemail ? _self.voicemail : voicemail // ignore: cast_nullable_to_non_nullable
+as VoicemailPageConfig,callCenter: null == callCenter ? _self.callCenter : callCenter // ignore: cast_nullable_to_non_nullable
+as CallCenterPageConfig,systemNotifications: null == systemNotifications ? _self.systemNotifications : systemNotifications // ignore: cast_nullable_to_non_nullable
+as SystemNotificationsPageConfig,
   ));
 }
 
@@ -3882,6 +3885,573 @@ as AppBarConfig?,
 
 /// Adds pattern-matching-related methods to [FavoritesPageConfig].
 extension FavoritesPageConfigPatterns on FavoritesPageConfig {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+
+}
+
+
+/// @nodoc
+mixin _$VoicemailPageConfig {
+
+ ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+/// Create a copy of VoicemailPageConfig
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$VoicemailPageConfigCopyWith<VoicemailPageConfig> get copyWith => _$VoicemailPageConfigCopyWithImpl<VoicemailPageConfig>(this as VoicemailPageConfig, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+
+@override
+String toString() {
+  return 'VoicemailPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $VoicemailPageConfigCopyWith<$Res>  {
+  factory $VoicemailPageConfigCopyWith(VoicemailPageConfig value, $Res Function(VoicemailPageConfig) _then) = _$VoicemailPageConfigCopyWithImpl;
+@useResult
+$Res call({
+ ThemeOverrideConfig themeOverride, PageBackground? background, BlurredSurfaceConfig? appBarBlurredSurface, AppBarConfig? appBarStyle
+});
+
+
+
+
+}
+/// @nodoc
+class _$VoicemailPageConfigCopyWithImpl<$Res>
+    implements $VoicemailPageConfigCopyWith<$Res> {
+  _$VoicemailPageConfigCopyWithImpl(this._self, this._then);
+
+  final VoicemailPageConfig _self;
+  final $Res Function(VoicemailPageConfig) _then;
+
+/// Create a copy of VoicemailPageConfig
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? themeOverride = null,Object? background = freezed,Object? appBarBlurredSurface = freezed,Object? appBarStyle = freezed,}) {
+  return _then(VoicemailPageConfig(
+themeOverride: null == themeOverride ? _self.themeOverride : themeOverride // ignore: cast_nullable_to_non_nullable
+as ThemeOverrideConfig,background: freezed == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
+as PageBackground?,appBarBlurredSurface: freezed == appBarBlurredSurface ? _self.appBarBlurredSurface : appBarBlurredSurface // ignore: cast_nullable_to_non_nullable
+as BlurredSurfaceConfig?,appBarStyle: freezed == appBarStyle ? _self.appBarStyle : appBarStyle // ignore: cast_nullable_to_non_nullable
+as AppBarConfig?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [VoicemailPageConfig].
+extension VoicemailPageConfigPatterns on VoicemailPageConfig {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+
+}
+
+
+/// @nodoc
+mixin _$CallCenterPageConfig {
+
+ ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+/// Create a copy of CallCenterPageConfig
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CallCenterPageConfigCopyWith<CallCenterPageConfig> get copyWith => _$CallCenterPageConfigCopyWithImpl<CallCenterPageConfig>(this as CallCenterPageConfig, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallCenterPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+
+@override
+String toString() {
+  return 'CallCenterPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $CallCenterPageConfigCopyWith<$Res>  {
+  factory $CallCenterPageConfigCopyWith(CallCenterPageConfig value, $Res Function(CallCenterPageConfig) _then) = _$CallCenterPageConfigCopyWithImpl;
+@useResult
+$Res call({
+ ThemeOverrideConfig themeOverride, PageBackground? background, BlurredSurfaceConfig? appBarBlurredSurface, AppBarConfig? appBarStyle
+});
+
+
+
+
+}
+/// @nodoc
+class _$CallCenterPageConfigCopyWithImpl<$Res>
+    implements $CallCenterPageConfigCopyWith<$Res> {
+  _$CallCenterPageConfigCopyWithImpl(this._self, this._then);
+
+  final CallCenterPageConfig _self;
+  final $Res Function(CallCenterPageConfig) _then;
+
+/// Create a copy of CallCenterPageConfig
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? themeOverride = null,Object? background = freezed,Object? appBarBlurredSurface = freezed,Object? appBarStyle = freezed,}) {
+  return _then(CallCenterPageConfig(
+themeOverride: null == themeOverride ? _self.themeOverride : themeOverride // ignore: cast_nullable_to_non_nullable
+as ThemeOverrideConfig,background: freezed == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
+as PageBackground?,appBarBlurredSurface: freezed == appBarBlurredSurface ? _self.appBarBlurredSurface : appBarBlurredSurface // ignore: cast_nullable_to_non_nullable
+as BlurredSurfaceConfig?,appBarStyle: freezed == appBarStyle ? _self.appBarStyle : appBarStyle // ignore: cast_nullable_to_non_nullable
+as AppBarConfig?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [CallCenterPageConfig].
+extension CallCenterPageConfigPatterns on CallCenterPageConfig {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+
+}
+
+
+/// @nodoc
+mixin _$SystemNotificationsPageConfig {
+
+ ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+/// Create a copy of SystemNotificationsPageConfig
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SystemNotificationsPageConfigCopyWith<SystemNotificationsPageConfig> get copyWith => _$SystemNotificationsPageConfigCopyWithImpl<SystemNotificationsPageConfig>(this as SystemNotificationsPageConfig, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotificationsPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+
+@override
+String toString() {
+  return 'SystemNotificationsPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SystemNotificationsPageConfigCopyWith<$Res>  {
+  factory $SystemNotificationsPageConfigCopyWith(SystemNotificationsPageConfig value, $Res Function(SystemNotificationsPageConfig) _then) = _$SystemNotificationsPageConfigCopyWithImpl;
+@useResult
+$Res call({
+ ThemeOverrideConfig themeOverride, PageBackground? background, BlurredSurfaceConfig? appBarBlurredSurface, AppBarConfig? appBarStyle
+});
+
+
+
+
+}
+/// @nodoc
+class _$SystemNotificationsPageConfigCopyWithImpl<$Res>
+    implements $SystemNotificationsPageConfigCopyWith<$Res> {
+  _$SystemNotificationsPageConfigCopyWithImpl(this._self, this._then);
+
+  final SystemNotificationsPageConfig _self;
+  final $Res Function(SystemNotificationsPageConfig) _then;
+
+/// Create a copy of SystemNotificationsPageConfig
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? themeOverride = null,Object? background = freezed,Object? appBarBlurredSurface = freezed,Object? appBarStyle = freezed,}) {
+  return _then(SystemNotificationsPageConfig(
+themeOverride: null == themeOverride ? _self.themeOverride : themeOverride // ignore: cast_nullable_to_non_nullable
+as ThemeOverrideConfig,background: freezed == background ? _self.background : background // ignore: cast_nullable_to_non_nullable
+as PageBackground?,appBarBlurredSurface: freezed == appBarBlurredSurface ? _self.appBarBlurredSurface : appBarBlurredSurface // ignore: cast_nullable_to_non_nullable
+as BlurredSurfaceConfig?,appBarStyle: freezed == appBarStyle ? _self.appBarStyle : appBarStyle // ignore: cast_nullable_to_non_nullable
+as AppBarConfig?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SystemNotificationsPageConfig].
+extension SystemNotificationsPageConfigPatterns on SystemNotificationsPageConfig {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
