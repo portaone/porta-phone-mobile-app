@@ -41,14 +41,21 @@ void main() {
   late List<bool> selfMutes;
   late List<({String callId, bool muted})> participantMutes;
   late List<String> hangups;
+  late List<String> switched;
 
   setUp(() {
     selfMutes = [];
     participantMutes = [];
     hangups = [];
+    switched = [];
   });
 
-  Widget subject({ConferenceState? conference, List<ActiveCall>? calls, bool scrollable = false}) => MaterialApp(
+  Widget subject({
+    ConferenceState? conference,
+    List<ActiveCall>? calls,
+    bool scrollable = false,
+    bool roomParked = false,
+  }) => MaterialApp(
     locale: const Locale('en'),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
@@ -60,6 +67,8 @@ void main() {
         ConferencePanel(
           conference: conference ?? _room(),
           calls: calls ?? [_call('a', displayName: 'Anna Marchenko'), _call('b', line: 1, displayName: 'Boris Klein')],
+          roomParked: roomParked,
+          onSwitchToConference: switched.add,
           onSelfMutedChanged: selfMutes.add,
           onParticipantMutedChanged: (callId, muted) => participantMutes.add((callId: callId, muted: muted)),
           onParticipantHangup: hangups.add,
@@ -81,6 +90,83 @@ void main() {
       // Ordered by line, whatever order the legs were recorded in.
       final names = tester.widgetList<Text>(find.byType(Text)).map((text) => text.data).toList();
       expect(names.indexOf('Anna Marchenko'), lessThan(names.indexOf('Boris Klein')));
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('the host microphone says what the room hears, not what he intended', (tester) async {
+      // A room standing aside hears nothing of him either way, so an unstruck
+      // microphone there would claim the room hears him while nobody does.
+      await tester.pumpWidget(subject());
+      expect(find.byIcon(Icons.mic_off), findsNothing, reason: 'nobody is muted in the room itself');
+
+      await tester.pumpWidget(subject(roomParked: true));
+      expect(
+        find.byIcon(Icons.mic_off),
+        findsOneWidget,
+        reason: "the host's own row, and only his - the participants are still heard by each other",
+      );
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets("a participant's controls step back while the room is not in use, and still work", (tester) async {
+      // Dimmed rather than disabled on purpose: a room-wide mute and a hangup
+      // still reach the room while the host is on another call, so taking them
+      // away would cost a real capability to tidy the screen.
+      await tester.pumpWidget(subject(roomParked: true));
+      final dimmed = tester.widgetList<Opacity>(find.byType(Opacity)).map((o) => o.opacity).toSet();
+
+      expect(dimmed.contains(1.0), isFalse, reason: 'every participant control is stepped back');
+
+      await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantMuteId, 0)));
+      await tester.pump();
+      expect(participantMutes, [(callId: 'a', muted: true)], reason: 'and it still acts');
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('the room carries the frame only while it is the conversation in use', (tester) async {
+      // Both blocks drew it at once once the rows became tappable: the room's
+      // own row asked for the frame unconditionally, so a user on the outside
+      // call saw two selected conversations that differed only in wording.
+      await tester.pumpWidget(subject());
+      expect(tester.widget<CallRowFrame>(find.byType(CallRowFrame).first).focused, isTrue);
+
+      await tester.pumpWidget(subject(roomParked: true));
+      expect(
+        tester.widget<CallRowFrame>(find.byType(CallRowFrame).first).focused,
+        isFalse,
+        reason: 'the frame belongs to the call the room stood aside for',
+      );
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('any row of the room is the way back into it', (tester) async {
+      // The room's rows used to do nothing at all, so the only way back from a
+      // call outside it was pressing Hold on that call.
+      await tester.pumpWidget(subject(roomParked: true));
+
+      await tester.tap(find.text('Anna Marchenko'));
+      await tester.pump();
+      expect(switched, ['a'], reason: 'a leg row names its own leg');
+
+      await tester.tap(find.byType(CallRowSelfAvatar));
+      await tester.pump();
+      expect(switched, ['a', 'a'], reason: "the host's own row leads back too");
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('says the host is elsewhere while the room stands aside, and offers no mute of it', (tester) async {
+      // The room neither hears him nor is heard (CallState.conferenceMustPark),
+      // so a mute of it would change nothing - and a row that said nothing
+      // would read as a conference that had quietly died.
+      await tester.pumpWidget(subject(roomParked: true));
+      final context = tester.element(find.byType(ConferencePanel));
+
+      expect(find.text(context.l10n.call_ConferencePanel_hostStatusAside), findsOneWidget);
+      expect(find.text(context.l10n.call_ConferencePanel_hostStatus), findsNothing);
+
+      await tester.tap(find.bySemanticsIdentifier(conferenceSelfMuteId));
+      await tester.pump();
+      expect(selfMutes, isEmpty, reason: 'the control is not the host\'s to press while the room is silent');
       await tester.pumpWidget(const SizedBox());
     });
 

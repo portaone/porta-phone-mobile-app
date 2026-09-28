@@ -27,8 +27,12 @@ ActiveCall _call(String callId, {int line = 0, String? displayName}) => ActiveCa
 
 void main() {
   late List<String> acted;
+  late List<String> switched;
 
-  setUp(() => acted = []);
+  setUp(() {
+    acted = [];
+    switched = [];
+  });
 
   Widget subject({bool selfMuted = false, bool ready = true}) => MaterialApp(
     locale: const Locale('en'),
@@ -49,6 +53,8 @@ void main() {
           _call('a', displayName: 'Anna Marchenko'),
           _call('b', line: 1, displayName: 'Boris Klein'),
         ],
+        roomParked: false,
+        onSwitchToConference: switched.add,
         onSelfMutedChanged: (muted) => acted.add('self:$muted'),
         onParticipantMutedChanged: (callId, muted) => acted.add('mute:$callId:$muted'),
         onParticipantHangup: (callId) => acted.add('hangup:$callId'),

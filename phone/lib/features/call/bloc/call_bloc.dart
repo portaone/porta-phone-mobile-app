@@ -169,6 +169,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// tells this client's own echoes from a person pressing mute.
   late final LegMuteSync _legMutes = LegMuteSync(callkeep);
 
+  /// Former legs kept locally silent while the host stays on an outside call.
+  /// A hold request can be delayed or refused, so only a successful resume
+  /// releases this barrier. User mute intent remains independent of it.
+  final Set<String> _parkedFormerLegs = {};
+
+  /// The conversation the last tap on the room's screen asked for, while the
+  /// hold or unhold it dispatched is still in flight; `null` when nothing is.
+  ///
+  /// Two things need it. A second tap on the same conversation must not ask
+  /// again, and a tap back to the room must hold a call that a switch has not
+  /// finished resuming - such a call still reads held, so the live-call rule
+  /// alone would leave it to come up after the room was meant to be back.
+  ConversationTarget? _conversationSwitchInFlight;
+
   final ConnectivityService _connectivityService;
 
   CallBloc({
@@ -376,12 +390,28 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       }
     }
 
+    // The room gives its audio up while a call outside it stands, and takes it
+    // back afterwards; the rule itself is [CallState.conferenceMustPark]. It is
+    // planned here, off the state, rather than commanded from the paths that
+    // accept and end calls: a call is marked accepted in four of them, the
+    // handshake restore after a reconnect included, and one that forgot to
+    // command it would leave the room carrying a private conversation.
+    if (!isClosed && change.nextState.conferenceMustPark != _conferencePeerConnection.isParked) {
+      add(const _CallMutationEvent.reconcileConferenceAudio());
+    }
+
+    // No room, no two conversations to move between.
+    if (!change.nextState.conference.isPresent) {
+      _conversationSwitchInFlight = null;
+    }
+
     final currentActiveCallUuids = Set.from(change.currentState.activeCalls.map((e) => e.callId));
     _logger.fine('onChange currentActiveCallUuids: $currentActiveCallUuids');
     final nextActiveCallUuids = Set.from(change.nextState.activeCalls.map((e) => e.callId));
     _logger.fine('onChange nextActiveCallUuids: $nextActiveCallUuids');
 
     for (final removeUuid in currentActiveCallUuids.difference(nextActiveCallUuids)) {
+      _parkedFormerLegs.remove(removeUuid);
       // Disposal is intentionally not awaited to avoid blocking the Bloc processing loop.
       // The CallPeerConnectionManager implements an internal "disposal barrier" (via _pendingDisposals)
       // which guarantees that any subsequent createPeerConnection() for this CallId will
@@ -1009,6 +1039,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallSignalingEventUpdated() => __onCallSignalingEventUpdated(event, emit),
       _CallSignalingEventPeerMediaState() => __onCallSignalingEventPeerMediaState(event, emit),
       _CallSignalingEventPeerConferenceMute() => __onCallSignalingEventPeerConferenceMute(event, emit),
+      _CallSignalingEventPeerConferenceHostAway() => __onCallSignalingEventPeerConferenceHostAway(event, emit),
       _CallSignalingEventTransfer() => __onCallSignalingEventTransfer(event, emit),
       _CallSignalingEventTransferring() => __onCallSignalingEventTransfering(event, emit),
       _CallSignalingEventTransferAccepted() => __onCallSignalingEventTransferAccepted(event, emit),
@@ -1289,6 +1320,19 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     if (state.retrieveActiveCall(event.callId) == null) return;
     emit(
       state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(peerReportedConferenceMute: event.muted)),
+    );
+  }
+
+  /// The other party of this call says they have stepped aside from the room
+  /// they host, or come back. Recorded on that call as their claim; see
+  /// [ActiveCall.peerReportedConferenceHostAway].
+  Future<void> __onCallSignalingEventPeerConferenceHostAway(
+    _CallSignalingEventPeerConferenceHostAway event,
+    Emitter<CallState> emit,
+  ) async {
+    if (state.retrieveActiveCall(event.callId) == null) return;
+    emit(
+      state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(peerReportedConferenceHostAway: event.away)),
     );
   }
 
@@ -1584,6 +1628,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     return switch (event) {
       _CallControlEventStarted() => __onCallControlEventStarted(event, emit),
       _CallControlEventCallSelected() => __onCallControlEventCallSelected(event, emit),
+      _CallControlEventConversationSwitched() => __onCallControlEventConversationSwitched(event, emit),
       _CallControlEventAnswered() => __onCallControlEventAnswered(event, emit),
       _CallControlEventAnsweredEndingOthers() => __onCallControlEventAnsweredEndingOthers(event, emit),
       _CallControlEventAnsweredHoldingOthers() => __onCallControlEventAnsweredHoldingOthers(event, emit),
@@ -1647,6 +1692,67 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// a live call via [CallState.copyWithSelectedCall] (no media side effects).
   Future<void> __onCallControlEventCallSelected(_CallControlEventCallSelected event, Emitter<CallState> emit) async {
     emit(state.copyWithSelectedCall(event.callId));
+  }
+
+  /// Moves the user between the two conversations a room's screen shows: the
+  /// room and a call outside it.
+  ///
+  /// A tap there cannot mean selection alone. The room stands aside for a live
+  /// call outside it, so a row that only took the focus would hand the user
+  /// controls for a conference that is still silent - which is what the screen
+  /// looked like before this existed: the way back was to press Hold on the
+  /// other call and know that it meant "return to the conference".
+  ///
+  /// So the tap does what it reads as: the conversation asked for is resumed and
+  /// the one left behind is held, and the room's own audio follows from
+  /// [CallState.conferenceMustPark] without being commanded here. Without a
+  /// room there is only one conversation and a tap stays a selection.
+  ///
+  /// It commands the hold and nothing else. The focus is not moved here: it is
+  /// read off the audio by [CallState.focusedCall], so a hold the server refuses
+  /// leaves the grid on the conversation that is still audible instead of on a
+  /// silent one. Nor is the settled state asked whether the switch is needed - a
+  /// tap arriving while the previous one is still in flight would read the state
+  /// it has not changed yet and do nothing, leaving the user on the conversation
+  /// they just left. What the last tap asked for is kept in
+  /// [_conversationSwitchInFlight]; the requests are ordered by the mutation
+  /// queue, so the tap that came last is the one that settles last.
+  Future<void> __onCallControlEventConversationSwitched(
+    _CallControlEventConversationSwitched event,
+    Emitter<CallState> emit,
+  ) async {
+    if (!state.conference.isPresent) {
+      add(CallControlEvent.callSelected(event.callId));
+      return;
+    }
+    final switchInFlight = _conversationSwitchInFlight;
+    if (state.conference.isLeg(event.callId)) {
+      const switchToRoom = ConversationTarget.room();
+      if (switchInFlight == switchToRoom) return;
+      // What keeps the room aside is a call outside it that is heard - the live
+      // ones, and one an unsettled switch is in the middle of resuming.
+      final callIdsToHold = <String>{
+        for (final call in state.liveCallsOutsideRoom) call.callId,
+        if (switchInFlight?.callId != null) switchInFlight!.callId!,
+      };
+      // Nothing outside the room is heard, so the room already is in use.
+      if (callIdsToHold.isEmpty) return;
+      _conversationSwitchInFlight = switchToRoom;
+      for (final callId in callIdsToHold) {
+        add(CallControlEvent.setHeld(callId, true));
+      }
+      return;
+    }
+    final outsideCall = state.retrieveActiveCall(event.callId);
+    if (outsideCall == null) return;
+    final switchToOutsideCall = ConversationTarget.outside(event.callId);
+    if (switchInFlight == switchToOutsideCall) return;
+    // Live with nothing in flight: that call already is the conversation.
+    if (switchInFlight == null && !outsideCall.held) return;
+    _conversationSwitchInFlight = switchToOutsideCall;
+    // Resuming it is what parks the room, and the existing plan holds whatever
+    // else is live - the legs are not among them.
+    add(CallControlEvent.resumedHoldingOthers(event.callId));
   }
 
   // Combined-action intents. Each re-dispatches the ordered primitive events
@@ -2182,6 +2288,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventConferenceLost() => __onMutationConferenceLost(event, emit),
       _CallMutationEventConferenceAnswered() => __onMutationConferenceAnswered(event, emit),
       _CallMutationEventConferenceAnswerFailed() => __onMutationConferenceAnswerFailed(event, emit),
+      _CallMutationEventReconcileConferenceAudio() => __onMutationReconcileConferenceAudio(event, emit),
     };
   }
 
@@ -2572,32 +2679,31 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       return;
     }
     try {
-      await state.performOnActiveCall(event.callId, (activeCall) {
-        if (event.onHold) {
-          return _signalingModule.execute(
-            HoldRequest(
-              transaction: WebtritSignalingClient.generateTransactionId(),
+      final activeCall = state.retrieveActiveCall(event.callId);
+      if (activeCall == null) return;
+      final transaction = WebtritSignalingClient.generateTransactionId();
+      final request = event.onHold
+          ? HoldRequest(
+              transaction: transaction,
               line: activeCall.line,
               callId: activeCall.callId,
               direction: HoldDirection.inactive,
-            ),
-          );
-        } else {
-          return _signalingModule.execute(
-            UnholdRequest(
-              transaction: WebtritSignalingClient.generateTransactionId(),
-              line: activeCall.line,
-              callId: activeCall.callId,
-            ),
-          );
-        }
-      });
+            )
+          : UnholdRequest(transaction: transaction, line: activeCall.line, callId: activeCall.callId);
+      final pending = _signalingModule.execute(request);
+      // No future means nothing was sent, not an acknowledged transition.
+      // In particular, it must not release a former leg's local isolation.
+      if (pending == null) return;
+      await pending;
 
       emit(
         state.copyWithMappedActiveCall(event.callId, (activeCall) {
           return activeCall.copyWith(held: event.onHold);
         }),
       );
+      if (!event.onHold && _parkedFormerLegs.remove(event.callId)) {
+        await _restoreLegAudio(event.callId);
+      }
     } on NotConnectedException {
       _logger.warning('__onMutationPerformSetHeld: not connected, let call survive');
     } on WebtritSignalingTransactionTimeoutException {
@@ -2619,6 +2725,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     } catch (e, stackTrace) {
       // A fault in this client, not a refused request.
       _endCallAfterFailedHold(event.callId, e, stackTrace);
+    } finally {
+      // However it went, the call is no longer between the room and being an
+      // ordinary one: either the server took the hold, or it refused and the
+      // call is live outside the room, which the room must stand aside for.
+      if (state.retrieveActiveCall(event.callId)?.leavingRoom == true) {
+        emit(state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(leavingRoom: false)));
+      }
+      // A switch that reached the server has settled, refusal included, so the
+      // next tap asking for the same conversation is a fresh request rather
+      // than a repeat of one in flight.
+      _conversationSwitchInFlight = null;
     }
   }
 
@@ -2794,7 +2911,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   Future<void> __onMutationControlSetHeld(_CallMutationEventControlSetHeld e, Emitter<CallState> emit) async {
     final error = await callkeep.setHeld(e.callId, onHold: e.onHold);
-    if (error != null) _logger.warning('__onMutationControlSetHeld error: $error');
+    if (error == null) return;
+    _logger.warning('__onMutationControlSetHeld error: $error');
+    // No perform event will follow a request the platform refused, so nothing
+    // else would clear a call the room released: left marked, it would keep the
+    // room from ever standing aside for it.
+    if (state.retrieveActiveCall(e.callId)?.leavingRoom == true) {
+      emit(state.copyWithMappedActiveCall(e.callId, (call) => call.copyWith(leavingRoom: false)));
+    }
   }
 
   Future<void> __onMutationControlSetMuted(_CallMutationEventControlSetMuted e, Emitter<CallState> emit) async {
@@ -3984,6 +4108,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _PeerConnectionEventStreamAdded event,
     Emitter<CallState> emit,
   ) async {
+    if (_parkedFormerLegs.contains(event.callId)) {
+      for (final track in event.stream.getAudioTracks()) {
+        track.enabled = false;
+      }
+    }
     final currentStream = state.retrieveActiveCall(event.callId)?.remoteStream;
     final sameRef = identical(currentStream, event.stream);
     _logger.info(
@@ -4401,6 +4530,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           add(_CallSignalingEvent.peerMediaState(line: e.line, callId: e.callId, video: e.video));
         case ConferenceMutePeerMessageEvent e:
           add(_CallSignalingEvent.peerConferenceMute(line: e.line, callId: e.callId, muted: e.muted));
+        case ConferenceHostAwayPeerMessageEvent e:
+          add(_CallSignalingEvent.peerConferenceHostAway(line: e.line, callId: e.callId, away: e.away));
         case UnknownPeerMessageEvent e:
           _logger.info('[SIG] PeerMessageEvent: ignoring unknown type "${e.type}"');
       }
@@ -4756,6 +4887,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     await _quietLegs([e.callId]);
     if (!state.conference.isPresent) return;
     emit(state.copyWith(conference: state.conference.copyWith(legs: {...state.conference.legs, e.callId: line})));
+    // After the room has been found to be still there, and after the call is
+    // one of its legs: told any earlier, a call whose room fell away while it
+    // was being quieted would be left saying the host had stepped out of a room
+    // it never joined, with nothing to ever correct it.
+    if (_conferencePeerConnection.isParked) _tellLegsTheRoomIsParked([e.callId], true);
   }
 
   /// A room-wide mute of one participant. Accepted by the server only once
@@ -4797,6 +4933,40 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     await _conferencePeerConnection.setSelfMuted(muted);
     emit(state.copyWith(conference: state.conference.copyWith(selfMuted: muted)));
     await _legMutes.apply(state.conference.legIds, muted);
+  }
+
+  /// Brings the room's own audio into line with the state: parked while a call
+  /// outside it stands, carrying again once that call is gone.
+  ///
+  /// What is wanted is read here rather than carried in the event, because the
+  /// request was planned when the state changed and this runs behind whatever
+  /// was already queued - which can have ended the room or given the call back
+  /// in the meantime. Idempotent for the same reason: the plan is made on every
+  /// state change, so the same request can be queued twice before it runs once.
+  Future<void> __onMutationReconcileConferenceAudio(
+    _CallMutationEventReconcileConferenceAudio e,
+    Emitter<CallState> emit,
+  ) async {
+    final roomMustPark = state.conferenceMustPark;
+    if (_conferencePeerConnection.isParked == roomMustPark) return;
+    _logger.info('__onMutationReconcileConferenceAudio: roomMustPark=$roomMustPark');
+    // Not awaited: the mixer's connection serialises its own work, so a park
+    // asked for while a room is still being answered queues behind that answer
+    // - and waiting here would hold the mutation queue for as long, with the
+    // room's own End and its assembly deadline behind it. Same reason as the
+    // teardown in [_leaveRoom].
+    unawaited(
+      _conferencePeerConnection.setParked(roomMustPark).catchError((Object error) {
+        // Only logged, and that is all there is to do here: applying is the
+        // connection's own business, and one that cannot be applied gives the
+        // room up through [ConferencePeerConnection.onConnectionLost] - which
+        // arrives as a conferenceLost event and hands the legs back. Nothing is
+        // re-planned from here: what is wanted is already what [isParked] says,
+        // so there would be no change to plan.
+        _logger.warning('__onMutationReconcileConferenceAudio: applying roomMustPark=$roomMustPark failed', error);
+      }),
+    );
+    _tellLegsTheRoomIsParked(state.conference.legIds, roomMustPark);
   }
 
   /// The host ends the conference, and with it every leg: a room is not
@@ -5029,6 +5199,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// own connection and the far end's audio stops playing.
   Future<void> _quietLegs(Iterable<String> callIds) async {
     for (final callId in callIds) {
+      // A rejoined leg is now isolated by the room's own membership again.
+      _parkedFormerLegs.remove(callId);
       final call = state.retrieveActiveCall(callId);
       if (call == null) continue;
       await _setMicrophoneAttached(callId, attached: false);
@@ -5044,6 +5216,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// muted that call. Returns whether there was a call to restore - nothing
   /// is done for one that is gone or going.
   Future<bool> _restoreLegAudio(String callId) async {
+    if (_parkedFormerLegs.contains(callId)) return false;
     final call = state.retrieveActiveCall(callId);
     if (call == null || call.wasHungUp || call.processingStatus == CallProcessingStatus.disconnecting) return false;
     // Hearing the far end again is independent of talking to them: a failure
@@ -5107,13 +5280,31 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     };
     emit(
       state
-          .copyWithMappedActiveCalls((call) => unheld.contains(call.callId) ? call.copyWith(held: false) : call)
+          .copyWithMappedActiveCalls((call) {
+            if (unheld.contains(call.callId)) return call.copyWith(held: false);
+            // A leg the server dropped is on its way to being an ordinary held
+            // call, and the hold can only be asked for once the group has been
+            // re-declared below. Marked rather than held: `held` means a hold
+            // the server took, and claiming one it has not would show the user
+            // a call on hold that is in fact live - with the room, seeing a
+            // held call, carrying his microphone into it.
+            if (vanished.contains(call.callId)) return call.copyWith(leavingRoom: true);
+            return call;
+          })
           .copyWith(
             conference: state.conference.copyWith(legs: legs, participants: participants),
           ),
     );
     await _quietLegs(adopted);
     _tellLegsTheirRoomMute(muteChanges);
+    if (_conferencePeerConnection.isParked) {
+      if (adopted.isNotEmpty) _tellLegsTheRoomIsParked(adopted, true);
+      // A leg the room drops while it stands aside carries on as an ordinary
+      // call, and the later unpark goes only to the legs the room still has -
+      // so this is its only chance to hear that the host is back. The same hole
+      // the room ending closes for the legs it releases.
+      if (vanished.isNotEmpty) _tellLegsTheRoomIsParked(vanished, false);
+    }
     // The group is the first thing the operating system is told about these
     // calls, and the hold the server took them off is not published at all.
     // CallKit does not keep two ungrouped calls active at once - it ends one -
@@ -5160,6 +5351,37 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
   }
 
+  /// Tells [callIds] that the host has stepped aside from the room, or come
+  /// back.
+  ///
+  /// Cosmetic, and best effort on the same terms as [_tellLegsTheirRoomMute]:
+  /// nothing on the far side can check it and nothing functional hangs on it.
+  /// Sent when the parking changes, to a leg as it joins, and as `false` when
+  /// the room ends - a leg that carries on as an ordinary call must not be left
+  /// showing a host who stepped away from a room that no longer exists. A
+  /// participant whose socket was down for it learns nothing until the next
+  /// change; there is no way to notice that from here, and a heartbeat for a
+  /// caption is not worth the traffic.
+  void _tellLegsTheRoomIsParked(Iterable<String> callIds, bool away) {
+    // An older core closes the signaling socket with 4600 on a request it does
+    // not know; the same reason as in [_tellLegsTheirRoomMute].
+    if (!capabilities.isPeerMessageEnabled) return;
+    for (final callId in callIds) {
+      final line = state.conference.legs[callId] ?? state.retrieveActiveCall(callId)?.line;
+      if (line == null) continue;
+      _signalingModule
+          .execute(
+            ConferenceHostAwayPeerMessageRequest(
+              transaction: WebtritSignalingClient.generateTransactionId(),
+              line: line,
+              callId: callId,
+              away: away,
+            ),
+          )
+          ?.catchError((Object e) => _logger.info('_tellLegsTheRoomIsParked: $e'));
+    }
+  }
+
   /// Puts the microphone on [callId]'s own connection, or takes it off.
   ///
   /// Mute is a property of one connection, not of the microphone: the app
@@ -5168,6 +5390,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// at once. Detaching it from a sender stops only what that connection
   /// sends.
   Future<void> _setMicrophoneAttached(String callId, {required bool attached}) async {
+    if (attached && _parkedFormerLegs.contains(callId)) return;
     try {
       final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
       if (peerConnection == null) return;
@@ -5201,8 +5424,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   /// Drops the room: its connection, the OS grouping and the state. With
   /// [restoreLegs] the legs still up become ordinary calls again - audio
-  /// back on each, and all but the focused one on hold, since the server
-  /// leaves them all active. Returns the ids of the legs restored.
+  /// back on each, and all but the focused one on hold. During an outside
+  /// call every former leg stays locally silent and is asked to hold instead.
+  /// Returns the ids of the surviving legs.
   Future<List<String>> _leaveRoom(Emitter<CallState> emit, {required bool restoreLegs}) async {
     _conferenceAssemblyTimer?.cancel();
     _conferenceAttempt++;
@@ -5215,6 +5439,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       for (final callId in legIds)
         if (state.conference.participantMuted(callId)) callId: false,
     };
+    // Same reason, for the room standing aside: a leg that carries on as an
+    // ordinary call would otherwise keep showing a host away from a room that
+    // is gone. Read before the teardown forgets it.
+    final wasParked = _conferencePeerConnection.isParked;
     // Not waited on: the mixer's connection serialises its own work, so a
     // teardown asked for while it is still opening runs after that and
     // closes it - but waiting here would hold the queue for exactly as long
@@ -5226,11 +5454,22 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (error != null) _logger.warning('_leaveRoom: unsetCallGroup error: $error');
     }
     _tellLegsTheirRoomMute(wereMuted);
+    if (wasParked) _tellLegsTheRoomIsParked(legIds, false);
+    final keepLegsParked = state.liveCallsOutsideRoom.isNotEmpty;
     emit(state.copyWith(conference: const ConferenceState()));
     if (!restoreLegs) return const [];
     final restored = <String>[];
     for (final callId in legIds) {
-      if (await _restoreLegAudio(callId)) restored.add(callId);
+      if (keepLegsParked) {
+        final call = state.retrieveActiveCall(callId);
+        if (call == null || call.wasHungUp || call.processingStatus == CallProcessingStatus.disconnecting) continue;
+        // Keep the room's existing isolation until an explicit resume succeeds;
+        // neither requesting nor confirming hold needs the microphone restored.
+        _parkedFormerLegs.add(callId);
+        restored.add(callId);
+      } else if (await _restoreLegAudio(callId)) {
+        restored.add(callId);
+      }
     }
     if (restored.isEmpty) return restored;
     // One of them carries on, the rest go on hold. Which one is the focused
@@ -5238,7 +5477,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // leave the room all active on the server, so a client that only ever
     // added holds would leave every one of them held and the user in
     // silence. A leg merged while it was held is resumed the same way.
-    final live = restored.contains(focused) ? focused! : restored.first;
+    final live = keepLegsParked ? null : (restored.contains(focused) ? focused! : restored.first);
     for (final callId in restored) {
       add(CallControlEvent.setHeld(callId, callId != live));
     }

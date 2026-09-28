@@ -3,7 +3,7 @@
 Merging the calls a person already holds into one room where everybody hears
 everybody. The room is the server's - a Janus AudioBridge the backend builds
 and owns - and this client asks for it, joins it, and follows what it says.
-Last reviewed: 2026-09-17.
+Last reviewed: 2026-09-28.
 
 The wire format, every refusal reason and the obligations this client is held
 to are in
@@ -152,6 +152,90 @@ command still outstanding** for that call is that command coming home; anything
 else is somebody's intention. The value alone cannot decide, because the
 platform does not wait for the report before the command returns, so a report
 can still be in flight when the host asks for the opposite.
+
+## A call outside the room
+
+While a call outside the room stands, the room is **parked**: nothing is sent to
+the mix and nothing of it is heard. Without that the room carries the host's
+half of that call to every participant, and its own mix into his ear over the
+person he is talking to - the microphone is one pooled track lent to every
+connection, so no per-call mute can silence it for the room, and only the
+room's own channel can be.
+
+Parking is not a mute, and the two are kept apart in
+`ConferencePeerConnection`: a mute is what the host asked for and what the
+panel shows, parking is the room standing aside, and the room speaks only when
+neither holds it back. So a mute set before the outside call outlives it with
+nothing to restore, and there is no "who asked for this" to work out.
+
+Both halves are applied in one place. The outbound half takes the microphone
+off the room's sender; the inbound half disables the **receiver's** track,
+which is the only handle on what is heard - the mixed audio plays natively and
+no stream of it is kept. That track exists only once a remote description has
+been set, so the state is applied again after every answer: a room parked while
+it was still assembling would otherwise come up audible.
+
+If both attempts to apply parking fail, the connection gives the room up.
+The failure is checked against the current request after the await as well as
+before it: an obsolete failure cannot terminate a room whose audio intent has
+already changed.
+
+When a room is lost or terminated during an outside call, every surviving leg
+stays locally silent and is asked to hold. None is automatically resumed into
+the private conversation. This local barrier survives a delayed or refused
+hold and mute callbacks; a successful explicit resume restores the leg's audio
+with its own mute intent preserved. Rejoining a room transfers isolation back
+to conference membership, and ending a call removes its barrier.
+
+While the room is the one standing aside, its participants' controls step back
+to half weight - the hangups especially, which would otherwise shout from a
+conversation the user is not in. They are dimmed and never disabled: a room-wide
+mute and a hangup still reach the room while the host is elsewhere, and the
+semantics are untouched, so a screen reader offers both exactly as before.
+
+Moving between the two is a tap on either of them: any row of the room leads
+back into it, and the row of the call outside leads out to that call. The tap
+acts rather than merely taking the focus - it holds the conversation left behind
+and resumes the wanted one, and the room's own audio follows from the rule. A tap
+that only took the focus would hand the user the room's controls while the room
+was still silent, which is what the screen did before: the way back was to press
+Hold on the other call and know what that meant. Without a room there is one
+conversation and a tap stays a selection.
+
+The hold is all the tap commands. Which conversation the screen frames, and which
+one the bottom controls act on, is read off the audio by
+[`CallState.focusedCall`] - so a hold the server refuses leaves both on the call
+that is still heard, rather than on a room nobody can hear. Nor is the settled
+state asked whether a switch is needed: between a tap and the server's answer the
+calls still read the way they did before it, so a second tap would find nothing
+to do and the first one's request would land unopposed. The conversation the last
+tap asked for is held in `CallBloc._conversationSwitchInFlight` until that hold
+or unhold settles, refusal included; the requests are ordered by the mutation
+queue, so the tap that came last is the one that settles last.
+
+When to park is [`CallState.conferenceMustPark`], planned in `onChange` off the
+state rather than commanded from the paths that accept and end calls. Four
+places mark a call accepted, the handshake restore after a reconnect among
+them, and a command from one of them that the others do not send would leave
+the room either silent for good or carrying a private conversation. An
+**accepted** call is the boundary, not a ringing one: before the answer there is
+nobody to be private with, and standing aside for a ringing call would cut the
+room off for an incoming call the host may well decline.
+
+The server is not told - the host's own mute is local too (§14: far ends learn
+nothing of a conference) - but the participants are, over the same app-to-app
+envelope the mute hint uses: a `conference_host_away {away}` goes to every leg
+when the parking changes, to a leg as it joins a room already standing aside,
+and as `false` both when the room ends and when the server drops a leg out of a
+room that is standing aside - a leg that carries on as an ordinary call must not
+be left showing a host away from a room it is no longer in. Core relays the
+envelope without reading it, so nothing on the server side changes for a new
+inner type.
+
+It is a claim on the same terms as the mute hint, and carries the same limit: it
+is not replayed, and a participant whose socket was down for it learns nothing
+until the host's next change. Nothing functional hangs on it - it is a line of
+text under the name.
 
 ## Telling the muted participant
 

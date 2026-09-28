@@ -91,6 +91,47 @@ class CallState with _$CallState {
   bool canAdd({required bool isConferenceEnabled}) =>
       isConferenceEnabled && conference.phase == ConferencePhase.active && mergeableCallIds.isNotEmpty;
 
+  /// Whether the room must stand aside: the host has a call outside it, and a
+  /// person talks to one party at a time.
+  ///
+  /// Without this the room carries the host's half of that call to every
+  /// participant, and its own mix into his ear over the person he is talking
+  /// to: the microphone is one pooled track lent to every connection, so
+  /// nothing but the room's own channel can be silenced for it.
+  ///
+  /// An accepted call is the boundary, not a ringing one. Before the answer
+  /// there is nobody on the other side to be private with, and standing aside
+  /// for a ringing call would cut the room off for an incoming call the host
+  /// may well decline.
+  ///
+  /// Derived, never commanded: four places mark a call accepted, the handshake
+  /// restore after a reconnect among them, and a command from one of them that
+  /// the others do not send would leave the room either silent for good or
+  /// carrying a private conversation.
+  bool get conferenceMustPark => conference.isPresent && liveCallsOutsideRoom.isNotEmpty;
+
+  /// The calls outside the room that the host is actually in: answered, not
+  /// held, and not on their way out.
+  ///
+  /// A held call is left out because the server stops its media: the host has
+  /// stepped away from it, so the room is his again - which is also how he
+  /// moves between the two, the same way he moves between two ordinary calls.
+  ///
+  /// So is a call the room has just released ([ActiveCall.leavingRoom]): it is
+  /// on its way to being held and reading it as a call the host went off to
+  /// would silence the conference for everyone still in it because somebody
+  /// left. Once that hold resolves the flag is gone either way, so a hold the
+  /// server refused leaves an ordinary live call the room does stand aside for.
+  Iterable<ActiveCall> get liveCallsOutsideRoom => activeCalls.where(
+    (call) =>
+        !conference.isLeg(call.callId) &&
+        call.wasAccepted &&
+        !call.held &&
+        !call.leavingRoom &&
+        !call.wasHungUp &&
+        call.processingStatus != CallProcessingStatus.disconnecting,
+  );
+
   /// The calls to put on hold before a new outgoing call is placed: every
   /// call not already held, except the room's legs - they stay in the mix,
   /// and the server would refuse the hold anyway.
@@ -102,14 +143,29 @@ class CallState with _$CallState {
   /// The call the action area should act on: the explicitly [selectedCallId]
   /// when it still maps to a live call, otherwise the derived `current`.
   ///
-  /// Returns `null` only when there are no active calls. Behavior is identical
-  /// to `activeCalls.current` until something dispatches
-  /// [CallControlEvent.callSelected], so this is a no-op seam for existing UI.
+  /// With a room up, an accepted selection is not consulted. There the focus is
+  /// not a preference but a fact - the conversation that is audible, the room
+  /// or the call it stands aside for - and the two blocks on that screen frame
+  /// themselves from the same rule. A selection would let the frame sit on a
+  /// call held long before the room existed, or on one whose hold the server
+  /// refused. A call that is still ringing keeps the focus it was given: it
+  /// demands a decision, and it is in neither conversation.
+  ///
+  /// Returns `null` only when there are no active calls.
   ActiveCall? get focusedCall {
     if (activeCalls.isEmpty) return null;
     final selected = selectedCallId == null ? null : retrieveActiveCall(selectedCallId!);
-    return selected ?? _firstLeg ?? activeCalls.current;
+    if (selected != null && !(conference.isPresent && selected.wasAccepted)) return selected;
+    return _callTheRoomIsParkedFor ?? _firstLeg ?? selected ?? activeCalls.current;
   }
+
+  /// While the room stands aside for a call outside it, that call is what the
+  /// action area acts on: its microphone, its hold, its hangup. Left on a leg,
+  /// the grid would offer a mute of a room nobody can hear, and a hangup that
+  /// ends the room while the host is talking to somebody else.
+  ///
+  /// The most recent one, as `current` reads a set of calls elsewhere.
+  ActiveCall? get _callTheRoomIsParkedFor => conferenceMustPark ? liveCallsOutsideRoom.lastOrNull : null;
 
   /// With a room up, the call the action area acts on by default is the
   /// room's first leg by line: the legs are what the user is in.

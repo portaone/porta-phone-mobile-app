@@ -43,6 +43,8 @@ class CallControlsParams {
     required this.onAccept,
     required this.dtmfInput,
     this.conference = const ConferenceState(),
+    this.conferenceParked = false,
+    this.onConversationSwitched,
     this.onMerge,
     this.onConferenceAdd,
     this.onConferenceSelfMuted,
@@ -99,6 +101,16 @@ class CallControlsParams {
   /// room instead - the microphone above all, which belongs to the room and
   /// not to any one leg.
   final ConferenceState conference;
+
+  /// Whether the room has stood aside for a call outside it
+  /// ([CallState.conferenceMustPark]). The action area needs no branch of its
+  /// own for it - the focus has already moved to that call - but the panel says
+  /// so, and the room's own mute is not offered while it is silent anyway.
+  final bool conferenceParked;
+
+  /// Moves the user between the room and a call outside it; `null` where the
+  /// screen has no room to move between.
+  final ValueChanged<String>? onConversationSwitched;
 
   /// Brings the calls outside the room into it; `null` while none of them
   /// can join, which shows the control disabled rather than hiding it.

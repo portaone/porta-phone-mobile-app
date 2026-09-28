@@ -24,6 +24,24 @@ void main() {
     expect(decoded, isA<UnknownPeerMessageEvent>());
   });
 
+  test('ConferenceHostAwayPeerMessageEvent: decoded by its type and round trips', () {
+    const event = ConferenceHostAwayPeerMessageEvent(line: 1, callId: 'qwerty', sender: '123', away: true);
+
+    expect(PeerMessageEvent.fromJson(event.toJson()), event);
+  });
+
+  test('ConferenceHostAwayPeerMessageEvent: a non-boolean away falls back to unknown', () {
+    final decoded = PeerMessageEvent.fromJson({
+      'event': 'peer_message',
+      'line': 1,
+      'call_id': 'qwerty',
+      'type': 'conference_host_away',
+      'data': {'away': 'yes'},
+    });
+
+    expect(decoded, isA<UnknownPeerMessageEvent>());
+  });
+
   void testFromJson(String description, Map<String, dynamic> actual, PeerMessageEvent expected) {
     test(description, () {
       expect(PeerMessageEvent.fromJson(actual), equals(expected));

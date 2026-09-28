@@ -40,7 +40,9 @@ class ActiveCall with _$ActiveCall implements CallEntry {
     this.localStream,
     this.remoteStream,
     this.remoteCameraEnabled,
+    this.leavingRoom = false,
     this.peerReportedConferenceMute,
+    this.peerReportedConferenceHostAway,
     this.speakerOnBeforeMinimize,
     this.iceCandidates = const [],
     this.iceConnectionIssue,
@@ -135,6 +137,18 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   @override
   final bool? remoteCameraEnabled;
 
+  /// Whether the room has released this call and the hold that turns it back
+  /// into an ordinary call has not resolved yet.
+  ///
+  /// It is neither a leg nor yet a call the user went off to, and that
+  /// difference decides whether the room stands aside for it - see
+  /// [CallState.liveCallsOutsideRoom]. Set when the server's participant list
+  /// stops naming it, cleared the moment the hold succeeds or is refused: a
+  /// refused hold leaves an ordinary live call, which the room must stand aside
+  /// for like any other.
+  @override
+  final bool leavingRoom;
+
   /// What the other party of this call last said about a room-wide mute they
   /// have applied to it, over `peer_message`. `null` until they say anything.
   ///
@@ -144,6 +158,15 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// the call; nothing functional hangs on it.
   @override
   final bool? peerReportedConferenceMute;
+
+  /// Whether the other party of this call says they have stepped aside from
+  /// the room they host, for a call of their own.
+  ///
+  /// A claim about this call on the same terms as [peerReportedConferenceMute]:
+  /// nothing here can check it, it is shown as somebody's word, and it ends
+  /// with the call.
+  @override
+  final bool? peerReportedConferenceHostAway;
 
   @override
   final bool? speakerOnBeforeMinimize;

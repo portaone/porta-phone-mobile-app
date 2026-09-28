@@ -28,6 +28,7 @@ class CallActiveScaffold extends StatefulWidget {
     required this.canMerge,
     required this.canAdd,
     required this.conference,
+    required this.conferenceParked,
     required this.localePlaceholderBuilder,
     required this.remotePlaceholderBuilder,
     required this.keepControlsVisible,
@@ -52,6 +53,10 @@ class CallActiveScaffold extends StatefulWidget {
   /// Whether a call standing outside the room can be brought into it now (see
   /// [CallState.canAdd]).
   final bool canAdd;
+
+  /// Whether the room has stood aside for a call outside it
+  /// ([CallState.conferenceMustPark]).
+  final bool conferenceParked;
 
   /// The conference room, when this session hosts one: the panel renders it
   /// and the control grid acts on it instead of on the focused leg.
@@ -435,6 +440,8 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                       onMerge: widget.canMerge ? _mergeCalls : null,
                       onConferenceAdd: widget.canAdd ? _addToConference : null,
                       conference: widget.conference,
+                      conferenceParked: widget.conferenceParked,
+                      onConversationSwitched: (callId) => _callBloc.add(CallControlEvent.conversationSwitched(callId)),
                       onConferenceSelfMuted: (muted) => _callBloc.add(CallControlEvent.conferenceSelfMuted(muted)),
                       onConferenceParticipantMuted: (callId, muted) =>
                           _callBloc.add(CallControlEvent.conferenceParticipantMuted(callId, muted)),

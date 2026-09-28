@@ -321,6 +321,8 @@
   "@call_ConferencePanel_hostStatus": {
     "description": "Status line of the host's own row in the conference panel."
   },
+  "call_ConferencePanel_hostStatusAside": "อยู่ในสายอื่น",
+  "@call_ConferencePanel_hostStatusAside": {},
   "call_ConferencePanel_participantStatus": "อยู่ในการประชุมสาย",
   "@call_ConferencePanel_participantStatus": {
     "description": "Status line of a participant row in the conference panel."
@@ -432,6 +434,8 @@
   "@call_description_held": {},
   "call_description_peerReportsMuted": "อีกฝ่ายแจ้งว่าคุณถูกปิดเสียง",
   "@call_description_peerReportsMuted": {},
+  "call_description_peerReportsHostAway": "อีกฝ่ายแจ้งว่ากำลังอยู่ในสายอื่น",
+  "@call_description_peerReportsHostAway": {},
   "call_description_incoming": "สายเรียกเข้า",
   "@call_description_incoming": {},
   "call_description_inviteToAttendedTransfer": "คุณได้รับเชิญให้เข้าร่วมการโอนสายแบบมีผู้รับสาย",

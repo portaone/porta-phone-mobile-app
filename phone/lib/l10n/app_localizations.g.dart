@@ -682,6 +682,12 @@ abstract class AppLocalizations {
   /// **'Host'**
   String get call_ConferencePanel_hostStatus;
 
+  /// Status on the host row of the conference panel while the host is on a call outside the room, so the room neither hears him nor is heard
+  ///
+  /// In en, this message translates to:
+  /// **'On another call'**
+  String get call_ConferencePanel_hostStatusAside;
+
   /// Status line of a participant row in the conference panel.
   ///
   /// In en, this message translates to:
@@ -801,6 +807,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The other side says you are muted'**
   String get call_description_peerReportsMuted;
+
+  /// Status of a call whose other party hosts a conference and reports having stepped aside from it for a call of their own, so the room neither carries nor plays their audio
+  ///
+  /// In en, this message translates to:
+  /// **'The other side says they are on another call'**
+  String get call_description_peerReportsHostAway;
 
   /// No description provided for @call_description_incoming.
   ///

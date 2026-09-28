@@ -205,6 +205,14 @@ sealed class _CallSignalingEvent extends CallEvent {
     required bool muted,
   }) = _CallSignalingEventPeerConferenceMute;
 
+  /// What the other party of this call says about having stepped aside from the
+  /// room they host.
+  const factory _CallSignalingEvent.peerConferenceHostAway({
+    required int? line,
+    required String callId,
+    required bool away,
+  }) = _CallSignalingEventPeerConferenceHostAway;
+
   const factory _CallSignalingEvent.updating({required int? line, required String callId}) =
       _CallSignalingEventUpdating;
 
@@ -410,6 +418,15 @@ class _CallSignalingEventPeerConferenceMute extends _CallSignalingEvent {
   final bool muted;
   @override
   List<Object?> get props => [line, callId, muted];
+}
+
+class _CallSignalingEventPeerConferenceHostAway extends _CallSignalingEvent {
+  const _CallSignalingEventPeerConferenceHostAway({required this.line, required this.callId, required this.away});
+  final int? line;
+  final String callId;
+  final bool away;
+  @override
+  List<Object?> get props => [line, callId, away];
 }
 
 class _CallSignalingEventCallUpdating extends _CallSignalingEvent {
@@ -721,6 +738,12 @@ sealed class CallControlEvent extends CallEvent {
   /// sets [CallState.selectedCallId] so the action area acts on that call.
   const factory CallControlEvent.callSelected(String callId) = _CallControlEventCallSelected;
 
+  /// The user tapped one of the two conversations the screen shows while a room
+  /// stands: the room itself (any of its rows) or a call outside it. Unlike
+  /// [callSelected] this acts - see the handler for why selection alone would
+  /// be misleading there.
+  const factory CallControlEvent.conversationSwitched(String callId) = _CallControlEventConversationSwitched;
+
   /// Answers [callId] after ending every other active call - the "End & Answer"
   /// action for a second incoming call, as a single intent.
   const factory CallControlEvent.answeredEndingOthers(String callId) = _CallControlEventAnsweredEndingOthers;
@@ -827,6 +850,13 @@ class _CallControlEventAnswered extends CallControlEvent {
 
   final String callId;
 
+  @override
+  List<Object?> get props => [callId];
+}
+
+class _CallControlEventConversationSwitched extends CallControlEvent {
+  const _CallControlEventConversationSwitched(this.callId);
+  final String callId;
   @override
   List<Object?> get props => [callId];
 }
@@ -1509,6 +1539,14 @@ sealed class _CallMutationEvent extends CallEvent {
 
   /// The mixer's offer could not be answered, or the answer never left.
   const factory _CallMutationEvent.conferenceAnswerFailed() = _CallMutationEventConferenceAnswerFailed;
+
+  /// Bring the room's own audio into line with the state: parked while a call
+  /// outside it stands, carrying again once that call is gone.
+  ///
+  /// A request, not a fact, and it carries no value - what is wanted is
+  /// [CallState.conferenceMustPark], read when this runs. It is an event so
+  /// that it takes its turn in the same queue as the room's own work.
+  const factory _CallMutationEvent.reconcileConferenceAudio() = _CallMutationEventReconcileConferenceAudio;
 }
 
 // ── perform variants ─────────────────────────────────────────────────────────
@@ -1930,6 +1968,12 @@ class _CallMutationEventConferenceAnswered extends _CallMutationEvent {
 
 class _CallMutationEventConferenceAnswerFailed extends _CallMutationEvent {
   const _CallMutationEventConferenceAnswerFailed();
+  @override
+  List<Object?> get props => const [];
+}
+
+class _CallMutationEventReconcileConferenceAudio extends _CallMutationEvent {
+  const _CallMutationEventReconcileConferenceAudio();
   @override
   List<Object?> get props => const [];
 }

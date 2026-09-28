@@ -394,6 +394,8 @@
   "@call_ConferencePanel_hostStatus": {
     "description": "Status line of the host's own row in the conference panel."
   },
+  "call_ConferencePanel_hostStatusAside": "On another call",
+  "@call_ConferencePanel_hostStatusAside": {"description": "Status on the host row of the conference panel while the host is on a call outside the room, so the room neither hears him nor is heard"},
   "call_ConferencePanel_participantStatus": "In the conference",
   "@call_ConferencePanel_participantStatus": {
     "description": "Status line of a participant row in the conference panel."
@@ -505,6 +507,8 @@
   "@call_description_held": {},
   "call_description_peerReportsMuted": "The other side says you are muted",
   "@call_description_peerReportsMuted": {},
+  "call_description_peerReportsHostAway": "The other side says they are on another call",
+  "@call_description_peerReportsHostAway": {"description": "Status of a call whose other party hosts a conference and reports having stepped aside from it for a call of their own, so the room neither carries nor plays their audio"},
   "call_description_incoming": "Incoming call",
   "@call_description_incoming": {},
   "call_description_inviteToAttendedTransfer": "You've been invited to join an attended transfer call",

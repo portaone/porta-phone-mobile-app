@@ -4,7 +4,7 @@ The product-level view of the calling experience: what the user can do, the
 screen states, the widgets that back them, and the in-progress redesign. The
 implementation deep-dive lives in [`call_arch.md`](call_arch.md).
 
-Last reviewed: 2026-09-03
+Last reviewed: 2026-09-28
 
 ## What the user can do
 
@@ -70,6 +70,16 @@ Auto-focus: a new ringing incoming call grabs the focus; when the focused call
 ends, the next ringing incoming call is focused. The media overlay keeps
 following the derived `current` call.
 
+With a conference room up, an accepted selection is not consulted at all. The
+screen then shows two conversations - the room and a call taken outside it - and
+which of them is in use is a fact rather than a preference, so the focus follows
+the audio: the live call outside the room while it stands aside, the room's first
+leg otherwise. A call that is still ringing is the exception and keeps the focus
+it was given; it demands a decision and is in neither conversation. Moving
+between the two is a tap on either block, which asks for the hold and leaves the
+focus to follow - see
+[`call_conference.md`](call_conference.md).
+
 ## Key widgets
 
 | Widget                   | File                                   | Role                                                                        |
@@ -81,6 +91,7 @@ following the derived `current` call.
 | `CallInfoBlock`          | `widgets/call_info_block.dart`         | Who the screen is about: the roster with several calls, `CallInfo` with one |
 | `CallActionArea`         | `widgets/call_action_area.dart`        | What can be pressed: the control grid, or Decline/Answer with the hint      |
 | `CallList` / `CallRow`   | `widgets/call_list.dart`               | Tappable per-call rows with status badge + duration                         |
+| `ConferencePanel`        | `widgets/conference_panel.dart`        | The room as one block: the host's own row and a row per leg, above the roster of the calls outside it |
 | `FocusedActionHint`      | `widgets/focused_action_hint.dart`     | "Acting on" hint + answer side effect                                       |
 | `CallInfo`               | `widgets/call_info.dart`               | Focused-call name / number / call description / timer                       |
 | `IncomingCallActions`    | `widgets/incoming_call_actions.dart`   | Decline / Answer for the focused ringing call                               |

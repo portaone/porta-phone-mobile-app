@@ -145,6 +145,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_SemanticsLabel_add' => call_SemanticsLabel_add,
       'call_ConferencePanel_you' => call_ConferencePanel_you,
       'call_ConferencePanel_hostStatus' => call_ConferencePanel_hostStatus,
+      'call_ConferencePanel_hostStatusAside' =>
+        call_ConferencePanel_hostStatusAside,
       'call_ConferencePanel_participantStatus' =>
         call_ConferencePanel_participantStatus,
       'call_ConferencePanel_participantMuted' =>
@@ -162,6 +164,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_ToolbarStatus_reconnecting' => call_ToolbarStatus_reconnecting,
       'call_description_held' => call_description_held,
       'call_description_peerReportsMuted' => call_description_peerReportsMuted,
+      'call_description_peerReportsHostAway' =>
+        call_description_peerReportsHostAway,
       'call_description_incoming' => call_description_incoming,
       'call_description_inviteToAttendedTransfer' =>
         call_description_inviteToAttendedTransfer,

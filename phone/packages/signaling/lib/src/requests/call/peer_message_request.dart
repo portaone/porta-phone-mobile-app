@@ -19,6 +19,7 @@ sealed class PeerMessageRequest extends CallRequest {
     return switch (json['type']) {
       MediaStatePeerMessageRequest.messageType => MediaStatePeerMessageRequest.fromJson(json),
       ConferenceMutePeerMessageRequest.messageType => ConferenceMutePeerMessageRequest.fromJson(json),
+      ConferenceHostAwayPeerMessageRequest.messageType => ConferenceHostAwayPeerMessageRequest.fromJson(json),
       final other => throw ArgumentError.value(other, 'type', 'Unknown peer_message type'),
     };
   }
@@ -103,6 +104,51 @@ final class ConferenceMutePeerMessageRequest extends PeerMessageRequest {
       'call_id': callId,
       'type': messageType,
       'data': {'muted': muted},
+    };
+  }
+}
+
+/// Tells the other party of this call that the host has stepped aside from the
+/// room for a call outside it, or come back (`data: {away: bool}`).
+///
+/// While the host is away the room neither carries his voice nor plays to him,
+/// and the server says nothing of it - a conference is the host's alone. Their
+/// client would otherwise show a host who is simply silent. See
+/// [ConferenceHostAwayPeerMessageEvent] for why the receiving side treats it
+/// as a claim about this call.
+final class ConferenceHostAwayPeerMessageRequest extends PeerMessageRequest {
+  const ConferenceHostAwayPeerMessageRequest({
+    required super.transaction,
+    required super.line,
+    required super.callId,
+    required this.away,
+  });
+
+  static const messageType = 'conference_host_away';
+
+  final bool away;
+
+  @override
+  List<Object?> get props => [...super.props, away];
+
+  factory ConferenceHostAwayPeerMessageRequest.fromJson(Map<String, dynamic> json) {
+    return ConferenceHostAwayPeerMessageRequest(
+      transaction: json['transaction'],
+      line: json['line'],
+      callId: json['call_id'],
+      away: json['data']['away'],
+    );
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      Request.typeKey: PeerMessageRequest.typeValue,
+      'transaction': transaction,
+      'line': line,
+      'call_id': callId,
+      'type': messageType,
+      'data': {'away': away},
     };
   }
 }

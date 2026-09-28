@@ -338,12 +338,11 @@ void main() {
     expect(h.bloc.state.conference.participantMuted('a'), isFalse, reason: 'the list says when it took effect');
   });
 
-  test('self mute takes the microphone off the room and leaves every call speaking', () async {
+  test('self mute takes the microphone off the room and leaves the microphone itself alone', () async {
     final h = _harness();
     addTearDown(h.close);
     h.seedEstablishedCall('a', line: 0);
     h.seedEstablishedCall('b', line: 1);
-    final outside = h.seedEstablishedCall('outside', line: 2);
     await _merge(h, ['a', 'b']);
     await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
     final mixer = h.peerFactory.created.single;
@@ -354,16 +353,15 @@ void main() {
     expect(h.bloc.state.conference.selfMuted, isTrue);
     expect(mixer.fakeSenders.single.track, isNull, reason: 'the room hears nothing');
     // The microphone is one object for every call: muting the room must not
-    // reach into a call that is not in it.
+    // switch off the track the other calls are holding.
     expect(h.media.microphone.enabled, isTrue);
-    expect(outside.fakeSenders.single.track, isNotNull, reason: 'the call outside the room still speaks');
 
     h.bloc.add(const CallControlEvent.conferenceSelfMuted(false));
     await pumpEventQueue();
     expect(mixer.fakeSenders.single.track, isNotNull);
   });
 
-  test('muting a call outside the room leaves the room speaking', () async {
+  test('muting a call outside the room reaches that call alone', () async {
     final h = _harness();
     addTearDown(h.close);
     h.seedEstablishedCall('a', line: 0);
@@ -372,13 +370,17 @@ void main() {
     await _merge(h, ['a', 'b']);
     await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
     final mixer = h.peerFactory.created.single;
+    // A call outside the room stands, so the room is aside for it - see
+    // conference_outside_call_test.dart. What is asserted here is that a mute
+    // of that call does not reach anything else through the shared track.
+    await _settle(h, () => mixer.fakeSenders.single.track == null);
 
     await h.bloc.performSetMuted('outside', true);
     await pumpEventQueue();
 
     expect(outside.fakeSenders.single.track, isNull);
-    expect(mixer.fakeSenders.single.track, isNotNull, reason: 'the room still hears the host');
-    expect(h.media.microphone.enabled, isTrue);
+    expect(h.media.microphone.enabled, isTrue, reason: 'the one track every call holds stays live');
+    expect(h.bloc.state.conference.selfMuted, isFalse, reason: 'muting a call is not muting the room');
   });
 
   test('ending the conference leaves a muted call outside it muted', () async {

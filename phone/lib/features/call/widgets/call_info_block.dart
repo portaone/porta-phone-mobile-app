@@ -26,6 +26,8 @@ class CallInfoBlock extends StatelessWidget {
     required this.focusedCall,
     required this.onCallSelected,
     this.conference = const ConferenceState(),
+    this.conferenceParked = false,
+    this.onConversationSwitched,
     this.onSelfMutedChanged,
     this.onParticipantMutedChanged,
     this.onParticipantHangup,
@@ -44,6 +46,8 @@ class CallInfoBlock extends StatelessWidget {
       focusedCall = params.focusedCall,
       onCallSelected = params.onCallSelected,
       conference = params.conference,
+      conferenceParked = params.conferenceParked,
+      onConversationSwitched = params.onConversationSwitched,
       onSelfMutedChanged = params.onConferenceSelfMuted,
       onParticipantMutedChanged = params.onConferenceParticipantMuted,
       onParticipantHangup = params.onConferenceParticipantHangup,
@@ -61,6 +65,14 @@ class CallInfoBlock extends StatelessWidget {
 
   /// The room, when there is one; see [ConferencePanel].
   final ConferenceState conference;
+
+  /// Whether that room has stood aside for a call outside it.
+  final bool conferenceParked;
+
+  /// Moves the user between the room and a call outside it. While a room
+  /// stands, a row is tapped to go to that conversation rather than merely to
+  /// point the controls at it.
+  final ValueChanged<String>? onConversationSwitched;
 
   final ValueChanged<bool>? onSelfMutedChanged;
   final void Function(String callId, bool muted)? onParticipantMutedChanged;
@@ -100,6 +112,8 @@ class CallInfoBlock extends StatelessWidget {
           ConferencePanel(
             conference: conference,
             calls: activeCalls,
+            roomParked: conferenceParked,
+            onSwitchToConference: onConversationSwitched,
             onSelfMutedChanged: onSelfMutedChanged ?? (_) {},
             onParticipantMutedChanged: onParticipantMutedChanged ?? (_, _) {},
             onParticipantHangup: onParticipantHangup ?? (_) {},
@@ -123,7 +137,9 @@ class CallInfoBlock extends StatelessWidget {
               contactResolver: contactResolver,
               style: style?.callInfo,
               listStyle: style?.list,
-              onCallTap: onCallSelected,
+              // Under a room this list is the other conversation, so a tap
+              // goes to it rather than only pointing the controls at it.
+              onCallTap: onConversationSwitched ?? onCallSelected,
             ),
         ],
       );
@@ -161,6 +177,7 @@ class CallInfoBlock extends StatelessWidget {
       isIncoming: focusedCall.isIncoming,
       held: focusedCall.held,
       peerReportedConferenceMute: focusedCall.peerReportedConferenceMute,
+      peerReportedConferenceHostAway: focusedCall.peerReportedConferenceHostAway,
       number: focusedCall.handle.value,
       username: focusedCall.displayName,
       acceptedTime: focusedCall.acceptedTime,

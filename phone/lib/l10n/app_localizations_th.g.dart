@@ -371,6 +371,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_ConferencePanel_hostStatus => 'ผู้ดำเนินการ';
 
   @override
+  String get call_ConferencePanel_hostStatusAside => 'อยู่ในสายอื่น';
+
+  @override
   String get call_ConferencePanel_participantStatus => 'อยู่ในการประชุมสาย';
 
   @override
@@ -449,6 +452,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get call_description_peerReportsMuted => 'อีกฝ่ายแจ้งว่าคุณถูกปิดเสียง';
+
+  @override
+  String get call_description_peerReportsHostAway => 'อีกฝ่ายแจ้งว่ากำลังอยู่ในสายอื่น';
 
   @override
   String get call_description_incoming => 'สายเรียกเข้า';
