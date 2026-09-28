@@ -159,6 +159,51 @@ class CallState with _$CallState {
     return _callTheRoomIsParkedFor ?? _firstLeg ?? selected ?? activeCalls.current;
   }
 
+  /// What the server's [participants] list means for the room: the membership
+  /// after it, and every difference from what this client holds.
+  ///
+  /// Pure counting, kept apart from acting on it, because the order the
+  /// results are acted on in is a rule of its own - the group is re-declared
+  /// before any hold, since a hold on a member is refused and a leg can only
+  /// leave a group declared without it.
+  ConferenceMembershipPlan membershipFrom(List<ConferenceParticipant> participants) {
+    final listed = {for (final participant in participants) participant.callId};
+    final vanished = conference.legIds.where((callId) => !listed.contains(callId)).toList();
+    // The server un-holds a leg as it joins, so the flag on the call follows
+    // it; nothing is asked of the operating system for this.
+    final unheld = [
+      for (final call in activeCalls)
+        if (listed.contains(call.callId) && call.held) call.callId,
+    ];
+    // The list is the server's account of the room; the legs are this client's
+    // own record, and it records only calls it has. A participant whose call
+    // this client no longer holds would otherwise become a leg with nothing
+    // behind it: a nameless row whose controls do nothing, and a call id the
+    // OS does not know in the group this client declares, which fails the
+    // grouping for every other leg with it.
+    final legs = {
+      for (final entry in conference.legs.entries)
+        if (listed.contains(entry.key)) entry.key: entry.value,
+      for (final participant in participants)
+        if (retrieveActiveCall(participant.callId) != null) participant.callId: participant.line,
+    };
+    return ConferenceMembershipPlan(
+      legs: legs,
+      adopted: legs.keys.where((callId) => !conference.legs.containsKey(callId)).toList(),
+      vanished: vanished,
+      unheld: unheld,
+      muteChanges: {
+        for (final participant in participants)
+          if (participant.muted != conference.participantMuted(participant.callId) ||
+              !conference.isReady(participant.callId) && participant.muted)
+            participant.callId: participant.muted,
+        // A leg that is no longer in the room is no longer muted by it.
+        for (final callId in vanished)
+          if (conference.participantMuted(callId)) callId: false,
+      },
+    );
+  }
+
   /// What the room's own connection is to carry, in both directions.
   ///
   /// Two independent reasons meet here and nowhere else: the host's own mute,

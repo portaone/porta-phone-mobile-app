@@ -7,6 +7,7 @@ export 'call_audio_device.dart';
 export 'call_display.dart';
 export 'call_transition.dart';
 export 'call_network_quality.dart';
+export 'conference_membership_plan.dart';
 export 'conference_state.dart';
 export 'conversation_target.dart';
 export 'ice_connection_issue.dart';

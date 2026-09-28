@@ -586,6 +586,23 @@ void main() {
       expect(state.conferencedCallIds, ['leg-a', 'leg-b']);
     });
 
+    test('membershipFrom counts the server list against what the client holds', () {
+      // The list names a leg this client has, a call it has but never recorded
+      // as a leg, and a participant it has no call for at all - and stops
+      // naming leg-b.
+      final plan = state.membershipFrom(const [
+        ConferenceParticipant(line: 0, callId: 'leg-a', muted: true),
+        ConferenceParticipant(line: 2, callId: 'outside'),
+        ConferenceParticipant(line: 3, callId: 'unknown'),
+      ]);
+
+      expect(plan.legs, {'leg-a': 0, 'outside': 2}, reason: 'a participant with no call behind it is not a leg');
+      expect(plan.adopted, ['outside'], reason: 'the server counts it in the mix, so its connection must go quiet');
+      expect(plan.vanished, ['leg-b'], reason: 'a leg the list no longer names is a call again');
+      expect(plan.unheld, ['outside'], reason: 'the server un-holds a leg as it joins, with no event for it');
+      expect(plan.muteChanges, {'leg-a': true}, reason: 'only what changed is worth telling a leg');
+    });
+
     test('roomAudio holds the two reasons a room goes quiet, and keeps them apart', () {
       // A mute is the host's own and closes one direction; standing aside for a
       // call outside the room closes both. They meet in one intent and stay
