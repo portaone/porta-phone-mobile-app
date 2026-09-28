@@ -15,10 +15,11 @@ enum CallTransition {
   /// leg leaving would silence the room for everybody still in it.
   leavingRoom,
 
-  /// The room was given up while the host was on a call outside it, and this
-  /// leg came back as an ordinary call. It stays silent both ways until a
-  /// resume the server acknowledged: a hold can be delayed or refused, and
-  /// giving the audio back on the strength of a request alone would re-open
-  /// the leak the room's parking exists to close.
+  /// This leg left the room while the host was on a call outside it - the
+  /// room was given up, or the server dropped the leg from it - and came back
+  /// as an ordinary call. It stays silent both ways until a resume the server
+  /// acknowledged: a hold can be delayed or refused, and giving the audio back
+  /// on the strength of a request alone would re-open the leak the room's
+  /// parking exists to close.
   releasedFromRoom,
 }

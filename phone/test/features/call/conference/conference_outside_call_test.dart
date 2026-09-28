@@ -477,6 +477,91 @@ void main() {
       expect(h.bloc.state.retrieveActiveCall('y')!.held, isTrue, reason: 'nothing was resumed for it');
     });
 
+    test('a leg dropped while the host is on a call outside stays silent until it is resumed', () async {
+      // The room stood aside for that call. A dropped leg is held on its way
+      // out, and until the server takes that hold - or if it refuses it - a leg
+      // given its audio back would carry the host's private conversation.
+      final h = CallBlocHarness(capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true));
+      addTearDown(h.close);
+      h.seedEstablishedCall('a', line: 0);
+      final b = h.seedEstablishedCall('b', line: 1);
+      h.seedEstablishedCall('d', line: 2);
+      h.bloc.add(const CallControlEvent.merged(['a', 'b', 'd']));
+      await pumpEventQueue();
+      h.signaling.emit(
+        ConferenceOfferEvent(
+          room: 7,
+          jsep: const {'type': 'offer', 'sdp': 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n'},
+          participants: [_participant('a', 0), _participant('b', 1), _participant('d', 2)],
+        ),
+      );
+      await _settle(() => h.bloc.state.conference.phase == ConferencePhase.active);
+      final mixer = h.peerFactory.created.single;
+      h.seedEstablishedCall('c', line: 3, number: '300');
+      await _settle(() => mixer.fakeSenders.single.track == null);
+
+      h.signaling.emit(ConferenceUpdatedEvent(room: 7, participants: [_participant('a', 0), _participant('d', 2)]));
+      await _settle(() => h.callkeep.held.any((r) => r.callId == 'b'));
+
+      expect(h.callkeep.held.where((r) => r.callId == 'b').single.onHold, isTrue, reason: 'it is held on its way out');
+      expect(b.fakeSenders.single.track, isNull, reason: 'and has not been given the microphone meanwhile');
+      expect(h.bloc.state.retrieveActiveCall('b')!.transition, CallTransition.releasedFromRoom);
+      expect(h.bloc.state.conferenceMustPark, isTrue, reason: 'the room still stands aside for the outside call');
+
+      // The server takes the hold, and later the host resumes that call.
+      await h.bloc.performSetHeld('b', true);
+      await pumpEventQueue();
+      expect(b.fakeSenders.single.track, isNull, reason: 'a hold taken is not a resume');
+      await h.bloc.performSetHeld('b', false);
+      await _settle(() => b.fakeSenders.single.track != null);
+
+      expect(h.bloc.state.retrieveActiveCall('b')!.transition, isNull, reason: 'the resume is what ends it');
+      expect(b.fakeSenders.single.track, h.media.microphone);
+    });
+
+    test('a dropped leg whose hold the server refused comes back with a tap on it', () async {
+      // Refused, the hold leaves the leg live - held false - but still silent
+      // behind the barrier, and only a resume ends that. A tap on the leg that
+      // took "not held" for "already the conversation" would ask for nothing.
+      final h = CallBlocHarness(capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true));
+      addTearDown(h.close);
+      h.seedEstablishedCall('a', line: 0);
+      final b = h.seedEstablishedCall('b', line: 1);
+      h.seedEstablishedCall('d', line: 2);
+      h.bloc.add(const CallControlEvent.merged(['a', 'b', 'd']));
+      await pumpEventQueue();
+      h.signaling.emit(
+        ConferenceOfferEvent(
+          room: 7,
+          jsep: const {'type': 'offer', 'sdp': 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n'},
+          participants: [_participant('a', 0), _participant('b', 1), _participant('d', 2)],
+        ),
+      );
+      await _settle(() => h.bloc.state.conference.phase == ConferencePhase.active);
+      final mixer = h.peerFactory.created.single;
+      h.seedEstablishedCall('c', line: 3, number: '300');
+      await _settle(() => mixer.fakeSenders.single.track == null);
+      h.signaling.emit(ConferenceUpdatedEvent(room: 7, participants: [_participant('a', 0), _participant('d', 2)]));
+      await _settle(() => h.callkeep.held.any((r) => r.callId == 'b'));
+
+      h.signaling.failure = const WebtritSignalingErrorException(1, 500, 'hold refused');
+      await h.bloc.performSetHeld('b', true);
+      await pumpEventQueue();
+      h.signaling.failure = null;
+      expect(h.bloc.state.retrieveActiveCall('b')!.held, isFalse);
+      expect(h.bloc.state.retrieveActiveCall('b')!.transition, CallTransition.releasedFromRoom);
+      expect(b.fakeSenders.single.track, isNull);
+
+      h.bloc.add(const CallControlEvent.conversationSwitched('b'));
+      await _settle(() => h.callkeep.held.any((r) => r.callId == 'b' && !r.onHold));
+      expect(h.callkeep.held.last, (callId: 'b', onHold: false), reason: 'the tap asks for the resume');
+
+      await h.bloc.performSetHeld('b', false);
+      await _settle(() => b.fakeSenders.single.track != null);
+      expect(h.bloc.state.retrieveActiveCall('b')!.transition, isNull);
+      expect(b.fakeSenders.single.track, h.media.microphone);
+    });
+
     test('a participant leaving does not make the room stand aside', () async {
       final h = CallBlocHarness(capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true));
       addTearDown(h.close);

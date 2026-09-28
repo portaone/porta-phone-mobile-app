@@ -122,12 +122,17 @@ class CallState with _$CallState {
   /// would silence the conference for everyone still in it because somebody
   /// left. Once that hold resolves the flag is gone either way, so a hold the
   /// server refused leaves an ordinary live call the room does stand aside for.
+  ///
+  /// And so is a call held back silent until a resume
+  /// ([CallTransition.releasedFromRoom]): nobody hears it and it hears nobody,
+  /// so it is not a conversation the host is in, and a room standing aside for
+  /// it would leave him hearing nothing at all.
   Iterable<ActiveCall> get liveCallsOutsideRoom => activeCalls.where(
     (call) =>
         !conference.isLeg(call.callId) &&
         call.wasAccepted &&
         !call.held &&
-        !call.leavingRoom &&
+        call.transition == null &&
         !call.wasHungUp &&
         call.processingStatus != CallProcessingStatus.disconnecting,
   );
