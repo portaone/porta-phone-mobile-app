@@ -13,12 +13,10 @@ class LocalContactsRepository implements ILocalContactsRepository {
   }
 
   @override
-  Stream<List<LocalContact>> contacts() {
+  Stream<void> watchChanges() {
     return const Stream.empty();
   }
 
   @override
-  Future<void> load() async {
-    return;
-  }
+  Future<List<LocalContact>> fetchContacts() async => const [];
 }

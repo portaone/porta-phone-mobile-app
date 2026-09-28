@@ -1,4 +1,4 @@
-part of 'local_contacts_sync_bloc.dart';
+part of 'local_contacts_sync_cubit.dart';
 
 @immutable
 abstract class LocalContactsSyncState extends Equatable {

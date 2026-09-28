@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
@@ -88,7 +90,7 @@ class MainShellBlocs extends StatelessWidget {
             )..add(const RecentsStarted());
           },
         ),
-        BlocProvider<LocalContactsSyncBloc>(
+        BlocProvider<LocalContactsSyncCubit>(
           lazy: false,
           create: (context) {
             final localContactsRepository = context.read<LocalContactsRepository>();
@@ -106,18 +108,16 @@ class MainShellBlocs extends StatelessWidget {
               return contactsAgreementStatus.isAccepted;
             }
 
-            final bloc = LocalContactsSyncBloc(
+            final cubit = LocalContactsSyncCubit(
               localContactsRepository: localContactsRepository,
-              contactsAgreementStatusRepository: contactsAgreementStatusRepository,
               contactsRepository: context.read<ContactsRepository>(),
               isFeatureEnabled: isFutureEnabled,
               isAgreementAccepted: isAgreementAccepted,
               isContactsPermissionGranted: () => appPermissions.isContactPermissionGranted(),
-              requestContactPermission: () => appPermissions.requestContactPermission(),
             );
 
-            bloc.add(const LocalContactsSyncStarted());
-            return bloc;
+            unawaited(cubit.refresh());
+            return cubit;
           },
         ),
         BlocProvider<CallBloc>(

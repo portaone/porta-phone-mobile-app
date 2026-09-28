@@ -16,21 +16,23 @@ class ContactsLocalTabBloc extends Bloc<ContactsLocalTabEvent, ContactsLocalTabS
   ContactsLocalTabBloc({
     required this.contactsRepository,
     required this.contactsSearchBloc,
-    required this.localContactsSyncBloc,
+    required this.localContactsSyncCubit,
   }) : super(const ContactsLocalTabState()) {
     on<ContactsLocalTabStarted>(_onStarted, transformer: restartable());
-    on<ContactsLocalTabRefreshed>(_onRefreshed, transformer: droppable());
   }
 
   final ContactsRepository contactsRepository;
   final ContactsBloc contactsSearchBloc;
-  final LocalContactsSyncBloc localContactsSyncBloc;
+  final LocalContactsSyncCubit localContactsSyncCubit;
+
+  /// Completes after device contacts are persisted, rejected, failed or cancelled.
+  Future<void> refresh() => localContactsSyncCubit.refresh();
 
   Future<void> _onStarted(ContactsLocalTabStarted event, Emitter<ContactsLocalTabState> emit) async {
     final watchContactsForEachFuture = emit.forEach(
       contactsRepository.watchContacts(event.search, ContactSourceType.local),
       onData: (List<Contact> contacts) => state.copyWith(
-        status: _mapLocalContactsSyncStateToStatus(localContactsSyncBloc.state),
+        status: _mapLocalContactsSyncStateToStatus(localContactsSyncCubit.state),
         contacts: contacts,
         searching: event.search.isNotEmpty,
       ),
@@ -44,7 +46,7 @@ class ContactsLocalTabBloc extends Bloc<ContactsLocalTabEvent, ContactsLocalTabS
     );
 
     final localContactsSyncStateForEachFuture = emit.forEach(
-      localContactsSyncBloc.stream,
+      localContactsSyncCubit.stream,
       onData: (LocalContactsSyncState localContactsSyncState) =>
           state.copyWith(status: _mapLocalContactsSyncStateToStatus(localContactsSyncState)),
     );
@@ -54,10 +56,6 @@ class ContactsLocalTabBloc extends Bloc<ContactsLocalTabEvent, ContactsLocalTabS
       contactsSearchSateOnEachFuture,
       localContactsSyncStateForEachFuture,
     ]);
-  }
-
-  Future<void> _onRefreshed(ContactsLocalTabRefreshed event, Emitter<ContactsLocalTabState> emit) async {
-    localContactsSyncBloc.add(const LocalContactsSyncRefreshed());
   }
 
   ContactsLocalTabStatus _mapLocalContactsSyncStateToStatus(LocalContactsSyncState localContactsSyncState) {
