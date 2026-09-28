@@ -125,9 +125,15 @@ would still drop the connection, so this table must grow with Core.
 | handshake `conference` | `ConferenceInfo({room, participants})` on `StateHandshake.conference` | `handshakes/conference_info.dart` |
 | `reason` string | `ConferenceRefusalReason.fromReason(String)` | `conference_refusal_reason.dart` |
 | `{"completed": true}` | `iceCandidateFromJson` / `iceCandidateToJson` | `ice_candidate_json.dart` |
+| `peer_message` (req) | `PeerMessageRequest` - sealed, one class per inner `type` | `requests/call/peer_message_request.dart` |
+| `peer_message` (evt) | `PeerMessageEvent` - sealed, plus `sender` | `events/call/peer_message_event.dart` |
+| `type: conference_mute` | `ConferenceMutePeerMessageRequest` / `...Event({line, callId, muted})` | as the two above |
+| `type: conference_host_away` | `ConferenceHostAwayPeerMessageRequest` / `...Event({line, callId, away})` | as the two above |
 
-All requests extend `SessionRequest`, all events extend `SessionEvent`. Every
-class round-trips through `toJson` / `fromJson` and is `Equatable`.
+All conference requests extend `SessionRequest` and all conference events extend
+`SessionEvent`; the `peer_message` pair are a `CallRequest` and a `CallEvent`
+instead, addressed to one call (section 13.1). Every class round-trips through
+`toJson` / `fromJson` and is `Equatable`.
 
 ## 4. Requests
 
@@ -640,6 +646,51 @@ sends `conference_terminated` (section 5.5, cause 5).
 - Feature discovery: `GET /api/v1/system-info` lists `conference` in the adapter's
   `supported` functionalities when the deployment offers it; without it, hide the
   merge control (a `merge` would only fail with `conference_disabled`).
+- What the host tells a participant himself travels over `peer_message`, not over
+  a conference message: see 13.1.
+
+### 13.1 `peer_message` - what the host tells a participant directly
+
+Two things a participant needs to know never reach them: Core addresses every
+conference message to the session that asked for the room, which is the host's.
+A participant the host muted room-wide sees a live microphone of their own, and a
+host who has stepped aside to another call looks like somebody who has simply
+gone quiet. `peer_message` is the app-to-app envelope the two of them already
+share, and the host says both over it.
+
+Core relays the envelope to the peer's sessions without reading it, so an inner
+type is a contract between clients and asks nothing of the server. Unlike a
+conference request it is a `CallRequest`: `line` and `call_id` address one call -
+the leg being told, not the room.
+
+```jsonc
+{ "request": "peer_message", "transaction": "t-9", "line": 1, "call_id": "abc",
+  "type": "conference_host_away", "data": { "away": true } }            // inbound: plus "sender"
+```
+
+| Inner `type` | `data` | Sent when |
+|---|---|---|
+| `conference_mute` | `{muted: bool}` | the server's participant list shows that leg's room-wide mute changed |
+| `conference_host_away` | `{away: bool}` | the room parks or carries again; to a leg as it joins a room already parked; `false` when the room ends, and when the server drops a leg out of a room that is aside |
+| `media_state` | `{video: bool}` | not a room message: a camera change on an ordinary call |
+
+The rules that hold for both room messages:
+
+- **Guarded by discovery.** Nothing is sent unless the deployment advertises
+  `peer_message` among the adapter's `supported` functionalities: an older core
+  closes the signalling socket with 4600 on a request it does not know, and a
+  caption is not worth the session the room lives in.
+- **Best effort.** Each is sent per leg and not waited on, it is never replayed,
+  and a participant whose socket was down for it learns nothing until the next
+  change. Authority over who is muted therefore stays with `conference_updated`;
+  these are captions, and nothing functional hangs on one.
+- **Forward compatible inbound, strict outbound.** An inner type this client does
+  not know decodes to `UnknownPeerMessageEvent` rather than failing the session;
+  outbound an unknown type is a programming error, there being no older client to
+  keep compatible with.
+- **A claim about one call.** The receiving side records it on that call and shows
+  it as somebody's word, below the mute it cannot contradict, and it ends with the
+  call.
 
 ## 14. Worked example: a three-way conference, message by message
 
