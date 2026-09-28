@@ -54,7 +54,15 @@ CallAudioDevice? audioDevice
 List<CallAudioDevice> availableAudioDevices
 
 AppLifecycleState? currentAppLifecycleState // last known Flutter lifecycle state
+String? selectedCallId // the call the user chose; read through focusedCall
+ConferenceState conference // the room this client hosts, empty when there is none
 ```
+
+`conference` is the one field a whole feature hangs off: it holds the room, its
+legs and the server's participant list, and the rules derived from it - whether
+the room must stand aside for a call outside it, and which of the two
+conversations the screen acts on - are in
+[`call_conference.md`](call_conference.md).
 
 ## ActiveCall Processing Status (state machine)
 

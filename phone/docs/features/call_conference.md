@@ -3,7 +3,7 @@
 Merging the calls a person already holds into one room where everybody hears
 everybody. The room is the server's - a Janus AudioBridge the backend builds
 and owns - and this client asks for it, joins it, and follows what it says.
-Last reviewed: 2026-09-27.
+Last reviewed: 2026-09-28.
 
 The wire format, every refusal reason and the obligations this client is held
 to are in
