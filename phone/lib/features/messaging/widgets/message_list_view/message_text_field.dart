@@ -92,7 +92,13 @@ class _MessageTextFieldState extends State<MessageTextField> {
                     onChanged: widget.onChanged,
                     decoration: InputDecoration(
                       hintText: context.l10n.messaging_MessageField_hint,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      // A touch target's height: wide as the field is, a shorter one
+                      // is still reported as a small target. The padding brings one
+                      // line of the default text there, and keeps it centred; the
+                      // constraint holds the height for a smaller brand font. The
+                      // bar is this tall anyway, for the send arrow.
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
                       isDense: true,
                       isCollapsed: true,
                       counterText: '',
