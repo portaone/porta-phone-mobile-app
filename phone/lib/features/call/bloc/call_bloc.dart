@@ -390,15 +390,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       }
     }
 
-    // The room gives its audio up while a call outside it stands, and takes it
-    // back afterwards; the rule itself is [CallState.conferenceMustPark]. It is
-    // planned here, off the state, rather than commanded from the paths that
-    // accept and end calls: a call is marked accepted in four of them, the
-    // handshake restore after a reconnect included, and one that forgot to
-    // command it would leave the room carrying a private conversation.
-    if (!isClosed && change.nextState.conferenceMustPark != _conferencePeerConnection.isParked) {
-      add(const _CallMutationEvent.reconcileConferenceAudio());
-    }
+    _planConferenceAudio(change);
 
     // No room, no two conversations to move between.
     if (!change.nextState.conference.isPresent) {
@@ -506,6 +498,39 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       previousCalls: change.currentState.activeCalls,
       currentCalls: change.nextState.activeCalls,
     );
+  }
+
+  /// The room gives its audio up while a call outside it stands, and takes it
+  /// back afterwards; the rule itself is [CallState.roomAudio]. It is planned
+  /// here, off the state, rather than commanded from the paths that accept and
+  /// end calls: a call is marked accepted in four of them, the handshake
+  /// restore after a reconnect included, and one that forgot to command it
+  /// would leave the room carrying a private conversation.
+  ///
+  /// Applied here, at the change, and not queued as a mutation: the global
+  /// queue can be waiting on an unrelated server round trip - a participant's
+  /// mute, an add - and a mute or a park that waited behind it would leave the
+  /// host's microphone in the room for exactly that long. The connection
+  /// serialises its own work, and a later intent overtakes an earlier one there.
+  void _planConferenceAudio(Change<CallState> change) {
+    if (isClosed) return;
+    final wanted = change.nextState.roomAudio;
+    if (wanted == _conferencePeerConnection.audio) return;
+    // Whether the room stands aside is the half of it the legs are told about;
+    // the host's own mute is theirs to hear from the server's list.
+    final parkingChanged = _conferencePeerConnection.isParked != !wanted.audible;
+    _logger.info('_planConferenceAudio: wanted=$wanted');
+    unawaited(
+      _conferencePeerConnection.apply(wanted).catchError((Object error) {
+        // Only logged, and that is all there is to do here: applying is the
+        // connection's own business, and one that cannot be applied gives the
+        // room up through [ConferencePeerConnection.onConnectionLost] - which
+        // arrives as a conferenceLost event and hands the legs back. Nothing is
+        // planned again from here: what is wanted is already what [audio] says.
+        _logger.warning('_planConferenceAudio: applying $wanted failed', error);
+      }),
+    );
+    if (parkingChanged) _tellLegsTheRoomIsParked(change.nextState.conference.legIds, !wanted.audible);
   }
 
   /// Analyzes changes in the active call list to trigger specific lifecycle hooks.
@@ -2288,7 +2313,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventConferenceLost() => __onMutationConferenceLost(event, emit),
       _CallMutationEventConferenceAnswered() => __onMutationConferenceAnswered(event, emit),
       _CallMutationEventConferenceAnswerFailed() => __onMutationConferenceAnswerFailed(event, emit),
-      _CallMutationEventReconcileConferenceAudio() => __onMutationReconcileConferenceAudio(event, emit),
     };
   }
 
@@ -2762,8 +2786,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (!_legMutes.consume(event.callId, event.muted) && event.muted != state.conference.selfMuted) {
         await _setRoomMuted(event.muted, emit);
       }
-    } else {
-      await _setMicrophoneAttached(event.callId, attached: !event.muted);
     }
 
     emit(
@@ -2771,6 +2793,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         return activeCall.copyWith(muted: event.muted);
       }),
     );
+
+    // The mute is recorded and the connection then brought into line with the
+    // state, rather than commanded from here: what a call carries is one rule
+    // ([CallState.audioFor]), and a leg the room released while the host is
+    // still on a call outside it stays silent whatever its own mute says.
+    if (!state.isConferenced(event.callId)) {
+      await _applyCallAudio(event.callId, _wantedAudio(event.callId));
+    }
   }
 
   Future<void> __onMutationPerformSendDTMF(_CallMutationEventPerformSendDTMF event, Emitter<CallState> emit) async {
@@ -4930,43 +4960,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// leg and the room's own control must not be able to disagree.
   Future<void> _setRoomMuted(bool muted, Emitter<CallState> emit) async {
     if (!state.conference.isPresent) return;
-    await _conferencePeerConnection.setSelfMuted(muted);
+    // The mute is recorded and the room's connection follows from the state,
+    // the same way its parking does: two reasons, one intent, one planner.
     emit(state.copyWith(conference: state.conference.copyWith(selfMuted: muted)));
     await _legMutes.apply(state.conference.legIds, muted);
-  }
-
-  /// Brings the room's own audio into line with the state: parked while a call
-  /// outside it stands, carrying again once that call is gone.
-  ///
-  /// What is wanted is read here rather than carried in the event, because the
-  /// request was planned when the state changed and this runs behind whatever
-  /// was already queued - which can have ended the room or given the call back
-  /// in the meantime. Idempotent for the same reason: the plan is made on every
-  /// state change, so the same request can be queued twice before it runs once.
-  Future<void> __onMutationReconcileConferenceAudio(
-    _CallMutationEventReconcileConferenceAudio e,
-    Emitter<CallState> emit,
-  ) async {
-    final roomMustPark = state.conferenceMustPark;
-    if (_conferencePeerConnection.isParked == roomMustPark) return;
-    _logger.info('__onMutationReconcileConferenceAudio: roomMustPark=$roomMustPark');
-    // Not awaited: the mixer's connection serialises its own work, so a park
-    // asked for while a room is still being answered queues behind that answer
-    // - and waiting here would hold the mutation queue for as long, with the
-    // room's own End and its assembly deadline behind it. Same reason as the
-    // teardown in [_leaveRoom].
-    unawaited(
-      _conferencePeerConnection.setParked(roomMustPark).catchError((Object error) {
-        // Only logged, and that is all there is to do here: applying is the
-        // connection's own business, and one that cannot be applied gives the
-        // room up through [ConferencePeerConnection.onConnectionLost] - which
-        // arrives as a conferenceLost event and hands the legs back. Nothing is
-        // re-planned from here: what is wanted is already what [isParked] says,
-        // so there would be no change to plan.
-        _logger.warning('__onMutationReconcileConferenceAudio: applying roomMustPark=$roomMustPark failed', error);
-      }),
-    );
-    _tellLegsTheRoomIsParked(state.conference.legIds, roomMustPark);
   }
 
   /// The host ends the conference, and with it every leg: a room is not
@@ -5201,28 +5198,50 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     for (final callId in callIds) {
       // A rejoined leg is now isolated by the room's own membership again.
       _parkedFormerLegs.remove(callId);
-      final call = state.retrieveActiveCall(callId);
-      if (call == null) continue;
-      await _setMicrophoneAttached(callId, attached: false);
-      _setInboundAudioEnabled(call, false);
+      await _applyCallAudio(callId, const CallAudio.silent());
     }
     // A call joining a room the host has already muted starts out of step
     // with it; see [LegMuteSync].
     if (state.conference.selfMuted) await _legMutes.apply(callIds, true);
   }
 
-  /// Gives a leg its audio back once it is a call again: the far end to the
-  /// speaker, and the microphone to the leg's connection unless the user had
-  /// muted that call. Returns whether there was a call to restore - nothing
-  /// is done for one that is gone or going.
+  /// Gives a leg its audio back once it is a call again, as
+  /// [CallState.audioFor] says an ordinary call carries it. Returns whether
+  /// there was a call to restore - nothing is done for one that is gone or
+  /// going, nor for one the room released and nobody has resumed.
   Future<bool> _restoreLegAudio(String callId) async {
     if (_parkedFormerLegs.contains(callId)) return false;
+    return _applyCallAudio(callId, _wantedAudio(callId));
+  }
+
+  /// What [callId]'s own connection is to carry as things stand.
+  ///
+  /// The one place the released-leg barrier is read: it is the state of an
+  /// operation in flight rather than something the call carries, so the rule
+  /// takes it as an argument and this is where it is supplied.
+  CallAudio _wantedAudio(String callId) => state.audioFor(callId, releasedFromRoom: _parkedFormerLegs.contains(callId));
+
+  /// Applies [wanted] to [callId]'s own connection, and says whether there was
+  /// a call to apply it to.
+  ///
+  /// The order is the rule rather than a detail. The microphone is given up
+  /// before anything else and taken back after everything else, so a change
+  /// that fails halfway leaves the call quieter and never louder - what is
+  /// private closes first. What is heard goes the other way: it is restored
+  /// before the sender is touched at all, so a slow or failing sender - even
+  /// one that only has to confirm a microphone that is already off - never
+  /// leaves the user deaf to a call he has back.
+  Future<bool> _applyCallAudio(String callId, CallAudio wanted) async {
     final call = state.retrieveActiveCall(callId);
-    if (call == null || call.wasHungUp || call.processingStatus == CallProcessingStatus.disconnecting) return false;
-    // Hearing the far end again is independent of talking to them: a failure
-    // to re-attach the microphone must not leave the call deaf as well.
-    _setInboundAudioEnabled(call, true);
-    await _setMicrophoneAttached(callId, attached: !call.muted);
+    if (call == null) return false;
+    // Nothing is woken on a call that is on its way out. Silencing one stays
+    // allowed: it can only make it quieter.
+    final wakes = wanted.microphone || wanted.audible;
+    if (wakes && (call.wasHungUp || call.processingStatus == CallProcessingStatus.disconnecting)) return false;
+    if (wanted.audible) _setInboundAudioEnabled(call, true);
+    if (!wanted.microphone) await _setMicrophoneAttached(callId, attached: false);
+    if (!wanted.audible) _setInboundAudioEnabled(call, false);
+    if (wanted.microphone) await _setMicrophoneAttached(callId, attached: true);
     return true;
   }
 
@@ -5390,7 +5409,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// at once. Detaching it from a sender stops only what that connection
   /// sends.
   Future<void> _setMicrophoneAttached(String callId, {required bool attached}) async {
-    if (attached && _parkedFormerLegs.contains(callId)) return;
     try {
       final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
       if (peerConnection == null) return;

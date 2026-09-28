@@ -586,6 +586,45 @@ void main() {
       expect(state.conferencedCallIds, ['leg-a', 'leg-b']);
     });
 
+    test('roomAudio holds the two reasons a room goes quiet, and keeps them apart', () {
+      // A mute is the host's own and closes one direction; standing aside for a
+      // call outside the room closes both. They meet in one intent and stay
+      // independent causes - which is what lets a mute outlive the call.
+      final muted = room.copyWith(selfMuted: true);
+      expect(state.roomAudio, const CallAudio(microphone: true, audible: true));
+      expect(state.copyWith(conference: muted).roomAudio, const CallAudio(microphone: false, audible: true));
+
+      final aside = state.copyWith(activeCalls: [legA, legB, outside.copyWith(held: false)]);
+      expect(aside.roomAudio, const CallAudio.silent(), reason: 'standing aside closes both directions');
+      expect(aside.copyWith(conference: muted).roomAudio, const CallAudio.silent());
+      expect(
+        state.copyWith(conference: muted).roomAudio,
+        const CallAudio(microphone: false, audible: true),
+        reason: 'the mute set before that call outlives it, with nothing to restore',
+      );
+    });
+
+    test('audioFor says what each connection carries, and a leg carries nothing', () {
+      // One rule for who is heard, read off the state: a leg speaks and listens
+      // through the room's own connection, so its own one carries nothing - or
+      // the host would be heard twice and hear himself.
+      expect(state.audioFor('leg-a', releasedFromRoom: false), const CallAudio.silent());
+      expect(state.audioFor('outside', releasedFromRoom: false), const CallAudio(microphone: true, audible: true));
+      expect(
+        state
+            .copyWithMappedActiveCall('outside', (call) => call.copyWith(muted: true))
+            .audioFor('outside', releasedFromRoom: false),
+        const CallAudio(microphone: false, audible: true),
+        reason: 'a muted call still hears the far end',
+      );
+      expect(
+        state.audioFor('outside', releasedFromRoom: true),
+        const CallAudio.silent(),
+        reason: 'a leg the room handed back stays silent until its resume lands',
+      );
+      expect(state.audioFor('gone', releasedFromRoom: false), const CallAudio.silent(), reason: 'no call to carry it');
+    });
+
     test('otherCallIds leaves the legs out', () {
       final incoming = _makeCall(callId: 'incoming', line: 3, processingStatus: CallProcessingStatus.incomingFromOffer);
       final withIncoming = state.copyWith(activeCalls: [legA, legB, outside, incoming]);

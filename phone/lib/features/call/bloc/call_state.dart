@@ -159,6 +159,39 @@ class CallState with _$CallState {
     return _callTheRoomIsParkedFor ?? _firstLeg ?? selected ?? activeCalls.current;
   }
 
+  /// What the room's own connection is to carry, in both directions.
+  ///
+  /// Two independent reasons meet here and nowhere else: the host's own mute,
+  /// which is his to set and the panel to show, and the room standing aside
+  /// for a call outside it, which silences both directions rather than one.
+  /// The room speaks only when neither holds it back, so a mute set before an
+  /// outside call outlives it with nothing to restore.
+  CallAudio get roomAudio =>
+      CallAudio(microphone: !conference.selfMuted && !conferenceMustPark, audible: !conferenceMustPark);
+
+  /// What [callId]'s own connection is to carry, in both directions.
+  ///
+  /// The one rule for who is heard, read off the state rather than commanded
+  /// where the state changes: the same call is silenced and restored from
+  /// several paths - joining a room, being dropped from one, a mute, a room
+  /// given up - and a path that forgot would leave a connection carrying what
+  /// nobody meant it to.
+  ///
+  /// [releasedFromRoom] marks a leg the room handed back whose resume the
+  /// server has not acknowledged yet: the room is gone but the host is still
+  /// on a call outside it, so the leg stays silent until that resume lands. It
+  /// is passed in because it belongs to an operation in flight, which the call
+  /// itself does not carry.
+  CallAudio audioFor(String callId, {required bool releasedFromRoom}) {
+    if (releasedFromRoom) return const CallAudio.silent();
+    // A leg speaks and listens through the room's connection; its own one
+    // carries nothing, or the host would be heard twice and hear himself.
+    if (isConferenced(callId)) return const CallAudio.silent();
+    final call = retrieveActiveCall(callId);
+    if (call == null) return const CallAudio.silent();
+    return CallAudio(microphone: !call.muted, audible: true);
+  }
+
   /// While the room stands aside for a call outside it, that call is what the
   /// action area acts on: its microphone, its hold, its hangup. Left on a leg,
   /// the grid would offer a mute of a room nobody can hear, and a hangup that

@@ -62,6 +62,39 @@ bool _restored(CallBlocHarness h, FakePeerConnection peer, String callId) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('a room mute closes the microphone without waiting on the server', () async {
+    // The host's mute is his own and is carried out locally: a participant's
+    // mute still waiting on the server is no reason for the room to go on
+    // hearing him. It used to be queued behind exactly that.
+    final h = _harness();
+    final first = Completer<void>();
+    final second = Completer<void>();
+    addTearDown(() async {
+      if (!first.isCompleted) first.complete();
+      if (!second.isCompleted) second.complete();
+      await pumpEventQueue();
+      await h.close();
+    });
+    h.seedEstablishedCall('a', line: 0);
+    h.seedEstablishedCall('b', line: 1);
+    await _merge(h, ['a', 'b']);
+    await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+    final mixer = h.peerFactory.created.single;
+
+    h.signaling.gate = first;
+    h.bloc.add(const CallControlEvent.conferenceParticipantMuted('a', true));
+    await _settle(h, () => h.signaling.requests.whereType<ConferenceMuteRequest>().length == 1);
+    h.bloc.add(const CallControlEvent.conferenceSelfMuted(true));
+    h.bloc.add(const CallControlEvent.conferenceParticipantMuted('b', true));
+    await pumpEventQueue();
+    h.signaling.gate = second;
+    first.complete();
+    await _settle(h, () => h.signaling.requests.whereType<ConferenceMuteRequest>().length == 2);
+
+    expect(h.bloc.state.conference.selfMuted, isTrue);
+    expect(mixer.fakeSenders.single.track, isNull, reason: 'while the second server request is still pending');
+  });
+
   test('a merge quiets the legs on the ack and records the room as assembling', () async {
     final h = _harness();
     addTearDown(h.close);
