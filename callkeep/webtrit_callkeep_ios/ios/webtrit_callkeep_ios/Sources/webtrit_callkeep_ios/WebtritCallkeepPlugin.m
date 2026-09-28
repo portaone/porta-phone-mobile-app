@@ -13,6 +13,10 @@
 
 static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
 
+/// How long after CallKit activates the audio session an unrequested unmute is taken for the
+/// session coming back up rather than for a person - see performSetMutedCallAction.
+static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
+
 @interface WebtritCallkeepPlugin ()<PKPushRegistryDelegate, CXProviderDelegate, CXCallObserverDelegate, WTPPushRegistryHostApi, WTPHostApi, WTPHostSoundApi>
 @end
 
@@ -33,6 +37,11 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
   // until the delegate performs them - see "Group hold".
   NSMutableSet<NSUUID *> *_groupMemberUuids;
   NSMutableSet<NSUUID *> *_groupHoldActionUuids;
+  // Mute actions this plugin asked CallKit for, by action UUID; the calls last known muted; and
+  // when CallKit last activated the audio session - see performSetMutedCallAction.
+  NSMutableSet<NSUUID *> *_ownMuteActionUuids;
+  NSMutableSet<NSUUID *> *_mutedCallUuids;
+  CFAbsoluteTime _audioSessionActivatedAt;
   BOOL _callWaitingToneOwnCallsOnly;
   CXCallController *_callController;
   BOOL _driveIdleTimerDisabled;
@@ -67,6 +76,8 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
     _requestedGroupActionUuids = [NSMutableSet set];
     _groupMemberUuids = [NSMutableSet set];
     _groupHoldActionUuids = [NSMutableSet set];
+    _ownMuteActionUuids = [NSMutableSet set];
+    _mutedCallUuids = [NSMutableSet set];
     _callWaitingToneOwnCallsOnly = YES;
   }
   return self;
@@ -471,8 +482,16 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   CXSetMutedCallAction *action = [[CXSetMutedCallAction alloc] initWithCallUUID:[[NSUUID alloc] initWithUUIDString:uuidString]
                                                                           muted:muted];
   CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+  [_ownMuteActionUuids addObject:action.UUID];
 
-  [self requestTransaction:transaction completion:completion];
+  __weak typeof(self) weakSelf = self;
+  [self requestTransaction:transaction completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+    typeof(self) strongSelf = weakSelf;
+    if (strongSelf != nil && (error != nil || flutterError != nil)) {
+      [strongSelf->_ownMuteActionUuids removeObject:action.UUID];
+    }
+    completion(error, flutterError);
+  }];
 }
 
 - (void)sendDTMF:(NSString *)uuidString
@@ -1141,12 +1160,32 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #ifdef DEBUG
   NSLog(@"[Callkeep][CXProviderDelegate][provider:performSetMutedCallAction:]");
 #endif
+  BOOL own = [_ownMuteActionUuids containsObject:action.UUID];
+  [_ownMuteActionUuids removeObject:action.UUID];
+  // When CallKit activates the audio session again - a call ended on the far side while the
+  // others were held, say - the session comes back with its input unmuted, and CallKit mirrors
+  // that onto the calls: an unmute nobody asked for ("setUplinkMuted false ... userInitiated 0"),
+  // measured 107 and 164 ms after the activation. Passed on, it unmuted a call the user had
+  // muted. So an unmute the plugin did not request, for a call last known muted, arriving that
+  // soon after an activation is refused: CallKit keeps the call muted, and the application never
+  // hears of it. A person unmuting from the system UI or from a headset cannot do it within that
+  // window of a session coming up, and one who somehow did has to press again.
+  if (!own && !action.muted && [_mutedCallUuids containsObject:action.callUUID] &&
+      CFAbsoluteTimeGetCurrent() - _audioSessionActivatedAt < kAudioSessionMuteResyncWindow) {
+    [action fail];
+    return;
+  }
   [_delegateFlutterApi performSetMuted:action.callUUID.UUIDString
                                  muted:action.muted
                             completion:^(NSNumber *fulfill, FlutterError *error) {
                               if (error != nil || [fulfill boolValue] != YES) {
                                 [action fail];
                               } else {
+                                if (action.muted) {
+                                  [self->_mutedCallUuids addObject:action.callUUID];
+                                } else {
+                                  [self->_mutedCallUuids removeObject:action.callUUID];
+                                }
                                 [action fulfill];
                               }
                             }];
@@ -1207,6 +1246,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #ifdef DEBUG
   NSLog(@"[CallKeep][CXProviderDelegate][provider:didActivateAudioSession:]");
 #endif
+  _audioSessionActivatedAt = CFAbsoluteTimeGetCurrent();
   // Pre-warm the call-waiting tone player before the Dart side starts the WebRTC
   // voice-processing engine (playback sources created after it are near-silent).
   [_callWaitingTone onAudioSessionActivated];
@@ -1304,6 +1344,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
   [_ownCallUuids removeObject:uuid];
   [_answeringCallUuids removeObject:uuid];
   [_groupMemberUuids removeObject:uuid];
+  [_mutedCallUuids removeObject:uuid];
   [self setVideo:NO forCallUUID:uuid];
 }
 
