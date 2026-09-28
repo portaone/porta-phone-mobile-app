@@ -608,21 +608,21 @@ void main() {
       // One rule for who is heard, read off the state: a leg speaks and listens
       // through the room's own connection, so its own one carries nothing - or
       // the host would be heard twice and hear himself.
-      expect(state.audioFor('leg-a', releasedFromRoom: false), const CallAudio.silent());
-      expect(state.audioFor('outside', releasedFromRoom: false), const CallAudio(microphone: true, audible: true));
+      expect(state.audioFor('leg-a'), const CallAudio.silent());
+      expect(state.audioFor('outside'), const CallAudio(microphone: true, audible: true));
       expect(
-        state
-            .copyWithMappedActiveCall('outside', (call) => call.copyWith(muted: true))
-            .audioFor('outside', releasedFromRoom: false),
+        state.copyWithMappedActiveCall('outside', (call) => call.copyWith(muted: true)).audioFor('outside'),
         const CallAudio(microphone: false, audible: true),
         reason: 'a muted call still hears the far end',
       );
       expect(
-        state.audioFor('outside', releasedFromRoom: true),
+        state
+            .copyWithMappedActiveCall('outside', (call) => call.copyWith(transition: CallTransition.releasedFromRoom))
+            .audioFor('outside'),
         const CallAudio.silent(),
         reason: 'a leg the room handed back stays silent until its resume lands',
       );
-      expect(state.audioFor('gone', releasedFromRoom: false), const CallAudio.silent(), reason: 'no call to carry it');
+      expect(state.audioFor('gone'), const CallAudio.silent(), reason: 'no call to carry it');
     });
 
     test('otherCallIds leaves the legs out', () {

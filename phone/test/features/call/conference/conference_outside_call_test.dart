@@ -20,7 +20,7 @@ ActiveCall _call(
   int? line = 0,
   bool accepted = true,
   bool held = false,
-  bool leavingRoom = false,
+  CallTransition? transition,
   bool hungUp = false,
   CallProcessingStatus status = CallProcessingStatus.connected,
 }) => ActiveCall(
@@ -31,7 +31,7 @@ ActiveCall _call(
   createdTime: DateTime(2026),
   video: false,
   held: held,
-  leavingRoom: leavingRoom,
+  transition: transition,
   processingStatus: status,
   acceptedTime: accepted ? DateTime(2026) : null,
   hungUpTime: hungUp ? DateTime(2026) : null,
@@ -109,7 +109,10 @@ void main() {
     });
 
     test('a call the room released is not yet a call the host went off to', () {
-      final leaving = _state([_call('a', line: 0), _call('b', line: 1, leavingRoom: true)], legs: {'a': 0});
+      final leaving = _state(
+        [_call('a', line: 0), _call('b', line: 1, transition: CallTransition.leavingRoom)],
+        legs: {'a': 0},
+      );
       // The hold was refused, so it is an ordinary live call after all.
       final refused = _state([_call('a', line: 0), _call('b', line: 1)], legs: {'a': 0});
 
