@@ -1783,8 +1783,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     if (outsideCall == null) return;
     final switchToOutsideCall = ConversationTarget.outside(event.callId);
     if (switchInFlight == switchToOutsideCall) return;
-    // Live with nothing in flight: that call already is the conversation.
-    if (switchInFlight == null && !outsideCall.held) return;
+    // Live with nothing in flight: that call already is the conversation - unless
+    // the room released it and a refused hold left it live but silent, which only
+    // a resume ends and only this tap can ask for.
+    final heldBack = outsideCall.held || outsideCall.transition == CallTransition.releasedFromRoom;
+    if (switchInFlight == null && !heldBack) return;
     _conversationSwitchInFlight = switchToOutsideCall;
     // Resuming it is what parks the room, and the existing plan holds whatever
     // else is live - the legs are not among them.
@@ -5273,6 +5276,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// the membership is re-declared, which is what lets it leave the group.
   Future<void> _adoptParticipants(List<ConferenceParticipant> participants, Emitter<CallState> emit) async {
     final plan = state.membershipFrom(participants);
+    // A leg dropped while the host is on a call outside the room must not get
+    // his microphone back on the way out: the room stood aside for that call,
+    // and a hold that is still unanswered - or refused - would hand the leg the
+    // private conversation. It stays silent until a resume the server took,
+    // the same way a leg a lost room hands back does.
+    final hostAway = state.conferenceMustPark;
     emit(
       state
           .copyWithMappedActiveCalls((call) {
@@ -5284,7 +5293,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             // a call on hold that is in fact live - with the room, seeing a
             // held call, carrying his microphone into it.
             if (plan.vanished.contains(call.callId)) {
-              return call.copyWith(transition: CallTransition.leavingRoom);
+              return call.copyWith(transition: hostAway ? CallTransition.releasedFromRoom : CallTransition.leavingRoom);
             }
             return call;
           })
@@ -5314,7 +5323,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // member anyway.
     await _groupLegs();
     for (final callId in plan.vanished) {
-      if (await _restoreLegAudio(callId, emit)) add(CallControlEvent.setHeld(callId, true));
+      if (hostAway) {
+        // Held all the same, and heard again only at an acknowledged resume.
+        final call = state.retrieveActiveCall(callId);
+        if (call == null || call.wasHungUp || call.processingStatus == CallProcessingStatus.disconnecting) continue;
+        add(CallControlEvent.setHeld(callId, true));
+      } else if (await _restoreLegAudio(callId, emit)) {
+        add(CallControlEvent.setHeld(callId, true));
+      }
     }
   }
 
