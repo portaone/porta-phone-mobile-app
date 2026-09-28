@@ -95,6 +95,37 @@ void main() {
     expect(mixer.fakeSenders.single.track, isNull, reason: 'while the second server request is still pending');
   });
 
+  test('a candidate during the room\'s setup does not hold up its End', () async {
+    // The connection feeds a candidate in turn with its own work, so one that
+    // arrives while the answer is still being prepared waits behind it there.
+    // Waiting for it in the mutation queue held the room's End and its
+    // assembly deadline behind a microphone that had not opened yet.
+    final gate = Completer<void>();
+    final media = _GatedMedia(gate);
+    final h = CallBlocHarness(
+      capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true),
+      userMediaBuilder: media,
+    );
+    addTearDown(() async {
+      if (!gate.isCompleted) gate.complete();
+      await pumpEventQueue();
+      await h.close();
+    });
+    h.seedEstablishedCall('a', line: 0);
+    h.seedEstablishedCall('b', line: 1);
+    await _merge(h, ['a', 'b']);
+    await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+    await _settle(h, () => media.pending);
+
+    h.signaling.emit(const ConferenceIceTrickleEvent(candidate: _candidate));
+    await pumpEventQueue();
+    h.bloc.add(const CallControlEvent.conferenceEnded());
+    await _settle(h, () => !h.bloc.state.conference.isPresent);
+
+    expect(h.bloc.state.conference.isPresent, isFalse);
+    expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), hasLength(1));
+  });
+
   test('a merge quiets the legs on the ack and records the room as assembling', () async {
     final h = _harness();
     addTearDown(h.close);
@@ -1105,4 +1136,26 @@ void main() {
     expect(h.peerFactory.created.single.closes, 1);
     expect(h.media.released, contains(h.media.built.last));
   });
+}
+
+/// Holds the room's microphone request open, so something can arrive while the
+/// room is still answering the mixer.
+class _GatedMedia extends Fake implements UserMediaBuilder {
+  _GatedMedia(this._gate);
+
+  final Completer<void> _gate;
+  final _inner = FakeUserMediaBuilder();
+
+  bool pending = false;
+
+  @override
+  Future<MediaStream> build({required bool video, bool? frontCamera, bool allowAudioFallback = false}) async {
+    pending = true;
+    await _gate.future;
+    pending = false;
+    return _inner.build(video: video, frontCamera: frontCamera, allowAudioFallback: allowAudioFallback);
+  }
+
+  @override
+  Future<void> release(MediaStream stream) => _inner.release(stream);
 }
