@@ -43,6 +43,29 @@ class LocalContactsSyncBloc extends Bloc<LocalContactsSyncEvent, LocalContactsSy
 
   StreamSubscription<List<LocalContact>>? _contactsSubscription;
 
+  final _refreshWaiters = <Completer<void>>[];
+  bool _refreshRunning = false;
+
+  /// Refreshes the device contacts and completes once the refresh has settled.
+  ///
+  /// Settled means no refresh is running and the state is no longer
+  /// [LocalContactsSyncRefreshInProgress]: a gate turned the refresh down, the
+  /// load failed, or the loaded contacts were synced. A call made while a
+  /// refresh runs joins it, the way the droppable handler folds its event into
+  /// the running one. The future never fails, and it completes on [close].
+  ///
+  /// Wait on this rather than on the next state: a gate that turns a refresh
+  /// down re-emits a state equal to the current one, the bloc drops it, and no
+  /// next state ever comes.
+  Future<void> refresh() {
+    if (isClosed) return Future.value();
+
+    final waiter = Completer<void>();
+    _refreshWaiters.add(waiter);
+    add(const LocalContactsSyncRefreshed());
+    return waiter.future;
+  }
+
   void _onStarted(LocalContactsSyncStarted event, Emitter<LocalContactsSyncState> emit) async {
     _logger.finer('_onStarted');
 
@@ -75,6 +98,16 @@ class LocalContactsSyncBloc extends Bloc<LocalContactsSyncEvent, LocalContactsSy
   void _onRefreshed(LocalContactsSyncRefreshed event, Emitter<LocalContactsSyncState> emit) async {
     _logger.finer('_onRefreshed');
 
+    _refreshRunning = true;
+    try {
+      await _refresh(emit);
+    } finally {
+      _refreshRunning = false;
+      _settleRefreshWaiters(state);
+    }
+  }
+
+  Future<void> _refresh(Emitter<LocalContactsSyncState> emit) async {
     final featureEnabled = await isFeatureEnabled();
     if (isClosed) return;
     if (!featureEnabled) {
@@ -139,9 +172,30 @@ class LocalContactsSyncBloc extends Bloc<LocalContactsSyncEvent, LocalContactsSy
     }, onError: (error, stackTrace) => _logger.warning('Contacts stream error', error, stackTrace));
   }
 
+  void _settleRefreshWaiters(LocalContactsSyncState state) {
+    if (_refreshRunning || state is LocalContactsSyncRefreshInProgress) return;
+    _completeRefreshWaiters();
+  }
+
+  void _completeRefreshWaiters() {
+    final waiters = List.of(_refreshWaiters);
+    _refreshWaiters.clear();
+    for (final waiter in waiters) {
+      waiter.complete();
+    }
+  }
+
+  @override
+  void onChange(Change<LocalContactsSyncState> change) {
+    super.onChange(change);
+    // Runs before the state is updated, so the new state has to be passed in.
+    _settleRefreshWaiters(change.nextState);
+  }
+
   @override
   Future<void> close() {
     _contactsSubscription?.cancel();
+    _completeRefreshWaiters();
     return super.close();
   }
 }

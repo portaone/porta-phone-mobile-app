@@ -19,12 +19,17 @@ class ContactsLocalTabBloc extends Bloc<ContactsLocalTabEvent, ContactsLocalTabS
     required this.localContactsSyncBloc,
   }) : super(const ContactsLocalTabState()) {
     on<ContactsLocalTabStarted>(_onStarted, transformer: restartable());
-    on<ContactsLocalTabRefreshed>(_onRefreshed, transformer: droppable());
   }
 
   final ContactsRepository contactsRepository;
   final ContactsBloc contactsSearchBloc;
   final LocalContactsSyncBloc localContactsSyncBloc;
+
+  /// Refreshes the device contacts and completes once the refresh has settled.
+  ///
+  /// The tab's own status follows [localContactsSyncBloc], so the completion
+  /// boundary is the one [LocalContactsSyncBloc.refresh] gives.
+  Future<void> refresh() => localContactsSyncBloc.refresh();
 
   Future<void> _onStarted(ContactsLocalTabStarted event, Emitter<ContactsLocalTabState> emit) async {
     final watchContactsForEachFuture = emit.forEach(
@@ -54,10 +59,6 @@ class ContactsLocalTabBloc extends Bloc<ContactsLocalTabEvent, ContactsLocalTabS
       contactsSearchSateOnEachFuture,
       localContactsSyncStateForEachFuture,
     ]);
-  }
-
-  Future<void> _onRefreshed(ContactsLocalTabRefreshed event, Emitter<ContactsLocalTabState> emit) async {
-    localContactsSyncBloc.add(const LocalContactsSyncRefreshed());
   }
 
   ContactsLocalTabStatus _mapLocalContactsSyncStateToStatus(LocalContactsSyncState localContactsSyncState) {
