@@ -121,7 +121,7 @@ void main() {
           contactsPermissionGranted = false;
           return buildBloc();
         },
-        act: (bloc) => bloc.add(const LocalContactsSyncRefreshed()),
+        act: (bloc) => bloc.add(LocalContactsSyncRefreshed()),
         expect: () => [const LocalContactsSyncPermissionFailure()],
       );
 
@@ -131,7 +131,7 @@ void main() {
           when(() => localContactsRepository.contacts()).thenAnswer((_) => Stream.empty());
           return buildBloc();
         },
-        act: (bloc) => bloc.add(const LocalContactsSyncRefreshed()),
+        act: (bloc) => bloc.add(LocalContactsSyncRefreshed()),
         expect: () => [const LocalContactsSyncRefreshInProgress()],
         verify: (_) => verify(() => localContactsRepository.load()).called(1),
       );
@@ -143,9 +143,114 @@ void main() {
           when(() => localContactsRepository.load()).thenThrow(Exception('Load error'));
           return buildBloc();
         },
-        act: (bloc) => bloc.add(const LocalContactsSyncRefreshed()),
+        act: (bloc) => bloc.add(LocalContactsSyncRefreshed()),
         expect: () => [const LocalContactsSyncRefreshInProgress(), const LocalContactsSyncRefreshFailure()],
       );
+    });
+
+    group('refresh()', () {
+      /// Tracks whether [future] has completed, without awaiting it.
+      bool Function() completion(Future<void> future) {
+        var done = false;
+        future.then((_) => done = true);
+        return () => done;
+      }
+
+      Future<void> settle() => Future<void>.delayed(const Duration(milliseconds: 20));
+
+      test('completes when a gate turns down a refresh whose state is already current', () async {
+        contactsPermissionGranted = false;
+        final bloc = buildBloc();
+        addTearDown(bloc.close);
+
+        await bloc.refresh();
+        expect(bloc.state, const LocalContactsSyncPermissionFailure());
+
+        // The same state again: the bloc drops the emit, so nothing on the
+        // stream could end this wait.
+        final emitted = <LocalContactsSyncState>[];
+        final subscription = bloc.stream.listen(emitted.add);
+        addTearDown(subscription.cancel);
+
+        await bloc.refresh().timeout(const Duration(seconds: 1));
+        expect(emitted, isEmpty);
+      });
+
+      test('completes only once the loaded contacts are synced', () async {
+        final deviceContacts = StreamController<List<LocalContact>>.broadcast();
+        addTearDown(deviceContacts.close);
+        final sync = Completer<void>();
+        when(() => localContactsRepository.contacts()).thenAnswer((_) => deviceContacts.stream);
+        when(() => localContactsRepository.load()).thenAnswer((_) async => deviceContacts.add([_localContact1]));
+        when(() => contactsRepository.syncLocalContacts(any())).thenAnswer((_) => sync.future);
+        final bloc = buildBloc();
+        addTearDown(bloc.close);
+
+        final done = completion(bloc.refresh());
+        await settle();
+        expect(bloc.state, const LocalContactsSyncRefreshInProgress());
+        expect(done(), isFalse);
+
+        sync.complete();
+        await settle();
+        expect(bloc.state, const LocalContactsSyncSuccess());
+        expect(done(), isTrue);
+      });
+
+      test('completes when the load fails', () async {
+        when(() => localContactsRepository.contacts()).thenAnswer((_) => const Stream.empty());
+        when(() => localContactsRepository.load()).thenThrow(Exception('Load error'));
+        final bloc = buildBloc();
+        addTearDown(bloc.close);
+
+        await bloc.refresh().timeout(const Duration(seconds: 1));
+        expect(bloc.state, const LocalContactsSyncRefreshFailure());
+      });
+
+      test('a call made while a refresh runs is not dropped, and both complete', () async {
+        final deviceContacts = StreamController<List<LocalContact>>.broadcast();
+        addTearDown(deviceContacts.close);
+        final load = Completer<void>();
+        when(() => localContactsRepository.contacts()).thenAnswer((_) => deviceContacts.stream);
+        when(() => localContactsRepository.load()).thenAnswer((_) async {
+          await load.future;
+          deviceContacts.add([_localContact1]);
+        });
+        final bloc = buildBloc();
+        addTearDown(bloc.close);
+
+        final first = completion(bloc.refresh());
+        await settle();
+        final second = completion(bloc.refresh());
+        await settle();
+        expect([first(), second()], [false, false]);
+
+        load.complete();
+        await settle();
+        expect([first(), second()], [true, true]);
+        verify(() => localContactsRepository.load()).called(2);
+      });
+
+      test('completes on close while a refresh is in progress', () async {
+        when(() => localContactsRepository.contacts()).thenAnswer((_) => const Stream.empty());
+        final bloc = buildBloc();
+
+        final done = completion(bloc.refresh());
+        await settle();
+        expect(bloc.state, const LocalContactsSyncRefreshInProgress());
+        expect(done(), isFalse);
+
+        await bloc.close();
+        await settle();
+        expect(done(), isTrue);
+      });
+
+      test('completes at once on a closed bloc', () async {
+        final bloc = buildBloc();
+        await bloc.close();
+
+        await bloc.refresh().timeout(const Duration(seconds: 1));
+      });
     });
 
     group('Logic updates from Stream (_LocalContactsSyncUpdated)', () {

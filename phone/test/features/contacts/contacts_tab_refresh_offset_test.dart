@@ -5,8 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mocktail/mocktail.dart';
 
-import 'package:webtrit_phone/features/contacts/contacts.dart';
-
 import 'contacts_tab_harness.dart';
 
 /// Where the refresh spinner is drawn.
@@ -44,18 +42,17 @@ void main() {
   }
 
   testWidgets('the phone book draws its spinner below the bar, not behind it', (tester) async {
-    final states = StreamController<ContactsLocalTabState>.broadcast();
-    addTearDown(states.close);
+    final refresh = Completer<void>();
 
-    await harness.pumpLocal(tester, contacts: people, behindAppBarOfHeight: tallBar, states: states.stream);
+    await harness.pumpLocal(tester, contacts: people, behindAppBarOfHeight: tallBar, refresh: () => refresh.future);
 
     final (:spinner, :barBottom) = await pullDown(tester);
 
     expect(spinner, greaterThanOrEqualTo(barBottom));
 
-    // The tab holds the spinner until its bloc reports a state that is no
-    // longer in progress; without it the indicator spins past the test.
-    states.add(ContactsLocalTabState(status: ContactsLocalTabStatus.success, contacts: people));
+    // The tab holds the spinner until its refresh completes; without this the
+    // indicator spins past the test.
+    refresh.complete();
     await tester.pumpAndSettle();
   });
 
