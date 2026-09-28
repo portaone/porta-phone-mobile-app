@@ -86,8 +86,7 @@ class _SmsConversationScreenState extends State<SmsConversationScreen> {
                   centerTitle: true,
                   // A thread is part of the conversations section, so its bar is
                   // frosted the way the conversations list is.
-                  flexibleSpace: BlurredSurface.forPage(
-                    context,
+                  flexibleSpace: BlurredSurface.fromStyle(
                     Theme.of(context).extension<ConversationsScreenStyles>()?.primary?.appBarBlurredSurface,
                   ),
                   // Themes that configure no bar color keep a translucent bar instead
