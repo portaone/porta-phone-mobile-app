@@ -75,9 +75,20 @@ void main() {
     expect(tester.getSize(find.byType(MessageTextField)), empty);
   });
 
+  testWidgets('the field is as tall as a touch target', (tester) async {
+    // Wide as it is, a field shorter than the size Android asks for is still
+    // reported as a small target. The bar is this tall anyway, for the arrow,
+    // so the field takes the room it already had.
+    await pump(tester);
+    await settle(tester);
+
+    expect(tester.getSize(find.byType(TextFormField)).height, greaterThanOrEqualTo(kMinInteractiveDimension));
+    final empty = tester.getSize(find.byType(MessageTextField));
+    expect(empty.height, kMinInteractiveDimension + 16);
+  });
+
   testWidgets('the arrow is big enough to hit', (tester) async {
-    // The size Android asks for. The field beside it stays as it was: it is
-    // 40 high but the width of the bar, so it was never hard to hit.
+    // The size Android asks for.
     final controller = await pump(tester);
     controller.text = 'hello';
     await settle(tester);
