@@ -157,14 +157,16 @@ class ContactsTabHarness {
     /// real screens do. Null keeps the bare host the older tests expect.
     double? behindAppBarOfHeight,
 
-    /// What the bloc emits after the pump. Empty by default; a test that
-    /// triggers a refresh needs at least one state, because the tab awaits the
-    /// next one before it lets the spinner go.
+    /// What the bloc emits after the pump. Empty by default.
     Stream<ContactsLocalTabState>? states,
+
+    /// Controls completion independently from the tab's state stream.
+    Future<void> Function()? refresh,
   }) async {
     final initialState = ContactsLocalTabState(status: status, contacts: contacts);
 
     whenListen(localBloc, states ?? const Stream<ContactsLocalTabState>.empty(), initialState: initialState);
+    when(() => localBloc.refresh()).thenAnswer((_) => refresh?.call() ?? Future<void>.value());
 
     await tester.pumpWidget(
       _around(

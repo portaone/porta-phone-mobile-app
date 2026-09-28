@@ -15,7 +15,3 @@ class ContactsLocalTabStarted extends ContactsLocalTabEvent {
   @override
   List<Object?> get props => [search];
 }
-
-class ContactsLocalTabRefreshed extends ContactsLocalTabEvent {
-  const ContactsLocalTabRefreshed();
-}

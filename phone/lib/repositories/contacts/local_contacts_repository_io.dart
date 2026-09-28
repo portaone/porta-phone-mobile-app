@@ -8,16 +8,6 @@ import 'package:webtrit_phone/models/models.dart' hide Contact;
 import 'local_contacts_repository.dart';
 
 class LocalContactsRepository implements ILocalContactsRepository {
-  LocalContactsRepository() {
-    _controller = StreamController<List<LocalContact>>.broadcast(
-      onListen: _onListenCallback,
-      onCancel: _onCancelCallback,
-    );
-  }
-
-  late StreamController<List<LocalContact>> _controller;
-  StreamSubscription<void>? _databaseSubscription;
-
   @override
   Future<bool> requestPermission() async {
     final status = await FlutterContacts.permissions.request(PermissionType.readWrite);
@@ -25,24 +15,7 @@ class LocalContactsRepository implements ILocalContactsRepository {
   }
 
   @override
-  Stream<List<LocalContact>> contacts() {
-    return _controller.stream;
-  }
-
-  @override
-  Future<void> load() async {
-    final contacts = await _listContacts();
-    _controller.add(contacts);
-  }
-
-  void _onListenCallback() {
-    _databaseSubscription = FlutterContacts.onDatabaseChange.listen((_) => load());
-  }
-
-  void _onCancelCallback() {
-    _databaseSubscription?.cancel();
-    _databaseSubscription = null;
-  }
+  Stream<void> watchChanges() => FlutterContacts.onDatabaseChange;
 
   /// Returns `true` for contacts that should appear in the app's contact list.
   ///
@@ -72,7 +45,8 @@ class LocalContactsRepository implements ILocalContactsRepository {
   static String _resolveLabelText<T extends Enum>(Label<T> label, T customValue) =>
       label.label == customValue ? (label.customLabel ?? '') : label.label.name;
 
-  Future<List<LocalContact>> _listContacts() async {
+  @override
+  Future<List<LocalContact>> fetchContacts() async {
     final contacts = await FlutterContacts.getAll(
       properties: {ContactProperty.name, ContactProperty.phone, ContactProperty.email, ContactProperty.photoThumbnail},
     );
