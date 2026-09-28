@@ -1204,6 +1204,10 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String get login_RequestFailureAddonRequiredError =>
+      'บัญชีของคุณไม่มีสิทธิ์ใช้งานแอปนี้ โปรดติดต่อผู้ให้บริการของคุณ';
+
+  @override
   String get login_RequestFailureDeliveryChannelUnspecifiedError =>
       'บัญชีนี้ไม่มีช่องทางติดต่อที่ตั้งค่าไว้สำหรับรับรหัสยืนยัน';
 

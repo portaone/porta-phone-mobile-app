@@ -2188,6 +2188,12 @@ abstract class AppLocalizations {
   /// **'Your app version is no longer supported, please update the application to continue (current: {actual}, minimum required: {minSupported})'**
   String login_AppVersionUnsupportedExceptionError(String actual, String minSupported);
 
+  /// Shown during sign-in when the server refuses the account because it lacks the add-on the installation requires for this app. Condition: the session request is rejected with HTTP 403 and the error code addon_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account does not include access to this app. Contact your service provider'**
+  String get login_RequestFailureAddonRequiredError;
+
   /// Shown during OTP sign-in when the requested account has no configured delivery channel to receive the one-time verification code and the advertised sign-in identifiers do not allow a more specific wording. Condition: the server rejects the OTP request because no delivery channel is set up for the account.
   ///
   /// In en, this message translates to:
