@@ -120,6 +120,19 @@ leaves the group standing, and its hold with it), and by the end of a member.
 
 ---
 
+## Mute after the audio session comes back
+
+When CallKit activates the audio session again - a call that ended on the far side while the
+others were held, for one - the session comes back with its input unmuted, and CallKit mirrors
+that onto the calls as an unmute nobody asked for (`setUplinkMuted false ... userInitiated 0`,
+measured 107 and 164 ms after the activation). Passed on, it unmuted a call the user had muted.
+The plugin therefore refuses an unmute it did not request itself, for a call last known muted,
+when it arrives within a second of an activation: CallKit keeps the call muted and
+`performSetMuted` is not called. A person unmuting from the system UI or a headset cannot do it
+that soon after the session comes up; one who somehow did presses again.
+
+---
+
 ## iOS-only API
 
 ```dart
