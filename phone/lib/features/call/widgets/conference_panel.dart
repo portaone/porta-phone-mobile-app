@@ -125,6 +125,9 @@ class ConferencePanel extends StatelessWidget {
             ready: conference.isReady(leg.key),
             muted: conference.participantMuted(leg.key),
             onTap: onSwitchToConference == null ? null : () => onSwitchToConference!(leg.key),
+            // The room is not the conversation in use, so its own controls step
+            // back rather than shout from it - the hangups especially.
+            dimmed: roomParked,
             onMutedChanged: (muted) => onParticipantMutedChanged(leg.key, muted),
             onHangup: () => onParticipantHangup(leg.key),
             contactResolver: contactResolver,
@@ -148,6 +151,7 @@ class _ParticipantRow extends StatelessWidget {
     required this.ready,
     required this.muted,
     required this.onTap,
+    required this.dimmed,
     required this.onMutedChanged,
     required this.onHangup,
     required this.contactResolver,
@@ -165,6 +169,13 @@ class _ParticipantRow extends StatelessWidget {
   final bool ready;
   final bool muted;
   final VoidCallback? onTap;
+
+  /// Whether the room is standing aside, so this row's controls are not what
+  /// the user is acting through. They keep working - a room-wide mute and a
+  /// hangup still reach the room while the host is elsewhere - they simply
+  /// stop competing with the conversation he is actually in.
+  final bool dimmed;
+
   final ValueChanged<bool> onMutedChanged;
   final VoidCallback onHangup;
   final ContactResolver? contactResolver;
@@ -203,32 +214,46 @@ class _ParticipantRow extends StatelessWidget {
       style: style,
       listStyle: listStyle,
       trailing: [
-        _MuteToggle(
-          muted: muted,
-          identifier: numberedId(conferenceParticipantMuteId, index),
-          // Named, not "this participant": four rows of identical
-          // destructive controls say nothing about which one they act on
-          // (docs/accessibility.md, naming a control that is one of many).
-          label: muted
-              ? context.l10n.call_SemanticsLabel_conferenceParticipantUnmute(name)
-              : context.l10n.call_SemanticsLabel_conferenceParticipantMute(name),
-          onPressed: ready ? () => onMutedChanged(!muted) : null,
-          style: statusStyle,
-        ),
-        CallActionButton(
-          label: context.l10n.call_SemanticsLabel_conferenceParticipantHangup(name),
-          identifier: numberedId(conferenceParticipantHangupId, index),
-          onPressed: onHangup,
-          style: (hangupStyle ?? _fallbackHangupStyle(context)).copyWith(
-            minimumSize: const WidgetStatePropertyAll(Size(40, 40)),
-            padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+        // Dimmed, never disabled: the semantics are untouched, so a screen
+        // reader still offers both controls with their own names.
+        Opacity(
+          opacity: dimmed ? _dimmedControls : 1,
+          child: _MuteToggle(
+            muted: muted,
+            identifier: numberedId(conferenceParticipantMuteId, index),
+            // Named, not "this participant": four rows of identical
+            // destructive controls say nothing about which one they act on
+            // (docs/accessibility.md, naming a control that is one of many).
+            label: muted
+                ? context.l10n.call_SemanticsLabel_conferenceParticipantUnmute(name)
+                : context.l10n.call_SemanticsLabel_conferenceParticipantMute(name),
+            onPressed: ready ? () => onMutedChanged(!muted) : null,
+            style: statusStyle,
           ),
-          child: const Icon(Icons.call_end, size: 20),
+        ),
+        Opacity(
+          opacity: dimmed ? _dimmedControls : 1,
+          child: CallActionButton(
+            label: context.l10n.call_SemanticsLabel_conferenceParticipantHangup(name),
+            identifier: numberedId(conferenceParticipantHangupId, index),
+            onPressed: onHangup,
+            style: (hangupStyle ?? _fallbackHangupStyle(context)).copyWith(
+              minimumSize: const WidgetStatePropertyAll(Size(40, 40)),
+              padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+            ),
+            child: const Icon(Icons.call_end, size: 20),
+          ),
         ),
       ],
     );
   }
 }
+
+/// How far a participant's controls step back while the room is not the
+/// conversation in use. Chosen to read as "not what you are acting through"
+/// while staying legible - a disabled control here is 0.3, and these are not
+/// disabled.
+const _dimmedControls = 0.5;
 
 /// A microphone toggle: on for a live microphone, struck through for a muted
 /// one. Disabled while the server would refuse the request.
