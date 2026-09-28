@@ -177,18 +177,17 @@ class CallState with _$CallState {
   /// given up - and a path that forgot would leave a connection carrying what
   /// nobody meant it to.
   ///
-  /// [releasedFromRoom] marks a leg the room handed back whose resume the
-  /// server has not acknowledged yet: the room is gone but the host is still
-  /// on a call outside it, so the leg stays silent until that resume lands. It
-  /// is passed in because it belongs to an operation in flight, which the call
-  /// itself does not carry.
-  CallAudio audioFor(String callId, {required bool releasedFromRoom}) {
-    if (releasedFromRoom) return const CallAudio.silent();
+  /// A call the room handed back and nobody has resumed yet carries nothing
+  /// either ([CallTransition.releasedFromRoom]): the room is gone but the host
+  /// is still on a call outside it, so the leg stays silent until the resume
+  /// lands.
+  CallAudio audioFor(String callId) {
+    final call = retrieveActiveCall(callId);
+    if (call == null) return const CallAudio.silent();
+    if (call.transition == CallTransition.releasedFromRoom) return const CallAudio.silent();
     // A leg speaks and listens through the room's connection; its own one
     // carries nothing, or the host would be heard twice and hear himself.
     if (isConferenced(callId)) return const CallAudio.silent();
-    final call = retrieveActiveCall(callId);
-    if (call == null) return const CallAudio.silent();
     return CallAudio(microphone: !call.muted, audible: true);
   }
 
