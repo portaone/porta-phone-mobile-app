@@ -5077,11 +5077,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     Emitter<CallState> emit,
   ) async {
     if (!state.conference.isPresent) return;
-    try {
-      await _conferencePeerConnection.addRemoteCandidate(e.candidate);
-    } catch (error, stackTrace) {
-      callErrorReporter.handle(error, stackTrace, '__onMutationConferenceRemoteCandidate error');
-    }
+    // Not awaited: the connection feeds candidates in turn with its own work,
+    // so one that arrives while the room's answer is still being prepared waits
+    // behind it there - and waiting for it here would hold the mutation queue
+    // for as long, with the room's End and its assembly deadline behind it.
+    // Nothing is lost by not waiting: the candidate is queued there at once,
+    // ahead of anything the room is asked to do later - a teardown included,
+    // which clears it - and a failure is still reported.
+    unawaited(
+      _conferencePeerConnection.addRemoteCandidate(e.candidate).catchError((Object error, StackTrace stackTrace) {
+        callErrorReporter.handle(error, stackTrace, '__onMutationConferenceRemoteCandidate error');
+      }),
+    );
   }
 
   Future<void> __onMutationConferenceLocalCandidate(
