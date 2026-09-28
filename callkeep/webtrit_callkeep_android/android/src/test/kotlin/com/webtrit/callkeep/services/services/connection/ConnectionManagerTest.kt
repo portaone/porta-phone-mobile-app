@@ -41,6 +41,7 @@ class ConnectionManagerTest {
             dispatcher = noop,
             metadata = CallMetadata(callId = callId),
             onDisconnect = noopCallback,
+            callGroup = TelecomCallGroup { emptyList() },
         )
 
     @Before

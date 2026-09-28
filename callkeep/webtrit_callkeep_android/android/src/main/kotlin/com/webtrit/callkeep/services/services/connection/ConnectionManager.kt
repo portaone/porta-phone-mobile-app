@@ -15,6 +15,9 @@ class ConnectionManager {
     private val connections: ConcurrentHashMap<String, PhoneConnection> = ConcurrentHashMap()
     private val connectionResourceLock = Any()
 
+    /** The call group kept on these connections; see [TelecomCallGroup]. */
+    val callGroup = TelecomCallGroup(::getConnections)
+
     // Call IDs sent to Telecom but not yet registered via onCreateIncomingConnection.
     // Guards the async gap between addNewIncomingCall() and connection creation.
     private val pendingCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()

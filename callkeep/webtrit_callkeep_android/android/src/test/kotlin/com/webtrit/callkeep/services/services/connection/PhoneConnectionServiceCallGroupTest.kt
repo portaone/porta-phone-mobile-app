@@ -26,7 +26,7 @@ class PhoneConnectionServiceCallGroupTest {
         service = Robolectric.buildService(PhoneConnectionService::class.java).create().get()
         calls =
             listOf("A", "B", "C", "D").associateWith { id ->
-                PhoneConnection(service, { _, _ -> }, CallMetadata(callId = id), {}).also {
+                PhoneConnection(service, { _, _ -> }, CallMetadata(callId = id), {}, ConnectionManager.instance.callGroup).also {
                     it.setActive()
                     ConnectionManager.instance.addConnection(id, it)
                 }
@@ -34,7 +34,7 @@ class PhoneConnectionServiceCallGroupTest {
     }
 
     private fun initialGroup(vararg ids: String) {
-        PhoneConnectionService.applyCallGroup(ids.toSet())
+        ConnectionManager.instance.callGroup.apply(ids.toSet())
     }
 
     private fun declare(vararg ids: String) = send(ServiceAction.SetCallGroup, *ids)

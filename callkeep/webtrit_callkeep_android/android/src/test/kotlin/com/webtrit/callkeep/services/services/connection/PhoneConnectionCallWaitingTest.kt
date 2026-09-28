@@ -45,6 +45,7 @@ class PhoneConnectionCallWaitingTest {
             dispatcher = noop,
             metadata = CallMetadata(callId = "incoming-2"),
             onDisconnectCallback = noopCallback,
+            callGroup = TelecomCallGroup { emptyList() },
             audioManager = audioManager,
         )
 
@@ -56,6 +57,7 @@ class PhoneConnectionCallWaitingTest {
                 dispatcher = noop,
                 metadata = CallMetadata(callId = "active-1"),
                 onDisconnect = noopCallback,
+                callGroup = TelecomCallGroup { emptyList() },
             )
         conn.setActive()
         manager.addConnection("active-1", conn)
@@ -70,6 +72,7 @@ class PhoneConnectionCallWaitingTest {
                 dispatcher = noop,
                 metadata = CallMetadata(callId = "held-1"),
                 onDisconnect = noopCallback,
+                callGroup = TelecomCallGroup { emptyList() },
             )
         conn.setOnHold()
         manager.addConnection("held-1", conn)

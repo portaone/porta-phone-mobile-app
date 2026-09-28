@@ -187,7 +187,7 @@ class PhoneConnectionService : ConnectionService() {
         Log.i(TAG, "handleCallGroup: action=$action requested=$callIds resolved=${named.size}")
         // "telecom" is only a placeholder for membership calculations, not group identity.
         // This adapter consumes members only; MainProcessConnectionTracker owns the real id.
-        val current = CallGroup.of("telecom", currentCallGroup())
+        val current = CallGroup.of("telecom", connectionManager.callGroup.members())
         val next =
             if (action == ServiceAction.UnsetCallGroup) {
                 current.without(callIds)
@@ -195,7 +195,7 @@ class PhoneConnectionService : ConnectionService() {
                 // A non-empty declaration with no resolved calls ends the current group.
                 if (named.isEmpty()) CallGroup.empty else current.declare(named) { "telecom" }
             }
-        applyCallGroup(next.members)
+        connectionManager.callGroup.apply(next.members)
     }
 
     /**
@@ -233,6 +233,7 @@ class PhoneConnectionService : ConnectionService() {
                 ::performEventHandle,
                 metadata,
                 ::disconnectConnection,
+                connectionManager.callGroup,
             )
         connectionManager.addConnection(metadata.callId, connection)
         phoneConnectionServiceDispatcher.dispatchLifecycle(
@@ -340,6 +341,7 @@ class PhoneConnectionService : ConnectionService() {
                 ::performEventHandle,
                 metadata,
                 ::disconnectConnection,
+                connectionManager.callGroup,
             )
 
         // Remove from pendingCallIds first (independent of the answer-reservation check).
@@ -549,61 +551,6 @@ class PhoneConnectionService : ConnectionService() {
         /** Local name for [ConnectionManager.instance], which this service is the busiest user of. */
         private val connectionManager: ConnectionManager
             get() = ConnectionManager.instance
-
-        /** The calls that stand as the one group, read off the connections that carry it. */
-        fun currentCallGroup(): Set<String> =
-            connectionManager
-                .getConnections()
-                .filter { it.isGrouped }
-                .map { it.callId }
-                .toSet()
-
-        /**
-         * Makes [members] the group, and everything else not the group.
-         *
-         * One call is not a group, so a membership that would leave one behind leaves nobody in
-         * it.
-         *
-         * Nothing else is touched. Telecom's own idea of which call is active is left exactly as
-         * it stands, because taking a held call off hold while another is active is not a swap
-         * here - it ends the call. `CallsManager.holdActiveCallForNewCall` first asks whether the
-         * active call can be held, and a self-managed connection of ours advertises
-         * CAPABILITY_SUPPORT_HOLD without CAPABILITY_HOLD, so it cannot; the same-source branch
-         * then disconnects the held call of this account outright ("Disconnect held call %s
-         * before holding active call %s") - measured, a leg of a room gone 20 ms after
-         * `setActive()`. Membership does not need it either way: a held member carries the room
-         * like any other, because the room is mixed off the device.
-         *
-         * A call on the way out is left held as well, even though the application believes it is
-         * speaking. Asking "is anything else active" first is not enough: a call whose connection
-         * has reached DISCONNECTED is still ACTIVE for Telecom for a few more milliseconds, and
-         * that window is exactly when the last member leaves a room - measured, the survivor was
-         * disconnected 12 ms after being made active. The disagreement is Telecom's bookkeeping
-         * only; who is held is the application's to publish, and it publishes it when the room
-         * ends.
-         */
-        fun applyCallGroup(members: Set<String>) {
-            // Normalize membership only; the placeholder id has no identity semantics here.
-            val settled = CallGroup.of("telecom", members).members
-            connectionManager.getConnections().forEach { connection ->
-                val belongs = connection.callId in settled
-                if (connection.isGrouped == belongs) return@forEach
-                Log.i(TAG, "applyCallGroup: ${connection.callId} ${if (belongs) "joins" else "leaves"} the group")
-                connection.isGrouped = belongs
-            }
-        }
-
-        /**
-         * Takes [connection] out of the group, taking the group apart if one call is left in it.
-         *
-         * The flag is cleared on the connection itself rather than through [applyCallGroup],
-         * because the one caller is a connection that has just reached DISCONNECTED and a
-         * disconnected connection is no longer among [ConnectionManager.getConnections].
-         */
-        fun releaseFromCallGroup(connection: PhoneConnection) {
-            connection.isGrouped = false
-            applyCallGroup(currentCallGroup())
-        }
 
         fun startAnswerCall(
             context: Context,

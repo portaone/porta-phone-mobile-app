@@ -40,7 +40,7 @@ class PhoneConnectionTest {
      * Allows verification of method calls like `toggleSpeaker` while running real logic.
      */
     private fun createConnection(metadata: CallMetadata): PhoneConnection {
-        val realConnection = PhoneConnection(context, dispatcher, metadata, onDisconnect)
+        val realConnection = PhoneConnection(context, dispatcher, metadata, onDisconnect, TelecomCallGroup { emptyList() })
         return spy(realConnection)
     }
 
@@ -50,7 +50,7 @@ class PhoneConnectionTest {
     private fun createConnectionWithAudioManager(
         metadata: CallMetadata,
         audioManager: AudioManager,
-    ): PhoneConnection = PhoneConnection(context, dispatcher, metadata, onDisconnect, audioManager = audioManager)
+    ): PhoneConnection = PhoneConnection(context, dispatcher, metadata, onDisconnect, TelecomCallGroup { emptyList() }, audioManager = audioManager)
 
     /**
      * Helper to populate [PhoneConnection.availableCallEndpoints] so the
