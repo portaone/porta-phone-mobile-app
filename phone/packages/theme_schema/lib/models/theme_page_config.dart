@@ -26,6 +26,9 @@ class ThemePageConfig with _$ThemePageConfig {
     this.conversations = const ConversationsPageConfig(),
     this.recents = const RecentsPageConfig(),
     this.numberCdrs = const NumberCdrsPageConfig(),
+    this.voicemail = const VoicemailPageConfig(),
+    this.callCenter = const CallCenterPageConfig(),
+    this.systemNotifications = const SystemNotificationsPageConfig(),
   });
 
   @override
@@ -60,6 +63,18 @@ class ThemePageConfig with _$ThemePageConfig {
 
   @override
   final NumberCdrsPageConfig numberCdrs;
+
+  /// The voicemail tab. Only its app bar tint is applied so far.
+  @override
+  final VoicemailPageConfig voicemail;
+
+  /// The call center tab. Only its app bar tint is applied so far.
+  @override
+  final CallCenterPageConfig callCenter;
+
+  /// The system notifications screen. Only its app bar tint is applied so far.
+  @override
+  final SystemNotificationsPageConfig systemNotifications;
 
   factory ThemePageConfig.fromJson(Map<String, Object?> json) => _$ThemePageConfigFromJson(json);
 
@@ -720,6 +735,91 @@ class FavoritesPageConfig with _$FavoritesPageConfig implements BasePageConfig {
   factory FavoritesPageConfig.fromJson(Map<String, Object?> json) => _$FavoritesPageConfigFromJson(json);
 
   Map<String, Object?> toJson() => _$FavoritesPageConfigToJson(this);
+}
+
+@freezed
+@JsonSerializable(explicitToJson: true)
+class VoicemailPageConfig with _$VoicemailPageConfig implements BasePageConfig {
+  const VoicemailPageConfig({
+    this.themeOverride = const ThemeOverrideConfig(),
+    this.background,
+    this.appBarBlurredSurface,
+    this.appBarStyle,
+  });
+
+  /// Configuration to force override the theme mode.
+  @override
+  final ThemeOverrideConfig themeOverride;
+
+  @override
+  final PageBackground? background;
+
+  @override
+  final BlurredSurfaceConfig? appBarBlurredSurface;
+
+  @override
+  final AppBarConfig? appBarStyle;
+
+  factory VoicemailPageConfig.fromJson(Map<String, Object?> json) => _$VoicemailPageConfigFromJson(json);
+
+  Map<String, Object?> toJson() => _$VoicemailPageConfigToJson(this);
+}
+
+@freezed
+@JsonSerializable(explicitToJson: true)
+class CallCenterPageConfig with _$CallCenterPageConfig implements BasePageConfig {
+  const CallCenterPageConfig({
+    this.themeOverride = const ThemeOverrideConfig(),
+    this.background,
+    this.appBarBlurredSurface,
+    this.appBarStyle,
+  });
+
+  /// Configuration to force override the theme mode.
+  @override
+  final ThemeOverrideConfig themeOverride;
+
+  @override
+  final PageBackground? background;
+
+  @override
+  final BlurredSurfaceConfig? appBarBlurredSurface;
+
+  @override
+  final AppBarConfig? appBarStyle;
+
+  factory CallCenterPageConfig.fromJson(Map<String, Object?> json) => _$CallCenterPageConfigFromJson(json);
+
+  Map<String, Object?> toJson() => _$CallCenterPageConfigToJson(this);
+}
+
+@freezed
+@JsonSerializable(explicitToJson: true)
+class SystemNotificationsPageConfig with _$SystemNotificationsPageConfig implements BasePageConfig {
+  const SystemNotificationsPageConfig({
+    this.themeOverride = const ThemeOverrideConfig(),
+    this.background,
+    this.appBarBlurredSurface,
+    this.appBarStyle,
+  });
+
+  /// Configuration to force override the theme mode.
+  @override
+  final ThemeOverrideConfig themeOverride;
+
+  @override
+  final PageBackground? background;
+
+  @override
+  final BlurredSurfaceConfig? appBarBlurredSurface;
+
+  @override
+  final AppBarConfig? appBarStyle;
+
+  factory SystemNotificationsPageConfig.fromJson(Map<String, Object?> json) =>
+      _$SystemNotificationsPageConfigFromJson(json);
+
+  Map<String, Object?> toJson() => _$SystemNotificationsPageConfigToJson(this);
 }
 
 @freezed

@@ -76,6 +76,7 @@ const nullableProperties = <String, List<String>>{
     'visualDensity',
   ],
   'ButtonWidgetConfig': ['primaryElevatedButton'],
+  'CallCenterPageConfig': ['appBarBlurredSurface', 'appBarStyle', 'background'],
   'CallPageActionsConfig': ['keypadInputStyle'],
   'CallPageConfig': [
     'actingOnHint',
@@ -288,6 +289,7 @@ const nullableProperties = <String, List<String>>{
   'ShadowConfig': ['color', 'offset'],
   'ShapeBorderConfig': ['borderRadius'],
   'SmartIndicatorStyleConfig': ['backgroundColor', 'icon', 'sizeFactor'],
+  'SystemNotificationsPageConfig': ['appBarBlurredSurface', 'appBarStyle', 'background'],
   'TabBarConfig': [
     'dividerColor',
     'dividerHeight',
@@ -324,6 +326,7 @@ const nullableProperties = <String, List<String>>{
   ],
   'ThemeWidgetConfig': ['group'],
   'ToolbarConfig': ['titleL10n'],
+  'VoicemailPageConfig': ['appBarBlurredSurface', 'appBarStyle', 'background'],
   '_ClassInfo': ['freezedUnionKey', 'redirectsTo', 'superName'],
   '_FieldInfo': ['defaultConstant'],
   '_Property': ['defaultValue'],

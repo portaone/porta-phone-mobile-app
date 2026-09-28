@@ -534,5 +534,26 @@
     "appBarStyle": {
       "backgroundColor": "#00000000"
     }
+  },
+  "voicemail": {
+    "appBarBlurredSurface": {
+      "color": "#96111315",
+      "sigmaX": 10,
+      "sigmaY": 10
+    }
+  },
+  "callCenter": {
+    "appBarBlurredSurface": {
+      "color": "#96111315",
+      "sigmaX": 10,
+      "sigmaY": 10
+    }
+  },
+  "systemNotifications": {
+    "appBarBlurredSurface": {
+      "color": "#96111315",
+      "sigmaX": 10,
+      "sigmaY": 10
+    }
   }
 }

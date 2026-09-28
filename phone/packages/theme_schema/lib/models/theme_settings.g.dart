@@ -1394,6 +1394,42 @@ const _$ThemeSettingsJsonSchema = {
         'appBarStyle': {r'$ref': r'#/$defs/AppBarConfig'},
       },
     },
+    'VoicemailPageConfig': {
+      'type': 'object',
+      'properties': {
+        'themeOverride': {
+          r'$ref': r'#/$defs/ThemeOverrideConfig',
+          'description': 'Configuration to force override the theme mode.',
+        },
+        'background': {r'$ref': r'#/$defs/PageBackground'},
+        'appBarBlurredSurface': {r'$ref': r'#/$defs/BlurredSurfaceConfig'},
+        'appBarStyle': {r'$ref': r'#/$defs/AppBarConfig'},
+      },
+    },
+    'CallCenterPageConfig': {
+      'type': 'object',
+      'properties': {
+        'themeOverride': {
+          r'$ref': r'#/$defs/ThemeOverrideConfig',
+          'description': 'Configuration to force override the theme mode.',
+        },
+        'background': {r'$ref': r'#/$defs/PageBackground'},
+        'appBarBlurredSurface': {r'$ref': r'#/$defs/BlurredSurfaceConfig'},
+        'appBarStyle': {r'$ref': r'#/$defs/AppBarConfig'},
+      },
+    },
+    'SystemNotificationsPageConfig': {
+      'type': 'object',
+      'properties': {
+        'themeOverride': {
+          r'$ref': r'#/$defs/ThemeOverrideConfig',
+          'description': 'Configuration to force override the theme mode.',
+        },
+        'background': {r'$ref': r'#/$defs/PageBackground'},
+        'appBarBlurredSurface': {r'$ref': r'#/$defs/BlurredSurfaceConfig'},
+        'appBarStyle': {r'$ref': r'#/$defs/AppBarConfig'},
+      },
+    },
     'ThemePageConfig': {
       'type': 'object',
       'properties': {
@@ -1408,6 +1444,21 @@ const _$ThemeSettingsJsonSchema = {
         'conversations': {r'$ref': r'#/$defs/ConversationsPageConfig'},
         'recents': {r'$ref': r'#/$defs/RecentsPageConfig'},
         'numberCdrs': {r'$ref': r'#/$defs/NumberCdrsPageConfig'},
+        'voicemail': {
+          r'$ref': r'#/$defs/VoicemailPageConfig',
+          'description':
+              'The voicemail tab. Only its app bar tint is applied so far.',
+        },
+        'callCenter': {
+          r'$ref': r'#/$defs/CallCenterPageConfig',
+          'description':
+              'The call center tab. Only its app bar tint is applied so far.',
+        },
+        'systemNotifications': {
+          r'$ref': r'#/$defs/SystemNotificationsPageConfig',
+          'description':
+              'The system notifications screen. Only its app bar tint is applied so far.',
+        },
       },
     },
   },

@@ -46,6 +46,19 @@ ThemePageConfig _$ThemePageConfigFromJson(
       : NumberCdrsPageConfig.fromJson(
           json['numberCdrs'] as Map<String, dynamic>,
         ),
+  voicemail: json['voicemail'] == null
+      ? const VoicemailPageConfig()
+      : VoicemailPageConfig.fromJson(json['voicemail'] as Map<String, dynamic>),
+  callCenter: json['callCenter'] == null
+      ? const CallCenterPageConfig()
+      : CallCenterPageConfig.fromJson(
+          json['callCenter'] as Map<String, dynamic>,
+        ),
+  systemNotifications: json['systemNotifications'] == null
+      ? const SystemNotificationsPageConfig()
+      : SystemNotificationsPageConfig.fromJson(
+          json['systemNotifications'] as Map<String, dynamic>,
+        ),
 );
 
 Map<String, dynamic> _$ThemePageConfigToJson(ThemePageConfig instance) =>
@@ -61,6 +74,9 @@ Map<String, dynamic> _$ThemePageConfigToJson(ThemePageConfig instance) =>
       'conversations': instance.conversations.toJson(),
       'recents': instance.recents.toJson(),
       'numberCdrs': instance.numberCdrs.toJson(),
+      'voicemail': instance.voicemail.toJson(),
+      'callCenter': instance.callCenter.toJson(),
+      'systemNotifications': instance.systemNotifications.toJson(),
     };
 
 ThemeOverrideConfig _$ThemeOverrideConfigFromJson(Map<String, dynamic> json) =>
@@ -702,6 +718,95 @@ FavoritesPageConfig _$FavoritesPageConfigFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$FavoritesPageConfigToJson(
   FavoritesPageConfig instance,
+) => <String, dynamic>{
+  'themeOverride': instance.themeOverride.toJson(),
+  'background': instance.background?.toJson(),
+  'appBarBlurredSurface': instance.appBarBlurredSurface?.toJson(),
+  'appBarStyle': instance.appBarStyle?.toJson(),
+};
+
+VoicemailPageConfig _$VoicemailPageConfigFromJson(Map<String, dynamic> json) =>
+    VoicemailPageConfig(
+      themeOverride: json['themeOverride'] == null
+          ? const ThemeOverrideConfig()
+          : ThemeOverrideConfig.fromJson(
+              json['themeOverride'] as Map<String, dynamic>,
+            ),
+      background: json['background'] == null
+          ? null
+          : PageBackground.fromJson(json['background'] as Map<String, dynamic>),
+      appBarBlurredSurface: json['appBarBlurredSurface'] == null
+          ? null
+          : BlurredSurfaceConfig.fromJson(
+              json['appBarBlurredSurface'] as Map<String, dynamic>,
+            ),
+      appBarStyle: json['appBarStyle'] == null
+          ? null
+          : AppBarConfig.fromJson(json['appBarStyle'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$VoicemailPageConfigToJson(
+  VoicemailPageConfig instance,
+) => <String, dynamic>{
+  'themeOverride': instance.themeOverride.toJson(),
+  'background': instance.background?.toJson(),
+  'appBarBlurredSurface': instance.appBarBlurredSurface?.toJson(),
+  'appBarStyle': instance.appBarStyle?.toJson(),
+};
+
+CallCenterPageConfig _$CallCenterPageConfigFromJson(
+  Map<String, dynamic> json,
+) => CallCenterPageConfig(
+  themeOverride: json['themeOverride'] == null
+      ? const ThemeOverrideConfig()
+      : ThemeOverrideConfig.fromJson(
+          json['themeOverride'] as Map<String, dynamic>,
+        ),
+  background: json['background'] == null
+      ? null
+      : PageBackground.fromJson(json['background'] as Map<String, dynamic>),
+  appBarBlurredSurface: json['appBarBlurredSurface'] == null
+      ? null
+      : BlurredSurfaceConfig.fromJson(
+          json['appBarBlurredSurface'] as Map<String, dynamic>,
+        ),
+  appBarStyle: json['appBarStyle'] == null
+      ? null
+      : AppBarConfig.fromJson(json['appBarStyle'] as Map<String, dynamic>),
+);
+
+Map<String, dynamic> _$CallCenterPageConfigToJson(
+  CallCenterPageConfig instance,
+) => <String, dynamic>{
+  'themeOverride': instance.themeOverride.toJson(),
+  'background': instance.background?.toJson(),
+  'appBarBlurredSurface': instance.appBarBlurredSurface?.toJson(),
+  'appBarStyle': instance.appBarStyle?.toJson(),
+};
+
+SystemNotificationsPageConfig _$SystemNotificationsPageConfigFromJson(
+  Map<String, dynamic> json,
+) => SystemNotificationsPageConfig(
+  themeOverride: json['themeOverride'] == null
+      ? const ThemeOverrideConfig()
+      : ThemeOverrideConfig.fromJson(
+          json['themeOverride'] as Map<String, dynamic>,
+        ),
+  background: json['background'] == null
+      ? null
+      : PageBackground.fromJson(json['background'] as Map<String, dynamic>),
+  appBarBlurredSurface: json['appBarBlurredSurface'] == null
+      ? null
+      : BlurredSurfaceConfig.fromJson(
+          json['appBarBlurredSurface'] as Map<String, dynamic>,
+        ),
+  appBarStyle: json['appBarStyle'] == null
+      ? null
+      : AppBarConfig.fromJson(json['appBarStyle'] as Map<String, dynamic>),
+);
+
+Map<String, dynamic> _$SystemNotificationsPageConfigToJson(
+  SystemNotificationsPageConfig instance,
 ) => <String, dynamic>{
   'themeOverride': instance.themeOverride.toJson(),
   'background': instance.background?.toJson(),
