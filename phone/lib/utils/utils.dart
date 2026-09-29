@@ -28,7 +28,6 @@ export 'platform_info.dart';
 export 'regexes.dart';
 export 'signaling_service_factory.dart';
 export 'string_phone_utils.dart';
-export 'text_matchers.dart';
 export 'ttl_cache.dart';
 export 'version_utils.dart';
 export 'view_params/view_params.dart';
