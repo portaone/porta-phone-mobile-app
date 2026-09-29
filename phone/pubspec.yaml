@@ -16,6 +16,7 @@ workspace:
   - packages/_web_socket_channel
   - packages/_tcp_proxy
   - packages/pjsua_companion
+  - packages/text_entities
 
 # Version format: <Major>.<Minor>.<Patch>[-<Pre-release>]+<Build>
 # Where:
@@ -146,6 +147,8 @@ dependencies:
     path: ./packages/phone_number
   signaling:
     path: ./packages/signaling
+  text_entities:
+    path: ./packages/text_entities
   signaling_service:
     path: ./packages/signaling_service/signaling_service
 

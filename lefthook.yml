@@ -80,6 +80,14 @@ pre-push:
       glob: "phone/**"
       run: flutter test
 
+    # Pure-Dart packages keep their tests out of `flutter test` in phone/, so they run here.
+    # They are members of the phone workspace, which needs the Flutter SDK to resolve: a bare
+    # `dart test` from PATH fails with "webtrit_phone requires the Flutter SDK".
+    text-entities-test:
+      root: phone/packages/text_entities/
+      glob: "phone/packages/text_entities/**"
+      run: flutter test
+
     tools-analyze:
       root: tools/
       glob: "tools/**"
