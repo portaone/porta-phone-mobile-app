@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Small circular "!" badge used to flag that the session has at least one side
 /// issue. Color is driven by the issue severity; callers position it as an

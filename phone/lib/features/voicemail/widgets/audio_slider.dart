@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AudioSlider extends StatelessWidget {
   const AudioSlider({super.key, required this.position, required this.duration, required this.onSeek});

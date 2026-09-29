@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/features/contacts/widgets/cleared_text_field.dart';
@@ -10,7 +10,7 @@ void main() {
     return MaterialApp(
       // The field names its clear button from the translations, so the
       // delegates have to be here even where the test itself reads no text.
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
         extensions: const [InputDecorations(search: InputDecoration(), keypad: InputDecoration())],

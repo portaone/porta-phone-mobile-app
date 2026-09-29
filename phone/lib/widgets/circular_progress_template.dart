@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CircularProgressTemplate extends StatelessWidget {
   const CircularProgressTemplate({super.key, this.color, this.size = 20, this.width = 4});

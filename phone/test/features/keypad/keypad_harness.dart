@@ -2,7 +2,7 @@
 /// the call controller it dials through, and a stand-in clipboard.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,7 +15,7 @@ import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/features/keypad/keypad.dart';
 import 'package:webtrit_phone/features/keypad/view/keypad_view.dart';
-import 'package:webtrit_phone/l10n/app_localizations.g.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -64,7 +64,7 @@ class KeypadHarness {
   Widget build({DestinationPickPurpose? purpose, bool transferEnabled = false}) {
     return MaterialApp(
       locale: const Locale('en'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: CallControllerScope(

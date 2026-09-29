@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,6 +21,7 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/services/services.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/resolvers/resolvers.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 final _logger = Logger('AppWidget');
 
@@ -238,10 +239,10 @@ class _AppState extends State<App> {
             // so the bars would otherwise keep the look of the screen shown before.
             builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
               value: systemOverlayStyleOf(Theme.of(context).brightness),
-              child: child ?? const SizedBox.shrink(),
+              child: LegacyMaterialBridge(child: child ?? const SizedBox.shrink()),
             ),
             locale: state.effectiveLocale,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: appLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             // restorationScopeId: 'App', // TODO: temporary comment to prevent AppShell's AutoRouter placeholder blink - additional investigation necessary
             title: EnvironmentConfig.APP_NAME,

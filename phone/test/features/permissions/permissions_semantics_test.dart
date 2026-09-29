@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -7,7 +7,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/permissions/permissions.dart';
-import 'package:webtrit_phone/l10n/app_localizations.g.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -23,7 +23,7 @@ void main() {
   Widget wrap() {
     return MaterialApp(
       locale: const Locale('en'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: BlocProvider<PermissionsCubit>.value(value: cubit, child: const PermissionsScreen()),
     );

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +7,7 @@ import 'package:phoenix_socket/phoenix_socket.dart';
 
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
-import 'package:webtrit_phone/l10n/app_localizations.g.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -180,7 +180,7 @@ class ConversationScreenHarness {
   Widget wrap(Widget screen, {ThemeData? theme}) {
     return MaterialApp(
       theme: theme,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: MultiRepositoryProvider(
         providers: [

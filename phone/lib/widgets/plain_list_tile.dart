@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A custom implementation of a list tile pattern without Material Design constraints.
 class PlainListTile extends StatelessWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ActionpadStyle with Diagnosticable {
   const ActionpadStyle({this.primary, this.secondary, this.backspace});

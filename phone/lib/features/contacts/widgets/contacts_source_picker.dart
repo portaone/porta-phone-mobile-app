@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/keys.dart';
@@ -47,43 +47,49 @@ class ContactsSourcePicker extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    return Semantics(
-      label: l10n.contacts_ContactsScreen_sourceSemanticsLabel,
-      identifier: contactsSourcePickerId,
-      button: true,
-      child: PopupMenuButton<ContactsListSelection>(
-        key: contactsSourcePickerKey,
-        initialValue: selected,
-        onSelected: onSelected,
-        tooltip: l10n.contacts_ContactsScreen_sourceSemanticsLabel,
-        itemBuilder: (context) => [
-          for (final selection in selections)
-            PopupMenuItem(
-              key: _itemKey(selection),
-              value: selection,
-              child: Row(
-                spacing: _pickerMenuGap,
-                children: [
-                  Icon(_icon(selection), size: _pickerIconSize),
-                  Expanded(child: Text(selection.l10n(context))),
-                  if (selection == selected) Icon(Icons.check, size: _pickerIconSize, color: theme.colorScheme.primary),
-                ],
+    // The menu button marks its own node as a button with a menu state, and
+    // without the merge the name below would land on a separate node above the
+    // one that takes the press.
+    return MergeSemantics(
+      child: Semantics(
+        label: l10n.contacts_ContactsScreen_sourceSemanticsLabel,
+        identifier: contactsSourcePickerId,
+        button: true,
+        child: PopupMenuButton<ContactsListSelection>(
+          key: contactsSourcePickerKey,
+          initialValue: selected,
+          onSelected: onSelected,
+          tooltip: l10n.contacts_ContactsScreen_sourceSemanticsLabel,
+          itemBuilder: (context) => [
+            for (final selection in selections)
+              PopupMenuItem(
+                key: _itemKey(selection),
+                value: selection,
+                child: Row(
+                  spacing: _pickerMenuGap,
+                  children: [
+                    Icon(_icon(selection), size: _pickerIconSize),
+                    Expanded(child: Text(selection.l10n(context))),
+                    if (selection == selected)
+                      Icon(Icons.check, size: _pickerIconSize, color: theme.colorScheme.primary),
+                  ],
+                ),
               ),
+          ],
+          // No pill of its own: the name, its icon and the chevron are the
+          // control. A filled shape here would read as a second search box
+          // beside the real one, and the line already carries enough of them.
+          child: SizedBox(
+            height: kMainAppBarBottomControlHeight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: _pickerGap,
+              children: [
+                Icon(_icon(selected), size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
+                Text(selected.l10n(context), style: theme.textTheme.bodyMedium),
+                Icon(Icons.expand_more, size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
+              ],
             ),
-        ],
-        // No pill of its own: the name, its icon and the chevron are the
-        // control. A filled shape here would read as a second search box
-        // beside the real one, and the line already carries enough of them.
-        child: SizedBox(
-          height: kMainAppBarBottomControlHeight,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: _pickerGap,
-            children: [
-              Icon(_icon(selected), size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
-              Text(selected.l10n(context), style: theme.textTheme.bodyMedium),
-              Icon(Icons.expand_more, size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
-            ],
           ),
         ),
       ),

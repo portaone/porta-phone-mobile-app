@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Builds its child with the answer to "is a screen reader in use", ignoring
 /// the moments when the platform cannot be trusted with that question.

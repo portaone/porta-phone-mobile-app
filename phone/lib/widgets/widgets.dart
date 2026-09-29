@@ -26,6 +26,7 @@ export 'history_fetch_indicator.dart';
 export 'inert_safe_area.dart';
 export 'keypad_key_button.dart';
 export 'leading_avatar.dart';
+export 'legacy_material_bridge.dart';
 export 'linkify.dart';
 export 'logos.dart';
 export 'main_app_bar.dart';

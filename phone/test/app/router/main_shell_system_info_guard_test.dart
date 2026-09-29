@@ -4,7 +4,7 @@
 /// value, and sends them back to login when it cannot.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:auto_route/auto_route.dart';

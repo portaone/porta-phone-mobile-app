@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/models/resource_loader.dart';

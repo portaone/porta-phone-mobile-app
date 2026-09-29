@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/features/messaging/widgets/message_list_view/message_text_field.dart';
@@ -9,7 +9,7 @@ void main() {
     final controller = TextEditingController();
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: MessageTextField(controller: controller, onSend: onSend ?? () {}),

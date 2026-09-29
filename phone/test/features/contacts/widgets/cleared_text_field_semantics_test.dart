@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
@@ -9,7 +9,7 @@ import 'package:webtrit_phone/theme/theme.dart';
 void main() {
   Widget wrap({String? identifier, String? clearIdentifier, String? initialValue, VoidCallback? onDismissed}) {
     return MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       // The field draws its clear button through the search decoration the
       // theme supplies; without it there is no suffix to look at.

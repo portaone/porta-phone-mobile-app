@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -105,51 +105,56 @@ class VoicemailFilterPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Semantics(
-      // The name says which filter is on, because the control's own label is
-      // the word it currently shows and a reader would otherwise announce the
-      // value twice and the purpose not at all.
-      label: context.l10n.voicemail_SemanticsLabel_filter(_label(context, selected)),
-      identifier: voicemailFilterPickerId,
-      button: true,
-      child: PopupMenuButton<VoicemailFilter>(
-        key: voicemailFilterPickerKey,
-        initialValue: selected,
-        onSelected: onSelected,
-        // No tooltip. It merges into the same semantics node as the label
-        // above and is then spoken on top of it, which says the same sentence
-        // twice and gives the picker's own name nowhere to be heard.
-        tooltip: '',
-        itemBuilder: (context) => [
-          for (final filter in filters)
-            PopupMenuItem(
-              value: filter,
+    // The menu button marks its own node as a button with a menu state, and
+    // without the merge the name below would land on a separate node above the
+    // one that takes the press.
+    return MergeSemantics(
+      child: Semantics(
+        // The name says which filter is on, because the control's own label is
+        // the word it currently shows and a reader would otherwise announce the
+        // value twice and the purpose not at all.
+        label: context.l10n.voicemail_SemanticsLabel_filter(_label(context, selected)),
+        identifier: voicemailFilterPickerId,
+        button: true,
+        child: PopupMenuButton<VoicemailFilter>(
+          key: voicemailFilterPickerKey,
+          initialValue: selected,
+          onSelected: onSelected,
+          // No tooltip. It merges into the same semantics node as the label
+          // above and is then spoken on top of it, which says the same sentence
+          // twice and gives the picker's own name nowhere to be heard.
+          tooltip: '',
+          itemBuilder: (context) => [
+            for (final filter in filters)
+              PopupMenuItem(
+                value: filter,
+                child: Row(
+                  spacing: _pickerMenuGap,
+                  children: [
+                    Icon(_icon(filter), size: _pickerIconSize),
+                    Expanded(child: Text(_label(context, filter))),
+                    if (filter == selected) Icon(Icons.check, size: _pickerIconSize, color: theme.colorScheme.primary),
+                  ],
+                ),
+              ),
+          ],
+          // What is drawn is the filter's own name with marks around it, and the
+          // name above already says it as part of a sentence. Left visible to
+          // semantics it merges into the same node and is announced a second
+          // time, on its own, after the sentence that explains it. The button's
+          // tap action sits above this, so excluding the drawing costs nothing.
+          child: ExcludeSemantics(
+            child: SizedBox(
+              height: kMainAppBarBottomControlHeight,
               child: Row(
-                spacing: _pickerMenuGap,
+                mainAxisSize: MainAxisSize.min,
+                spacing: _pickerGap,
                 children: [
-                  Icon(_icon(filter), size: _pickerIconSize),
-                  Expanded(child: Text(_label(context, filter))),
-                  if (filter == selected) Icon(Icons.check, size: _pickerIconSize, color: theme.colorScheme.primary),
+                  Icon(_icon(selected), size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
+                  Text(_label(context, selected), style: theme.textTheme.bodyMedium),
+                  Icon(Icons.expand_more, size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
                 ],
               ),
-            ),
-        ],
-        // What is drawn is the filter's own name with marks around it, and the
-        // name above already says it as part of a sentence. Left visible to
-        // semantics it merges into the same node and is announced a second
-        // time, on its own, after the sentence that explains it. The button's
-        // tap action sits above this, so excluding the drawing costs nothing.
-        child: ExcludeSemantics(
-          child: SizedBox(
-            height: kMainAppBarBottomControlHeight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: _pickerGap,
-              children: [
-                Icon(_icon(selected), size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
-                Text(_label(context, selected), style: theme.textTheme.bodyMedium),
-                Icon(Icons.expand_more, size: _pickerIconSize, color: theme.colorScheme.onSurfaceVariant),
-              ],
             ),
           ),
         ),

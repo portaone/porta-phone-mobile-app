@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -16,7 +16,7 @@ void main() {
       MediaQuery(
         data: const MediaQueryData(padding: EdgeInsets.only(bottom: _shellBarRoom)),
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: ScrollToTopOverlay(

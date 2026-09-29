@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/features/call/call.dart';
@@ -10,7 +10,7 @@ Widget _buildSubject({
   List<String> willBeEndedNames = const [],
 }) {
   return MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       body: FocusedActionHint(
@@ -96,7 +96,7 @@ void main() {
   group('IncomingCallActions', () {
     Widget buildActions({VoidCallback? onAccept, VoidCallback? onHangup}) {
       return MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: IncomingCallActions(

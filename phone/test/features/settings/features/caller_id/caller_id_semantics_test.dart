@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart' as legacy show Dialog;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -10,6 +11,7 @@ import 'package:webtrit_phone/features/settings/features/caller_id/caller_id.dar
 import 'package:webtrit_phone/features/settings/features/caller_id/widgets/widgets.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/caller_id_settings.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../../../../helpers/helpers.dart';
 
@@ -36,7 +38,8 @@ void main() {
   });
 
   Widget wrap() => MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
+    builder: (context, child) => LegacyMaterialBridge(child: child!),
     supportedLocales: AppLocalizations.supportedLocales,
     home: BlocProvider<CallerIdSettingsCubit>.value(value: cubit, child: const CallerIdSettingsScreen()),
   );
@@ -163,7 +166,8 @@ void main() {
     await tapViaSemantics(tester, find.bySemanticsIdentifier(callerIdMatchPrefixId));
     await tester.pumpAndSettle();
 
-    expect(find.byType(Dialog), findsOneWidget, reason: 'the country list opened');
+    // The picker is built on flutter/material, and so is the dialog it opens.
+    expect(find.byType(legacy.Dialog), findsOneWidget, reason: 'the country list opened');
 
     handle.dispose();
   });

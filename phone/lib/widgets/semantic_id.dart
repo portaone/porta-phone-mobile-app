@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Attaches a stable [identifier] to [child] and changes nothing else about
 /// how the subtree is announced.

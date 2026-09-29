@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart' as legacy show InkWell;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
@@ -93,8 +94,9 @@ void main() {
       expect(tabs, findsNWidgets(9));
       for (var i = 0; i < 9; i++) {
         // The tab bar pads each tab from the outside, so what a finger has to
-        // hit is the tab together with its padding.
-        final size = tester.getSize(find.ancestor(of: tabs.at(i), matching: find.byType(InkWell)).first);
+        // hit is the tab together with its padding. The bar is flutter/material's,
+        // as the picker hands it a controller of that library, and so is its ink.
+        final size = tester.getSize(find.ancestor(of: tabs.at(i), matching: find.byType(legacy.InkWell)).first);
         expect(size.width, greaterThanOrEqualTo(kMinInteractiveDimension), reason: 'category $i');
         expect(size.height, greaterThanOrEqualTo(kMinInteractiveDimension), reason: 'category $i');
       }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:theme_schema/models/theme_page_config.dart';
 import 'package:webtrit_phone/features/contacts/view/contacts_screen_style.dart';

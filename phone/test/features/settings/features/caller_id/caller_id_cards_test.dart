@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/features/settings/features/caller_id/widgets/widgets.dart';
@@ -23,7 +23,7 @@ void main() {
 
   Widget wrap(ColorScheme colorScheme) => MaterialApp(
     theme: ThemeData.from(colorScheme: colorScheme),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: MatcherTile(matcher: PrefixMatcher('+1', '441'), index: 0)),
   );

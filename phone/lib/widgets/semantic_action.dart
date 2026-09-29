@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Attaches an accessibility [label] and a stable [identifier] to the single
 /// interactive control in [child].

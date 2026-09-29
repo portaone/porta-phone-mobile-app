@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/widgets/webview/webview_progress_indicator.dart';
 
