@@ -88,6 +88,11 @@ pre-push:
       glob: "phone/packages/text_entities/**"
       run: flutter test
 
+    link-preview-test:
+      root: phone/packages/link_preview/
+      glob: "phone/packages/link_preview/**"
+      run: flutter test
+
     tools-analyze:
       root: tools/
       glob: "tools/**"
