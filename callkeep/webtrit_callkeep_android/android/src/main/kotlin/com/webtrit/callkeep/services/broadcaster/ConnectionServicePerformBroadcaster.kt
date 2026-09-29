@@ -5,9 +5,11 @@ import android.content.Context
 import android.content.IntentFilter
 import android.os.Bundle
 import com.webtrit.callkeep.common.CallDataConst
+import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.registerReceiverCompat
 import com.webtrit.callkeep.common.sendInternalBroadcast
 import com.webtrit.callkeep.managers.NotificationManager
+import com.webtrit.callkeep.services.services.incoming_call.IncomingCallRelease
 
 /**
  * Marker interface for all events dispatched between [PhoneConnectionService] and the main process.
@@ -92,6 +94,8 @@ enum class CallCommandEvent : ConnectionEvent {
  * This object is responsible for broadcasting the connection service perform events from the connection service.
  */
 object ConnectionServicePerformBroadcaster {
+    private const val TAG = "ConnectionServicePerformBroadcaster"
+
     private val notificationManager = NotificationManager()
 
     fun registerConnectionPerformReceiver(
@@ -133,14 +137,19 @@ object ConnectionServicePerformBroadcaster {
             ) {
                 val appContext = context.applicationContext
 
-                // When connection is not found, cancel any visible notification and synthesise a HungUp
+                // When connection is not found, end this call's notifications and synthesise a HungUp
                 // so that subscribers waiting for a termination event are not left hanging.
+                // The incoming release names the call: a running incoming-call service showing
+                // another call (the one still ringing while this one was refused) ignores it.
                 if (report == CallLifecycleEvent.ConnectionNotFound) {
-                    data?.getString(CallDataConst.CALL_ID)?.let {
-                        notificationManager.cancelActiveCallNotification(it)
-                    } ?: notificationManager.tearDown()
-
-                    notificationManager.cancelIncomingNotification(true)
+                    val callId = data?.getString(CallDataConst.CALL_ID)
+                    if (callId != null) {
+                        notificationManager.cancelActiveCallNotification(callId)
+                        notificationManager.cancelIncomingNotification(callId, IncomingCallRelease.IC_RELEASE_HANDED_OVER)
+                    } else {
+                        Log.w(TAG, "ConnectionNotFound without a callId: tearing down both notification services")
+                        notificationManager.tearDown()
+                    }
                     appContext.sendInternalBroadcast(CallLifecycleEvent.HungUp.name, data)
                     return
                 }

@@ -31,6 +31,7 @@ import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.broadcaster.CallMediaEvent
 import com.webtrit.callkeep.services.services.connection.models.PerformDispatchHandle
+import com.webtrit.callkeep.services.services.incoming_call.IncomingCallRelease
 import java.util.concurrent.Executors
 
 /**
@@ -294,7 +295,10 @@ class PhoneConnection internal constructor(
         callConnection.transitionTo(CallConnectionState.DISCONNECTED)
 
         timeout?.cancel()
-        notificationManager.cancelIncomingNotification(hasAnswered)
+        notificationManager.cancelIncomingNotification(
+            callId,
+            if (hasAnswered) IncomingCallRelease.IC_RELEASE_HANDED_OVER else IncomingCallRelease.IC_RELEASE_ENDED,
+        )
         notificationManager.cancelActiveCallNotification(callId)
         audioManager.stopRingtone()
         audioManager.stopCallWaitingTone()

@@ -12,15 +12,12 @@ class NotificationManager {
         IncomingCallService.start(context, callMetaData)
     }
 
-    fun cancelIncomingNotification(answered: Boolean) {
-        IncomingCallService.release(
-            context,
-            if (answered) {
-                IncomingCallRelease.IC_RELEASE_HANDED_OVER
-            } else {
-                IncomingCallRelease.IC_RELEASE_ENDED
-            },
-        )
+    /** Ends the incoming phase of [callId]; a running incoming-call service showing another call ignores it. */
+    fun cancelIncomingNotification(
+        callId: String,
+        reason: IncomingCallRelease,
+    ) {
+        IncomingCallService.release(context, callId, reason)
     }
 
     fun showActiveCallNotification(

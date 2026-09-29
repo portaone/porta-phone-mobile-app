@@ -47,6 +47,12 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
   (`IC_RELEASE_HANDED_OVER` / `IC_RELEASE_ENDED`), not via `onStartCommand`: the
   receiver only lives while the service is alive, so a release arriving after the service
   stopped goes nowhere instead of restarting it.
+- Every release names its call (`callId` extra), and the service acts only on a release for
+  the call it shows. The release is sent on the end of any call - an outgoing or active one,
+  or a second incoming call Telecom refused while this one rings - so acting on another
+  call's release would tear down a call that is still ringing. A release that arrives before
+  `IC_INITIALIZE` is parked in `PendingBroadcastQueue` for its call. `AnswerCall` events are
+  filtered the same way.
 - Two safety-net timeouts force-stop the service if the normal flow stalls: an independent
   60 s timeout armed at launch, and a 2 s stop timeout armed when the release arrives.
 - `onDestroy()` - unsubscribes, stops foreground, and explicitly cancels the current
