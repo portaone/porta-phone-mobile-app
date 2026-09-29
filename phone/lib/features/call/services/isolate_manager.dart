@@ -250,18 +250,38 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
       return;
     }
 
+    // Every incoming line, not only the first: the session's own call is not
+    // necessarily on line 0, and close() hands it off only if it finds it here.
     for (final activeLine in lines) {
       final callEvent = activeLine.callLogs.whereType<CallEventLog>().map((log) => log.callEvent).firstOrNull;
 
       if (callEvent is IncomingCallEvent) {
         logger.info('Handshake: incoming call found callId=${callEvent.callId}');
         _incomingCallEvents[callEvent.callId] = callEvent;
-        _executePendingRequests();
-        return;
       }
     }
 
-    logger.info('Handshake: active lines present but no IncomingCallEvent found - lines=${_lines.keys}');
+    if (_incomingCallEvents.isEmpty) {
+      logger.info('Handshake: active lines present but no IncomingCallEvent found - lines=${_lines.keys}');
+    }
+
+    // Other calls on the lines do not keep this session: only its own call does. When that call
+    // is not among them it has already ended, and no hangup of another call will end the session
+    // any more - so check it the way an empty handshake is checked.
+    final ownCallId = _metadata?.callId;
+    if (ownCallId != null && !_lines.containsKey(ownCallId)) {
+      logger.info('Handshake: own call $ownCallId not among the lines, deferring check');
+      Future(() {
+        if (_lines.containsKey(ownCallId) || _incomingCallEvents.containsKey(ownCallId)) {
+          logger.info('Handshake deferred: own call $ownCallId arrived, proceeding');
+          _executePendingRequests();
+        } else {
+          logger.info('Handshake deferred: own call $ownCallId is gone - ending it');
+          _onNoActiveLines();
+        }
+      });
+      return;
+    }
     _executePendingRequests();
   }
 
@@ -279,7 +299,8 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
         }
       case HangupEvent():
         final incomingEventLog = _incomingCallEvents.remove(event.callId);
-        _onHangupCall(event, (
+        final onHangup = _isOwnCall(event.callId) ? _onHangupCall : _onOtherCallHangup;
+        onHangup(event, (
           direction: CallDirection.incoming,
           number: incomingEventLog?.caller ?? _metadata?.handle?.value ?? '',
           video: JsepValue.fromOptional(incomingEventLog?.jsep)?.hasVideo ?? false,
@@ -351,12 +372,36 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     }
   }
 
+  /// Whether [callId] is the call this session was opened for.
+  ///
+  /// A session without push metadata has no call of its own; it keeps the old
+  /// behaviour and treats every call as its own.
+  bool _isOwnCall(String callId) => _metadata == null || _metadata!.callId == callId;
+
   void _onHangupCall(HangupEvent event, NewCall call) async {
     logger.info('Hangup event: callId=${event.callId} reason=${event.reason}');
     await _showMissedCallNotification(event, call);
     await _logCall(call);
     await _releaseCall(event.callId);
     _complete();
+  }
+
+  /// Another call on this session's lines ended while the session's own call
+  /// is still going.
+  ///
+  /// The session stays open: ending it here handed the own call off while it
+  /// still rang, which took its notification away and left its connection
+  /// ringing with nobody to hear its hangup. The other call is still recorded
+  /// and ended natively, and callkeep keeps the incoming-call service up,
+  /// because it shows the session's own call.
+  void _onOtherCallHangup(HangupEvent event, NewCall call) async {
+    logger.info(
+      'Hangup event for another call: callId=${event.callId} reason=${event.reason} - session stays on ${_metadata?.callId}',
+    );
+    _lines.remove(event.callId);
+    await _showMissedCallNotification(event, call);
+    await _logCall(call);
+    await _releaseCall(event.callId);
   }
 
   // ---------------------------------------------------------------------------
