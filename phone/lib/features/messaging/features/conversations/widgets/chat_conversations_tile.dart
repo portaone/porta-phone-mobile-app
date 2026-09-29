@@ -210,6 +210,8 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
                       text: lastMessage.content,
                       style: textStyle,
                       quoteDecoration: theme.strongQuoteDecoration(true),
+                      // A preview of the conversation: a tap opens the conversation, not a link in it.
+                      interactive: false,
                       textWidthBasis: TextWidthBasis.longestLine,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
