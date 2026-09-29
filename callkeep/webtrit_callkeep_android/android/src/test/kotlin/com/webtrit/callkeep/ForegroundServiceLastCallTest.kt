@@ -1,0 +1,84 @@
+package com.webtrit.callkeep
+
+import android.content.Context
+import android.os.Build
+import androidx.test.core.app.ApplicationProvider
+import com.webtrit.callkeep.common.ContextHolder
+import com.webtrit.callkeep.models.CallMetadata
+import com.webtrit.callkeep.services.core.CallkeepCore
+import com.webtrit.callkeep.services.services.foreground.ForegroundService
+import org.junit.After
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.Robolectric
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+/**
+ * The app on the lock screen shows every call, so it is sent back only when the call that
+ * ended was the last live one - not when a second incoming call Telecom refused ends while
+ * the first still rings (WT-2029).
+ */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
+class ForegroundServiceLastCallTest {
+    private lateinit var service: ForegroundService
+    private val core get() = CallkeepCore.instance
+
+    @Before
+    fun prepare() {
+        ContextHolder.init(ApplicationProvider.getApplicationContext<Context>())
+        core.clear()
+        service = Robolectric.buildService(ForegroundService::class.java).create().get()
+    }
+
+    @After
+    fun tearDown() {
+        service.onDestroy()
+        core.clear()
+    }
+
+    private fun ringing(callId: String) = core.promote(callId, CallMetadata(callId = callId), PCallkeepConnectionState.STATE_RINGING)
+
+    @Test
+    fun `the only call ending is the last call`() {
+        ringing("A")
+        core.markTerminated("A")
+
+        assertTrue(service.isLastCall("A"))
+    }
+
+    @Test
+    fun `a refused call ending while another rings is not the last call`() {
+        ringing("A")
+        // B was reported and refused by Telecom: pending, then dropped, never registered.
+        core.addPending("B")
+        core.removePending("B")
+        core.markTerminated("B")
+
+        assertFalse("A still rings", service.isLastCall("B"))
+    }
+
+    @Test
+    fun `the ringing call ending after a refused one is the last call`() {
+        core.addPending("B")
+        core.removePending("B")
+        ringing("A")
+        core.markTerminated("A")
+
+        assertTrue(service.isLastCall("A"))
+    }
+
+    @Test
+    fun `an ended call does not count as live`() {
+        ringing("A")
+        ringing("B")
+        core.markTerminated("B")
+        core.markTerminated("A")
+
+        assertTrue(service.isLastCall("A"))
+    }
+}

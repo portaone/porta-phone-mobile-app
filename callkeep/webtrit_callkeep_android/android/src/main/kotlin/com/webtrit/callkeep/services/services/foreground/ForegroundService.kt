@@ -1289,11 +1289,20 @@ class ForegroundService :
             notifyFlutter("performEndCall") { performEndCall(callId) }
             notifyFlutter("didDeactivateAudioSession") { didDeactivateAudioSession() }
 
-            if (Platform.isLockScreen(baseContext)) {
+            if (Platform.isLockScreen(baseContext) && isLastCall(callId)) {
                 ActivityHolder.finish()
             }
         }
     }
+
+    /**
+     * True when no call other than [endedCallId] is still live.
+     *
+     * The activity on the lock screen shows every call, not one: sending it back when any call
+     * ends took the screen away from a call still ringing (a second incoming call refused by
+     * Telecom while the first rang). A refused call was never registered, so it never counts.
+     */
+    internal fun isLastCall(endedCallId: String): Boolean = core.getAll().none { it.callId != endedCallId }
 
     private fun handleCSReportAnswerCall(extras: Bundle?) {
         logger.d("handleCSReportAnswerCall")

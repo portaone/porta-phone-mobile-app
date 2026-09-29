@@ -120,7 +120,7 @@ registered `ConnectionEventListener`. `ForegroundService` does not register its 
 | `ReplayIncomingCall`         | `handleCSReplayIncomingCall()`           | Deliver the incoming call to a freshly attached delegate via `didPushIncomingCall` (sole foreground delivery)               |
 | `ConnectionStateChanged`     | `handleCSReportConnectionStateChanged()` | `updateState()` -- mirror the authoritative connection state into the tracker                                               |
 | `AnswerCall`                 | `handleCSReportAnswerCall()`             | `markAnswered()` guard in tracker, call `performAnswerCall()` on Dart delegate                                              |
-| `DeclineCall`                | `handleCSReportDeclineCall()`            | `markTerminated()`, call `performEndCall()`                                                                                 |
+| `DeclineCall`                | `handleCSReportDeclineCall()`            | `markTerminated()`, call `performEndCall()`; on the lock screen sends the app back only if no other call is live            |
 | `HungUp`                     | `handleCSReportDeclineCall()`            | Same as DeclineCall                                                                                                         |
 | `ConnectionNotFound`         | `handleCSConnectionNotFound()`           | Synthesize HungUp — `performEndCall()`                                                                                      |
 | `AudioMuting`                | Inline                                   | Call `performMuteCall()` on Dart delegate                                                                                   |
