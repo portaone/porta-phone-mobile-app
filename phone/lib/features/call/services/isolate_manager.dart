@@ -299,8 +299,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
         }
       case HangupEvent():
         final incomingEventLog = _incomingCallEvents.remove(event.callId);
-        final onHangup = _isOwnCall(event.callId) ? _onHangupCall : _onOtherCallHangup;
-        onHangup(event, (
+        final call = (
           direction: CallDirection.incoming,
           number: incomingEventLog?.caller ?? _metadata?.handle?.value ?? '',
           video: JsepValue.fromOptional(incomingEventLog?.jsep)?.hasVideo ?? false,
@@ -308,7 +307,12 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
           createdTime: _initialConnectionTime,
           acceptedTime: null,
           hungUpTime: DateTime.now(),
-        ));
+        );
+        if (_isOwnCall(event.callId)) {
+          _onHangupCall(event, call);
+        } else {
+          _onOtherCallHangup(event, call, wasIncoming: incomingEventLog != null);
+        }
       case UnregisteredEvent():
         _onUnregistered(event);
       default:
@@ -394,13 +398,19 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   /// ringing with nobody to hear its hangup. The other call is still recorded
   /// and ended natively, and callkeep keeps the incoming-call service up,
   /// because it shows the session's own call.
-  void _onOtherCallHangup(HangupEvent event, NewCall call) async {
+  ///
+  /// Only an incoming call the session saw arrive ([wasIncoming]) is recorded as missed: the other
+  /// lines can also carry an outgoing call from another device or a call answered elsewhere, and
+  /// those are not missed calls.
+  void _onOtherCallHangup(HangupEvent event, NewCall call, {required bool wasIncoming}) async {
     logger.info(
       'Hangup event for another call: callId=${event.callId} reason=${event.reason} - session stays on ${_metadata?.callId}',
     );
     _lines.remove(event.callId);
-    await _showMissedCallNotification(event, call);
-    await _logCall(call);
+    if (wasIncoming) {
+      await _showMissedCallNotification(event, call);
+      await _logCall(call);
+    }
     await _releaseCall(event.callId);
   }
 
