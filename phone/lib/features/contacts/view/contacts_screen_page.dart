@@ -57,7 +57,7 @@ Widget contactSourceTypeWidgetBuilder(
           return ContactsLocalTabBloc(
             contactsRepository: context.read<ContactsRepository>(),
             contactsSearchBloc: contactsSearchBloc,
-            localContactsSyncBloc: context.read<LocalContactsSyncBloc>(),
+            localContactsSyncCubit: context.read<LocalContactsSyncCubit>(),
           )..add(ContactsLocalTabStarted(search: contactsSearchBloc.state.search));
         },
         child: widget,

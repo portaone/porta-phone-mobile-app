@@ -7,7 +7,9 @@ export 'local_contacts_repository_io.dart' if (dart.library.html) 'local_contact
 abstract class ILocalContactsRepository {
   Future<bool> requestPermission();
 
-  Stream<List<LocalContact>> contacts();
+  /// Reports invalidations; the sync owner decides when to read again.
+  Stream<void> watchChanges();
 
-  Future<void> load();
+  /// Reads the current device snapshot without publishing it on another stream.
+  Future<List<LocalContact>> fetchContacts();
 }

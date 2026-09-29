@@ -1,7 +1,7 @@
 # Refreshing data by hand
 
 How a user asks a list in the app to fetch again, screen by screen.
-Last reviewed: 2026-09-11.
+Last reviewed: 2026-09-28.
 
 The rule: refreshing is a pull on the list. A screen that can be refreshed
 carries no refresh control in its app bar.
@@ -66,6 +66,25 @@ owner, so the pull joins a scheduled Contacts cycle when one is already
 running. A failed pull shows the same request-failed snack bar as the account
 screen. The widget has no polling dependency, and the owner keeps invalidation
 and unregister capabilities private.
+
+The local tab awaits `ContactsLocalTabBloc.refresh()`, which delegates to the
+shell-owned `LocalContactsSyncCubit`. One cycle checks feature access, agreement
+and permission, reads device contacts, and awaits their store transaction
+(including up to three retries). Refused attempts and failures also complete;
+the cubit's state supplies the outcome. Completion never depends on another
+state emission, so repeated permission refusals cannot leave a refresh pending.
+
+Concurrent manual refreshes join the active cycle. The device repository exposes
+change notifications separately from `fetchContacts()`: a notification during
+a cycle queues a fresh read after it, with multiple notifications coalesced into
+one pending read. Initial loading, app resume, pull-to-refresh and native changes
+use the same pipeline. Resume still checks permissions so granting access in
+system settings takes effect without reopening the screen.
+
+Closing the cubit releases refresh callers and cancels its change subscription.
+Native reads and already-started store writes cannot be interrupted; their late
+completion publishes no state and starts no further writes or retries. Closing
+only the tab does not stop the shell-owned sync operation.
 
 Both lists sit behind a translucent app bar, so - as on the account screen -
 the indicator carries an `edgeOffset`, or the spinner is drawn behind the bar
