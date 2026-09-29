@@ -1,12 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:quiver/collection.dart';
-import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 
 import 'package:text_entities/text_entities.dart';
 
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/utils/utils.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 class MessageBody extends StatefulWidget {
   const MessageBody({required this.text, required this.isMine, this.style, super.key});
@@ -95,12 +95,10 @@ class _MessageBodyState extends State<MessageBody> {
           secondChild: const SizedBox(),
           crossFadeState: preview != null ? CrossFadeState.showFirst : CrossFadeState.showSecond,
         ),
-        ParsedText(
-          parse: TextMatchers.matchers(style, quoteDecoration),
-          regexOptions: const RegexOptions(multiLine: true, dotAll: true, caseSensitive: false),
-          style: style.copyWith(fontFamily: theme.textTheme.bodyMedium?.fontFamily, overflow: .ellipsis),
-          softWrap: true,
+        FormattedText(
           text: widget.text,
+          style: style.copyWith(fontFamily: theme.textTheme.bodyMedium?.fontFamily, overflow: .ellipsis),
+          quoteDecoration: quoteDecoration,
           textWidthBasis: TextWidthBasis.longestLine,
         ),
       ],
