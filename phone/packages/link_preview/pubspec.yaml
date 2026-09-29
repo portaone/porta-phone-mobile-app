@@ -1,0 +1,18 @@
+name: link_preview
+resolution: workspace
+description: Fetches an Open Graph style preview of a web page, bounded in time, size and destination.
+publish_to: none
+version: 0.0.1
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  html: ^0.15.6
+  http: ^1.6.0
+  logging: ^1.3.0
+
+dev_dependencies:
+  fake_async: ^1.3.3
+  lints: ^6.1.0
+  test: ^1.31.0
