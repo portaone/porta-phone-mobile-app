@@ -1,13 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:quiver/collection.dart';
-import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 
 import 'package:text_entities/text_entities.dart';
 
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/models/system_notification.dart';
 import 'package:webtrit_phone/utils/utils.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 class SystemNotificationListTile extends StatefulWidget {
   const SystemNotificationListTile(this.notification, {this.seenPending = false, this.onSeen, super.key});
@@ -160,18 +160,14 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
           ],
         ),
         Divider(height: 12, color: style.color?.withAlpha(10)),
-        ParsedText(
+        FormattedText(
           text: widget.notification.content,
-          parse: TextMatchers.matchers(
-            style,
-            BoxDecoration(
-              color: colorScheme.primaryFixed.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(0),
-              border: Border(left: BorderSide(color: colorScheme.primaryFixed, width: 2)),
-            ),
-          ),
-          regexOptions: const RegexOptions(multiLine: true, dotAll: true, caseSensitive: false),
           style: style.copyWith(fontFamily: theme.textTheme.bodyMedium?.fontFamily),
+          quoteDecoration: BoxDecoration(
+            color: colorScheme.primaryFixed.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(0),
+            border: Border(left: BorderSide(color: colorScheme.primaryFixed, width: 2)),
+          ),
           textWidthBasis: TextWidthBasis.longestLine,
         ),
       ],
