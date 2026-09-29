@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
@@ -207,11 +206,10 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
                   Text(context.l10n.messaging_MessageView_deleted, style: textStyle, overflow: TextOverflow.ellipsis)
                 else
                   Flexible(
-                    child: ParsedText(
-                      parse: TextMatchers.matchers(textStyle, theme.strongQuoteDecoration(true)),
-                      regexOptions: const RegexOptions(multiLine: true, dotAll: true, caseSensitive: false),
-                      style: textStyle,
+                    child: FormattedText(
                       text: lastMessage.content,
+                      style: textStyle,
+                      quoteDecoration: theme.strongQuoteDecoration(true),
                       textWidthBasis: TextWidthBasis.longestLine,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

@@ -73,7 +73,6 @@ dependencies:
   flutter_bloc: ^9.1.1
   flutter_contacts: ^2.5.0
   flutter_local_notifications: ^21.0.0
-  flutter_parsed_text: ^2.2.1
   flutter_secure_storage: ^10.3.1
   flutter_svg: ^2.3.0
   formz: ^0.8.0
