@@ -7,6 +7,7 @@ import 'package:webtrit_phone/models/system_notification_outbox_entry.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../system_notifications.dart';
+import 'system_notifications_screen_styles.dart';
 
 class SystemNotificationsScreen extends StatefulWidget {
   const SystemNotificationsScreen({super.key});
@@ -54,9 +55,11 @@ class _SystemNotificationsScreenState extends State<SystemNotificationsScreen> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(context.l10n.system_notifications_screen_title),
-        flexibleSpace: BlurredSurface.adaptive(context),
-        // Themes that configure no bar color keep the historic translucent bar
-        // (the adaptive frost on top), instead of the opaque framework default.
+        flexibleSpace: BlurredSurface.fromStyle(
+          Theme.of(context).extension<SystemNotificationsScreenStyles>()?.primary?.appBarBlurredSurface,
+        ),
+        // Themes that configure no bar color keep a translucent bar instead of
+        // the opaque framework default.
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.transparent,
       ),
       body: BlocBuilder<SystemNotificationsScreenCubit, SystemNotificationScreenState>(

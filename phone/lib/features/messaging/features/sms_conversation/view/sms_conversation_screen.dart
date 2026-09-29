@@ -8,6 +8,7 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
+import 'package:webtrit_phone/features/messaging/features/conversations/view/conversations_screen_styles.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
@@ -83,9 +84,13 @@ class _SmsConversationScreenState extends State<SmsConversationScreen> {
                 extendBodyBehindAppBar: true,
                 appBar: AppBar(
                   centerTitle: true,
-                  flexibleSpace: BlurredSurface.adaptive(context),
-                  // Themes that configure no bar color keep the historic translucent bar
-                  // (the adaptive frost on top), instead of the opaque framework default.
+                  // A thread is part of the conversations section, so its bar is
+                  // frosted the way the conversations list is.
+                  flexibleSpace: BlurredSurface.fromStyle(
+                    Theme.of(context).extension<ConversationsScreenStyles>()?.primary?.appBarBlurredSurface,
+                  ),
+                  // Themes that configure no bar color keep a translucent bar instead
+                  // of the opaque framework default.
                   backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.transparent,
                   title: Builder(
                     builder: (context) {

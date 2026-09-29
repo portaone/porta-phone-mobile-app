@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
 import 'package:webtrit_phone/theme/extension/extension.dart';
+import 'package:webtrit_phone/theme/factory/styles/call_center_screen_style_factory.dart';
 import 'package:webtrit_phone/theme/factory/styles/conversations_screen_style_factory.dart';
 import 'package:webtrit_phone/theme/factory/styles/embedded_screen_style_factory.dart';
 import 'package:webtrit_phone/theme/factory/styles/favorites_screen_style_factory.dart';
 import 'package:webtrit_phone/theme/factory/styles/recents_screen_style_factory.dart';
+import 'package:webtrit_phone/theme/factory/styles/system_notifications_screen_style_factory.dart';
+import 'package:webtrit_phone/theme/factory/styles/voicemail_screen_style_factory.dart';
 
 import './styles/styles.dart';
 import '../models/models.dart';
@@ -41,14 +44,71 @@ class ThemeStyleFactoryProvider {
   /// The default text theme derived from the color scheme and widget configuration.
   late final TextTheme defaultTextTheme;
 
+  /// The pages as the style factories read them: a page whose bar tint the
+  /// theme leaves unset gets one built from the colour scheme.
+  ///
+  /// A theme from the configurator sets no page tint at all, and one built into
+  /// the app sets the same tint on every page, so without this the screens
+  /// either all went without a tint or took it from wherever the code held its
+  /// own. The number history is left out: its bar is chrome-less on purpose.
+  late final ThemePageConfig _pages = _withSchemeTints(pageConfig);
+
+  ThemePageConfig _withSchemeTints(ThemePageConfig p) {
+    BlurredSurfaceConfig? tint(BlurredSurfaceConfig? own, AppBarConfig? pageBar) => own ?? _schemeTint(pageBar);
+    return p.copyWith(
+      about: p.about.copyWith(appBarBlurredSurface: tint(p.about.appBarBlurredSurface, p.about.appBarStyle)),
+      keypad: p.keypad.copyWith(appBarBlurredSurface: tint(p.keypad.appBarBlurredSurface, p.keypad.appBarStyle)),
+      settings: p.settings.copyWith(
+        appBarBlurredSurface: tint(p.settings.appBarBlurredSurface, p.settings.appBarStyle),
+      ),
+      contacts: p.contacts.copyWith(
+        appBarBlurredSurface: tint(p.contacts.appBarBlurredSurface, p.contacts.appBarStyle),
+      ),
+      embedded: p.embedded.copyWith(
+        appBarBlurredSurface: tint(p.embedded.appBarBlurredSurface, p.embedded.appBarStyle),
+      ),
+      favorites: p.favorites.copyWith(
+        appBarBlurredSurface: tint(p.favorites.appBarBlurredSurface, p.favorites.appBarStyle),
+      ),
+      conversations: p.conversations.copyWith(
+        appBarBlurredSurface: tint(p.conversations.appBarBlurredSurface, p.conversations.appBarStyle),
+      ),
+      recents: p.recents.copyWith(appBarBlurredSurface: tint(p.recents.appBarBlurredSurface, p.recents.appBarStyle)),
+      voicemail: p.voicemail.copyWith(
+        appBarBlurredSurface: tint(p.voicemail.appBarBlurredSurface, p.voicemail.appBarStyle),
+      ),
+      callCenter: p.callCenter.copyWith(
+        appBarBlurredSurface: tint(p.callCenter.appBarBlurredSurface, p.callCenter.appBarStyle),
+      ),
+      systemNotifications: p.systemNotifications.copyWith(
+        appBarBlurredSurface: tint(p.systemNotifications.appBarBlurredSurface, p.systemNotifications.appBarStyle),
+      ),
+    );
+  }
+
+  /// The tint for a page the theme gives none: the surface at the opacity the
+  /// shipped pages use, so the content under a transparent bar stays behind it.
+  ///
+  /// None for a bar with a colour of its own - a translucent one shows the
+  /// brand's colour, as configured, and an opaque one has nothing to blur.
+  BlurredSurfaceConfig? _schemeTint(AppBarConfig? pageBar) {
+    final barColor = pageBar?.backgroundColor ?? widgetConfig.bar.appBarConfig.backgroundColor;
+    if (barColor != null && barColor.toColor().a > 0) return null;
+    return BlurredSurfaceConfig(
+      color: colorScheme.surface.withValues(alpha: 0x96 / 255).toCSSColorString(),
+      sigmaX: 10,
+      sigmaY: 10,
+    );
+  }
+
   List<ThemeExtension> createThemeExtensions() {
     final defaultFontFamily = defaultTextTheme.bodyMedium?.fontFamily;
 
     _logger.finer('Default font family: $defaultFontFamily');
 
     // Page schema
-    final loginPageScheme = pageConfig.login;
-    final callPageScheme = pageConfig.dialing;
+    final loginPageScheme = _pages.login;
+    final callPageScheme = _pages.dialing;
 
     // Widget images config
     final imageAssetsConfig = widgetConfig.imageAssets;
@@ -98,16 +158,16 @@ class ThemeStyleFactoryProvider {
 
     // Screen-specific styles
     final aboutScreenStyleFactory = AboutScreenStyleFactory(
-      pageConfig.about,
-      appBarTheme: _pageAppBarTheme(pageConfig.about.appBarStyle),
+      _pages.about,
+      appBarTheme: _pageAppBarTheme(_pages.about.appBarStyle),
     );
     final callScreenStyleFactory = CallScreenStyleFactory(colorScheme, callPageScheme, defaultFontFamily);
     final keypadScreenStyleFactory = KeypadScreenStyleFactory(
       colorScheme,
       defaultFontFamily,
-      config: pageConfig.keypad,
+      config: _pages.keypad,
       textTheme: defaultTextTheme,
-      appBarTheme: _pageAppBarTheme(pageConfig.keypad.appBarStyle),
+      appBarTheme: _pageAppBarTheme(_pages.keypad.appBarStyle),
     );
     final loginOtpSigninVerifyScreenStyleFactory = LoginOtpSigninVerifyScreenStyleFactory(
       colorScheme,
@@ -140,42 +200,57 @@ class ThemeStyleFactoryProvider {
     );
     final settingsScreenStyleFactory = SettingsScreenStyleFactory(
       colorScheme,
-      pageConfig.settings,
+      _pages.settings,
       defaultFontFamily,
-      appBarTheme: _pageAppBarTheme(pageConfig.settings.appBarStyle),
+      appBarTheme: _pageAppBarTheme(_pages.settings.appBarStyle),
     );
     final contactsScreenStyleFactory = ContactsScreenStyleFactory(
       colorScheme,
-      pageConfig.contacts,
-      appBarTheme: _pageAppBarTheme(pageConfig.contacts.appBarStyle),
+      _pages.contacts,
+      appBarTheme: _pageAppBarTheme(_pages.contacts.appBarStyle),
     );
     final recentsScreenStyleFactory = RecentsScreenStyleFactory(
       colorScheme,
-      pageConfig.recents,
-      appBarTheme: _pageAppBarTheme(pageConfig.recents.appBarStyle),
+      _pages.recents,
+      appBarTheme: _pageAppBarTheme(_pages.recents.appBarStyle),
     );
     final favoritesScreenStyleFactory = FavoritesScreenStyleFactory(
       colorScheme,
-      pageConfig.favorites,
-      appBarTheme: _pageAppBarTheme(pageConfig.favorites.appBarStyle),
+      _pages.favorites,
+      appBarTheme: _pageAppBarTheme(_pages.favorites.appBarStyle),
     );
     final conversationsScreenStyleFactory = ConversationsScreenStyleFactory(
       colorScheme,
-      pageConfig.conversations,
-      appBarTheme: _pageAppBarTheme(pageConfig.conversations.appBarStyle),
+      _pages.conversations,
+      appBarTheme: _pageAppBarTheme(_pages.conversations.appBarStyle),
+    );
+    final voicemailScreenStyleFactory = VoicemailScreenStyleFactory(
+      colorScheme,
+      _pages.voicemail,
+      appBarTheme: _pageAppBarTheme(_pages.voicemail.appBarStyle),
+    );
+    final callCenterScreenStyleFactory = CallCenterScreenStyleFactory(
+      colorScheme,
+      _pages.callCenter,
+      appBarTheme: _pageAppBarTheme(_pages.callCenter.appBarStyle),
+    );
+    final systemNotificationsScreenStyleFactory = SystemNotificationsScreenStyleFactory(
+      colorScheme,
+      _pages.systemNotifications,
+      appBarTheme: _pageAppBarTheme(_pages.systemNotifications.appBarStyle),
     );
     final embeddedScreenStyleFactory = EmbeddedScreenStyleFactory(
       colorScheme,
-      pageConfig.embedded,
-      appBarTheme: _pageAppBarTheme(pageConfig.embedded.appBarStyle),
+      _pages.embedded,
+      appBarTheme: _pageAppBarTheme(_pages.embedded.appBarStyle),
     );
     final numberCdrsScreenStyleFactory = NumberCdrsScreenStyleFactory(
       colorScheme,
-      pageConfig.numberCdrs,
+      _pages.numberCdrs,
       // A deliberately chrome-less screen: when the theme does not configure
       // this page's bar, default to a transparent one.
       appBarTheme: _pageAppBarThemeWithDefault(
-        pageConfig.numberCdrs.appBarStyle,
+        _pages.numberCdrs.appBarStyle,
         const AppBarConfig(backgroundColor: '#00000000'),
       ),
     );
@@ -218,6 +293,9 @@ class ThemeStyleFactoryProvider {
       recentsScreenStyleFactory.create(),
       favoritesScreenStyleFactory.create(),
       conversationsScreenStyleFactory.create(),
+      voicemailScreenStyleFactory.create(),
+      callCenterScreenStyleFactory.create(),
+      systemNotificationsScreenStyleFactory.create(),
       embeddedScreenStyleFactory.create(),
       numberCdrsScreenStyleFactory.create(),
       loginCoreUrlAssignScreenStyleFactory.create(),
