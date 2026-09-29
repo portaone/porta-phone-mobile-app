@@ -120,12 +120,24 @@ there is no conference object to address instead - so each one hears them under 
 - Dispatches `AudioDeviceSet` broadcast with the new endpoint.
 - Dispatches `AudioDevicesUpdate` broadcast with full device list.
 
+### `onMuteStateChanged(isMuted)` (API 34+)
+
+Telecom's mute is its own, and `changeMuteState` never reaches it: a call muted from the app
+still reads unmuted to Telecom. Telecom re-announces that value whenever it re-describes a
+call - a call leaving its group is the case measured on a Pixel - so applying every report
+would unmute a call the app muted.
+
+- Remembers the last value Telecom reported (`systemMute`, initially unmuted).
+- A repeat of that value is logged and ignored.
+- A change is somebody pressing mute on the system's side (a headset, a car): it updates
+  `isMute` and dispatches `AudioMuting`.
+
 ## Media Methods
 
 ### `changeMuteState(muted)`
 
 - Updates `isMute`.
-- Sets Telecom audio mute.
+- Does not reach Telecom's mute (see `onMuteStateChanged` above).
 - Dispatches `AudioMuting` broadcast.
 
 ### `setSpeaker(on)` / `setAudioDevice(device)`
