@@ -284,7 +284,9 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
         final onHangup = _isOwnCall(event.callId) ? _onHangupCall : _onOtherCallHangup;
         onHangup(event, (
           direction: CallDirection.incoming,
-          number: incomingEventLog?.caller ?? _metadata?.handle?.value ?? '',
+          // The push metadata describes the session's own call only; another call without
+          // an IncomingCallEvent has no number here rather than borrowing that one.
+          number: incomingEventLog?.caller ?? (_isOwnCall(event.callId) ? _metadata?.handle?.value : null) ?? '',
           video: JsepValue.fromOptional(incomingEventLog?.jsep)?.hasVideo ?? false,
           username: incomingEventLog?.callerDisplayName,
           createdTime: _initialConnectionTime,

@@ -167,4 +167,29 @@ void main() {
       expect(callkeep.released, isEmpty, reason: 'releasing c1 would decline a call that still rings');
     });
   });
+
+  group('missed call', () {
+    test('a call the session knows nothing about is not given the own caller', () async {
+      manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+
+      signaling.hangup('c9', line: 1);
+      await settle();
+
+      expect(missed.single.$1, 'c9');
+      expect(missed.single.$2, isNot('555002'), reason: '555002 is the caller of c1, not of c9');
+    });
+
+    test('the own call without its event still gets the pushed number', () async {
+      final session = manager.run(
+        const CallkeepIncomingCallMetadata(callId: 'c1', handle: CallkeepHandle.number('555002')),
+      );
+      signaling.handshake([(callId: 'c2', caller: '555003')]);
+
+      signaling.hangup('c1');
+      await session;
+
+      expect(missed.single, ('c1', '555002'));
+    });
+  });
 }
