@@ -95,7 +95,7 @@ class CallLifecycleHandler(
             }, onFailure = {
                 Log.e(TAG, "Sync before decline failed: $it")
                 connectionController.hangUp(metadata)
-                stopService()
+                stopServiceFor(metadata.callId)
             })
         }
     }
@@ -114,7 +114,7 @@ class CallLifecycleHandler(
         }, onFailure = {
             Log.e(TAG, "Call end signaling failed: $it")
             connectionController.hangUp(metadata)
-            stopService()
+            stopServiceFor(metadata.callId)
         })
     }
 
@@ -129,7 +129,7 @@ class CallLifecycleHandler(
     override suspend fun releaseCall(callId: String) {
         Log.d(TAG, "releaseCall: $callId — unanswered, terminating connection and stopping service")
         terminateCall(CallMetadata(callId = callId), DeclineSource.SERVER)
-        stopService()
+        stopServiceFor(callId)
     }
 
     override suspend fun handoffCall(callId: String) {
@@ -139,6 +139,22 @@ class CallLifecycleHandler(
         // still ringing. In both cases the PhoneConnection must stay alive; only
         // IncomingCallService is stopped so the Activity can handle the call normally.
         Log.d(TAG, "handoffCall: $callId — stopping service only, connection stays alive (Activity handoff)")
+        stopServiceFor(callId)
+    }
+
+    /**
+     * Stops the service only when [callId] is the call it shows.
+     *
+     * The push isolate ends and hands off calls by id, and a session can learn of more than one
+     * call (the handshake lists every line). Stopping on another call's end took the ringing
+     * call's notification and foreground state away while it still rang.
+     */
+    private fun stopServiceFor(callId: String) {
+        val shown = currentCallData?.callId
+        if (shown != null && shown != callId) {
+            Log.i(TAG, "stopService for $callId skipped: this service shows $shown")
+            return
+        }
         stopService()
     }
 
