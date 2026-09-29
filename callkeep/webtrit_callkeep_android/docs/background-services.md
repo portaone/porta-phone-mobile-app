@@ -53,6 +53,9 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
   call's release would tear down a call that is still ringing. A release that arrives before
   `IC_INITIALIZE` is parked in `PendingBroadcastQueue` for its call. `AnswerCall` events are
   filtered the same way.
+- The push isolate ends and hands off calls by id (`releaseCall`, `handoffCall`), and its
+  session can know more than one call. `CallLifecycleHandler` stops the service only when
+  that id is the call the service shows; for another call it ends that call and keeps running.
 - Two safety-net timeouts force-stop the service if the normal flow stalls: an independent
   60 s timeout armed at launch, and a 2 s stop timeout armed when the release arrives.
 - `onDestroy()` - unsubscribes, stops foreground, and explicitly cancels the current
