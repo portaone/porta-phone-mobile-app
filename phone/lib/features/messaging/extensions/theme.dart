@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 extension MsgViewExt on ThemeData {
   TextStyle get userNameStyle => TextStyle(color: colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w600);

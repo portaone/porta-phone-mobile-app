@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/register_status/register_status.dart';

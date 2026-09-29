@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AppBarStyle with Diagnosticable {
   const AppBarStyle({this.backgroundColor, this.foregroundColor, this.primary = true, this.showBackButton = true});

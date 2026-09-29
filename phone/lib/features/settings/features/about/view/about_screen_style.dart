@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/widgets/blurred_surface.dart';

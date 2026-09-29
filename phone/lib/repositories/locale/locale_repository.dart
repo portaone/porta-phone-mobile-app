@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/data/app_preferences.dart';
 import 'package:webtrit_phone/extensions/locale.dart';

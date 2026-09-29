@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ProgressOverlay extends StatelessWidget {
   static void insert<T>(BuildContext context, Future<T> removeFuture) {

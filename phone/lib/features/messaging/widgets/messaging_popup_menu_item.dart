@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// One entry of a messaging popup menu, carrying a stable id where the id has
 /// to sit.

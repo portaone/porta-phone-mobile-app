@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Visual style for a [BlurredSurface] widget.
 class BlurredSurfaceStyle with Diagnosticable {

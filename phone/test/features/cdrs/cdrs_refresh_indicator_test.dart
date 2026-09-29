@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -15,7 +15,7 @@ import 'package:webtrit_phone/features/cdrs/widgets/missed_recent_cdrs_list.dart
 import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
-import 'package:webtrit_phone/l10n/app_localizations.g.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/theme/theme.dart';
@@ -97,7 +97,7 @@ void main() {
         theme: ThemeData(platform: TargetPlatform.iOS),
         scrollBehavior: const MaterialScrollBehavior().copyWith(physics: const BouncingScrollPhysics()),
         locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: RepositoryProvider<ContactsRepository>.value(
           value: contactsRepository,

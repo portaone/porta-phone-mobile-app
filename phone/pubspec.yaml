@@ -45,7 +45,7 @@ dependencies:
 
   async: ^2.13.1
   audio_session: ^0.2.3
-  auto_route: ^11.1.0
+  auto_route: ^11.2.0
   bloc: ^9.2.1
   bloc_concurrency: ^0.3.0
   bloc_test: ^10.0.0
@@ -54,6 +54,7 @@ dependencies:
   collection: ^1.19.1
   connectivity_plus: ^7.1.1
   country_code_picker: ^3.4.1
+  cupertino_ui: ^1.1.1
   cross_file: ^0.3.5+2
   device_info_plus: ^13.1.0
   device_region: ^1.4.0
@@ -76,7 +77,7 @@ dependencies:
   formz: ^0.8.0
   freezed_annotation: ^3.1.0
   google_api_availability: ^5.0.1
-  google_fonts: ^8.1.0
+  google_fonts: ^9.0.0
   gravatar_utils: ^1.0.0
   html: ^0.15.6
   http: ^1.6.0
@@ -93,6 +94,7 @@ dependencies:
   logging_appenders: ^2.0.0+1
   mask_text_input_formatter: ^2.9.0
   material_color_utilities: any
+  material_ui: ^1.5.0
   meta: any
   mobile_scanner: ^7.2.0
   package_info_plus: ^10.1.0

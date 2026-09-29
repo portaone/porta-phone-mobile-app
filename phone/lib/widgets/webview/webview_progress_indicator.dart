@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class WebViewProgressIndicator extends StatelessWidget {
   const WebViewProgressIndicator({super.key, required this.stream});

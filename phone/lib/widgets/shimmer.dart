@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class Shimmer extends StatefulWidget {
   const Shimmer({super.key, this.duration = const Duration(milliseconds: 1500), this.baseColor, this.highlightColor});

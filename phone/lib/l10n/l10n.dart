@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' show GlobalMaterialLocalizations;
 
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
 
@@ -6,6 +7,16 @@ import 'app_localizations.g.dart';
 export 'app_localizations.g.dart';
 
 export 'default_error_l10n.dart';
+
+/// The delegates every app root and test harness registers.
+///
+/// Not [AppLocalizations.localizationsDelegates]: gen-l10n still emits the
+/// flutter_localizations delegates, which register the framework's
+/// MaterialLocalizations - a type material_ui widgets never look up.
+const List<LocalizationsDelegate<dynamic>> appLocalizationsDelegates = [
+  AppLocalizations.delegate,
+  ...GlobalMaterialLocalizations.delegates,
+];
 
 extension AppLocalizationsX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;

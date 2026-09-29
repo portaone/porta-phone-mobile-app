@@ -1,5 +1,6 @@
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as legacy show TabAlignment, TabBar;
+import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
@@ -112,9 +113,11 @@ class _StatusIconCategoryViewState extends CategoryViewState<StatusIconCategoryV
           Expanded(
             child: SizedBox(
               height: _categoryTabSize,
-              child: TabBar(
+              // The framework's TabBar, not material_ui's: the picker is still built
+              // on flutter/material and hands over a controller of that library.
+              child: legacy.TabBar(
                 isScrollable: true,
-                tabAlignment: TabAlignment.start,
+                tabAlignment: legacy.TabAlignment.start,
                 controller: widget.tabController,
                 labelColor: categoryViewConfig.iconColorSelected,
                 unselectedLabelColor: categoryViewConfig.iconColor,

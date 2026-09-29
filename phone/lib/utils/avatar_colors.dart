@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Deterministic ("pseudorandom") avatar colors derived from a name.
 ///

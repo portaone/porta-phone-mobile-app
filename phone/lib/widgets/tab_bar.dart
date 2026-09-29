@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ExtTabBar extends StatelessWidget {
   const ExtTabBar({super.key, this.width, this.height, required this.tabs, this.controller});

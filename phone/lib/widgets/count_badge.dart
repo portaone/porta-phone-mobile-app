@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The little filled shape that carries a number: unread messages, selected
 /// items, members of a group.

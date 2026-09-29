@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/features/settings/features/about/widgets/widgets.dart';
-import 'package:webtrit_phone/l10n/app_localizations.g.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 import '../../../../helpers/helpers.dart';
@@ -13,7 +13,7 @@ EmbeddedData _resource(String uri) =>
 
 void main() {
   Widget wrap(EmbeddedData resource, ValueChanged<EmbeddedData> onOpen) => MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       body: EmbeddedLinkTile(resource: resource, onOpen: onOpen),

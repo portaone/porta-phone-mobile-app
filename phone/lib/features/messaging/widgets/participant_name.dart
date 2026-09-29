@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/features/messaging/extensions/extensions.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';

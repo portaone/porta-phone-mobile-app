@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,9 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/features/settings/features/presence/presence.dart';
-import 'package:webtrit_phone/l10n/app_localizations.g.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../../../../helpers/helpers.dart';
 
@@ -95,7 +96,8 @@ class PresenceSettingsHarness {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
+        builder: (context, child) => LegacyMaterialBridge(child: child!),
         supportedLocales: AppLocalizations.supportedLocales,
         home: _withStubRouter(
           BlocProvider(create: (_) => PresenceSettingsCubit(repository), child: const PresenceSettingsScreen()),

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -18,6 +18,11 @@ import 'package:webtrit_phone/widgets/keypad_key_button.dart';
 
 import '../../../helpers/semantics.dart';
 import 'call_active_scaffold_harness.dart';
+
+/// [find.byTooltip] matches only flutter/material's Tooltip, and the app's
+/// tooltips are material_ui's.
+Finder _findTooltip(String message) =>
+    find.byWidgetPredicate((widget) => widget is Tooltip && widget.message == message);
 
 void main() {
   late MockCallBloc callBloc;
@@ -314,8 +319,8 @@ void main() {
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [call], focusedCall: call));
       final context = tester.element(find.byType(CallActiveScaffold));
 
-      expect(find.byTooltip(context.l10n.call_CallActionsTooltip_cameraPermissionDenied), findsOneWidget);
-      expect(find.byTooltip(context.l10n.call_CallActionsTooltip_enableCamera), findsNothing);
+      expect(_findTooltip(context.l10n.call_CallActionsTooltip_cameraPermissionDenied), findsOneWidget);
+      expect(_findTooltip(context.l10n.call_CallActionsTooltip_enableCamera), findsNothing);
       await teardownCallScaffold(tester);
     });
 

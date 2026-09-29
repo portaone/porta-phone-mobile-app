@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class GroupTitleListStyle with Diagnosticable {
   const GroupTitleListStyle({this.textStyle, this.background});
