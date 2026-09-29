@@ -3,6 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:quiver/collection.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 
+import 'package:text_entities/text_entities.dart';
+
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
@@ -18,8 +20,9 @@ class MessageBody extends StatefulWidget {
 }
 
 class _MessageBodyState extends State<MessageBody> {
-  static final previewsCache = LruMap<String, OgPreview>(maximumSize: 100);
-  OgPreview? preview;
+  static final previewsCache = LruMap<String, LinkPreview>(maximumSize: 100);
+  LinkPreview? preview;
+  Uri? _previewUrl;
 
   @override
   void initState() {
@@ -34,21 +37,26 @@ class _MessageBodyState extends State<MessageBody> {
   }
 
   void findLink(String text) {
-    final match = RegExp(linkRegex, caseSensitive: false).stringMatch(text);
+    final url = firstLink(text)?.uri;
+    _previewUrl = url;
 
-    if (match != null) {
-      if (previewsCache[match] != null) {
-        preview = previewsCache[match];
-        if (mounted) setState(() {});
-      } else {
-        OgPreview.get(match).then((value) {
-          if (value != null) previewsCache[match] = value;
-          if (mounted) setState(() => preview = value);
-        });
-      }
-    } else {
+    if (url == null) {
       if (mounted) setState(() => preview = null);
+      return;
     }
+
+    final cached = previewsCache[url.toString()];
+    if (cached != null) {
+      preview = cached;
+      if (mounted) setState(() {});
+      return;
+    }
+
+    fetchLinkPreview(url).then((value) {
+      if (value != null) previewsCache[url.toString()] = value;
+      // The text may have changed while the fetch ran; only the current link's preview is shown.
+      if (mounted && _previewUrl == url) setState(() => preview = value);
+    });
   }
 
   @override
