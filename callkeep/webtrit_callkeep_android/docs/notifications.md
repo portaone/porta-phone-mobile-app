@@ -48,13 +48,13 @@ its users - `PhoneConnection` and `ConnectionServicePerformBroadcaster` - run in
 lives; the main-process `ActiveCallService` never reads it and only sees the copy serialized
 into each start intent.
 
-| Method                                   | Action                                                                     |
-|------------------------------------------|----------------------------------------------------------------------------|
-| `showIncomingCallNotification(metadata)` | Starts `IncomingCallService` with the call data                            |
-| `cancelIncomingNotification(answered)`   | Releases `IncomingCallService` via an internal broadcast (answer/decline)  |
-| `showActiveCallNotification(id, meta)`   | Adds/moves the call to the head of `activeCalls`, then upserts the service |
-| `cancelActiveCallNotification(id)`       | Removes the call from `activeCalls`, then upserts the service              |
-| `tearDown()`                             | Stops both notification services                                           |
+| Method                                       | Action                                                                                                            |
+|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `showIncomingCallNotification(metadata)`     | Starts `IncomingCallService` with the call data                                                                   |
+| `cancelIncomingNotification(callId, reason)` | Releases `IncomingCallService` for that call via an internal broadcast; a service showing another call ignores it |
+| `showActiveCallNotification(id, meta)`       | Adds/moves the call to the head of `activeCalls`, then upserts the service                                        |
+| `cancelActiveCallNotification(id)`           | Removes the call from `activeCalls`, then upserts the service                                                     |
+| `tearDown()`                                 | Stops both notification services                                                                                  |
 
 The private `upsertActiveCallsService()` implements the active-call lifecycle: while
 `activeCalls` is non-empty it (re)starts `ActiveCallService` with the full list serialized

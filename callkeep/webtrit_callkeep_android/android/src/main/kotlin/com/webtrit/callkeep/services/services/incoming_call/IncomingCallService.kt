@@ -17,6 +17,7 @@ import com.webtrit.callkeep.PDelegateBackgroundRegisterFlutterApi
 import com.webtrit.callkeep.PDelegateBackgroundServiceFlutterApi
 import com.webtrit.callkeep.R
 import com.webtrit.callkeep.common.AssetCacheManager
+import com.webtrit.callkeep.common.CallDataConst
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.PendingBroadcastQueue
@@ -72,7 +73,8 @@ class IncomingCallService :
     // Guards against a repeat when ActiveCallService is restarted or re-delivered its intent.
     private var hasYieldedNotification = false
 
-    // Receives IC_RELEASE_HANDED_OVER / IC_RELEASE_ENDED from release().
+    // Receives IC_RELEASE_HANDED_OVER / IC_RELEASE_ENDED from release(), each naming its call;
+    // see onReleaseRequested for why a release for another call is ignored.
     // Registered in onCreate() and unregistered in onDestroy() so it only lives while the
     // service is alive. If the service is not running the broadcast goes nowhere — no zombie
     // restart, no placeholder notification appearing after the call ends.
@@ -82,11 +84,18 @@ class IncomingCallService :
                 context: Context?,
                 intent: Intent?,
             ) {
-                when (intent?.action) {
-                    IncomingCallRelease.IC_RELEASE_ENDED.name -> handleRelease(answered = false)
-                    IncomingCallRelease.IC_RELEASE_HANDED_OVER.name -> handleRelease(answered = true)
-                    IC_ACTIVE_CALL_VISIBLE -> yieldNotificationToActiveCall()
+                val action = intent?.action ?: return
+                if (action == IC_ACTIVE_CALL_VISIBLE) {
+                    yieldNotificationToActiveCall()
+                    return
                 }
+                val reason = IncomingCallRelease.entries.firstOrNull { it.name == action } ?: return
+                val callId = intent.getStringExtra(CallDataConst.CALL_ID)
+                if (callId == null) {
+                    Log.e(TAG, "release $reason without a callId ignored")
+                    return
+                }
+                onReleaseRequested(callId, reason)
             }
         }
 
@@ -121,6 +130,13 @@ class IncomingCallService :
         // teardown.
         if (event == CallLifecycleEvent.AnswerCall) {
             val metadata = data?.let(CallMetadata::fromBundleOrNull) ?: return
+            // Another call being answered (e.g. a replay of an active call's state) says nothing
+            // about the call this service is ringing.
+            val owned = callLifecycleHandler.currentCallData?.callId
+            if (metadata.callId != owned) {
+                Log.i(TAG, "AnswerCall for ${metadata.callId} ignored: this service shows $owned")
+                return
+            }
             // Covers answers that never touch our notification: the system call UI, a Bluetooth
             // headset, a watch, Android Auto.
             dropAnswerActions()
@@ -377,7 +393,7 @@ class IncomingCallService :
             // notification, so the ringing UI is never visible to the user.
             incomingCallHandler.handle(metadata)
             callLifecycleHandler.currentCallData = metadata.toPCallkeepIncomingCallData()
-            handleRelease(answered = false)
+            handleRelease(IncomingCallRelease.IC_RELEASE_ENDED)
             return START_NOT_STICKY
         }
         timeoutHandler.removeCallbacks(stopTimeoutRunnable)
@@ -409,8 +425,40 @@ class IncomingCallService :
         return START_NOT_STICKY
     }
 
+    /**
+     * The one place that decides whether a release concerns this service.
+     *
+     * The release is broadcast on the end of any call - an outgoing or active one, a second
+     * incoming call Telecom refused - and this service shows exactly one call. Acting on a
+     * release for another call tore down the ringing call's notification, foreground state and
+     * push session while that call was still ringing, so only a release naming the call on
+     * screen is acted on. Senders must name their call; they need not know which call is shown.
+     *
+     * Before IC_INITIALIZE the service has no call yet: the release is parked in
+     * [PendingBroadcastQueue] and [handleLaunch] consumes it for the matching call.
+     */
+    private fun onReleaseRequested(
+        callId: String,
+        reason: IncomingCallRelease,
+    ) {
+        when (val owned = callLifecycleHandler.currentCallData?.callId) {
+            null -> {
+                Log.i(TAG, "release $reason for $callId before any call is shown: parked")
+                PendingBroadcastQueue.post(PendingBroadcastQueue.incomingReleaseKey(callId))
+            }
+
+            callId -> {
+                handleRelease(reason)
+            }
+
+            else -> {
+                Log.i(TAG, "release $reason for $callId ignored: this service shows $owned")
+            }
+        }
+    }
+
     // Handles the RELEASE action and cancels the timeout
-    private fun handleRelease(answered: Boolean = false): Int {
+    private fun handleRelease(reason: IncomingCallRelease): Int {
         if (isReleased) {
             Log.w(TAG, "handleRelease: already released, ignoring duplicate invocation")
             return START_NOT_STICKY
@@ -428,9 +476,9 @@ class IncomingCallService :
         timeoutHandler.removeCallbacks(independentTimeoutRunnable)
         timeoutHandler.removeCallbacks(stopTimeoutRunnable)
         timeoutHandler.postDelayed(stopTimeoutRunnable, SERVICE_TIMEOUT_MS)
-        if (answered) {
-            // The call was answered. The background isolate is no longer needed for signaling —
-            // the main process takes over the active-call session. Release resources immediately.
+        if (reason == IncomingCallRelease.IC_RELEASE_HANDED_OVER) {
+            // Nothing is left for the push isolate to tell the server (the call was answered and
+            // the main process owns it, or it is already gone). Release resources immediately.
             callLifecycleHandler.release()
         } else {
             // The call was declined or hung up before being answered.
@@ -560,8 +608,12 @@ class IncomingCallService :
         // Stopping the service immediately would destroy the isolate, which can be critical if the signaling layer
         // still needs to be notified about the disconnection.
         // Instead, we initiate communication with the Flutter side and delay stopping the service to ensure a graceful shutdown.
+        //
+        // [callId] is the call whose incoming phase is over. It is required: the service acts
+        // only on a release for the call it shows (see onReleaseRequested).
         fun release(
             context: Context,
+            callId: String,
             type: IncomingCallRelease,
         ) {
             // Deliver via broadcast instead of startService().
@@ -573,8 +625,12 @@ class IncomingCallService :
             // sendInternalBroadcast() uses setPackage(packageName) + FLAG_RECEIVER_FOREGROUND,
             // so it crosses the :callkeep_core → main-process boundary safely and is
             // delivered only to this app.
-            context.sendInternalBroadcast(type.name, permission = releaseBroadcastPermission(context))
-            Log.d(TAG, "Release action $type initiated via broadcast.")
+            context.sendInternalBroadcast(
+                type.name,
+                Bundle().apply { putString(CallDataConst.CALL_ID, callId) },
+                permission = releaseBroadcastPermission(context),
+            )
+            Log.d(TAG, "Release action $type for $callId initiated via broadcast.")
         }
 
         /**
