@@ -134,4 +134,37 @@ void main() {
       expect(callkeep.released, isEmpty);
     });
   });
+
+  group('more than one call on the session', () {
+    test('another call hanging up keeps the session on its own call', () async {
+      var ended = false;
+      final session = manager.run(owner)..whenComplete(() => ended = true);
+      signaling.handshake([(callId: 'c1', caller: '555002'), (callId: 'c2', caller: '555003')]);
+
+      signaling.hangup('c2', line: 1);
+      await settle();
+
+      expect(ended, isFalse, reason: 'c1 still rings; the session must hear its hangup');
+      expect(callkeep.released, ['c2'], reason: 'the other call is ended natively');
+      expect(callkeep.handedOff, isEmpty, reason: 'c1 must not be handed off while it rings');
+
+      signaling.hangup('c1');
+      await session;
+
+      expect(callkeep.released, ['c2', 'c1']);
+    });
+
+    test('the own call not on line 0 is still found and handed off', () async {
+      final session = manager.run(owner);
+      signaling.handshake([(callId: 'c2', caller: '555003'), (callId: 'c1', caller: '555002')]);
+
+      signaling.activityTookOver();
+      await session;
+      await manager.close().catchError((_) {});
+      await settle();
+
+      expect(callkeep.handedOff, ['c1']);
+      expect(callkeep.released, isEmpty, reason: 'releasing c1 would decline a call that still rings');
+    });
+  });
 }
