@@ -84,10 +84,10 @@ to `CallLifecycleHandler.performAnswerCall()`. `DeclineCall` and `HungUp` are ha
 
 `BackgroundPushNotificationIsolateBootstrapApi` (registered in `WebtritCallkeepPlugin`):
 
-| Method                                                            | Description                                 |
-|-------------------------------------------------------------------|---------------------------------------------|
-| `initializePushNotificationCallback(callbackDispatcher, onNotificationSync)` | Stores the two Dart entry-point handles |
-| `reportNewIncomingCall(callId, handle, displayName, hasVideo)`    | Builds `CallMetadata` and routes it into `CallkeepCore.startIncomingCall()` (Telecom registration; `IncomingCallService` starts later, from the connection callback) |
+| Method                                                                       | Description                                                                                                                                                          |
+|------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `initializePushNotificationCallback(callbackDispatcher, onNotificationSync)` | Stores the two Dart entry-point handles                                                                                                                              |
+| `reportNewIncomingCall(callId, handle, displayName, hasVideo)`               | Builds `CallMetadata` and routes it into `CallkeepCore.startIncomingCall()` (Telecom registration; `IncomingCallService` starts later, from the connection callback) |
 
 ---
 
