@@ -122,12 +122,17 @@ class CallState with _$CallState {
   /// would silence the conference for everyone still in it because somebody
   /// left. Once that hold resolves the flag is gone either way, so a hold the
   /// server refused leaves an ordinary live call the room does stand aside for.
+  ///
+  /// And so is a call held back silent until a resume
+  /// ([CallTransition.releasedFromRoom]): nobody hears it and it hears nobody,
+  /// so it is not a conversation the host is in, and a room standing aside for
+  /// it would leave him hearing nothing at all.
   Iterable<ActiveCall> get liveCallsOutsideRoom => activeCalls.where(
     (call) =>
         !conference.isLeg(call.callId) &&
         call.wasAccepted &&
         !call.held &&
-        !call.leavingRoom &&
+        call.transition == null &&
         !call.wasHungUp &&
         call.processingStatus != CallProcessingStatus.disconnecting,
   );
@@ -157,6 +162,83 @@ class CallState with _$CallState {
     final selected = selectedCallId == null ? null : retrieveActiveCall(selectedCallId!);
     if (selected != null && !(conference.isPresent && selected.wasAccepted)) return selected;
     return _callTheRoomIsParkedFor ?? _firstLeg ?? selected ?? activeCalls.current;
+  }
+
+  /// What the server's [participants] list means for the room: the membership
+  /// after it, and every difference from what this client holds.
+  ///
+  /// Pure counting, kept apart from acting on it, because the order the
+  /// results are acted on in is a rule of its own - the group is re-declared
+  /// before any hold, since a hold on a member is refused and a leg can only
+  /// leave a group declared without it.
+  ConferenceMembershipPlan membershipFrom(List<ConferenceParticipant> participants) {
+    final listed = {for (final participant in participants) participant.callId};
+    final vanished = conference.legIds.where((callId) => !listed.contains(callId)).toList();
+    // The server un-holds a leg as it joins, so the flag on the call follows
+    // it; nothing is asked of the operating system for this.
+    final unheld = [
+      for (final call in activeCalls)
+        if (listed.contains(call.callId) && call.held) call.callId,
+    ];
+    // The list is the server's account of the room; the legs are this client's
+    // own record, and it records only calls it has. A participant whose call
+    // this client no longer holds would otherwise become a leg with nothing
+    // behind it: a nameless row whose controls do nothing, and a call id the
+    // OS does not know in the group this client declares, which fails the
+    // grouping for every other leg with it.
+    final legs = {
+      for (final entry in conference.legs.entries)
+        if (listed.contains(entry.key)) entry.key: entry.value,
+      for (final participant in participants)
+        if (retrieveActiveCall(participant.callId) != null) participant.callId: participant.line,
+    };
+    return ConferenceMembershipPlan(
+      legs: legs,
+      adopted: legs.keys.where((callId) => !conference.legs.containsKey(callId)).toList(),
+      vanished: vanished,
+      unheld: unheld,
+      muteChanges: {
+        for (final participant in participants)
+          if (participant.muted != conference.participantMuted(participant.callId) ||
+              !conference.isReady(participant.callId) && participant.muted)
+            participant.callId: participant.muted,
+        // A leg that is no longer in the room is no longer muted by it.
+        for (final callId in vanished)
+          if (conference.participantMuted(callId)) callId: false,
+      },
+    );
+  }
+
+  /// What the room's own connection is to carry, in both directions.
+  ///
+  /// Two independent reasons meet here and nowhere else: the host's own mute,
+  /// which is his to set and the panel to show, and the room standing aside
+  /// for a call outside it, which silences both directions rather than one.
+  /// The room speaks only when neither holds it back, so a mute set before an
+  /// outside call outlives it with nothing to restore.
+  CallAudio get roomAudio =>
+      CallAudio(microphone: !conference.selfMuted && !conferenceMustPark, audible: !conferenceMustPark);
+
+  /// What [callId]'s own connection is to carry, in both directions.
+  ///
+  /// The one rule for who is heard, read off the state rather than commanded
+  /// where the state changes: the same call is silenced and restored from
+  /// several paths - joining a room, being dropped from one, a mute, a room
+  /// given up - and a path that forgot would leave a connection carrying what
+  /// nobody meant it to.
+  ///
+  /// A call the room handed back and nobody has resumed yet carries nothing
+  /// either ([CallTransition.releasedFromRoom]): the room is gone but the host
+  /// is still on a call outside it, so the leg stays silent until the resume
+  /// lands.
+  CallAudio audioFor(String callId) {
+    final call = retrieveActiveCall(callId);
+    if (call == null) return const CallAudio.silent();
+    if (call.transition == CallTransition.releasedFromRoom) return const CallAudio.silent();
+    // A leg speaks and listens through the room's connection; its own one
+    // carries nothing, or the host would be heard twice and hear himself.
+    if (isConferenced(callId)) return const CallAudio.silent();
+    return CallAudio(microphone: !call.muted, audible: true);
   }
 
   /// While the room stands aside for a call outside it, that call is what the

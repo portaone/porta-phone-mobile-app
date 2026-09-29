@@ -64,6 +64,7 @@ class PhoneConnectionTerminateTest {
             dispatcher = dispatcher,
             metadata = CallMetadata(callId = callId),
             onDisconnect = onDisconnectCallback,
+            callGroup = TelecomCallGroup { emptyList() },
         )
 
     // -------------------------------------------------------------------------

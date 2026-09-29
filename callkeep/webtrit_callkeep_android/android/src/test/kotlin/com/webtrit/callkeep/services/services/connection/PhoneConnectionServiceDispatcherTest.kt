@@ -66,6 +66,7 @@ class PhoneConnectionServiceDispatcherTest {
             dispatcher = captureDispatcher,
             metadata = CallMetadata(callId = callId),
             onDisconnect = {},
+            callGroup = TelecomCallGroup { emptyList() },
         )
 
     // -------------------------------------------------------------------------

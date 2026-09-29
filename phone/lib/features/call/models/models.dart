@@ -2,9 +2,12 @@ export 'package:flutter_webrtc/flutter_webrtc.dart' show RTCVideoRenderer;
 
 export 'active_call.dart';
 export 'blind_transfer_purpose.dart';
+export 'call_audio.dart';
 export 'call_audio_device.dart';
 export 'call_display.dart';
+export 'call_transition.dart';
 export 'call_network_quality.dart';
+export 'conference_membership_plan.dart';
 export 'conference_state.dart';
 export 'conversation_target.dart';
 export 'ice_connection_issue.dart';

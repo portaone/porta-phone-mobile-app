@@ -472,12 +472,18 @@ class FakeRtpSender extends Fake implements RTCRtpSender {
   /// Every track put on the sender since it was created, `null` included.
   final List<MediaStreamTrack?> replaced = [];
 
+  /// While set, [replaceTrack] records the request and then waits for this to
+  /// complete before taking effect - so a test can read what else has already
+  /// happened while the sender is still being changed.
+  Completer<void>? gate;
+
   @override
   MediaStreamTrack? get track => _track;
 
   @override
   Future<void> replaceTrack(MediaStreamTrack? track) async {
     replaced.add(track);
+    await gate?.future;
     _track = track;
   }
 }

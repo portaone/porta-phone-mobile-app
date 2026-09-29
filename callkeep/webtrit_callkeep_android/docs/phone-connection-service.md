@@ -117,7 +117,7 @@ calls become the group and every other call leaves it. An empty list names no gr
 nothing. `UnsetCallGroup` takes only the named calls out. One call is not a group, so any
 membership that would leave a single call in it leaves nobody in it - the same rule the
 standalone backend applies - and that covers both a membership of one and the last member
-disconnecting on its own (`PhoneConnection.onStateChanged` -> `releaseFromCallGroup`).
+disconnecting on its own (`PhoneConnection.onStateChanged` -> `TelecomCallGroup.release`).
 
 Membership is all that changes. A call crossing the boundary in either direction is left in the
 state Telecom put it in, held or active: a member carries the room whichever state Telecom keeps
@@ -140,6 +140,23 @@ gone.
 The pre-dial hang-up of an active connection in `startOutgoingCall()` never takes a group
 member: the group is what Telecom holds for the new call.
 
+### The group's hold around a call outside it
+
+The membership and the hold the members share live in `TelecomCallGroup`, one instance per
+process, owned by `ConnectionManager` (`connectionManager.callGroup`) and handed to every
+`PhoneConnection` through its factory. Neither the connection nor the service reaches the other
+for it.
+
+Before a call outside the group goes active - established, answered or taken off hold - its
+connection asks the group to hold every active member (`hold()`) and goes active only after
+`TelecomCallGroup.FOCUS_SETTLE_MS`, once Telecom's focus has left them
+(`activateAfterFocusSettles()`); with no active member of ours left there is nothing for
+Telecom's arbitration to end (EMUI 12 disconnected a held member otherwise). When that call is
+held or ends, `resumeLater()` makes one member active again after the same wait, unless another
+call outside the group is still active or waiting. A hold or an end of the waiting call calls its
+activation off (`cancelActivation()`). The members' hold is Telecom's bookkeeping only; the room
+keeps its audio and the application is not told.
+
 ## Event Dispatch
 
 All events sent to the main process go through `performEventHandle()`, which calls
@@ -152,6 +169,7 @@ See [ipc-broadcasting.md](ipc-broadcasting.md) for the full event catalogue.
 | Class                              | Role                                                                            |
 |------------------------------------|---------------------------------------------------------------------------------|
 | `ConnectionManager`                | Stores `PhoneConnection` instances and pending/terminated state                 |
+| `TelecomCallGroup`                 | The call group on those connections and the hold it shares with outside calls   |
 | `PhoneConnectionServiceDispatcher` | Routes lifecycle actions to the correct `PhoneConnection`                       |
 | `ActivityWakelockManager`          | Acquires/releases wake lock for incoming calls                                  |
 | `ProximitySensorManager`           | Manages proximity sensor for in-ear audio routing                               |

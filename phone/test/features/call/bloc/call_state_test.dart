@@ -586,6 +586,62 @@ void main() {
       expect(state.conferencedCallIds, ['leg-a', 'leg-b']);
     });
 
+    test('membershipFrom counts the server list against what the client holds', () {
+      // The list names a leg this client has, a call it has but never recorded
+      // as a leg, and a participant it has no call for at all - and stops
+      // naming leg-b.
+      final plan = state.membershipFrom(const [
+        ConferenceParticipant(line: 0, callId: 'leg-a', muted: true),
+        ConferenceParticipant(line: 2, callId: 'outside'),
+        ConferenceParticipant(line: 3, callId: 'unknown'),
+      ]);
+
+      expect(plan.legs, {'leg-a': 0, 'outside': 2}, reason: 'a participant with no call behind it is not a leg');
+      expect(plan.adopted, ['outside'], reason: 'the server counts it in the mix, so its connection must go quiet');
+      expect(plan.vanished, ['leg-b'], reason: 'a leg the list no longer names is a call again');
+      expect(plan.unheld, ['outside'], reason: 'the server un-holds a leg as it joins, with no event for it');
+      expect(plan.muteChanges, {'leg-a': true}, reason: 'only what changed is worth telling a leg');
+    });
+
+    test('roomAudio holds the two reasons a room goes quiet, and keeps them apart', () {
+      // A mute is the host's own and closes one direction; standing aside for a
+      // call outside the room closes both. They meet in one intent and stay
+      // independent causes - which is what lets a mute outlive the call.
+      final muted = room.copyWith(selfMuted: true);
+      expect(state.roomAudio, const CallAudio(microphone: true, audible: true));
+      expect(state.copyWith(conference: muted).roomAudio, const CallAudio(microphone: false, audible: true));
+
+      final aside = state.copyWith(activeCalls: [legA, legB, outside.copyWith(held: false)]);
+      expect(aside.roomAudio, const CallAudio.silent(), reason: 'standing aside closes both directions');
+      expect(aside.copyWith(conference: muted).roomAudio, const CallAudio.silent());
+      expect(
+        state.copyWith(conference: muted).roomAudio,
+        const CallAudio(microphone: false, audible: true),
+        reason: 'the mute set before that call outlives it, with nothing to restore',
+      );
+    });
+
+    test('audioFor says what each connection carries, and a leg carries nothing', () {
+      // One rule for who is heard, read off the state: a leg speaks and listens
+      // through the room's own connection, so its own one carries nothing - or
+      // the host would be heard twice and hear himself.
+      expect(state.audioFor('leg-a'), const CallAudio.silent());
+      expect(state.audioFor('outside'), const CallAudio(microphone: true, audible: true));
+      expect(
+        state.copyWithMappedActiveCall('outside', (call) => call.copyWith(muted: true)).audioFor('outside'),
+        const CallAudio(microphone: false, audible: true),
+        reason: 'a muted call still hears the far end',
+      );
+      expect(
+        state
+            .copyWithMappedActiveCall('outside', (call) => call.copyWith(transition: CallTransition.releasedFromRoom))
+            .audioFor('outside'),
+        const CallAudio.silent(),
+        reason: 'a leg the room handed back stays silent until its resume lands',
+      );
+      expect(state.audioFor('gone'), const CallAudio.silent(), reason: 'no call to carry it');
+    });
+
     test('otherCallIds leaves the legs out', () {
       final incoming = _makeCall(callId: 'incoming', line: 3, processingStatus: CallProcessingStatus.incomingFromOffer);
       final withIncoming = state.copyWith(activeCalls: [legA, legB, outside, incoming]);

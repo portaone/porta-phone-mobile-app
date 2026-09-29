@@ -13,6 +13,10 @@
 
 static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
 
+/// How long after CallKit activates the audio session an unrequested unmute is taken for the
+/// session coming back up rather than for a person - see performSetMutedCallAction.
+static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
+
 @interface WebtritCallkeepPlugin ()<PKPushRegistryDelegate, CXProviderDelegate, CXCallObserverDelegate, WTPPushRegistryHostApi, WTPHostApi, WTPHostSoundApi>
 @end
 
@@ -29,6 +33,15 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
   NSMutableSet<NSUUID *> *_answeringCallUuids;
   // Group actions this plugin asked CallKit for, by action UUID, until CallKit answers them.
   NSMutableSet<NSUUID *> *_requestedGroupActionUuids;
+  // The calls of the current group, and this plugin's own hold changes on them by action UUID
+  // until the delegate performs them - see "Group hold".
+  NSMutableSet<NSUUID *> *_groupMemberUuids;
+  NSMutableSet<NSUUID *> *_groupHoldActionUuids;
+  // Mute actions this plugin asked CallKit for, by action UUID; the calls last known muted; and
+  // when CallKit last activated the audio session - see performSetMutedCallAction.
+  NSMutableSet<NSUUID *> *_ownMuteActionUuids;
+  NSMutableSet<NSUUID *> *_mutedCallUuids;
+  CFAbsoluteTime _audioSessionActivatedAt;
   BOOL _callWaitingToneOwnCallsOnly;
   CXCallController *_callController;
   BOOL _driveIdleTimerDisabled;
@@ -61,6 +74,10 @@ static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
     _videoCallUuids = [NSMutableSet set];
     _answeringCallUuids = [NSMutableSet set];
     _requestedGroupActionUuids = [NSMutableSet set];
+    _groupMemberUuids = [NSMutableSet set];
+    _groupHoldActionUuids = [NSMutableSet set];
+    _ownMuteActionUuids = [NSMutableSet set];
+    _mutedCallUuids = [NSMutableSet set];
     _callWaitingToneOwnCallsOnly = YES;
   }
   return self;
@@ -372,9 +389,11 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
     action.contactIdentifier = displayNameOrContactIdentifier;
   }
   action.video = video;
-  CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+  NSMutableArray<CXAction *> *actions = [[self holdActionsForGroup:_groupMemberUuids onHold:YES] mutableCopy];
+  [actions addObject:action];
+  CXTransaction *transaction = [[CXTransaction alloc] initWithActions:actions];
 
-  [self requestTransaction:transaction completion:^(WTPCallRequestError *pigeonError, FlutterError *flutterError) {
+  [self requestGroupHoldTransaction:transaction completion:^(WTPCallRequestError *pigeonError, FlutterError *flutterError) {
     if (pigeonError == nil && flutterError == nil) {
       CXCallUpdate *callUpdate = [[CXCallUpdate alloc] init];
       callUpdate.remoteHandle = action.handle;
@@ -400,9 +419,10 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   NSLog(@"[Callkeep][answerCall] uuidString = %@", uuidString);
 #endif
   CXAnswerCallAction *action = [[CXAnswerCallAction alloc] initWithCallUUID:[[NSUUID alloc] initWithUUIDString:uuidString]];
-  CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+  NSMutableArray<CXAction *> *actions = [[self holdActionsForGroup:_groupMemberUuids onHold:YES] mutableCopy];
+  [actions addObject:action];
 
-  [self requestTransaction:transaction completion:completion];
+  [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:actions] completion:completion];
 }
 
 - (void)setSpeaker:(NSString *)uuidString
@@ -418,10 +438,15 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
 #ifdef DEBUG
   NSLog(@"[Callkeep][endCall] uuidString = %@", uuidString);
 #endif
-  CXEndCallAction *action = [[CXEndCallAction alloc] initWithCallUUID:[[NSUUID alloc] initWithUUIDString:uuidString]];
-  CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+  NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:uuidString];
+  NSMutableArray<CXAction *> *actions = [NSMutableArray arrayWithObject:[[CXEndCallAction alloc] initWithCallUUID:uuid]];
+  if (![_groupMemberUuids containsObject:uuid] && ![self isCallOutsideGroup:_groupMemberUuids activeIgnoring:uuid]) {
+    // Resumed in the same transaction rather than after the end is seen: in between CallKit has
+    // no active call, deactivates the audio session and brings it straight back.
+    [actions addObjectsFromArray:[self holdActionsForGroup:_groupMemberUuids onHold:NO]];
+  }
 
-  [self requestTransaction:transaction completion:completion];
+  [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:actions] completion:completion];
 }
 
 - (void)setHeld:(NSString *)uuidString
@@ -430,11 +455,22 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
 #ifdef DEBUG
   NSLog(@"[Callkeep][setHeld] uuidString = %@ held = %d", uuidString, onHold);
 #endif
-  CXSetHeldCallAction *action = [[CXSetHeldCallAction alloc] initWithCallUUID:[[NSUUID alloc] initWithUUIDString:uuidString]
-                                                                       onHold:onHold];
-  CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+  NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:uuidString];
+  CXSetHeldCallAction *action = [[CXSetHeldCallAction alloc] initWithCallUUID:uuid onHold:onHold];
+  NSMutableArray<CXAction *> *actions = [NSMutableArray arrayWithObject:action];
+  if (![_groupMemberUuids containsObject:uuid]) {
+    // Resuming this call takes the active place from the group; holding it gives the place
+    // back unless another call outside the group still holds it.
+    BOOL groupOnHold = !onHold || [self isCallOutsideGroup:_groupMemberUuids activeIgnoring:uuid];
+    NSArray<CXAction *> *groupActions = [self holdActionsForGroup:_groupMemberUuids onHold:groupOnHold];
+    if (onHold) {
+      [actions addObjectsFromArray:groupActions];
+    } else {
+      [actions insertObjects:groupActions atIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, groupActions.count)]];
+    }
+  }
 
-  [self requestTransaction:transaction completion:completion];
+  [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:actions] completion:completion];
 }
 
 - (void)setMuted:(NSString *)uuidString
@@ -446,8 +482,16 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   CXSetMutedCallAction *action = [[CXSetMutedCallAction alloc] initWithCallUUID:[[NSUUID alloc] initWithUUIDString:uuidString]
                                                                           muted:muted];
   CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+  [_ownMuteActionUuids addObject:action.UUID];
 
-  [self requestTransaction:transaction completion:completion];
+  __weak typeof(self) weakSelf = self;
+  [self requestTransaction:transaction completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+    typeof(self) strongSelf = weakSelf;
+    if (strongSelf != nil && (error != nil || flutterError != nil)) {
+      [strongSelf->_ownMuteActionUuids removeObject:action.UUID];
+    }
+    completion(error, flutterError);
+  }];
 }
 
 - (void)sendDTMF:(NSString *)uuidString
@@ -532,7 +576,20 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
     }
     [actions addObject:[[CXSetGroupCallAction alloc] initWithCallUUID:uuid callUUIDToGroupWith:anchor]];
   }
-  [self requestGroupTransaction:[[CXTransaction alloc] initWithActions:actions] forCallUUIDs:uuids completion:completion];
+  NSSet<NSUUID *> *members = [NSSet setWithArray:uuids];
+  BOOL otherCallIsActive = [self isCallOutsideGroup:members activeIgnoring:nil];
+  NSArray<CXAction *> *holdActions = [self holdActionsForGroup:members onHold:otherCallIsActive];
+  [actions addObjectsFromArray:holdActions];
+  [self requestGroupTransaction:[[CXTransaction alloc] initWithActions:actions] forCallUUIDs:uuids completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+    if (error == nil && flutterError == nil) {
+      [self->_groupMemberUuids setSet:members];
+    } else {
+      for (CXAction *action in holdActions) {
+        [self->_groupHoldActionUuids removeObject:action.UUID];
+      }
+    }
+    completion(error, flutterError);
+  }];
 }
 
 - (void)unsetCallGroup:(NSArray<NSString *> *)uuidStrings
@@ -560,7 +617,17 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
     [self setGroupingAllowed:NO ungrouping:YES forCallUUID:uuid];
     [actions addObject:[[CXSetGroupCallAction alloc] initWithCallUUID:uuid callUUIDToGroupWith:nil]];
   }
-  [self requestGroupTransaction:[[CXTransaction alloc] initWithActions:actions] forCallUUIDs:uuids completion:completion];
+  // The members leave the group's hold only once CallKit has taken them out of the group: a
+  // refused ungrouping leaves the group standing in CallKit, and the next call outside it still
+  // has to hold it.
+  [self requestGroupTransaction:[[CXTransaction alloc] initWithActions:actions] forCallUUIDs:uuids completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+    if (error == nil && flutterError == nil) {
+      for (NSUUID *uuid in uuids) {
+        [self->_groupMemberUuids removeObject:uuid];
+      }
+    }
+    completion(error, flutterError);
+  }];
 }
 
 /// Requests a grouping transaction and closes the capability window behind it.
@@ -597,6 +664,89 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
     }
     completion(error, flutterError);
   }];
+}
+
+#pragma mark - Group hold
+
+// CallKit keeps one active call and one held call. It knows nothing of rooms: the members of a
+// group are held and resumed like any call, and a group keeps whatever hold each member had
+// before it was grouped. The application does not hold them either - a leg of a room is not
+// held on its own, the room is, and the plugin answers such a request with callIsGrouped. Left
+// alone, a fresh group is one active and one held call, and the next call that goes active
+// makes CallKit end the active member ("Ending current active call ... because call ... is
+// going to go active"): the room loses a participant.
+//
+// So the plugin keeps the members on one hold that follows the calls outside the group: held
+// while one of them is active or going active, resumed once none is. The hold changes ride in
+// the same transaction as whatever changes the calls outside - grouping, starting, answering,
+// holding or resuming a call - and after a call outside ends. They are the plugin's own and are
+// fulfilled without asking the application: they change how the operating system presents the
+// calls, not what the calls do, and a room standing aside for another call is the
+// application's own state already.
+
+/// Whether a call outside [members] is active or going active, leaving [ignored] out. Any call
+/// on the device counts, a cellular one included: CallKit makes room for it the same way.
+- (BOOL)isCallOutsideGroup:(NSSet<NSUUID *> *)members activeIgnoring:(NSUUID *)ignored {
+  for (CXCall *call in _callController.callObserver.calls) {
+    if (call.hasEnded || [members containsObject:call.UUID] || [call.UUID isEqual:ignored]) {
+      continue;
+    }
+    if (!call.isOnHold && (call.hasConnected || call.isOutgoing)) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
+/// The hold changes that put every live member of [members] on [onHold], remembered as the
+/// plugin's own so the delegate fulfils them.
+- (NSArray<CXAction *> *)holdActionsForGroup:(NSSet<NSUUID *> *)members onHold:(BOOL)onHold {
+  NSMutableArray<CXAction *> *actions = [NSMutableArray array];
+  for (CXCall *call in _callController.callObserver.calls) {
+    if (call.hasEnded || ![members containsObject:call.UUID] || call.isOnHold == onHold) {
+      continue;
+    }
+    CXSetHeldCallAction *action = [[CXSetHeldCallAction alloc] initWithCallUUID:call.UUID onHold:onHold];
+    [_groupHoldActionUuids addObject:action.UUID];
+    [actions addObject:action];
+  }
+  return actions;
+}
+
+/// Requests [transaction], forgetting its group hold changes if CallKit refuses it outright -
+/// the delegate is then never asked, so nothing else would.
+- (void)requestGroupHoldTransaction:(CXTransaction *)transaction
+                         completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
+  __weak typeof(self) weakSelf = self;
+  [self requestTransaction:transaction completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+    typeof(self) strongSelf = weakSelf;
+    if (strongSelf != nil && (error != nil || flutterError != nil)) {
+      for (CXAction *action in transaction.actions) {
+        [strongSelf->_groupHoldActionUuids removeObject:action.UUID];
+      }
+    }
+    completion(error, flutterError);
+  }];
+}
+
+/// Gives the active place back to the group once no call outside it has it - after a call
+/// outside ended on the far side, which no request of the application's announces.
+- (void)resumeGroupIfNothingElseIsActive {
+  if (_groupMemberUuids.count == 0 || [self isCallOutsideGroup:_groupMemberUuids activeIgnoring:nil]) {
+    return;
+  }
+  NSArray<CXAction *> *actions = [self holdActionsForGroup:_groupMemberUuids onHold:NO];
+  if (actions.count == 0) {
+    return;
+  }
+  [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:actions]
+                         completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+#ifdef DEBUG
+                           if (error != nil || flutterError != nil) {
+                             NSLog(@"[Callkeep][resumeGroupIfNothingElseIsActive] refused: %@ %@", error, flutterError);
+                           }
+#endif
+                         }];
 }
 
 #pragma mark - WTPHostApi - helpers
@@ -872,6 +1022,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
   // keep the screen awake after CallKit is done with it.
   if (call.hasEnded) {
     [self forgetCall:call.UUID];
+    [self resumeGroupIfNothingElseIsActive];
   }
   [self syncCallWaitingTone:callObserver];
 }
@@ -987,6 +1138,13 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #ifdef DEBUG
   NSLog(@"[Callkeep][CXProviderDelegate][provider:performSetHeldCallAction:]");
 #endif
+  // The plugin's own hold on the members of a group - see "Group hold".
+  if ([_groupHoldActionUuids containsObject:action.UUID]) {
+    [_groupHoldActionUuids removeObject:action.UUID];
+    [_requestedGroupActionUuids removeObject:action.UUID];
+    [action fulfill];
+    return;
+  }
   [_delegateFlutterApi performSetHeld:action.callUUID.UUIDString
                                onHold:action.onHold
                            completion:^(NSNumber *fulfill, FlutterError *error) {
@@ -1002,12 +1160,32 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #ifdef DEBUG
   NSLog(@"[Callkeep][CXProviderDelegate][provider:performSetMutedCallAction:]");
 #endif
+  BOOL own = [_ownMuteActionUuids containsObject:action.UUID];
+  [_ownMuteActionUuids removeObject:action.UUID];
+  // When CallKit activates the audio session again - a call ended on the far side while the
+  // others were held, say - the session comes back with its input unmuted, and CallKit mirrors
+  // that onto the calls: an unmute nobody asked for ("setUplinkMuted false ... userInitiated 0"),
+  // measured 107 and 164 ms after the activation. Passed on, it unmuted a call the user had
+  // muted. So an unmute the plugin did not request, for a call last known muted, arriving that
+  // soon after an activation is refused: CallKit keeps the call muted, and the application never
+  // hears of it. A person unmuting from the system UI or from a headset cannot do it within that
+  // window of a session coming up, and one who somehow did has to press again.
+  if (!own && !action.muted && [_mutedCallUuids containsObject:action.callUUID] &&
+      CFAbsoluteTimeGetCurrent() - _audioSessionActivatedAt < kAudioSessionMuteResyncWindow) {
+    [action fail];
+    return;
+  }
   [_delegateFlutterApi performSetMuted:action.callUUID.UUIDString
                                  muted:action.muted
                             completion:^(NSNumber *fulfill, FlutterError *error) {
                               if (error != nil || [fulfill boolValue] != YES) {
                                 [action fail];
                               } else {
+                                if (action.muted) {
+                                  [self->_mutedCallUuids addObject:action.callUUID];
+                                } else {
+                                  [self->_mutedCallUuids removeObject:action.callUUID];
+                                }
                                 [action fulfill];
                               }
                             }];
@@ -1068,6 +1246,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #ifdef DEBUG
   NSLog(@"[CallKeep][CXProviderDelegate][provider:didActivateAudioSession:]");
 #endif
+  _audioSessionActivatedAt = CFAbsoluteTimeGetCurrent();
   // Pre-warm the call-waiting tone player before the Dart side starts the WebRTC
   // voice-processing engine (playback sources created after it are near-silent).
   [_callWaitingTone onAudioSessionActivated];
@@ -1164,6 +1343,8 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
   }
   [_ownCallUuids removeObject:uuid];
   [_answeringCallUuids removeObject:uuid];
+  [_groupMemberUuids removeObject:uuid];
+  [_mutedCallUuids removeObject:uuid];
   [self setVideo:NO forCallUUID:uuid];
 }
 

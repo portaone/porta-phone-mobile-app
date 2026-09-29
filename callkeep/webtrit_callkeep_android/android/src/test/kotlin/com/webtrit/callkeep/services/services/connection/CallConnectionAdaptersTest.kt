@@ -57,7 +57,7 @@ class CallConnectionAdaptersTest {
 
     @Test
     fun `Telecom lifecycle and media callbacks update the shared connection`() {
-        val phone = PhoneConnection(service, { _, _ -> }, CallMetadata(callId = "a"), {})
+        val phone = PhoneConnection(service, { _, _ -> }, CallMetadata(callId = "a"), {}, ConnectionManager.instance.callGroup)
         phone.setRinging()
         assertEquals(CallConnectionState.RINGING, phone.callConnection.state)
         phone.onAnswer()
@@ -76,17 +76,17 @@ class CallConnectionAdaptersTest {
 
     @Test
     fun `Telecom-only hold stays separate from logical call state`() {
-        val phone = PhoneConnection(service, { _, _ -> }, CallMetadata(callId = "a"), {})
+        val phone = PhoneConnection(service, { _, _ -> }, CallMetadata(callId = "a"), {}, ConnectionManager.instance.callGroup)
         phone.setActive()
-        val other = PhoneConnection(service, { _, _ -> }, CallMetadata(callId = "b"), {})
+        val other = PhoneConnection(service, { _, _ -> }, CallMetadata(callId = "b"), {}, ConnectionManager.instance.callGroup)
         other.setActive()
         ConnectionManager.instance.addConnection("a", phone)
         ConnectionManager.instance.addConnection("b", other)
-        PhoneConnectionService.applyCallGroup(setOf("a", "b"))
+        ConnectionManager.instance.callGroup.apply(setOf("a", "b"))
         phone.onHold()
         assertEquals(Connection.STATE_HOLDING, phone.state)
         assertEquals(CallConnectionState.ACTIVE, phone.callConnection.state)
-        PhoneConnectionService.applyCallGroup(emptySet())
+        ConnectionManager.instance.callGroup.apply(emptySet())
         assertEquals(Connection.STATE_HOLDING, phone.state)
         assertEquals(CallConnectionState.ACTIVE, phone.callConnection.state)
         phone.onHold()

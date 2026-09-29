@@ -6,6 +6,7 @@ import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 import 'call_network_quality.dart';
+import 'call_transition.dart';
 import 'ice_connection_issue.dart';
 import 'jsep_value.dart';
 import 'processing_status.dart';
@@ -40,7 +41,7 @@ class ActiveCall with _$ActiveCall implements CallEntry {
     this.localStream,
     this.remoteStream,
     this.remoteCameraEnabled,
-    this.leavingRoom = false,
+    this.transition,
     this.peerReportedConferenceMute,
     this.peerReportedConferenceHostAway,
     this.speakerOnBeforeMinimize,
@@ -137,17 +138,20 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   @override
   final bool? remoteCameraEnabled;
 
-  /// Whether the room has released this call and the hold that turns it back
-  /// into an ordinary call has not resolved yet.
+  /// What this call is waiting for the server to answer, if anything.
   ///
-  /// It is neither a leg nor yet a call the user went off to, and that
-  /// difference decides whether the room stands aside for it - see
-  /// [CallState.liveCallsOutsideRoom]. Set when the server's participant list
-  /// stops naming it, cleared the moment the hold succeeds or is refused: a
-  /// refused hold leaves an ordinary live call, which the room must stand aside
-  /// for like any other.
+  /// An operation in flight rather than something the call is: it decides
+  /// whether the room stands aside for this call ([CallState.liveCallsOutsideRoom])
+  /// and what its connection carries ([CallState.audioFor]), and each of its
+  /// values says what has to arrive before it is over. `null` is a settled
+  /// call - which is what a refused request leaves behind, since a request the
+  /// server would not take changed nothing.
   @override
-  final bool leavingRoom;
+  final CallTransition? transition;
+
+  /// Whether the room has let this call go and the hold that makes it an
+  /// ordinary one has not been answered; see [CallTransition.leavingRoom].
+  bool get leavingRoom => transition == CallTransition.leavingRoom;
 
   /// What the other party of this call last said about a room-wide mute they
   /// have applied to it, over `peer_message`. `null` until they say anything.

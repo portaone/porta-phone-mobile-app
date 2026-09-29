@@ -44,6 +44,7 @@ class PhoneConnectionSystemMuteTest {
             dispatcher = recording,
             metadata = CallMetadata(callId = "room-leg"),
             onDisconnectCallback = {},
+            callGroup = TelecomCallGroup { emptyList() },
             audioManager = mock(AudioManager::class.java),
         )
 
