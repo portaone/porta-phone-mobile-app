@@ -70,9 +70,16 @@ Future<PushNotificationIsolateManager> _getOrInit(PushIsolateContext context) as
   final localPushRepository = context.localPushRepository;
   _manager = PushNotificationIsolateManager(
     callLogsRepository: context.callLogsRepository,
-    callkeep: BackgroundPushNotificationService(),
-    storage: context.secureStorage,
-    certificates: context.appCertificates.trustedCertificates,
+    callkeep: BackgroundPushSessionCallkeep(),
+    createSignaling: () => WebtritSignalingService(
+      config: SignalingServiceConfig(
+        coreUrl: context.secureStorage.readCoreUrl() ?? '',
+        tenantId: context.secureStorage.readTenantId() ?? '',
+        token: context.secureStorage.readToken() ?? '',
+        trustedCertificates: context.appCertificates.trustedCertificates,
+      ),
+      mode: SignalingServiceMode.pushBound,
+    ),
     logger: Logger('PushNotificationIsolateManager'),
     onMissedCall: (callId, callerName) => localPushRepository.displayPush(
       AppLocalPush.missedCall(
