@@ -22,8 +22,8 @@ object PendingBroadcastQueue {
     /** Returns true and removes the entry if [key] was present, false otherwise. */
     fun consume(key: String): Boolean = queue.remove(key) != null
 
-    /** Key for a pending IC_RELEASE_WITH_DECLINE for [callId]. */
-    fun incomingReleaseKey(callId: String) = "IC_RELEASE_WITH_DECLINE:$callId"
+    /** Key for a pending IC_RELEASE_ENDED for [callId]. */
+    fun incomingReleaseKey(callId: String) = "IC_RELEASE_ENDED:$callId"
 
     /** Removes all pending entries. Intended for use in tests to reset state between cases. */
     @androidx.annotation.VisibleForTesting

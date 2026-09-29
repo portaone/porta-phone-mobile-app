@@ -967,7 +967,7 @@ class ForegroundService :
         // Post a pending release so IncomingCallService.handleLaunch() can detect a stale
         // IC_INITIALIZE that arrives after this call was already terminated. Only posted when
         // IncomingCallService is not yet running — if it is already up, releaseReceiver is
-        // registered and will handle IC_RELEASE_WITH_DECLINE directly. Posting when the service
+        // registered and will handle IC_RELEASE_ENDED directly. Posting when the service
         // is already running creates orphan entries that are never consumed.
         // Must be posted here (main thread) — not in NotificationManager which runs in
         // :callkeep_core and cannot reach this main-process queue.
@@ -1310,7 +1310,7 @@ class ForegroundService :
                 // Push-notification path: tell the background isolate to release its
                 // signaling WebSocket. ActivityHolder.start() already fired from
                 // PhoneConnection.onAnswer() in :callkeep_core.
-                IncomingCallService.release(baseContext, IncomingCallRelease.IC_RELEASE_WITH_ANSWER)
+                IncomingCallService.release(baseContext, IncomingCallRelease.IC_RELEASE_HANDED_OVER)
             }
             notifyFlutter("performAnswerCall") { performAnswerCall(callMetaData.callId) }
         }

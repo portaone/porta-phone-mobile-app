@@ -240,7 +240,7 @@ sequenceDiagram
     else User declines
         User->>SYS: Decline
         SYS->>PCS: onReject -> terminateWithCause(REJECTED)
-        PCS->>ICS: onDisconnect -> release(IC_RELEASE_WITH_DECLINE)
+        PCS->>ICS: onDisconnect -> release(IC_RELEASE_ENDED)
         ICS->>PISO: handleRelease(answered=false) -> performEndCall
         PISO->>WS: DeclineRequest (the push isolate sends the decline)
         Note over ICS: stop service, dismiss UI

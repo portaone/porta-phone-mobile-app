@@ -16,9 +16,9 @@ class NotificationManager {
         IncomingCallService.release(
             context,
             if (answered) {
-                IncomingCallRelease.IC_RELEASE_WITH_ANSWER
+                IncomingCallRelease.IC_RELEASE_HANDED_OVER
             } else {
-                IncomingCallRelease.IC_RELEASE_WITH_DECLINE
+                IncomingCallRelease.IC_RELEASE_ENDED
             },
         )
     }

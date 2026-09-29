@@ -761,7 +761,7 @@ class PhoneConnection internal constructor(
         logger.i("Connection became active for callId: $callId")
         audioManager.stopRingtone()
         audioManager.stopCallWaitingTone()
-        // IncomingCallService release (IC_RELEASE_WITH_ANSWER) is intentionally NOT triggered
+        // IncomingCallService release (IC_RELEASE_HANDED_OVER) is intentionally NOT triggered
         // here from :callkeep_core. ForegroundService.handleCSReportAnswerCall() owns that
         // trigger and sets pendingReleaseCallback before firing it, ensuring performAnswerCall
         // reaches the main Flutter engine only after the background isolate confirms its

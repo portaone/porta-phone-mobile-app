@@ -44,7 +44,7 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
   service `PendingIntent`s (`NotificationAction.Answer` / `Decline`); Answer additionally
   drops the notification buttons right away.
 - Release (the end of the ringing phase) is delivered via an **internal broadcast**
-  (`IC_RELEASE_WITH_ANSWER` / `IC_RELEASE_WITH_DECLINE`), not via `onStartCommand`: the
+  (`IC_RELEASE_HANDED_OVER` / `IC_RELEASE_ENDED`), not via `onStartCommand`: the
   receiver only lives while the service is alive, so a release arriving after the service
   stopped goes nowhere instead of restarting it.
 - Two safety-net timeouts force-stop the service if the normal flow stalls: an independent
@@ -70,7 +70,7 @@ safety-net timeout stops it.
 `CallkeepCore`. It only acts on `AnswerCall` - when the system UI or the user answers,
 `PhoneConnectionService` fires `AnswerCall`, which drops the notification buttons and forwards
 to `CallLifecycleHandler.performAnswerCall()`. `DeclineCall` and `HungUp` are handled via the
-`IC_RELEASE_WITH_DECLINE` broadcast path instead to avoid a double `performEndCall` race.
+`IC_RELEASE_ENDED` broadcast path instead to avoid a double `performEndCall` race.
 
 ### Key Handlers (Composition)
 
