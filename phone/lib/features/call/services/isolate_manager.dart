@@ -3,12 +3,10 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:logging/logging.dart';
 
-import 'package:ssl_certificates/ssl_certificates.dart' show TrustedCertificates;
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:signaling/signaling.dart';
 import 'package:signaling_service/signaling_service.dart';
 
-import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -25,13 +23,13 @@ import '../models/jsep_value.dart';
 /// Call [init] after construction and before [run].
 class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegate {
   PushNotificationIsolateManager({
-    required BackgroundPushNotificationService callkeep,
-    required this.storage,
-    required this.certificates,
+    required PushSessionCallkeep callkeep,
+    required SignalingModule Function() createSignaling,
     required this.logger,
     required Future<void> Function(String callId, String? callerName) onMissedCall,
     this.callLogsRepository,
   }) : _onMissedCall = onMissedCall,
+       _createSignaling = createSignaling,
        _pushService = callkeep {
     // setBackgroundServiceDelegate is called in the constructor so callkeep can
     // route performAnswerCall / performEndCall as soon as the object exists,
@@ -41,11 +39,10 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
 
   final Logger logger;
   final CallLogsRepository? callLogsRepository;
-  final SecureStorage storage;
-  final TrustedCertificates certificates;
   final Future<void> Function(String callId, String? callerName) _onMissedCall;
+  final SignalingModule Function() _createSignaling;
 
-  final BackgroundPushNotificationService _pushService;
+  final PushSessionCallkeep _pushService;
 
   // Assigned exactly once in [init], before any call to [run] or [close].
   late SignalingModule _signalingModule;
@@ -86,8 +83,8 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
 
   /// Initialises the signaling module.
   ///
-  /// Must be called once after construction and before [run]. Constructs
-  /// [WebtritSignalingService] and wires up the event subscription.
+  /// Must be called once after construction and before [run]. Creates the
+  /// signaling module and wires up the event subscription.
   /// The WebSocket connection starts when [connect] is called from [run].
   void init() {
     _initSignaling();
@@ -187,21 +184,14 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   // Signaling init
   // ---------------------------------------------------------------------------
 
-  /// Sets up [WebtritSignalingService] for this isolate in
-  /// [SignalingServiceMode.pushBound] mode. Each isolate (push and Activity)
-  /// opens its own direct WebSocket - no shared FGS hub. [connect] is called
-  /// from [run], not here, so the connection starts only when processing begins.
+  /// Creates the signaling module for this isolate (in production a
+  /// [WebtritSignalingService] in [SignalingServiceMode.pushBound] mode: each
+  /// isolate, push and Activity, opens its own direct WebSocket - no shared FGS
+  /// hub). [connect] is called from [run], not here, so the connection starts
+  /// only when processing begins.
   void _initSignaling() {
-    logger.info('_initSignaling: creating WebtritSignalingService (pushBound)');
-    _signalingModule = WebtritSignalingService(
-      config: SignalingServiceConfig(
-        coreUrl: storage.readCoreUrl() ?? '',
-        tenantId: storage.readTenantId() ?? '',
-        token: storage.readToken() ?? '',
-        trustedCertificates: certificates,
-      ),
-      mode: SignalingServiceMode.pushBound,
-    );
+    logger.info('_initSignaling: creating the signaling module');
+    _signalingModule = _createSignaling();
 
     _signalingSubscription = _signalingModule.events.listen((event) {
       switch (event) {
@@ -508,6 +498,38 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     final metadataName = _metadata?.callId == event.callId ? _metadata?.displayName : null;
     return [call.username, metadataName, call.number].firstWhere((s) => s != null && s.isNotEmpty, orElse: () => null);
   }
+}
+
+// ---------------------------------------------------------------------------
+
+/// What a push session needs from callkeep, and nothing more: the delegate that
+/// receives answer/decline, and the two ways the session gives its call back.
+abstract interface class PushSessionCallkeep {
+  void setBackgroundServiceDelegate(CallkeepBackgroundServiceDelegate? delegate);
+
+  /// Ends [callId] natively and stops the incoming-call service if it shows that call.
+  Future<void> releaseCall(String callId);
+
+  /// Stops the incoming-call service for [callId] and leaves the connection alive.
+  Future<void> handoffCall(String callId);
+}
+
+/// [PushSessionCallkeep] over the plugin's [BackgroundPushNotificationService].
+class BackgroundPushSessionCallkeep implements PushSessionCallkeep {
+  BackgroundPushSessionCallkeep([BackgroundPushNotificationService? service])
+    : _service = service ?? BackgroundPushNotificationService();
+
+  final BackgroundPushNotificationService _service;
+
+  @override
+  void setBackgroundServiceDelegate(CallkeepBackgroundServiceDelegate? delegate) =>
+      _service.setBackgroundServiceDelegate(delegate);
+
+  @override
+  Future<void> releaseCall(String callId) async => await _service.releaseCall(callId);
+
+  @override
+  Future<void> handoffCall(String callId) async => await _service.handoffCall(callId);
 }
 
 // ---------------------------------------------------------------------------
