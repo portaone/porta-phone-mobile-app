@@ -1,0 +1,19 @@
+include: package:lints/recommended.yaml
+
+linter:
+  rules:
+    prefer_single_quotes: true
+
+analyzer:
+  # The block `flutter test` appends when it is missing; kept here so a test run leaves the tree clean.
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+formatter:
+  page_width: 120
