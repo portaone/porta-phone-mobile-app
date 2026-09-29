@@ -3,6 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:quiver/collection.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 
+import 'package:text_entities/text_entities.dart';
+
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/models/system_notification.dart';
 import 'package:webtrit_phone/utils/utils.dart';
@@ -22,8 +24,9 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
   late final controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 800), value: 1);
   late final animation = CurvedAnimation(parent: controller, curve: Curves.elasticOut);
 
-  static final previewsCache = LruMap<String, OgPreview>(maximumSize: 100);
-  OgPreview? preview;
+  static final previewsCache = LruMap<String, LinkPreview>(maximumSize: 100);
+  LinkPreview? preview;
+  Uri? _previewUrl;
 
   bool get seen => widget.notification.seen || widget.seenPending;
   late bool wasSeen = seen;
@@ -47,21 +50,26 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
   }
 
   void findLink(String text) {
-    final match = RegExp(linkRegex, caseSensitive: false).stringMatch(text);
+    final url = firstLink(text)?.uri;
+    _previewUrl = url;
 
-    if (match != null) {
-      if (previewsCache[match] != null) {
-        preview = previewsCache[match];
-        if (mounted) setState(() {});
-      } else {
-        OgPreview.get(match).then((value) {
-          if (value != null) previewsCache[match] = value;
-          if (mounted) setState(() => preview = value);
-        });
-      }
-    } else {
+    if (url == null) {
       if (mounted) setState(() => preview = null);
+      return;
     }
+
+    final cached = previewsCache[url.toString()];
+    if (cached != null) {
+      preview = cached;
+      if (mounted) setState(() {});
+      return;
+    }
+
+    fetchLinkPreview(url).then((value) {
+      if (value != null) previewsCache[url.toString()] = value;
+      // The text may have changed while the fetch ran; only the current link's preview is shown.
+      if (mounted && _previewUrl == url) setState(() => preview = value);
+    });
   }
 
   @override
@@ -183,11 +191,12 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 8,
         children: [
-          if (preview?.imageUrl != null) ...[
+          if (preview?.image != null) ...[
             Container(
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
-              child: Image.network(preview!.imageUrl!),
+              // Decoded no wider than a phone screen: a few compressed kilobytes can be a huge bitmap.
+              child: Image.memory(preview!.image!, cacheWidth: 1080),
             ),
             const SizedBox(height: 8),
           ],
@@ -207,12 +216,12 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
               ],
             ),
           if (preview?.description != null) ...[Text(preview!.description!, style: style)],
-          if (preview?.imageUrl != null && preview?.title == null && preview?.description == null)
+          if (preview?.image != null && preview?.title == null && preview?.description == null)
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    preview!.imageUrl!,
+                    _previewUrl.toString(),
                     style: style.copyWith(fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
