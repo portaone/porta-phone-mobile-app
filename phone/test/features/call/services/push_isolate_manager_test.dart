@@ -175,4 +175,27 @@ void main() {
       expect(callkeep.released, ['c1'], reason: 'the own call ended before the session opened');
     });
   });
+
+  group('missed call', () {
+    test('another incoming call the session saw is recorded under its own caller', () async {
+      manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002'), (callId: 'c2', caller: '555003')]);
+
+      signaling.hangup('c2', line: 1);
+      await settle();
+
+      expect(missed, [('c2', '555003')]);
+    });
+
+    test('another call the session never saw arrive is not recorded as missed', () async {
+      manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+
+      signaling.hangup('c9', line: 1);
+      await settle();
+
+      expect(missed, isEmpty, reason: 'an outgoing call or one answered elsewhere is not a missed call');
+      expect(callkeep.released, ['c9'], reason: 'it is still ended natively');
+    });
+  });
 }
