@@ -1,6 +1,5 @@
 import 'package:api/api.dart';
 
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/mappers/mappers.dart';
 import 'package:webtrit_phone/models/models.dart';
 
@@ -22,26 +21,16 @@ abstract class ExternalContactsRepository {
 
 /// The full-list v1 implementation (`GET /user/contacts`).
 class ExternalContactsRepositoryV1Impl with ExternalContactApiMapper implements ExternalContactsRepository {
-  ExternalContactsRepositoryV1Impl({
-    required WebtritApiClient webtritApiClient,
-    required String token,
-    SessionGuard? sessionGuard,
-  }) : _sessionGuard = sessionGuard ?? const EmptySessionGuard(),
-       _webtritApiClient = webtritApiClient,
-       _token = token;
+  ExternalContactsRepositoryV1Impl({required WebtritApiClient webtritApiClient, required String token})
+    : _webtritApiClient = webtritApiClient,
+      _token = token;
 
   final WebtritApiClient _webtritApiClient;
   final String _token;
-  final SessionGuard _sessionGuard;
 
   @override
   Future<List<ExternalContact>> fetchContacts() async {
-    try {
-      final contacts = await _webtritApiClient.getUserContactList(_token);
-      return contacts.map(externalContactFromApi).toList();
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    final contacts = await _webtritApiClient.getUserContactList(_token);
+    return contacts.map(externalContactFromApi).toList();
   }
 }

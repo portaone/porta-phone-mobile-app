@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 
 import 'package:webtrit_phone/data/data.dart';
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 import '../mocks/mocks.dart';
@@ -23,7 +22,6 @@ void main() {
       token: 'user_token',
       appDatabase: appDatabase,
       trashSupported: true,
-      sessionGuard: const EmptySessionGuard(),
     );
     // Let the refresh the constructor starts finish before a test seeds or
     // asserts. It is detached (`.ignore()`), so without this a test races the

@@ -1,6 +1,5 @@
-import 'package:api/api.dart' show WebtritApiClient, UnauthorizedException;
+import 'package:api/api.dart' show WebtritApiClient;
 
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/mappers/mappers.dart';
 import 'package:webtrit_phone/models/models.dart';
 
@@ -21,29 +20,23 @@ abstract class CdrsRemoteRepository {
 }
 
 class CdrsRemoteRepositoryApiImpl with CdrApiMapper implements CdrsRemoteRepository {
-  CdrsRemoteRepositoryApiImpl(this._webtritApiClient, this._token, this._sessionGuard);
+  CdrsRemoteRepositoryApiImpl(this._webtritApiClient, this._token);
 
   final WebtritApiClient _webtritApiClient;
   final String _token;
-  final SessionGuard _sessionGuard;
 
   @override
   Future<CdrHistoryPage> getHistory({DateTime? timeFrom, DateTime? timeTo, int? page, int? limit}) async {
-    try {
-      final response = await _webtritApiClient.getCdrHistory(
-        _token,
-        timeFrom: timeFrom,
-        timeTo: timeTo,
-        page: page,
-        limit: limit,
-      );
-      return CdrHistoryPage(
-        records: response.items.map(cdrFromApi).toList(),
-        itemsTotal: response.pagination?.itemsTotal,
-      );
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    final response = await _webtritApiClient.getCdrHistory(
+      _token,
+      timeFrom: timeFrom,
+      timeTo: timeTo,
+      page: page,
+      limit: limit,
+    );
+    return CdrHistoryPage(
+      records: response.items.map(cdrFromApi).toList(),
+      itemsTotal: response.pagination?.itemsTotal,
+    );
   }
 }

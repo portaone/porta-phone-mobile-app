@@ -5,7 +5,6 @@ import 'package:rxdart/rxdart.dart';
 
 import 'package:api/api.dart' as api;
 
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/common/common.dart';
 import 'package:webtrit_phone/mappers/mappers.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -36,16 +35,13 @@ class CallQueuesRepositoryApiImpl with CallQueueApiMapper implements CallQueuesR
   CallQueuesRepositoryApiImpl({
     required api.WebtritApiClient apiClient,
     required String token,
-    required SessionGuard sessionGuard,
     void Function(bool isAgent)? onAgentKnown,
   }) : _apiClient = apiClient,
        _token = token,
-       _sessionGuard = sessionGuard,
        _onAgentKnown = onAgentKnown;
 
   final api.WebtritApiClient _apiClient;
   final String _token;
-  final SessionGuard _sessionGuard;
 
   /// Told what the backend answered about this user being an agent.
   ///
@@ -104,10 +100,6 @@ class CallQueuesRepositoryApiImpl with CallQueueApiMapper implements CallQueuesR
       _logger.info('Call queues are not offered by this deployment, stopping: $e');
       _deactivate();
       return;
-    } on api.UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      _publishReadFailure();
-      rethrow;
     } catch (_) {
       _publishReadFailure();
       rethrow;
@@ -180,9 +172,6 @@ class CallQueuesRepositoryApiImpl with CallQueueApiMapper implements CallQueuesR
         _logger.info('Call queues are not offered by this deployment, stopping: $e');
         _deactivate();
       }
-      rethrow;
-    } on api.UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
       rethrow;
     }
 

@@ -34,7 +34,6 @@ import 'app/app_dependencies.dart';
 import 'app/firebase_integration.dart';
 import 'app/initial_notification_resolver.dart';
 import 'app/push_platform_initializer.dart';
-import 'app/session/session.dart';
 import 'app/startup_trace.dart';
 import 'app/startup_wave.dart';
 import 'firebase_options.dart';
@@ -743,7 +742,7 @@ void workManagerDispatcher() {
       if (coreUrl == null || tenantId == null || token == null) return true;
 
       final api = WebtritApiClient(Uri.parse(coreUrl), tenantId);
-      final remoteRepo = SystemNotificationsRemoteRepositoryApiImpl(api, token, const EmptySessionGuard());
+      final remoteRepo = SystemNotificationsRemoteRepositoryApiImpl(api, token);
 
       final appPath = await AppPath.init();
       final localPushRepo = LocalPushRepositoryFLNImpl();

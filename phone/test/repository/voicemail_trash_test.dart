@@ -6,7 +6,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' as api;
 
-import 'package:webtrit_phone/app/session/session_guard.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -18,7 +17,6 @@ import '../mocks/voicemails_fixture_factory.dart';
 void main() {
   late AppDatabase appDatabase;
   late _Client client;
-  late _Guard guard;
   late VoicemailRepositoryImpl repository;
 
   setUpAll(() {
@@ -29,7 +27,6 @@ void main() {
   setUp(() async {
     appDatabase = AppDatabase(NativeDatabase.memory());
     client = _Client();
-    guard = _Guard();
     when(
       () => client.getUserVoicemailList(
         any(),
@@ -43,7 +40,6 @@ void main() {
       token: 'token',
       appDatabase: appDatabase,
       trashSupported: true,
-      sessionGuard: guard,
     );
     await pumpEventQueue();
   });
@@ -108,7 +104,7 @@ void main() {
       expect(await storedIds(), ['vm-1']);
     });
 
-    test('a 401 reaches the session guard and is rethrown', () async {
+    test('a 401 is rethrown', () async {
       final error = unauthorized();
       when(
         () => client.restoreUserVoicemail(
@@ -120,8 +116,6 @@ void main() {
       ).thenAnswer((_) => Future.error(error));
 
       await expectLater(repository.restoreVoicemail('vm-1'), throwsA(same(error)));
-
-      expect(guard.errors, [same(error)]);
     });
   });
 
@@ -179,7 +173,7 @@ void main() {
       expect(await storedIds(), ['inbox-1']);
     });
 
-    test('a 401 reaches the session guard and is rethrown', () async {
+    test('a 401 is rethrown', () async {
       final error = unauthorized();
       when(
         () => client.emptyUserVoicemailTrash(
@@ -190,16 +184,8 @@ void main() {
       ).thenAnswer((_) => Future.error(error));
 
       await expectLater(repository.emptyVoicemailTrash(), throwsA(same(error)));
-
-      expect(guard.errors, [same(error)]);
     });
   });
 }
 
 class _Client extends Mock implements api.WebtritApiClient {}
-
-class _Guard implements SessionGuard {
-  final errors = <Exception>[];
-  @override
-  void onUnauthorized(Exception e) => errors.add(e);
-}

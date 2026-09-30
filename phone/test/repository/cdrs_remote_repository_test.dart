@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' as api;
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 import '../mocks/mocks.dart';
@@ -26,7 +25,7 @@ void main() {
 
   setUp(() {
     apiClient = MockWebtritApiClient();
-    repository = CdrsRemoteRepositoryApiImpl(apiClient, 'user_token', const EmptySessionGuard());
+    repository = CdrsRemoteRepositoryApiImpl(apiClient, 'user_token');
   });
 
   void stub(api.CdrHistoryResponse response) {

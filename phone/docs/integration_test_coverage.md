@@ -245,9 +245,9 @@ bootstrap the full app, log in, contact a backend or toggle device connectivity.
    by 2 and 4 seconds with a one-second test interval and zero jitter. Recovery
    persists the mapped user, emits one data update and restores the base cadence.
    Reloading native preferences verifies the value beyond the in-memory cache.
-2. HTTP 401 `token_invalid` reaches a recording `SessionGuard` and the manual
-   caller as a failed task, without overwriting the native cache or retrying HTTP.
-   This verifies guard routing, not the full app logout flow.
+2. HTTP 401 `token_invalid` is published on the client's `sessionRejections`
+   and reaches the manual caller as a failed task, without overwriting the native
+   cache or retrying HTTP. This verifies the report, not the full app logout flow.
 
 Teardown restores the previous `user-info` preference and disposes the polling
 service. To retain unrelated application data, follow the
@@ -316,8 +316,9 @@ these are not live-backend E2E, OS connectivity or physical disk-failure tests.
    survives. The retry starts after two seconds with a one-second test interval;
    the cycle remains running until the gated SQLite write finishes.
 2. HTTP 401 releases both a polling joiner and a waiting delete with the same
-   failure, calls a recording `SessionGuard` once, and leaves the cached row
-   untouched. This verifies guard routing, not the full application logout flow.
+   failure, is published once on the client's `sessionRejections`, and leaves
+   the cached row untouched. This verifies the report, not the full application
+   logout flow.
 
 Each scenario uses an isolated temporary database and removes it in teardown.
 The application's database is never opened. Use the

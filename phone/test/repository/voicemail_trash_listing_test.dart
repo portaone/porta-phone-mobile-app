@@ -6,7 +6,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' as api;
 
-import 'package:webtrit_phone/app/session/session_guard.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -19,7 +18,6 @@ import '../mocks/voicemails_fixture_factory.dart';
 void main() {
   late AppDatabase appDatabase;
   late _Client client;
-  late _Guard guard;
   late VoicemailRepositoryImpl repository;
 
   setUpAll(() {
@@ -75,7 +73,6 @@ void main() {
   setUp(() async {
     appDatabase = AppDatabase(NativeDatabase.memory());
     client = _Client();
-    guard = _Guard();
     inboxIsEmpty();
     when(() => client.getVoicemailAttachmentUrl(any(), fileFormat: any(named: 'fileFormat'))).thenReturn('url');
     when(
@@ -91,7 +88,6 @@ void main() {
       token: 'token',
       appDatabase: appDatabase,
       trashSupported: true,
-      sessionGuard: guard,
     );
     // Join the eager refresh the constructor starts, so a test does not race it.
     await pumpEventQueue();
@@ -178,7 +174,7 @@ void main() {
     verify(() => client.getUserVoicemail('token', 'trashed-1', locale: 'uk')).called(1);
   });
 
-  test('a 401 reaches the session guard and is rethrown', () async {
+  test('a 401 is rethrown', () async {
     final error = api.UnauthorizedException(url: Uri(), requestId: 'request', statusCode: 401);
     when(
       () => client.getUserVoicemailList(
@@ -189,8 +185,6 @@ void main() {
     ).thenAnswer((_) => Future.error(error));
 
     await expectLater(repository.fetchTrashedVoicemails(), throwsA(same(error)));
-
-    expect(guard.errors, [same(error)]);
   });
 
   test('a failure on one message fails the read rather than hiding it', () async {
@@ -225,9 +219,3 @@ Future<void> _storeContact(
 }
 
 class _Client extends Mock implements api.WebtritApiClient {}
-
-class _Guard implements SessionGuard {
-  final errors = <Exception>[];
-  @override
-  void onUnauthorized(Exception e) => errors.add(e);
-}

@@ -10,7 +10,6 @@ import 'package:api/api.dart';
 import 'package:webtrit_phone/common/common.dart';
 import 'package:webtrit_phone/mappers/mappers.dart';
 import 'package:webtrit_phone/models/models.dart';
-import 'package:webtrit_phone/app/session/session.dart';
 
 abstract class VoicemailRepository implements Refreshable {
   /// Fetches voicemails from the remote server and updates the local database.
@@ -158,9 +157,7 @@ class VoicemailRepositoryImpl
     required String token,
     required AppDatabase appDatabase,
     required bool trashSupported,
-    SessionGuard? sessionGuard,
-  }) : _sessionGuard = sessionGuard ?? const EmptySessionGuard(),
-       _webtritApiClient = webtritApiClient,
+  }) : _webtritApiClient = webtritApiClient,
        _token = token,
        _appDatabase = appDatabase,
        _trashSupported = trashSupported {
@@ -171,7 +168,6 @@ class VoicemailRepositoryImpl
   final String _token;
   final AppDatabase _appDatabase;
   final bool _trashSupported;
-  final SessionGuard _sessionGuard;
 
   // If the repository is disabled, the stream controller is not initialized.
   // In such cases, subscribers will receive an empty stream instead.
@@ -192,8 +188,8 @@ class VoicemailRepositoryImpl
   void _initialize() {
     _updatesController = StreamController<List<Voicemail>>.broadcast(onListen: _onListen, onCancel: _onCancel);
 
-    // The eager fetch has no awaiting owner. Its error is already logged or
-    // routed to SessionGuard; ignoring this detached observation does not change
+    // The eager fetch has no awaiting owner. Its error is already logged, and a
+    // rejected session is reported by the API client; ignoring this detached observation does not change
     // the shared future's failure for polling or UI callers joining the fetch.
     fetchVoicemails().ignore();
   }
@@ -246,9 +242,6 @@ class VoicemailRepositoryImpl
       // leaves the loop through the catch below without reaching this line, so
       // a refresh that only half happened never decides that the rest is gone.
       await _appDatabase.voicemailDao.deleteVoicemailsNotIn(remoteItems.items.map((item) => item.id));
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
     } catch (e, st) {
       final isExpected = e is VoicemailNotConfiguredException || e is EndpointNotSupportedException;
       _logger.warning('Failed to fetch voicemails', e, isExpected ? null : st);
@@ -294,24 +287,19 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    try {
-      await _webtritApiClient.deleteUserVoicemail(
-        _token,
-        messageId,
-        // Where there is a trash the message goes there and stays reachable.
-        // Where there is not, the deletion has to be final: a message left in
-        // a trash this build offers no way into is one nobody can get back to
-        // and nobody can empty.
-        permanent: !_trashSupported,
-        locale: localeCode,
-        options: RequestOptions.withNoRetries(),
-      );
+    await _webtritApiClient.deleteUserVoicemail(
+      _token,
+      messageId,
+      // Where there is a trash the message goes there and stays reachable.
+      // Where there is not, the deletion has to be final: a message left in
+      // a trash this build offers no way into is one nobody can get back to
+      // and nobody can empty.
+      permanent: !_trashSupported,
+      locale: localeCode,
+      options: RequestOptions.withNoRetries(),
+    );
 
-      await _appDatabase.voicemailDao.deleteVoicemailById(messageId);
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    await _appDatabase.voicemailDao.deleteVoicemailById(messageId);
   }
 
   @override
@@ -372,10 +360,6 @@ class VoicemailRepositoryImpl
         // before admitting the mailbox never took the change.
         options: RequestOptions.withNoRetries(),
       );
-    } on UnauthorizedException catch (e) {
-      await _appDatabase.voicemailDao.updateVoicemail(before);
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
     } catch (e) {
       await _appDatabase.voicemailDao.updateVoicemail(before);
       rethrow;
@@ -388,17 +372,12 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    try {
-      await _webtritApiClient.restoreUserVoicemail(
-        _token,
-        messageId,
-        locale: localeCode,
-        options: RequestOptions.withNoRetries(),
-      );
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    await _webtritApiClient.restoreUserVoicemail(
+      _token,
+      messageId,
+      locale: localeCode,
+      options: RequestOptions.withNoRetries(),
+    );
 
     // The row went when the message was trashed, and what comes back carries
     // more than a restore answers with, so the mailbox is asked again rather
@@ -421,20 +400,15 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    try {
-      await _webtritApiClient.deleteUserVoicemail(
-        _token,
-        messageId,
-        permanent: true,
-        locale: localeCode,
-        options: RequestOptions.withNoRetries(),
-      );
+    await _webtritApiClient.deleteUserVoicemail(
+      _token,
+      messageId,
+      permanent: true,
+      locale: localeCode,
+      options: RequestOptions.withNoRetries(),
+    );
 
-      await _appDatabase.voicemailDao.deleteVoicemailById(messageId);
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    await _appDatabase.voicemailDao.deleteVoicemailById(messageId);
   }
 
   @override
@@ -443,28 +417,23 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    try {
-      final response = await _webtritApiClient.getUserVoicemailList(
-        _token,
-        folder: VoicemailFolder.trash,
-        locale: localeCode,
-      );
+    final response = await _webtritApiClient.getUserVoicemailList(
+      _token,
+      folder: VoicemailFolder.trash,
+      locale: localeCode,
+    );
 
-      final trashed = <Voicemail>[];
-      for (final item in response.items) {
-        // The listing carries no sender, so the message itself is asked for -
-        // the same shape the inbox refresh needs, for the same reason.
-        final details = await _webtritApiClient.getUserVoicemail(_token, item.id, locale: localeCode);
-        final row = voicemailToDrift(item, details, _webtritApiClient.getVoicemailAttachmentUrl(item.id));
+    final trashed = <Voicemail>[];
+    for (final item in response.items) {
+      // The listing carries no sender, so the message itself is asked for -
+      // the same shape the inbox refresh needs, for the same reason.
+      final details = await _webtritApiClient.getUserVoicemail(_token, item.id, locale: localeCode);
+      final row = voicemailToDrift(item, details, _webtritApiClient.getVoicemailAttachmentUrl(item.id));
 
-        trashed.add(voicemailFromDrift(row, await _displayNameFor(details.sender)));
-      }
-
-      return trashed;
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
+      trashed.add(voicemailFromDrift(row, await _displayNameFor(details.sender)));
     }
+
+    return trashed;
   }
 
   @override
@@ -502,22 +471,17 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    try {
-      return await _webtritApiClient.forwardUserVoicemail(
-        _token,
-        messageId,
-        toUserId: toUserId,
-        // One key per deliberate forward. The client retries a request that
-        // failed below HTTP, and a forward that timed out may well have been
-        // delivered, so without a key a flaky network turns one message into
-        // several; with it the retry answers with the original result.
-        idempotencyKey: const Uuid().v4(),
-        locale: localeCode,
-      );
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    return await _webtritApiClient.forwardUserVoicemail(
+      _token,
+      messageId,
+      toUserId: toUserId,
+      // One key per deliberate forward. The client retries a request that
+      // failed below HTTP, and a forward that timed out may well have been
+      // delivered, so without a key a flaky network turns one message into
+      // several; with it the retry answers with the original result.
+      idempotencyKey: const Uuid().v4(),
+      locale: localeCode,
+    );
   }
 
   @override
@@ -526,16 +490,11 @@ class VoicemailRepositoryImpl
       await _fetching;
     }
 
-    try {
-      await _webtritApiClient.emptyUserVoicemailTrash(
-        _token,
-        locale: localeCode,
-        options: RequestOptions.withNoRetries(),
-      );
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    await _webtritApiClient.emptyUserVoicemailTrash(
+      _token,
+      locale: localeCode,
+      options: RequestOptions.withNoRetries(),
+    );
 
     // Nothing local to do: what the trash held had already left the stored
     // list on its way there.
@@ -571,10 +530,6 @@ class VoicemailRepositoryImpl
         locale: localeCode,
         options: RequestOptions.withNoRetries(),
       );
-    } on UnauthorizedException catch (e) {
-      await _appDatabase.voicemailDao.updateVoicemail(before);
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
     } catch (_) {
       await _appDatabase.voicemailDao.updateVoicemail(before);
       rethrow;

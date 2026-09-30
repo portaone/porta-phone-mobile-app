@@ -8,7 +8,6 @@ import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/mappers/api/self_config_mapper.dart';
 import 'package:webtrit_phone/common/common.dart';
-import 'package:webtrit_phone/app/session/session.dart';
 
 final _logger = Logger('PrivateGatewayRepository');
 
@@ -34,12 +33,11 @@ abstract class PrivateGatewayRepository {
 /// All subsequent lifecycle management of the token is delegated to the embedded WebView.
 
 class CustomPrivateGatewayRepository with SelfConfigApiMapper implements PrivateGatewayRepository, Disposable {
-  CustomPrivateGatewayRepository(this._webtritApiClient, this._secureStorage, this._token, this._sessionGuard);
+  CustomPrivateGatewayRepository(this._webtritApiClient, this._secureStorage, this._token);
 
   final api.WebtritApiClient _webtritApiClient;
   final SecureStorage _secureStorage;
   final String _token;
-  final SessionGuard _sessionGuard;
 
   Timer? _refreshTimer;
 
@@ -68,9 +66,6 @@ class CustomPrivateGatewayRepository with SelfConfigApiMapper implements Private
 
         // Store the latest external page access token received from the server in secure storage
         await _secureStorage.writeExternalPageToken(externalPageToken);
-      } on api.UnauthorizedException catch (e) {
-        _sessionGuard.onUnauthorized(e);
-        rethrow;
       } on api.EndpointNotSupportedException catch (_) {
         // Endpoint is not supported, stop fetching the token
         _isUnsupportedExternalPageTokenEndpoint = true;

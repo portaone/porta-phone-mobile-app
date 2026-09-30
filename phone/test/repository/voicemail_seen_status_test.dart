@@ -6,7 +6,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' as api;
 
-import 'package:webtrit_phone/app/session/session_guard.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -18,7 +17,6 @@ import '../mocks/voicemails_fixture_factory.dart';
 void main() {
   late AppDatabase appDatabase;
   late _Client client;
-  late _Guard guard;
   late VoicemailRepositoryImpl repository;
 
   setUpAll(() {
@@ -28,7 +26,6 @@ void main() {
   setUp(() async {
     appDatabase = AppDatabase(NativeDatabase.memory());
     client = _Client();
-    guard = _Guard();
     // The repository fetches eagerly on construction; an empty mailbox keeps
     // that out of the way of the rows each test inserts itself.
     when(() => client.getUserVoicemailList(any(), locale: any(named: 'locale')))
@@ -38,7 +35,6 @@ void main() {
       token: 'token',
       appDatabase: appDatabase,
       trashSupported: true,
-      sessionGuard: guard,
     );
     // Let the refresh the constructor starts finish before a test seeds or
     // asserts. It is detached (`.ignore()`), so without this a test races the
@@ -86,7 +82,6 @@ void main() {
     await expectLater(repository.updateVoicemailSeenStatus('1', false), throwsA(same(error)));
 
     expect(await seenOf('1'), isTrue);
-    expect(guard.errors, isEmpty);
   });
 
   test('the revert waits for the server: the flag is not restored before the patch settles', () async {
@@ -104,7 +99,7 @@ void main() {
     expect(await seenOf('1'), isFalse);
   });
 
-  test('a 401 reverts, reaches the session guard and is rethrown', () async {
+  test('a 401 reverts and is rethrown', () async {
     await appDatabase.voicemailDao.insertOrUpdateVoicemail(VoicemailsFixtureFactory.createVoicemail(id: '1'));
     final error = api.UnauthorizedException(url: Uri(), requestId: 'request', statusCode: 401);
     await patchAnswers(() => Future.error(error));
@@ -112,7 +107,6 @@ void main() {
     await expectLater(repository.updateVoicemailSeenStatus('1', true), throwsA(same(error)));
 
     expect(await seenOf('1'), isFalse);
-    expect(guard.errors, [same(error)]);
   });
 
   test('the patch is sent without retries', () async {
@@ -150,9 +144,3 @@ void main() {
 }
 
 class _Client extends Mock implements api.WebtritApiClient {}
-
-class _Guard implements SessionGuard {
-  final errors = <Exception>[];
-  @override
-  void onUnauthorized(Exception e) => errors.add(e);
-}

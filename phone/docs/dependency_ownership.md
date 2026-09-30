@@ -91,7 +91,7 @@ Two consequences worth spelling out:
 | `AppDatabaseLifecycleHolder` and `AppDatabase` | `RootApp.build` | itself - it owns the client connection and its lifecycle observer |
 | `PollingService`, `CdrsSync`, `ExternalContactsSync`, session services | `main_shell_services.dart` | the same provider; each sync owner releases its worker and task |
 | `PrivateGatewayRepository` | `main_shell_repositories.dart` | the same provider |
-| `SessionGuard` | `main_shell.dart` | the shell |
+| the session's `WebtritApiClient` and its session-rejection subscription | `main_shell.dart` | the shell cancels the subscription; the client itself is not closed |
 
 ## What keeps it honest
 

@@ -11,15 +11,14 @@ import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:signaling_service/signaling_service.dart' show SignalingModule, SignalingServiceConfig;
 
 import 'package:webtrit_phone/app/assets.gen.dart';
+import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/notifications/notifications.dart';
 import 'package:webtrit_phone/app/router/main_shell_blocs.dart';
 import 'package:webtrit_phone/app/router/main_shell_repositories.dart';
 import 'package:webtrit_phone/app/router/main_shell_services.dart';
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
-import 'package:webtrit_phone/common/common.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/services/services.dart';
 import 'package:webtrit_phone/utils/utils.dart';
@@ -41,15 +40,19 @@ class _MainShellState extends State<MainShell> {
   late final Callkeep _callkeep = context.read<Callkeep>();
   late final CallkeepConnections _callkeepConnections = context.read<CallkeepConnections>();
 
-  /// The [SessionGuard] instance that handles session expiration and logout.
-  late final SessionGuard _sessionGuard;
+  /// The session's API client. Any of its requests that learns the session is
+  /// over reports it on [WebtritApiClient.sessionRejections], and the first
+  /// such report ends the session (see [_onSessionRejected]), so no repository
+  /// needs to know about it.
+  late final WebtritApiClient _apiClient;
+  late final StreamSubscription<SessionRejection> _sessionRejectionsSubscription;
 
   /// Stored in [initState] so it remains accessible during [dispose] without
   /// reading from a potentially deactivated [BuildContext].
   late final AppBloc _appBloc;
 
-  /// Captured in [initState] so the session-guard callbacks can submit
-  /// notifications without touching a possibly-deactivated [BuildContext].
+  /// Captured in [initState] so [_onSessionRejected] can submit a
+  /// notification without touching a possibly-deactivated [BuildContext].
   late final NotificationsBloc _notificationsBloc;
 
   /// Created and connected in [initState] so that the WebSocket handshake
@@ -120,31 +123,36 @@ class _MainShellState extends State<MainShell> {
 
     _notificationsBloc = context.read<NotificationsBloc>();
 
-    _sessionGuard = RouterLogoutSessionGuard(
-      performLogout: _onSessionGuardLogout,
-      onPreLogout: _onSessionGuardPreLogout,
+    _apiClient = WebtritApiClient(
+      Uri.parse(session.coreUrl!),
+      session.tenantId,
+      connectionTimeout: kApiClientConnectionTimeout,
+      certs: context.read<AppCertificates>().trustedCertificates,
+      userAgent: context.read<AppMetadataProvider>().userAgent,
     );
+    // Once is enough: later requests of the same session are refused for the
+    // same reason, and cancelling in dispose drops a report that arrives after
+    // the shell is gone.
+    _sessionRejectionsSubscription = _apiClient.sessionRejections.take(1).listen(_onSessionRejected);
 
     unawaited(_appUpdateService.check());
   }
 
-  /// Maps an unauthorized [Exception] to a logout reason and triggers logout.
-  void _onSessionGuardLogout(Exception e) {
-    final reason = e is UserNotFoundException ? AppLogoutReason.userNotFound : AppLogoutReason.serverRejection;
-    _appBloc.add(AppLogoutRequested(reason: reason));
-  }
-
-  /// Surfaces a reason-specific notification before the guard logs the user out.
-  void _onSessionGuardPreLogout(Exception e) {
-    final notification = e is UserNotFoundException
-        ? const AccountNotFoundNotification()
-        : const SessionExpiredNotification();
-    _notificationsBloc.add(NotificationsSubmitted(notification));
+  /// Tells the user why, then logs out: an account that is gone reads
+  /// differently from a session that expired.
+  void _onSessionRejected(SessionRejection rejection) {
+    final accountGone = rejection is UserNotFoundException;
+    _notificationsBloc.add(
+      NotificationsSubmitted(accountGone ? const AccountNotFoundNotification() : const SessionExpiredNotification()),
+    );
+    _appBloc.add(
+      AppLogoutRequested(reason: accountGone ? AppLogoutReason.userNotFound : AppLogoutReason.serverRejection),
+    );
   }
 
   @override
   void dispose() {
-    _disposeSessionGuard();
+    unawaited(_sessionRejectionsSubscription.cancel());
     _callkeep.tearDown();
     unawaited(_tearDownSignaling());
     _callController?.dispose();
@@ -167,7 +175,7 @@ class _MainShellState extends State<MainShell> {
     return Provider<FeatureAccess>.value(
       value: _sessionFeatureAccess,
       child: MainShellRepositories(
-        sessionGuard: _sessionGuard,
+        apiClient: _apiClient,
         child: MainShellServices(
           child: MainShellBlocs(
             callkeep: _callkeep,
@@ -206,12 +214,5 @@ class _MainShellState extends State<MainShell> {
         ),
       ),
     );
-  }
-
-  /// Disposes [sessionGuard] if it implements [Disposable].
-  /// This ensures any held resources are released before
-  /// the widget tree is torn down.
-  void _disposeSessionGuard() {
-    disposeIfDisposable(_sessionGuard);
   }
 }

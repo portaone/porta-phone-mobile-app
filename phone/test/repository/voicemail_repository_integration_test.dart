@@ -76,7 +76,7 @@ void main() {
         expect(result.$1, same(error));
         expect(result.$2, same(stack));
       }
-      expect(harness.sessionGuard.errors, status == 401 ? [same(error)] : isEmpty);
+      expect(harness.sessionRejections, status == 401 ? [same(error)] : isEmpty);
       expect(await harness.dao.getVoicemailById('message-1'), VoicemailRepositoryIntegrationHarness.cached);
       expect(harness.requests, hasLength(1));
       harness.respond = _success;

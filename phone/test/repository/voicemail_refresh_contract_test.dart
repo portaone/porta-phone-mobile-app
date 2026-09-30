@@ -8,7 +8,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:api/api.dart' as api;
 import 'package:app_database/app_database.dart';
 
-import 'package:webtrit_phone/app/session/session_guard.dart';
 import 'package:webtrit_phone/repositories/voicemail/voicemail_repository.dart';
 import 'package:webtrit_phone/services/polling_service.dart';
 import 'package:webtrit_phone/services/polling_task_handle.dart';
@@ -55,7 +54,6 @@ void main() {
         response.completeError(error, stack);
         await Future.wait([first, joined]).timeout(const Duration(seconds: 1));
         verify(() => fixture.client.getUserVoicemailList('token')).called(1);
-        expect(fixture.guard.errors, unauthorized ? [same(error)] : isEmpty);
 
         when(() => fixture.client.getUserVoicemailList(any())).thenAnswer((_) async => _empty);
         await fixture.repository.refresh();
@@ -138,7 +136,6 @@ void main() {
       await Future.wait([first, waiting]).timeout(const Duration(seconds: 1));
       verifyNever(() => fixture.dao.getAllVoicemails());
       verifyNever(() => fixture.dao.getVoicemailById(any()));
-      expect(fixture.guard.errors, [same(error)]);
     });
   }
 
@@ -157,7 +154,6 @@ void main() {
       expect(task.state.phase, PollingTaskPhase.failed);
       expect(task.state.error, same(error));
       expect(task.state.stackTrace, same(stack));
-      expect(starting.guard.errors, [same(error)]);
     });
   });
 
@@ -238,14 +234,12 @@ class _Fixture {
       token: 'token',
       appDatabase: database,
       trashSupported: true,
-      sessionGuard: guard,
     );
   }
 
   final client = _Client();
   final database = _Database();
   final dao = _Dao();
-  final guard = _Guard();
   late final VoicemailRepositoryImpl repository;
 }
 
@@ -254,9 +248,3 @@ class _Client extends Mock implements api.WebtritApiClient {}
 class _Database extends Mock implements AppDatabase {}
 
 class _Dao extends Mock implements VoicemailDao {}
-
-class _Guard implements SessionGuard {
-  final errors = <Exception>[];
-  @override
-  void onUnauthorized(Exception e) => errors.add(e);
-}

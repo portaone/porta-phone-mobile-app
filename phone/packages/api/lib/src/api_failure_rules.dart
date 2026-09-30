@@ -85,8 +85,9 @@ final List<FailureRule> defaultFailureRules = [
     ),
   ),
 
-  // Every token was invalidated, as after a backend restart. Mapped so the
-  // SessionGuard chain logs the user out rather than showing a bare failure.
+  // Every token was invalidated, as after a backend restart. Mapped as a
+  // SessionRejection so the client's owner ends the session rather than
+  // showing a bare failure.
   FailureRule(
     status: 401,
     code: 'token_invalid',

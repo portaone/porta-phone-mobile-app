@@ -10,7 +10,6 @@ import 'package:drift/backends.dart';
 import 'package:api/api.dart' as api;
 import 'package:app_database/app_database.dart';
 
-import 'package:webtrit_phone/app/session/session_guard.dart';
 import 'package:webtrit_phone/repositories/voicemail/voicemail_repository.dart';
 
 /// Real API mapping, repository and SQLite, with controlled HTTP and optional
@@ -18,12 +17,12 @@ import 'package:webtrit_phone/repositories/voicemail/voicemail_repository.dart';
 class VoicemailRepositoryIntegrationHarness {
   VoicemailRepositoryIntegrationHarness(QueryExecutor executor) : _database = _Database(executor) {
     client = api.WebtritApiClient.inner(Uri.parse('https://refresh.test'), '', httpClient: MockClient(_respond));
+    client.sessionRejections.listen(sessionRejections.add);
     repository = VoicemailRepositoryImpl(
       webtritApiClient: client,
       token: 'integration-token',
       appDatabase: database,
       trashSupported: true,
-      sessionGuard: sessionGuard,
     );
   }
 
@@ -56,7 +55,7 @@ class VoicemailRepositoryIntegrationHarness {
 
   final _Database _database;
   AppDatabase get database => _database;
-  final sessionGuard = _RecordingSessionGuard();
+  final sessionRejections = <api.SessionRejection>[];
   final requests = <http.Request>[];
   late final api.WebtritApiClient client;
   late final VoicemailRepositoryImpl repository;
@@ -111,10 +110,4 @@ class ControlledVoicemailDao extends VoicemailDao {
     await beforeWrite?.call();
     await super.insertOrUpdateVoicemail(voicemail);
   }
-}
-
-class _RecordingSessionGuard implements SessionGuard {
-  final errors = <Exception>[];
-  @override
-  void onUnauthorized(Exception e) => errors.add(e);
 }

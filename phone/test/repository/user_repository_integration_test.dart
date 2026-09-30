@@ -48,7 +48,7 @@ void main() {
     expect(updates, [UserRepositoryIntegrationHarness.cachedUser, UserRepositoryIntegrationHarness.updatedUser]);
     expect(await harness.repository.getAndListen().first, UserRepositoryIntegrationHarness.updatedUser);
     expect(harness.requests, hasLength(2));
-    expect(harness.sessionGuard.errors, isEmpty);
+    expect(harness.sessionRejections, isEmpty);
   });
 
   test('native lifecycle callbacks can refresh outside the test zone', () async {
@@ -95,7 +95,7 @@ void main() {
           expect(harness.requests, hasLength(4), reason: 'success restores the base interval');
           expect(updates, [UserRepositoryIntegrationHarness.cachedUser, UserRepositoryIntegrationHarness.updatedUser]);
           expect(streamErrors, isEmpty);
-          expect(harness.sessionGuard.errors, isEmpty);
+          expect(harness.sessionRejections, isEmpty);
         } finally {
           // Cancel inside virtual time so async* cleanup can drain its microtasks.
           unawaited(subscription.cancel());
@@ -130,7 +130,7 @@ void main() {
       expect(harness.requests, hasLength(5), reason: 'four HTTP attempts count as one failed polling cycle');
       expect(task.state.phase, PollingTaskPhase.succeeded);
       expect(harness.local.getInfo(), UserRepositoryIntegrationHarness.updatedUser);
-      expect(harness.sessionGuard.errors, isEmpty);
+      expect(harness.sessionRejections, isEmpty);
     });
   });
 
@@ -139,15 +139,15 @@ void main() {
     (status: 401, code: 'session_missing', type: isA<api.SessionMissingException>()),
     (status: 404, code: 'user_not_found', type: isA<api.UserNotFoundException>()),
   ]) {
-    test('${rejection.code} reaches the session guard and manual caller as the same failed cycle', () async {
+    test('${rejection.code} is reported as a session rejection and manual caller as the same failed cycle', () async {
       harness.respond = (_) async => http.Response('{"code":"${rejection.code}"}', rejection.status);
       final task = _register(harness.worker, connected: false);
 
       await expectLater(task.runNow(), throwsA(rejection.type));
 
       expect(task.state.phase, PollingTaskPhase.failed);
-      expect(harness.sessionGuard.errors, hasLength(1));
-      expect(task.state.error, same(harness.sessionGuard.errors.single));
+      expect(harness.sessionRejections, hasLength(1));
+      expect(task.state.error, same(harness.sessionRejections.single));
       expect(harness.local.getInfo(), UserRepositoryIntegrationHarness.cachedUser);
       expect(harness.requests, hasLength(1), reason: 'session rejections must not be retried by the API client');
     });
@@ -162,7 +162,7 @@ void main() {
     expect(task.state.phase, PollingTaskPhase.failed);
     expect(harness.local.getInfo(), UserRepositoryIntegrationHarness.cachedUser);
     expect(harness.requests, hasLength(1));
-    expect(harness.sessionGuard.errors, isEmpty);
+    expect(harness.sessionRejections, isEmpty);
   });
 }
 

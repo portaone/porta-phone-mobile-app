@@ -6,7 +6,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' as api;
 
-import 'package:webtrit_phone/app/session/empty_session_guard.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -35,7 +34,6 @@ void main() {
       token: 'token',
       appDatabase: appDatabase,
       trashSupported: true,
-      sessionGuard: const EmptySessionGuard(),
     );
     await pumpEventQueue();
   }

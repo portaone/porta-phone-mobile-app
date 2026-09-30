@@ -8,7 +8,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' as api;
 
-import 'package:webtrit_phone/app/session/session_guard.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -20,7 +19,6 @@ import '../mocks/voicemails_fixture_factory.dart';
 void main() {
   late AppDatabase appDatabase;
   late _Client client;
-  late _Guard guard;
   late VoicemailRepositoryImpl repository;
 
   setUpAll(() {
@@ -30,7 +28,6 @@ void main() {
   setUp(() async {
     appDatabase = AppDatabase(NativeDatabase.memory());
     client = _Client();
-    guard = _Guard();
     when(() => client.getUserVoicemailList(any(), locale: any(named: 'locale')))
         .thenAnswer((_) async => api.UserVoicemailListResponse(hasNewMessages: false, items: const []));
     repository = VoicemailRepositoryImpl(
@@ -38,7 +35,6 @@ void main() {
       token: 'token',
       appDatabase: appDatabase,
       trashSupported: true,
-      sessionGuard: guard,
     );
     // Let the refresh the constructor starts finish before a test seeds or
     // asserts. It is detached (`.ignore()`), so without this a test races the
@@ -98,7 +94,6 @@ void main() {
       token: 'token',
       appDatabase: appDatabase,
       trashSupported: false,
-      sessionGuard: guard,
     );
     await pumpEventQueue();
     await insert(['1']);
@@ -135,7 +130,6 @@ void main() {
           options: any(named: 'options'),
         ),
       ).called(1);
-      expect(guard.errors, isEmpty);
     });
 
     test('the first of several failures is the one rethrown', () async {
@@ -203,7 +197,7 @@ void main() {
       );
     });
 
-    test('a 401 stops the loop, reaches the session guard and is rethrown', () async {
+    test('a 401 stops the loop and is rethrown', () async {
       await insert(['1', '2', '3']);
       final error = unauthorized();
       deleteAnswers({'2': error});
@@ -219,7 +213,6 @@ void main() {
           options: any(named: 'options'),
         ),
       );
-      expect(guard.errors, [same(error)]);
     });
   });
 
@@ -246,9 +239,3 @@ void main() {
 }
 
 class _Client extends Mock implements api.WebtritApiClient {}
-
-class _Guard implements SessionGuard {
-  final errors = <Exception>[];
-  @override
-  void onUnauthorized(Exception e) => errors.add(e);
-}
