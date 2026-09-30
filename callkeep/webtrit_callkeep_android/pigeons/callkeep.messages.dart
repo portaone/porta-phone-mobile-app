@@ -519,6 +519,12 @@ abstract class PDelegateBackgroundServiceFlutterApi {
 
   @async
   void performEndCall(String callId);
+
+  /// Callkeep no longer needs this session for [callId]: the app holds the call
+  /// now, or it ended through another handler. The session finishes the work it
+  /// started and returns from its callback; nothing is sent to the server.
+  @async
+  void performHandoff(String callId);
 }
 
 @HostApi()

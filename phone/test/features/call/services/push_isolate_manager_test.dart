@@ -15,13 +15,17 @@ import 'package:webtrit_phone/features/call/services/isolate_manager.dart';
 /// Records what the push session asks of callkeep.
 class _FakeCallkeep implements PushSessionCallkeep {
   final List<String> reported = [];
+  final Map<String, CallkeepEndCallReason> reportedAs = {};
   final List<String> released = [];
 
   @override
   void setBackgroundServiceDelegate(CallkeepBackgroundServiceDelegate? delegate) {}
 
   @override
-  Future<void> reportEndCall(String callId, CallkeepEndCallReason reason) async => reported.add(callId);
+  Future<void> reportEndCall(String callId, CallkeepEndCallReason reason) async {
+    reported.add(callId);
+    reportedAs[callId] = reason;
+  }
 
   @override
   Future<void> releaseCall(String callId) async => released.add(callId);
@@ -163,17 +167,55 @@ void main() {
       expect(missed.single.$1, 'c1');
     });
 
-    test('an Activity taking over leaves the ringing call to it', () async {
+    test('callkeep handing the call off leaves the ringing call to the app', () async {
       final session = manager.run(owner);
       signaling.handshake([(callId: 'c1', caller: '555002')]);
 
-      signaling.activityTookOver();
+      manager.performHandoff('c1');
       await session;
       await manager.close().catchError((_) {});
       await settle();
 
-      expect(callkeep.reported, isEmpty, reason: 'the call is live and now the Activity\'s');
+      expect(callkeep.reported, isEmpty, reason: 'the call is live and now the app\'s');
       expect(callkeep.released, isEmpty);
+    });
+
+    test('the Activity displacing the socket does not end the session', () async {
+      // 4441 only says the server's events now go to the Activity's socket; whether the app holds
+      // the call is callkeep's to confirm. Until then the session stays, and the service with it.
+      var done = false;
+      final session = manager.run(owner)..whenComplete(() => done = true);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+
+      signaling.activityTookOver();
+      await settle();
+      expect(done, isFalse);
+
+      manager.performHandoff('c1');
+      await session;
+      expect(callkeep.released, isEmpty);
+    });
+
+    test('a handoff of another call changes nothing', () async {
+      var done = false;
+      manager.run(owner).whenComplete(() => done = true);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+
+      manager.performHandoff('c2');
+      await settle();
+
+      expect(done, isFalse, reason: 'c1 still rings here');
+    });
+
+    test('a handed-off call the session never saw is not released on close', () async {
+      final session = manager.run(owner);
+
+      manager.performHandoff('c1');
+      await session;
+      await manager.close().catchError((_) {});
+      await settle();
+
+      expect(callkeep.released, isEmpty, reason: 'the app holds c1; releasing it would end its call');
     });
   });
 
@@ -246,17 +288,17 @@ void main() {
       expect(done, isFalse, reason: 'c1 still rings after the record too');
     });
 
-    test('the Activity taking over waits for a record another call started', () async {
+    test('a handoff waits for a record another call started', () async {
       // The order seen in the design review: a second call hangs up and its record begins,
-      // then the Activity takes the session over. The session must not complete - and the
-      // plugin must not stop the service - before that record is done.
+      // then callkeep hands the session's call to the app. The session must not complete - and
+      // the plugin must not stop the service - before that record is done.
       var done = false;
       final session = manager.run(owner)..whenComplete(() => done = true);
       signaling.handshake([(callId: 'c1', caller: '555002'), (callId: 'c2', caller: '555003')]);
       signaling.hangup('c2', line: 1);
       await settle();
 
-      signaling.activityTookOver();
+      manager.performHandoff('c1');
       await settle();
       expect(done, isFalse, reason: 'the record of c2 is still pending');
 
@@ -285,11 +327,11 @@ void main() {
       expect(callkeep.reported, ['c2', 'c1']);
     });
 
-    test('the own call not on line 0 is still found and left to the Activity', () async {
+    test('the own call not on line 0 is still found and left to the app', () async {
       final session = manager.run(owner);
       signaling.handshake([(callId: 'c2', caller: '555003'), (callId: 'c1', caller: '555002')]);
 
-      signaling.activityTookOver();
+      manager.performHandoff('c1');
       await session;
       await manager.close().catchError((_) {});
       await settle();
@@ -304,6 +346,21 @@ void main() {
       await session.timeout(const Duration(seconds: 1));
 
       expect(callkeep.reported, ['c1'], reason: 'the own call ended before the session opened');
+      expect(callkeep.reportedAs['c1'], CallkeepEndCallReason.missedWhileConnecting);
+    });
+
+    test('an own call reported gone is not released again on close', () async {
+      // The session never saw c1 arrive, so the close path would otherwise release it a second
+      // time: a decline for a connection callkeep ended on the report.
+      final session = manager.run(owner);
+      signaling.handshake([(callId: 'c2', caller: '555003')]);
+      await session.timeout(const Duration(seconds: 1));
+
+      await manager.close().catchError((_) {});
+      await settle();
+
+      expect(callkeep.reported, ['c1']);
+      expect(callkeep.released, isEmpty, reason: 'the end was reported; releasing would decline it twice');
     });
   });
 
@@ -327,6 +384,11 @@ void main() {
 
       expect(missed, isEmpty, reason: 'an outgoing call or one answered elsewhere is not a missed call');
       expect(callkeep.reported, ['c9'], reason: 'it is still ended natively');
+      expect(
+        callkeep.reportedAs['c9'],
+        CallkeepEndCallReason.remoteEnded,
+        reason: 'it never rang here, so there is no presentation to guard against',
+      );
     });
   });
 

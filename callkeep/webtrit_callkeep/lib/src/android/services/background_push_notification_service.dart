@@ -31,8 +31,8 @@ class BackgroundPushNotificationService {
   /// [CallkeepEndCallReason.missedWhileConnecting] for a call the app never presented.
   ///
   /// Ends the call, not the session: [IncomingCallService] keeps running, so the session can
-  /// still record the missed call and show its notification. Finish the session afterwards with
-  /// [releaseCall] or [handoffCall] as before.
+  /// still record the missed call and show its notification. The session finishes on its own:
+  /// return from the callback, and the plugin stops the service.
   Future<void> reportEndCall(String callId, CallkeepEndCallReason reason) {
     if (kIsWeb || !Platform.isAndroid) return Future.value();
     return platform.reportEndCallBackgroundPushNotificationService(callId, reason);

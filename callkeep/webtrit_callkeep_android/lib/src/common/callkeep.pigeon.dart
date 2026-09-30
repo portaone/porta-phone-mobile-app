@@ -2510,6 +2510,11 @@ abstract class PDelegateBackgroundServiceFlutterApi {
 
   Future<void> performEndCall(String callId);
 
+  /// Callkeep no longer needs this session for [callId]: the app holds the call
+  /// now, or it ended through another handler. The session finishes the work it
+  /// started and returns from its callback; nothing is sent to the server.
+  Future<void> performHandoff(String callId);
+
   static void setUp(PDelegateBackgroundServiceFlutterApi? api, {
     BinaryMessenger? binaryMessenger,
     String messageChannelSuffix = '',
@@ -2549,6 +2554,27 @@ abstract class PDelegateBackgroundServiceFlutterApi {
           final String arg_callId = args[0]! as String;
           try {
             await api.performEndCall(arg_callId);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundServiceFlutterApi.performHandoff$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          final List<Object?> args = message! as List<Object?>;
+          final String arg_callId = args[0]! as String;
+          try {
+            await api.performHandoff(arg_callId);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

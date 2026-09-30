@@ -231,9 +231,10 @@ sequenceDiagram
         User->>SYS: Answer
         SYS->>PCS: onAnswer
         PCS->>PISO: performAnswerCall (records _answeredCallId, no WS send)
-        Note over PISO: session completes - the call is the Activity's now
-        PISO-->>ICS: run() future resolves -> stop service, keep connection
         Note over ACT: Activity launches, binds ForegroundService, adopts the connection
+        CORE->>PISO: performHandoff (the app's delegate holds the call)
+        Note over PISO: session completes
+        PISO-->>ICS: run() future resolves -> stop service, keep connection
         ACT->>WS: answer over the app WebSocket (SIP 200 OK)
         ACT->>CORE: PHostApi: mute / hold / DTMF / end
         CORE-->>ACT: ConnectionEventListener events (PDelegateFlutterApi)
@@ -270,6 +271,13 @@ stops `IncomingCallService` on it - the session never stops the service itself. 
 draining, not stopping: every missed-call record the session started (its own call's or another
 call's) finishes before it resolves, whatever ended the session, so the record is written while
 the service still holds its rights. `releaseCall` stays only for a call the session never saw.
+
+What ends the session is its own call ending here, or callkeep's `performHandoff`: the app's
+delegate has taken the call (or another handler ended it). The Activity's WebSocket displacing
+the session's (4441 `controllerForceAttachClose`) is not a handoff - it only moves the server's
+events to the Activity, which reports a hangup of its own accord - and the session keeps the
+service up through it. On a Samsung M32 cold start that gap between the Activity's socket and
+its delegate was 8.8 s; a caller hanging up inside it used to come back as a ghost call.
 
 ## Sequence — Case B (persistent / socket)
 

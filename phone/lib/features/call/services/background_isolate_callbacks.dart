@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:logging/logging.dart';
 
@@ -63,8 +65,7 @@ Future<PushNotificationIsolateManager> _getOrInit(PushIsolateContext context) as
   // call made in bootstrap.dart (Activity isolate). Register the factory here so
   // _startDirect() can create a SignalingModule when connect() is called from run().
   await WebtritSignalingService.setModuleFactory(createSignalingModule);
-  WebtritSignalingService.setHandoffCallback(() => _manager?.notifyActivityTookOver());
-  _logger.info('_getOrInit: module factory and handoff callback registered');
+  _logger.info('_getOrInit: module factory registered');
 
   final l10n = lookupAppLocalizations(_effectiveLocale(context.locale, AppLocalizations.supportedLocales));
   final localPushRepository = context.localPushRepository;
@@ -134,13 +135,12 @@ Future<void> _disposeContext(PushIsolateContext context) async {
 ///   `reportEndCall()` ends the [PhoneConnection] at once, the missed call is recorded while
 ///   [IncomingCallService] is still up, and the session completes once the record is done.
 /// - **Answered via push UI**: `performAnswerCall` fires -> the call is remembered as
-///   answered and the session completes; the plugin stops [IncomingCallService] without
-///   terminating the connection, leaving the Activity to adopt the live call.
-/// - **Activity took over**: the Activity opens its own WebSocket, the server sends
-///   4441 (`controllerForceAttachClose`) to the push isolate, or the plugin detects
-///   the Activity via [IsolateNameServer] and calls the handoff callback - whichever
-///   arrives first completes the push lifecycle early via `notifyActivityTookOver()`.
-///   A missed-call record another call started still finishes before the future completes.
+///   answered; the session completes once callkeep confirms the app holds it.
+/// - **Handed off**: `performHandoff` fires once the app's delegate has taken the call (or
+///   another handler ended it) - the one confirmation that the call's events reach the app.
+///   The Activity's WebSocket displacing this one (4441 `controllerForceAttachClose`) is
+///   not: it only means the server's hangup now reaches the app instead. The session
+///   completes on the confirmation, after a missed-call record another call started.
 @pragma('vm:entry-point')
 Future<void> onPushNotificationSyncCallback(CallkeepIncomingCallMetadata? metadata) async {
   PushIsolateContext? context;
@@ -192,7 +192,16 @@ Future<void> onPushNotificationSyncCallback(CallkeepIncomingCallMetadata? metada
   } catch (e) {
     _logger.severe('onPushNotificationSyncCallback: error=$e');
   } finally {
-    await _disposeContext(context);
+    // The plugin stops IncomingCallService once this callback returns, and gives the session a
+    // budget to get here. The teardown below is not the session's work: it needs no service,
+    // and on a cold start its platform calls wait on the main looper behind the app's own start
+    // for longer than that budget. Return first; the teardown finishes on its own, or dies with
+    // the engine the service destroys.
+    unawaited(
+      _disposeContext(context).catchError(
+        (Object e, StackTrace st) => _logger.warning('onPushNotificationSyncCallback: dispose failed', e, st),
+      ),
+    );
   }
 }
 

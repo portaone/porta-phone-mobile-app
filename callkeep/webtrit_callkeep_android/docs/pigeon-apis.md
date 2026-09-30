@@ -157,6 +157,7 @@ communicator keep a `SupervisorJob` scope on `Dispatchers.Main.immediate` for th
 | `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | Place this outgoing call                                                                                      |
 | `performAnswerCall(callId)`                                               | Answer this call                                                                                              |
 | `performEndCall(callId)`                                                  | End this call                                                                                                 |
+| `performHandoff(callId)`                                                  | Push isolate only: the call is the app's now, or ended elsewhere; finish and return                           |
 | `performSetHeld(callId, onHold)`                                          | Hold or resume this call                                                                                      |
 | `performSetMuted(callId, muted)`                                          | Mute or unmute this call                                                                                      |
 | `performSendDTMF(callId, key)`                                            | Send this DTMF digit                                                                                          |

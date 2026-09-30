@@ -73,9 +73,10 @@ class IncomingCallServiceReleaseTest {
 
     private fun stopped() = shadowOf(service).isStoppedBySelf
 
-    /** The push session's side of the bridge: records whether it was asked to end a call. */
+    /** The push session's side of the bridge: records what it was told about each call. */
     private class RecordingCommunicator : FlutterIsolateCommunicator {
         val endCallIds = mutableListOf<String>()
+        val handoffCallIds = mutableListOf<String>()
 
         override fun performAnswer(
             callId: String,
@@ -89,6 +90,15 @@ class IncomingCallServiceReleaseTest {
             onFailure: (Throwable) -> Unit,
         ) {
             endCallIds += callId
+            onSuccess()
+        }
+
+        override fun performHandoff(
+            callId: String,
+            onSuccess: () -> Unit,
+            onFailure: (Throwable) -> Unit,
+        ) {
+            handoffCallIds += callId
             onSuccess()
         }
 
@@ -131,7 +141,7 @@ class IncomingCallServiceReleaseTest {
     }
 
     @Test
-    fun `an end the app reported is not sent to the session as performEndCall`() {
+    fun `an end the app reported is a handoff to the session, not a performEndCall`() {
         show("A")
         val session = RecordingCommunicator().also { service.getCallLifecycleHandler().flutterApi = it }
         CallkeepCore.instance.reportCallEnded(CallMetadata(callId = "A"), PEndCallReasonEnum.MISSED_WHILE_CONNECTING)
@@ -139,7 +149,8 @@ class IncomingCallServiceReleaseTest {
         release("A", IncomingCallRelease.IC_RELEASE_ENDED)
 
         assertTrue("the app reported this end; the session must not decline the call on the server again", session.endCallIds.isEmpty())
-        assertTrue(stopped())
+        assertEquals("the session is told the call is no longer its concern", listOf("A"), session.handoffCallIds)
+        assertFalse("the session's future stops the service, not the release", stopped())
     }
 
     @Test
@@ -150,6 +161,35 @@ class IncomingCallServiceReleaseTest {
         release("A", IncomingCallRelease.IC_RELEASE_ENDED)
 
         assertEquals(listOf("A"), session.endCallIds)
+        assertTrue(session.handoffCallIds.isEmpty())
+        assertFalse("the session ends the call on the server and finishes; only then does the service stop", stopped())
+    }
+
+    @Test
+    fun `a handoff for the shown call is told to the session, which then finishes`() {
+        show("A")
+        val session = RecordingCommunicator().also { service.getCallLifecycleHandler().flutterApi = it }
+
+        release("A", IncomingCallRelease.IC_RELEASE_HANDED_OVER)
+
+        assertEquals(listOf("A"), session.handoffCallIds)
+        assertFalse(stopped())
+
+        service.onSessionFinished("A")
+        ShadowLooper.idleMainLooper(5, TimeUnit.SECONDS)
+        assertTrue(stopped())
+    }
+
+    @Test
+    fun `a session that does not finish is stopped by its budget`() {
+        show("A")
+        RecordingCommunicator().also { service.getCallLifecycleHandler().flutterApi = it }
+
+        IncomingCallService.release(context, "A", IncomingCallRelease.IC_RELEASE_HANDED_OVER)
+        ShadowLooper.idleMainLooper(9, TimeUnit.SECONDS)
+        assertFalse("the session has 10 s to finish", stopped())
+
+        ShadowLooper.idleMainLooper(2, TimeUnit.SECONDS)
         assertTrue(stopped())
     }
 
@@ -168,16 +208,17 @@ class IncomingCallServiceReleaseTest {
     }
 
     @Test
-    fun `release handed over for the shown call stops the service`() {
+    fun `release handed over for the shown call with no session stops the service`() {
         show("A")
 
+        // No push isolate here: nobody to finish anything, so the service stops at once.
         release("A", IncomingCallRelease.IC_RELEASE_HANDED_OVER)
 
         assertTrue(stopped())
     }
 
     @Test
-    fun `release ended for the shown call stops the service`() {
+    fun `release ended for the shown call with no session stops the service`() {
         show("A")
 
         // No push isolate here: performEndCall falls back to releasing directly.
