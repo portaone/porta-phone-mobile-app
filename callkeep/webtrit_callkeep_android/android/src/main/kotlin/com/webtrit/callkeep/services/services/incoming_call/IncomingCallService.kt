@@ -58,9 +58,9 @@ class IncomingCallService :
     // deferred) would otherwise both deliver call data to the Dart isolate.
     private var callDataSynced = false
 
-    // Set to true on the first handleRelease() call. Guards against a second invocation in the
-    // narrow window where both releaseReceiver and the PendingBroadcastQueue early-exit path
-    // could race to call handleRelease() for the same call.
+    // Set to true on the first handleRelease() call. Guards against a second invocation for the
+    // same call: a release can reach it from releaseReceiver and from the early release taken
+    // at launch.
     private var isReleased = false
 
     // Set to true once the call has been answered and the notification has been stripped of its
@@ -124,31 +124,38 @@ class IncomingCallService :
 
     fun getCallLifecycleHandler(): CallLifecycleHandler = callLifecycleHandler
 
+    /** The call this service shows, or null until IC_INITIALIZE has named it. */
+    private val shownCallId: String?
+        get() = callLifecycleHandler.currentCallData?.callId
+
+    /**
+     * True when this service already shows a call other than [callId].
+     *
+     * The service shows exactly one call, but the release broadcast and the AnswerCall event are
+     * sent for every call, so each is checked against the call on screen. Before IC_INITIALIZE
+     * no call is shown and nothing counts as another call.
+     */
+    private fun showsAnotherCall(callId: String): Boolean = shownCallId.let { it != null && it != callId }
+
     override fun onConnectionEvent(
         event: ConnectionEvent,
         data: Bundle?,
     ) {
-        // Only handle AnswerCall. DeclineCall and HungUp are handled via IC_RELEASE_ENDED
-        // intent (triggered from PhoneConnection.onDisconnect -> cancelIncomingNotification).
-        // Handling them here as well would cause a double performEndCall: once from handleRelease
-        // and once from this listener, racing to tear down the WebSocket before the SIP BYE is
-        // sent. The IC_RELEASE_ENDED path is the single authoritative source for decline
-        // teardown.
-        if (event == CallLifecycleEvent.AnswerCall) {
-            val metadata = data?.let(CallMetadata::fromBundleOrNull) ?: return
-            // Another call being answered (e.g. a replay of an active call's state) says nothing
-            // about the call this service is ringing.
-            // Before IC_INITIALIZE the call is not known yet; the answer is acted on as before.
-            val owned = callLifecycleHandler.currentCallData?.callId
-            if (owned != null && metadata.callId != owned) {
-                Log.i(TAG, "AnswerCall for ${metadata.callId} ignored: this service shows $owned")
-                return
-            }
-            // Covers answers that never touch our notification: the system call UI, a Bluetooth
-            // headset, a watch, Android Auto.
-            dropAnswerActions()
-            performAnswerCall(metadata)
+        // Only AnswerCall. Decline and hang-up reach this service as IC_RELEASE_ENDED; handling
+        // them here too would run performEndCall twice and race the WebSocket teardown against
+        // the SIP BYE.
+        if (event != CallLifecycleEvent.AnswerCall) return
+        val metadata = data?.let(CallMetadata::fromBundleOrNull) ?: return
+        // An answer for another call, such as a replay of an active call's state, says nothing
+        // about the call ringing here.
+        if (showsAnotherCall(metadata.callId)) {
+            Log.i(TAG, "AnswerCall for ${metadata.callId} ignored: this service shows $shownCallId")
+            return
         }
+        // Covers answers that never touch our notification: the system call UI, a Bluetooth
+        // headset, a watch, Android Auto.
+        dropAnswerActions()
+        callLifecycleHandler.performAnswerCall(metadata)
     }
 
     override fun onCreate() {
@@ -221,6 +228,7 @@ class IncomingCallService :
             return START_NOT_STICKY
         }
 
+        // Releases do not come through here: they are broadcasts (see releaseReceiver).
         return when (action) {
             PushNotificationServiceEnums.IC_INITIALIZE.name -> {
                 if (metadata == null) {
@@ -232,37 +240,32 @@ class IncomingCallService :
                 }
             }
 
-            // IC_RELEASE_HANDED_OVER / IC_RELEASE_ENDED are now delivered via
-            // releaseReceiver (BroadcastReceiver registered in onCreate). They no longer
-            // arrive through onStartCommand — release() uses sendInternalBroadcast() instead
-            // of startService(), so the service is never restarted after it has stopped.
-
-            // Listen push notification actions (Only notify connection service)
+            // The buttons of the ringing notification only tell the connection service, which
+            // owns the call; the release that follows ends this service.
             NotificationAction.Answer.action -> {
-                if (metadata != null) {
-                    // The user has pressed answer: take the buttons away now rather than when the
-                    // service is torn down, which on a cold start is many seconds later.
-                    dropAnswerActions()
-                    reportAnswerToConnectionService(metadata)
-                } else {
-                    Log.w(TAG, "onStartCommand: Answer action missing metadata")
-                    START_NOT_STICKY
-                }
+                val call = metadata ?: return ignoreWithoutMetadata(action)
+                // Take the buttons away now rather than when the service is torn down, which on
+                // a cold start is many seconds later.
+                dropAnswerActions()
+                callLifecycleHandler.reportAnswerToConnectionService(call)
+                START_NOT_STICKY
             }
 
             NotificationAction.Decline.action -> {
-                if (metadata != null) {
-                    reportHungUpToConnectionService(metadata)
-                } else {
-                    Log.w(TAG, "onStartCommand: Decline action missing metadata")
-                    START_NOT_STICKY
-                }
+                val call = metadata ?: return ignoreWithoutMetadata(action)
+                callLifecycleHandler.reportDeclineToConnectionService(call)
+                START_NOT_STICKY
             }
 
             else -> {
                 handleUnknownAction(action)
             }
         }
+    }
+
+    private fun ignoreWithoutMetadata(action: String?): Int {
+        Log.w(TAG, "onStartCommand: $action missing metadata")
+        return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -353,22 +356,10 @@ class IncomingCallService :
         incomingCallHandler.detachForegroundNotification()
     }
 
-    private fun reportAnswerToConnectionService(metadata: CallMetadata): Int {
-        callLifecycleHandler.reportAnswerToConnectionService(metadata)
-        return START_NOT_STICKY
-    }
-
-    private fun reportHungUpToConnectionService(metadata: CallMetadata): Int {
-        callLifecycleHandler.reportDeclineToConnectionService(metadata)
-        return START_NOT_STICKY
-    }
-
-    // Called from onConnectionEvent only, never from onStartCommand - no start mode to return.
-    private fun performAnswerCall(metadata: CallMetadata) {
-        callLifecycleHandler.performAnswerCall(metadata)
-    }
-
-    // Launches the service with the LAUNCH action and cancels the timeout
+    /**
+     * Takes on the call IC_INITIALIZE names: shows it, or - when it already ended before this
+     * service learned it was its call - releases it without showing anything.
+     */
     private fun handleLaunch(metadata: CallMetadata): Int {
         // The service handles one call at a time. If IC_INITIALIZE arrives while we are
         // still in the teardown window of a previous call (stopTimeoutRunnable pending),
@@ -382,28 +373,10 @@ class IncomingCallService :
         }
         isInitialized = true
 
-        // Check for a pending release posted by ForegroundService.reportEndCall() before
-        // this service started. startForegroundService(IC_INITIALIZE) may be queued in the
-        // OS before the caller hangs up. By the time the OS delivers it, reportEndCall() has
-        // already run and posted to PendingBroadcastQueue. The IC_RELEASE_ENDED
-        // broadcast from :callkeep_core was lost (releaseReceiver not yet registered), so
-        // this in-process entry is the only remaining signal that the call is over.
-        val earlyRelease = takeEarlyRelease(metadata.callId)
-        if (earlyRelease != null) {
-            Log.w(TAG, "handleLaunch: pending release $earlyRelease found for callId=${metadata.callId} — releasing immediately without showing UI")
-            // Block any deferred syncPushIsolate from establishFlutterCommunication(). The call
-            // is already in teardown; delivering it to Dart as a new incoming call would create
-            // a zombie ActiveCall on the Dart side that was never set up natively.
-            callDataSynced = true
-            // startForeground() must be called within 5s of startForegroundService() on Android 12+.
-            // handle() satisfies this by posting a notification and calling startForeground().
-            // releaseIncomingCallNotification() immediately transitions it to a silent release
-            // notification, so the ringing UI is never visible to the user.
-            incomingCallHandler.handle(metadata)
-            callLifecycleHandler.currentCallData = metadata.toPCallkeepIncomingCallData()
-            handleRelease(earlyRelease)
-            return START_NOT_STICKY
-        }
+        // startForegroundService(IC_INITIALIZE) can be delivered after the call is already over;
+        // the release that said so is waiting for it (see takeEarlyRelease).
+        takeEarlyRelease(metadata.callId)?.let { return releaseWithoutShowing(metadata, it) }
+
         timeoutHandler.removeCallbacks(stopTimeoutRunnable)
         timeoutHandler.removeCallbacks(independentTimeoutRunnable)
         timeoutHandler.postDelayed(independentTimeoutRunnable, INDEPENDENT_SERVICE_TIMEOUT_MS)
@@ -434,6 +407,29 @@ class IncomingCallService :
     }
 
     /**
+     * Ends a call that was over before this service learned it shows it, without it ever
+     * appearing as ringing.
+     */
+    private fun releaseWithoutShowing(
+        metadata: CallMetadata,
+        release: IncomingCallRelease,
+    ): Int {
+        Log.w(TAG, "handleLaunch: pending release $release found for callId=${metadata.callId} — releasing immediately without showing UI")
+        // Block any deferred syncPushIsolate from establishFlutterCommunication(). The call
+        // is already in teardown; delivering it to Dart as a new incoming call would create
+        // a zombie ActiveCall on the Dart side that was never set up natively.
+        callDataSynced = true
+        // startForeground() must be called within 5s of startForegroundService() on Android 12+.
+        // handle() satisfies this by posting a notification and calling startForeground().
+        // releaseIncomingCallNotification() immediately transitions it to a silent release
+        // notification, so the ringing UI is never visible to the user.
+        incomingCallHandler.handle(metadata)
+        callLifecycleHandler.currentCallData = metadata.toPCallkeepIncomingCallData()
+        handleRelease(release)
+        return START_NOT_STICKY
+    }
+
+    /**
      * The one place that decides whether a release concerns this service.
      *
      * The release is broadcast on the end of any call - an outgoing or active one, a second
@@ -449,18 +445,18 @@ class IncomingCallService :
         callId: String,
         reason: IncomingCallRelease,
     ) {
-        when (val owned = callLifecycleHandler.currentCallData?.callId) {
-            null -> {
+        when {
+            shownCallId == null -> {
                 Log.i(TAG, "release $reason for $callId before any call is shown: kept until IC_INITIALIZE")
                 earlyReleases[callId] = reason
             }
 
-            callId -> {
-                handleRelease(reason)
+            showsAnotherCall(callId) -> {
+                Log.i(TAG, "release $reason for $callId ignored: this service shows $shownCallId")
             }
 
             else -> {
-                Log.i(TAG, "release $reason for $callId ignored: this service shows $owned")
+                handleRelease(reason)
             }
         }
     }
@@ -480,7 +476,11 @@ class IncomingCallService :
         return received ?: IncomingCallRelease.IC_RELEASE_ENDED.takeIf { posted }
     }
 
-    // Handles the RELEASE action and cancels the timeout
+    /**
+     * Ends the ringing phase of the call this service shows, once: silences the notification and
+     * arms the stop timeout, then either lets go at once ([IncomingCallRelease.IC_RELEASE_HANDED_OVER])
+     * or lets the push isolate end the call on the server first ([IncomingCallRelease.IC_RELEASE_ENDED]).
+     */
     private fun handleRelease(reason: IncomingCallRelease): Int {
         if (isReleased) {
             Log.w(TAG, "handleRelease: already released, ignoring duplicate invocation")
