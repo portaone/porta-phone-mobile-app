@@ -41,7 +41,7 @@ construction time, so early singleton creation itself never throws. There is no 
 subclass: `ContextHolder.init` runs at each entry point (plugin attach, `WebtritCallkeep`,
 service `onCreate`, receiver `onReceive`; the `:callkeep_core` services init their own copy), and
 a CS command issued before any entry point has run throws `IllegalStateException` -- the
-synchronous-throw case described under `startIncomingCall` below. Swapping the `instance`
+synchronous-throw case described under Incoming registration below. Swapping the `instance`
 assignment is the single point to change IPC strategy without touching call sites.
 
 Known consumers: `ForegroundService`, `ConnectionsApi`, `WebtritCallkeepPlugin` (lock-screen
@@ -74,7 +74,7 @@ events. `ForegroundService.onConnectionEvent` still handles the other call and U
 
 | Method                                                         | Typical trigger                                                                                                                | Effect                                                                                                                              |
 |----------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| `addPending(callId)`                                           | own `startIncomingCall`; outgoing `startCall` pre-registration                                                                 | Registers pending; resets the four per-call guards first (the sticky ghost guard excepted); true = caller owns the entry            |
+| `addPending(callId)`                                           | incoming dispatch inside `registerIncomingCall`; outgoing `startCall` pre-registration                                         | Registers pending; resets the four per-call guards first (the sticky ghost guard excepted); true = caller owns the entry            |
 | `removePending(callId)`                                        | registration failure / timeout / decline-before-confirmation / failed outgoing / tearDown and `onDestroy` rollback             | Drops the pending entry only                                                                                                        |
 | `promote(callId, meta, state)`                                 | `IncomingConnectionReported`; `OngoingCall`; adoption paths                                                                    | Full registration; same guard reset as `addPending` (also clears an earlier `markAnswered`)                                         |
 | `markAnswered(callId)`                                         | `AnswerCall` broadcast; adoption paths (after `promote`); `CallLifecycleHandler` fallback when the push isolate is unreachable | Answer guard only; no state stamp                                                                                                   |
@@ -151,19 +151,14 @@ tablets, Android Go builds) **and** every release below API 26; everything else 
 
 ### Call Setup
 
-| Method                                        | Description                                     |
-|-----------------------------------------------|-------------------------------------------------|
-| `startIncomingCall(meta, onSuccess, onError)` | Reserve pending + trigger incoming registration |
-| `startOutgoingCall(meta)`                     | Trigger outgoing connection creation            |
+| Method                    | Description                          |
+|---------------------------|--------------------------------------|
+| `startOutgoingCall(meta)` | Trigger outgoing connection creation |
 
-`startIncomingCall` owns the `pendingCallIds` reservation: it calls `addPending` first and rejects
-a concurrent duplicate registration (push isolate vs foreground signaling for the same callId)
-with `CALL_ID_ALREADY_EXISTS` if the entry already exists. On any failure -- logical `onError` or a
-synchronous throw from the backend -- it drains the reservation exactly once before propagating.
-This is the low-level dispatch API. The push, signaling and SMS entry points all use the
-complete `registerIncomingCall` operation below; none of them calls this dispatch API or manages
-pending callbacks itself. Raw dispatch also enables the core receiver; a Telecom refusal drains
-its pending reservation even when no host call is waiting.
+An incoming call has no dispatch-only entry: every caller goes through `registerIncomingCall`
+below. Inside it, the core's private dispatch owns the `pendingCallIds` reservation: it calls
+`addPending` before handing the call to the backend and, on any failure -- logical error or a
+synchronous throw -- drains the reservation exactly once before the waiting callers learn it.
 
 ### Incoming registration
 

@@ -199,10 +199,9 @@ must preserve them (most are pinned by `MainProcessConnectionTrackerTest`):
    `state = STATE_DISCONNECTED` for the rest of the session -- it is the "ever seen" marker that
    makes derived termination and the `endCall` re-fire path work.
 7. **`addPending` returning true is an ownership token.** The core's incoming dispatch (behind
-   `registerIncomingCall` and the dispatch-only `startIncomingCall`) uses it to arbitrate
-   concurrent registrations of the same callId: only the inserting caller proceeds and owns the
-   rollback duty. Push and signaling reports of one call no longer race here -- the second joins
-   the registration already waiting.
+   `registerIncomingCall`) uses it to arbitrate concurrent registrations of the same callId: only
+   the inserting caller proceeds and owns the rollback duty. Push, signaling and SMS reports of
+   one call no longer race here -- the later ones join the registration already waiting.
 
 ## Thread Safety and Atomicity
 
@@ -240,9 +239,9 @@ What is deliberately NOT atomic:
   from the main process" rule (AGENTS.md, [dual-process.md](dual-process.md)) is about
   connection state, which lives only in the `:callkeep_core` heap, while the `pendingCallIds`
   pre-registration is populated in the MAIN-process heap by `checkAndReservePending` during
-  `startIncomingCall` -- so the main process must also be the one to drop it, or a subsequent
-  `reportNewIncomingCall` with the same callId (blind transfer-back) is permanently rejected as
-  a duplicate.
+  `PhoneConnectionService.startIncomingCall` -- so the main process must also be the one to drop
+  it, or a subsequent `reportNewIncomingCall` with the same callId (blind transfer-back) is
+  permanently rejected as a duplicate.
 
 Any further refactor must preserve every invariant in the previous section -- in particular the
 sticky ghost guard (5), the state-only-record semantics (2), and answered-blocks-terminated (3).
@@ -253,7 +252,7 @@ sticky ghost guard (5), the state-only-record semantics (2), and answered-blocks
 
 | Mutation                         | Called from                                                                                                                                                                                                                                                                                                                                                                      |
 |----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `addPending`                     | `InProcessCallkeepCore` incoming dispatch (owns the entry; behind `registerIncomingCall` and `startIncomingCall`); `ForegroundService.startCall` (outgoing pre-registration)                                                                                                                                                                                                     |
+| `addPending`                     | `InProcessCallkeepCore` incoming dispatch (owns the entry; behind `registerIncomingCall`); `ForegroundService.startCall` (outgoing pre-registration)                                                                                                                                                                                                                             |
 | `promote`                        | `InProcessCallkeepCore` incoming registration: `IncomingConnectionReported` and deferred `AnswerCall` confirmation, and adoption of an existing backend call (`STATE_ACTIVE` + `markAnswered`, or `STATE_RINGING` -- see invariant 4); `ForegroundService` `OngoingCall` per-call receiver (outgoing, `STATE_DIALING`)                                                           |
 | `markAnswered`                   | `AnswerCall` handler (`handleCSReportAnswerCall`); adoption paths (after `promote`); `CallLifecycleHandler.performAnswerCall` fallback when the push isolate is unreachable                                                                                                                                                                                                      |
 | `updateState`                    | `ConnectionStateChanged` handler (source of truth: `PhoneConnection.onStateChanged` in `:callkeep_core`, or `StandaloneCallService` transitions)                                                                                                                                                                                                                                 |
@@ -290,9 +289,9 @@ for any future tightening of the push re-registration path), the guards survivin
 `markTerminated`, the `updateMetadata` merge, and -- via a two-thread stress cycle -- that a
 reader can never observe a transient terminated state mid-transition (this test FAILS against
 the former multi-collection implementation, demonstrating the closed race).
-`InProcessCallkeepCoreTest` (8 tests) covers the `startIncomingCall` pending-ownership contract
-(concurrent duplicate rejection, drain-on-error, drain-on-throw, drain-at-most-once, a cold raw
-dispatch releasing its reservation on Telecom refusal), the
+`IncomingRegistrationTest` covers the pending-ownership contract of incoming dispatch (one
+dispatch for concurrent reports, drain on a dispatch error or throw, drain at most once, a
+refusal releasing the reservation). `InProcessCallkeepCoreTest` (2 tests) covers the
 `clearAndMarkEndCallDispatched` composite (tracker termination + main-process
 `ConnectionManager` reservation drop + dispatch dedup), and `routeAnswerCall` preferring the
 live connection inside the dual-state window.

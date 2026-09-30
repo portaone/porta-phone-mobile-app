@@ -35,6 +35,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
@@ -383,6 +384,22 @@ class IncomingRegistrationTest {
         verifyDispatches(2)
         event(CallLifecycleEvent.IncomingConnectionReported, "c1")
         assertNull(retried.result())
+    }
+
+    @Test
+    fun `a backend answering one dispatch twice drains pending once`() {
+        val tracker = spy(MainProcessConnectionTracker())
+        core = InProcessCallkeepCore(tracker = tracker, routerInit = { router })
+        val error = PIncomingCallError(PIncomingCallErrorEnum.INTERNAL)
+        stubRouter { _, _, onError ->
+            onError(error)
+            onError(error)
+        }
+
+        val owner = report("push", "c1")
+
+        assertEquals(error, owner.result())
+        verify(tracker, times(1)).removePending("c1")
     }
 
     @Test

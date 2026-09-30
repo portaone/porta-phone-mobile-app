@@ -378,20 +378,6 @@ class InProcessCallkeepCore internal constructor(
     @RequiresPermission(Manifest.permission.CALL_PHONE)
     override fun startOutgoingCall(metadata: CallMetadata) = router.startOutgoingCall(metadata)
 
-    override fun startIncomingCall(
-        metadata: CallMetadata,
-        onSuccess: () -> Unit,
-        onError: (PIncomingCallError?) -> Unit,
-    ) {
-        ensureReceiving()
-        if (wasEndedWithoutFlutterState(metadata.callId)) {
-            onError(PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED))
-            return
-        }
-        incomingRegistrations.allowRetry(metadata.callId)
-        dispatchIncomingCall(metadata, onSuccess, onError)
-    }
-
     private fun dispatchIncomingCall(
         metadata: CallMetadata,
         onSuccess: () -> Unit,
@@ -400,10 +386,10 @@ class InProcessCallkeepCore internal constructor(
     ) {
         val callId = metadata.callId
         // Reserve before dispatch so answer/end can find the call while Telecom is creating it.
-        // Registration callers already joined in the core; this also protects raw SMS dispatch.
+        // Callers of the same id already joined one registration; this guards the tracker itself.
         val addedPending = tracker.addPending(callId)
         if (!addedPending) {
-            Log.w(TAG, "startIncomingCall: callId=$callId already pending, rejecting concurrent duplicate")
+            Log.w(TAG, "dispatchIncomingCall: callId=$callId already pending, rejecting concurrent duplicate")
             onError(PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS))
             return
         }
