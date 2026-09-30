@@ -1310,7 +1310,7 @@ class ForegroundService :
                 // Push-notification path: tell the background isolate to release its
                 // signaling WebSocket. ActivityHolder.start() already fired from
                 // PhoneConnection.onAnswer() in :callkeep_core.
-                IncomingCallService.release(baseContext, IncomingCallRelease.IC_RELEASE_HANDED_OVER)
+                IncomingCallService.release(baseContext, callMetaData.callId, IncomingCallRelease.IC_RELEASE_HANDED_OVER)
             }
             notifyFlutter("performAnswerCall") { performAnswerCall(callMetaData.callId) }
         }
