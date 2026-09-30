@@ -6,6 +6,7 @@ import android.os.Looper
 import com.webtrit.callkeep.PCallkeepIncomingCallData
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.incoming_call.handlers.CallLifecycleHandler
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -91,12 +92,15 @@ class CallLifecycleHandlerTest {
     private class FakeConnectionController : CallConnectionController {
         var answerCallCount = 0
         var tearDownCallCount = 0
+        val declinedCallIds = mutableListOf<String>()
 
         override fun answer(metadata: CallMetadata) {
             answerCallCount++
         }
 
-        override fun decline(metadata: CallMetadata) {}
+        override fun decline(metadata: CallMetadata) {
+            declinedCallIds.add(metadata.callId)
+        }
 
         override fun hangUp(metadata: CallMetadata) {}
 
@@ -347,5 +351,40 @@ class CallLifecycleHandlerTest {
 
         assertEquals(0, fakeController.answerCallCount)
         assertEquals(0, fakeController.tearDownCallCount)
+    }
+
+    // -------------------------------------------------------------------------
+    // releaseCall / handoffCall - the service stops only for the call it shows
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `releaseCall for the shown call ends it and stops the service`() {
+        runBlocking { handler.releaseCall("call-1") }
+
+        assertEquals(listOf("call-1"), fakeController.declinedCallIds)
+        assertEquals(listOf("stop"), stopServiceCalls)
+    }
+
+    @Test
+    fun `releaseCall for another call ends that call and keeps the service`() {
+        // A second call on the same push session hangs up while call-1 still rings.
+        runBlocking { handler.releaseCall("call-2") }
+
+        assertEquals(listOf("call-2"), fakeController.declinedCallIds)
+        assertTrue("call-1's service must keep running", stopServiceCalls.isEmpty())
+    }
+
+    @Test
+    fun `handoffCall for the shown call stops the service`() {
+        runBlocking { handler.handoffCall("call-1") }
+
+        assertEquals(listOf("stop"), stopServiceCalls)
+    }
+
+    @Test
+    fun `handoffCall for another call keeps the service`() {
+        runBlocking { handler.handoffCall("call-2") }
+
+        assertTrue(stopServiceCalls.isEmpty())
     }
 }

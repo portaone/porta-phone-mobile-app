@@ -241,7 +241,7 @@ sequenceDiagram
         User->>SYS: Decline
         SYS->>PCS: onReject -> terminateWithCause(REJECTED)
         PCS->>ICS: onDisconnect -> release(IC_RELEASE_ENDED)
-        ICS->>PISO: handleRelease(answered=false) -> performEndCall
+        ICS->>PISO: handleRelease(IC_RELEASE_ENDED) -> performEndCall
         PISO->>WS: DeclineRequest (the push isolate sends the decline)
         Note over ICS: stop service, dismiss UI
     else Missed (caller cancels)
@@ -250,6 +250,17 @@ sequenceDiagram
         PCS->>SYS: dismiss incoming UI
     end
 ```
+
+The push session belongs to the call it was opened for (the one `IncomingCallService` shows).
+Its WebSocket sees every line of the account, so it can also hear about other calls - a second
+incoming call that Telecom refused while this one rings. A `HangupEvent` for such a call ends
+that call natively - and records it as a missed call, under its own caller, only if the session
+saw that call's `IncomingCallEvent` - but does not end the session: ending it there handed the
+session's own call off while it still rang, which took its notification away and left its
+connection ringing with nobody to hear its hangup. The handshake is read for every incoming line
+for the same reason - the session's own call is not necessarily on line 0. If the handshake no
+longer lists the session's own call, that call ended before the session opened: the session
+releases it and closes instead of waiting for a hangup that will not come.
 
 ## Sequence — Case B (persistent / socket)
 
