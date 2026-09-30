@@ -141,6 +141,8 @@ native → Dart events.
 - Message prefix: `<#> WEBTRIT:` (hard-coded security filter, do not change).
 - Regex pattern (4 capture groups in order): `callId`, `handle`, `displayName`, `hasVideo`.
 - Configured via `initializeSmsReception(messagePrefix:, regexPattern:)`.
+- A matched message is registered through `CallkeepCore.registerIncomingCall`, the same operation
+  as push and signaling, so it joins a report of the same call and gets its outcome.
 - Full regex spec: `docs/sms_trigger_regex_requirements.md` at repo root.
 
 ---

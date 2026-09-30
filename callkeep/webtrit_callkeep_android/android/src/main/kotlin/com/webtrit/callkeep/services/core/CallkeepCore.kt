@@ -257,8 +257,9 @@ interface CallkeepCore {
      *   throwable reaches the Pigeon channel as channel-error, so its message and stack
      *   trace are preserved for Dart-side diagnostics.
      *
-     * Dispatch-only API for the SMS receiver. Clients that need the backend outcome must use
-     * [registerIncomingCall], which owns waiting and cleanup, including synchronous exceptions.
+     * Dispatch-only: it does not wait for the backend's outcome. Every entry point (push,
+     * signaling, SMS) uses [registerIncomingCall], which owns waiting and cleanup, including
+     * synchronous exceptions.
      */
     fun startIncomingCall(
         metadata: CallMetadata,

@@ -160,17 +160,18 @@ tablets, Android Go builds) **and** every release below API 26; everything else 
 a concurrent duplicate registration (push isolate vs foreground signaling for the same callId)
 with `CALL_ID_ALREADY_EXISTS` if the entry already exists. On any failure -- logical `onError` or a
 synchronous throw from the backend -- it drains the reservation exactly once before propagating.
-This is the low-level dispatch API, also used by the SMS entry point. The push and signaling
-entry points use the complete `registerIncomingCall` operation below; they do not call this
-dispatch API or manage pending callbacks themselves. Raw dispatch also enables the core receiver;
-a Telecom refusal drains its pending reservation even when no host call is waiting, as for SMS.
+This is the low-level dispatch API. The push, signaling and SMS entry points all use the
+complete `registerIncomingCall` operation below; none of them calls this dispatch API or manages
+pending callbacks itself. Raw dispatch also enables the core receiver; a Telecom refusal drains
+its pending reservation even when no host call is waiting.
 
 ### Incoming registration
 
-The signaling and push Pigeon entry points both call
-`registerIncomingCall(metadata, client)`. This suspend operation waits for the backend's outcome
-or the registration deadline, rather than returning dispatch acceptance. The core checks the
-never-presented-call guard, adopts an existing call
+The signaling and push Pigeon entry points and the SMS trigger receiver all call
+`registerIncomingCall(metadata, client)`. The receiver keeps its broadcast alive with
+`goAsync()` until the operation answers, which the five-second deadline bounds. This suspend
+operation waits for the backend's outcome or the registration deadline, rather than returning
+dispatch acceptance. The core checks the never-presented-call guard, adopts an existing call
 when appropriate, joins a registration already in progress or starts a new one. The first caller
 dispatches once; callers joining the same call id wait for that operation and receive
 `CALL_ID_ALREADY_EXISTS` when it succeeds. A refusal reaches every caller.
