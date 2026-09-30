@@ -6,9 +6,11 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Build
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.services.broadcaster.CallCommandEvent
+import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.core.CallkeepCore
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -16,6 +18,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
@@ -64,6 +67,16 @@ class PhoneConnectionServiceCommandTest {
         PhoneConnectionService.sendTearDownConnections(refusing)
 
         assertEquals(listOf(CallCommandEvent.TearDownComplete.name), acks)
+    }
+
+    @Test
+    fun `a refused incoming cancellation does not pretend the native call hung up`() {
+        CallkeepCore.instance.registerConnectionEvents(app, listOf(CallLifecycleEvent.HungUp), ackReceiver)
+
+        PhoneConnectionService.cancelIncomingCall(refusing, "call-1")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals(emptyList<String?>(), acks)
     }
 
     @Test

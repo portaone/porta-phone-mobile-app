@@ -130,6 +130,10 @@ class PhoneConnectionService : ConnectionService() {
                     handleReserveAnswer(command.callId)
                 }
 
+                is PhoneServiceCommand.CancelIncoming -> {
+                    handleCancelIncomingCall(command.callId)
+                }
+
                 is PhoneServiceCommand.Clean -> {
                     handleCleanConnections()
                 }
@@ -298,11 +302,14 @@ class PhoneConnectionService : ConnectionService() {
         // reporting process, whose ConnectionManager is a different JVM instance, and Telecom then
         // binds this service and calls here on the main thread.
         //
-        // A refusal means cleanConnections already captured this callId - a stale callback that
-        // arrived after a tearDown - so the connection is refused rather than created into a
-        // session that is already closed.
+        // Session cleanup or a final registration cancellation can precede Telecom creation.
+        // Neither may be undone by a late callback.
         if (!connectionManager.addPendingForIncomingCall(metadata.callId)) {
-            Log.w(TAG, "onCreateIncomingConnection: callId=${metadata.callId} force-terminated by tearDown, rejecting stale callback")
+            val reason = "Incoming registration already cancelled: callId=${metadata.callId}"
+            Log.w(TAG, reason)
+            // Returning a failed connection does not invoke onCreateIncomingConnectionFailed.
+            // A restarted main process or dispatch-only client still needs this final result.
+            dispatcher.dispatch(baseContext, CallLifecycleEvent.IncomingFailure, FailureMetadata(metadata, reason).toBundle())
             return Connection.createFailedConnection(DisconnectCause(DisconnectCause.LOCAL))
         }
 
@@ -369,6 +376,7 @@ class PhoneConnectionService : ConnectionService() {
             // and does not cancel it with DISCONNECTED/CANCELED.
             Log.i(TAG, "onCreateIncomingConnection: scheduling deferred answer after Telecom setup for callId=${metadata.callId}")
             android.os.Handler(android.os.Looper.getMainLooper()).post {
+                if (connectionManager.getConnection(metadata.callId) !== connection) return@post
                 Log.i(TAG, "onCreateIncomingConnection: applying deferred answer for callId=${metadata.callId}")
                 connection.onAnswer()
             }
@@ -452,6 +460,12 @@ class PhoneConnectionService : ConnectionService() {
         }
         connectionManager.cleanConnections()
         dispatcher.dispatch(baseContext, CallCommandEvent.TearDownComplete)
+    }
+
+    private fun handleCancelIncomingCall(callId: String) {
+        Log.i(TAG, "Cancelling incoming registration: callId=$callId")
+        connectionManager.cancelIncomingCall(callId)?.hungUp()
+        phoneConnectionServiceDispatcher.dispatchLifecycle(ConnectionLifecycleAction.ConnectionChanged)
     }
 
     private fun handleReserveAnswer(callId: String) {
@@ -578,6 +592,15 @@ class PhoneConnectionService : ConnectionService() {
             metadata: CallMetadata,
         ) {
             communicate(context, ServiceAction.DeclineCall, metadata)
+        }
+
+        fun cancelIncomingCall(
+            context: Context,
+            callId: String,
+        ) {
+            // Cancellation must reach the backend even if it has no connection yet. A refused
+            // start is logged as a lost command, not reported as a successful native hangup.
+            command(context, ServiceAction.CancelIncomingCall, Bundle().apply { putString(CallDataConst.CALL_ID, callId) }, "callId=$callId")
         }
 
         fun startHungUpCall(

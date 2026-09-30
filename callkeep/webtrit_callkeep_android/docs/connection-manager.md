@@ -38,9 +38,16 @@ fun removePending(callId: String)
 Both run inside `:callkeep_core`, where `PhoneConnectionService.onCreateIncomingConnection`
 is the only thing that registers a slot: the call is reported straight to Telecom from the
 other process, so nothing arrives here ahead of Telecom's own callback.
-`addPendingForIncomingCall` returns `false` when `cleanConnections()` has already captured
-this callId as force-terminated, i.e. the call is a zombie and must not be re-registered -
-which is what the caller refuses the connection on.
+`addPendingForIncomingCall` returns `false` when session cleanup captured the ID as
+force-terminated or `cancelIncomingCall` recorded a final registration rejection. The service
+returns a failed connection and reports `IncomingFailure` to drain any main-process waiter or
+raw pending reservation.
+
+`cancelIncomingCall(callId)` atomically records the cancelled UUID, removes its pending slot and
+deferred answer, and returns any live connection for the service to hang up. It records the ID
+even before Telecom has delivered a creation callback. Cancelled IDs survive `cleanConnections`
+and cannot reserve an answer or create a connection afterward. This applies only to calls rejected
+before app presentation; ordinary hangup and transfer-back do not create cancellation records.
 
 ```kotlin
 fun checkAndReservePending(callId: String): PIncomingCallErrorEnum?

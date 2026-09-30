@@ -226,15 +226,17 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   Future<void> close() => _events.close();
 }
 
-/// Records what the bloc asked the OS to do; every request is accepted.
+/// Records what the bloc asked the OS to do; requests are accepted by default.
 class FakeCallkeep extends Fake implements Callkeep {
+  CallkeepIncomingCallError? incomingRegistrationError;
+
   @override
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(
     String callId,
     CallkeepHandle handle, {
     String? displayName,
     bool hasVideo = false,
-  }) async => null;
+  }) async => incomingRegistrationError;
 
   @override
   Future<void> reportUpdateCall(

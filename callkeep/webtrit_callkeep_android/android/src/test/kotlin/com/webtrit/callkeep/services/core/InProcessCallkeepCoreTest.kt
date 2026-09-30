@@ -1,10 +1,17 @@
 package com.webtrit.callkeep.services.core
 
+import android.content.Context
 import android.os.Build
+import android.os.Looper
+import androidx.test.core.app.ApplicationProvider
 import com.webtrit.callkeep.PCallkeepConnectionState
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
+import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.models.CallMetadata
+import com.webtrit.callkeep.models.FailureMetadata
+import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
+import com.webtrit.callkeep.services.broadcaster.ConnectionServicePerformBroadcaster
 import com.webtrit.callkeep.services.services.connection.ConnectionManager
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -23,6 +30,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
@@ -51,6 +59,7 @@ class InProcessCallkeepCoreTest {
 
     @Before
     fun setUp() {
+        ContextHolder.init(ApplicationProvider.getApplicationContext<Context>())
         tracker = MainProcessConnectionTracker()
         router = mock(CallServiceRouter::class.java)
         core = InProcessCallkeepCore(tracker = tracker, routerInit = { router })
@@ -94,6 +103,27 @@ class InProcessCallkeepCoreTest {
         assertTrue(succeeded)
         // Connection lifecycle (promote / markTerminated) drains pending later — not us.
         assertTrue(tracker.isPending("call-1"))
+    }
+
+    @Test
+    fun `a cold raw incoming dispatch hears Telecom refusal and releases its pending reservation`() {
+        stubRouter { _, onSuccess, _ -> onSuccess() }
+        var succeeded = false
+        core.startIncomingCall(metadata(), onSuccess = { succeeded = true }, onError = {})
+        assertTrue(succeeded)
+        assertTrue(core.isPending("call-1"))
+
+        ConnectionServicePerformBroadcaster.handle.dispatch(
+            ApplicationProvider.getApplicationContext(),
+            CallLifecycleEvent.IncomingFailure,
+            FailureMetadata(metadata(), "onCreateIncomingConnectionFailed: callId=call-1").toBundle(),
+        )
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertFalse(core.isPending("call-1"))
+        assertTrue(core.isTerminated("call-1"))
+        core.notifyConnectionEvent(CallLifecycleEvent.IncomingConnectionReported, metadata().toBundle())
+        assertFalse(core.exists("call-1"))
     }
 
     // ----------------------------------------------------------------------
@@ -148,7 +178,7 @@ class InProcessCallkeepCoreTest {
         }
 
         // Callbacks bypassed — documented contract: caller must rely on its own safety-net
-        // (e.g. ForegroundService's 5 s INCOMING_CALL_CONFIRMATION_TIMEOUT_MS).
+        // (e.g. the 5 s timeout of the core's incoming-registration waiter).
         assertFalse(succeeded)
         assertNull(receivedError)
         // Pending drained — a subsequent reportNewIncomingCall for this callId can succeed.

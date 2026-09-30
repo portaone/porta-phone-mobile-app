@@ -24,7 +24,7 @@ flowchart TB
   classDef ext fill:#f5f5f5,stroke:#999999,color:#000
   classDef dec fill:#fff2cc,stroke:#d6b656,color:#000
 
-  IN["reportNewIncomingCall -> CallkeepCore.startIncomingCall<br/>-> PhoneConnectionService (Telecom) -> IncomingCallService.start (ringing UI)"]:::ck
+  IN["reportNewIncomingCall -> CallkeepCore.registerIncomingCall<br/>-> PhoneConnectionService (Telecom) -> IncomingCallService.start (ringing UI)"]:::ck
   GATE{"IncomingCallHandler.maybeInitBackgroundHandling"}:::dec
   IN --> GATE
   GATE -- "hosted on an external engine<br/>(WebtritCallkeep.attachToEngine)" --> HOST["the host engine owns the background work<br/>callkeep does NOT spawn an isolate"]:::app

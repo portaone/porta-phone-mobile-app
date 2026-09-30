@@ -176,7 +176,7 @@ These are the non-obvious behaviors the rest of the plugin depends on. Any refac
 must preserve them (most are pinned by `MainProcessConnectionTrackerTest`):
 
 1. **State survives `addPending`.** `updateState` writes are NOT reset by the `addPending` guard
-   reset. `reportNewIncomingCall` relies on this for cold-start adoption: after
+   reset. `registerIncomingCall` relies on this for cold-start adoption: after
    `CALL_ID_ALREADY_EXISTS`, `getState() == STATE_ACTIVE` distinguishes "answered via the
    notification while the main process had no UI" from "still ringing".
 2. **A state-only callId reads as terminated.** If `updateState` ran for a callId that is in no
@@ -186,19 +186,23 @@ must preserve them (most are pinned by `MainProcessConnectionTrackerTest`):
    before `promote`, the call has `isAnswered == true`, `exists == false`, and -- because the
    `answered` flag blocks the derived formula -- `isTerminated == false`.
 4. **`promote` clears the answered guard.** Adoption sites must call `markAnswered` AFTER
-   `promote`. `ForegroundService.reportNewIncomingCall` has four promote sites: the three
-   already-answered adoptions promote with `STATE_ACTIVE` and re-mark answered right after;
-   the fourth (`STATE_RINGING`, the broadcast-lag "still ringing in Telecom" path) deliberately
-   does NOT mark answered -- the call is still ringing, and marking it would make
-   `checkIncomingDuplicate` report it as already answered.
+   `promote`. The core's incoming registration promotes in two places. Adoption of an existing
+   backend call promotes an answered call with `STATE_ACTIVE` and re-marks answered right
+   after; a still-ringing one (the broadcast-lag "still ringing in Telecom" path) is promoted
+   with `STATE_RINGING` and deliberately NOT marked answered -- marking it would make
+   `checkIncomingDuplicate` report it as already answered. Confirmation promotes on
+   `IncomingConnectionReported` (ringing, or active when already answered) and on a deferred
+   `AnswerCall` (active, then `markAnswered`).
 5. **The ghost guard is sticky.** `endedWithoutFlutterState` survives `addPending`/`promote`
    and repeated reads; only `clear()` removes it.
 6. **Records (and their `state`) live until `clear()`.** Terminated calls keep their record with
    `state = STATE_DISCONNECTED` for the rest of the session -- it is the "ever seen" marker that
    makes derived termination and the `endCall` re-fire path work.
-7. **`addPending` returning true is an ownership token.** `InProcessCallkeepCore.startIncomingCall`
-   uses it to arbitrate concurrent registrations of the same callId (push isolate vs foreground
-   signaling): only the inserting caller proceeds and owns the rollback duty.
+7. **`addPending` returning true is an ownership token.** The core's incoming dispatch (behind
+   `registerIncomingCall` and the dispatch-only `startIncomingCall`) uses it to arbitrate
+   concurrent registrations of the same callId: only the inserting caller proceeds and owns the
+   rollback duty. Push and signaling reports of one call no longer race here -- the second joins
+   the registration already waiting.
 
 ## Thread Safety and Atomicity
 
@@ -247,27 +251,27 @@ sticky ghost guard (5), the state-only-record semantics (2), and answered-blocks
 
 **Mutations by trigger:**
 
-| Mutation                         | Called from                                                                                                                                                                                                                                                                                                                                             |
-|----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `addPending`                     | `InProcessCallkeepCore.startIncomingCall` (owns the entry); `ForegroundService.startCall` (outgoing pre-registration)                                                                                                                                                                                                                                   |
-| `promote`                        | `ForegroundService`: `IncomingConnectionReported` handler; `OngoingCall` per-call receiver (outgoing, `STATE_DIALING`); four sites in `reportNewIncomingCall` -- three already-answered adoptions (`STATE_ACTIVE`, each followed by `markAnswered`) and the still-ringing broadcast-lag promote (`STATE_RINGING`, no `markAnswered` -- see invariant 4) |
-| `markAnswered`                   | `AnswerCall` handler (`handleCSReportAnswerCall`); adoption paths (after `promote`); `CallLifecycleHandler.performAnswerCall` fallback when the push isolate is unreachable                                                                                                                                                                             |
-| `updateState`                    | `ConnectionStateChanged` handler (source of truth: `PhoneConnection.onStateChanged` in `:callkeep_core`, or `StandaloneCallService` transitions)                                                                                                                                                                                                        |
-| `updateMetadata`                 | `InProcessCallkeepCore.startUpdateCall` (e.g. mid-call hasVideo toggle)                                                                                                                                                                                                                                                                                 |
-| `markTerminated`                 | `reportEndCall` (synchronous, ahead of the `DeclineCall` echo); via `clearAndMarkEndCallDispatched` in the `HungUp`/`DeclineCall`/`ConnectionNotFound` handler, tearDown steps, and the incoming-confirmation timeout                                                                                                                                   |
-| `removePending`                  | rollback paths: failed/timed-out incoming registration, decline-before-confirmation (`HungUp`/`DeclineCall` handler with a pending incoming callback), failed outgoing, tearDown step 1b, `ForegroundService.onDestroy`                                                                                                                                 |
-| `reserveAnswer`/`consumeAnswer`  | `answerCall` deferred path / `AnswerCall` handler                                                                                                                                                                                                                                                                                                       |
-| `drainUnconnectedPendingCallIds` | `tearDown` step 2                                                                                                                                                                                                                                                                                                                                       |
-| `clear`                          | end of `tearDown` (after TearDownComplete ack or timeout); `ConnectionsApi.cleanConnections`                                                                                                                                                                                                                                                            |
-| guard marks                      | `tearDown` and `ForegroundService.onDestroy` (directNotified + endCallDispatched for unresolved pending incomings; onDestroy runs WITHOUT a subsequent `clear()`), `endCall`, `reportEndCall` (`MISSED_WHILE_CONNECTING` arms the ghost guard)                                                                                                          |
+| Mutation                         | Called from                                                                                                                                                                                                                                                                                                                                                                      |
+|----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `addPending`                     | `InProcessCallkeepCore` incoming dispatch (owns the entry; behind `registerIncomingCall` and `startIncomingCall`); `ForegroundService.startCall` (outgoing pre-registration)                                                                                                                                                                                                     |
+| `promote`                        | `InProcessCallkeepCore` incoming registration: `IncomingConnectionReported` and deferred `AnswerCall` confirmation, and adoption of an existing backend call (`STATE_ACTIVE` + `markAnswered`, or `STATE_RINGING` -- see invariant 4); `ForegroundService` `OngoingCall` per-call receiver (outgoing, `STATE_DIALING`)                                                           |
+| `markAnswered`                   | `AnswerCall` handler (`handleCSReportAnswerCall`); adoption paths (after `promote`); `CallLifecycleHandler.performAnswerCall` fallback when the push isolate is unreachable                                                                                                                                                                                                      |
+| `updateState`                    | `ConnectionStateChanged` handler (source of truth: `PhoneConnection.onStateChanged` in `:callkeep_core`, or `StandaloneCallService` transitions)                                                                                                                                                                                                                                 |
+| `updateMetadata`                 | `InProcessCallkeepCore.startUpdateCall` (e.g. mid-call hasVideo toggle)                                                                                                                                                                                                                                                                                                          |
+| `markTerminated`                 | `reportEndCall` (synchronous, ahead of the `DeclineCall` echo); the core's terminal-event handling while no `CallEndListener` is attached; via `clearAndMarkEndCallDispatched` in the `HungUp`/`DeclineCall`/`ConnectionNotFound` handler, tearDown steps, and every core rejection of an incoming registration (refusal, end before confirmation, timeout, session end, detach) |
+| `removePending`                  | rollback of a failed incoming dispatch (logical error or synchronous throw, drained once); failed outgoing `startCall`. Rejected registrations drop the entry through `clearAndMarkEndCallDispatched`                                                                                                                                                                            |
+| `reserveAnswer`/`consumeAnswer`  | `answerCall` deferred path / `AnswerCall` handler                                                                                                                                                                                                                                                                                                                                |
+| `drainUnconnectedPendingCallIds` | `tearDown` step 2                                                                                                                                                                                                                                                                                                                                                                |
+| `clear`                          | end of `tearDown` (after TearDownComplete ack or timeout); `ConnectionsApi.cleanConnections`                                                                                                                                                                                                                                                                                     |
+| guard marks                      | core rejection of an incoming registration (directNotified + endCallDispatched; the confirmation timeout also arms the ghost guard and cancels the call in the backend); `tearDown` (directNotified + endCallDispatched for active and unconnected pending calls); `endCall`; `reportEndCall` (`MISSED_WHILE_CONNECTING` arms the ghost guard)                                   |
 
 **Reads:**
 
 - `ForegroundService.answerCall` -- `routeAnswerCall` (exists -> answer now, pending -> defer,
   else error);
 - `ForegroundService.endCall` -- `isTerminated` re-fire path + `markEndCallDispatched` dedup;
-- `ForegroundService.reportNewIncomingCall` -- ghost guard, `checkIncomingDuplicate`, `getState`
-  adoption;
+- `InProcessCallkeepCore.registerIncomingCall` -- ghost guard, `checkIncomingDuplicate`,
+  `getState` adoption (both the push and the signaling report go through it);
 - `deliverIncomingToDelegate` -- `isTerminated` suppresses seeding a dead call into CallBloc;
 - `syncScreenWakelock` -- `getAll` hasVideo;
 - `WebtritCallkeepPlugin` ON_START -- `getAll` + `getPendingCallIds` decide the lock-screen /
@@ -286,8 +290,9 @@ for any future tightening of the push re-registration path), the guards survivin
 `markTerminated`, the `updateMetadata` merge, and -- via a two-thread stress cycle -- that a
 reader can never observe a transient terminated state mid-transition (this test FAILS against
 the former multi-collection implementation, demonstrating the closed race).
-`InProcessCallkeepCoreTest` (7 tests) covers the `startIncomingCall` pending-ownership contract
-(concurrent duplicate rejection, drain-on-error, drain-on-throw, drain-at-most-once), the
+`InProcessCallkeepCoreTest` (8 tests) covers the `startIncomingCall` pending-ownership contract
+(concurrent duplicate rejection, drain-on-error, drain-on-throw, drain-at-most-once, a cold raw
+dispatch releasing its reservation on Telecom refusal), the
 `clearAndMarkEndCallDispatched` composite (tracker termination + main-process
 `ConnectionManager` reservation drop + dispatch dedup), and `routeAnswerCall` preferring the
 live connection inside the dual-state window.

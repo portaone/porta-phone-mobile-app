@@ -42,6 +42,22 @@ class ConnectionManager {
     // for UUID call IDs but handled for correctness).
     private val forcedTerminatedCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+    // Final incoming registration failures outlive session cleanup. The app has already declined
+    // these UUIDs, so neither a late Telecom callback nor a deferred answer may revive them.
+    private val cancelledIncomingCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+    fun isIncomingCallCancelled(callId: String): Boolean = cancelledIncomingCallIds.contains(callId)
+
+    /** Records cancellation even when Telecom has not delivered its creation callback yet. */
+    fun cancelIncomingCall(callId: String): PhoneConnection? =
+        synchronized(connectionResourceLock) {
+            cancelledIncomingCallIds.add(callId)
+            pendingCallIds.remove(callId)
+            pendingAnswers.remove(callId)
+            terminatedCallIds.add(callId)
+            connections[callId]?.takeUnless { it.state == Connection.STATE_DISCONNECTED }
+        }
+
     /**
      * Atomically validates that a call ID can be added and reserves it as pending.
      *
@@ -101,8 +117,8 @@ class ConnectionManager {
     }
 
     /**
-     * Adds [callId] to [pendingCallIds] and returns true, or returns false and does nothing
-     * if [callId] is currently in [forcedTerminatedCallIds].
+     * Adds [callId] to [pendingCallIds], unless session cleanup or a final incoming
+     * registration cancellation has already ended it.
      *
      * In the dual-process architecture, [checkAndReservePending] runs in the reporting process
      * (main or push isolate) and populates that process's [ConnectionManager] instance. The
@@ -115,17 +131,17 @@ class ConnectionManager {
      * callId, so this is a stale post-tearDown callback. The caller (onCreateIncomingConnection)
      * rejects the connection instead of creating a [PhoneConnection] for a closed session.
      */
-    fun addPendingForIncomingCall(callId: String): Boolean {
-        // If cleanConnections() already ran and captured this callId into forcedTerminatedCallIds,
-        // this is a post-tearDown stale callback. Reject it so no PhoneConnection is created for a
-        // closed session whose broadcasts would arrive in an already-cleared main-process tracker.
-        if (forcedTerminatedCallIds.contains(callId)) {
-            logger.w("addPendingForIncomingCall: callId=$callId is force-terminated, rejecting stale in-flight intent")
-            return false
+    fun addPendingForIncomingCall(callId: String): Boolean =
+        synchronized(connectionResourceLock) {
+            // Both a closed session and a final registration cancellation reject delayed
+            // Telecom creation. Cancellation also covers IDs never pending in this process.
+            if (forcedTerminatedCallIds.contains(callId) || isIncomingCallCancelled(callId)) {
+                logger.w("addPendingForIncomingCall: callId=$callId already ended, rejecting stale Telecom callback")
+                return@synchronized false
+            }
+            pendingCallIds.add(callId)
+            true
         }
-        pendingCallIds.add(callId)
-        return true
-    }
 
     /**
      * Returns true if [callId] was in [pendingCallIds] when [cleanConnections] was last called.
@@ -224,7 +240,9 @@ class ConnectionManager {
      * without holding the connection creation lock (e.g., tearDown, ConnectionNotFound).
      */
     fun reserveAnswer(callId: String) {
-        pendingAnswers.add(callId)
+        synchronized(connectionResourceLock) {
+            if (!isIncomingCallCancelled(callId)) pendingAnswers.add(callId)
+        }
     }
 
     /**
@@ -279,6 +297,7 @@ class ConnectionManager {
     @RequiresApi(Build.VERSION_CODES.O)
     fun reserveOrGetConnectionToAnswer(callId: String): PhoneConnection? {
         synchronized(connectionResourceLock) {
+            if (isIncomingCallCancelled(callId)) return null
             val connection = connections[callId]
             return if (connection != null && !connection.hasAnswered) {
                 connection

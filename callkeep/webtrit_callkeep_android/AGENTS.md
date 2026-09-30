@@ -83,6 +83,7 @@ explicit `startService` intents. Events are grouped by broadcaster:
 | `TearDownConnections` | Main -> `:callkeep_core` | --       | Trigger `hungUp()` + `cleanConnections()` on all PhoneConnections                                                                                        |
 | `TearDownComplete`    | `:callkeep_core` -> Main | --       | Ack that tearDown completed                                                                                                                              |
 | `ReserveAnswer`       | Main -> `:callkeep_core` | `callId` | Deferred answer reservation cross-process                                                                                                                |
+| `CancelIncomingCall`  | Main -> `:callkeep_core` | `callId` | Withdraw an incoming call rejected before the app presented it; a later Telecom creation or answer of it is refused                                      |
 | `CleanConnections`    | Main -> `:callkeep_core` | --       | Clear all connections without `hungUp()`                                                                                                                 |
 | `ReplayAudioState`    | Main -> `:callkeep_core` | --       | Ask all PhoneConnections to re-emit audio device + mute state; used by `ForegroundService.onDelegateSet()` to restore Flutter audio UI after hot restart |
 
