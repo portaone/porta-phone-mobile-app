@@ -112,7 +112,9 @@ Future<void> _disposeContext(PushIsolateContext context) async {
 /// Entry point for the CallKeep push-notification background isolate.
 ///
 /// Runs the full incoming-call lifecycle (signaling, missed-call notification,
-/// call log, native release), then disposes all resources.
+/// call log), then disposes all resources. The plugin keeps [IncomingCallService]
+/// up until this future completes and stops it itself afterwards, so the work the
+/// session starts is done while the service still has its rights.
 /// Registered via [AndroidCallkeepServices.backgroundPushNotificationBootstrapService.initializeCallback].
 ///
 /// ## Persistent-session devices
@@ -130,14 +132,15 @@ Future<void> _disposeContext(PushIsolateContext context) async {
 /// one of three outcomes:
 /// - **Missed call**: [HangupEvent] received before the user answers ->
 ///   `reportEndCall()` ends the [PhoneConnection] at once, the missed call is recorded while
-///   [IncomingCallService] is still up, then `releaseCall()` stops the service.
-/// - **Answered via push UI**: `performAnswerCall` fires ->
-///   `handoffCall()` stops [IncomingCallService] without terminating the connection,
-///   leaving the Activity to adopt the live call.
+///   [IncomingCallService] is still up, and the session completes once the record is done.
+/// - **Answered via push UI**: `performAnswerCall` fires -> the call is remembered as
+///   answered and the session completes; the plugin stops [IncomingCallService] without
+///   terminating the connection, leaving the Activity to adopt the live call.
 /// - **Activity took over**: the Activity opens its own WebSocket, the server sends
 ///   4441 (`controllerForceAttachClose`) to the push isolate, or the plugin detects
 ///   the Activity via [IsolateNameServer] and calls the handoff callback - whichever
 ///   arrives first completes the push lifecycle early via `notifyActivityTookOver()`.
+///   A missed-call record another call started still finishes before the future completes.
 @pragma('vm:entry-point')
 Future<void> onPushNotificationSyncCallback(CallkeepIncomingCallMetadata? metadata) async {
   PushIsolateContext? context;

@@ -231,7 +231,8 @@ sequenceDiagram
         User->>SYS: Answer
         SYS->>PCS: onAnswer
         PCS->>PISO: performAnswerCall (records _answeredCallId, no WS send)
-        PISO->>ICS: handoffCall (stop service, keep connection)
+        Note over PISO: session completes - the call is the Activity's now
+        PISO-->>ICS: run() future resolves -> stop service, keep connection
         Note over ACT: Activity launches, binds ForegroundService, adopts the connection
         ACT->>WS: answer over the app WebSocket (SIP 200 OK)
         ACT->>CORE: PHostApi: mute / hold / DTMF / end
@@ -249,7 +250,7 @@ sequenceDiagram
         PISO->>CORE: reportEndCall -> terminate connection, service stays up
         PCS->>SYS: dismiss incoming UI
         Note over PISO: record the missed call, show its notification
-        PISO->>CORE: releaseCall -> stop service
+        PISO-->>ICS: run() future resolves once the record is done -> stop service
     end
 ```
 
@@ -262,7 +263,13 @@ session's own call off while it still rang, which took its notification away and
 connection ringing with nobody to hear its hangup. The handshake is read for every incoming line
 for the same reason - the session's own call is not necessarily on line 0. If the handshake no
 longer lists the session's own call, that call ended before the session opened: the session
-releases it and closes instead of waiting for a hangup that will not come.
+ends it and closes instead of waiting for a hangup that will not come.
+
+The session's end is the completion of `onPushNotificationSyncCallback`'s future, and the plugin
+stops `IncomingCallService` on it - the session never stops the service itself. The future is
+draining, not stopping: every missed-call record the session started (its own call's or another
+call's) finishes before it resolves, whatever ended the session, so the record is written while
+the service still holds its rights. `releaseCall` stays only for a call the session never saw.
 
 ## Sequence — Case B (persistent / socket)
 

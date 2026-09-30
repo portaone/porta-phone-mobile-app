@@ -186,11 +186,13 @@ class IncomingCallService :
                 if (callDataSynced) {
                     Log.d(TAG, "onStart: callDataSynced already set — skipping duplicate syncPushIsolate")
                 } else {
+                    val data = callLifecycleHandler.currentCallData
                     callLifecycleHandler.flutterApi?.syncPushIsolate(
-                        callLifecycleHandler.currentCallData,
+                        data,
                         onSuccess = {
                             callDataSynced = true
                             Log.d(TAG, "syncPushIsolate: success")
+                            onSessionFinished(data?.callId)
                         },
                         onFailure = { e -> Log.e(TAG, "syncPushIsolate: failed: $e") },
                     ) ?: Log.w(TAG, "syncPushIsolate: flutterApi is null — will retry from establishFlutterCommunication")
@@ -312,7 +314,10 @@ class IncomingCallService :
                 Log.w(TAG, "establishFlutterCommunication: deferred sync for callId=${data.callId}")
                 callLifecycleHandler.flutterApi?.syncPushIsolate(
                     data,
-                    onSuccess = { Log.d(TAG, "syncPushIsolate (deferred): success") },
+                    onSuccess = {
+                        Log.d(TAG, "syncPushIsolate (deferred): success")
+                        onSessionFinished(data.callId)
+                    },
                     onFailure = { e -> Log.e(TAG, "syncPushIsolate (deferred): failed: $e") },
                 )
             }
@@ -474,6 +479,28 @@ class IncomingCallService :
         earlyReleases.clear()
         val posted = PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey(callId))
         return received ?: IncomingCallRelease.IC_RELEASE_ENDED.takeIf { posted }
+    }
+
+    /**
+     * The push session's callback has returned: everything it set out to do for [callId] is done,
+     * and whatever it reported about the call stands. This service exists for that work, so it
+     * lets go now - the connection is left as the session left it, ended through reportEndCall or
+     * alive for the Activity that took over. A session that already released or handed off has
+     * nothing left here, and a late return of an earlier session must not touch the call this
+     * service shows now.
+     */
+    internal fun onSessionFinished(callId: String?) {
+        val shown = callLifecycleHandler.currentCallData?.callId
+        if (callId != null && shown != null && shown != callId) {
+            Log.i(TAG, "session finished for $callId ignored: this service shows $shown")
+            return
+        }
+        if (isReleased) {
+            Log.d(TAG, "session finished for ${callId ?: shown}: already released")
+            return
+        }
+        Log.i(TAG, "session finished for ${callId ?: shown}: releasing the service")
+        handleRelease(IncomingCallRelease.IC_RELEASE_HANDED_OVER)
     }
 
     /**

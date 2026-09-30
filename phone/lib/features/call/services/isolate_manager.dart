@@ -62,15 +62,20 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   /// Requests queued while the signaling module is not yet connected.
   final List<_PendingRequest> _pendingRequests = [];
 
-  /// Completer resolved when all isolate work is done and [_releaseCall] or
-  /// [_handoffCall] has been called (depending on whether the call was answered).
+  /// Completer of the session: resolved once nothing is left for the session to do. The plugin
+  /// keeps the incoming-call service up until [run]'s future completes, so the work a signaling
+  /// event starts - the missed-call record and its notification - is tracked in [_inFlight] and
+  /// awaited before the future completes, even when the Activity takes over meanwhile.
   Completer<void>? _completer;
+
+  /// Work started by signaling events that has not finished yet.
+  final Set<Future<void>> _inFlight = {};
 
   /// The callId of the call answered via the push notification.
   ///
   /// Set in [performAnswerCall] only when a network connection is confirmed.
-  /// Used in [close] to call [_handoffCall] instead of [_releaseCall] so the
-  /// PhoneConnection is not terminated before the Activity can adopt it.
+  /// Used in [close] to leave the call to the Activity instead of releasing
+  /// it, so the PhoneConnection is not terminated before the Activity adopts it.
   /// Null means the call was not answered (missed, declined, or no network).
   String? _answeredCallId;
 
@@ -93,7 +98,8 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
 
   /// Connects to the signaling server, processes call state for the given push
   /// notification [metadata], and returns a [Future] that completes after all
-  /// work is done (notifications shown, logs written, native service released).
+  /// work is done (notifications shown, logs written). The plugin stops the
+  /// incoming-call service once that future completes.
   Future<void> run(CallkeepIncomingCallMetadata? metadata) {
     if (!_initialized) {
       throw StateError('PushNotificationIsolateManager.run() called before init()');
@@ -138,23 +144,13 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     _completeWithError(StateError('PushNotificationIsolateManager closed'));
   }
 
-  /// Gives the session's own call back to callkeep as the session closes: handed off while
-  /// someone can still take it, released otherwise.
+  /// Gives the session's own call back to callkeep as the session closes. A call that was
+  /// answered here or is still live on the server is left to the Activity that took it over;
+  /// the plugin ends the session itself once [run]'s future completes. A call the session never
+  /// saw arrive is released, as before.
   Future<void> _giveBackOwnCall() async {
-    if (_answeredCallId != null) {
-      await _handoffCall(_answeredCallId);
-    } else if (_incomingCallEvents.containsKey(_metadata?.callId)) {
-      // The call is still active server-side (no HangupEvent received) - the
-      // Activity has likely taken over via a full-screen intent. Hand off
-      // instead of releasing so the ringing call is not terminated prematurely.
-      await _handoffCall(_metadata?.callId);
-    } else {
-      // In direct mode the push isolate's WebSocket is independent from the
-      // Activity's. If the Activity took over before IncomingCallEvent arrived
-      // (empty _incomingCallEvents), releaseCall only stops IncomingCallService
-      // here - the Activity keeps its own connection and handles the call normally.
-      await _releaseCall(_metadata?.callId);
-    }
+    if (_answeredCallId != null || _incomingCallEvents.containsKey(_metadata?.callId)) return;
+    await _releaseCall(_metadata?.callId);
   }
 
   // ---------------------------------------------------------------------------
@@ -180,7 +176,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
       (r) => r.isNotEmpty && !r.contains(ConnectivityResult.none),
     );
     if (!hasNetwork) {
-      logger.warning('performAnswerCall: no network for callId=$callId, skipping handoff');
+      logger.warning('performAnswerCall: no network for callId=$callId, not remembering the answer');
       return;
     }
     _answeredCallId = callId;
@@ -335,7 +331,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
 
   /// The session's own call is no longer on the server: it ended before the session could see
   /// its hangup, so it is recorded and released from what the push said about it.
-  void _onOwnCallGone() async {
+  void _onOwnCallGone() {
     logger.info('No active lines: releasing call');
     if (_metadata == null) {
       logger.severe('_onOwnCallGone: metadata is null, cannot release call');
@@ -352,12 +348,17 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
       acceptedTime: null,
       hungUpTime: DateTime.now(),
     );
-    // The call is over: callkeep ends it in Telecom now, before the missed call is recorded,
-    // which can wait on the main thread and the database while the Activity starts. The
-    // service stays up for that record; releaseCall ends the session afterwards.
-    await _reportEndCall(_metadata!.callId);
-    await _recordMissed(event, call);
-    await _releaseCall(_metadata!.callId);
+    _endOwnCall(event, call);
+  }
+
+  /// The session's own call is over: callkeep ends it in Telecom now, before the missed call is
+  /// recorded - the record can wait on the main thread and the database while the Activity
+  /// starts. The session ends once the record is done; the plugin then stops the service.
+  void _endOwnCall(HangupEvent event, NewCall call) {
+    _track(() async {
+      await _reportEndCall(event.callId);
+      await _recordMissed(event, call);
+    }());
     _complete();
   }
 
@@ -392,12 +393,9 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   /// behaviour and treats every call as its own.
   bool _isOwnCall(String callId) => _metadata == null || _metadata!.callId == callId;
 
-  void _onOwnCallHangup(HangupEvent event, NewCall call) async {
+  void _onOwnCallHangup(HangupEvent event, NewCall call) {
     logger.info('Hangup event: callId=${event.callId} reason=${event.reason}');
-    await _reportEndCall(event.callId);
-    await _recordMissed(event, call);
-    await _releaseCall(event.callId);
-    _complete();
+    _endOwnCall(event, call);
   }
 
   /// Another call on this session's lines ended while the session's own call
@@ -405,23 +403,22 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   ///
   /// The session stays open: ending it here handed the own call off while it
   /// still rang, which took its notification away and left its connection
-  /// ringing with nobody to hear its hangup. The other call is still recorded
-  /// and ended natively, and callkeep keeps the incoming-call service up,
-  /// because it shows the session's own call.
+  /// ringing with nobody to hear its hangup. The other call is still ended
+  /// natively and recorded, and the record is tracked like the own call's:
+  /// the session does not complete over it, whatever ends the session.
   ///
   /// Only an incoming call the session saw arrive ([wasIncoming]) is recorded as missed: the other
   /// lines can also carry an outgoing call from another device or a call answered elsewhere, and
   /// those are not missed calls.
-  void _onOtherCallHangup(HangupEvent event, NewCall call, {required bool wasIncoming}) async {
+  void _onOtherCallHangup(HangupEvent event, NewCall call, {required bool wasIncoming}) {
     logger.info(
       'Hangup event for another call: callId=${event.callId} reason=${event.reason} - session stays on ${_metadata?.callId}',
     );
     _lines.remove(event.callId);
-    if (wasIncoming) {
+    _track(() async {
       await _reportEndCall(event.callId);
-      await _recordMissed(event, call);
-    }
-    await _releaseCall(event.callId);
+      if (wasIncoming) await _recordMissed(event, call);
+    }());
   }
 
   // ---------------------------------------------------------------------------
@@ -505,7 +502,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   // ---------------------------------------------------------------------------
 
   /// Tells callkeep the call is over, so it ends it in Telecom at once and never presents it
-  /// again. The session goes on: only [_releaseCall] or [_handoffCall] ends it.
+  /// again. The session goes on: only [_complete] ends it.
   Future<void> _reportEndCall(String callId) async {
     try {
       await _callkeep.reportEndCall(callId, CallkeepEndCallReason.missedWhileConnecting);
@@ -523,18 +520,23 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     }
   }
 
-  Future<void> _handoffCall(String? callId) async {
-    if (callId == null) return;
-    try {
-      await _callkeep.handoffCall(callId);
-    } catch (e, st) {
-      logger.severe('_handoffCall failed: $e', e, st);
-    }
+  /// Keeps [work] in [_inFlight] until it is done, so [_complete] does not complete over it.
+  void _track(Future<void> work) {
+    _inFlight.add(work);
+    work.whenComplete(() => _inFlight.remove(work));
   }
 
+  /// Completes the session once every tracked piece of work is done: draining, not stopping.
+  /// A missed-call record still in flight finishes first, whatever ended the session.
   void _complete() {
-    if (_completer != null && !_completer!.isCompleted) {
-      _completer!.complete();
+    final completer = _completer;
+    if (completer == null || completer.isCompleted) return;
+    completer.complete(_drained());
+  }
+
+  Future<void> _drained() async {
+    while (_inFlight.isNotEmpty) {
+      await Future.wait(_inFlight.toList());
     }
   }
 
@@ -586,7 +588,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
 // ---------------------------------------------------------------------------
 
 /// What a push session needs from callkeep, and nothing more: the delegate that
-/// receives answer/decline, and the two ways the session gives its call back.
+/// receives answer/decline, and the two ways the session ends a call.
 abstract interface class PushSessionCallkeep {
   void setBackgroundServiceDelegate(CallkeepBackgroundServiceDelegate? delegate);
 
@@ -596,9 +598,6 @@ abstract interface class PushSessionCallkeep {
 
   /// Ends [callId] natively and stops the incoming-call service if it shows that call.
   Future<void> releaseCall(String callId);
-
-  /// Stops the incoming-call service for [callId] and leaves the connection alive.
-  Future<void> handoffCall(String callId);
 }
 
 /// [PushSessionCallkeep] over the plugin's [BackgroundPushNotificationService].
@@ -617,9 +616,6 @@ class BackgroundPushSessionCallkeep implements PushSessionCallkeep {
 
   @override
   Future<void> releaseCall(String callId) async => await _service.releaseCall(callId);
-
-  @override
-  Future<void> handoffCall(String callId) async => await _service.handoffCall(callId);
 }
 
 // ---------------------------------------------------------------------------

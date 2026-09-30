@@ -22,7 +22,7 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
 1. Starts a short-lived Flutter background isolate.
 2. Shows the incoming-call notification / system UI.
 3. Waits for the user or app code to answer or decline.
-4. Exits when the call is answered, declined, or timed out.
+4. Exits when the app's push session finishes, or a safety-net timeout fires.
 
 ### Lifecycle
 
@@ -55,11 +55,19 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
   `PendingBroadcastQueue` under its call id, and one received before `IC_INITIALIZE` is kept
   by the service per call id. `handleLaunch` acts only on the release for the call it
   launches. An `AnswerCall` event is ignored only once the service shows another call.
-- The push isolate reports, ends and hands off calls by id (`reportEndCall`, `releaseCall`,
+- The push session's end is the completion of the app's `syncPushIsolate` callback: on its
+  success the service releases itself (`onSessionFinished` -> `IC_RELEASE_HANDED_OVER`), with
+  the connection left as the session left it - ended through `reportEndCall`, or alive for the
+  Activity that took over. A late completion for another call than the one the service shows,
+  or one after the service already released, changes nothing. The service therefore stays up
+  for everything the session does before its future resolves - the missed-call record and its
+  notification included - and the app owes it a future that resolves only when that work is
+  done.
+- The push isolate also reports and ends calls by id (`reportEndCall`, `releaseCall`,
   `handoffCall`), and its session can know more than one call. `reportEndCall` hands the end to
   the core and keeps the service running. `CallLifecycleHandler` stops the service only when
   the id of a `releaseCall` or `handoffCall` is the call the service shows; for another call it
-  ends that call and keeps running.
+  ends that call and keeps running. Neither is needed on the normal paths any more.
 - Two safety-net timeouts force-stop the service if the normal flow stalls: an independent
   60 s timeout armed at launch, and a 2 s stop timeout armed when the release arrives.
 - `onDestroy()` - unsubscribes, stops foreground, and explicitly cancels the current

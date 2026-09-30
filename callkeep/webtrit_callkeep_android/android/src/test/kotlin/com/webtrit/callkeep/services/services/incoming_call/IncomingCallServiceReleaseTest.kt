@@ -100,6 +100,37 @@ class IncomingCallServiceReleaseTest {
     }
 
     @Test
+    fun `the session finishing for the shown call releases the service`() {
+        show("A")
+
+        service.onSessionFinished("A")
+        ShadowLooper.idleMainLooper(5, TimeUnit.SECONDS)
+
+        assertTrue(stopped())
+    }
+
+    @Test
+    fun `the session finishing for another call leaves the shown call alone`() {
+        show("A")
+
+        service.onSessionFinished("B")
+        ShadowLooper.idleMainLooper(5, TimeUnit.SECONDS)
+
+        assertFalse("A still rings; an earlier session's return must not end it", stopped())
+    }
+
+    @Test
+    fun `the session finishing after it released the call changes nothing`() {
+        show("A")
+        release("A", IncomingCallRelease.IC_RELEASE_ENDED)
+
+        service.onSessionFinished("A")
+        ShadowLooper.idleMainLooper(5, TimeUnit.SECONDS)
+
+        assertTrue(stopped())
+    }
+
+    @Test
     fun `an end the app reported is not sent to the session as performEndCall`() {
         show("A")
         val session = RecordingCommunicator().also { service.getCallLifecycleHandler().flutterApi = it }
