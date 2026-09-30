@@ -23,6 +23,12 @@ interface FlutterIsolateCommunicator {
         onFailure: (Throwable) -> Unit,
     )
 
+    fun performHandoff(
+        callId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    )
+
     fun syncPushIsolate(
         callData: PCallkeepIncomingCallData?,
         onSuccess: () -> Unit,
@@ -58,6 +64,15 @@ class DefaultFlutterIsolateCommunicator(
     ) {
         val api = serviceApi ?: return onFailure(IllegalStateException("Service API unavailable"))
         relay(onSuccess, onFailure) { api.performEndCall(callId) }
+    }
+
+    override fun performHandoff(
+        callId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    ) {
+        val api = serviceApi ?: return onFailure(IllegalStateException("Service API unavailable"))
+        relay(onSuccess, onFailure) { api.performHandoff(callId) }
     }
 
     override fun syncPushIsolate(

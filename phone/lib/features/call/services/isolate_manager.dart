@@ -71,6 +71,11 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   /// Work started by signaling events that has not finished yet.
   final Set<Future<void>> _inFlight = {};
 
+  /// Set once callkeep confirmed the session's own call is no longer its concern
+  /// ([performHandoff]): the app holds it, or it ended elsewhere. The session then
+  /// never releases that call, whatever it saw of it.
+  bool _handedOff = false;
+
   /// The callId of the call answered via the push notification.
   ///
   /// Set in [performAnswerCall] only when a network connection is confirmed.
@@ -115,15 +120,6 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     return _completer!.future;
   }
 
-  /// Called by the plugin when the Activity's WebSocket has connected in direct
-  /// push-bound mode. Completes [run]'s future early so [close] executes via the
-  /// [onPushNotificationSyncCallback] finally block, disposing the module and
-  /// cancelling any pending reconnect timers before they fire.
-  void notifyActivityTookOver() {
-    logger.info('notifyActivityTookOver: Activity WebSocket connected - completing push session early');
-    _complete();
-  }
-
   /// Cancels all timers and pending requests, then disposes the signaling module.
   Future<void> close() async {
     logger.info(
@@ -144,12 +140,12 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     _completeWithError(StateError('PushNotificationIsolateManager closed'));
   }
 
-  /// Gives the session's own call back to callkeep as the session closes. A call that was
-  /// answered here or is still live on the server is left to the Activity that took it over;
-  /// the plugin ends the session itself once [run]'s future completes. A call the session never
-  /// saw arrive is released, as before.
+  /// Gives the session's own call back to callkeep as the session closes. A call callkeep took
+  /// off the session, one that was answered here or one still live on the server is left to the
+  /// app; the plugin stops the service itself once [run]'s future completes. A call the session
+  /// never saw arrive is released, as before.
   Future<void> _giveBackOwnCall() async {
-    if (_answeredCallId != null || _incomingCallEvents.containsKey(_metadata?.callId)) return;
+    if (_handedOff || _answeredCallId != null || _incomingCallEvents.containsKey(_metadata?.callId)) return;
     await _releaseCall(_metadata?.callId);
   }
 
@@ -169,6 +165,21 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   @override
   void performAnswerCall(String callId) {
     _handlePerformAnswerCall(callId);
+  }
+
+  /// Callkeep no longer needs this session for [callId]: the app holds the call, or it ended
+  /// through another handler. For the session's own call that is the end of the session - the
+  /// only one, besides its own call ending here: an Activity on screen or a connected WebSocket
+  /// says nothing about who receives the call's events. Work still in flight finishes first.
+  @override
+  void performHandoff(String callId) {
+    if (!_isOwnCall(callId)) {
+      logger.info('performHandoff: $callId is not this session\'s call (${_metadata?.callId}) - ignored');
+      return;
+    }
+    logger.info('performHandoff: $callId is the app\'s now - completing the session');
+    _handedOff = true;
+    _complete();
   }
 
   Future<void> _handlePerformAnswerCall(String callId) async {
@@ -209,8 +220,11 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
           logger.info('Signaling: disconnecting');
         case SignalingDisconnected(:final code, :final reason, :final knownCode):
           logger.info('Signaling: disconnected code=$code reason=$reason knownCode=$knownCode');
+          // The Activity's socket displaced this one; the session goes on until callkeep says
+          // the app holds the call (performHandoff) or the call is over - the server's hangup
+          // now reaches the app, which reports it.
           if (knownCode == SignalingDisconnectCode.controllerForceAttachClose) {
-            _complete();
+            logger.info('Signaling: displaced by the Activity - waiting for callkeep to hand the call off');
           }
         case SignalingConnectionFailed(:final error):
           _onSignalingError(error);

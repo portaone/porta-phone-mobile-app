@@ -1,8 +1,13 @@
 package com.webtrit.callkeep
 
+import android.content.Context
 import android.os.Build
 import android.os.Looper
+import androidx.test.core.app.ApplicationProvider
+import com.webtrit.callkeep.common.ContextHolder
+import com.webtrit.callkeep.services.core.CallkeepCore
 import io.flutter.plugin.common.BinaryMessenger
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -57,11 +62,15 @@ class ForegroundServiceProxyTest {
             proximityEnabled: Boolean?,
         ) = Unit
 
+        val endedCallIds = mutableListOf<String>()
+
         override suspend fun reportEndCall(
             callId: String,
             displayName: String,
             reason: PEndCallReason,
-        ) = Unit
+        ) {
+            endedCallIds += callId
+        }
 
         override suspend fun startCall(
             callId: String,
@@ -164,6 +173,28 @@ class ForegroundServiceProxyTest {
     private fun assertError(reply: List<Any?>?) {
         assertTrue("expected an error reply, got $reply", reply != null && reply.size == 3)
         assertEquals("IllegalStateException", reply!![0])
+    }
+
+    @Test
+    fun `reportEndCall before the service binds reaches the core`() {
+        ContextHolder.init(ApplicationProvider.getApplicationContext<Context>())
+        CallkeepCore.instance.clear()
+
+        runBlocking { proxy.reportEndCall("c1", "", PEndCallReason(PEndCallReasonEnum.REMOTE_ENDED)) }
+
+        assertTrue("the end is a fact for the core whether or not the service is bound", CallkeepCore.instance.isTerminated("c1"))
+        CallkeepCore.instance.clear()
+    }
+
+    @Test
+    fun `reportEndCall after the service bound reaches it`() {
+        val service = FakeService()
+        proxy.binding()
+        proxy.connected(service)
+
+        runBlocking { proxy.reportEndCall("c1", "", PEndCallReason(PEndCallReasonEnum.REMOTE_ENDED)) }
+
+        assertEquals(listOf("c1"), service.endedCallIds)
     }
 
     @Test

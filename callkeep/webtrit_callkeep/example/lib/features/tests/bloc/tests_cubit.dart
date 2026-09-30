@@ -157,6 +157,11 @@ class TestsCubit extends Cubit<TestsState> implements CallkeepDelegate, Callkeep
   }
 
   @override
+  void performHandoff(String callId) {
+    emit(state.log(LogEntry.event('[cb] performHandoff id=$callId')));
+  }
+
+  @override
   Future<bool> performSetHeld(String callId, bool onHold) {
     emit(state.log(LogEntry.event('[cb] performSetHeld id=$callId held=$onHold')));
     return Future.value(true);

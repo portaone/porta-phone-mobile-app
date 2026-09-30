@@ -2700,6 +2700,30 @@ class PDelegateBackgroundServiceFlutterApi(private val binaryMessenger: BinaryMe
       }
     }
   }
+  /**
+   * Callkeep no longer needs this session for [callId]: the app holds the call
+   * now, or it ended through another handler. The session finishes the work it
+   * started and returns from its callback; nothing is sent to the server.
+   */
+  suspend fun performHandoff(callIdArg: String)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    return suspendCancellableCoroutine { continuation ->
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundServiceFlutterApi.performHandoff$separatedMessageChannelSuffix"
+      val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+      channel.send(listOf(callIdArg)) {
+        if (it is List<*>) {
+          if (it.size > 1) {
+            continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
+          } else {
+            continuation.resume(Unit)
+          }
+        } else {
+          continuation.resumeWithException(GeneratedPigeonUtils.createConnectionError(channelName))
+        }
+      }
+    }
+  }
 }
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface PPushRegistryHostApi {

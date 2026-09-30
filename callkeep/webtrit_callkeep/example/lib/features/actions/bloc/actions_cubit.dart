@@ -520,6 +520,12 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
   }
 
   @override
+  void performHandoff(String callId) {
+    // Push session only: the call is the app's now, or ended elsewhere. Nothing to do here.
+    emit(state.log(LogEntry.event('[cb] performHandoff id=$callId')));
+  }
+
+  @override
   Future<bool> performSetHeld(String callId, bool onHold) async {
     emit(_ensureLine(state, callId).updateLine(callId, isHold: onHold).log(
           LogEntry.event('[cb] performSetHeld id=$callId held=$onHold'),

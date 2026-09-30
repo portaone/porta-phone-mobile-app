@@ -58,10 +58,14 @@ class IncomingCallService :
     // deferred) would otherwise both deliver call data to the Dart isolate.
     private var callDataSynced = false
 
-    // Set to true on the first handleRelease() call. Guards against a second invocation for the
-    // same call: a release can reach it from releaseReceiver and from the early release taken
-    // at launch.
+    // Set to true once the ringing phase of the shown call is over: a release arrived, or the
+    // session finished. Guards against a second pass over the same call: a release can reach it
+    // from releaseReceiver and from the early release taken at launch.
     private var isReleased = false
+
+    // Set to true once the service has started stopping. The session's callback future is what
+    // stops it; the residual budget and the independent timeout are the safety nets.
+    private var isStopping = false
 
     // Set to true once the call has been answered and the notification has been stripped of its
     // buttons. The answer is observable from two places — the notification action and the
@@ -108,7 +112,7 @@ class IncomingCallService :
     private val timeoutHandler = Handler(Looper.getMainLooper())
     private val stopTimeoutRunnable =
         Runnable {
-            Log.w(TAG, "Service stop timeout ($SERVICE_TIMEOUT_MS ms) reached. Stopping forcefully.")
+            Log.w(TAG, "Session finish timeout ($SESSION_FINISH_TIMEOUT_MS ms) reached. Stopping forcefully.")
             stopSelf()
         }
 
@@ -430,7 +434,9 @@ class IncomingCallService :
         // notification, so the ringing UI is never visible to the user.
         incomingCallHandler.handle(metadata)
         callLifecycleHandler.currentCallData = metadata.toPCallkeepIncomingCallData()
-        handleRelease(release)
+        // No session ran for this call, so there is nobody to finish: stop at once.
+        endRingingPhase()
+        stop()
         return START_NOT_STICKY
     }
 
@@ -484,10 +490,9 @@ class IncomingCallService :
     /**
      * The push session's callback has returned: everything it set out to do for [callId] is done,
      * and whatever it reported about the call stands. This service exists for that work, so it
-     * lets go now - the connection is left as the session left it, ended through reportEndCall or
-     * alive for the Activity that took over. A session that already released or handed off has
-     * nothing left here, and a late return of an earlier session must not touch the call this
-     * service shows now.
+     * stops now - the connection is left as the session left it, ended through reportEndCall or
+     * alive for the engine that holds it. A late return of an earlier session must not touch the
+     * call this service shows now.
      */
     internal fun onSessionFinished(callId: String?) {
         val shown = callLifecycleHandler.currentCallData?.callId
@@ -495,24 +500,62 @@ class IncomingCallService :
             Log.i(TAG, "session finished for $callId ignored: this service shows $shown")
             return
         }
-        if (isReleased) {
-            Log.d(TAG, "session finished for ${callId ?: shown}: already released")
+        if (isStopping) {
+            Log.d(TAG, "session finished for ${callId ?: shown}: already stopping")
             return
         }
-        Log.i(TAG, "session finished for ${callId ?: shown}: releasing the service")
-        handleRelease(IncomingCallRelease.IC_RELEASE_HANDED_OVER)
+        Log.i(TAG, "session finished for ${callId ?: shown}: stopping the service")
+        endRingingPhase()
+        stop()
     }
 
     /**
-     * Ends the ringing phase of the call this service shows, once: silences the notification and
-     * arms the stop timeout, then either lets go at once ([IncomingCallRelease.IC_RELEASE_HANDED_OVER])
-     * or lets the push isolate end the call on the server first ([IncomingCallRelease.IC_RELEASE_ENDED]).
+     * A release for the call this service shows, once. The ringing phase ends here; the service
+     * does not: only the session's callback future stops it (see [onSessionFinished]), so a
+     * record the session is still writing is not cut short. The release only tells the session
+     * what happened - to end the call on the server ([IncomingCallRelease.IC_RELEASE_ENDED] for
+     * an end nobody reported yet), or that the call is no longer its concern
+     * ([IncomingCallRelease.IC_RELEASE_HANDED_OVER], or an end the app reported itself). A
+     * session that cannot be reached has nothing to finish, and the service stops at once.
      */
     private fun handleRelease(reason: IncomingCallRelease): Int {
         if (isReleased) {
             Log.w(TAG, "handleRelease: already released, ignoring duplicate invocation")
             return START_NOT_STICKY
         }
+        endRingingPhase()
+        val callId = callLifecycleHandler.currentCallData?.callId
+        when {
+            callId == null -> {
+                Log.w(TAG, "handleRelease: no currentCallData, stopping")
+                stop()
+            }
+
+            reason == IncomingCallRelease.IC_RELEASE_HANDED_OVER -> {
+                callLifecycleHandler.performHandoff(CallMetadata(callId = callId))
+            }
+
+            // The app reported this end itself (reportEndCall), so it already knows: asking it
+            // to end the call again would send the server a decline for a call it hung up.
+            !CallkeepCore.instance.markEndCallDispatched(callId) -> {
+                Log.i(TAG, "handleRelease: the app reported the end of $callId itself, not asking it to end the call")
+                callLifecycleHandler.performHandoff(CallMetadata(callId = callId))
+            }
+
+            else -> {
+                callLifecycleHandler.performEndCall(CallMetadata(callId = callId))
+            }
+        }
+        return START_NOT_STICKY
+    }
+
+    /**
+     * The ringing phase of the shown call is over, whichever way: the screen is let go of, the
+     * notification goes silent, and the session gets [SESSION_FINISH_TIMEOUT_MS] to finish what
+     * it started before the service stops without it.
+     */
+    private fun endRingingPhase() {
+        if (isReleased) return
         isReleased = true
         // The ringing phase is over — release the wake lock immediately so the screen
         // is not held on for the full WAKELOCK_TIMEOUT_MS during post-call teardown.
@@ -525,44 +568,14 @@ class IncomingCallService :
         }
         timeoutHandler.removeCallbacks(independentTimeoutRunnable)
         timeoutHandler.removeCallbacks(stopTimeoutRunnable)
-        timeoutHandler.postDelayed(stopTimeoutRunnable, SERVICE_TIMEOUT_MS)
-        if (reason == IncomingCallRelease.IC_RELEASE_HANDED_OVER) {
-            // Nothing is left for the push isolate to tell the server (the call was answered and
-            // the main process owns it, or it is already gone). Release resources immediately.
-            callLifecycleHandler.release()
-        } else {
-            // The call was declined or hung up before being answered.
-            // The signaling layer (WebSocket) must send a SIP BYE/decline to the server
-            // BEFORE the WebSocket is torn down.
-            //
-            // Calling release() here directly (the old behaviour) would close the WebSocket
-            // immediately, racing with the SIP BYE that performEndCall needs to send.
-            //
-            // Fix: call performEndCall first; its onSuccess/onFailure callbacks call release(),
-            // which fires releaseResources and closes the WebSocket only after BYE completes
-            // (or fails). If flutterApi is null, performEndCall falls back to release() directly
-            // so cleanup always runs. The stopTimeoutRunnable above is an additional safety net
-            // in case the Flutter isolate never responds.
-            val callId = callLifecycleHandler.currentCallData?.callId
-            when {
-                callId == null -> {
-                    Log.w(TAG, "handleRelease: no currentCallData, falling back to release()")
-                    callLifecycleHandler.release()
-                }
+        timeoutHandler.postDelayed(stopTimeoutRunnable, SESSION_FINISH_TIMEOUT_MS)
+    }
 
-                // The app reported this end itself (reportEndCall), so it already knows: asking it
-                // to end the call again would send the server a decline for a call it hung up.
-                !CallkeepCore.instance.markEndCallDispatched(callId) -> {
-                    Log.i(TAG, "handleRelease: the app reported the end of $callId itself, not asking it to end the call")
-                    callLifecycleHandler.release()
-                }
-
-                else -> {
-                    callLifecycleHandler.performEndCall(CallMetadata(callId = callId))
-                }
-            }
-        }
-        return START_NOT_STICKY
+    private fun stop() {
+        if (isStopping) return
+        isStopping = true
+        timeoutHandler.removeCallbacks(stopTimeoutRunnable)
+        callLifecycleHandler.release()
     }
 
     private fun handleUnknownAction(action: String?): Int {
@@ -636,7 +649,9 @@ class IncomingCallService :
     companion object {
         private const val TAG = "IncomingCallService"
 
-        private const val SERVICE_TIMEOUT_MS = 2_000L
+        // What a session gets to finish what it started (a missed-call record and its
+        // notification) once callkeep no longer needs it, before the service stops without it.
+        private const val SESSION_FINISH_TIMEOUT_MS = 10_000L
         private const val INDEPENDENT_SERVICE_TIMEOUT_MS = 60_000L
         private const val WAKELOCK_TIMEOUT_MS = 30_000L
         private const val WAKELOCK_TAG = "com.webtrit.callkeep:IncomingCallWakeLock"

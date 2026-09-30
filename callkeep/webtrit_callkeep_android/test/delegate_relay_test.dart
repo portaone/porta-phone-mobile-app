@@ -136,6 +136,11 @@ class _FakeBackgroundServiceDelegate implements CallkeepBackgroundServiceDelegat
   Future<void> performEndCall(String callId) async {
     (calls['performEndCall'] ??= []).add(callId);
   }
+
+  @override
+  Future<void> performHandoff(String callId) async {
+    (calls['performHandoff'] ??= []).add(callId);
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -383,6 +388,11 @@ void main() {
     test('performEndCall forwards callId', () async {
       await _send('$_prefix.PDelegateBackgroundServiceFlutterApi.performEndCall', ['call-bg-2']);
       expect(fake.calls['performEndCall'], contains('call-bg-2'));
+    });
+
+    test('performHandoff forwards callId', () async {
+      await _send('$_prefix.PDelegateBackgroundServiceFlutterApi.performHandoff', ['call-bg-3']);
+      expect(fake.calls['performHandoff'], contains('call-bg-3'));
     });
   });
 }

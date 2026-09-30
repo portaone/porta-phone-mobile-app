@@ -53,6 +53,7 @@ class CallLifecycleHandlerTest {
 
         val events = mutableListOf<String>()
         var lastPerformEndCallId: String? = null
+        val handoffCallIds = mutableListOf<String>()
 
         override fun performAnswer(
             callId: String,
@@ -74,6 +75,16 @@ class CallLifecycleHandlerTest {
                 EndCallResult.SUCCESS -> onSuccess()
                 EndCallResult.FAILURE -> onFailure(RuntimeException("BYE failed"))
             }
+        }
+
+        override fun performHandoff(
+            callId: String,
+            onSuccess: () -> Unit,
+            onFailure: (Throwable) -> Unit,
+        ) {
+            events.add("performHandoff")
+            handoffCallIds += callId
+            onSuccess()
         }
 
         override fun syncPushIsolate(
@@ -153,73 +164,48 @@ class CallLifecycleHandlerTest {
     // -------------------------------------------------------------------------
 
     /**
-     * Regression: performEndCall must emit "performEndCall" before triggering
-     * release() → stopServiceWithDelay(). The service must not stop before the
-     * SIP BYE is sent.
+     * The session ends the call on the server and then records it; its callback future, not the
+     * answer to performEndCall, says when the service may stop.
      */
     @Test
-    fun `performEndCall fires performEndCall before stopService on success`() {
-        handler.performEndCall(CallMetadata(callId = "call-1"))
-
-        assertTrue(
-            "performEndCall must be forwarded to Flutter before service stops",
-            communicator.events.contains("performEndCall"),
-        )
-
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
-
-        assertEquals(
-            "stopService must be called after performEndCall succeeds",
-            1,
-            stopServiceCalls.size,
-        )
-    }
-
-    @Test
-    fun `performEndCall fires performEndCall before stopService on failure`() {
-        communicator = FakeCommunicator(FakeCommunicator.EndCallResult.FAILURE)
-        handler.flutterApi = communicator
-
-        handler.performEndCall(CallMetadata(callId = "call-1"))
-
-        assertTrue(
-            "performEndCall must be forwarded to Flutter even on failure",
-            communicator.events.contains("performEndCall"),
-        )
-
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
-
-        assertEquals(
-            "stopService must still be called when BYE fails",
-            1,
-            stopServiceCalls.size,
-        )
-    }
-
-    @Test
-    fun `performEndCall passes correct callId to flutterApi`() {
-        handler.performEndCall(CallMetadata(callId = "call-99"))
-
-        assertEquals("call-99", communicator.lastPerformEndCallId)
-    }
-
-    @Test
-    fun `performEndCall triggers stopService exactly once on success`() {
+    fun `performEndCall asks the session and leaves the service running`() {
         handler.performEndCall(CallMetadata(callId = "call-1"))
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
 
-        assertEquals(1, stopServiceCalls.size)
+        assertEquals(listOf("performEndCall"), communicator.events)
+        assertEquals("call-99 style id must reach the session", "call-1", communicator.lastPerformEndCallId)
+        assertTrue("the session's future stops the service, not this answer", stopServiceCalls.isEmpty())
     }
 
     @Test
-    fun `performEndCall triggers stopService exactly once on failure`() {
+    fun `performEndCall failing leaves the service to its budget`() {
         communicator = FakeCommunicator(FakeCommunicator.EndCallResult.FAILURE)
         handler.flutterApi = communicator
 
         handler.performEndCall(CallMetadata(callId = "call-1"))
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
 
-        assertEquals(1, stopServiceCalls.size)
+        assertTrue(communicator.events.contains("performEndCall"))
+        assertTrue("a failed end does not stop the service here: the service's timeout does", stopServiceCalls.isEmpty())
+    }
+
+    @Test
+    fun `performHandoff tells the session and leaves the service running`() {
+        handler.performHandoff(CallMetadata(callId = "call-1"))
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        assertEquals(listOf("call-1"), communicator.handoffCallIds)
+        assertTrue(stopServiceCalls.isEmpty())
+    }
+
+    @Test
+    fun `performHandoff with null flutterApi stops the service`() {
+        handler.flutterApi = null
+
+        handler.performHandoff(CallMetadata(callId = "call-1"))
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        assertEquals("nobody to finish anything: stop at once", 1, stopServiceCalls.size)
     }
 
     // -------------------------------------------------------------------------
@@ -333,6 +319,12 @@ class CallLifecycleHandlerTest {
                 }
 
                 override fun performEndCall(
+                    callId: String,
+                    onSuccess: () -> Unit,
+                    onFailure: (Throwable) -> Unit,
+                ) {}
+
+                override fun performHandoff(
                     callId: String,
                     onSuccess: () -> Unit,
                     onFailure: (Throwable) -> Unit,
