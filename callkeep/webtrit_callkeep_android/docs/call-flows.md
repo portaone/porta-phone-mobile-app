@@ -13,23 +13,25 @@ Triggered by an FCM message or a direct Dart call to `reportNewIncomingCall`.
         |
         v
 2.  BackgroundPushNotificationIsolateBootstrapApi.reportNewIncomingCall(callId, meta)
-        |   (Pigeon host call)
+        |   CallkeepCore.registerIncomingCall(meta, client)
+        |   The signaling entry point uses the same core operation.
         v
-3.  IncomingCallService  (starts as foreground service)
+3.  Core checks guards, adopts or joins an existing call, or starts registration
+        |   One operation per call id, with a five-second safety timer
+        |   Dispatch acceptance does not finish the suspended host call
+        v
+4.  CallServiceRouter --> TelephonyUtils.addNewIncomingCall() --> Android Telecom
         |
         v
-4.  TelephonyUtils.addNewIncomingCall()  -->  Android Telecom
-        |   Reported straight to Telecom, which binds the ConnectionService itself
-        v
 5.  Telecom --> PhoneConnectionService.onCreateIncomingConnection()
-        |   ConnectionManager.addPendingForIncomingCall(callId)  (the only registration)
         |   PhoneConnection created (STATE_RINGING)
         |   broadcast: IncomingConnectionReported
         v
-7.  ForegroundService.connectionServicePerformReceiver
-        |   CallkeepCore.promote(callId, meta, state)   (register-only)
+6.  CallkeepCore receives the event, with or without ForegroundService attached
+        |   Promote the call to ringing, cancel the timer, complete all waiters
+        |   ForegroundService, if attached, synchronizes its screen wakelock
         v
-8.  Delegate notification (NOT from the event above):
+7.  Delegate notification (NOT from the event above):
         |   - call arrived while app running -> Flutter signaling __onCallSignalingEventIncoming
         |   - push->foreground handoff -> ReplayIncomingCall on delegate attach
         |     -> PDelegateFlutterApi.didPushIncomingCall(callId, meta)
@@ -38,31 +40,33 @@ Triggered by an FCM message or a direct Dart call to `reportNewIncomingCall`.
 **Answer path (user taps answer in notification or UI):**
 
 ```text
-9.  Dart calls PHostApi.answerCall(callId)
+8.  Dart calls PHostApi.answerCall(callId)
         |
         v
-10. ForegroundService.answerCall()
+9.  ForegroundService.answerCall()
         |   If PhoneConnection exists: CallkeepCore.startAnswerCall(callId)
         |   If not yet: ConnectionManager.reserveAnswer(callId)  (deferred)
         v
-11. PhoneConnectionService.onStartCommand(AnswerCall)
+10. PhoneConnectionService.onStartCommand(AnswerCall)
         |   PhoneConnection.onAnswer() -> setActive() -> STATE_ACTIVE
         |   broadcast: ConnectionStateChanged (connectionState = ACTIVE)
         |   broadcast: AnswerCall
         v
-12. ForegroundService receives the broadcasts
+11. ForegroundService receives the broadcasts
         |   ConnectionStateChanged -> updateState(callId, ACTIVE)  (mirror)
         |   AnswerCall -> markAnswered(callId)  (guard)
         |   PDelegateFlutterApi.performAnswerCall(callId)
         v
-13. Dart delegate receives performAnswerCall()
+12. Dart delegate receives performAnswerCall()
 ```
 
 **Deferred answer (user answered before PhoneConnection was created):**
 
-At step 10, `reserveAnswer` stores the intent. At step 6 (`onCreateIncomingConnection`),
-`ConnectionManager.consumeAnswer(callId)` returns true and `PhoneConnection.onAnswer()` is called
-immediately — continuing from step 11 above.
+At step 9, `reserveAnswer` stores the intent. At step 5 (`onCreateIncomingConnection`),
+`ConnectionManager.consumeAnswer(callId)` returns true and `PhoneConnection.onAnswer()` is posted
+to the main handler, continuing from step 10 above. This path emits `AnswerCall` without an
+`IncomingConnectionReported`; the core treats that answer as registration confirmation and
+promotes the call as active before notifying the foreground bridge.
 
 ---
 
@@ -76,7 +80,7 @@ second incoming call arrives while the first is still ringing, Telecom calls
 1.  Dart / Push isolate calls reportNewIncomingCall(id2, meta)
         |  (call id1 is already in RINGING state)
         v
-2.  TelephonyUtils.addNewIncomingCall()  -->  Android Telecom
+2.  CallkeepCore.registerIncomingCall() dispatches through TelephonyUtils --> Android Telecom
         |
         v
 3.  Telecom --> PhoneConnectionService.onCreateIncomingConnectionFailed(callId=id2)
@@ -84,10 +88,11 @@ second incoming call arrives while the first is still ringing, Telecom calls
         |   whether anything is waiting on this call is main-process state, and this
         |   service runs in :callkeep_core with its own ConnectionManager instance
         v
-4.  ForegroundService.handleCSIncomingFailure()
-        |   pendingIncomingCalls[id2] exists (host call still suspended)
-        |   reply with PIncomingCallError(callRejectedBySystem)
-        |   (performEndCall is NOT fired — call was never confirmed to Flutter)
+4.  CallkeepCore processes IncomingFailure, whether or not the bridge is attached
+        |   Remove the registration and its timer, drain pending state, mark it ended
+        |   Resume all waiting push/signaling reports with callRejectedBySystem
+        |   ForegroundService does not decide or mutate the registration outcome
+        |   (performEndCall is not fired for the unconfirmed call)
         v
 5.  Dart receives reportNewIncomingCall() result = callRejectedBySystem
 ```
@@ -170,7 +175,10 @@ Triggered by Dart calling `tearDown()` — used on logout or app reset.
         |
         v
 2.  ForegroundService.tearDown()
-        |   For each non-terminated call in MainProcessConnectionTracker:
+        |   CallkeepCore.endIncomingRegistrations():
+        |     Reject every waiting push/signaling report and cancel its timer
+        |     Suppress later terminal events for those unconfirmed calls
+        |   For each confirmed non-terminated call in MainProcessConnectionTracker:
         |     directNotifiedCallIds += callId
         |     PDelegateFlutterApi.performEndCall(callId, reason=LOCAL_HANGUP)
         |
@@ -192,6 +200,10 @@ Triggered by Dart calling `tearDown()` — used on logout or app reset.
         v
 5.  Dart receives tearDown() success result
 ```
+
+`onDestroy()` has a different scope: it calls `detachIncomingClient(this)`, so an in-flight
+push registration survives the activity bridge being destroyed. Session teardown rejects all
+clients before clearing state; the next session cannot join a registration or timer from the old one.
 
 **Duplicate notification prevention**: `directNotifiedCallIds` ensures that when
 `ForegroundService` receives the `HungUp` broadcast in step 3, it does not call

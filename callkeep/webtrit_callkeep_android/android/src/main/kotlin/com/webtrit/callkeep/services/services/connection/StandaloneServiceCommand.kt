@@ -31,6 +31,10 @@ sealed class StandaloneServiceCommand {
         val callId: String,
     ) : StandaloneServiceCommand()
 
+    data class CancelIncoming(
+        val callId: String,
+    ) : StandaloneServiceCommand()
+
     data class Call(
         val action: StandaloneServiceAction,
         val metadata: CallMetadata,
@@ -68,6 +72,10 @@ sealed class StandaloneServiceCommand {
 
                 StandaloneServiceAction.ReserveAnswer -> {
                     intent.extras?.getString(CallDataConst.CALL_ID)?.let { Reserve(it) }
+                }
+
+                StandaloneServiceAction.CancelIncomingCall -> {
+                    intent.extras?.getString(CallDataConst.CALL_ID)?.let { CancelIncoming(it) }
                 }
 
                 StandaloneServiceAction.SetCallGroup,

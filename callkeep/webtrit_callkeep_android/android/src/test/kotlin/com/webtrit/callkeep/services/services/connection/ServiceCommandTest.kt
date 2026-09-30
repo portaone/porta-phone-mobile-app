@@ -62,6 +62,13 @@ class ServiceCommandTest {
     }
 
     @Test
+    fun phone_cancelIncoming_requiresOnlyCallId() {
+        val extras = Bundle().apply { putString(CallDataConst.CALL_ID, "call-1") }
+        assertEquals(PhoneServiceCommand.CancelIncoming("call-1"), PhoneServiceCommand.from(intent(ServiceAction.CancelIncomingCall.action, extras)))
+        assertNull(PhoneServiceCommand.from(intent(ServiceAction.CancelIncomingCall.action, Bundle())))
+    }
+
+    @Test
     fun phone_callOp_withoutExtras_returnsCallOpWithNullMetadata() {
         val command = PhoneServiceCommand.from(intent(ServiceAction.AnswerCall.action, null))
         assertTrue(command is PhoneServiceCommand.CallOp)
@@ -115,6 +122,16 @@ class ServiceCommandTest {
             StandaloneServiceCommand.Reserve("call-4"),
             StandaloneServiceCommand.from(intent(StandaloneServiceAction.ReserveAnswer.action, extras)),
         )
+    }
+
+    @Test
+    fun standalone_cancelIncoming_requiresOnlyCallId() {
+        val extras = Bundle().apply { putString(CallDataConst.CALL_ID, "call-4") }
+        assertEquals(
+            StandaloneServiceCommand.CancelIncoming("call-4"),
+            StandaloneServiceCommand.from(intent(StandaloneServiceAction.CancelIncomingCall.action, extras)),
+        )
+        assertNull(StandaloneServiceCommand.from(intent(StandaloneServiceAction.CancelIncomingCall.action, Bundle())))
     }
 
     @Test

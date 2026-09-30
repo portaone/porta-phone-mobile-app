@@ -10,7 +10,7 @@
 
 ## Responsibility
 
-`ForegroundService` is the central coordinator in the **main process**. It:
+`ForegroundService` is the Flutter activity bridge in the **main process**. It:
 
 - Serves as a bound service that the Flutter activity binds to for its lifetime.
 - Implements the `PHostApi` Pigeon interface — all call-control commands from Dart arrive here.
@@ -48,41 +48,43 @@
 ### `onDestroy()`
 
 - Calls `CallkeepCore.instance.removeConnectionEventListener(this)` to unsubscribe.
+- Calls `detachIncomingClient(this)` to finish its waiting host calls. A registration shared
+  with a push client keeps waiting for the backend; confirmed calls also remain live.
 - Tears down audio and notification managers.
 
 ## Pigeon Host API Implementation (`PHostApi`)
 
 ### Setup / Teardown
 
-| Method                             | Behavior                                                                                                                                    |
-|------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `setUp(handle, ringtonePath, ...)` | Registers phone account via `TelephonyUtils`, initializes notification channels (with retry on failure), stores config in `StorageDelegate` |
-| `tearDown()`                       | Calls `sendTearDownConnections()`, awaits `TearDownComplete` broadcast, then cleans up connections and notifies Dart                        |
+| Method                               | Behavior                                                                                                                                                                                          |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `setUp(handle, ringtonePath, ...)`   | Registers phone account via `TelephonyUtils`, initializes notification channels (with retry on failure), stores config in `StorageDelegate`                                                       |
+| `tearDown()`                         | Ends all incoming registrations through `endIncomingRegistrations()`, notifies Dart for confirmed calls, sends `sendTearDownConnections()`, then awaits `TearDownComplete` before resetting state |
 
 ### Call Reporting
 
-| Method                                       | Behavior                                               |
-|----------------------------------------------|--------------------------------------------------------|
-| `reportNewIncomingCall(callId, meta)`        | `TelephonyUtils.addNewIncomingCall()` + update tracker |
-| `reportConnectingOutgoingCall(callId, meta)` | Mark call as pending in tracker                        |
-| `reportConnectedOutgoingCall(callId, meta)`  | Mark call as established                               |
-| `reportEndCall(callId)`                      | Force-terminate call in tracker and notify Dart        |
-| `reportUpdateCall(callId, meta)`             | Update call metadata                                   |
+| Method                                         | Behavior                                                                                                    |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `reportNewIncomingCall(callId, meta)`          | Awaits `CallkeepCore.registerIncomingCall(meta, this)`; core owns dispatch, tracker transitions and outcome |
+| `reportConnectingOutgoingCall(callId, meta)`   | Mark call as pending in tracker                                                                             |
+| `reportConnectedOutgoingCall(callId, meta)`    | Mark call as established                                                                                    |
+| `reportEndCall(callId)`                        | Force-terminate call in tracker and notify Dart                                                             |
+| `reportUpdateCall(callId, meta)`               | Update call metadata                                                                                        |
 
 ### Call Control
 
-| Method                           | Behavior                                                                                                                                                                                 |
-|----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `startCall(callId, meta)`        | `CallkeepCore.startOutgoingCall()`                                                                                                                                                       |
-| `answerCall(callId)`             | Deferred if `PhoneConnection` not yet created (stored in `pendingAnswers`); otherwise `CallkeepCore.startAnswerCall()`                                                                   |
-| `endCall(callId)`                | `CallkeepCore.startHungUpCall()`                                                                                                                                                         |
-| `setMuted(callId, muted)`        | `CallkeepCore.startMutingCall()`                                                                                                                                                         |
-| `setHeld(callId, held)`          | `CallkeepCore.startHoldingCall()`; answers `callIsGrouped` without forwarding when `CallkeepCore.isGrouped()` says the call is in a group                                                |
-| `setSpeaker(callId, on)`         | `CallkeepCore.startSpeaker()`                                                                                                                                                            |
-| `setAudioDevice(callId, device)` | `CallkeepCore.setAudioDevice()`                                                                                                                                                          |
-| `sendDTMF(callId, digit)`        | `CallkeepCore.startSendDtmf()`                                                                                                                                                           |
-| `setCallGroup(groupId, callIds)` | `CallkeepCore.startSetCallGroup()`; its `CallGroupOutcome` becomes the answer: `maximumCallGroupsReached` when another group is live, `callGroupingNotSupported` when no backend took it |
-| `unsetCallGroup(callIds)`        | `CallkeepCore.startUnsetCallGroup()`; the core releases the calls from the group on success                                                                                              |
+| Method                             | Behavior                                                                                                                                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `startCall(callId, meta)`          | `CallkeepCore.startOutgoingCall()`                                                                                                                                                         |
+| `answerCall(callId)`               | Deferred if `PhoneConnection` not yet created (stored in `pendingAnswers`); otherwise `CallkeepCore.startAnswerCall()`                                                                     |
+| `endCall(callId)`                  | `CallkeepCore.appEndingCall()` completes any waiting report, then `CallkeepCore.startHungUpCall()`                                                                                         |
+| `setMuted(callId, muted)`          | `CallkeepCore.startMutingCall()`                                                                                                                                                           |
+| `setHeld(callId, held)`            | `CallkeepCore.startHoldingCall()`; answers `callIsGrouped` without forwarding when `CallkeepCore.isGrouped()` says the call is in a group                                                  |
+| `setSpeaker(callId, on)`           | `CallkeepCore.startSpeaker()`                                                                                                                                                              |
+| `setAudioDevice(callId, device)`   | `CallkeepCore.setAudioDevice()`                                                                                                                                                            |
+| `sendDTMF(callId, digit)`          | `CallkeepCore.startSendDtmf()`                                                                                                                                                             |
+| `setCallGroup(groupId, callIds)`   | `CallkeepCore.startSetCallGroup()`; its `CallGroupOutcome` becomes the answer: `maximumCallGroupsReached` when another group is live, `callGroupingNotSupported` when no backend took it   |
+| `unsetCallGroup(callIds)`          | `CallkeepCore.startUnsetCallGroup()`; the core releases the calls from the group on success                                                                                                |
 
 ## Call Groups
 
@@ -108,26 +110,36 @@ and their group live on in the backend, and the next bridge finds them as the ca
 ## Connection Event Listener: `onConnectionEvent()`
 
 Events arrive from `CallkeepCore` via `onConnectionEvent(event, data)`. `CallkeepCore` holds a
-single `globalReceiver` that receives all `:callkeep_core` broadcasts and fans them out to every
-registered `ConnectionEventListener`. `ForegroundService` does not register its own
-`BroadcastReceiver` directly.
+single `globalReceiver` that receives `:callkeep_core` broadcasts, settles incoming registrations
+and then notifies listeners. This processing does not depend on the bridge being attached.
+A terminal event that rejects an unconfirmed registration is consumed by the core, so the
+bridge does not send `performEndCall` in addition to the failed report result.
+The registration deadline returns a final failure: Dart declines the server call without
+adding an `ActiveCall`. Core therefore cancels the native registration and suppresses late
+confirmation, answer and replay for that never-presented UUID.
+`ForegroundService` does not register its own global `BroadcastReceiver` directly.
 
 **Global events** (received via `ConnectionEventListener`):
 
-| Event                        | Handler                                  | Main Action                                                                                                                 |
-|------------------------------|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| `IncomingConnectionReported` | `handleCSIncomingConnectionReported()`   | Register the call in the tracker (promote + wakelock + resolve pending callback). Register-only -- no delegate notification |
-| `ReplayIncomingCall`         | `handleCSReplayIncomingCall()`           | Deliver the incoming call to a freshly attached delegate via `didPushIncomingCall` (sole foreground delivery)               |
-| `ConnectionStateChanged`     | `handleCSReportConnectionStateChanged()` | `updateState()` -- mirror the authoritative connection state into the tracker                                               |
-| `AnswerCall`                 | `handleCSReportAnswerCall()`             | `markAnswered()` guard in tracker, call `performAnswerCall()` on Dart delegate                                              |
-| `DeclineCall`                | `handleCSReportDeclineCall()`            | `markTerminated()`, call `performEndCall()`; on the lock screen sends the app back only if no other call is live            |
-| `HungUp`                     | `handleCSReportDeclineCall()`            | Same as DeclineCall                                                                                                         |
-| `ConnectionNotFound`         | `handleCSConnectionNotFound()`           | Synthesize HungUp — `performEndCall()`                                                                                      |
-| `AudioMuting`                | Inline                                   | Call `performMuteCall()` on Dart delegate                                                                                   |
-| `AudioDeviceSet`             | Inline                                   | Call `performSetAudioDevice()`                                                                                              |
-| `AudioDevicesUpdate`         | Inline                                   | Call `performUpdateAudioDevices()`                                                                                          |
-| `ConnectionHolding`          | Inline                                   | Call `performHoldCall()`                                                                                                    |
-| `SentDTMF`                   | Inline                                   | Call `performSendDTMF()`                                                                                                    |
+| Event                          | Handler                                    | Main Action                                                                                                                           |
+| ------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `IncomingConnectionReported`   | `syncScreenWakelock()`                     | Synchronize the screen wakelock; core already promoted the call and completed the registration. No delegate notification              |
+| `ReplayIncomingCall`           | `handleCSReplayIncomingCall()`             | Deliver the incoming call to a freshly attached delegate via `didPushIncomingCall` (sole foreground delivery)                         |
+| `ConnectionStateChanged`       | `handleCSReportConnectionStateChanged()`   | `updateState()` -- mirror the authoritative connection state into the tracker                                                         |
+| `AnswerCall`                   | `handleCSReportAnswerCall()`               | Core already tracked the answer; call `performAnswerCall()` on Dart delegate                                                          |
+| `DeclineCall`                  | `handleCSReportDeclineCall()`              | For confirmed calls: `markTerminated()`, call `performEndCall()`; on the lock screen sends the app back only if no other call is live |
+| `HungUp`                       | `handleCSReportDeclineCall()`              | Same as DeclineCall                                                                                                                   |
+| `ConnectionNotFound`           | `handleCSConnectionNotFound()`             | Synthesize HungUp — `performEndCall()`                                                                                                |
+| `AudioMuting`                  | Inline                                     | Call `performMuteCall()` on Dart delegate                                                                                             |
+| `AudioDeviceSet`               | Inline                                     | Call `performSetAudioDevice()`                                                                                                        |
+| `AudioDevicesUpdate`           | Inline                                     | Call `performUpdateAudioDevices()`                                                                                                    |
+| `ConnectionHolding`            | Inline                                     | Call `performHoldCall()`                                                                                                              |
+| `SentDTMF`                     | Inline                                     | Call `performSendDTMF()`                                                                                                              |
+
+`IncomingFailure` is handled entirely by the core. The bridge does not inspect registration
+waiters or change call state for this event. Incoming duplicate adoption also belongs to the
+core: the bridge only sends the Flutter answer notification when `registerIncomingCall` returns
+`CALL_ID_ALREADY_EXISTS_AND_ANSWERED`.
 
 **Per-call dynamic receivers** (registered ad-hoc via `CallkeepCore.registerConnectionEvents()`):
 
@@ -140,16 +152,17 @@ registered `ConnectionEventListener`. `ForegroundService` does not register its 
 ## Duplicate-Notification Guards
 
 To prevent sending the same event to Dart twice (e.g., from both the direct tearDown path and a
-stale broadcast), `MainProcessConnectionTracker` maintains guard sets. `ForegroundService` checks
-these before dispatching:
+stale broadcast), `MainProcessConnectionTracker` maintains guard sets used by the core and
+foreground bridge before dispatching:
 
-- `directNotifiedCallIds` — suppress `HungUp` broadcast if tearDown already notified this call.
+- `directNotifiedCallIds` -- core suppresses a terminal acknowledgement after a registration
+  was rejected or failed, and after teardown already notified Flutter for a confirmed call.
 - `endCallDispatchedCallIds` — suppress second `performEndCall()` for the same call.
 
 ## Related Components
 
 - [callkeep-core.md](callkeep-core.md) — all Telecom commands go through here
-- [connection-tracker.md](connection-tracker.md) — state mutated here on broadcast events
+- [connection-tracker.md](connection-tracker.md) -- shadow state shared through the core
 - [pigeon-apis.md](pigeon-apis.md) — `PHostApi` and `PDelegateFlutterApi` definitions
 - [callkeep-core.md](callkeep-core.md) — `ConnectionEventListener` API and event routing
 - [ipc-broadcasting.md](ipc-broadcasting.md) — cross-process broadcast transport

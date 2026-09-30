@@ -9,7 +9,7 @@
 ## Responsibility
 
 `CallkeepCore` is the single facade used by the **main process** for all interactions with the
-call backend. It combines three concerns:
+call backend. It combines four concerns:
 
 1. **State queries and mutations** -- the shadow call state held in
    `MainProcessConnectionTracker` (see [connection-tracker.md](connection-tracker.md)).
@@ -20,6 +20,9 @@ call backend. It combines three concerns:
 3. **Event routing** -- receives `:callkeep_core` broadcasts via a single lazy internal receiver
    and fans them out to registered `ConnectionEventListener` subscribers; also supports direct
    in-process delivery (`notifyConnectionEvent`) for the standalone backend.
+4. **Incoming registration** -- owns the complete operation from dispatch through backend
+   confirmation, refusal or timeout, and tracks each waiting client. Entry points supply metadata and a client
+   identity; they do not keep registration callbacks or interpret backend outcomes.
 
 All main-process code that needs to know call state, trigger a call action, or subscribe to
 connection events goes through `CallkeepCore.instance`.
@@ -66,8 +69,8 @@ invariants) are documented in [connection-tracker.md](connection-tracker.md).
 
 ## State Mutation API
 
-Mutations are driven mostly from `ForegroundService.onConnectionEvent` as broadcasts arrive from
-the backend; the facade adds one composite:
+Incoming registration transitions are applied in the core before listeners receive backend
+events. `ForegroundService.onConnectionEvent` still handles the other call and UI transitions:
 
 | Method                                                         | Typical trigger                                                                                                                | Effect                                                                                                                              |
 |----------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
@@ -98,19 +101,20 @@ reach it via `startUpdateCall`.)
 ## Connection Event Listener API
 
 `InProcessCallkeepCore` holds a single lazy `BroadcastReceiver` (`globalReceiver`) registered on
-the first `addConnectionEventListener` call and unregistered when the last listener is removed
-(ref-counted). Listeners receive events via `onConnectionEvent(event, data)` on the main thread.
+the first listener or call-state operation. It remains registered when the last listener is
+removed: pending registrations and live calls outlast the activity bridge. Events are processed
+on the main thread, and core registration transitions run before listener delivery.
 
-| Method                               | Description                                                                                                 |
-|--------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| `addConnectionEventListener(l)`      | Register a persistent global subscriber                                                                     |
-| `removeConnectionEventListener(l)`   | Unregister; tears down globalReceiver when list is empty                                                    |
-| `registerConnectionEvents(...)`      | Register a temporary per-call dynamic receiver                                                              |
-| `unregisterConnectionEvents(...)`    | Unregister a temporary receiver                                                                             |
-| `notifyConnectionEvent(event, data)` | Deliver an event directly to listeners and per-call receivers, bypassing ActivityManager broadcast dispatch |
+| Method                                 | Description                                                                                                             |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `addConnectionEventListener(l)`        | Register a persistent global subscriber                                                                                 |
+| `removeConnectionEventListener(l)`     | Remove the subscriber; keep the core receiver alive                                                                     |
+| `registerConnectionEvents(...)`        | Register a temporary per-call dynamic receiver                                                                          |
+| `unregisterConnectionEvents(...)`      | Unregister a temporary receiver                                                                                         |
+| `notifyConnectionEvent(event, data)`   | Process a backend event, then deliver it to listeners and per-call receivers without ActivityManager broadcast dispatch |
 
-**Global events** (routed to all `ConnectionEventListener` subscribers):
-`IncomingConnectionReported`, `ReplayIncomingCall`, `ConnectionStateChanged`, `DeclineCall`,
+**Global events** (received by the core receiver):
+`IncomingConnectionReported`, `IncomingFailure`, `ReplayIncomingCall`, `ConnectionStateChanged`, `DeclineCall`,
 `HungUp`, `ConnectionNotFound`, `AnswerCall`, `AudioDeviceSet`, `AudioDevicesUpdate`,
 `AudioMuting`, `ConnectionHolding`, `SentDTMF`.
 
@@ -119,10 +123,12 @@ the first `addConnectionEventListener` call and unregistered when the last liste
 (tearDown ack).
 
 `IncomingFailure` is dispatched by `PhoneConnectionService`
-(`onCreateIncomingConnectionFailed`) and is a global listener event: `ForegroundService`
-handles it and fails the `reportNewIncomingCall` suspended on that call. It was excluded from
-the global list until 2026-09-23, and no dynamic receiver named it either, so the event went
-nowhere and a refused incoming call waited out the confirmation timeout.
+(`onCreateIncomingConnectionFailed`). The core rejects the matching registration directly,
+regardless of whether a foreground service is attached. Terminal events for a registration still
+waiting on Telecom are also consumed here: the suspended report learns the refusal, and the
+foreground bridge must not additionally send `performEndCall` for that unconfirmed call.
+`IncomingConnectionReported` promotes the call and completes the registration before listeners
+run; the foreground listener only updates the screen wakelock for this event.
 
 `notifyConnectionEvent` exists for `StandaloneCallService`, which runs in the main process: on
 certain OEM devices the system suppresses app-originated `sendBroadcast` calls entirely, so the
@@ -154,9 +160,78 @@ tablets, Android Go builds) **and** every release below API 26; everything else 
 a concurrent duplicate registration (push isolate vs foreground signaling for the same callId)
 with `CALL_ID_ALREADY_EXISTS` if the entry already exists. On any failure -- logical `onError` or a
 synchronous throw from the backend -- it drains the reservation exactly once before propagating.
-Synchronous throws bypass `onError` and reach Dart as a Pigeon channel-error; callers that
-pre-register state must clean it themselves or rely on their own timeout safety-net
-(`ForegroundService.reportNewIncomingCall` does the latter).
+This is the low-level dispatch API, also used by the SMS entry point. The push and signaling
+entry points use the complete `registerIncomingCall` operation below; they do not call this
+dispatch API or manage pending callbacks themselves. Raw dispatch also enables the core receiver;
+a Telecom refusal drains its pending reservation even when no host call is waiting, as for SMS.
+
+### Incoming registration
+
+The signaling and push Pigeon entry points both call
+`registerIncomingCall(metadata, client)`. This suspend operation waits for the backend's outcome
+or the registration deadline, rather than returning dispatch acceptance. The core checks the
+never-presented-call guard, adopts an existing call
+when appropriate, joins a registration already in progress or starts a new one. The first caller
+dispatches once; callers joining the same call id wait for that operation and receive
+`CALL_ID_ALREADY_EXISTS` when it succeeds. A refusal reaches every caller.
+
+`IncomingRegistrations` stores the waiters and the five-second timer for each operation. Its
+callbacks and settlement methods stay inside the core; callers cannot split dispatch from
+waiting or settle a registration themselves. Backend broadcasts and direct standalone events
+enter the same pipeline, independent of `CallEndListener` presence:
+
+- `IncomingConnectionReported` promotes the call to ringing before returning success. A deferred
+  `AnswerCall` can confirm registration directly as active; the same event still reaches the
+  bridge for its Flutter answer notification. Confirmation cannot override a registration
+  explicitly rejected or finalized by the core, or demote an answered call to ringing.
+  The core remembers explicitly rejected registrations
+  until a new attempt starts. This keeps a late ACTIVE state followed by `AnswerCall` from
+  reviving a refused call, while still allowing cold replay of a live backend call whose
+  metadata has not yet reached the main process.
+- `IncomingFailure`, or `DeclineCall` / `HungUp` / `ConnectionNotFound` before confirmation,
+  rejects it with `CALL_REJECTED_BY_SYSTEM`, removes pending state and marks it terminated.
+  The core also suppresses a later terminal acknowledgement, so the bridge receives no
+  additional end-call action for the rejected registration.
+- The five-second deadline is a final application cancellation. `CALL_REJECTED_BY_SYSTEM`
+  makes `CallBloc` decline the server call and return without adding an `ActiveCall`, so the
+  native side cannot later recover just its own half of that call. Before answering callers,
+  the core marks the never-presented UUID ended and sends `cancelIncomingCall` to the backend.
+  Both backends remember this cancellation, reject creation that arrives later, clear deferred
+  answers and end an existing connection. A late confirmation, answer or replay is suppressed
+  and retries cancellation; a late state event cannot repopulate the shadow. No timed-out
+  metadata or waiters are retained. Re-reporting this UUID returns `CALL_ID_ALREADY_TERMINATED`.
+  A different UUID starts a new operation normally. Unlike a call that was successfully
+  presented, this already-declined UUID is not a transfer-back candidate.
+- A synchronous dispatch exception cleans up the operation immediately and propagates the
+  original exception to its waiting callers, with the same terminal-event suppression.
+  A late dispatch callback is tied to its operation
+  identity and cannot complete a newer attempt with the same call id.
+- Coroutine cancellation removes that waiter only. The backend operation continues through
+  confirmation or timeout, so cancellation does not hang up a call or strand another client.
+- A backend duplicate whose mirrored state is already active is adopted as active and answered.
+  The foreground entry point translates `CALL_ID_ALREADY_EXISTS_AND_ANSWERED` into its Flutter
+  answer notification; it does not mutate the registration or tracker itself.
+
+The public lifecycle methods describe why an operation ends:
+
+| Method | Effect |
+| -------- | -------- |
+| `registerIncomingCall(metadata, client)` | Own dispatch and await its result; join or adopt an existing call when appropriate |
+| `appEndingCall(callId)` | Complete a waiting registration successfully before the app's explicit hang-up |
+| `detachIncomingClient(client)` | Reject that client's waiting host calls; preserve shared registrations for other clients, reject registrations with no clients left |
+| `endIncomingRegistrations()` | Finalize pending registrations for session teardown, including independent push operations |
+
+`onDestroy` detaches the activity bridge. A push operation remains alive if the push is its
+remaining client, even when the foreground report started the operation. `tearDown` ends the
+session instead: all registrations finish and all timers are cancelled before the tracker is
+reset. Ordinary refusal releases its pending reservation, so a later valid report can retry
+rather than being mistaken for a ringing call. A timeout is different: the app has declined
+that unpresented UUID, and backend cancellation remains final even across session cleanup.
+
+Cancellation is a native service command, not an acknowledgement that Telecom has already
+disconnected. If Android refuses that command, the failure is logged and a later lifecycle
+event retries it. Tests cover both command ordering and backend cancellation; device scenarios
+that never force a deadline do not establish cancellation delivery under OS restrictions.
 
 ### In-Call Control
 
@@ -178,11 +253,12 @@ where the declared membership is kept: on `ACCEPTED` it records the group on eac
 takes an ended call out and dissolves a group left with one member, and `clear()` empties it
 with the session. `isGrouped(callId)` and `groupMembersWith(callId)` read it. The core keeps
 its global receiver registered from the first call it learns about, not only while a listener
-is attached, and while no `CallEndListener` is attached it marks a call terminated itself on
+is attached. Incoming registration events are always handled by the core. For calls whose
+registration has already finished, while no `CallEndListener` is attached it marks a call terminated itself on
 `HungUp`, `DeclineCall` and `ConnectionNotFound`: a member that ends while the activity's bridge
 is away still leaves its group, and the next bridge finds the record as the calls left it. The
-foreground service is the one `CallEndListener`: while it is attached it handles the end with
-its full context and the core stays out of its way. A listener that only observes - the
+foreground service is the one `CallEndListener`: while it is attached it handles the end of
+confirmed calls with its full Flutter context. A listener that only observes - the
 incoming-call service handles `AnswerCall` and nothing else - does not count, so its presence
 while the bridge is away changes nothing. Both backends
 take the request today, and both keep the membership themselves; the Telecom backend does not
@@ -204,7 +280,7 @@ reason to end one.
 ## Related Components
 
 - [connection-tracker.md](connection-tracker.md) -- state storage backend and its invariants
-- [foreground-service.md](foreground-service.md) -- implements `ConnectionEventListener`, calls the mutation API from `onConnectionEvent()`
+- [foreground-service.md](foreground-service.md) -- Flutter bridge and listener for confirmed-call events
 - [background-services.md](background-services.md) -- `IncomingCallService` also implements `ConnectionEventListener` (AnswerCall only)
 - [phone-connection-service.md](phone-connection-service.md) -- Telecom backend receiving commands
 - [ipc-broadcasting.md](ipc-broadcasting.md) -- broadcast events routed through `globalReceiver`

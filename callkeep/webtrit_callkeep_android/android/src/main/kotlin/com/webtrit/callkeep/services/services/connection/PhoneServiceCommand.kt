@@ -33,6 +33,10 @@ sealed class PhoneServiceCommand {
         val callId: String,
     ) : PhoneServiceCommand()
 
+    data class CancelIncoming(
+        val callId: String,
+    ) : PhoneServiceCommand()
+
     data class CallOp(
         val action: ServiceAction,
         val metadata: CallMetadata?,
@@ -70,6 +74,10 @@ sealed class PhoneServiceCommand {
 
                 ServiceAction.ReserveAnswer -> {
                     intent.extras?.getString(CallDataConst.CALL_ID)?.let { Reserve(it) }
+                }
+
+                ServiceAction.CancelIncomingCall -> {
+                    intent.extras?.getString(CallDataConst.CALL_ID)?.let { CancelIncoming(it) }
                 }
 
                 ServiceAction.SetCallGroup,

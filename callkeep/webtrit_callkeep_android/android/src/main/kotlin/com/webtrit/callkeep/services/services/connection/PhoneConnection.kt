@@ -241,6 +241,7 @@ class PhoneConnection internal constructor(
      * (which the framework schedules separately and which is skipped for an immediately-answered call).
      */
     override fun onShowIncomingCallUi() {
+        if (state == STATE_DISCONNECTED) return
         logger.d("Showing incoming call UI for callId: $callId")
         notificationManager.showIncomingCallNotification(metadata)
         if (ConnectionManager.instance.hasActiveOrHoldingConnection()) {
@@ -269,6 +270,7 @@ class PhoneConnection internal constructor(
      * Handles the transition when a user accepts an incoming call.
      */
     override fun onAnswer() {
+        if (state == STATE_DISCONNECTED) return
         logger.i("Answering call: $metadata")
         super.onAnswer()
         callConnection.answer()

@@ -126,86 +126,6 @@ class ForegroundService :
     // when startCall() is invoked again with the same callId.
     private val pendingCallCleanupsByCallId: ConcurrentHashMap<String, () -> Unit> = ConcurrentHashMap()
 
-    // Suspended reportNewIncomingCall() host calls that are waiting for Telecom confirmation.
-    // Parked here instead of resolving immediately, so that
-    // Flutter only gets "success" once Telecom has actually accepted the call (IncomingConnectionReported)
-    // or gets CALL_REJECTED_BY_SYSTEM when Telecom rejects it (HungUp / onCreateIncomingConnectionFailed).
-    private val pendingIncomingCalls: ConcurrentHashMap<String, CancellableContinuation<PIncomingCallError?>> =
-        ConcurrentHashMap()
-
-    // Timeout runnables for pending incoming call confirmations, keyed by callId.
-    // Allows cancellation when the confirmation arrives before the timeout fires.
-    private val pendingIncomingTimeouts: ConcurrentHashMap<String, Runnable> = ConcurrentHashMap()
-
-    /**
-     * Resumes a suspended [reportNewIncomingCall] host call with [result].
-     * Cancels the associated safety timeout. Safe to call multiple times — only
-     * the first call has any effect (the entry is removed atomically).
-     */
-
-    private fun resolvePendingIncomingCall(
-        callId: String,
-        result: Result<PIncomingCallError?>,
-    ) {
-        val cb = pendingIncomingCalls.remove(callId) ?: return
-        pendingIncomingTimeouts.remove(callId)?.let { mainHandler.removeCallbacks(it) }
-        cb.resumeIfActive(result)
-    }
-
-    /**
-     * Fails a [reportNewIncomingCall] still suspended on [callId] with CALL_REJECTED_BY_SYSTEM,
-     * and answers whether there was one.
-     *
-     * The three paths that can learn a call died before Flutter ever saw it - Telecom refusing
-     * the registration, a decline arriving first, and the confirmation timeout - all owe the
-     * same three steps, and they are here rather than repeated so they cannot drift apart:
-     * drain the pending slot, mark the call terminated and endCall-dispatched, then resume the
-     * suspended host call.
-     *
-     * Marking it dispatched is what keeps `performEndCall` from firing later for a call Flutter
-     * was never told about - neither from a late broadcast nor from the `endCall` Flutter makes
-     * on receiving the rejection.
-     *
-     * Returns false when nothing was waiting, which is not a failure: the caller is then holding
-     * an event about a call this process is not in the middle of registering.
-     */
-    private fun rejectBeforeConfirmation(
-        callId: String,
-        reason: String,
-    ): Boolean {
-        if (!pendingIncomingCalls.containsKey(callId)) return false
-        logger.w("rejectBeforeConfirmation: callId=$callId ($reason) — resolving with CALL_REJECTED_BY_SYSTEM")
-        core.removePending(callId)
-        core.clearAndMarkEndCallDispatched(callId)
-        resolvePendingIncomingCall(
-            callId,
-            Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM)),
-        )
-        return true
-    }
-
-    /**
-     * Telecom refused to register an incoming call in :callkeep_core.
-     *
-     * That process reports the refusal and decides nothing about it, because the state the
-     * decision needs is here: whether a [reportNewIncomingCall] is still suspended on this call.
-     * If one is, the call never reached Flutter and is failed now rather than left to the
-     * confirmation timeout. If none is, the refusal concerns a call this process is not
-     * registering - a stale callback - and nothing is done with it, in particular no
-     * `performEndCall`, which must never fire for a call Flutter was never told about.
-     */
-    private fun handleCSIncomingFailure(extras: Bundle?) {
-        val failure = extras?.let { FailureMetadata.fromBundle(it) }
-        val callId = failure?.callMetadata?.callId
-        if (callId == null) {
-            logger.w("handleCSIncomingFailure: no callId in failure metadata, ignoring (${failure?.message})")
-            return
-        }
-        if (!rejectBeforeConfirmation(callId, "Telecom refused the incoming registration")) {
-            logger.i("handleCSIncomingFailure: nothing suspended on callId=$callId, ignoring (${failure.message})")
-        }
-    }
-
     /**
      * Resume a suspended host call once. The second answer for one call - a timeout that
      * already resolved it, then the late Telecom reply - is dropped, as Flutter used to drop
@@ -229,11 +149,7 @@ class ForegroundService :
         logger.d("onConnectionEvent: ${event.name}")
         when (event) {
             CallLifecycleEvent.IncomingConnectionReported -> {
-                handleCSIncomingConnectionReported(data)
-            }
-
-            CallLifecycleEvent.IncomingFailure -> {
-                handleCSIncomingFailure(data)
+                syncScreenWakelock()
             }
 
             CallLifecycleEvent.ConnectionStateChanged -> {
@@ -550,226 +466,22 @@ class ForegroundService :
         handle: PHandle,
         displayName: String?,
         hasVideo: Boolean,
-    ): PIncomingCallError? =
-        suspendCancellableCoroutine { continuation ->
-            reportNewIncomingCall(callId, handle, displayName, hasVideo, continuation)
-        }
-
-    /**
-     * The incoming-call handshake with Telecom. Success is only known once
-     * IncomingConnectionReported arrives, so the continuation of the suspended host call is
-     * parked in [pendingIncomingCalls] and resumed from the broadcast, the timeout, an
-     * explicit endCall, tearDown or onDestroy - whichever comes first.
-     */
-    private fun reportNewIncomingCall(
-        callId: String,
-        handle: PHandle,
-        displayName: String?,
-        hasVideo: Boolean,
-        continuation: CancellableContinuation<PIncomingCallError?>,
-    ) {
-        logger.i("reportNewIncomingCall: callId=$callId, handle=$handle")
-
-        // Reject a stale ghost re-presentation: the app ended this callId while it was never
-        // presented in Flutter state (a push->foreground handoff where the remote hung up before
-        // CallBloc registered the call - reportEndCall with MISSED_WHILE_CONNECTING armed the guard),
-        // and a connection-state replay from :callkeep_core now re-drives the incoming call as a fresh
-        // registration. Returning CALL_ID_ALREADY_TERMINATED short-circuits before any
-        // Telecom/IncomingCallService work, so no second ringtone/notification is shown. The Dart
-        // CallBloc already handles this error (not treated as a failure; the call is ended), so
-        // nothing is stranded. The guard is sticky (a stale handshake replays the dead incoming
-        // several times, so every re-presentation must be rejected) and is armed ONLY by the
-        // never-presented end - a transfer-back reuses a call the app DID know, so it never arms it
-        // and re-report proceeds normally (the permanent isTerminated guard is intentionally not
-        // checked here; see below).
-        if (core.wasEndedWithoutFlutterState(callId)) {
-            logger.i("reportNewIncomingCall: callId=$callId ended without Flutter state; rejecting as terminated to suppress ghost re-presentation")
-            continuation.resumeIfActive(Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED)))
-            return
-        }
-
-        // Build metadata before the early check so we can promote the call into the core shadow
-        // tracker even when the call is already answered (cold-start race: ReplayConnectionStates
-        // fires handleCSReportAnswerCall on delegate attach, marking the call answered before
-        // reportNewIncomingCall arrives from the signaling layer).
-        val ringtonePath = StorageDelegate.Sound.getRingtonePath(baseContext)
-
+    ): PIncomingCallError? {
         val metadata =
             CallMetadata(
                 callId = callId,
                 handle = handle.toCallHandle(),
                 displayName = displayName,
                 hasVideo = hasVideo,
-                ringtonePath = ringtonePath,
+                ringtonePath = StorageDelegate.Sound.getRingtonePath(baseContext),
             )
-
-        // Query tracker state BEFORE addPending, which resets lifecycle flags (answeredCallIds).
-        // MainProcessConnectionTracker is the authoritative view of call state in the main process,
-        // updated via broadcasts from :callkeep_core. In contrast, checkAndReservePending (inside
-        // startIncomingCall) only checks ConnectionManager.instance, which is isolated
-        // from :callkeep_core and is never updated with answered/terminated transitions.
-        //
-        // exists() is also checked here to short-circuit duplicate detection without a Telecom
-        // round-trip. When IncomingConnectionReported has already been delivered and promoted the call,
-        // the second reportNewIncomingCall must return CALL_ID_ALREADY_EXISTS immediately rather
-        // than going to Telecom, which would otherwise trigger the CALL_ID_ALREADY_EXISTS adoption
-        // path and return null (masking the duplicate from Flutter).
-        //
-        // isTerminated is intentionally NOT checked here. MainProcessConnectionTracker derives
-        // termination from the absence of a callId in all active sets — there is no persistent
-        // terminated list. A call that re-arrives with the same ID (e.g. transfer back) must be
-        // allowed through regardless of timing.
-        val trackerError: PIncomingCallError? = core.checkIncomingDuplicate(callId)
-        if (trackerError != null) {
-            if (trackerError.value == PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED) {
-                // Cold-start race: the call was already answered in Telecom (via the notification
-                // button) before reportNewIncomingCall arrived from the signaling layer.
-                // Promote the call into the core shadow so endCall() can locate it for the
-                // duration of the active call.
-                // Fire performAnswerCall directly — the Telecom connection is already ACTIVE,
-                // so we bypass the callkeep.answerCall() -> IPC -> AnswerCall broadcast round-trip.
-                // __onCallPerformEventAnswered will start WebRTC using the offer from
-                // __onCallSignalingEventIncoming, which is emitted to the bloc state just after
-                // this callback returns but before _CallPerformEvent.answered is processed.
-                core.promote(callId, metadata, PCallkeepConnectionState.STATE_ACTIVE)
-                core.markAnswered(callId)
-                notifyFlutter("performAnswerCall") { performAnswerCall(callId) }
-                logger.i("reportNewIncomingCall: adopted already-answered call callId=$callId, fired performAnswerCall")
-            } else {
-                // CALL_ID_ALREADY_EXISTS here is expected in the push+signaling combined flow:
-                // the push path registers the call first, and the signaling WebSocket arrives
-                // shortly after with the same callId. Logging at INFO avoids spurious
-                // Crashlytics exception reports in consuming apps that forward WARN to
-                // FirebaseCrashlytics.recordError().
-                logger.i("reportNewIncomingCall: rejecting duplicate callId=$callId, tracker state=${trackerError.value}")
-            }
-            continuation.resumeIfActive(Result.success(trackerError))
-            return
+        val result = core.registerIncomingCall(metadata, this)
+        if (result?.value == PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED) {
+            // The backend already answered before this engine learned the call's offer.
+            // Core adopted it; the bridge only delivers the Flutter-side answer effect.
+            notifyFlutter("performAnswerCall") { performAnswerCall(callId) }
         }
-
-        // Park the continuation and the safety timeout BEFORE calling startIncomingCall.
-        // IncomingConnectionReported can arrive synchronously — during the addNewIncomingCall Telecom
-        // call inside startIncomingCall — before the IPC onSuccess callback returns to this
-        // process. Without pre-registration, resolvePendingIncomingCall finds no entry and
-        // the confirmation is lost, causing the 5-second timeout to fire unconditionally.
-        //
-        // putIfAbsent is used instead of a plain assignment so that concurrent
-        // reportNewIncomingCall calls with the same callId (all dispatched on the main thread
-        // before any of them completes) cannot overwrite each other's continuation. Only the first
-        // caller owns the slot (ownsPendingSlot=true) and registers the timeout; duplicates
-        // skip both registrations and, in their onError handler, must not touch the maps so
-        // the first continuation remains in place until IncomingConnectionReported resolves it.
-        val ownsPendingSlot = pendingIncomingCalls.putIfAbsent(callId, continuation) == null
-        // Non-owners post no timeout and have nothing to cancel in onError — null makes
-        // the ownership contract explicit and avoids allocating a no-op Runnable per call.
-        val timeoutRunnable: Runnable? =
-            if (ownsPendingSlot) {
-                Runnable {
-                    pendingIncomingTimeouts.remove(callId)
-                    // The safety net, not the normal path: it fires when nothing else answered
-                    // for the call at all - a synchronous throw out of startIncomingCall, or a
-                    // backend that never came up. A Telecom refusal arrives as IncomingFailure
-                    // long before this.
-                    if (!rejectBeforeConfirmation(callId, "confirmation timeout")) {
-                        // Nothing was waiting: something answered for this call between the timer
-                        // being posted and it firing, and cancelling it lost the race. Said out
-                        // loud because a timer that fires and does nothing is otherwise invisible.
-                        logger.i("reportNewIncomingCall: confirmation timeout for callId=$callId arrived after it was resolved")
-                    }
-                }.also { r ->
-                    pendingIncomingTimeouts[callId] = r
-                    mainHandler.postDelayed(r, INCOMING_CALL_CONFIRMATION_TIMEOUT_MS)
-                }
-            } else {
-                null
-            }
-
-        // Note: core.startIncomingCall can throw synchronously (e.g. uninitialized
-        // ContextHolder). The exception bypasses our onError handler and propagates to
-        // Pigeon as channel-error. The 5 s timeoutRunnable above is our safety-net for
-        // that case — it fires, drains pending, and resolves pendingIncomingCalls
-        // with CALL_REJECTED_BY_SYSTEM. (Dart will have already received the original
-        // throwable via channel-error by then; the second reply is matched by reply-ID
-        // and silently dropped by Flutter.)
-        core.startIncomingCall(
-            metadata = metadata,
-            onSuccess = {
-                logger.d("reportNewIncomingCall: startIncomingCall success callId=$callId")
-                // pendingIncomingCalls and timeout are already registered above.
-            },
-            onError = { error ->
-                // Cancel timeout and clear maps only if this call owns the pending slot.
-                // A non-owner (ownsPendingSlot=false) must leave the maps untouched so the
-                // first caller's continuation stays in place for IncomingConnectionReported to resolve.
-                timeoutRunnable?.let { mainHandler.removeCallbacks(it) }
-                if (ownsPendingSlot) {
-                    pendingIncomingTimeouts.remove(callId)
-                    pendingIncomingCalls.remove(callId)
-                }
-
-                when (error?.value) {
-                    PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS -> {
-                        // The callId is still in the main-process ConnectionManager.pendingCallIds
-                        // from the original registration by the background isolate, so
-                        // checkAndReservePending returns CALL_ID_ALREADY_EXISTS regardless of
-                        // whether the call was answered. Use the tracker's last known connection
-                        // state — which is NOT reset by core.addPending — to distinguish between
-                        // a call that is still ringing and one that was already answered via the
-                        // notification Answer button while the main process had no UI running.
-                        //
-                        // connectionStates[callId] is mirrored to STATE_ACTIVE by the
-                        // ConnectionStateChanged event (PhoneConnection.onStateChanged ACTIVE, fired
-                        // from :callkeep_core after onAnswer()); updateState writes it unconditionally
-                        // so it is preserved across the addPending() call above.
-                        val existingState = core.getState(callId)
-                        if (existingState == PCallkeepConnectionState.STATE_ACTIVE) {
-                            // Call answered before the main app started its UI. Adopt as active
-                            // and notify Flutter so it skips the incoming screen entirely.
-                            logger.i("reportNewIncomingCall: adopting already-answered call callId=$callId (CALL_ID_ALREADY_EXISTS + STATE_ACTIVE)")
-                            core.promote(callId, metadata, PCallkeepConnectionState.STATE_ACTIVE)
-                            core.markAnswered(callId)
-                            notifyFlutter("performAnswerCall") { performAnswerCall(callId) }
-                            continuation.resumeIfActive(Result.success(null))
-                        } else {
-                            // Call still ringing in Telecom but not yet promoted in the tracker
-                            // (narrow race: Telecom created the PhoneConnection before the
-                            // IncomingConnectionReported broadcast was delivered to this process).
-                            // Promote into the tracker so answerCall() / endCall() can locate it,
-                            // then return CALL_ID_ALREADY_EXISTS so Flutter treats this as a
-                            // duplicate rather than a new registration — the call was already
-                            // reported to Flutter by the push path's didPushIncomingCall callback.
-                            logger.i("reportNewIncomingCall: ringing call already in Telecom callId=$callId, promoting and returning callIdAlreadyExists")
-                            core.promote(callId, metadata, PCallkeepConnectionState.STATE_RINGING)
-                            continuation.resumeIfActive(
-                                Result.success(
-                                    PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS),
-                                ),
-                            )
-                        }
-                    }
-
-                    PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED -> {
-                        // The call was already answered (e.g. via the notification Answer button)
-                        // while the main process was not running. Adopt it as an active call and
-                        // notify Flutter so it can transition its state machine from incoming to
-                        // active without waiting for an AnswerCall broadcast that will not arrive.
-                        logger.i("reportNewIncomingCall: adopting already-answered call callId=$callId")
-                        core.promote(callId, metadata, PCallkeepConnectionState.STATE_ACTIVE)
-                        core.markAnswered(callId)
-                        notifyFlutter("performAnswerCall") { performAnswerCall(callId) }
-                        continuation.resumeIfActive(Result.success(null))
-                    }
-
-                    else -> {
-                        logger.e("reportNewIncomingCall: startIncomingCall failed callId=$callId, error=$error")
-                        // The pending entry has already been drained by
-                        // InProcessCallkeepCore.startIncomingCall before invoking this onError
-                        // callback, so no core.removePending(callId) is needed here.
-                        continuation.resumeIfActive(Result.success(error))
-                    }
-                }
-            },
-        )
+        return result
     }
 
     override fun isSetUp(): Boolean = true
@@ -807,22 +519,9 @@ class ForegroundService :
         // Step 1: Collect active call IDs from the core shadow state (promoted connections).
         val activeCallIds = core.getAll().map { it.callId }
 
-        // Step 1b: Drain any suspended reportNewIncomingCall calls that are still waiting
-        // for Telecom confirmation. These calls were accepted by startIncomingCall() but
-        // IncomingConnectionReported has not yet arrived. Resolve them with CALL_REJECTED_BY_SYSTEM
-        // and mark directNotified so that any subsequent HungUp broadcast is suppressed.
-        // Must run before drainUnconnectedPendingCallIds() so the callIds are removed from
-        // pendingCallIds first, preventing tearDown from also firing performEndCall for them.
-        pendingIncomingCalls.keys().toList().forEach { callId ->
-            logger.w("tearDown: resolving pending incoming callback for callId=$callId with CALL_REJECTED_BY_SYSTEM")
-            core.markDirectNotified(callId)
-            core.removePending(callId)
-            core.clearAndMarkEndCallDispatched(callId)
-            resolvePendingIncomingCall(
-                callId,
-                Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM)),
-            )
-        }
+        // The session ends for every client, including push registrations. Core rejects
+        // them and suppresses their later terminal broadcasts before pending calls are drained.
+        core.endIncomingRegistrations()
 
         // Step 2: Drain pending calls that were registered with Telecom but whose
         // PhoneConnection was never created (no IncomingConnectionReported received yet).
@@ -1027,16 +726,7 @@ class ForegroundService :
     override suspend fun endCall(callId: String): PCallRequestError? {
         logger.i("endCall $callId.")
 
-        // If there is a suspended reportNewIncomingCall call waiting for Telecom
-        // confirmation, resolve it immediately with null (success). The call was
-        // accepted by startIncomingCall() and is now being explicitly ended by the
-        // app — the subsequent HungUp broadcast must still fire performEndCall.
-        // Without this, handleCSReportDeclineCall would see the pending callback and
-        // return CALL_REJECTED_BY_SYSTEM while suppressing performEndCall.
-        if (pendingIncomingCalls.containsKey(callId)) {
-            logger.d("endCall $callId: resuming suspended reportNewIncomingCall before explicit end")
-            resolvePendingIncomingCall(callId, Result.success(null))
-        }
+        core.appEndingCall(callId)
 
         if (core.isTerminated(callId)) {
             // Re-fire performEndCall only on the first endCall for a Telecom-terminated call
@@ -1158,33 +848,6 @@ class ForegroundService :
         }
     }
 
-    private fun handleCSIncomingConnectionReported(extras: Bundle?) {
-        logger.d("handleCSIncomingConnectionReported")
-        extras?.let {
-            val metadata = CallMetadata.fromBundle(it)
-            // Register-only: record the connection in the main-process shadow state. The foreground
-            // delegate is deliberately NOT notified here. A foreground incoming always reaches the
-            // Flutter delegate by another route: its own signaling (__onCallSignalingEventIncoming)
-            // for calls that arrive while the app is running, or the ReplayIncomingCall replay on
-            // delegate attach for a push->foreground handoff (the connection existed before this
-            // process did). Background incoming is shown by IncomingCallService directly. So there is
-            // no live push-path delivery to make from this event.
-            registerIncomingConnection(metadata)
-        }
-    }
-
-    /**
-     * Register a reported incoming connection in the main-process shadow state: promote it from
-     * pending to a fully tracked connection, refresh the screen wakelock, and resolve any deferred
-     * reportNewIncomingCall host call (the success path: Telecom accepted the call, so Flutter
-     * learns it is live when the call resumes, null = no error).
-     */
-    private fun registerIncomingConnection(metadata: CallMetadata) {
-        core.promote(metadata.callId, metadata, PCallkeepConnectionState.STATE_RINGING)
-        syncScreenWakelock()
-        resolvePendingIncomingCall(metadata.callId, Result.success(null))
-    }
-
     /**
      * Notify the Flutter delegate of an incoming call via the public `didPushIncomingCall` callback.
      * The single delivery point to the foreground delegate, used by the connection-state replay
@@ -1256,25 +919,6 @@ class ForegroundService :
         extras?.let {
             val callMetaData = CallMetadata.fromBundle(it)
             val callId = callMetaData.callId
-
-            // Suppress stale async HungUp/Decline broadcasts for calls that were already
-            // directly notified via performEndCall in tearDown(). Without this guard, the
-            // broadcast from the previous session's connection.hungUp() arrives after the
-            // new session's delegate is set and fires performEndCall for the wrong callId.
-            if (core.consumeDirectNotified(callId)) {
-                logger.d(
-                    "handleCSReportDeclineCall: suppressing stale broadcast for callId=$callId (already notified directly)",
-                )
-                return@let
-            }
-
-            // If there is a suspended reportNewIncomingCall call for this callId, Telecom
-            // rejected the call before Flutter was ever notified of it. Resolve the Pigeon
-            // call with CALL_REJECTED_BY_SYSTEM and return early — do NOT fire
-            // performEndCall since Flutter never received a successful registration.
-            if (rejectBeforeConfirmation(callId, "declined before confirmation")) {
-                return@let
-            }
 
             // Mark terminated and record that performEndCall is being dispatched now,
             // so that a subsequent endCall() call with isTerminated=true does NOT
@@ -1443,21 +1087,8 @@ class ForegroundService :
         pendingCallCleanupsByCallId.values.toList().forEach { it() }
         pendingCallCleanupsByCallId.clear()
 
-        // Resume any suspended reportNewIncomingCall calls that are still pending.
-        // The service is being destroyed so Telecom confirmation will never arrive.
-        // Mirror the tearDown path: mark directNotified and remove from pending so
-        // that stale HungUp broadcasts from the dying CS process are suppressed and
-        // pendingCallIds do not leak into the next session's core state.
-        pendingIncomingCalls.keys().toList().forEach { callId ->
-            logger.w("onDestroy: resolving pending incoming callback for callId=$callId with CALL_REJECTED_BY_SYSTEM")
-            core.markDirectNotified(callId)
-            core.removePending(callId)
-            core.clearAndMarkEndCallDispatched(callId)
-            resolvePendingIncomingCall(
-                callId,
-                Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM)),
-            )
-        }
+        // Destroying this bridge does not end the session or a push client's registration.
+        core.detachIncomingClient(this)
 
         // Cancel any in-progress tearDown so the receiver and timeout do not outlive the service.
         tearDownTimeoutRunnable?.let { mainHandler.removeCallbacks(it) }
@@ -1497,11 +1128,6 @@ class ForegroundService :
 
         private const val OUTGOING_CALL_TIMEOUT_MS = 5_000L
         private const val TEAR_DOWN_ACK_TIMEOUT_MS = 3_000L
-
-        // Maximum time to wait for Telecom to confirm an incoming call via IncomingConnectionReported.
-        // If this elapses without confirmation or rejection, resume the suspended host call with
-        // CALL_REJECTED_BY_SYSTEM so it does not hang forever.
-        private const val INCOMING_CALL_CONFIRMATION_TIMEOUT_MS = 5_000L
 
         /**
          * Process-wide facade for all interactions with the `:callkeep_core` process.

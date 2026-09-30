@@ -43,13 +43,14 @@ Its responsibilities:
 
 ### `onCreateIncomingConnection(phoneAccountHandle, request)`
 
-- Creates a `PhoneConnection` for the incoming call.
-- Looks up metadata from `ConnectionManager.getPendingMetadata(callId)`.
-- If metadata is not yet available (race condition), falls back to extracting from the `request`
-  Bundle.
-- Calls `performEventHandle(IncomingConnectionReported, ...)` to notify the main process.
-- If `ConnectionManager.consumeAnswer(callId)` returns true (deferred answer), calls
-  `connection.onAnswer()` immediately.
+- Extracts the call metadata from the request Bundle.
+- Refuses UUIDs cancelled before app presentation, including cancellation delivered before this
+  process had a pending slot. Reports `IncomingFailure` explicitly; returning a failed connection
+  does not trigger `onCreateIncomingConnectionFailed`.
+- Creates and registers the `PhoneConnection`, then reports `IncomingConnectionReported`.
+- If a deferred answer exists, posts it after Telecom finishes connection setup instead of
+  reporting ringing. The posted callback checks connection identity; `onAnswer` ignores a
+  connection already disconnected by cancellation.
 
 ### `onCreateOutgoingConnection(phoneAccountHandle, request)`
 
@@ -88,6 +89,23 @@ encoded as a string extra.
 | `SendDtmf`               | Send DTMF tone                                                                       |
 | `SetCallGroup`           | `handleCallGroup()`: declare the listed calls to be the one group                    |
 | `UnsetCallGroup`         | `handleCallGroup()`: take the listed calls out of the group                          |
+
+## Final incoming registration cancellation
+
+The main process returns `CALL_REJECTED_BY_SYSTEM` only after deciding that registration is
+finished. Dart declines the server call on that result, so a later Telecom callback cannot make
+the call valid again. `CancelIncomingCall` records that final decision in this backend, clears
+pending and deferred-answer state, and hangs up an existing connection. The record survives
+session cleanup; cancellation before `onCreateIncomingConnection` prevents subsequent creation.
+
+This command uses the state-command transport: a refused `startService` is logged with the
+call ID and does not synthesize a successful hangup. The main core suppresses late confirmation
+and answer events and retries cancellation if such an event proves the backend call still exists.
+These safeguards do not make a refused IPC command successful.
+
+The standalone backend applies the same contract through its own typed `CancelIncomingCall`
+command. Its cancelled IDs survive service recreation and session cleanup in the same process;
+a queued incoming setup reports failure and neither shows a call nor reserves an answer.
 
 ## Call Groups
 

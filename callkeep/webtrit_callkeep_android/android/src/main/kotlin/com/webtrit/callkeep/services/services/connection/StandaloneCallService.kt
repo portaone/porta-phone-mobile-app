@@ -25,6 +25,7 @@ import com.webtrit.callkeep.models.CallConnection
 import com.webtrit.callkeep.models.CallConnectionState
 import com.webtrit.callkeep.models.CallGroup
 import com.webtrit.callkeep.models.CallMetadata
+import com.webtrit.callkeep.models.FailureMetadata
 import com.webtrit.callkeep.notifications.StandaloneActiveCallNotificationBuilder
 import com.webtrit.callkeep.notifications.StandaloneIncomingCallNotificationBuilder
 import com.webtrit.callkeep.services.broadcaster.CallCommandEvent
@@ -210,6 +211,7 @@ class StandaloneCallService : Service() {
                 is StandaloneServiceCommand.ReplayAudio -> handleReplayAudioState()
                 is StandaloneServiceCommand.ReplayConnections -> handleReplayConnectionStates()
                 is StandaloneServiceCommand.Reserve -> handleReserveAnswer(command.callId)
+                is StandaloneServiceCommand.CancelIncoming -> handleCancelIncomingCall(command.callId)
                 is StandaloneServiceCommand.Call -> dispatchCall(command.action, command.metadata)
                 is StandaloneServiceCommand.Group -> dispatchGroup(command.action, command.callIds)
             }
@@ -261,6 +263,15 @@ class StandaloneCallService : Service() {
         action: StandaloneServiceAction,
         metadata: CallMetadata,
     ) {
+        if (metadata.callId in cancelledIncomingCallIds) {
+            if (action == StandaloneServiceAction.IncomingCall) {
+                core.notifyConnectionEvent(
+                    CallLifecycleEvent.IncomingFailure,
+                    FailureMetadata(metadata, "Incoming registration already cancelled").toBundle(),
+                )
+            }
+            return
+        }
         when (action) {
             StandaloneServiceAction.IncomingCall -> handleIncomingCall(metadata)
 
@@ -288,6 +299,7 @@ class StandaloneCallService : Service() {
 
             // Lifecycle and ReserveAnswer actions are modelled as dedicated command types and never
             // wrapped in Call, so they cannot reach this branch.
+            StandaloneServiceAction.CancelIncomingCall,
             StandaloneServiceAction.TearDownConnections,
             StandaloneServiceAction.CleanConnections,
             StandaloneServiceAction.ReserveAnswer,
@@ -518,6 +530,13 @@ class StandaloneCallService : Service() {
         core.notifyConnectionEvent(CallLifecycleEvent.HungUp, metadata.toBundle())
     }
 
+    private fun handleCancelIncomingCall(callId: String) {
+        Log.i(TAG, "Cancelling incoming registration: callId=$callId")
+        cancelledIncomingCallIds.add(callId)
+        val metadata = connections[callId]?.metadata ?: CallMetadata(callId = callId)
+        handleHungUpCall(metadata)
+    }
+
     private fun handleHungUpCall(metadata: CallMetadata) {
         Log.i(TAG, "handleHungUpCall: callId=${metadata.callId}")
         stopRingtoneUnlessOtherCallRinging(metadata.callId)
@@ -708,6 +727,7 @@ class StandaloneCallService : Service() {
      * record the reservation so [handleIncomingCall] can apply it when it fires.
      */
     private fun handleReserveAnswer(callId: String) {
+        if (callId in cancelledIncomingCallIds) return
         Log.i(TAG, "handleReserveAnswer: callId=$callId")
         val meta = connections[callId]?.metadata
         if (meta != null) {
@@ -870,6 +890,10 @@ class StandaloneCallService : Service() {
         // holds outgoing/dialing calls that never play the ringtone - hence the ringtone-stop guard
         // consults this set, not the full map, to decide whether another call is still ringing.
         internal val ringingIncomingCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+        // Process-lifetime outcomes: session cleanup cannot make an already declined UUID ring.
+        internal val cancelledIncomingCallIds: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
         internal val answeredCallIds: Set<String>
             get() =
                 connections.values
@@ -1030,6 +1054,7 @@ enum class StandaloneServiceAction {
     AnswerCall,
     DeclineCall,
     HungUpCall,
+    CancelIncomingCall,
     UpdateCall,
     SendDtmf,
     Holding,

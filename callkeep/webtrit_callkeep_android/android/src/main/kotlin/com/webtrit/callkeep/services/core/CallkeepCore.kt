@@ -58,12 +58,9 @@ fun interface ConnectionEventListener {
 }
 
 /**
- * A [ConnectionEventListener] that owns the end of a call: on `HungUp`, `DeclineCall` and
- * `ConnectionNotFound` it marks the call terminated itself, with context the core does not
- * have (pending incoming calls, stale broadcasts of a previous session). While one is attached
- * the core leaves those events to it; while none is - a listener that only observes, such as
- * the incoming-call service, does not count - the core marks the call terminated itself, so
- * the state it keeps for the call, its group above all, follows the call and not the listener.
+ * Owns the UI effects and termination of already-presented calls. Core first handles pending
+ * registrations and stale teardown events, regardless of listeners. Remaining terminal events
+ * go to this bridge; when no bridge is attached, core terminates their shadow state itself.
  */
 interface CallEndListener : ConnectionEventListener
 
@@ -260,17 +257,38 @@ interface CallkeepCore {
      *   throwable reaches the Pigeon channel as channel-error, so its message and stack
      *   trace are preserved for Dart-side diagnostics.
      *
-     * Callers that pre-register state (Pigeon callbacks, timeouts) before invoking this
-     * method must either: (a) wrap the call in their own try/catch and clean that state
-     * on throw, or (b) rely on a self-cleaning safety-net (e.g. a deferred timeout that
-     * removes the stale entries) — exception propagation will skip [onError] entirely
-     * in the synchronous-throw case.
+     * Dispatch-only API for the SMS receiver. Clients that need the backend outcome must use
+     * [registerIncomingCall], which owns waiting and cleanup, including synchronous exceptions.
      */
     fun startIncomingCall(
         metadata: CallMetadata,
         onSuccess: () -> Unit,
         onError: (PIncomingCallError?) -> Unit,
     )
+
+    // -------------------------------------------------------------------------
+    // Incoming registration: waiting for Telecom's answer
+    // -------------------------------------------------------------------------
+
+    /**
+     * Registers once and waits for the backend's answer, joining an existing attempt for this id.
+     * The core owns guards, dispatch, timeout, state promotion, and cleanup before returning.
+     * Already-answered calls return CALL_ID_ALREADY_EXISTS_AND_ANSWERED so a UI adapter can
+     * deliver its answer notification. A cancelled caller releases only its own waiter.
+     */
+    suspend fun registerIncomingCall(
+        metadata: CallMetadata,
+        client: Any,
+    ): PIncomingCallError?
+
+    /** The activity bridge is gone; other clients and their calls remain live. */
+    fun detachIncomingClient(client: Any)
+
+    /** The session is ending; reject all its pending registrations and cancel their timers. */
+    fun endIncomingRegistrations()
+
+    /** An explicit app end accepts its pending report; the normal end event must still follow. */
+    fun appEndingCall(callId: String)
 
     fun startAnswerCall(metadata: CallMetadata)
 

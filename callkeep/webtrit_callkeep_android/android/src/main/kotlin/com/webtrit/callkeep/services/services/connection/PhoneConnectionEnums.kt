@@ -2,6 +2,7 @@ package com.webtrit.callkeep.services.services.connection
 
 enum class ServiceAction {
     HungUpCall,
+    CancelIncomingCall,
     DeclineCall,
     AnswerCall,
     EstablishCall,
