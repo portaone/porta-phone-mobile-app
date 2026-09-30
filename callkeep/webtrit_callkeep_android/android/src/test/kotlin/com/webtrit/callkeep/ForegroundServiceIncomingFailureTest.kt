@@ -20,6 +20,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
@@ -31,7 +33,7 @@ import org.robolectric.annotation.Config
  *
  * The refusal is reported by :callkeep_core as IncomingFailure and carries no verdict: whether
  * anything is waiting on that call is state only this process has. These tests drive the event
- * into the service the way the broadcast does and check both answers - one waiting, none
+ * through the core the way the broadcast does and check both answers - one waiting, none
  * waiting - because getting the second wrong would fire performEndCall for a call Flutter was
  * never told about.
  */
@@ -66,18 +68,21 @@ class ForegroundServiceIncomingFailureTest {
     @Test
     fun `a refusal with nothing waiting is ignored`() {
         val callId = "no-one-waiting"
+        val delegate = mock(PDelegateFlutterApi::class.java)
+        service.flutterDelegateApi = delegate
 
-        service.onConnectionEvent(CallLifecycleEvent.IncomingFailure, failureBundle(callId))
+        CallkeepCore.instance.notifyConnectionEvent(CallLifecycleEvent.IncomingFailure, failureBundle(callId))
 
-        // Nothing is asserted about Flutter because nothing may be said to it: this is a stale
-        // callback about a call this process is not registering.
         shadowOf(service.mainLooper).idle()
+        verifyNoInteractions(delegate)
     }
 
     @Test
     fun `a refusal fails the call that is waiting on it`() =
         runBlocking {
             val callId = "waiting"
+            val delegate = mock(PDelegateFlutterApi::class.java)
+            service.flutterDelegateApi = delegate
             val suspended =
                 async(Dispatchers.Unconfined) {
                     service.reportNewIncomingCall(
@@ -89,12 +94,13 @@ class ForegroundServiceIncomingFailureTest {
                 }
             shadowOf(service.mainLooper).idle()
 
-            service.onConnectionEvent(CallLifecycleEvent.IncomingFailure, failureBundle(callId))
+            CallkeepCore.instance.notifyConnectionEvent(CallLifecycleEvent.IncomingFailure, failureBundle(callId))
             shadowOf(service.mainLooper).idle()
 
             // The timeout is five seconds; a second is generous for an answer that should be
             // immediate and far too short for the timer to be what answered.
             val result = withTimeout(1_000) { suspended.await() }
             assertEquals(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM, result?.value)
+            verifyNoInteractions(delegate)
         }
 }

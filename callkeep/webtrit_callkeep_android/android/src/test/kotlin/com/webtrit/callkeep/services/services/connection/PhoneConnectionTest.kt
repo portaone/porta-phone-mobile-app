@@ -5,16 +5,19 @@ import android.os.Build
 import android.os.ParcelUuid
 import android.telecom.CallEndpoint
 import android.telecom.Connection
+import android.telecom.DisconnectCause
 import com.webtrit.callkeep.managers.AudioManager
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.models.PerformDispatchHandle
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.clearInvocations
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
@@ -51,6 +54,18 @@ class PhoneConnectionTest {
         metadata: CallMetadata,
         audioManager: AudioManager,
     ): PhoneConnection = PhoneConnection(context, dispatcher, metadata, onDisconnect, TelecomCallGroup { emptyList() }, audioManager = audioManager)
+
+    @Test
+    fun `late incoming UI callback cannot restart a disconnected call ringtone`() {
+        val audio: AudioManager = mock()
+        val connection = createConnectionWithAudioManager(CallMetadata(callId = "ended-before-ui"), audio)
+        connection.setDisconnected(DisconnectCause(DisconnectCause.LOCAL))
+        clearInvocations(audio)
+
+        connection.onShowIncomingCallUi()
+
+        verifyNoInteractions(audio)
+    }
 
     /**
      * Helper to populate [PhoneConnection.availableCallEndpoints] so the

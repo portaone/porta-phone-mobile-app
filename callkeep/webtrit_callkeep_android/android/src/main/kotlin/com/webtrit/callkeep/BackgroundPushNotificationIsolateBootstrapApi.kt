@@ -6,8 +6,6 @@ import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.toCallHandle
 import com.webtrit.callkeep.services.core.CallkeepCore
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 
 class BackgroundPushNotificationIsolateBootstrapApi(
     private val context: Context,
@@ -27,6 +25,7 @@ class BackgroundPushNotificationIsolateBootstrapApi(
         hasVideo: Boolean,
     ): PIncomingCallError? {
         Log.d(TAG, "reportNewIncomingCall: $callId, $handle, $displayName, $hasVideo")
+        val core = CallkeepCore.instance
         val ringtonePath = StorageDelegate.Sound.getRingtonePath(context)
 
         val metadata =
@@ -38,14 +37,11 @@ class BackgroundPushNotificationIsolateBootstrapApi(
                 ringtonePath = ringtonePath,
             )
 
-        return suspendCancellableCoroutine { continuation ->
-            CallkeepCore.instance.startIncomingCall(
-                metadata = metadata,
-                onSuccess = { continuation.resume(null) },
-                onError = { error -> continuation.resume(error) },
-            )
-        }
+        return core.registerIncomingCall(metadata, PushClient)
     }
+
+    /** The push path as a client of the core's incoming registration. */
+    private object PushClient
 
     companion object {
         const val TAG = "PigeonPushNotificationIsolateApi"

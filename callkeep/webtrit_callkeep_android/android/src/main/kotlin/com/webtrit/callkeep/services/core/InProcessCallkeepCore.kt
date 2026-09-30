@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.RequiresPermission
 import com.webtrit.callkeep.PCallkeepConnection
 import com.webtrit.callkeep.PCallkeepConnectionState
@@ -15,6 +17,7 @@ import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.models.CallConnectionState
 import com.webtrit.callkeep.models.CallMetadata
+import com.webtrit.callkeep.models.FailureMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.broadcaster.CallMediaEvent
 import com.webtrit.callkeep.services.broadcaster.ConnectionEvent
@@ -66,7 +69,7 @@ class InProcessCallkeepCore internal constructor(
     override fun removeConnectionEventListener(listener: ConnectionEventListener) {
         // The receiver stays: the calls, and the state the core keeps for them, outlive the
         // listeners - the foreground service goes with the activity - and a call that ends
-        // meanwhile still has to reach the tracker. See consumeWithoutListeners.
+        // meanwhile still has to reach the tracker. Registration handling and terminal-state tracking stay in the core.
         listeners.remove(listener)
     }
 
@@ -98,28 +101,130 @@ class InProcessCallkeepCore internal constructor(
             ) {
                 val action = intent?.action ?: return
                 val event = GLOBAL_LISTENER_EVENTS.find { it.name == action } ?: return
-                consumeWithoutListeners(event, intent.extras)
-                listeners.forEach { it.onConnectionEvent(event, intent.extras) }
+                deliverConnectionEvent(event, intent.extras)
             }
         }
 
-    /**
-     * What the core does with an event itself when no listener is there to do it: a call that
-     * ends while the activity's bridge is away is marked terminated, so the state the core
-     * keeps for it - its group above all - follows the call and not the bridge. With a
-     * [CallEndListener] attached the foreground service handles the end with its full context
-     * (pending incoming calls, stale broadcasts of a previous session) and the core stays out
-     * of its way. Any other listener only observes - the incoming-call service handles
-     * `AnswerCall` and nothing else - so its presence changes nothing here.
-     */
-    private fun consumeWithoutListeners(
+    /** Registration transitions always precede observers and never depend on a UI bridge. */
+    private fun deliverConnectionEvent(
         event: ConnectionEvent,
         data: Bundle?,
     ) {
-        if (event !in TERMINAL_EVENTS || listeners.any { it is CallEndListener }) return
-        val callId = data?.let { CallMetadata.fromBundleOrNull(it) }?.callId ?: return
-        tracker.markTerminated(callId)
+        if (consumeRegistrationEvent(event, data)) return
+        listeners.forEach { it.onConnectionEvent(event, data) }
     }
+
+    /** True when a terminal event only rejected an unpresented call or was already notified. */
+    private fun consumeRegistrationEvent(
+        event: ConnectionEvent,
+        data: Bundle?,
+    ): Boolean {
+        val callId = data?.let { callIdOf(event, it) } ?: return false
+        // Dart declines a failed registration without adding the call. Once that outcome
+        // is final, neither replay nor a late Telecom answer can recreate just the native half.
+        if (wasEndedWithoutFlutterState(callId)) {
+            when (event) {
+                CallLifecycleEvent.IncomingConnectionReported,
+                CallLifecycleEvent.AnswerCall,
+                CallLifecycleEvent.ReplayIncomingCall,
+                -> {
+                    cancelRejectedIncomingCall(callId)
+                    return true
+                }
+
+                CallLifecycleEvent.ConnectionStateChanged -> {
+                    val metadata = CallMetadata.fromBundle(data)
+                    if (metadata.connectionState != CallConnectionState.DISCONNECTED) cancelRejectedIncomingCall(callId)
+                    return true
+                }
+
+                else -> {
+                    Unit
+                }
+            }
+        }
+        val registration = incomingRegistrations[callId]
+        when (event) {
+            CallLifecycleEvent.IncomingConnectionReported -> {
+                // Raw dispatch clients (SMS) have no waiter, but still receive confirmation.
+                // A host failure is final: Dart may already have declined the server call.
+                if (isStaleIncomingConfirmation(callId)) return true
+                val metadata = CallMetadata.fromBundle(data)
+                val state =
+                    if (isAnswered(callId) || getState(callId) == PCallkeepConnectionState.STATE_ACTIVE) {
+                        PCallkeepConnectionState.STATE_ACTIVE
+                    } else {
+                        PCallkeepConnectionState.STATE_RINGING
+                    }
+                val promoteCall = {
+                    if (!exists(callId)) promote(callId, metadata, state)
+                    if (state == PCallkeepConnectionState.STATE_ACTIVE) markAnswered(callId)
+                }
+                if (registration != null) {
+                    incomingRegistrations.complete(registration, Result.success(null), beforeAnswer = promoteCall)
+                } else {
+                    promoteCall()
+                }
+            }
+
+            CallLifecycleEvent.AnswerCall -> {
+                if (isStaleIncomingConfirmation(callId)) return true
+                // A deferred answer replaces IncomingConnectionReported while registration
+                // is still waiting. Confirmed push calls can also be answered without a bridge.
+                val reported = CallMetadata.fromBundle(data)
+                val metadata = registration?.metadata ?: get(callId)
+                val answerCall = {
+                    if (metadata != null) promote(callId, metadata.mergeWith(reported), PCallkeepConnectionState.STATE_ACTIVE)
+                    markAnswered(callId)
+                }
+                if (registration != null) {
+                    incomingRegistrations.complete(registration, Result.success(null), beforeAnswer = answerCall)
+                } else {
+                    answerCall()
+                }
+                // Keep the real event for the bridge's single Flutter notification.
+            }
+
+            CallLifecycleEvent.IncomingFailure -> {
+                if (registration != null) {
+                    rejectIncomingRegistration(registration, "Telecom refused registration")
+                } else if (isPending(callId)) {
+                    // A dispatch-only SMS registration still owns a pending reservation.
+                    rejectUnconfirmedIncomingCall(callId)
+                }
+            }
+
+            in TERMINAL_EVENTS -> {
+                if (consumeDirectNotified(callId) || incomingRegistrations.wasRejected(callId)) return true
+                if (registration != null) {
+                    rejectIncomingRegistration(registration, "ended before confirmation")
+                    return true
+                }
+                // Connected-call UI effects still belong to the existing bridge. Without one,
+                // the shadow state and groups must follow the backend's terminal event anyway.
+                if (listeners.none { it is CallEndListener }) tracker.markTerminated(callId)
+            }
+
+            else -> {
+                Unit
+            }
+        }
+        return false
+    }
+
+    private fun isStaleIncomingConfirmation(callId: String): Boolean =
+        incomingRegistrations.wasRejected(callId) ||
+            (isTerminated(callId) && getState(callId) == PCallkeepConnectionState.STATE_DISCONNECTED)
+
+    private fun callIdOf(
+        event: ConnectionEvent,
+        data: Bundle,
+    ): String? =
+        if (event == CallLifecycleEvent.IncomingFailure) {
+            FailureMetadata.fromBundle(data).callMetadata?.callId
+        } else {
+            CallMetadata.fromBundleOrNull(data)?.callId
+        }
 
     // -------------------------------------------------------------------------
     // State queries
@@ -184,7 +289,13 @@ class InProcessCallkeepCore internal constructor(
         state: CallConnectionState,
     ) = tracker.updateState(callId, state)
 
-    override fun markTerminated(callId: String) = tracker.markTerminated(callId)
+    override fun markTerminated(callId: String) {
+        incomingRegistrations[callId]?.let {
+            rejectIncomingRegistration(it, "app reported call ended")
+            return
+        }
+        tracker.markTerminated(callId)
+    }
 
     override fun clearAndMarkEndCallDispatched(callId: String): Boolean {
         tracker.markTerminated(callId)
@@ -201,7 +312,11 @@ class InProcessCallkeepCore internal constructor(
 
     override fun drainUnconnectedPendingCallIds(): Set<String> = tracker.drainUnconnectedPendingCallIds()
 
-    override fun clear() = tracker.clear()
+    override fun clear() {
+        endIncomingRegistrations()
+        incomingRegistrations.clearRejections()
+        tracker.clear()
+    }
 
     // -------------------------------------------------------------------------
     // Callback guards
@@ -246,9 +361,7 @@ class InProcessCallkeepCore internal constructor(
         val actionName = event.name
         val intent = Intent(actionName).apply { data?.let { putExtras(it) } }
 
-        consumeWithoutListeners(event, data)
-        // Deliver to global listeners (ForegroundService, IncomingCallService, etc.)
-        listeners.forEach { it.onConnectionEvent(event, data) }
+        deliverConnectionEvent(event, data)
 
         // Deliver to per-call dynamic receivers (OngoingCall, TearDownComplete, etc.)
         inProcessReceivers.entries.toList().forEach { (receiver, actions) ->
@@ -270,18 +383,24 @@ class InProcessCallkeepCore internal constructor(
         onSuccess: () -> Unit,
         onError: (PIncomingCallError?) -> Unit,
     ) {
+        ensureReceiving()
+        if (wasEndedWithoutFlutterState(metadata.callId)) {
+            onError(PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED))
+            return
+        }
+        incomingRegistrations.allowRetry(metadata.callId)
+        dispatchIncomingCall(metadata, onSuccess, onError)
+    }
+
+    private fun dispatchIncomingCall(
+        metadata: CallMetadata,
+        onSuccess: () -> Unit,
+        onError: (PIncomingCallError?) -> Unit,
+        isCurrent: () -> Boolean = { true },
+    ) {
         val callId = metadata.callId
-        // Reserve the pendingCallIds entry before handing off to the backend so that
-        // answerCall() / endCall() issued before IncomingConnectionReported fires can locate
-        // the call via core.isPending() during the broadcast-lag window.
-        //
-        // addPending() returns true only when this invocation actually inserted the entry.
-        // If it returns false, a concurrent first invocation (e.g. push-isolate vs
-        // foreground signaling for the same callId) already owns the entry — reject this
-        // duplicate via onError(CALL_ID_ALREADY_EXISTS) rather than letting both proceed
-        // to Telecom, which would cause the second to be silently adopted via the
-        // :callkeep_core CALL_ID_ALREADY_EXISTS path and return null, masking the
-        // duplicate from the caller.
+        // Reserve before dispatch so answer/end can find the call while Telecom is creating it.
+        // Registration callers already joined in the core; this also protects raw SMS dispatch.
         val addedPending = tracker.addPending(callId)
         if (!addedPending) {
             Log.w(TAG, "startIncomingCall: callId=$callId already pending, rejecting concurrent duplicate")
@@ -304,24 +423,147 @@ class InProcessCallkeepCore internal constructor(
                 metadata,
                 onSuccess = onSuccess,
                 onError = { err ->
-                    drainOnce()
-                    onError(err)
+                    if (isCurrent()) {
+                        drainOnce()
+                        onError(err)
+                    }
                 },
             )
         } catch (t: Throwable) {
-            // Synchronous failure (e.g. IllegalStateException from ContextHolder, SecurityException,
-            // any unexpected throw inside the router). Drain so the next reportNewIncomingCall for
-            // this callId is not rejected as "already pending, rejecting concurrent duplicate".
-            //
-            // The throwable is re-thrown rather than converted to onError so the original
-            // exception message + stack trace reach Dart via Pigeon's channel-error envelope
-            // (better diagnostics than a structured PIncomingCallError(INTERNAL) that would
-            // lose t.message). This skips the onError callback path — callers that pre-register
-            // state before invoking this method must handle that themselves; see KDoc on
-            // CallkeepCore.startIncomingCall.
-            drainOnce()
+            // Keep the original exception for Pigeon diagnostics. A late throw after a
+            // synchronous confirmation must not drain a newer attempt with the same call id.
+            if (isCurrent()) drainOnce()
             throw t
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Incoming registration
+    // -------------------------------------------------------------------------
+
+    private val incomingRegistrations: IncomingRegistrations by lazy {
+        IncomingRegistrations(Handler(Looper.getMainLooper()), INCOMING_REGISTRATION_TIMEOUT_MS) { registration ->
+            rejectIncomingRegistration(registration, "confirmation timeout") {
+                // Returning CALL_REJECTED_BY_SYSTEM makes Dart decline the server call and
+                // omit ActiveCall. Cancel the backend too, before allowing Dart to continue.
+                // This UUID was never presented, so a later report must not start it again.
+                markEndedWithoutFlutterState(registration.callId)
+                cancelRejectedIncomingCall(registration.callId)
+            }
+        }
+    }
+
+    override suspend fun registerIncomingCall(
+        metadata: CallMetadata,
+        client: Any,
+    ): PIncomingCallError? {
+        ensureReceiving()
+        val callId = metadata.callId
+        if (wasEndedWithoutFlutterState(callId)) {
+            return PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED)
+        }
+        checkIncomingDuplicate(callId)?.let { return adoptIncomingCall(metadata, it) }
+
+        return incomingRegistrations.await(metadata, client) { registration ->
+            try {
+                dispatchIncomingCall(
+                    metadata,
+                    onSuccess = { Log.d(TAG, "Incoming call dispatched: $callId; waiting for confirmation") },
+                    onError = { error ->
+                        val duplicate =
+                            error?.value == PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS ||
+                                error?.value == PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED
+                        if (duplicate) {
+                            // A prior dispatch-only report (SMS) or a cold-start connection can
+                            // already exist in the backend. Adoption belongs to the core too.
+                            val result = adoptIncomingCall(metadata, error)
+                            incomingRegistrations.complete(registration, Result.success(result))
+                        } else {
+                            incomingRegistrations.complete(
+                                registration,
+                                Result.success(error ?: PIncomingCallError(PIncomingCallErrorEnum.INTERNAL)),
+                                rejected = true,
+                            ) {
+                                clearAndMarkEndCallDispatched(callId)
+                                markDirectNotified(callId)
+                            }
+                        }
+                    },
+                    isCurrent = { incomingRegistrations.isCurrent(registration) },
+                )
+            } catch (error: Throwable) {
+                // No orphan timer after a synchronous dispatch failure; joined callers learn
+                // the same exception and a retry receives a fresh operation and deadline.
+                incomingRegistrations.complete(registration, Result.failure(error), rejected = true) {
+                    clearAndMarkEndCallDispatched(callId)
+                    markDirectNotified(callId)
+                }
+            }
+        }
+    }
+
+    private fun adoptIncomingCall(
+        metadata: CallMetadata,
+        error: PIncomingCallError,
+    ): PIncomingCallError {
+        val callId = metadata.callId
+        val answered =
+            error.value == PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED ||
+                getState(callId) == PCallkeepConnectionState.STATE_ACTIVE
+        if (answered) {
+            promote(callId, metadata, PCallkeepConnectionState.STATE_ACTIVE)
+            markAnswered(callId)
+            return PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED)
+        }
+        if (!exists(callId)) promote(callId, metadata, PCallkeepConnectionState.STATE_RINGING)
+        return error
+    }
+
+    override fun endIncomingRegistrations() {
+        incomingRegistrations.snapshot().forEach { rejectIncomingRegistration(it, "session ended") }
+    }
+
+    override fun detachIncomingClient(client: Any) {
+        incomingRegistrations.snapshot().filter { incomingRegistrations.hasClient(it, client) }.forEach { registration ->
+            if (incomingRegistrations.hasOtherClients(registration, client)) {
+                incomingRegistrations.detach(registration, client)
+            } else {
+                rejectIncomingRegistration(registration, "client detached")
+            }
+        }
+    }
+
+    override fun appEndingCall(callId: String) {
+        incomingRegistrations[callId]?.let { incomingRegistrations.complete(it, Result.success(null)) }
+    }
+
+    private fun rejectUnconfirmedIncomingCall(callId: String) {
+        incomingRegistrations.markRejected(callId)
+        clearAndMarkEndCallDispatched(callId)
+        markDirectNotified(callId)
+    }
+
+    private fun rejectIncomingRegistration(
+        registration: IncomingRegistrations.Registration,
+        reason: String,
+        beforeAnswer: () -> Unit = {},
+    ): Boolean =
+        incomingRegistrations.complete(
+            registration,
+            Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM)),
+            rejected = true,
+        ) {
+            Log.i(TAG, "Incoming registration rejected: ${registration.callId} ($reason)")
+            clearAndMarkEndCallDispatched(registration.callId)
+            markDirectNotified(registration.callId)
+            beforeAnswer()
+        }
+
+    private fun cancelRejectedIncomingCall(callId: String) {
+        // A failed service start must not strand the host continuation. A late lifecycle
+        // event proves the backend is reachable again and retries this idempotent command.
+        runCatching { router.cancelIncomingCall(callId) }
+            .onFailure { Log.w(TAG, "Could not cancel rejected incoming call $callId", it) }
     }
 
     override fun startAnswerCall(metadata: CallMetadata) = router.startAnswerCall(metadata)
@@ -386,6 +628,11 @@ class InProcessCallkeepCore internal constructor(
     companion object {
         private const val TAG = "InProcessCallkeepCore"
 
+        // How long an incoming registration waits for Telecom before it is rejected. The safety
+        // net, not the normal path: a refusal arrives as IncomingFailure long before this; the
+        // timer is for a backend that never answers. Dispatch exceptions are cleaned immediately.
+        private const val INCOMING_REGISTRATION_TIMEOUT_MS = 5_000L
+
         val instance: CallkeepCore = InProcessCallkeepCore()
 
         /**
@@ -396,10 +643,8 @@ class InProcessCallkeepCore internal constructor(
          * TearDownComplete) are excluded — they stay as dynamic receivers registered via
          * [registerConnectionEvents].
          *
-         * IncomingFailure was listed among those until it was not: no dynamic receiver ever
-         * named it, so it was dispatched to nobody and a refused incoming call waited out the
-         * confirmation timeout. It is global because the listener is [ForegroundService], which
-         * holds the suspended host call it has to fail.
+         * IncomingFailure must reach the core even on a cold push with no listeners:
+         * it completes the incoming registration without waiting for the safety timeout.
          */
 
         internal val GLOBAL_LISTENER_EVENTS: List<ConnectionEvent> =

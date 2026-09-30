@@ -55,6 +55,9 @@ connection active while another one is active - the way a call group used to.
 
 Telecom asks the app to display its incoming call UI.
 
+A callback arriving after disconnection is ignored, so it cannot restart the ringtone or
+notification after registration cancellation. `onAnswer()` also ignores disconnected calls.
+
 - Acquires wake lock.
 - Starts ringtone.
 - Shows incoming call notification (via `NotificationManager`).

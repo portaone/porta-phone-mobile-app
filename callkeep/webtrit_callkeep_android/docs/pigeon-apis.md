@@ -25,27 +25,27 @@ Implemented by: `ForegroundService`
 
 The primary call-control API. All call lifecycle operations from Dart arrive here.
 
-| Method                                                                               | Description                                        |
-|--------------------------------------------------------------------------------------|----------------------------------------------------|
-| `isSetUp()`                                                                          | Whether the plugin has been set up                 |
-| `setUp(options)`                                                                     | Register phone account, init notification channels |
-| `tearDown()`                                                                         | Hang up all calls, clean up                        |
-| `reportNewIncomingCall(callId, handle, displayName, hasVideo)`                       | Register incoming call with Telecom                |
-| `reportConnectingOutgoingCall(callId)`                                               | Mark outgoing call as connecting                   |
-| `reportConnectedOutgoingCall(callId)`                                                | Mark outgoing call as connected                    |
-| `reportUpdateCall(callId, handle, displayName, hasVideo, proximityEnabled)`          | Update call metadata; unset fields are left alone  |
-| `reportEndCall(callId, displayName, reason)`                                         | Force-end call from Dart side                      |
-| `startCall(callId, handle, displayNameOrContactIdentifier, video, proximityEnabled)` | Initiate an outgoing call                          |
-| `answerCall(callId)`                                                                 | Answer incoming call                               |
-| `endCall(callId)`                                                                    | End a call                                         |
-| `setHeld(callId, onHold)`                                                            | Toggle hold                                        |
-| `setMuted(callId, muted)`                                                            | Toggle mute                                        |
-| `setSpeaker(callId, enabled)`                                                        | Toggle speaker                                     |
-| `setAudioDevice(callId, device)`                                                     | Select audio device                                |
-| `sendDTMF(callId, key)`                                                              | Send DTMF tone                                     |
-| `setCallGroup(groupId, callIds)`                                                     | Present these calls to the OS as one group         |
-| `unsetCallGroup(callIds)`                                                            | Take these calls out of their group                |
-| `onDelegateSet()`                                                                    | Dart signals it is ready to receive events         |
+| Method                                                                               | Description                                                                                                                                   |
+|--------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `isSetUp()`                                                                          | Whether the plugin has been set up                                                                                                            |
+| `setUp(options)`                                                                     | Register phone account, init notification channels                                                                                            |
+| `tearDown()`                                                                         | Hang up all calls, clean up                                                                                                                   |
+| `reportNewIncomingCall(callId, handle, displayName, hasVideo)`                       | Register with Telecom through the core and await the outcome: null when confirmed, an error on refusal, duplicate or the five-second deadline |
+| `reportConnectingOutgoingCall(callId)`                                               | Mark outgoing call as connecting                                                                                                              |
+| `reportConnectedOutgoingCall(callId)`                                                | Mark outgoing call as connected                                                                                                               |
+| `reportUpdateCall(callId, handle, displayName, hasVideo, proximityEnabled)`          | Update call metadata; unset fields are left alone                                                                                             |
+| `reportEndCall(callId, displayName, reason)`                                         | Force-end call from Dart side                                                                                                                 |
+| `startCall(callId, handle, displayNameOrContactIdentifier, video, proximityEnabled)` | Initiate an outgoing call                                                                                                                     |
+| `answerCall(callId)`                                                                 | Answer incoming call                                                                                                                          |
+| `endCall(callId)`                                                                    | End a call                                                                                                                                    |
+| `setHeld(callId, onHold)`                                                            | Toggle hold                                                                                                                                   |
+| `setMuted(callId, muted)`                                                            | Toggle mute                                                                                                                                   |
+| `setSpeaker(callId, enabled)`                                                        | Toggle speaker                                                                                                                                |
+| `setAudioDevice(callId, device)`                                                     | Select audio device                                                                                                                           |
+| `sendDTMF(callId, key)`                                                              | Send DTMF tone                                                                                                                                |
+| `setCallGroup(groupId, callIds)`                                                     | Present these calls to the OS as one group                                                                                                    |
+| `unsetCallGroup(callIds)`                                                            | Take these calls out of their group                                                                                                           |
+| `onDelegateSet()`                                                                    | Dart signals it is ready to receive events                                                                                                    |
 
 `setCallGroup` names the group and takes its whole membership rather than a
 change to it. Both backends implement them by keeping the membership themselves; neither
@@ -120,11 +120,11 @@ Implemented by: `SoundApi`
 
 Implemented by: `BackgroundPushNotificationIsolateBootstrapApi`
 
-| Method                                       | Description                                         |
-|----------------------------------------------|-----------------------------------------------------|
-| `initializePushNotificationCallback(handle)` | Store Dart isolate entry-point                      |
-| `configureSignalingService(config)`          | Persist service config                              |
-| `reportNewIncomingCall(callId, meta)`        | Start `IncomingCallService` for push-triggered call |
+| Method                                       | Description                                                                                                                                      |
+|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| `initializePushNotificationCallback(handle)` | Store Dart isolate entry-point                                                                                                                   |
+| `configureSignalingService(config)`          | Persist service config                                                                                                                           |
+| `reportNewIncomingCall(callId, meta)`        | Register a push-triggered call through the same core operation as the signaling report; `IncomingCallService` starts from the Telecom connection |
 
 ---
 

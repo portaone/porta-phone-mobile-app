@@ -50,10 +50,10 @@ See [ipc-broadcasting.md](ipc-broadcasting.md) for the full event catalogue.
 Used for **commands** where delivery must be guaranteed (broadcasts can be dropped if the receiver
 is not yet registered).
 
-- main → `:callkeep_core` commands: `TearDownConnections`, `ReserveAnswer`, `CleanConnections`,
-  `ReplayAudioState`, `ReplayConnectionStates`, and per-call commands (`AnswerCall`, `DeclineCall`,
-  `HungUpCall`, `EstablishCall`, `UpdateCall`, `MuteCall`, `HoldCall`, `SpeakerCall`,
-  `SetAudioDevice`, `SendDtmf`).
+- main → `:callkeep_core` commands: `TearDownConnections`, `ReserveAnswer`, `CancelIncomingCall`,
+  `CleanConnections`, `ReplayAudioState`, `ReplayConnectionStates`, and per-call commands
+  (`AnswerCall`, `DeclineCall`, `HungUpCall`, `EstablishCall`, `UpdateCall`, `MuteCall`,
+  `HoldCall`, `SpeakerCall`, `SetAudioDevice`, `SendDtmf`).
 
 `PhoneConnectionService.onStartCommand()` routes each intent by `ServiceAction` enum.
 
@@ -67,11 +67,14 @@ an OEM throttle - and a refused command is lost, not a no-op. The two command fa
 that differently:
 
 - The **state commands** (`TearDown`, `TearDownConnections`, `CleanConnections`, `ReserveAnswer`,
-  `ReplayAudioState`, `ReplayConnectionStates`, `SetCallGroup`, `UnsetCallGroup`) go through
-  `PhoneConnectionService.command()`. A loss is logged at WARN with what the command carried.
+  `CancelIncomingCall`, `ReplayAudioState`, `ReplayConnectionStates`, `SetCallGroup`,
+  `UnsetCallGroup`) go through `PhoneConnectionService.command()`. A loss is logged at WARN
+  with what the command carried.
   `TearDownConnections` additionally acks itself with a synthesised `TearDownComplete`, so
   `ForegroundService.tearDown()` does not wait out `TEAR_DOWN_ACK_TIMEOUT_MS` - the same as the
   standalone sender. A lost `ReserveAnswer` is a lost Answer tap; the log line is the evidence.
+  A lost `CancelIncomingCall` is sent again by the core when a late lifecycle event for that
+  call arrives, since the event proves the backend is reachable.
 - The **per-call commands** go through `communicate()` and act on a call that exists by the time
   they are sent. An undelivered one leaves that call hanging, so the sender ends it (`HungUp`)
   rather than letting it sit.

@@ -28,7 +28,7 @@ flowchart TB
     A_FCM["FCM high-priority push"]:::ext
     A_FMISO["firebase_messaging background isolate (APP)<br/>_firebaseMessagingBackgroundHandler -> reportNewIncomingCall<br/>(no WebSocket here)"]:::app
     A_BOOT["reportNewIncomingCall (bootstrap API)"]:::ck
-    A_CKC["CallkeepCore.startIncomingCall"]:::ck
+    A_CKC["CallkeepCore.registerIncomingCall"]:::ck
     A_PCS["PhoneConnectionService<br/>:callkeep_core, Telecom"]:::ck
     A_TEL["System call UI + ring"]:::ext
     A_ICS["IncomingCallService (callkeep)<br/>spawns its OWN FlutterEngine (autoRegister = true)"]:::ck
@@ -54,7 +54,7 @@ flowchart TB
     B_SISO["push isolate (app code on the FGS engine)<br/>background_isolate_callbacks.dart : onSignalingBackgroundCallEvent"]:::app
     B_WS["Signaling server (WebSocket)"]:::ext
     B_BOOT["reportNewIncomingCall (bootstrap API)"]:::ck
-    B_CKC["CallkeepCore.startIncomingCall"]:::ck
+    B_CKC["CallkeepCore.registerIncomingCall"]:::ck
     B_PCS["PhoneConnectionService<br/>:callkeep_core, Telecom"]:::ck
     B_TEL["System call UI + ring"]:::ext
     B_ACT["Activity / main UI engine<br/>adopts the call after answer"]:::app
@@ -75,7 +75,7 @@ flowchart TB
     C_SMOD["App signaling + CallBloc<br/>owns the WebSocket while foreground"]:::app
     C_WS["Signaling server (WebSocket)"]:::ext
     C_FGS["ForegroundService (callkeep)<br/>bound to Activity, PHostApi + events"]:::ck
-    C_CKC["CallkeepCore.startIncomingCall"]:::ck
+    C_CKC["CallkeepCore.registerIncomingCall"]:::ck
     C_PCS["PhoneConnectionService<br/>:callkeep_core, Telecom"]:::ck
     C_ICS["IncomingCallService (notification UI)<br/>app active -> SKIP background isolate"]:::ck
     C_TEL["System call UI + ring (in-app)"]:::ext
@@ -104,7 +104,7 @@ flowchart TB
   FCM["FCM high-priority push"]:::ext
   FMISO["firebase_messaging background isolate (APP)<br/>bootstrap.dart : _firebaseMessagingBackgroundHandler<br/>reports the call (no WebSocket here)"]:::app
   BOOT["reportNewIncomingCall (callkeep bootstrap API)"]:::ck
-  CKC["CallkeepCore.startIncomingCall"]:::ck
+  CKC["CallkeepCore.registerIncomingCall"]:::ck
   PCS["PhoneConnectionService<br/>:callkeep_core, Android Telecom"]:::ck
   TEL["System call UI + ring"]:::ext
   ICS["IncomingCallService (callkeep)<br/>starts FGS + shows the ringing UI"]:::ck
@@ -150,7 +150,7 @@ flowchart TB
   SISO["push isolate (APP code on the FGS engine)<br/>background_isolate_callbacks.dart : onSignalingBackgroundCallEvent<br/>IncomingCallEvent -> reportNewIncomingCall, HangupEvent -> releaseCall"]:::app
   WS["Signaling server (WebSocket)"]:::ext
   BOOT["reportNewIncomingCall<br/>callkeep bootstrap API"]:::ck
-  CKC["CallkeepCore.startIncomingCall"]:::ck
+  CKC["CallkeepCore.registerIncomingCall"]:::ck
   PCS["PhoneConnectionService<br/>process :callkeep_core, Android Telecom"]:::ck
   TEL["System call UI + ring"]:::ext
   ACT["Activity / main UI engine<br/>adopts the live call after answer"]:::app
@@ -182,7 +182,7 @@ flowchart TB
   SMOD["App signaling + CallBloc<br/>owns the WebSocket while the app is active"]:::app
   WS["Signaling server (WebSocket)"]:::ext
   FGSVC["ForegroundService (callkeep, main process)<br/>bound to the Activity (onAttachedToActivity)<br/>PHostApi: call-control from Dart<br/>ConnectionEventListener: CallkeepCore events -> Flutter"]:::ck
-  CKC["CallkeepCore.startIncomingCall"]:::ck
+  CKC["CallkeepCore.registerIncomingCall"]:::ck
   PCS["PhoneConnectionService<br/>process :callkeep_core, Android Telecom"]:::ck
   ICS["IncomingCallService (notification UI)<br/>maybeInitBackgroundHandling:<br/>app active -> SKIP background isolate"]:::ck
   TEL["System call UI + ring (in-app)"]:::ext
@@ -218,7 +218,7 @@ sequenceDiagram
     FCM->>FMISO: deliver push
     Note over FMISO: bootstrap.dart : _firebaseMessagingBackgroundHandler<br/>reports the call (no WebSocket here)
     FMISO->>CORE: reportNewIncomingCall (bootstrap API)
-    CORE->>PCS: startIncomingCall (Telecom addNewIncomingCall)
+    CORE->>PCS: registerIncomingCall (Telecom addNewIncomingCall)
     PCS->>SYS: onShowIncomingCallUi -> ring + notification
     PCS->>ICS: start IncomingCallService (FGS)
     Note over ICS: spawns its OWN FlutterEngine (autoRegister = true)
@@ -291,7 +291,7 @@ sequenceDiagram
     Note over SFGS: background_isolate_callbacks.dart : onSignalingBackgroundCallEvent (IncomingCallEvent)<br/>runs on the FGS engine (app code)
     SFGS->>CORE: reportNewIncomingCall (bootstrap channel, hosted)
     Note over CORE: callkeep does NOT spawn its own isolate<br/>(hosted on external engine)
-    CORE->>PCS: startIncomingCall (Telecom addNewIncomingCall)
+    CORE->>PCS: registerIncomingCall (Telecom addNewIncomingCall)
     PCS->>SYS: onShowIncomingCallUi -> ring + full-screen / notification
     SYS-->>User: ringing
 

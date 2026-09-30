@@ -28,8 +28,8 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
 
 - Started by `NotificationManager.showIncomingCallNotification()`, whose only caller is
   `PhoneConnection.onShowIncomingCallUi()` in the `:callkeep_core` process. (The push path
-  gets there indirectly: `reportNewIncomingCall()` routes the call into
-  `CallkeepCore.startIncomingCall()`, Telecom registers it, and this service starts from the
+  gets there indirectly: `reportNewIncomingCall()` hands the call to
+  `CallkeepCore.registerIncomingCall()`, Telecom registers it, and this service starts from the
   resulting connection callback.)
 - `onCreate()` - registers the internal release receiver (see below), subscribes to
   `CallkeepCore` events via `addConnectionEventListener(this)`, and wires the handlers.
@@ -95,10 +95,10 @@ to `CallLifecycleHandler.performAnswerCall()`. `DeclineCall` and `HungUp` are ha
 
 `BackgroundPushNotificationIsolateBootstrapApi` (registered in `WebtritCallkeepPlugin`):
 
-| Method                                                                       | Description                                                                                                                                                          |
-|------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `initializePushNotificationCallback(callbackDispatcher, onNotificationSync)` | Stores the two Dart entry-point handles                                                                                                                              |
-| `reportNewIncomingCall(callId, handle, displayName, hasVideo)`               | Builds `CallMetadata` and routes it into `CallkeepCore.startIncomingCall()` (Telecom registration; `IncomingCallService` starts later, from the connection callback) |
+| Method                                                                       | Description                                                                                                                                                                                                                                       |
+|------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `initializePushNotificationCallback(callbackDispatcher, onNotificationSync)` | Stores the two Dart entry-point handles                                                                                                                                                                                                           |
+| `reportNewIncomingCall(callId, handle, displayName, hasVideo)`               | Builds `CallMetadata` and awaits `CallkeepCore.registerIncomingCall(metadata, client)`: null once Telecom confirms, an error on refusal, duplicate or the five-second deadline (`IncomingCallService` starts later, from the connection callback) |
 
 ---
 

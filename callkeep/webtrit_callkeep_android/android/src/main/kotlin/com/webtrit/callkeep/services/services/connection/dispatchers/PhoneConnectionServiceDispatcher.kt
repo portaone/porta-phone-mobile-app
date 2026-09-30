@@ -78,6 +78,7 @@ class PhoneConnectionServiceDispatcher(
 
             // IPC command actions are handled directly in PhoneConnectionService.onStartCommand
             // before reaching the dispatcher, so they should never arrive here.
+            ServiceAction.CancelIncomingCall,
             ServiceAction.TearDownConnections,
             ServiceAction.ReserveAnswer,
             ServiceAction.CleanConnections,
