@@ -18,7 +18,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  */
 internal class IncomingRegistrations(
     private val handler: Handler,
-    private val timeoutMs: Long,
+    private val timeoutMs: () -> Long,
     private val onTimeout: (Registration) -> Unit,
 ) {
     internal class Registration(
@@ -91,7 +91,7 @@ internal class IncomingRegistrations(
             if (existing == null) {
                 allowRetry(metadata.callId)
                 registration.timeout = Runnable { onTimeout(registration) }
-                handler.postDelayed(registration.timeout, timeoutMs)
+                handler.postDelayed(registration.timeout, timeoutMs())
                 dispatch(registration)
             }
         }

@@ -1,6 +1,7 @@
 package com.webtrit.callkeep.services.receivers
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
@@ -55,6 +56,11 @@ class IncomingCallSmsTriggerReceiverTest {
     @Before
     fun setUp() {
         ContextHolder.init(ApplicationProvider.getApplicationContext<Context>())
+        // Robolectric runs the plugin as a debuggable app; these deadlines are the release ones.
+        // ContextHolder keeps the first test's context for the whole JVM, so flag that one.
+        ContextHolder.context.applicationInfo.apply {
+            flags = flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+        }
         router = mock(CallServiceRouter::class.java)
         core = InProcessCallkeepCore(tracker = MainProcessConnectionTracker(), routerInit = { router })
     }

@@ -1,6 +1,7 @@
 package com.webtrit.callkeep.services.core
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
@@ -57,6 +58,11 @@ class IncomingRegistrationTest {
     @Before
     fun setUp() {
         ContextHolder.init(ApplicationProvider.getApplicationContext<Context>())
+        // Robolectric runs the plugin as a debuggable app; these deadlines are the release ones.
+        // ContextHolder keeps the first test's context for the whole JVM, so flag that one.
+        ContextHolder.context.applicationInfo.apply {
+            flags = flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+        }
         router = mock(CallServiceRouter::class.java)
         core = InProcessCallkeepCore(tracker = MainProcessConnectionTracker(), routerInit = { router })
     }
@@ -65,6 +71,35 @@ class IncomingRegistrationTest {
     fun tearDown() {
         scope.cancel()
         core.endIncomingRegistrations()
+    }
+
+    @Test
+    fun `a release app gives Telecom five seconds and a debuggable one ten`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val flags = context.applicationInfo.flags
+        try {
+            context.applicationInfo.flags = flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+            assertEquals(5_000L, InProcessCallkeepCore.incomingRegistrationTimeoutMs(context))
+            context.applicationInfo.flags = flags or ApplicationInfo.FLAG_DEBUGGABLE
+            assertEquals(10_000L, InProcessCallkeepCore.incomingRegistrationTimeoutMs(context))
+            assertEquals(5_000L, InProcessCallkeepCore.incomingRegistrationTimeoutMs(null))
+        } finally {
+            context.applicationInfo.flags = flags
+        }
+    }
+
+    @Test
+    fun `a debuggable app keeps waiting past five seconds and gives up at ten`() {
+        ContextHolder.context.applicationInfo.apply {
+            flags = flags or ApplicationInfo.FLAG_DEBUGGABLE
+        }
+        val waiting = report("push", "c1")
+
+        advanceSeconds(6)
+        assertFalse("a debug build's slow start must not cost the call", waiting.isCompleted)
+
+        advanceSeconds(5)
+        assertEquals(rejected(), waiting.result())
     }
 
     @Test

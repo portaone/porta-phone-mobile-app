@@ -164,14 +164,14 @@ synchronous throw -- drains the reservation exactly once before the waiting call
 
 The signaling and push Pigeon entry points and the SMS trigger receiver all call
 `registerIncomingCall(metadata, client)`. The receiver keeps its broadcast alive with
-`goAsync()` until the operation answers, which the five-second deadline bounds. This suspend
+`goAsync()` until the operation answers, which the registration deadline bounds. This suspend
 operation waits for the backend's outcome or the registration deadline, rather than returning
 dispatch acceptance. The core checks the never-presented-call guard, adopts an existing call
 when appropriate, joins a registration already in progress or starts a new one. The first caller
 dispatches once; callers joining the same call id wait for that operation and receive
 `CALL_ID_ALREADY_EXISTS` when it succeeds. A refusal reaches every caller.
 
-`IncomingRegistrations` stores the waiters and the five-second timer for each operation. Its
+`IncomingRegistrations` stores the waiters and the deadline timer for each operation. Its
 callbacks and settlement methods stay inside the core; callers cannot split dispatch from
 waiting or settle a registration themselves. Backend broadcasts and direct standalone events
 enter the same pipeline, independent of `CallEndListener` presence:
@@ -188,7 +188,7 @@ enter the same pipeline, independent of `CallEndListener` presence:
   rejects it with `CALL_REJECTED_BY_SYSTEM`, removes pending state and marks it terminated.
   The core also suppresses a later terminal acknowledgement, so the bridge receives no
   additional end-call action for the rejected registration.
-- The five-second deadline is a final application cancellation. `CALL_REJECTED_BY_SYSTEM`
+- The registration deadline is a final application cancellation. `CALL_REJECTED_BY_SYSTEM`
   makes `CallBloc` decline the server call and return without adding an `ActiveCall`, so the
   native side cannot later recover just its own half of that call. Before answering callers,
   the core marks the never-presented UUID ended and sends `cancelIncomingCall` to the backend.
@@ -207,6 +207,33 @@ enter the same pipeline, independent of `CallEndListener` presence:
 - A backend duplicate whose mirrored state is already active is adopted as active and answered.
   The foreground entry point translates `CALL_ID_ALREADY_EXISTS_AND_ANSWERED` into its Flutter
   answer notification; it does not mutate the registration or tracker itself.
+
+#### Registration deadline
+
+The deadline is five seconds in a release build and ten in a debuggable one
+(`ApplicationInfo.FLAG_DEBUGGABLE`, read when each registration starts). It is a safety net for a
+backend that never answers; every measured registration ended with a real Telecom answer long
+before it. What decides the time is not Telecom but the main thread: on a cold start the backend's
+answer waits in the main looper behind Flutter starting up, and the deadline timer runs on that
+same looper. A debug build starts Flutter several times slower, hence its longer deadline.
+
+Measured on the local stand, debug build unless marked (time from dispatch to the backend's
+answer, median / maximum; refusal = the second call Telecom refuses while the first rings):
+
+| Device                                   | App state               | Confirmed       | Refused         |
+|------------------------------------------|-------------------------|-----------------|-----------------|
+| Pixel 9, Android 17                      | foreground / background | 91 / 141 ms     | 24 / 217 ms     |
+| Pixel 9, Android 17                      | cold start (push)       | 692 / 727 ms    | 1409 / 1743 ms  |
+| Galaxy M32, Android 13                   | foreground / background | 91 / 100 ms     | 84 / 188 ms     |
+| Galaxy M32, Android 13                   | cold start (push)       | 954 / 2442 ms   | 1509 / 3046 ms  |
+| Huawei MAO-LX9N, Android 12              | foreground / background | 77 / 152 ms     | 83 / 140 ms     |
+| Galaxy XCover 5, Android 14              | foreground / background | 375 / 434 ms    | 258 / 1004 ms   |
+| Galaxy XCover 5, Android 14              | cold start (push)       | 1416 / 14829 ms | 4999 / 12748 ms |
+| Galaxy XCover 5, Android 14, **release** | cold start (push)       | 384 / 445 ms    | 634 / 929 ms    |
+
+The XCover's 14.8 s debug confirmation is the main thread blocked for about ten seconds on a cold
+start; the timer was blocked with it, so the answer still came first. In release the slowest
+device answers within a second, leaving more than four seconds of the five.
 
 The public lifecycle methods describe why an operation ends:
 

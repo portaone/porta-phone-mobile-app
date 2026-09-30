@@ -1,6 +1,7 @@
 package com.webtrit.callkeep
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.webtrit.callkeep.common.ContextHolder
@@ -58,6 +59,11 @@ class ForegroundServiceIncomingRegistrationTest {
     @Before
     fun prepare() {
         ContextHolder.init(ApplicationProvider.getApplicationContext<Context>())
+        // Robolectric runs the plugin as a debuggable app; these deadlines are the release ones.
+        // ContextHolder keeps the first test's context for the whole JVM, so flag that one.
+        ContextHolder.context.applicationInfo.apply {
+            flags = flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+        }
         controller = Robolectric.buildService(ForegroundService::class.java).create()
         service = controller.get()
     }

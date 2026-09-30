@@ -17,7 +17,7 @@ Triggered by an FCM message or a direct Dart call to `reportNewIncomingCall`.
         |   The signaling entry point uses the same core operation.
         v
 3.  Core checks guards, adopts or joins an existing call, or starts registration
-        |   One operation per call id, with a five-second safety timer
+        |   One operation per call id, with a deadline (5 s release, 10 s debug)
         |   Dispatch acceptance does not finish the suspended host call
         v
 4.  CallServiceRouter --> TelephonyUtils.addNewIncomingCall() --> Android Telecom
