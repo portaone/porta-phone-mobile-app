@@ -1,7 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'package:fake_async/fake_async.dart';
 import 'package:logging/logging.dart';
+
 import 'package:signaling/signaling.dart';
 import 'package:signaling_service/signaling_service.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
@@ -27,14 +31,20 @@ class _FakeCallkeep implements PushSessionCallkeep {
 class _FakeSignaling extends Fake implements SignalingModule {
   final _events = StreamController<SignalingModuleEvent>.broadcast(sync: true);
 
+  /// Whether the session counts as connected; requests made while it is false are queued.
+  bool connected = true;
+
+  /// Every request the session sent, in order.
+  final List<Request> executed = [];
+
   @override
   Stream<SignalingModuleEvent> get events => _events.stream;
 
   @override
-  bool get isConnected => true;
+  bool get isConnected => connected;
 
   @override
-  Future<void>? execute(Request request) async {}
+  Future<void>? execute(Request request) async => executed.add(request);
 
   @override
   void connect() {}
@@ -67,6 +77,23 @@ class _FakeSignaling extends Fake implements SignalingModule {
     ),
   );
 
+  /// An incoming call that arrives as a protocol event rather than as a handshake line.
+  void incoming(String callId, {required int line, required String caller}) => _events.add(
+    SignalingProtocolEvent(
+      event: IncomingCallEvent(line: line, callId: callId, callee: '555001', caller: caller),
+    ),
+  );
+
+  void unregistered() => _events.add(SignalingProtocolEvent(event: UnregisteredEvent()));
+
+  void connectionFailed() => _events.add(
+    SignalingConnectionFailed(
+      error: StateError('refused'),
+      isRepeated: false,
+      recommendedReconnectDelay: Duration.zero,
+    ),
+  );
+
   void hangup(String callId, {int line = 0}) => _events.add(
     SignalingProtocolEvent(
       event: HangupEvent(line: line, callId: callId, code: 487, reason: 'Request Terminated'),
@@ -84,6 +111,8 @@ class _FakeSignaling extends Fake implements SignalingModule {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late _FakeCallkeep callkeep;
   late _FakeSignaling signaling;
   late List<(String, String?)> missed;
@@ -107,7 +136,19 @@ void main() {
     )..init();
   });
 
-  Future<void> settle() => Future<void>.delayed(Duration.zero);
+  // A few event-loop turns: enough for a deferred handshake check and a platform-channel reply.
+  Future<void> settle() async {
+    for (var i = 0; i < 5; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+  }
+
+  // PushNotificationIsolateManager asks Connectivity() itself, so the plugin channel is answered.
+  void mockConnectivity(List<String> states) =>
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('dev.fluttercommunity.plus/connectivity'),
+        (call) async => call.method == 'check' ? states : null,
+      );
 
   group('one call on the session', () {
     test('its hangup releases it and ends the session', () async {
@@ -196,6 +237,184 @@ void main() {
 
       expect(missed, isEmpty, reason: 'an outgoing call or one answered elsewhere is not a missed call');
       expect(callkeep.released, ['c9'], reason: 'it is still ended natively');
+    });
+  });
+
+  group('handshake without lines', () {
+    test('the own call arriving as an event right after keeps the session on it', () async {
+      var ended = false;
+      final session = manager.run(owner)..whenComplete(() => ended = true);
+      signaling.handshake([]);
+      signaling.incoming('c1', line: 0, caller: '555002');
+      await settle();
+
+      expect(ended, isFalse, reason: 'the call is replayed after the handshake, not missing');
+      expect(callkeep.released, isEmpty);
+
+      signaling.hangup('c1');
+      await session;
+
+      expect(callkeep.released, ['c1']);
+    });
+
+    test('nothing arriving after it ends the own call as missed', () async {
+      final session = manager.run(owner);
+      signaling.handshake([]);
+
+      await session.timeout(const Duration(seconds: 1));
+
+      expect(callkeep.released, ['c1']);
+      expect(missed, [('c1', 'User 555002')]);
+    });
+  });
+
+  group('the session losing the server', () {
+    test('unregistering releases the own call without recording it', () async {
+      final session = manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+
+      signaling.unregistered();
+      await session;
+
+      expect(callkeep.released, ['c1']);
+      expect(missed, isEmpty);
+    });
+
+    test('a failed connection releases the own call without recording it', () async {
+      final session = manager.run(owner);
+
+      signaling.connectionFailed();
+      await session;
+
+      expect(callkeep.released, ['c1']);
+      expect(missed, isEmpty);
+    });
+  });
+
+  group('decline from the notification', () {
+    test('while connected is sent at once on the call line', () async {
+      manager.run(owner);
+      signaling.handshake([(callId: 'c2', caller: '555003'), (callId: 'c1', caller: '555002')]);
+
+      manager.performEndCall('c1');
+      await settle();
+
+      final decline = signaling.executed.single as DeclineRequest;
+      expect((decline.callId, decline.line), ('c1', 1));
+    });
+
+    test('for a call not on the lines is dropped', () async {
+      manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+
+      manager.performEndCall('c9');
+      await settle();
+
+      expect(signaling.executed, isEmpty);
+    });
+
+    test('before the handshake waits for it and then goes out on the call line', () async {
+      signaling.connected = false;
+      manager.run(owner);
+
+      manager.performEndCall('c1');
+      await settle();
+      expect(signaling.executed, isEmpty, reason: 'queued until the session knows the lines');
+
+      signaling.connected = true;
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+      await settle();
+
+      final decline = signaling.executed.single as DeclineRequest;
+      expect((decline.callId, decline.line), ('c1', 0));
+    });
+
+    test('queued for a call the handshake does not list is dropped', () async {
+      signaling.connected = false;
+      manager.run(owner);
+
+      manager.performEndCall('c9');
+      signaling.connected = true;
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+      await settle();
+
+      expect(signaling.executed, isEmpty);
+    });
+
+    test('dropped for an unknown call stays dropped when a later handshake lists it', () async {
+      signaling.connected = false;
+      manager.run(owner);
+
+      manager.performEndCall('c9');
+      signaling.connected = true;
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+      await settle();
+      signaling.handshake([(callId: 'c1', caller: '555002'), (callId: 'c9', caller: '555009')]);
+      await settle();
+
+      expect(signaling.executed, isEmpty);
+    });
+
+    test('queued longer than 10 s is dropped', () {
+      fakeAsync((async) {
+        final signaling = _FakeSignaling()..connected = false;
+        final manager = PushNotificationIsolateManager(
+          callkeep: _FakeCallkeep(),
+          createSignaling: () => signaling,
+          logger: Logger('test'),
+          onMissedCall: (callId, name) async {},
+        )..init();
+        manager.run(owner);
+
+        manager.performEndCall('c1');
+        async.elapse(const Duration(seconds: 11));
+        signaling.connected = true;
+        signaling.handshake([(callId: 'c1', caller: '555002')]);
+        async.flushMicrotasks();
+
+        expect(signaling.executed, isEmpty);
+      });
+    });
+  });
+
+  group('closing the session', () {
+    test('an answer with network hands the call off', () async {
+      mockConnectivity(['wifi']);
+      final session = manager.run(owner);
+
+      manager.performAnswerCall('c1');
+      await settle();
+      final ended = expectLater(session, throwsStateError, reason: 'close() ends a running session with an error');
+      await manager.close();
+      await ended;
+
+      expect(callkeep.handedOff, ['c1']);
+      expect(callkeep.released, isEmpty);
+    });
+
+    test('an answer without network is not remembered: a call never seen is released', () async {
+      mockConnectivity(['none']);
+      final session = manager.run(owner);
+
+      manager.performAnswerCall('c1');
+      await settle();
+      final ended = expectLater(session, throwsStateError, reason: 'close() ends a running session with an error');
+      await manager.close();
+      await ended;
+
+      expect(callkeep.released, ['c1']);
+      expect(callkeep.handedOff, isEmpty);
+    });
+
+    test('before the own call was seen releases it', () async {
+      final session = manager.run(owner);
+
+      final ended = expectLater(session, throwsStateError, reason: 'close() ends a running session with an error');
+      await manager.close();
+      await ended;
+
+      expect(callkeep.released, ['c1']);
+      expect(callkeep.handedOff, isEmpty);
     });
   });
 }

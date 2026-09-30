@@ -30,11 +30,11 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     this.callLogsRepository,
   }) : _onMissedCall = onMissedCall,
        _createSignaling = createSignaling,
-       _pushService = callkeep {
+       _callkeep = callkeep {
     // setBackgroundServiceDelegate is called in the constructor so callkeep can
     // route performAnswerCall / performEndCall as soon as the object exists,
     // before [init] is called.
-    _pushService.setBackgroundServiceDelegate(this);
+    _callkeep.setBackgroundServiceDelegate(this);
   }
 
   final Logger logger;
@@ -42,7 +42,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   final Future<void> Function(String callId, String? callerName) _onMissedCall;
   final SignalingModule Function() _createSignaling;
 
-  final PushSessionCallkeep _pushService;
+  final PushSessionCallkeep _callkeep;
 
   // Assigned exactly once in [init], before any call to [run] or [close].
   late SignalingModule _signalingModule;
@@ -134,6 +134,13 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
       await _signalingSubscription.cancel();
       await _signalingModule.dispose();
     }
+    await _giveBackOwnCall();
+    _completeWithError(StateError('PushNotificationIsolateManager closed'));
+  }
+
+  /// Gives the session's own call back to callkeep as the session closes: handed off while
+  /// someone can still take it, released otherwise.
+  Future<void> _giveBackOwnCall() async {
     if (_answeredCallId != null) {
       await _handoffCall(_answeredCallId);
     } else if (_incomingCallEvents.containsKey(_metadata?.callId)) {
@@ -148,7 +155,6 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
       // here - the Activity keeps its own connection and handles the call normally.
       await _releaseCall(_metadata?.callId);
     }
-    _completeWithError(StateError('PushNotificationIsolateManager closed'));
   }
 
   // ---------------------------------------------------------------------------
@@ -234,19 +240,15 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
       // The hub sends StateHandshake first, then replays IncomingCallEvent entries
       // from _callEventHistory. When a call arrived as a protocol event (not in
       // StateHandshake lines), the push isolate would see 0 lines and immediately
-      // call _onNoActiveLines() before the IncomingCallEvent from _callEventHistory
+      // call _onOwnCallGone() before the IncomingCallEvent from _callEventHistory
       // replay is processed. Defer to the next event-loop turn so any pending
       // port messages (including replayed protocol events) are handled first.
       logger.info('Handshake: no active lines, deferring check for protocol-event calls');
-      Future(() {
-        if (_incomingCallEvents.containsKey(_metadata?.callId)) {
-          logger.info('Handshake deferred: found incoming call from history callId=${_metadata?.callId}, proceeding');
-          _executePendingRequests();
-        } else {
-          logger.info('Handshake deferred: no incoming call found - ending calls');
-          _onNoActiveLines();
-        }
-      });
+      _checkOwnCallNextTurn(
+        () => _incomingCallEvents.containsKey(_metadata?.callId),
+        arrived: 'Handshake deferred: found incoming call from history callId=${_metadata?.callId}, proceeding',
+        gone: 'Handshake deferred: no incoming call found - ending calls',
+      );
       return;
     }
 
@@ -271,18 +273,29 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     final ownCallId = _metadata?.callId;
     if (ownCallId != null && !_lines.containsKey(ownCallId)) {
       logger.info('Handshake: own call $ownCallId not among the lines, deferring check');
-      Future(() {
-        if (_lines.containsKey(ownCallId) || _incomingCallEvents.containsKey(ownCallId)) {
-          logger.info('Handshake deferred: own call $ownCallId arrived, proceeding');
-          _executePendingRequests();
-        } else {
-          logger.info('Handshake deferred: own call $ownCallId is gone - ending it');
-          _onNoActiveLines();
-        }
-      });
+      _checkOwnCallNextTurn(
+        () => _lines.containsKey(ownCallId) || _incomingCallEvents.containsKey(ownCallId),
+        arrived: 'Handshake deferred: own call $ownCallId arrived, proceeding',
+        gone: 'Handshake deferred: own call $ownCallId is gone - ending it',
+      );
       return;
     }
     _executePendingRequests();
+  }
+
+  /// Looks for the session's own call again after the current event-loop turn, once the
+  /// events queued behind the handshake (replayed calls) have been handled: the session goes
+  /// on when [ownCallArrived], and ends its call otherwise.
+  void _checkOwnCallNextTurn(bool Function() ownCallArrived, {required String arrived, required String gone}) {
+    Future(() {
+      if (ownCallArrived()) {
+        logger.info(arrived);
+        _executePendingRequests();
+      } else {
+        logger.info(gone);
+        _onOwnCallGone();
+      }
+    });
   }
 
   void _onProtocolEvent(Event event) {
@@ -309,21 +322,23 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
           hungUpTime: DateTime.now(),
         );
         if (_isOwnCall(event.callId)) {
-          _onHangupCall(event, call);
+          _onOwnCallHangup(event, call);
         } else {
           _onOtherCallHangup(event, call, wasIncoming: incomingEventLog != null);
         }
       case UnregisteredEvent():
-        _onUnregistered(event);
+        _onUnregistered();
       default:
         break;
     }
   }
 
-  void _onNoActiveLines() async {
+  /// The session's own call is no longer on the server: it ended before the session could see
+  /// its hangup, so it is recorded and released from what the push said about it.
+  void _onOwnCallGone() async {
     logger.info('No active lines: releasing call');
     if (_metadata == null) {
-      logger.severe('_onNoActiveLines: metadata is null, cannot release call');
+      logger.severe('_onOwnCallGone: metadata is null, cannot release call');
       _complete();
       return;
     }
@@ -337,34 +352,25 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
       acceptedTime: null,
       hungUpTime: DateTime.now(),
     );
-    await _showMissedCallNotification(event, call);
-    await _logCall(call);
+    await _recordMissed(event, call);
     await _releaseCall(_metadata!.callId);
     _complete();
   }
 
-  void _onUnregistered(UnregisteredEvent event) async {
-    try {
-      final callId = _metadata?.callId;
-      if (callId == null) {
-        logger.severe('_onUnregistered: metadata is null, cannot release call');
-        _complete();
-        return;
-      }
-      await _releaseCall(callId);
-    } catch (e) {
-      logger.severe(e);
-    } finally {
-      _complete();
-    }
+  void _onUnregistered() => _releaseOwnCallAndEnd('_onUnregistered');
+
+  void _onSignalingError(Object error) {
+    logger.severe('Signaling connection failed: $error - releasing call');
+    _releaseOwnCallAndEnd('_onSignalingError');
   }
 
-  void _onSignalingError(Object error) async {
-    logger.severe('Signaling connection failed: $error - releasing call');
+  /// The session can no longer follow its call (the server dropped it): the call is released
+  /// without being recorded, and the session ends.
+  void _releaseOwnCallAndEnd(String source) async {
     try {
       final callId = _metadata?.callId;
       if (callId == null) {
-        logger.severe('_onSignalingError: metadata is null, cannot release call');
+        logger.severe('$source: metadata is null, cannot release call');
         _complete();
         return;
       }
@@ -382,10 +388,9 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   /// behaviour and treats every call as its own.
   bool _isOwnCall(String callId) => _metadata == null || _metadata!.callId == callId;
 
-  void _onHangupCall(HangupEvent event, NewCall call) async {
+  void _onOwnCallHangup(HangupEvent event, NewCall call) async {
     logger.info('Hangup event: callId=${event.callId} reason=${event.reason}');
-    await _showMissedCallNotification(event, call);
-    await _logCall(call);
+    await _recordMissed(event, call);
     await _releaseCall(event.callId);
     _complete();
   }
@@ -408,8 +413,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     );
     _lines.remove(event.callId);
     if (wasIncoming) {
-      await _showMissedCallNotification(event, call);
-      await _logCall(call);
+      await _recordMissed(event, call);
     }
     await _releaseCall(event.callId);
   }
@@ -423,9 +427,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     for (final pending in List<_PendingRequest>.from(_pendingRequests)) {
       final lineIndex = _lines[pending.callId];
       if (lineIndex == null) {
-        pending.completer.completeError('Line not found for callId: ${pending.callId}');
-        pending.timeoutTimer.cancel();
-        _pendingRequests.remove(pending);
+        _dropPending(pending, 'Line not found for callId: ${pending.callId}');
         continue;
       }
 
@@ -433,9 +435,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
         pending.requestBuilder(lineIndex, pending.callId, WebtritSignalingClient.generateTransactionId()),
       );
       if (future == null) {
-        pending.completer.completeError(StateError('Signaling disconnected while flushing callId: ${pending.callId}'));
-        pending.timeoutTimer.cancel();
-        _pendingRequests.remove(pending);
+        _dropPending(pending, StateError('Signaling disconnected while flushing callId: ${pending.callId}'));
         continue;
       }
       future
@@ -446,6 +446,12 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
             _pendingRequests.remove(pending);
           });
     }
+  }
+
+  void _dropPending(_PendingRequest pending, Object error) {
+    pending.completer.completeError(error);
+    pending.timeoutTimer.cancel();
+    _pendingRequests.remove(pending);
   }
 
   Future<void> _sendRequest(String callId, Request Function(int line, String callId, String tx) requestBuilder) async {
@@ -495,7 +501,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   Future<void> _releaseCall(String? callId) async {
     if (callId == null) return;
     try {
-      await _pushService.releaseCall(callId);
+      await _callkeep.releaseCall(callId);
     } catch (e) {
       logger.severe('_releaseCall failed: $e');
     }
@@ -504,7 +510,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   Future<void> _handoffCall(String? callId) async {
     if (callId == null) return;
     try {
-      await _pushService.handoffCall(callId);
+      await _callkeep.handoffCall(callId);
     } catch (e, st) {
       logger.severe('_handoffCall failed: $e', e, st);
     }
@@ -525,6 +531,12 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   // ---------------------------------------------------------------------------
   // Notifications and logging
   // ---------------------------------------------------------------------------
+
+  /// Shows the missed-call notification for [event]'s call and writes it to the call log.
+  Future<void> _recordMissed(HangupEvent event, NewCall call) async {
+    await _showMissedCallNotification(event, call);
+    await _logCall(call);
+  }
 
   Future<void> _logCall(NewCall call) async {
     if (callLogsRepository == null) {
