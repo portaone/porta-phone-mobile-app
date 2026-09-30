@@ -38,7 +38,7 @@ void main() {
       expect(logouts.single, isA<SessionPasswordChangeRequired>());
     });
 
-    test('does not duplicate a logout owned by the session guard', () async {
+    test('does not duplicate a logout the shell already dispatches', () async {
       stubVerify(const SessionLogoutDelegated());
 
       await handler.onSessionMissedReported();

@@ -14,7 +14,7 @@ final _logger = Logger('SessionInvalidationHandler');
 /// Reacts to a signaling report that the account session is gone: resolves
 /// the reason over the REST API with [SessionVerifier] and calls
 /// [performLogout] with it. The only resolution that does not dispatch a
-/// logout is one already owned by the [SessionGuard].
+/// logout is a session rejection, which the shell already acts on.
 class SessionInvalidationHandler {
   SessionInvalidationHandler(this._verifier, {required this.performLogout});
 
@@ -30,10 +30,10 @@ class SessionInvalidationHandler {
         case SessionPasswordChangeRequired():
           performLogout(result);
         case SessionLogoutDelegated():
-          // The API client already reported the rejection to the session
-          // guard, which dispatches its own, more specific logout - avoid a
-          // second, conflicting one.
-          _logger.info('Logout delegated to the session guard');
+          // The API client already reported the rejection to the shell,
+          // which dispatches its own, more specific logout - avoid a second,
+          // conflicting one.
+          _logger.info('Logout delegated to the shell');
       }
     } catch (e, st) {
       // verify() resolves every Exception itself, so what lands here is a

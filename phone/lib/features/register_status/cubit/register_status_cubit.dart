@@ -41,7 +41,7 @@ class RegisterStatusCubit extends Cubit<RegisterStatus> {
   /// the stale value.
   ///
   /// A rejected session is not handled here: the shell's API client reports
-  /// it to the session guard, which logs out.
+  /// it, and the shell logs out.
   Future<bool> fetchStatus() async {
     final bool status;
     try {

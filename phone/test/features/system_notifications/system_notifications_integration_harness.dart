@@ -11,7 +11,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' as api;
 
-import 'package:webtrit_phone/app/session/session_guard.dart';
 import 'package:webtrit_phone/data/data.dart' show AppDatabase;
 import 'package:webtrit_phone/features/system_notifications/system_notifications.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -28,7 +27,7 @@ class SystemNotificationsIntegrationHarness {
     database = AppDatabase(NativeDatabase(File('${directory.path}/notifications.sqlite')));
     local = SystemNotificationsLocalRepositoryDriftImpl(database);
     client = api.WebtritApiClient.inner(Uri.parse('https://refresh.test'), '', httpClient: MockClient(_respond));
-    client.sessionRejections.listen(_SessionGuard().onUnauthorized);
+    client.sessionRejections.listen((rejection) => fail('Unexpected session rejection: $rejection'));
     final remote = SystemNotificationsRemoteRepositoryApiImpl(client, 'integration-token');
     worker = SystemNotificationsSyncWorker(local, remote, pageSize: 2);
     polling = PollingService(connectivityService: connectivity, options: const PollingOptions(jitterRatio: 0));
@@ -131,8 +130,3 @@ class SystemNotificationsIntegrationHarness {
 class _LocalPush extends Mock implements LocalPushRepository {}
 
 class _RemotePush extends Mock implements RemotePushRepository {}
-
-class _SessionGuard implements SessionGuard {
-  @override
-  void onUnauthorized(Exception e) => fail('Unexpected unauthorized response: $e');
-}

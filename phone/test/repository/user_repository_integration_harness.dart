@@ -7,7 +7,6 @@ import 'package:http/testing.dart';
 
 import 'package:api/api.dart' as api;
 
-import 'package:webtrit_phone/app/session/session_guard.dart';
 import 'package:webtrit_phone/data/app_preferences.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
 import 'package:webtrit_phone/repositories/user_info/user_repository.dart';
@@ -18,7 +17,7 @@ import 'package:webtrit_phone/repositories/user_info/user_repository.dart';
 class UserRepositoryIntegrationHarness {
   UserRepositoryIntegrationHarness(AppPreferences preferences) {
     client = api.WebtritApiClient.inner(Uri.parse('https://refresh.test'), '', httpClient: MockClient(_respond));
-    client.sessionRejections.listen(sessionGuard.onUnauthorized);
+    client.sessionRejections.listen(sessionRejections.add);
     local = UserLocalDatasourcePrefsImpl(preferences);
     remote = UserRemoteDatasourceApiImpl(client, 'integration-token');
     repository = UserRepository(remoteDatasource: remote, localDatasource: local);
@@ -42,7 +41,7 @@ class UserRepositoryIntegrationHarness {
     headers: {'content-type': 'application/json'},
   );
 
-  final sessionGuard = _RecordingSessionGuard();
+  final sessionRejections = <api.SessionRejection>[];
   final _assertionZone = Zone.current;
   final requests = <http.Request>[];
   late final api.WebtritApiClient client;
@@ -73,11 +72,4 @@ class UserRepositoryIntegrationHarness {
     await remote.dispose();
     client.close();
   }
-}
-
-class _RecordingSessionGuard implements SessionGuard {
-  final errors = <Exception>[];
-
-  @override
-  void onUnauthorized(Exception e) => errors.add(e);
 }

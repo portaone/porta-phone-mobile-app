@@ -23,9 +23,9 @@ class SessionPasswordChangeRequired extends SessionVerificationResult {
   const SessionPasswordChangeRequired();
 }
 
-/// An auth error owned by the [SessionGuard]: the shell's API client reports
-/// every rejected session to it, and it dispatches its own logout, so the
-/// caller must not dispatch a second, conflicting one.
+/// A session rejection: the shell's API client reports it, and the shell
+/// dispatches its own logout, so the caller must not dispatch a second,
+/// conflicting one.
 class SessionLogoutDelegated extends SessionVerificationResult {
   const SessionLogoutDelegated();
 }
@@ -35,8 +35,8 @@ class SessionLogoutDelegated extends SessionVerificationResult {
 ///
 /// The signaling report is trusted as final: the invalidation always ends in
 /// a logout, and the REST probe only refines the reason - the dedicated
-/// password-change message, a rejection already owned by the [SessionGuard],
-/// or the generic missed session.
+/// password-change message, a rejection the shell already acts on, or the
+/// generic missed session.
 ///
 /// Extension point: this is where the REST answer could gate the logout
 /// itself - keep the session when the backend is unreachable and only log out
@@ -55,13 +55,13 @@ class SessionVerifier {
       _logger.info('verify: password change required');
       return const SessionPasswordChangeRequired();
     } on UnauthorizedException {
-      _logger.info('verify: unauthorized - logout delegated to the session guard');
+      _logger.info('verify: unauthorized - logout delegated to the shell');
       return const SessionLogoutDelegated();
     } on UserNotFoundException {
-      _logger.info('verify: user not found - logout delegated to the session guard');
+      _logger.info('verify: user not found - logout delegated to the shell');
       return const SessionLogoutDelegated();
     } on SessionMissingException {
-      _logger.info('verify: session missing - logout delegated to the session guard');
+      _logger.info('verify: session missing - logout delegated to the shell');
       return const SessionLogoutDelegated();
     } on RequestFailure catch (e) {
       _logger.warning('verify: account error code: ${e.errorCode}');
