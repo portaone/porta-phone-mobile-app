@@ -242,6 +242,7 @@ class MainShellRepositories extends StatelessWidget {
           create: (context) => AppRepository(
             webtritApiClient: context.read<WebtritApiClient>(),
             token: context.read<AppBloc>().state.session.token!,
+            sessionGuard: sessionGuard,
           ),
         ),
         RepositoryProvider<ChatsRepository>(
