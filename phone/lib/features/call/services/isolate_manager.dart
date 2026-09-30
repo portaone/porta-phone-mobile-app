@@ -352,6 +352,10 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
       acceptedTime: null,
       hungUpTime: DateTime.now(),
     );
+    // The call is over: callkeep ends it in Telecom now, before the missed call is recorded,
+    // which can wait on the main thread and the database while the Activity starts. The
+    // service stays up for that record; releaseCall ends the session afterwards.
+    await _reportEndCall(_metadata!.callId);
     await _recordMissed(event, call);
     await _releaseCall(_metadata!.callId);
     _complete();
@@ -390,6 +394,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
 
   void _onOwnCallHangup(HangupEvent event, NewCall call) async {
     logger.info('Hangup event: callId=${event.callId} reason=${event.reason}');
+    await _reportEndCall(event.callId);
     await _recordMissed(event, call);
     await _releaseCall(event.callId);
     _complete();
@@ -413,6 +418,7 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
     );
     _lines.remove(event.callId);
     if (wasIncoming) {
+      await _reportEndCall(event.callId);
       await _recordMissed(event, call);
     }
     await _releaseCall(event.callId);
@@ -498,6 +504,16 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   // Native release
   // ---------------------------------------------------------------------------
 
+  /// Tells callkeep the call is over, so it ends it in Telecom at once and never presents it
+  /// again. The session goes on: only [_releaseCall] or [_handoffCall] ends it.
+  Future<void> _reportEndCall(String callId) async {
+    try {
+      await _callkeep.reportEndCall(callId, CallkeepEndCallReason.missedWhileConnecting);
+    } catch (e) {
+      logger.severe('_reportEndCall failed: $e');
+    }
+  }
+
   Future<void> _releaseCall(String? callId) async {
     if (callId == null) return;
     try {
@@ -574,6 +590,10 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
 abstract interface class PushSessionCallkeep {
   void setBackgroundServiceDelegate(CallkeepBackgroundServiceDelegate? delegate);
 
+  /// The call [callId] is over on the server: ends it natively at once, keeps the session
+  /// and its service running, and keeps a replay or a late push from presenting it again.
+  Future<void> reportEndCall(String callId, CallkeepEndCallReason reason);
+
   /// Ends [callId] natively and stops the incoming-call service if it shows that call.
   Future<void> releaseCall(String callId);
 
@@ -591,6 +611,9 @@ class BackgroundPushSessionCallkeep implements PushSessionCallkeep {
   @override
   void setBackgroundServiceDelegate(CallkeepBackgroundServiceDelegate? delegate) =>
       _service.setBackgroundServiceDelegate(delegate);
+
+  @override
+  Future<void> reportEndCall(String callId, CallkeepEndCallReason reason) => _service.reportEndCall(callId, reason);
 
   @override
   Future<void> releaseCall(String callId) async => await _service.releaseCall(callId);
