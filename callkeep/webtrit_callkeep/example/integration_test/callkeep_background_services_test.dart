@@ -23,7 +23,7 @@ import 'helpers/callkeep_test_helpers.dart';
 //   - Call registration / deduplication between isolate and main process.
 //   - performEndCall / performAnswerCall delegate routing.
 //   - releaseCall clean-up triggered by signaling events
-//     (_onHangupCall, _onSignalingError, _onNoActiveLines, _onUnregistered).
+//     (_onOwnCallHangup, _onSignalingError, _onOwnCallGone, _onUnregistered).
 //   - Lifecycle management: startService / stopService without crash.
 // ---------------------------------------------------------------------------
 
@@ -158,7 +158,7 @@ void main() {
     // integration test.  We therefore end the call via the main-process
     // callkeep.endCall() API, which exercises the same Telecom tear-down path
     // and results in the same performEndCall callback.
-    // Matches: IsolateManager._onHangupCall → endCallOnService(callId)
+    // Matches: IsolateManager._onOwnCallHangup → endCallOnService(callId)
     // -----------------------------------------------------------------------
 
     testWidgets('push-path call endCall fires performEndCall on main delegate', (WidgetTester _) async {
