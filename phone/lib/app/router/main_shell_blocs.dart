@@ -175,6 +175,8 @@ class MainShellBlocs extends StatelessWidget {
             );
 
             final localPushRepository = context.read<LocalPushRepository>();
+            final userRepository = context.read<UserRepository>();
+            final callerIdSettingsRepository = context.read<CallerIdSettingsRepository>();
             return CallBloc(
               callLogsRepository: context.read<CallLogsRepository>(),
               onMissedCall: (callId, callerName) => localPushRepository
@@ -188,13 +190,13 @@ class MainShellBlocs extends StatelessWidget {
               // Outgoing SIP `from` policy: normalise the user's main number to
               // null (main line), or fall back to caller-ID matcher resolution.
               resolveOutgoingFromNumber: (callerFromNumber, destination) {
-                final mainNumber = context.read<UserRepository>().getLocalInfo()?.numbers.main;
+                final mainNumber = userRepository.getLocalInfo()?.numbers.main;
                 if (callerFromNumber != null && callerFromNumber == mainNumber) return null;
                 return callerFromNumber ??
-                    context.read<CallerIdSettingsRepository>().getCallerIdSettings().resolveFromNumber(destination);
+                    callerIdSettingsRepository.getCallerIdSettings().resolveFromNumber(destination);
               },
               onSessionMissedReported: SessionInvalidationHandler(
-                SessionVerifier(context.read<UserRepository>()),
+                SessionVerifier(userRepository),
                 performLogout: (resolution) => appBloc.add(
                   AppLogoutRequested(
                     reason: resolution is SessionPasswordChangeRequired
