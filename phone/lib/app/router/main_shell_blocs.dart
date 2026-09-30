@@ -299,13 +299,8 @@ class MainShellBlocs extends StatelessWidget {
               ),
               BlocProvider(
                 lazy: false,
-                create: (_) => RegisterStatusCubit(
-                  context.read<AppRepository>(),
-                  context.read<RegisterStatusRepository>(),
-                  handleError: (error, stackTrace) {
-                    context.read<AppBloc>().maybeHandleError(error);
-                  },
-                ),
+                create: (_) =>
+                    RegisterStatusCubit(context.read<AppRepository>(), context.read<RegisterStatusRepository>()),
               ),
               BlocProvider(
                 lazy: false,

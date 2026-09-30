@@ -21,7 +21,7 @@ class RegisterStatus {
 }
 
 class RegisterStatusCubit extends Cubit<RegisterStatus> {
-  RegisterStatusCubit(this.appRepository, this.registerStatusRepository, {this.handleError})
+  RegisterStatusCubit(this.appRepository, this.registerStatusRepository)
     : super(RegisterStatus(value: registerStatusRepository.getRegisterStatus())) {
     fetchStatus();
     _connectivitySub = Connectivity().onConnectivityChanged.listen(_handleConnectivity);
@@ -29,7 +29,6 @@ class RegisterStatusCubit extends Cubit<RegisterStatus> {
 
   final AppRepository appRepository;
   final RegisterStatusRepository registerStatusRepository;
-  final Function(Object error, StackTrace stackTrace)? handleError;
 
   late final StreamSubscription _connectivitySub;
 
@@ -37,51 +36,55 @@ class RegisterStatusCubit extends Cubit<RegisterStatus> {
     if (results.any((result) => result != ConnectivityResult.none)) fetchStatus();
   }
 
-  /// Returns whether the fetch succeeded, so an explicit user-triggered
-  /// refresh can report a failure instead of silently keeping the stale value.
+  /// Returns whether the fetched value reached the state, so an explicit
+  /// user-triggered refresh can report a failure instead of silently keeping
+  /// the stale value.
   ///
-  /// [handleError] is called on every failure: it routes a 401 to the app
-  /// logout flow and ignores everything else, so it stays silent for the
-  /// automatic fetches (startup, connectivity regained).
+  /// A rejected session is not handled here: [AppRepository] hands it to the
+  /// shell's session guard, which logs out.
   Future<bool> fetchStatus() async {
+    final bool status;
     try {
-      final status = await appRepository.getRegisterStatus();
+      status = await appRepository.getRegisterStatus();
       await registerStatusRepository.setRegisterStatus(status);
-      emit(RegisterStatus(value: status));
-      return true;
     } catch (e, s) {
-      _logger.warning('Failed to get register status', e, s);
-      handleError?.call(e, s);
-      if (!_isTransientNetworkError(e)) {
-        CrashlyticsUtils.recordError(e, stack: s, reason: 'RegisterStatusCubit.fetchStatus');
-      }
+      _reportFailure('Failed to get register status', 'RegisterStatusCubit.fetchStatus', e, s);
       return false;
     }
+    // The shell closes this cubit on logout, and a request already sent still
+    // completes afterwards.
+    if (isClosed) return false;
+    emit(RegisterStatus(value: status));
+    return true;
   }
-
-  bool _isTransientNetworkError(Object error) =>
-      error is SocketException || error is TimeoutException || error is TlsException;
 
   /// Returns whether the change was accepted by the server. On failure the
   /// previous value is restored, so the caller must tell the user why the
   /// switch snapped back.
   Future<bool> setStatus(bool value) async {
     emit(RegisterStatus(value: value, isUpdating: true));
+    var accepted = true;
     try {
       await appRepository.setRegisterStatus(value);
       await registerStatusRepository.setRegisterStatus(value);
-      emit(RegisterStatus(value: value, isUpdating: false));
-      return true;
-    } catch (e, stackTrace) {
-      _logger.warning('_onRegisterStatusChanged', e, stackTrace);
-      emit(RegisterStatus(value: !value, isUpdating: false));
-      handleError?.call(e, stackTrace);
-      if (!_isTransientNetworkError(e)) {
-        CrashlyticsUtils.recordError(e, stack: stackTrace, reason: 'RegisterStatusCubit.setStatus');
-      }
-      return false;
+    } catch (e, s) {
+      _reportFailure('_onRegisterStatusChanged', 'RegisterStatusCubit.setStatus', e, s);
+      accepted = false;
+    }
+    if (isClosed) return accepted;
+    emit(RegisterStatus(value: accepted ? value : !value, isUpdating: false));
+    return accepted;
+  }
+
+  void _reportFailure(String message, String reason, Object error, StackTrace stackTrace) {
+    _logger.warning(message, error, stackTrace);
+    if (!_isTransientNetworkError(error)) {
+      CrashlyticsUtils.recordError(error, stack: stackTrace, reason: reason);
     }
   }
+
+  bool _isTransientNetworkError(Object error) =>
+      error is SocketException || error is TimeoutException || error is TlsException;
 
   @override
   Future<void> close() {
