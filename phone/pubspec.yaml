@@ -101,7 +101,14 @@ dependencies:
   path: ^1.9.1
   path_provider: ^2.1.5
   permission_handler: ^12.0.1
-  phoenix_socket: ^0.8.0
+  # Pinned to upstream #113: onPushReply leaves a whenComplete future unhandled,
+  # so a socket close during an in-flight push reaches the zone handler as an
+  # uncaught error. Merged upstream, not in the latest pub.dev release (0.8.0).
+  # The commit is pinned rather than master, which adds MessagePack on top.
+  phoenix_socket:
+    git:
+      url: https://github.com/braverhealth/phoenix-socket-dart.git
+      ref: 5dc54b218817d8f8f6677f56b87d5e0a73af7ff3
   provider: ^6.1.5+1
   pub_semver: ^2.2.0
   quiver: ^3.2.2
