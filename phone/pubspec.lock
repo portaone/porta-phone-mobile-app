@@ -1417,10 +1417,11 @@ packages:
   phoenix_socket:
     dependency: "direct main"
     description:
-      name: phoenix_socket
-      sha256: befa09b9861b69f922e8b4854de3e40bf9601e381a89460dacdd1198799ca28a
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: "5dc54b218817d8f8f6677f56b87d5e0a73af7ff3"
+      resolved-ref: "5dc54b218817d8f8f6677f56b87d5e0a73af7ff3"
+      url: "https://github.com/braverhealth/phoenix-socket-dart.git"
+    source: git
     version: "0.8.0"
   platform:
     dependency: transitive
