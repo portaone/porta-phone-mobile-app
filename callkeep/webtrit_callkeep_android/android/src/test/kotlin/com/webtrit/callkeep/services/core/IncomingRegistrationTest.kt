@@ -132,6 +132,34 @@ class IncomingRegistrationTest {
     }
 
     @Test
+    fun `a finished registration logs its outcome and how long the backend took`() {
+        val waiting = report("push", "c1")
+        shadowOf(Looper.getMainLooper()).idleFor(700, TimeUnit.MILLISECONDS)
+
+        event(CallLifecycleEvent.IncomingConnectionReported, "c1")
+
+        assertNull(waiting.result())
+        assertTrue(
+            ShadowLog.getLogs().any {
+                it.msg.contains("Incoming registration finished: c1 confirmed after 700 ms of 5000")
+            },
+        )
+    }
+
+    @Test
+    fun `a timed out registration logs the whole deadline`() {
+        report("push", "c1")
+
+        advanceSeconds(6)
+
+        assertTrue(
+            ShadowLog.getLogs().any {
+                it.msg.contains("Incoming registration finished: c1 CALL_REJECTED_BY_SYSTEM after 5000 ms of 5000")
+            },
+        )
+    }
+
+    @Test
     fun `a foreground listener does not take over confirmation`() {
         core.addConnectionEventListener(mock(CallEndListener::class.java))
         val waiting = report("push", "c1")

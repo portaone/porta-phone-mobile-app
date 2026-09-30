@@ -2,8 +2,10 @@ package com.webtrit.callkeep.services.core
 
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
+import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.models.CallMetadata
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -25,8 +27,12 @@ internal class IncomingRegistrations(
         val metadata: CallMetadata,
     ) {
         val callId get() = metadata.callId
+
+        // Same clock as the deadline's Handler, so the logged time is comparable to the timeout.
+        val startedAtMs = SystemClock.uptimeMillis()
         internal val waiters = mutableListOf<Waiter>()
         internal lateinit var timeout: Runnable
+        internal var deadlineMs = 0L
     }
 
     internal class Waiter(
@@ -91,7 +97,8 @@ internal class IncomingRegistrations(
             if (existing == null) {
                 allowRetry(metadata.callId)
                 registration.timeout = Runnable { onTimeout(registration) }
-                handler.postDelayed(registration.timeout, timeoutMs())
+                registration.deadlineMs = timeoutMs()
+                handler.postDelayed(registration.timeout, registration.deadlineMs)
                 dispatch(registration)
             }
         }
@@ -109,6 +116,10 @@ internal class IncomingRegistrations(
         beforeAnswer()
         val waiters = registration.waiters.toList()
         registration.waiters.clear()
+        // One line per attempt: how long the backend took, against the deadline it had.
+        val outcome = result.fold({ it?.value?.name ?: "confirmed" }, { "failed ${it.javaClass.simpleName}" })
+        val elapsedMs = SystemClock.uptimeMillis() - registration.startedAtMs
+        Log.i(TAG, "Incoming registration finished: ${registration.callId} $outcome after $elapsedMs ms of ${registration.deadlineMs}, callers=${waiters.size}")
         waiters.forEach { it.answer(result) }
         return true
     }
@@ -131,5 +142,9 @@ internal class IncomingRegistrations(
         registration.waiters.removeAll(detached)
         val rejected = Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM))
         detached.forEach { it.answer(rejected) }
+    }
+
+    private companion object {
+        const val TAG = "IncomingRegistrations"
     }
 }
