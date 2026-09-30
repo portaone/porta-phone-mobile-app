@@ -60,9 +60,10 @@ through `CallkeepCore.instance`, not `connectionManager` directly.**
 `PhoneConnectionService` runs in the `:callkeep_core` OS process -- the connections held by
 `connectionManager` in the main JVM heap do not exist, so reading or mutating them there is a
 silent no-op. ONE sanctioned exception: the `pendingCallIds` pre-registration, which
-`checkAndReservePending` populates in the MAIN-process heap during `startIncomingCall` --
-`InProcessCallkeepCore.clearAndMarkEndCallDispatched` must drop it from the main process, or a
-transfer-back reusing the callId is rejected as a duplicate.
+`checkAndReservePending` populates in the MAIN-process heap during
+`PhoneConnectionService.startIncomingCall` -- `InProcessCallkeepCore.clearAndMarkEndCallDispatched`
+must drop it from the main process, or a transfer-back reusing the callId is rejected as a
+duplicate.
 
 ### IPC events
 
@@ -141,6 +142,8 @@ native → Dart events.
 - Message prefix: `<#> WEBTRIT:` (hard-coded security filter, do not change).
 - Regex pattern (4 capture groups in order): `callId`, `handle`, `displayName`, `hasVideo`.
 - Configured via `initializeSmsReception(messagePrefix:, regexPattern:)`.
+- A matched message is registered through `CallkeepCore.registerIncomingCall`, the same operation
+  as push and signaling, so it joins a report of the same call and gets its outcome.
 - Full regex spec: `docs/sms_trigger_regex_requirements.md` at repo root.
 
 ---

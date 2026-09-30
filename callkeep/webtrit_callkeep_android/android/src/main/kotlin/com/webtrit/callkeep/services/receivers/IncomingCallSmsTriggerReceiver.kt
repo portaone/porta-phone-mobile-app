@@ -11,6 +11,9 @@ import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.models.CallHandle
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.core.CallkeepCore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.net.URLDecoder
 
 class IncomingCallSmsTriggerReceiver : BroadcastReceiver() {
@@ -34,25 +37,39 @@ class IncomingCallSmsTriggerReceiver : BroadcastReceiver() {
         val validMessages = extractValidSmsMessages(context, intent, prefix, regex)
         if (validMessages.isEmpty()) {
             Log.e(TAG, "No valid SMS messages found with prefix: $prefix and regex: $regex")
-        } else {
-            validMessages.forEach {
-                tryStartCall(context, it)
+            return
+        }
+
+        // The registration waits for Telecom's answer, at most the core's deadline, so the
+        // broadcast is kept alive until it is known rather than ended on dispatch.
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.Main.immediate).launch {
+            try {
+                validMessages.forEach { registerCall(it) }
+            } finally {
+                pendingResult.finish()
             }
         }
     }
 
-    private fun tryStartCall(
-        context: Context,
+    /**
+     * Registers an SMS-triggered call through the same core operation as push and signaling,
+     * so it joins a report of the same call already waiting, is refused when that call already
+     * ended, and its refusal or deadline is settled by the core.
+     */
+    internal suspend fun registerCall(
         metadata: CallMetadata,
+        core: CallkeepCore = CallkeepCore.instance,
     ) {
         try {
-            CallkeepCore.instance.startIncomingCall(
-                metadata,
-                onSuccess = { Log.d(TAG, "Incoming call started") },
-                onError = { Log.e(TAG, "Failed to start call: $it") },
-            )
+            val error = core.registerIncomingCall(metadata, SmsClient)
+            if (error == null) {
+                Log.d(TAG, "Incoming call registered: ${metadata.callId}")
+            } else {
+                Log.w(TAG, "Incoming call not registered: ${metadata.callId}, ${error.value}")
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception starting call: ${e.message}")
+            Log.e(TAG, "Exception registering call ${metadata.callId}: ${e.message}")
         }
     }
 
@@ -81,6 +98,9 @@ class IncomingCallSmsTriggerReceiver : BroadcastReceiver() {
             ),
         )
     }
+
+    /** Waiter identity of SMS-triggered registrations; no bridge ever detaches it. */
+    private object SmsClient
 
     companion object {
         private const val TAG = "SmsReceiver"
