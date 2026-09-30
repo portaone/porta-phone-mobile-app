@@ -129,7 +129,8 @@ Future<void> _disposeContext(PushIsolateContext context) async {
 /// The push isolate opens its own WebSocket directly (no FGS). It runs until
 /// one of three outcomes:
 /// - **Missed call**: [HangupEvent] received before the user answers ->
-///   `releaseCall()` terminates the [PhoneConnection] and stops [IncomingCallService].
+///   `reportEndCall()` ends the [PhoneConnection] at once, the missed call is recorded while
+///   [IncomingCallService] is still up, then `releaseCall()` stops the service.
 /// - **Answered via push UI**: `performAnswerCall` fires ->
 ///   `handoffCall()` stops [IncomingCallService] without terminating the connection,
 ///   leaving the Activity to adopt the live call.

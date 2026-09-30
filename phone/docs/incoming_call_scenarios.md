@@ -246,8 +246,10 @@ sequenceDiagram
         Note over ICS: stop service, dismiss UI
     else Missed (caller cancels)
         WS-->>PISO: HangupEvent
-        PISO->>CORE: releaseCall -> terminate connection
+        PISO->>CORE: reportEndCall -> terminate connection, service stays up
         PCS->>SYS: dismiss incoming UI
+        Note over PISO: record the missed call, show its notification
+        PISO->>CORE: releaseCall -> stop service
     end
 ```
 

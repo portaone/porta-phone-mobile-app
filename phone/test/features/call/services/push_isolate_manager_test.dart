@@ -14,11 +14,15 @@ import 'package:webtrit_phone/features/call/services/isolate_manager.dart';
 
 /// Records what the push session asks of callkeep.
 class _FakeCallkeep implements PushSessionCallkeep {
+  final List<String> reported = [];
   final List<String> released = [];
   final List<String> handedOff = [];
 
   @override
   void setBackgroundServiceDelegate(CallkeepBackgroundServiceDelegate? delegate) {}
+
+  @override
+  Future<void> reportEndCall(String callId, CallkeepEndCallReason reason) async => reported.add(callId);
 
   @override
   Future<void> releaseCall(String callId) async => released.add(callId);
@@ -173,6 +177,74 @@ void main() {
 
       expect(callkeep.handedOff, ['c1']);
       expect(callkeep.released, isEmpty);
+    });
+  });
+
+  // On a cold start the missed-call record can wait: the notification goes through a platform
+  // channel to a main thread busy starting the Activity's engine, and the call log waits on the
+  // database. The end must reach callkeep before that wait, or Telecom keeps the call alive
+  // long enough for the Activity to be replayed a call the caller has left. The session itself
+  // must outlive the record, so it is not released until the record is done.
+  group('ending a call does not wait for its missed-call record', () {
+    late Completer<void> notificationShown;
+
+    setUp(() {
+      notificationShown = Completer<void>();
+      // A fresh signaling module: the outer setUp's manager must not hear these events.
+      signaling = _FakeSignaling();
+      manager = PushNotificationIsolateManager(
+        callkeep: callkeep,
+        createSignaling: () => signaling,
+        logger: Logger('test'),
+        onMissedCall: (callId, name) {
+          missed.add((callId, name));
+          return notificationShown.future;
+        },
+      )..init();
+    });
+
+    test('an own call already gone from the server is ended while its record is pending', () async {
+      final session = manager.run(owner);
+      signaling.handshake([]);
+      await settle();
+
+      expect(missed.single.$1, 'c1', reason: 'the missed call is being recorded');
+      expect(callkeep.reported, ['c1'], reason: 'callkeep must end the call before the record');
+      expect(callkeep.released, isEmpty, reason: 'the session must live until the record is done');
+
+      notificationShown.complete();
+      await session;
+      expect(callkeep.released, ['c1']);
+    });
+
+    test('an own call hung up is ended while its record is pending', () async {
+      final session = manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+
+      signaling.hangup('c1');
+      await settle();
+
+      expect(callkeep.reported, ['c1']);
+      expect(callkeep.released, isEmpty);
+
+      notificationShown.complete();
+      await session;
+      expect(callkeep.released, ['c1']);
+    });
+
+    test('another call hung up is ended while its record is pending', () async {
+      manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002'), (callId: 'c2', caller: '555003')]);
+
+      signaling.hangup('c2', line: 1);
+      await settle();
+
+      expect(callkeep.reported, ['c2']);
+      expect(callkeep.released, isEmpty, reason: 'c1 still rings; nothing is released yet');
+
+      notificationShown.complete();
+      await settle();
+      expect(callkeep.released, ['c2']);
     });
   });
 
