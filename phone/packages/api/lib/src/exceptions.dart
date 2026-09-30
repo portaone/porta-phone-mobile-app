@@ -131,14 +131,20 @@ class VoicemailNotConfiguredException extends RequestFailure {
   }) : super();
 }
 
-class UserNotFoundException extends RequestFailure {
+/// A refusal that ends the session, whichever request received it: the token
+/// is no longer accepted, the backend holds no session for it, or the account
+/// behind it is gone. [WebtritApiClient.sessionRejections] publishes each
+/// one, so a caller needs no handling of its own to have the session closed.
+abstract interface class SessionRejection implements Exception {}
+
+class UserNotFoundException extends RequestFailure implements SessionRejection {
   UserNotFoundException({required super.url, required super.requestId, required super.statusCode});
 
   @override
   String toString() => 'UserNotFoundException($statusCode, $url)';
 }
 
-class UnauthorizedException extends RequestFailure {
+class UnauthorizedException extends RequestFailure implements SessionRejection {
   UnauthorizedException({
     required super.url,
     required super.requestId,
@@ -168,7 +174,7 @@ class IncorrectCredentialsException extends RequestFailure {
   String toString() => 'IncorrectCredentialsException(statusCode: $statusCode, requestId: $requestId, url: $url)';
 }
 
-class SessionMissingException extends RequestFailure {
+class SessionMissingException extends RequestFailure implements SessionRejection {
   SessionMissingException({
     required super.url,
     required super.requestId,

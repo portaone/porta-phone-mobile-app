@@ -11,6 +11,7 @@ import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:signaling_service/signaling_service.dart' show SignalingModule, SignalingServiceConfig;
 
 import 'package:webtrit_phone/app/assets.gen.dart';
+import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/notifications/notifications.dart';
 import 'package:webtrit_phone/app/router/main_shell_blocs.dart';
 import 'package:webtrit_phone/app/router/main_shell_repositories.dart';
@@ -43,6 +44,12 @@ class _MainShellState extends State<MainShell> {
 
   /// The [SessionGuard] instance that handles session expiration and logout.
   late final SessionGuard _sessionGuard;
+
+  /// The session's API client. Any of its requests that learns the session is
+  /// over reports it on [WebtritApiClient.sessionRejections], which feeds
+  /// [_sessionGuard], so no repository needs to know about the guard.
+  late final WebtritApiClient _apiClient;
+  late final StreamSubscription<SessionRejection> _sessionRejectionsSubscription;
 
   /// Stored in [initState] so it remains accessible during [dispose] without
   /// reading from a potentially deactivated [BuildContext].
@@ -125,6 +132,15 @@ class _MainShellState extends State<MainShell> {
       onPreLogout: _onSessionGuardPreLogout,
     );
 
+    _apiClient = WebtritApiClient(
+      Uri.parse(session.coreUrl!),
+      session.tenantId,
+      connectionTimeout: kApiClientConnectionTimeout,
+      certs: context.read<AppCertificates>().trustedCertificates,
+      userAgent: context.read<AppMetadataProvider>().userAgent,
+    );
+    _sessionRejectionsSubscription = _apiClient.sessionRejections.listen(_sessionGuard.onUnauthorized);
+
     unawaited(_appUpdateService.check());
   }
 
@@ -144,6 +160,7 @@ class _MainShellState extends State<MainShell> {
 
   @override
   void dispose() {
+    unawaited(_sessionRejectionsSubscription.cancel());
     _disposeSessionGuard();
     _callkeep.tearDown();
     unawaited(_tearDownSignaling());
@@ -167,6 +184,7 @@ class _MainShellState extends State<MainShell> {
     return Provider<FeatureAccess>.value(
       value: _sessionFeatureAccess,
       child: MainShellRepositories(
+        apiClient: _apiClient,
         sessionGuard: _sessionGuard,
         child: MainShellServices(
           child: MainShellBlocs(

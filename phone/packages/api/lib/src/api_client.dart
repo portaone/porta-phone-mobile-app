@@ -116,12 +116,20 @@ class WebtritApiClient {
   /// on web it is always the browser's own value).
   final String? userAgent;
 
+  final _sessionRejections = StreamController<SessionRejection>.broadcast();
+
+  /// Every [SessionRejection] this client receives, published as it is
+  /// rethrown to the caller. The owner of the session listens and decides what
+  /// ends it; the requests only report. Closed by [close].
+  Stream<SessionRejection> get sessionRejections => _sessionRejections.stream;
+
   /// Maximum number of characters of an unparsed error body carried into
   /// [RequestFailure.rawBody].
   static const _rawErrorBodyLimit = 256;
 
   void close() {
     _httpClient.close();
+    _sessionRejections.close();
   }
 
   Future<dynamic> _httpClientExecute(
@@ -286,6 +294,8 @@ class WebtritApiClient {
             _logger.severe(message);
           }
         }
+
+        if (e is SessionRejection && !_sessionRejections.isClosed) _sessionRejections.add(e);
 
         // Do not retry for valid server responses with a defined HTTP status code.
         if (e is RequestFailure || requestAttempt >= requestOptions.retries) rethrow;

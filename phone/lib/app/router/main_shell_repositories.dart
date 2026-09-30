@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:api/api.dart';
 
-import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/common/common.dart';
@@ -22,7 +21,11 @@ import 'package:webtrit_phone/services/services.dart';
 /// so the layer reads as one unit and can be composed (or replaced) on its
 /// own in tests.
 class MainShellRepositories extends StatelessWidget {
-  const MainShellRepositories({super.key, required this.sessionGuard, required this.child});
+  const MainShellRepositories({super.key, required this.apiClient, required this.sessionGuard, required this.child});
+
+  /// The session's API client; owned by the shell state, which also listens to
+  /// its session rejections.
+  final WebtritApiClient apiClient;
 
   /// Handles session expiration reported by the remote datasources; owned by
   /// the shell state so it stays alive across rebuilds of this layer.
@@ -35,23 +38,10 @@ class MainShellRepositories extends StatelessWidget {
     // Resolves the session snapshot the shell shadows above (see [MainShell]):
     // one configuration for the whole session, so the graph never reshapes.
     final featureAccess = context.read<FeatureAccess>();
-    final appCertificates = context.read<AppCertificates>();
 
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider<WebtritApiClient>(
-          create: (context) {
-            final appBloc = context.read<AppBloc>();
-
-            return WebtritApiClient(
-              Uri.parse(appBloc.state.session.coreUrl!),
-              appBloc.state.session.tenantId,
-              connectionTimeout: kApiClientConnectionTimeout,
-              certs: appCertificates.trustedCertificates,
-              userAgent: context.read<AppMetadataProvider>().userAgent,
-            );
-          },
-        ),
+        RepositoryProvider<WebtritApiClient>.value(value: apiClient),
         RepositoryProvider<FavoritesRepository>(
           create: (context) {
             final appDatabase = context.read<AppDatabase>();
