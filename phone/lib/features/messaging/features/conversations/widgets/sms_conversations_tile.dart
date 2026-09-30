@@ -4,14 +4,12 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
-import 'package:webtrit_phone/utils/text_matchers.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 class SmsConversationsTile extends StatefulWidget {
@@ -127,11 +125,12 @@ class _SmsConversationsTileState extends State<SmsConversationsTile> {
       children: [
         if (lastMessage != null)
           Expanded(
-            child: ParsedText(
-              parse: TextMatchers.matchers(textStyle, theme.strongQuoteDecoration(true)),
-              regexOptions: const RegexOptions(multiLine: true, dotAll: true, caseSensitive: false),
-              style: textStyle,
+            child: FormattedText(
               text: lastMessage.content,
+              style: textStyle,
+              quoteDecoration: theme.strongQuoteDecoration(true),
+              // A preview of the conversation: a tap opens the conversation, not a link in it.
+              interactive: false,
               textWidthBasis: TextWidthBasis.longestLine,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

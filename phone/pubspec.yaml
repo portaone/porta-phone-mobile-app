@@ -16,6 +16,8 @@ workspace:
   - packages/_web_socket_channel
   - packages/_tcp_proxy
   - packages/pjsua_companion
+  - packages/text_entities
+  - packages/link_preview
 
 # Version format: <Major>.<Minor>.<Patch>[-<Pre-release>]+<Build>
 # Where:
@@ -71,7 +73,6 @@ dependencies:
   flutter_bloc: ^9.1.1
   flutter_contacts: ^2.5.0
   flutter_local_notifications: ^21.0.0
-  flutter_parsed_text: ^2.2.1
   flutter_secure_storage: ^10.3.1
   flutter_svg: ^2.3.0
   formz: ^0.8.0
@@ -79,7 +80,6 @@ dependencies:
   google_api_availability: ^5.0.1
   google_fonts: ^9.0.0
   gravatar_utils: ^1.0.0
-  html: ^0.15.6
   http: ^1.6.0
   image: ^4.0.0
   in_app_update: ^4.2.5
@@ -146,6 +146,10 @@ dependencies:
     path: ./packages/phone_number
   signaling:
     path: ./packages/signaling
+  text_entities:
+    path: ./packages/text_entities
+  link_preview:
+    path: ./packages/link_preview
   signaling_service:
     path: ./packages/signaling_service/signaling_service
 

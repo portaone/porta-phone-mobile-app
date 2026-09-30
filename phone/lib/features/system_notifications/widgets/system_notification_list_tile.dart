@@ -1,11 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 
-import 'package:quiver/collection.dart';
-import 'package:flutter_parsed_text/flutter_parsed_text.dart';
-
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/models/system_notification.dart';
 import 'package:webtrit_phone/utils/utils.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 class SystemNotificationListTile extends StatefulWidget {
   const SystemNotificationListTile(this.notification, {this.seenPending = false, this.onSeen, super.key});
@@ -22,9 +20,6 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
   late final controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 800), value: 1);
   late final animation = CurvedAnimation(parent: controller, curve: Curves.elasticOut);
 
-  static final previewsCache = LruMap<String, OgPreview>(maximumSize: 100);
-  OgPreview? preview;
-
   bool get seen => widget.notification.seen || widget.seenPending;
   late bool wasSeen = seen;
 
@@ -37,31 +32,12 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
       controller.forward();
       widget.onSeen?.call();
     });
-    findLink(widget.notification.content);
   }
 
   @override
   void dispose() {
     controller.dispose();
     super.dispose();
-  }
-
-  void findLink(String text) {
-    final match = RegExp(linkRegex, caseSensitive: false).stringMatch(text);
-
-    if (match != null) {
-      if (previewsCache[match] != null) {
-        preview = previewsCache[match];
-        if (mounted) setState(() {});
-      } else {
-        OgPreview.get(match).then((value) {
-          if (value != null) previewsCache[match] = value;
-          if (mounted) setState(() => preview = value);
-        });
-      }
-    } else {
-      if (mounted) setState(() => preview = null);
-    }
   }
 
   @override
@@ -98,14 +74,12 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
               child: Column(
                 children: [
                   content(style, theme),
-                  AnimatedCrossFade(
-                    duration: const Duration(milliseconds: 600),
-                    sizeCurve: Curves.elasticOut,
-                    firstCurve: Curves.easeInExpo,
-                    alignment: Alignment.center,
-                    firstChild: linkPreview(colorScheme, style),
-                    secondChild: const SizedBox.shrink(),
-                    crossFadeState: preview != null ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+                  LinkPreviewBuilder(
+                    text: widget.notification.content,
+                    builder: (context, preview, url) => LinkPreviewReveal(
+                      preview: preview,
+                      card: (preview) => linkPreview(preview, url, colorScheme, style),
+                    ),
                   ),
                 ],
               ),
@@ -152,25 +126,21 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
           ],
         ),
         Divider(height: 12, color: style.color?.withAlpha(10)),
-        ParsedText(
+        FormattedText(
           text: widget.notification.content,
-          parse: TextMatchers.matchers(
-            style,
-            BoxDecoration(
-              color: colorScheme.primaryFixed.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(0),
-              border: Border(left: BorderSide(color: colorScheme.primaryFixed, width: 2)),
-            ),
-          ),
-          regexOptions: const RegexOptions(multiLine: true, dotAll: true, caseSensitive: false),
           style: style.copyWith(fontFamily: theme.textTheme.bodyMedium?.fontFamily),
+          quoteDecoration: BoxDecoration(
+            color: colorScheme.primaryFixed.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(0),
+            border: Border(left: BorderSide(color: colorScheme.primaryFixed, width: 2)),
+          ),
           textWidthBasis: TextWidthBasis.longestLine,
         ),
       ],
     );
   }
 
-  Widget linkPreview(ColorScheme colorScheme, TextStyle style) {
+  Widget linkPreview(LinkPreview preview, Uri? url, ColorScheme colorScheme, TextStyle style) {
     return Container(
       margin: const EdgeInsets.only(top: 16),
       decoration: BoxDecoration(
@@ -183,20 +153,20 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 8,
         children: [
-          if (preview?.imageUrl != null) ...[
+          if (preview.image != null) ...[
             Container(
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
-              child: Image.network(preview!.imageUrl!),
+              child: LinkPreviewImage(preview.image!),
             ),
             const SizedBox(height: 8),
           ],
-          if ((preview?.title) != null)
+          if (preview.title != null)
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    preview!.title!,
+                    preview.title!,
                     style: style.copyWith(fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -206,13 +176,13 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
                 Icon(Icons.link_sharp, size: 16, color: Colors.grey.shade600),
               ],
             ),
-          if (preview?.description != null) ...[Text(preview!.description!, style: style)],
-          if (preview?.imageUrl != null && preview?.title == null && preview?.description == null)
+          if (preview.description != null) ...[Text(preview.description!, style: style)],
+          if (preview.image != null && preview.title == null && preview.description == null)
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    preview!.imageUrl!,
+                    url.toString(),
                     style: style.copyWith(fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

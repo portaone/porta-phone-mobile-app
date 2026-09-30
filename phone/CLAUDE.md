@@ -15,6 +15,8 @@
 @packages/store_info_extractor/AGENTS.md
 @packages/device_auto_rotate/AGENTS.md
 @packages/phone_number/AGENTS.md
+@packages/text_entities/AGENTS.md
+@packages/link_preview/AGENTS.md
 
 ## Gotchas
 
