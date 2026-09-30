@@ -18,12 +18,12 @@ import 'package:webtrit_phone/repositories/voicemail/voicemail_repository.dart';
 class VoicemailRepositoryIntegrationHarness {
   VoicemailRepositoryIntegrationHarness(QueryExecutor executor) : _database = _Database(executor) {
     client = api.WebtritApiClient.inner(Uri.parse('https://refresh.test'), '', httpClient: MockClient(_respond));
+    client.sessionRejections.listen(sessionGuard.onUnauthorized);
     repository = VoicemailRepositoryImpl(
       webtritApiClient: client,
       token: 'integration-token',
       appDatabase: database,
       trashSupported: true,
-      sessionGuard: sessionGuard,
     );
   }
 

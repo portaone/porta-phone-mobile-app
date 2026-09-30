@@ -23,9 +23,9 @@ class SessionPasswordChangeRequired extends SessionVerificationResult {
   const SessionPasswordChangeRequired();
 }
 
-/// An auth error owned by the [SessionGuard] wired into the user datasource.
-/// The guard dispatches its own logout, so the caller must not dispatch a
-/// second, conflicting one.
+/// An auth error owned by the [SessionGuard]: the shell's API client reports
+/// every rejected session to it, and it dispatches its own logout, so the
+/// caller must not dispatch a second, conflicting one.
 class SessionLogoutDelegated extends SessionVerificationResult {
   const SessionLogoutDelegated();
 }

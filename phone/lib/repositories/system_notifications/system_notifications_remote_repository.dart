@@ -1,8 +1,7 @@
-import 'package:api/api.dart' show WebtritApiClient, UnauthorizedException;
+import 'package:api/api.dart' show WebtritApiClient;
 
 import 'package:webtrit_phone/mappers/api/system_notification_mapper.dart';
 import 'package:webtrit_phone/models/system_notification.dart';
-import 'package:webtrit_phone/app/session/session.dart';
 
 abstract class SystemNotificationsRemoteRepository {
   /// Fetches the history of system notifications.
@@ -22,41 +21,25 @@ abstract class SystemNotificationsRemoteRepository {
 class SystemNotificationsRemoteRepositoryApiImpl
     with SystemNotificationApiMapper
     implements SystemNotificationsRemoteRepository {
-  SystemNotificationsRemoteRepositoryApiImpl(this._webtritApiClient, this._token, this._sessionGuard);
+  SystemNotificationsRemoteRepositoryApiImpl(this._webtritApiClient, this._token);
 
   final WebtritApiClient _webtritApiClient;
   final String _token;
-  final SessionGuard _sessionGuard;
 
   @override
   Future<List<SystemNotification>> getHistory({DateTime? since, int limit = 20}) async {
-    try {
-      final response = await _webtritApiClient.getSystemNotificationsHistory(_token, since: since, limit: limit);
-      return response.items.map(systemNotificationFromApi).toList();
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    final response = await _webtritApiClient.getSystemNotificationsHistory(_token, since: since, limit: limit);
+    return response.items.map(systemNotificationFromApi).toList();
   }
 
   @override
   Future<List<SystemNotification>> getUpdates({required DateTime since, int limit = 20}) async {
-    try {
-      final response = await _webtritApiClient.getSystemNotificationsUpdates(_token, since: since, limit: limit);
-      return response.items.map(systemNotificationFromApi).toList();
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    final response = await _webtritApiClient.getSystemNotificationsUpdates(_token, since: since, limit: limit);
+    return response.items.map(systemNotificationFromApi).toList();
   }
 
   @override
   Future<void> markSystemNotificationAsSeen(int notificationId) async {
-    try {
-      await _webtritApiClient.markSystemNotificationAsSeen(_token, notificationId);
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    await _webtritApiClient.markSystemNotificationAsSeen(_token, notificationId);
   }
 }

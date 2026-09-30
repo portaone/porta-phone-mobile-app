@@ -185,7 +185,6 @@ class _MainShellState extends State<MainShell> {
       value: _sessionFeatureAccess,
       child: MainShellRepositories(
         apiClient: _apiClient,
-        sessionGuard: _sessionGuard,
         child: MainShellServices(
           child: MainShellBlocs(
             callkeep: _callkeep,

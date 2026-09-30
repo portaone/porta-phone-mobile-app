@@ -627,10 +627,11 @@ remain available to the UI; this fallback never turns a failed cycle into succes
 Writes remain per item, not an all-or-nothing batch transaction.
 
 The constructor retains its eager fetch and handles its detached observation;
-joining polling/UI callers still receive the failed future. The
-[composition root](../lib/app/router/main_shell_repositories.dart) supplies the
-session guard, so `UnauthorizedException` is routed once per fetch before being
-rethrown. Polling does not perform logout or classify HTTP errors.
+joining polling/UI callers still receive the failed future. A rejected session
+never needs handling here: the API client the
+[composition root](../lib/app/router/main_shell_repositories.dart) builds reports
+it to the session guard before the failure reaches the repository. Polling does
+not perform logout or classify HTTP errors.
 
 An unconfigured mailbox or unsupported endpoint fails the attempted cycle and
 sets `isActive` to false. Callers joining that still-running fetch receive its

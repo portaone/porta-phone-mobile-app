@@ -4,17 +4,13 @@ import 'package:flutter/foundation.dart';
 
 import 'package:api/api.dart';
 
-import 'package:webtrit_phone/app/session/session.dart';
-
 class PushTokensRepository {
-  PushTokensRepository({required WebtritApiClient webtritApiClient, required String token, SessionGuard? sessionGuard})
-    : _sessionGuard = sessionGuard ?? const EmptySessionGuard(),
-      _webtritApiClient = webtritApiClient,
+  PushTokensRepository({required WebtritApiClient webtritApiClient, required String token})
+    : _webtritApiClient = webtritApiClient,
       _token = token;
 
   final WebtritApiClient _webtritApiClient;
   final String _token;
-  final SessionGuard _sessionGuard;
 
   Future<void> insertOrUpdatePushToken(AppPushTokenType type, String value) async {
     // If you launch the app in debug mode, then you definetely want to use dev environment for push tokens
@@ -31,11 +27,6 @@ class PushTokensRepository {
 
     var appPushToken = AppPushToken(type: type, value: value, env: env);
 
-    try {
-      return await _webtritApiClient.createAppPushToken(_token, appPushToken);
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    return await _webtritApiClient.createAppPushToken(_token, appPushToken);
   }
 }

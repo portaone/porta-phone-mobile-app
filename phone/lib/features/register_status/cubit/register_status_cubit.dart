@@ -40,8 +40,8 @@ class RegisterStatusCubit extends Cubit<RegisterStatus> {
   /// user-triggered refresh can report a failure instead of silently keeping
   /// the stale value.
   ///
-  /// A rejected session is not handled here: [AppRepository] hands it to the
-  /// shell's session guard, which logs out.
+  /// A rejected session is not handled here: the shell's API client reports
+  /// it to the session guard, which logs out.
   Future<bool> fetchStatus() async {
     final bool status;
     try {

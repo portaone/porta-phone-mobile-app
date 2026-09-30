@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 import '../mocks/mocks.dart';
@@ -14,7 +13,7 @@ void main() {
     apiClient = MockWebtritApiClient();
     secureStorage = MockSecureStorage();
 
-    repo = CustomPrivateGatewayRepository(apiClient, secureStorage, 'user_token', const EmptySessionGuard());
+    repo = CustomPrivateGatewayRepository(apiClient, secureStorage, 'user_token');
   });
 
   group('CustomPrivateGatewayRepository.dispose', () {

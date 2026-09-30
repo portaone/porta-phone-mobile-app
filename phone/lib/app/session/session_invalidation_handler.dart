@@ -30,8 +30,9 @@ class SessionInvalidationHandler {
         case SessionPasswordChangeRequired():
           performLogout(result);
         case SessionLogoutDelegated():
-          // The session guard wired into the user datasource dispatches its
-          // own, more specific logout - avoid a second, conflicting one.
+          // The API client already reported the rejection to the session
+          // guard, which dispatches its own, more specific logout - avoid a
+          // second, conflicting one.
           _logger.info('Logout delegated to the session guard');
       }
     } catch (e, st) {

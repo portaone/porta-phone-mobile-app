@@ -28,7 +28,8 @@ class SystemNotificationsIntegrationHarness {
     database = AppDatabase(NativeDatabase(File('${directory.path}/notifications.sqlite')));
     local = SystemNotificationsLocalRepositoryDriftImpl(database);
     client = api.WebtritApiClient.inner(Uri.parse('https://refresh.test'), '', httpClient: MockClient(_respond));
-    final remote = SystemNotificationsRemoteRepositoryApiImpl(client, 'integration-token', _SessionGuard());
+    client.sessionRejections.listen(_SessionGuard().onUnauthorized);
+    final remote = SystemNotificationsRemoteRepositoryApiImpl(client, 'integration-token');
     worker = SystemNotificationsSyncWorker(local, remote, pageSize: 2);
     polling = PollingService(connectivityService: connectivity, options: const PollingOptions(jitterRatio: 0));
     owner = SystemNotificationsSync(worker: worker, pollingService: polling, interval: const Duration(hours: 1));

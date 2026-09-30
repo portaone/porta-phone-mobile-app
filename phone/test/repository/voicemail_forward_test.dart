@@ -6,7 +6,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' as api;
 
-import 'package:webtrit_phone/app/session/session_guard.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -17,7 +16,6 @@ import '../mocks/voicemails_fixture_factory.dart';
 void main() {
   late AppDatabase appDatabase;
   late _Client client;
-  late _Guard guard;
   late VoicemailRepositoryImpl repository;
 
   setUpAll(() {
@@ -28,7 +26,6 @@ void main() {
   setUp(() async {
     appDatabase = AppDatabase(NativeDatabase.memory());
     client = _Client();
-    guard = _Guard();
     when(
       () => client.getUserVoicemailList(
         any(),
@@ -41,7 +38,6 @@ void main() {
       token: 'token',
       appDatabase: appDatabase,
       trashSupported: true,
-      sessionGuard: guard,
     );
     await pumpEventQueue();
   });
@@ -124,20 +120,12 @@ void main() {
     await expectLater(repository.forwardVoicemail('vm-1', toUserId: 'nobody'), throwsA(same(error)));
   });
 
-  test('a 401 reaches the session guard and is rethrown', () async {
+  test('a 401 is rethrown', () async {
     final error = api.UnauthorizedException(url: Uri(), requestId: 'request', statusCode: 401);
     forwardAnswers(() => Future.error(error));
 
     await expectLater(repository.forwardVoicemail('vm-1', toUserId: '1'), throwsA(same(error)));
-
-    expect(guard.errors, [same(error)]);
   });
 }
 
 class _Client extends Mock implements api.WebtritApiClient {}
-
-class _Guard implements SessionGuard {
-  final errors = <Exception>[];
-  @override
-  void onUnauthorized(Exception e) => errors.add(e);
-}

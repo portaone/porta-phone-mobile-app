@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' as api;
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 import '../mocks/mocks.dart';
@@ -28,16 +27,8 @@ api.CallQueue _apiQueue(
 api.RequestFailure _failure(int statusCode) =>
     api.RequestFailure(url: Uri.https('demo.webtrit.com'), requestId: 'r', statusCode: statusCode);
 
-class _RecordingSessionGuard implements SessionGuard {
-  final unauthorized = <Exception>[];
-
-  @override
-  void onUnauthorized(Exception e) => unauthorized.add(e);
-}
-
 void main() {
   late MockWebtritApiClient apiClient;
-  late _RecordingSessionGuard sessionGuard;
   late CallQueuesRepository repository;
   late List<bool> agentAnswers;
 
@@ -47,14 +38,8 @@ void main() {
 
   setUp(() {
     apiClient = MockWebtritApiClient();
-    sessionGuard = _RecordingSessionGuard();
     agentAnswers = [];
-    repository = CallQueuesRepositoryApiImpl(
-      apiClient: apiClient,
-      token: 'token_1',
-      sessionGuard: sessionGuard,
-      onAgentKnown: agentAnswers.add,
-    );
+    repository = CallQueuesRepositoryApiImpl(apiClient: apiClient, token: 'token_1', onAgentKnown: agentAnswers.add);
   });
 
   tearDown(() => repository.dispose());
@@ -186,7 +171,7 @@ void main() {
       ).called(1);
     });
 
-    test('a dead session reaches the guard and is still thrown on', () async {
+    test('a dead session is still thrown on', () async {
       final unauthorized = api.UnauthorizedException(
         url: Uri.https('demo.webtrit.com'),
         requestId: 'r',
@@ -195,7 +180,6 @@ void main() {
       stubReadFailing(unauthorized);
 
       await expectLater(repository.refresh(), throwsA(same(unauthorized)));
-      expect(sessionGuard.unauthorized, [same(unauthorized)]);
     });
   });
 

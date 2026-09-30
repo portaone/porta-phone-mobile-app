@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:api/api.dart';
 
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/common/common.dart';
 import 'package:webtrit_phone/data/data.dart';
@@ -21,15 +20,11 @@ import 'package:webtrit_phone/services/services.dart';
 /// so the layer reads as one unit and can be composed (or replaced) on its
 /// own in tests.
 class MainShellRepositories extends StatelessWidget {
-  const MainShellRepositories({super.key, required this.apiClient, required this.sessionGuard, required this.child});
+  const MainShellRepositories({super.key, required this.apiClient, required this.child});
 
   /// The session's API client; owned by the shell state, which also listens to
   /// its session rejections.
   final WebtritApiClient apiClient;
-
-  /// Handles session expiration reported by the remote datasources; owned by
-  /// the shell state so it stays alive across rebuilds of this layer.
-  final SessionGuard sessionGuard;
 
   final Widget child;
 
@@ -120,18 +115,14 @@ class MainShellRepositories extends StatelessWidget {
           ),
         ),
         RepositoryProvider<SessionsRepository>(
-          create: (context) => SessionsRepositoryApiImpl(
-            context.read<WebtritApiClient>(),
-            context.read<AppBloc>().state.session.token!,
-            sessionGuard,
-          ),
+          create: (context) =>
+              SessionsRepositoryApiImpl(context.read<WebtritApiClient>(), context.read<AppBloc>().state.session.token!),
         ),
         RepositoryProvider<UserRepository>(
           create: (context) => UserRepository(
             remoteDatasource: UserRemoteDatasourceApiImpl(
               context.read<WebtritApiClient>(),
               context.read<AppBloc>().state.session.token!,
-              sessionGuard: sessionGuard,
             ),
             localDatasource: context.read<UserLocalDatasource>(),
           ),
@@ -164,7 +155,6 @@ class MainShellRepositories extends StatelessWidget {
             context.read<WebtritApiClient>(),
             context.read<SecureStorage>(),
             context.read<AppBloc>().state.session.token!,
-            sessionGuard,
           ),
           dispose: disposeIfDisposable,
         ),
@@ -182,7 +172,6 @@ class MainShellRepositories extends StatelessWidget {
             return CallQueuesRepositoryApiImpl(
               apiClient: context.read<WebtritApiClient>(),
               token: session.token!,
-              sessionGuard: sessionGuard,
               // Remembered for the NEXT session start, which is when the
               // bottom-menu section is decided - nothing can ask the backend
               // that early.
@@ -207,7 +196,6 @@ class MainShellRepositories extends StatelessWidget {
                 token: context.read<AppBloc>().state.session.token!,
                 appDatabase: context.read<AppDatabase>(),
                 trashSupported: featureAccess.voicemailTrashAvailable,
-                sessionGuard: sessionGuard,
               );
             } else {
               return const EmptyVoicemailRepository();
@@ -232,7 +220,6 @@ class MainShellRepositories extends StatelessWidget {
           create: (context) => AppRepository(
             webtritApiClient: context.read<WebtritApiClient>(),
             token: context.read<AppBloc>().state.session.token!,
-            sessionGuard: sessionGuard,
           ),
         ),
         RepositoryProvider<ChatsRepository>(
@@ -269,7 +256,6 @@ class MainShellRepositories extends StatelessWidget {
           create: (context) => SystemNotificationsRemoteRepositoryApiImpl(
             context.read<WebtritApiClient>(),
             context.read<AppBloc>().state.session.token!,
-            sessionGuard,
           ),
         ),
         RepositoryProvider<LinesStateRepository>(create: (context) => LinesStateRepositoryInMemoryImpl()),
@@ -286,7 +272,6 @@ class MainShellRepositories extends StatelessWidget {
           create: (context) => CdrsRemoteRepositoryApiImpl(
             context.read<WebtritApiClient>(),
             context.read<AppBloc>().state.session.token!,
-            sessionGuard,
           ),
         ),
         RepositoryProvider<AppCacheManager>(

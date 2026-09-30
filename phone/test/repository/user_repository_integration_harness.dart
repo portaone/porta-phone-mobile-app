@@ -18,8 +18,9 @@ import 'package:webtrit_phone/repositories/user_info/user_repository.dart';
 class UserRepositoryIntegrationHarness {
   UserRepositoryIntegrationHarness(AppPreferences preferences) {
     client = api.WebtritApiClient.inner(Uri.parse('https://refresh.test'), '', httpClient: MockClient(_respond));
+    client.sessionRejections.listen(sessionGuard.onUnauthorized);
     local = UserLocalDatasourcePrefsImpl(preferences);
-    remote = UserRemoteDatasourceApiImpl(client, 'integration-token', sessionGuard: sessionGuard);
+    remote = UserRemoteDatasourceApiImpl(client, 'integration-token');
     repository = UserRepository(remoteDatasource: remote, localDatasource: local);
     worker = UserInfoSyncWorker(userRepository: repository);
   }

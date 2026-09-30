@@ -1,6 +1,5 @@
-import 'package:api/api.dart' show WebtritApiClient, UnauthorizedException;
+import 'package:api/api.dart' show WebtritApiClient;
 
-import 'package:webtrit_phone/app/session/session.dart';
 import 'package:webtrit_phone/mappers/mappers.dart';
 import 'package:webtrit_phone/models/models.dart';
 
@@ -13,30 +12,19 @@ abstract interface class SessionsRepository {
 }
 
 class SessionsRepositoryApiImpl with ActiveSessionApiMapper implements SessionsRepository {
-  SessionsRepositoryApiImpl(this._webtritApiClient, this._token, this._sessionGuard);
+  SessionsRepositoryApiImpl(this._webtritApiClient, this._token);
 
   final WebtritApiClient _webtritApiClient;
   final String _token;
-  final SessionGuard _sessionGuard;
 
   @override
   Future<List<ActiveSession>> getSessions() async {
-    try {
-      final sessions = await _webtritApiClient.getUserSessions(_token);
-      return sessions.map(activeSessionFromApi).toList();
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    final sessions = await _webtritApiClient.getUserSessions(_token);
+    return sessions.map(activeSessionFromApi).toList();
   }
 
   @override
   Future<void> revokeSession(String sessionId) async {
-    try {
-      await _webtritApiClient.deleteUserSession(_token, sessionId);
-    } on UnauthorizedException catch (e) {
-      _sessionGuard.onUnauthorized(e);
-      rethrow;
-    }
+    await _webtritApiClient.deleteUserSession(_token, sessionId);
   }
 }
