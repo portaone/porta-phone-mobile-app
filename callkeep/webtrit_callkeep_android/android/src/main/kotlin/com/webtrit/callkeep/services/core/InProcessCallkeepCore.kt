@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -428,7 +429,10 @@ class InProcessCallkeepCore internal constructor(
     // -------------------------------------------------------------------------
 
     private val incomingRegistrations: IncomingRegistrations by lazy {
-        IncomingRegistrations(Handler(Looper.getMainLooper()), INCOMING_REGISTRATION_TIMEOUT_MS) { registration ->
+        IncomingRegistrations(
+            Handler(Looper.getMainLooper()),
+            timeoutMs = { incomingRegistrationTimeoutMs(runCatching { context }.getOrNull()) },
+        ) { registration ->
             rejectIncomingRegistration(registration, "confirmation timeout") {
                 // Returning CALL_REJECTED_BY_SYSTEM makes Dart decline the server call and
                 // omit ActiveCall. Cancel the backend too, before allowing Dart to continue.
@@ -618,6 +622,16 @@ class InProcessCallkeepCore internal constructor(
         // net, not the normal path: a refusal arrives as IncomingFailure long before this; the
         // timer is for a backend that never answers. Dispatch exceptions are cleaned immediately.
         private const val INCOMING_REGISTRATION_TIMEOUT_MS = 5_000L
+
+        // A debuggable app starts Flutter on the main thread far slower, and the backend's answer
+        // waits behind that start. On a slow device a cold-start registration took up to 5 s in a
+        // debug build and under 1 s in release, so debug gets the longer wait.
+        private const val DEBUG_INCOMING_REGISTRATION_TIMEOUT_MS = 10_000L
+
+        internal fun incomingRegistrationTimeoutMs(context: Context?): Long {
+            val debuggable = context != null && context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+            return if (debuggable) DEBUG_INCOMING_REGISTRATION_TIMEOUT_MS else INCOMING_REGISTRATION_TIMEOUT_MS
+        }
 
         val instance: CallkeepCore = InProcessCallkeepCore()
 
