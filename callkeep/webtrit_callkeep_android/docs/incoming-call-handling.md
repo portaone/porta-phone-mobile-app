@@ -58,7 +58,7 @@ sequenceDiagram
     else User declines
         User->>SYS: Decline
         SYS->>PCS: onReject -> terminateWithCause(REJECTED)
-        PCS->>ICS: onDisconnect -> release(IC_RELEASE_WITH_DECLINE)
+        PCS->>ICS: onDisconnect -> release(IC_RELEASE_ENDED)
         ICS->>OWNER: performEndCall (the owner sends the decline)
     else Missed (caller cancels)
         OWNER->>CORE: releaseCall -> terminate connection

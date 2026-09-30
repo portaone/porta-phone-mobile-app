@@ -72,7 +72,7 @@ class IncomingCallService :
     // Guards against a repeat when ActiveCallService is restarted or re-delivered its intent.
     private var hasYieldedNotification = false
 
-    // Receives IC_RELEASE_WITH_ANSWER / IC_RELEASE_WITH_DECLINE from release().
+    // Receives IC_RELEASE_HANDED_OVER / IC_RELEASE_ENDED from release().
     // Registered in onCreate() and unregistered in onDestroy() so it only lives while the
     // service is alive. If the service is not running the broadcast goes nowhere — no zombie
     // restart, no placeholder notification appearing after the call ends.
@@ -83,8 +83,8 @@ class IncomingCallService :
                 intent: Intent?,
             ) {
                 when (intent?.action) {
-                    IncomingCallRelease.IC_RELEASE_WITH_DECLINE.name -> handleRelease(answered = false)
-                    IncomingCallRelease.IC_RELEASE_WITH_ANSWER.name -> handleRelease(answered = true)
+                    IncomingCallRelease.IC_RELEASE_ENDED.name -> handleRelease(answered = false)
+                    IncomingCallRelease.IC_RELEASE_HANDED_OVER.name -> handleRelease(answered = true)
                     IC_ACTIVE_CALL_VISIBLE -> yieldNotificationToActiveCall()
                 }
             }
@@ -113,11 +113,11 @@ class IncomingCallService :
         event: ConnectionEvent,
         data: Bundle?,
     ) {
-        // Only handle AnswerCall. DeclineCall and HungUp are handled via IC_RELEASE_WITH_DECLINE
+        // Only handle AnswerCall. DeclineCall and HungUp are handled via IC_RELEASE_ENDED
         // intent (triggered from PhoneConnection.onDisconnect -> cancelIncomingNotification).
         // Handling them here as well would cause a double performEndCall: once from handleRelease
         // and once from this listener, racing to tear down the WebSocket before the SIP BYE is
-        // sent. The IC_RELEASE_WITH_DECLINE path is the single authoritative source for decline
+        // sent. The IC_RELEASE_ENDED path is the single authoritative source for decline
         // teardown.
         if (event == CallLifecycleEvent.AnswerCall) {
             val metadata = data?.let(CallMetadata::fromBundleOrNull) ?: return
@@ -140,8 +140,8 @@ class IncomingCallService :
         registerReceiverCompat(
             releaseReceiver,
             IntentFilter().apply {
-                addAction(IncomingCallRelease.IC_RELEASE_WITH_DECLINE.name)
-                addAction(IncomingCallRelease.IC_RELEASE_WITH_ANSWER.name)
+                addAction(IncomingCallRelease.IC_RELEASE_ENDED.name)
+                addAction(IncomingCallRelease.IC_RELEASE_HANDED_OVER.name)
                 addAction(IC_ACTIVE_CALL_VISIBLE)
             },
             exported = false,
@@ -209,7 +209,7 @@ class IncomingCallService :
                 }
             }
 
-            // IC_RELEASE_WITH_ANSWER / IC_RELEASE_WITH_DECLINE are now delivered via
+            // IC_RELEASE_HANDED_OVER / IC_RELEASE_ENDED are now delivered via
             // releaseReceiver (BroadcastReceiver registered in onCreate). They no longer
             // arrive through onStartCommand — release() uses sendInternalBroadcast() instead
             // of startService(), so the service is never restarted after it has stopped.
@@ -362,7 +362,7 @@ class IncomingCallService :
         // Check for a pending release posted by ForegroundService.reportEndCall() before
         // this service started. startForegroundService(IC_INITIALIZE) may be queued in the
         // OS before the caller hangs up. By the time the OS delivers it, reportEndCall() has
-        // already run and posted to PendingBroadcastQueue. The IC_RELEASE_WITH_DECLINE
+        // already run and posted to PendingBroadcastQueue. The IC_RELEASE_ENDED
         // broadcast from :callkeep_core was lost (releaseReceiver not yet registered), so
         // this in-process entry is the only remaining signal that the call is over.
         if (PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey(metadata.callId))) {
@@ -592,9 +592,18 @@ class IncomingCallService :
     }
 }
 
+/**
+ * What the incoming-call service does with its push session once the ringing phase is over.
+ *
+ * Named after the effect, not the cause: a call that was never answered can still be
+ * [IC_RELEASE_HANDED_OVER] when nothing is left to tell the server.
+ */
 enum class IncomingCallRelease {
-    IC_RELEASE_WITH_ANSWER,
-    IC_RELEASE_WITH_DECLINE,
+    /** Someone else owns the call now (the app took over, or there is nothing to end): stop without ending it. */
+    IC_RELEASE_HANDED_OVER,
+
+    /** The call is over: let the push isolate tell the server before the service stops. */
+    IC_RELEASE_ENDED,
 }
 
 enum class PushNotificationServiceEnums {
