@@ -149,6 +149,19 @@ core: the bridge only sends the Flutter answer notification when `registerIncomi
 | `OutgoingFailure`  | `handleCSReportOutgoingFailure()` | `markTerminated()`, notify Dart     |
 | `TearDownComplete` | Inline lambda                     | Completes the `tearDown()` deferred |
 
+### Sending the app back after a call on the lock screen
+
+When a confirmed call ends (`DeclineCall` / `HungUp`) while the device is locked
+(`Platform.isLockScreen`) and no other call is live or pending (`isLastCall`), the bridge calls
+`ActivityHolder.finish()`, which moves the task to the back (`moveTaskToBack(true)`). After
+unlocking, the user sees what was under the app, not the app.
+
+The rule does not know how the app came to be on screen. A call brings the activity up over the
+lock screen (`showWhenLocked`), and the same rule sends it back afterwards - but it also sends back
+an app the user had open before locking the device, so after unlocking that app is gone as well.
+The behaviour is the same on every device (seen on Pixel 9, Galaxy M32, Galaxy XCover 5 and
+Huawei MAO-LX9N) and in every signaling mode.
+
 ## Duplicate-Notification Guards
 
 To prevent sending the same event to Dart twice (e.g., from both the direct tearDown path and a
