@@ -8,6 +8,7 @@ import com.webtrit.callkeep.PEndCallReasonEnum
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.ContextHolder
+import com.webtrit.callkeep.common.PendingBroadcastQueue
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.broadcaster.ConnectionEvent
@@ -49,6 +50,7 @@ class ReportCallEndedTest {
     @Before
     fun setUp() {
         ContextHolder.init(ApplicationProvider.getApplicationContext<Context>())
+        PendingBroadcastQueue.clear()
         router = mock(CallServiceRouter::class.java)
         core = InProcessCallkeepCore(tracker = MainProcessConnectionTracker(), routerInit = { router })
         core.addConnectionEventListener { event, _ -> delivered += event }
@@ -58,6 +60,17 @@ class ReportCallEndedTest {
     fun tearDown() {
         scope.cancel()
         core.endIncomingRegistrations()
+        PendingBroadcastQueue.clear()
+    }
+
+    @Test
+    fun `a reported end with no incoming-call service running leaves it a pending release`() {
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
+
+        assertTrue(
+            "a service started for this call afterwards must end it without showing it",
+            PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")),
+        )
     }
 
     @Test

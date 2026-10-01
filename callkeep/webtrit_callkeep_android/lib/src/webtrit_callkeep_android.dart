@@ -513,6 +513,11 @@ class _CallkeepBackgroundServiceDelegateRelay implements PDelegateBackgroundServ
   Future<void> performAnswerCall(String callId) async {
     return _delegate.performAnswerCall(callId);
   }
+
+  @override
+  Future<void> performHandoff(String callId) async {
+    return _delegate.performHandoff(callId);
+  }
 }
 
 @pragma('vm:entry-point')

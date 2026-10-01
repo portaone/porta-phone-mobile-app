@@ -241,9 +241,21 @@ class PCallkeepConnection {
 //   PHostBackgroundPushNotificationIsolateApi          -> PHostBackgroundIsolateApi
 @HostApi()
 abstract class PHostBackgroundPushNotificationIsolateBootstrapApi {
+  /// Registers the Dart entry points a push session is started with: [callbackDispatcher]
+  /// boots the background isolate, [onNotificationSync] is the session callback the plugin
+  /// hands the call to and waits on. Both are stored natively, so a push that arrives with
+  /// the app dead can start a session; the incoming-call service stays up until that
+  /// callback's future completes and stops itself afterwards.
   @async
   void initializePushNotificationCallback({required int callbackDispatcher, required int onNotificationSync});
 
+  /// Presents an incoming call from the push session: the same registration the foreground
+  /// bridge makes (`CallkeepCore.registerIncomingCall`), with its outcome. Null when Telecom
+  /// presents the call; `callIdAlreadyExists` when another engine already holds it;
+  /// `callIdAlreadyTerminated` when the app reported its end before; `callRejectedBySystem`
+  /// when Telecom refused it (a second call while one rings) or the registration deadline
+  /// passed, in which case the backend is asked to cancel it and the app declines it on the
+  /// server.
   @async
   PIncomingCallError? reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo);
 }
@@ -258,22 +270,32 @@ abstract class PHostBackgroundPushNotificationIsolateApi {
   @async
   void reportEndCall(String callId, PEndCallReason reason);
 
+  /// Ends [callId] in Telecom as a server-side decline and nothing more: the service and the
+  /// session keep running, and the end is not remembered as reported, so the release that
+  /// follows still reaches the session as `performEndCall`. For a call the server hung up
+  /// use [reportEndCall], which also keeps the call from being presented again.
   @async
   void endCall(String callId);
 
+  /// Tears down every connection the session's controller holds, without stopping the
+  /// service or ending the session. Legacy: the Dart aggregator deprecates it in favour of
+  /// the per-call methods, because it leaves the incoming-call notification on screen.
   @async
   void endAllCalls();
 
-  /// Terminates the PhoneConnection and stops IncomingCallService.
-  /// Called when the push isolate is done with an unanswered call
-  /// (missed, declined, server hangup, signaling error).
+  /// Ends [callId] in Telecom as a server-side decline and stops IncomingCallService when it
+  /// shows that call. For a call the session cannot follow any more: a signaling error, or a
+  /// call it never saw arrive. A call that ended on the server is reported with
+  /// [reportEndCall] instead, and the service stops on its own once the session's callback
+  /// future completes.
   @async
   void releaseCall(String callId);
 
-  /// Stops IncomingCallService without touching the PhoneConnection.
-  /// Called when the push isolate hands off an already-answered call
-  /// to the Activity. The PhoneConnection must stay alive so the
-  /// Activity can adopt it via CALL_ID_ALREADY_EXISTS_AND_ANSWERED.
+  /// Stops IncomingCallService for [callId] and leaves the PhoneConnection alive, so the
+  /// Activity can adopt it through CALL_ID_ALREADY_EXISTS_AND_ANSWERED. Not needed on the
+  /// answered path any more: callkeep confirms the handoff itself ([performHandoff]) and
+  /// stops the service once the session's callback future completes. Kept for an engine that
+  /// ends a session by hand.
   @async
   void handoffCall(String callId);
 }
@@ -514,11 +536,25 @@ abstract class PDelegateFlutterApi {
 
 @FlutterApi()
 abstract class PDelegateBackgroundServiceFlutterApi {
+  /// The user answered [callId] from the push notification, or Telecom reported the answer.
+  /// The session remembers the answer and leaves the live connection to the Activity, which
+  /// adopts it; callkeep confirms the handoff with [performHandoff] once the app's delegate
+  /// has the call.
   @async
   void performAnswerCall(String callId);
 
+  /// The ringing phase of [callId] ended with an end nobody reported yet (IC_RELEASE_ENDED:
+  /// the user declined from the notification, or Telecom ended the call). The session
+  /// declines it on the server, records it and finishes; the service stops on its future.
+  /// Not sent for an end the app reported itself - that arrives as [performHandoff].
   @async
   void performEndCall(String callId);
+
+  /// Callkeep no longer needs this session for [callId]: the app holds the call
+  /// now, or it ended through another handler. The session finishes the work it
+  /// started and returns from its callback; nothing is sent to the server.
+  @async
+  void performHandoff(String callId);
 }
 
 @HostApi()

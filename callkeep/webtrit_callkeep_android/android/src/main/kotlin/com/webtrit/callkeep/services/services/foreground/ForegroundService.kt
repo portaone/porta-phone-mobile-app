@@ -27,7 +27,6 @@ import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.POptions
 import com.webtrit.callkeep.common.ActivityHolder
 import com.webtrit.callkeep.common.Log
-import com.webtrit.callkeep.common.PendingBroadcastQueue
 import com.webtrit.callkeep.common.Platform
 import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.common.TelephonyUtils
@@ -101,11 +100,14 @@ class ForegroundService :
      */
     private fun notifyFlutter(
         name: String,
+        onSuccess: (() -> Unit)? = null,
         block: suspend PDelegateFlutterApi.() -> Unit,
     ) {
         val api = flutterDelegateApi ?: return
         scope.launch {
-            runCatching { api.block() }.onFailure { logger.w("$name: delegate call failed: ${it.message}") }
+            runCatching { api.block() }
+                .onFailure { logger.w("$name: delegate call failed: ${it.message}") }
+                .onSuccess { onSuccess?.invoke() }
         }
     }
 
@@ -662,18 +664,7 @@ class ForegroundService :
         reason: PEndCallReason,
     ) {
         logger.i("reportEndCall: callId=$callId, reason=$reason")
-        val callMetaData = CallMetadata(callId = callId, displayName = displayName)
-        // Post a pending release so IncomingCallService.handleLaunch() can detect a stale
-        // IC_INITIALIZE that arrives after this call was already terminated. Only posted when
-        // IncomingCallService is not yet running — if it is already up, releaseReceiver is
-        // registered and will handle IC_RELEASE_ENDED directly. Posting when the service
-        // is already running creates orphan entries that are never consumed.
-        // Must be posted here (main thread) — not in NotificationManager which runs in
-        // :callkeep_core and cannot reach this main-process queue.
-        if (!IncomingCallService.isRunning) {
-            PendingBroadcastQueue.post(PendingBroadcastQueue.incomingReleaseKey(callId))
-        }
-        core.reportCallEnded(callMetaData, reason.value)
+        core.reportCallEnded(CallMetadata(callId = callId, displayName = displayName), reason.value)
     }
 
     override suspend fun answerCall(callId: String): PCallRequestError? {
@@ -858,7 +849,7 @@ class ForegroundService :
             return
         }
         logger.i("deliverIncomingToDelegate: delivering incoming callId=${metadata.callId} to delegate")
-        notifyFlutter("didPresentIncomingCall") {
+        notifyFlutter("didPresentIncomingCall", onSuccess = { confirmHandoff(metadata.callId) }) {
             didPresentIncomingCall(
                 handleArg = handle.toPHandle(),
                 displayNameArg = metadata.displayName,
@@ -867,6 +858,18 @@ class ForegroundService :
                 errorArg = null,
             )
         }
+    }
+
+    /**
+     * The delegate has taken [callId]: this engine holds the call from here on. The push session
+     * that presented it, if still up, is told so and finishes; nothing else is a confirmation - an
+     * Activity on screen or a connected WebSocket says nothing about who receives the call's
+     * events.
+     */
+    private fun confirmHandoff(callId: String) {
+        if (!IncomingCallService.isRunning) return
+        logger.i("confirmHandoff: the delegate holds $callId, the push session is done with it")
+        IncomingCallService.release(baseContext, callId, IncomingCallRelease.IC_RELEASE_HANDED_OVER)
     }
 
     /**

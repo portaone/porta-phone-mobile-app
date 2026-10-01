@@ -1,6 +1,8 @@
 package com.webtrit.callkeep
 
 import com.webtrit.callkeep.common.Log
+import com.webtrit.callkeep.models.CallMetadata
+import com.webtrit.callkeep.services.core.CallkeepCore
 import kotlinx.coroutines.CompletableDeferred
 
 /**
@@ -84,11 +86,19 @@ internal class ForegroundServiceProxy : PHostApi {
         proximityEnabled: Boolean?,
     ) = service().reportUpdateCall(callId, handle, displayName, hasVideo, proximityEnabled)
 
+    // The end of a call is a fact the core takes at once: a service still binding must not delay
+    // it, or the connection-state replay that the bind triggers presents a call the app already
+    // knows is over. The core lives in this process whether or not the service is bound.
     override suspend fun reportEndCall(
         callId: String,
         displayName: String,
         reason: PEndCallReason,
-    ) = service().reportEndCall(callId, displayName, reason)
+    ) {
+        val bound = target
+        if (bound != null) return bound.reportEndCall(callId, displayName, reason)
+        Log.i(TAG, "reportEndCall: ForegroundService not yet connected, the core takes the end of $callId")
+        CallkeepCore.instance.reportCallEnded(CallMetadata(callId = callId, displayName = displayName), reason.value)
+    }
 
     override suspend fun startCall(
         callId: String,

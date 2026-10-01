@@ -17,6 +17,7 @@ import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
+import com.webtrit.callkeep.common.PendingBroadcastQueue
 import com.webtrit.callkeep.models.CallConnectionState
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailureMetadata
@@ -26,6 +27,7 @@ import com.webtrit.callkeep.services.broadcaster.ConnectionEvent
 import com.webtrit.callkeep.services.broadcaster.ConnectionServicePerformBroadcaster
 import com.webtrit.callkeep.services.services.connection.ConnectionManager
 import com.webtrit.callkeep.services.services.connection.PhoneConnectionService
+import com.webtrit.callkeep.services.services.incoming_call.IncomingCallService
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
@@ -314,6 +316,13 @@ class InProcessCallkeepCore internal constructor(
         // The app knows this end: the backend's terminal event must not turn into a request to
         // end the call again, in this engine or in the push session's.
         tracker.markEndCallDispatched(callId)
+        // An incoming-call service started for this call after its end would present a call that
+        // is over: the pending release lets its launch end the call without showing it. A running
+        // service has its receiver up and takes the IC_RELEASE_ENDED that follows directly; a
+        // post for it would be an orphan entry, never consumed.
+        if (!IncomingCallService.isRunning) {
+            PendingBroadcastQueue.post(PendingBroadcastQueue.incomingReleaseKey(callId))
+        }
         router.startDeclineCall(metadata)
     }
 

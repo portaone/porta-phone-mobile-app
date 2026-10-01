@@ -131,8 +131,9 @@ When adding a converter for a new Pigeon type, add an extension in `lib/src/comm
 - Service: `IncomingCallService`
 
 The background isolate entry point function **must** be annotated `@pragma('vm:entry-point')`. The
-isolate uses `CallkeepBackgroundServiceDelegate` (`performAnswerCall`, `performEndCall`) for
-native → Dart events.
+isolate uses `CallkeepBackgroundServiceDelegate` (`performAnswerCall`, `performEndCall`,
+`performHandoff`) for native → Dart events. The session's callback future is what stops
+`IncomingCallService`; `performHandoff` says callkeep no longer needs the session for the call.
 
 ---
 
