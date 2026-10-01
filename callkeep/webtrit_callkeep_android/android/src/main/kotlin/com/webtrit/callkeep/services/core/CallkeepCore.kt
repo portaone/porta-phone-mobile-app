@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.annotation.RequiresPermission
 import com.webtrit.callkeep.PCallkeepConnection
 import com.webtrit.callkeep.PCallkeepConnectionState
+import com.webtrit.callkeep.PEndCallReasonEnum
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.models.CallConnectionState
@@ -244,6 +245,22 @@ interface CallkeepCore {
 
     @RequiresPermission(Manifest.permission.CALL_PHONE)
     fun startOutgoingCall(metadata: CallMetadata)
+
+    /**
+     * The app reports that [metadata]'s call ended - the remote party hung up, nobody answered,
+     * or the app never got to present it ([PEndCallReasonEnum.MISSED_WHILE_CONNECTING]). The
+     * same fact whichever engine reports it; today the foreground bridge (PHostApi.reportEndCall).
+     *
+     * The core marks the call terminated at once (a registration still waiting for Telecom is
+     * rejected), remembers a never-presented end so that a replay or a late push cannot present
+     * the call again, records that the app knows this end so nothing asks it to end the call a
+     * second time, and ends the call in the backend. Ends the call only: whatever session
+     * reported it keeps running.
+     */
+    fun reportCallEnded(
+        metadata: CallMetadata,
+        reason: PEndCallReasonEnum,
+    )
 
     // -------------------------------------------------------------------------
     // Incoming registration: waiting for Telecom's answer
