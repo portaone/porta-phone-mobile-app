@@ -673,21 +673,7 @@ class ForegroundService :
         if (!IncomingCallService.isRunning) {
             PendingBroadcastQueue.post(PendingBroadcastQueue.incomingReleaseKey(callId))
         }
-        // Mark terminated synchronously in the main-process tracker. startDeclineCall only marks
-        // terminated once the DeclineCall broadcast echoes back from :callkeep_core, which is subject
-        // to cross-process latency. Doing it here lets deliverIncomingToDelegate suppress a
-        // late-arriving connection-state replay for a call the app already reported as ended.
-        core.markTerminated(callId)
-        // When the app ends a call it never presented in Flutter state (MISSED_WHILE_CONNECTING:
-        // the remote hung up an incoming call before CallBloc registered it), arm a one-shot guard
-        // so a stale connection-state replay that re-drives reportNewIncomingCall for the same
-        // callId is rejected rather than ringing again. Only this never-presented end arms it - a
-        // transfer-back always reuses a call the app DID know, so it is unaffected. See
-        // reportNewIncomingCall.
-        if (reason.value == PEndCallReasonEnum.MISSED_WHILE_CONNECTING) {
-            core.markEndedWithoutFlutterState(callId)
-        }
-        core.startDeclineCall(callMetaData)
+        core.reportCallEnded(callMetaData, reason.value)
     }
 
     override suspend fun answerCall(callId: String): PCallRequestError? {

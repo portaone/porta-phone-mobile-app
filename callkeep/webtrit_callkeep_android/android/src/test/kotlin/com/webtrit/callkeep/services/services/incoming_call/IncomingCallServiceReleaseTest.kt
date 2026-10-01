@@ -3,6 +3,7 @@ package com.webtrit.callkeep.services.services.incoming_call
 import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
+import com.webtrit.callkeep.PEndCallReasonEnum
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.PendingBroadcastQueue
 import com.webtrit.callkeep.models.CallMetadata
@@ -71,6 +72,55 @@ class IncomingCallServiceReleaseTest {
     }
 
     private fun stopped() = shadowOf(service).isStoppedBySelf
+
+    /** The push session's side of the bridge: records whether it was asked to end a call. */
+    private class RecordingCommunicator : FlutterIsolateCommunicator {
+        val endCallIds = mutableListOf<String>()
+
+        override fun performAnswer(
+            callId: String,
+            onSuccess: () -> Unit,
+            onFailure: (Throwable) -> Unit,
+        ) = onSuccess()
+
+        override fun performEndCall(
+            callId: String,
+            onSuccess: () -> Unit,
+            onFailure: (Throwable) -> Unit,
+        ) {
+            endCallIds += callId
+            onSuccess()
+        }
+
+        override fun syncPushIsolate(
+            callData: com.webtrit.callkeep.PCallkeepIncomingCallData?,
+            onSuccess: () -> Unit,
+            onFailure: (Throwable) -> Unit,
+        ) = onSuccess()
+    }
+
+    @Test
+    fun `an end the app reported is not sent to the session as performEndCall`() {
+        show("A")
+        val session = RecordingCommunicator().also { service.getCallLifecycleHandler().flutterApi = it }
+        CallkeepCore.instance.reportCallEnded(CallMetadata(callId = "A"), PEndCallReasonEnum.MISSED_WHILE_CONNECTING)
+
+        release("A", IncomingCallRelease.IC_RELEASE_ENDED)
+
+        assertTrue("the app reported this end; the session must not decline the call on the server again", session.endCallIds.isEmpty())
+        assertTrue(stopped())
+    }
+
+    @Test
+    fun `an end nobody reported is sent to the session once as performEndCall`() {
+        show("A")
+        val session = RecordingCommunicator().also { service.getCallLifecycleHandler().flutterApi = it }
+
+        release("A", IncomingCallRelease.IC_RELEASE_ENDED)
+
+        assertEquals(listOf("A"), session.endCallIds)
+        assertTrue(stopped())
+    }
 
     @Test
     fun `release for another call leaves the shown call alone`() {

@@ -79,14 +79,14 @@ events. `ForegroundService.onConnectionEvent` still handles the other call and U
 | `promote(callId, meta, state)`                                 | `IncomingConnectionReported`; `OngoingCall`; adoption paths                                                                    | Full registration; same guard reset as `addPending` (also clears an earlier `markAnswered`)                                         |
 | `markAnswered(callId)`                                         | `AnswerCall` broadcast; adoption paths (after `promote`); `CallLifecycleHandler` fallback when the push isolate is unreachable | Answer guard only; no state stamp                                                                                                   |
 | `updateState(callId, state)`                                   | `ConnectionStateChanged` broadcast                                                                                             | Mirrors authoritative state; unconditional; ignores DISCONNECTED                                                                    |
-| `markTerminated(callId)`                                       | `reportEndCall`; HungUp/Decline handling                                                                                       | Clears active sets; state becomes DISCONNECTED                                                                                      |
+| `markTerminated(callId)`                                       | `reportCallEnded`; HungUp/Decline handling                                                                                     | Clears active sets; state becomes DISCONNECTED                                                                                      |
 | `clearAndMarkEndCallDispatched(id)`                            | HungUp/Decline/`ConnectionNotFound` handler, tearDown, `onDestroy`, confirmation timeout                                       | `markTerminated` + drops the main-process `ConnectionManager` pending reservation + marks endCallDispatched (true = first dispatch) |
 | `reserveAnswer` / `consumeAnswer`                              | deferred-answer path / `AnswerCall` handler                                                                                    | Deferred answer bookkeeping                                                                                                         |
 | `drainUnconnectedPendingCallIds()`                             | `tearDown`                                                                                                                     | Snapshot + clear of pending                                                                                                         |
 | `clear()`                                                      | end of `tearDown`; `cleanConnections`                                                                                          | Full per-session reset                                                                                                              |
 | `markDirectNotified` / `consumeDirectNotified`                 | `tearDown` / HungUp handler                                                                                                    | Stale-broadcast suppression                                                                                                         |
-| `markEndCallDispatched(id)`                                    | `endCall`                                                                                                                      | performEndCall dedup; true = first mark                                                                                             |
-| `markEndedWithoutFlutterState` / `wasEndedWithoutFlutterState` | `reportEndCall(MISSED_WHILE_CONNECTING)` / `reportNewIncomingCall`                                                             | Sticky ghost-re-presentation guard                                                                                                  |
+| `markEndCallDispatched(id)`                                    | `endCall`; `reportCallEnded`; the incoming-call service on `IC_RELEASE_ENDED`                                                  | performEndCall dedup; true = first mark                                                                                             |
+| `markEndedWithoutFlutterState` / `wasEndedWithoutFlutterState` | `reportCallEnded(MISSED_WHILE_CONNECTING)` / `reportNewIncomingCall`                                                           | Sticky ghost-re-presentation guard                                                                                                  |
 
 `clearAndMarkEndCallDispatched` is the one sanctioned main-process touch of
 `ConnectionManager.instance`: it drops the `pendingCallIds` reservation that
@@ -299,6 +299,26 @@ reason to end one.
 | `sendCleanConnections()`    | Clear backend connections without individual hangups (`ServiceAction.CleanConnections` on both backends)                                                                                                                                                                                                                                                                                                                                               |
 | `replayAudioState()`        | One-way pull: re-emit audio state (device + mute) to a fresh delegate                                                                                                                                                                                                                                                                                                                                                                                  |
 | `replayConnectionStates()`  | One-way pull seeding a freshly attached delegate / restarted main process (cold-start race). For every live connection re-emits `ConnectionStateChanged` (live states only; restores e.g. STATE_ACTIVE for the already-answered adoption), then `AnswerCall` (callId-only metadata) for answered connections, or `ReplayIncomingCall` (full metadata) for still-ringing ones -- the ONLY path by which a fresh delegate learns of a still-ringing call |
+
+### Reporting a call ended
+
+`reportCallEnded(metadata, reason)` is the app telling the core that a call is over: the remote
+party hung up, nobody answered, or the app never got to present it
+(`MISSED_WHILE_CONNECTING`). It is one fact whoever reports it - today the foreground bridge
+(`PHostApi.reportEndCall`) - and the core does the same four things at once:
+
+1. marks the call terminated ahead of the backend's echo, which also rejects a registration
+   still waiting on it;
+2. for a never-presented end, arms the ghost guard, so a replay, a late confirmation or a late
+   push of the same call is refused and the backend is asked to cancel it;
+3. marks the end dispatched, so no engine is asked to end the call again: the incoming-call
+   service, on the `IC_RELEASE_ENDED` that follows, releases without `performEndCall` - the
+   push session would otherwise send the server a decline for a call the server hung up;
+4. ends the call in the backend (`startDeclineCall`).
+
+It ends the call, not the session that holds the service: the incoming-call service keeps
+running for whatever that session still has to do. A presented call keeps its id free for a
+transfer-back.
 
 ## Related Components
 

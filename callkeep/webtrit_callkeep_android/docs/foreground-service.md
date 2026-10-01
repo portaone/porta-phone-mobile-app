@@ -63,13 +63,13 @@
 
 ### Call Reporting
 
-| Method                                         | Behavior                                                                                                    |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `reportNewIncomingCall(callId, meta)`          | Awaits `CallkeepCore.registerIncomingCall(meta, this)`; core owns dispatch, tracker transitions and outcome |
-| `reportConnectingOutgoingCall(callId, meta)`   | Mark call as pending in tracker                                                                             |
-| `reportConnectedOutgoingCall(callId, meta)`    | Mark call as established                                                                                    |
-| `reportEndCall(callId)`                        | Force-terminate call in tracker and notify Dart                                                             |
-| `reportUpdateCall(callId, meta)`               | Update call metadata                                                                                        |
+| Method                                       | Behavior                                                                                                                                                                             |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `reportNewIncomingCall(callId, meta)`        | Awaits `CallkeepCore.registerIncomingCall(meta, this)`; core owns dispatch, tracker transitions and outcome                                                                          |
+| `reportConnectingOutgoingCall(callId, meta)` | Mark call as pending in tracker                                                                                                                                                      |
+| `reportConnectedOutgoingCall(callId, meta)`  | Mark call as established                                                                                                                                                             |
+| `reportEndCall(callId)`                      | Hand the end to `CallkeepCore.reportCallEnded` (terminate, ghost guard for a never-presented end, end in the backend); post a pending release if the incoming-call service is not up |
+| `reportUpdateCall(callId, meta)`             | Update call metadata                                                                                                                                                                 |
 
 ### Call Control
 

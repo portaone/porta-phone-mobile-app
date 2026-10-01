@@ -517,11 +517,22 @@ class IncomingCallService :
             // so cleanup always runs. The stopTimeoutRunnable above is an additional safety net
             // in case the Flutter isolate never responds.
             val callId = callLifecycleHandler.currentCallData?.callId
-            if (callId != null) {
-                callLifecycleHandler.performEndCall(CallMetadata(callId = callId))
-            } else {
-                Log.w(TAG, "handleRelease: no currentCallData, falling back to release()")
-                callLifecycleHandler.release()
+            when {
+                callId == null -> {
+                    Log.w(TAG, "handleRelease: no currentCallData, falling back to release()")
+                    callLifecycleHandler.release()
+                }
+
+                // The app reported this end itself (reportEndCall), so it already knows: asking it
+                // to end the call again would send the server a decline for a call it hung up.
+                !CallkeepCore.instance.markEndCallDispatched(callId) -> {
+                    Log.i(TAG, "handleRelease: the app reported the end of $callId itself, not asking it to end the call")
+                    callLifecycleHandler.release()
+                }
+
+                else -> {
+                    callLifecycleHandler.performEndCall(CallMetadata(callId = callId))
+                }
             }
         }
         return START_NOT_STICKY

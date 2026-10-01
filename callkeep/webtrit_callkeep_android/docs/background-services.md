@@ -81,7 +81,11 @@ safety-net timeout stops it.
 `CallkeepCore`. It only acts on `AnswerCall` - when the system UI or the user answers,
 `PhoneConnectionService` fires `AnswerCall`, which drops the notification buttons and forwards
 to `CallLifecycleHandler.performAnswerCall()`. `DeclineCall` and `HungUp` are handled via the
-`IC_RELEASE_ENDED` broadcast path instead to avoid a double `performEndCall` race.
+`IC_RELEASE_ENDED` broadcast path instead to avoid a double `performEndCall` race. On that
+release the service asks the push isolate to end the call (`performEndCall`) only when the end
+was not reported by the app: after `reportEndCall` the core has marked the end dispatched
+(`markEndCallDispatched` answers false), and the service releases without it, so the session
+never declines on the server a call the server already hung up.
 
 ### Key Handlers (Composition)
 

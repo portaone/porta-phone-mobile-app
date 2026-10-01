@@ -12,6 +12,7 @@ import android.os.Looper
 import androidx.annotation.RequiresPermission
 import com.webtrit.callkeep.PCallkeepConnection
 import com.webtrit.callkeep.PCallkeepConnectionState
+import com.webtrit.callkeep.PEndCallReasonEnum
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.ContextHolder
@@ -296,6 +297,24 @@ class InProcessCallkeepCore internal constructor(
             return
         }
         tracker.markTerminated(callId)
+    }
+
+    override fun reportCallEnded(
+        metadata: CallMetadata,
+        reason: PEndCallReasonEnum,
+    ) {
+        val callId = metadata.callId
+        Log.i(TAG, "Call ended by the app: $callId ($reason)")
+        // Terminated now, ahead of the DeclineCall echo from the backend: a late state replay for
+        // this call is already suppressed, and a registration still waiting on it is rejected.
+        markTerminated(callId)
+        // The app never presented this call, so a replay must not present it either. A call the
+        // app did present (a transfer-back reuses one) stays eligible for a new registration.
+        if (reason == PEndCallReasonEnum.MISSED_WHILE_CONNECTING) markEndedWithoutFlutterState(callId)
+        // The app knows this end: the backend's terminal event must not turn into a request to
+        // end the call again, in this engine or in the push session's.
+        tracker.markEndCallDispatched(callId)
+        router.startDeclineCall(metadata)
     }
 
     override fun clearAndMarkEndCallDispatched(callId: String): Boolean {
