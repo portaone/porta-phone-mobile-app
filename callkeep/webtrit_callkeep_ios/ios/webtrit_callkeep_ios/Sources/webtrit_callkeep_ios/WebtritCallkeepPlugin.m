@@ -972,7 +972,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
                                     [self setVideo:callUpdate.hasVideo forCallUUID:uuid];
                                   }
 
-                                  [self->_delegateFlutterApi didPushIncomingCallHandle:[callUpdate.remoteHandle toPigeon]
+                                  [self->_delegateFlutterApi didPresentIncomingCallHandle:[callUpdate.remoteHandle toPigeon]
                                                                            displayName:callUpdate.localizedCallerName
                                                                                  video:callUpdate.hasVideo
                                                                                 callId:callId

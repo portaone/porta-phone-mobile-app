@@ -1031,7 +1031,9 @@ abstract class PDelegateFlutterApi {
 
   void continueStartCallIntent(PHandle handle, String? displayName, bool video);
 
-  void didPushIncomingCall(PHandle handle, String? displayName, bool video, String callId, String uuidString, PIncomingCallError? error);
+  /// CallKit registered the incoming call from a PushKit push (or refused it with `error`):
+  /// the delegate owns the call from here.
+  void didPresentIncomingCall(PHandle handle, String? displayName, bool video, String callId, String uuidString, PIncomingCallError? error);
 
   Future<bool> performStartCall(String uuidString, PHandle handle, String? displayNameOrContactIdentifier, bool video);
 
@@ -1084,7 +1086,7 @@ abstract class PDelegateFlutterApi {
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.webtrit_callkeep_ios.PDelegateFlutterApi.didPushIncomingCall$messageChannelSuffix', pigeonChannelCodec,
+          'dev.flutter.pigeon.webtrit_callkeep_ios.PDelegateFlutterApi.didPresentIncomingCall$messageChannelSuffix', pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
@@ -1098,7 +1100,7 @@ abstract class PDelegateFlutterApi {
           final String arg_uuidString = args[4]! as String;
           final PIncomingCallError? arg_error = args[5] as PIncomingCallError?;
           try {
-            api.didPushIncomingCall(arg_handle, arg_displayName, arg_video, arg_callId, arg_uuidString, arg_error);
+            api.didPresentIncomingCall(arg_handle, arg_displayName, arg_video, arg_callId, arg_uuidString, arg_error);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

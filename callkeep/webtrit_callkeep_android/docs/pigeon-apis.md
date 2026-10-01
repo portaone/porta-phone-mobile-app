@@ -151,20 +151,20 @@ when the function returns, and a thrown exception becomes a `PlatformException` 
 delegate call from Kotlin has to run inside a coroutine: the service and the push-isolate
 communicator keep a `SupervisorJob` scope on `Dispatchers.Main.immediate` for that.
 
-| Method                                                                    | Description                                                                    |
-|---------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| `didPushIncomingCall(handle, displayName, video, callId, error)`          | An incoming call arrived through a push                                        |
-| `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | Place this outgoing call                                                       |
-| `performAnswerCall(callId)`                                               | Answer this call                                                               |
-| `performEndCall(callId)`                                                  | End this call                                                                  |
-| `performSetHeld(callId, onHold)`                                          | Hold or resume this call                                                       |
-| `performSetMuted(callId, muted)`                                          | Mute or unmute this call                                                       |
-| `performSendDTMF(callId, key)`                                            | Send this DTMF digit                                                           |
-| `performAudioDeviceSet(callId, device)`                                   | The audio device changed                                                       |
-| `performAudioDevicesUpdate(callId, devices)`                              | The available audio devices changed                                            |
-| `performSetCallGroup(callId, groupWithCallId)`                            | The OS grouped this call with another, or ungrouped it when the second is null |
-| `didActivateAudioSession()`                                               | The call audio session became active                                           |
-| `didDeactivateAudioSession()`                                             | The call audio session was released                                            |
+| Method                                                                    | Description                                                                                                   |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `didPresentIncomingCall(handle, displayName, video, callId, error)`       | A ringing connection this delegate has not been handed yet (replay on attach; `error` always null on Android) |
+| `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | Place this outgoing call                                                                                      |
+| `performAnswerCall(callId)`                                               | Answer this call                                                                                              |
+| `performEndCall(callId)`                                                  | End this call                                                                                                 |
+| `performSetHeld(callId, onHold)`                                          | Hold or resume this call                                                                                      |
+| `performSetMuted(callId, muted)`                                          | Mute or unmute this call                                                                                      |
+| `performSendDTMF(callId, key)`                                            | Send this DTMF digit                                                                                          |
+| `performAudioDeviceSet(callId, device)`                                   | The audio device changed                                                                                      |
+| `performAudioDevicesUpdate(callId, devices)`                              | The available audio devices changed                                                                           |
+| `performSetCallGroup(callId, groupWithCallId)`                            | The OS grouped this call with another, or ungrouped it when the second is null                                |
+| `didActivateAudioSession()`                                               | The call audio session became active                                                                          |
+| `didDeactivateAudioSession()`                                             | The call audio session was released                                                                           |
 
 `continueStartCallIntent` and `didReset` exist on the shared `CallkeepDelegate` but are
 iOS-only: Android has no source for either, so they are absent from this API.

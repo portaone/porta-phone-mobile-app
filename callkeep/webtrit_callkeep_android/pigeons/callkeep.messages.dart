@@ -450,8 +450,16 @@ abstract class PHostConnectionsApi {
 
 @FlutterApi()
 abstract class PDelegateFlutterApi {
-  @ObjCSelector('didPushIncomingCallHandle:displayName:video:id:error:')
-  void didPushIncomingCall(PHandle handle, String? displayName, bool video, String callId, PIncomingCallError? error);
+  /// A ringing connection this delegate has not been handed yet: sent on delegate attach for a
+  /// connection an earlier engine presented (replay). `error` is always null on Android.
+  @ObjCSelector('didPresentIncomingCallHandle:displayName:video:id:error:')
+  void didPresentIncomingCall(
+    PHandle handle,
+    String? displayName,
+    bool video,
+    String callId,
+    PIncomingCallError? error,
+  );
 
   @ObjCSelector('performStartCall:handle:displayNameOrContactIdentifier:video:')
   @async

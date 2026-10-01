@@ -2365,11 +2365,15 @@ class PDelegateFlutterApi(private val binaryMessenger: BinaryMessenger, private 
       GeneratedPigeonCodec()
     }
   }
-  suspend fun didPushIncomingCall(handleArg: PHandle, displayNameArg: String?, videoArg: Boolean, callIdArg: String, errorArg: PIncomingCallError?)
+  /**
+   * A ringing connection this delegate has not been handed yet: sent on delegate attach for a
+   * connection an earlier engine presented (replay). `error` is always null on Android.
+   */
+  suspend fun didPresentIncomingCall(handleArg: PHandle, displayNameArg: String?, videoArg: Boolean, callIdArg: String, errorArg: PIncomingCallError?)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
     return suspendCancellableCoroutine { continuation ->
-      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didPushIncomingCall$separatedMessageChannelSuffix"
+      val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didPresentIncomingCall$separatedMessageChannelSuffix"
       val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
       channel.send(listOf(handleArg, displayNameArg, videoArg, callIdArg, errorArg)) {
         if (it is List<*>) {

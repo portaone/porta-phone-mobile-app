@@ -34,7 +34,7 @@ Triggered by an FCM message or a direct Dart call to `reportNewIncomingCall`.
 7.  Delegate notification (NOT from the event above):
         |   - call arrived while app running -> Flutter signaling __onCallSignalingEventIncoming
         |   - push->foreground handoff -> ReplayIncomingCall on delegate attach
-        |     -> PDelegateFlutterApi.didPushIncomingCall(callId, meta)
+        |     -> PDelegateFlutterApi.didPresentIncomingCall(callId, meta)
 ```
 
 **Answer path (user taps answer in notification or UI):**

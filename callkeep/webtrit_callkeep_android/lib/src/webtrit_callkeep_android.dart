@@ -401,8 +401,14 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
   final CallkeepDelegate _delegate;
 
   @override
-  void didPushIncomingCall(PHandle handle, String? displayName, bool video, String callId, PIncomingCallError? error) {
-    _delegate.didPushIncomingCall(handle.toCallkeep(), displayName, video, callId, error?.value.toCallkeep());
+  void didPresentIncomingCall(
+    PHandle handle,
+    String? displayName,
+    bool video,
+    String callId,
+    PIncomingCallError? error,
+  ) {
+    _delegate.didPresentIncomingCall(handle.toCallkeep(), displayName, video, callId, error?.value.toCallkeep());
   }
 
   @override

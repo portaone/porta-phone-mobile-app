@@ -69,7 +69,7 @@ class RecordingDelegate implements CallkeepDelegate {
   void continueStartCallIntent(CallkeepHandle handle, String? displayName, bool video) {}
 
   @override
-  void didPushIncomingCall(
+  void didPresentIncomingCall(
     CallkeepHandle handle,
     String? displayName,
     bool video,

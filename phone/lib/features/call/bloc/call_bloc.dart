@@ -4787,7 +4787,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   // TODO: Unify incoming-call handling for both iOS and Android so that
   // this method becomes the shared entry point. This may require removing
   // `CallkeepConnections` and adjusting the method signature.
-  void didPushIncomingCall(
+  void didPresentIncomingCall(
     CallkeepHandle handle,
     String? displayName,
     bool video,
@@ -4796,7 +4796,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   ) {
     _logger.fine(
       () =>
-          'didPushIncomingCall handle: $handle displayName: $displayName video: $video'
+          'didPresentIncomingCall handle: $handle displayName: $displayName video: $video'
           ' callId: $callId error: $error',
     );
 

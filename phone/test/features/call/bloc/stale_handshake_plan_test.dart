@@ -55,7 +55,7 @@ void main() {
     final connections = _Connections();
     final h = CallBlocHarness(callkeepConnections: connections);
     addTearDown(h.close);
-    h.bloc.didPushIncomingCall(const CallkeepHandle.number('100'), null, false, 'push-call', null);
+    h.bloc.didPresentIncomingCall(const CallkeepHandle.number('100'), null, false, 'push-call', null);
     await pumpEventQueue();
     expect(h.bloc.state.activeCalls.single.incomingOffer, isNull);
     h.signaling.emitHandshake(_snapshot());
@@ -74,7 +74,7 @@ void main() {
     final connections = _Connections();
     final h = CallBlocHarness(callkeepConnections: connections);
     addTearDown(h.close);
-    h.bloc.didPushIncomingCall(const CallkeepHandle.number('100'), null, false, 'push-call', null);
+    h.bloc.didPresentIncomingCall(const CallkeepHandle.number('100'), null, false, 'push-call', null);
     await pumpEventQueue();
     h.signaling.emitHandshake(_snapshot());
     await connections.entered.future.timeout(const Duration(seconds: 2));

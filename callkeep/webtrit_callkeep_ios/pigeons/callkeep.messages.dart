@@ -189,8 +189,10 @@ abstract class PDelegateFlutterApi {
   @ObjCSelector('continueStartCallIntentHandle:displayName:video:')
   void continueStartCallIntent(PHandle handle, String? displayName, bool video);
 
-  @ObjCSelector('didPushIncomingCallHandle:displayName:video:callId:uuid:error:')
-  void didPushIncomingCall(
+  /// CallKit registered the incoming call from a PushKit push (or refused it with `error`):
+  /// the delegate owns the call from here.
+  @ObjCSelector('didPresentIncomingCallHandle:displayName:video:callId:uuid:error:')
+  void didPresentIncomingCall(
     PHandle handle,
     String? displayName,
     bool video,

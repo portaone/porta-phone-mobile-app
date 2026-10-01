@@ -221,7 +221,9 @@ extern void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger
 - (instancetype)initWithBinaryMessenger:(id<FlutterBinaryMessenger>)binaryMessenger;
 - (instancetype)initWithBinaryMessenger:(id<FlutterBinaryMessenger>)binaryMessenger messageChannelSuffix:(nullable NSString *)messageChannelSuffix;
 - (void)continueStartCallIntentHandle:(WTPHandle *)handle displayName:(nullable NSString *)displayName video:(BOOL)video completion:(void (^)(FlutterError *_Nullable))completion;
-- (void)didPushIncomingCallHandle:(WTPHandle *)handle displayName:(nullable NSString *)displayName video:(BOOL)video callId:(NSString *)callId uuid:(NSString *)uuidString error:(nullable WTPIncomingCallError *)error completion:(void (^)(FlutterError *_Nullable))completion;
+/// CallKit registered the incoming call from a PushKit push (or refused it with `error`):
+/// the delegate owns the call from here.
+- (void)didPresentIncomingCallHandle:(WTPHandle *)handle displayName:(nullable NSString *)displayName video:(BOOL)video callId:(NSString *)callId uuid:(NSString *)uuidString error:(nullable WTPIncomingCallError *)error completion:(void (^)(FlutterError *_Nullable))completion;
 - (void)performStartCall:(NSString *)uuidString handle:(WTPHandle *)handle displayNameOrContactIdentifier:(nullable NSString *)displayNameOrContactIdentifier video:(BOOL)video completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 - (void)performAnswerCall:(NSString *)uuidString completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 - (void)performEndCall:(NSString *)uuidString completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;

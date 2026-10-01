@@ -68,7 +68,7 @@ void main() {
     addTearDown(h.close);
     h.signaling.emitHandshake(_ringing(callId: 'call'));
     await connections.entered.future.timeout(const Duration(seconds: 2));
-    h.bloc.didPushIncomingCall(const CallkeepHandle.number('100'), null, false, 'call', null);
+    h.bloc.didPresentIncomingCall(const CallkeepHandle.number('100'), null, false, 'call', null);
     await pumpEventQueue();
     expect(h.bloc.state.activeCalls.map((c) => c.callId), ['call']);
 

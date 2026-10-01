@@ -53,7 +53,7 @@ void main() {
 
       // Use the outgoing-call path to establish an active call without touching FGS.
       // After 80+ tests the FGS incoming-call broadcast pipeline is completely
-      // backlogged and reportNewIncomingCall / didPushIncomingCall stop firing.
+      // backlogged and reportNewIncomingCall / didPresentIncomingCall stop firing.
       // An outgoing call reaches ACTIVE state via synchronous CS IPC calls only,
       // which remain reliable regardless of how many tests have accumulated.
       final startLatch = Completer<void>();
@@ -142,11 +142,11 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // didPushIncomingCall callback (Android only)
+  // didPresentIncomingCall callback (Android only)
   // -------------------------------------------------------------------------
 
-  group('didPushIncomingCall callback (Android only)', skip: kIsWeb || defaultTargetPlatform != TargetPlatform.android,
-      () {
+  group('didPresentIncomingCall callback (Android only)',
+      skip: kIsWeb || defaultTargetPlatform != TargetPlatform.android, () {
     testWidgets('fires with null error on successful push-path registration', (WidgetTester _) async {
       if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
         markTestSkipped('Android only');
@@ -162,7 +162,7 @@ void main() {
       await AndroidCallkeepServices.backgroundPushNotificationBootstrapService
           .reportNewIncomingCall(id, kTestHandle1, displayName: 'Dave');
 
-      final err = await waitFor(latch.future, label: 'didPushIncomingCall');
+      final err = await waitFor(latch.future, label: 'didPresentIncomingCall');
       expect(err, isNull);
     });
 

@@ -123,7 +123,7 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
       state: CallkeepConnectionState.stateRinging,
       disconnectCause: null,
     );
-    _delegate?.didPushIncomingCall(handle, displayName, hasVideo, callId, null);
+    _delegate?.didPresentIncomingCall(handle, displayName, hasVideo, callId, null);
     return null;
   }
 

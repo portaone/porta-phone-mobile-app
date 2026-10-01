@@ -65,7 +65,7 @@ CallkeepHandle.sip('user@example.com')
 
 | Callback | When it fires |
 | --- | --- |
-| `didPushIncomingCall` | Platform registered the incoming call (or reports an error) |
+| `didPresentIncomingCall` | The platform shows an incoming call this delegate has not been handed yet (iOS: CallKit registered the push call, or an error; Android: replay of a ringing connection on attach) |
 | `performAnswerCall` | User answered from system UI |
 | `performEndCall` | User ended from system UI or system terminated the call |
 | `performStartCall` | User initiated outgoing call from system UI |

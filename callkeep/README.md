@@ -148,7 +148,7 @@ Implement `CallkeepDelegate` and pass it to `setDelegate` to receive platform ev
 
 | Method | When it fires |
 | --- | --- |
-| `didPushIncomingCall(handle, displayName, video, callId, error)` | Platform has registered the incoming call (or reports an error) |
+| `didPresentIncomingCall(handle, displayName, video, callId, error)` | The platform shows an incoming call this delegate has not been handed yet: iOS after CallKit registered the push call (or an error), Android a replay of a ringing Telecom connection on attach |
 | `performAnswerCall(callId)` | User answered from system UI |
 | `performEndCall(callId)` | User ended from system UI or system terminated the call |
 | `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | User initiated outgoing call from system UI (e.g. Siri) |

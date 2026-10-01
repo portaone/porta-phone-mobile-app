@@ -98,7 +98,7 @@ WebtritCallkeepPlatform (platform_interface)
 
 **Platform to Flutter** (via `CallkeepDelegate`): `performStartCall`, `performAnswerCall`, `performEndCall`,
 `performSetHeld`, `performSetMuted`, `performSendDTMF`, `performAudioDeviceSet`, `performAudioDevicesUpdate`,
-`performSetCallGroup`, `didActivateAudioSession`, `didDeactivateAudioSession`, `didPushIncomingCall`.
+`performSetCallGroup`, `didActivateAudioSession`, `didDeactivateAudioSession`, `didPresentIncomingCall`.
 
 `setCallGroup` names the group and takes its whole membership, not a change to it; a second
 name while one group is live is refused with `maximumCallGroupsReached`;

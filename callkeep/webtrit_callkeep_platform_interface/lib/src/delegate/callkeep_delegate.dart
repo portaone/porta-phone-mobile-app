@@ -13,8 +13,17 @@ abstract class CallkeepDelegate {
   /// outgoing call instead of this callback. Never invoked on Android.
   void continueStartCallIntent(CallkeepHandle handle, String? displayName, bool video);
 
-  /// Confirmation for incoming call processing
-  void didPushIncomingCall(
+  /// The platform holds and shows an incoming call under [callId] that this
+  /// delegate has not been handed yet; the delegate owns it from here.
+  ///
+  /// iOS: right after CallKit registered the call from a PushKit push, or
+  /// with [error] when CallKit refused it. Android: when a delegate attaches
+  /// while a Telecom connection presented by an earlier engine (the push
+  /// session) still rings - a replay; [error] is always null there.
+  ///
+  /// Either way the platform believes the call is alive; whether the app
+  /// still does is for the app to check against what it heard meanwhile.
+  void didPresentIncomingCall(
     CallkeepHandle handle,
     String? displayName,
     bool video,

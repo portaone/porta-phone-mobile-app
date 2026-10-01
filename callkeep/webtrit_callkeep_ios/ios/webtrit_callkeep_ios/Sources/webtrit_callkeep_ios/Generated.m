@@ -1115,8 +1115,8 @@ void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger, NSObj
     }
   }];
 }
-- (void)didPushIncomingCallHandle:(WTPHandle *)arg_handle displayName:(nullable NSString *)arg_displayName video:(BOOL)arg_video callId:(NSString *)arg_callId uuid:(NSString *)arg_uuidString error:(nullable WTPIncomingCallError *)arg_error completion:(void (^)(FlutterError *_Nullable))completion {
-  NSString *channelName = [NSString stringWithFormat:@"%@%@", @"dev.flutter.pigeon.webtrit_callkeep_ios.PDelegateFlutterApi.didPushIncomingCall", _messageChannelSuffix];
+- (void)didPresentIncomingCallHandle:(WTPHandle *)arg_handle displayName:(nullable NSString *)arg_displayName video:(BOOL)arg_video callId:(NSString *)arg_callId uuid:(NSString *)arg_uuidString error:(nullable WTPIncomingCallError *)arg_error completion:(void (^)(FlutterError *_Nullable))completion {
+  NSString *channelName = [NSString stringWithFormat:@"%@%@", @"dev.flutter.pigeon.webtrit_callkeep_ios.PDelegateFlutterApi.didPresentIncomingCall", _messageChannelSuffix];
   FlutterBasicMessageChannel *channel =
     [FlutterBasicMessageChannel
       messageChannelWithName:channelName
