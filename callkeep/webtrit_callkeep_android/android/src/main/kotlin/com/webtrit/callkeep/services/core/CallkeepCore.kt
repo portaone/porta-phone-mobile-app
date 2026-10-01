@@ -249,7 +249,7 @@ interface CallkeepCore {
     /**
      * The app reports that [metadata]'s call ended - the remote party hung up, nobody answered,
      * or the app never got to present it ([PEndCallReasonEnum.MISSED_WHILE_CONNECTING]). The
-     * same fact whichever engine reports it; today the foreground bridge (PHostApi.reportEndCall).
+     * same fact from every engine: the foreground bridge, the push session and a hosted engine.
      *
      * The core marks the call terminated at once (a registration still waiting for Telecom is
      * rejected), remembers a never-presented end so that a replay or a late push cannot present

@@ -22,7 +22,7 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
 1. Starts a short-lived Flutter background isolate.
 2. Shows the incoming-call notification / system UI.
 3. Waits for the user or app code to answer or decline.
-4. Exits when the call is answered, declined, or timed out.
+4. Exits when the app's push session finishes, or a safety-net timeout fires.
 
 ### Lifecycle
 
@@ -55,11 +55,34 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
   `PendingBroadcastQueue` under its call id, and one received before `IC_INITIALIZE` is kept
   by the service per call id. `handleLaunch` acts only on the release for the call it
   launches. An `AnswerCall` event is ignored only once the service shows another call.
-- The push isolate ends and hands off calls by id (`releaseCall`, `handoffCall`), and its
-  session can know more than one call. `CallLifecycleHandler` stops the service only when
-  that id is the call the service shows; for another call it ends that call and keeps running.
+- Only the push session's end stops the service: the completion of the app's `syncPushIsolate`
+  callback (`onSessionFinished`), with the connection left as the session left it - ended
+  through `reportEndCall`, or alive for the engine that holds it. A late completion for another
+  call than the one the service shows, or one after the service started stopping, changes
+  nothing. The service therefore stays up for everything the session does before its future
+  resolves - the missed-call record and its notification included - and the app owes it a
+  future that resolves only when that work is done.
+- A release ends the ringing phase (wake lock, silent notification) and tells the session what
+  happened, nothing more: `IC_RELEASE_ENDED` for an end nobody reported yet becomes
+  `performEndCall` (the session ends the call on the server, records it and finishes);
+  `IC_RELEASE_HANDED_OVER`, or an end the app reported itself, becomes `performHandoff` (the
+  call is no longer the session's concern; it finishes). A session that cannot be reached has
+  nothing to finish and the service stops at once. From the release the session has
+  `SESSION_FINISH_TIMEOUT_MS` (10 s) to finish; then the service stops without it.
+- The handoff is confirmed by callkeep, not guessed by the session: `ForegroundService` sends
+  `IC_RELEASE_HANDED_OVER` once its delegate has taken the call (`didPresentIncomingCall` returned,
+  or the answered call's `AnswerCall` was delivered). An Activity on screen or the Activity's
+  WebSocket displacing the session's (4441) says nothing about who receives the call's events -
+  on a Samsung M32 cold start the delegate attached 8.8 s after that socket connected, and a
+  session that let go on the socket left the hangup of that window with nobody to report it.
+- The push isolate also reports and ends calls by id (`reportEndCall`, `releaseCall`,
+  `handoffCall`), and its session can know more than one call. `reportEndCall` hands the end to
+  the core and keeps the service running. `CallLifecycleHandler` stops the service only when
+  the id of a `releaseCall` or `handoffCall` is the call the service shows; for another call it
+  ends that call and keeps running. Neither is needed on the normal paths any more.
 - Two safety-net timeouts force-stop the service if the normal flow stalls: an independent
-  60 s timeout armed at launch, and a 2 s stop timeout armed when the release arrives.
+  60 s timeout armed at launch, and the 10 s session-finish budget armed when the ringing
+  phase ends.
 - `onDestroy()` - unsubscribes, stops foreground, and explicitly cancels the current
   notification (on some Samsung builds `stopForeground(REMOVE)` alone leaves it in the
   shade), then tears the isolate down.

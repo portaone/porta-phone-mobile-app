@@ -4,7 +4,10 @@ import android.content.Context
 import android.os.Build
 import android.os.Looper
 import com.webtrit.callkeep.PCallkeepIncomingCallData
+import com.webtrit.callkeep.PEndCallReason
+import com.webtrit.callkeep.PEndCallReasonEnum
 import com.webtrit.callkeep.models.CallMetadata
+import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.services.incoming_call.handlers.CallLifecycleHandler
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -13,7 +16,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
@@ -48,6 +53,7 @@ class CallLifecycleHandlerTest {
 
         val events = mutableListOf<String>()
         var lastPerformEndCallId: String? = null
+        val handoffCallIds = mutableListOf<String>()
 
         override fun performAnswer(
             callId: String,
@@ -69,6 +75,16 @@ class CallLifecycleHandlerTest {
                 EndCallResult.SUCCESS -> onSuccess()
                 EndCallResult.FAILURE -> onFailure(RuntimeException("BYE failed"))
             }
+        }
+
+        override fun performHandoff(
+            callId: String,
+            onSuccess: () -> Unit,
+            onFailure: (Throwable) -> Unit,
+        ) {
+            events.add("performHandoff")
+            handoffCallIds += callId
+            onSuccess()
         }
 
         override fun syncPushIsolate(
@@ -118,17 +134,20 @@ class CallLifecycleHandlerTest {
     private lateinit var handler: CallLifecycleHandler
     private lateinit var communicator: FakeCommunicator
     private lateinit var fakeController: FakeConnectionController
+    private lateinit var core: CallkeepCore
     private val stopServiceCalls = mutableListOf<String>()
 
     @Before
     fun setUp() {
         communicator = FakeCommunicator()
         fakeController = FakeConnectionController()
+        core = mock(CallkeepCore::class.java)
         handler =
             CallLifecycleHandler(
                 connectionController = fakeController,
                 stopService = { stopServiceCalls.add("stop") },
                 isolateHandler = mock(com.webtrit.callkeep.services.services.incoming_call.handlers.FlutterIsolateHandler::class.java),
+                core = core,
             )
         handler.flutterApi = communicator
         handler.currentCallData =
@@ -145,73 +164,48 @@ class CallLifecycleHandlerTest {
     // -------------------------------------------------------------------------
 
     /**
-     * Regression: performEndCall must emit "performEndCall" before triggering
-     * release() → stopServiceWithDelay(). The service must not stop before the
-     * SIP BYE is sent.
+     * The session ends the call on the server and then records it; its callback future, not the
+     * answer to performEndCall, says when the service may stop.
      */
     @Test
-    fun `performEndCall fires performEndCall before stopService on success`() {
-        handler.performEndCall(CallMetadata(callId = "call-1"))
-
-        assertTrue(
-            "performEndCall must be forwarded to Flutter before service stops",
-            communicator.events.contains("performEndCall"),
-        )
-
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
-
-        assertEquals(
-            "stopService must be called after performEndCall succeeds",
-            1,
-            stopServiceCalls.size,
-        )
-    }
-
-    @Test
-    fun `performEndCall fires performEndCall before stopService on failure`() {
-        communicator = FakeCommunicator(FakeCommunicator.EndCallResult.FAILURE)
-        handler.flutterApi = communicator
-
-        handler.performEndCall(CallMetadata(callId = "call-1"))
-
-        assertTrue(
-            "performEndCall must be forwarded to Flutter even on failure",
-            communicator.events.contains("performEndCall"),
-        )
-
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
-
-        assertEquals(
-            "stopService must still be called when BYE fails",
-            1,
-            stopServiceCalls.size,
-        )
-    }
-
-    @Test
-    fun `performEndCall passes correct callId to flutterApi`() {
-        handler.performEndCall(CallMetadata(callId = "call-99"))
-
-        assertEquals("call-99", communicator.lastPerformEndCallId)
-    }
-
-    @Test
-    fun `performEndCall triggers stopService exactly once on success`() {
+    fun `performEndCall asks the session and leaves the service running`() {
         handler.performEndCall(CallMetadata(callId = "call-1"))
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
 
-        assertEquals(1, stopServiceCalls.size)
+        assertEquals(listOf("performEndCall"), communicator.events)
+        assertEquals("call-99 style id must reach the session", "call-1", communicator.lastPerformEndCallId)
+        assertTrue("the session's future stops the service, not this answer", stopServiceCalls.isEmpty())
     }
 
     @Test
-    fun `performEndCall triggers stopService exactly once on failure`() {
+    fun `performEndCall failing leaves the service to its budget`() {
         communicator = FakeCommunicator(FakeCommunicator.EndCallResult.FAILURE)
         handler.flutterApi = communicator
 
         handler.performEndCall(CallMetadata(callId = "call-1"))
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
 
-        assertEquals(1, stopServiceCalls.size)
+        assertTrue(communicator.events.contains("performEndCall"))
+        assertTrue("a failed end does not stop the service here: the service's timeout does", stopServiceCalls.isEmpty())
+    }
+
+    @Test
+    fun `performHandoff tells the session and leaves the service running`() {
+        handler.performHandoff(CallMetadata(callId = "call-1"))
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        assertEquals(listOf("call-1"), communicator.handoffCallIds)
+        assertTrue(stopServiceCalls.isEmpty())
+    }
+
+    @Test
+    fun `performHandoff with null flutterApi stops the service`() {
+        handler.flutterApi = null
+
+        handler.performHandoff(CallMetadata(callId = "call-1"))
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        assertEquals("nobody to finish anything: stop at once", 1, stopServiceCalls.size)
     }
 
     // -------------------------------------------------------------------------
@@ -330,6 +324,12 @@ class CallLifecycleHandlerTest {
                     onFailure: (Throwable) -> Unit,
                 ) {}
 
+                override fun performHandoff(
+                    callId: String,
+                    onSuccess: () -> Unit,
+                    onFailure: (Throwable) -> Unit,
+                ) {}
+
                 override fun syncPushIsolate(
                     callData: PCallkeepIncomingCallData?,
                     onSuccess: () -> Unit,
@@ -375,6 +375,15 @@ class CallLifecycleHandlerTest {
     }
 
     @Test
+    fun `reportEndCall hands the end to the core and keeps the service`() {
+        runBlocking { handler.reportEndCall("call-1", PEndCallReason(value = PEndCallReasonEnum.MISSED_WHILE_CONNECTING)) }
+
+        verify(core).reportCallEnded(metadataWithId("call-1"), reason(PEndCallReasonEnum.MISSED_WHILE_CONNECTING))
+        assertTrue("the core ends the call; the handler must not decline it a second time", fakeController.declinedCallIds.isEmpty())
+        assertTrue("ending the call does not end the session", stopServiceCalls.isEmpty())
+    }
+
+    @Test
     fun `handoffCall for the shown call stops the service`() {
         runBlocking { handler.handoffCall("call-1") }
 
@@ -386,5 +395,20 @@ class CallLifecycleHandlerTest {
         runBlocking { handler.handoffCall("call-2") }
 
         assertTrue(stopServiceCalls.isEmpty())
+    }
+
+    // Mockito matchers return null; routing them through a type-parameter helper keeps Kotlin from
+    // inserting a null check where the value meets the mocked method's non-null parameter.
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> uninitialized(): T = null as T
+
+    private fun metadataWithId(callId: String): CallMetadata {
+        ArgumentMatchers.argThat<CallMetadata> { it.callId == callId }
+        return uninitialized()
+    }
+
+    private fun reason(value: PEndCallReasonEnum): PEndCallReasonEnum {
+        ArgumentMatchers.eq(value)
+        return uninitialized()
     }
 }

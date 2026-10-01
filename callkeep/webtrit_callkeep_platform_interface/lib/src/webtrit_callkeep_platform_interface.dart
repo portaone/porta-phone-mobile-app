@@ -389,6 +389,10 @@ abstract class WebtritCallkeepPlatform extends PlatformInterface {
     throw UnimplementedError('endAllCalls() has not been implemented.');
   }
 
+  Future<void> reportEndCallBackgroundPushNotificationService(String callId, CallkeepEndCallReason reason) {
+    throw UnimplementedError('reportEndCallBackgroundPushNotificationService() has not been implemented.');
+  }
+
   Future<dynamic> endCallBackgroundPushNotificationService(String callId) {
     throw UnimplementedError('hungUpAndroidService() has not been implemented.');
   }

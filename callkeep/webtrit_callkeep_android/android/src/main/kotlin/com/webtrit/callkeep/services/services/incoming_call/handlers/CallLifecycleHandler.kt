@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.webtrit.callkeep.PCallkeepIncomingCallData
+import com.webtrit.callkeep.PEndCallReason
 import com.webtrit.callkeep.PHostBackgroundPushNotificationIsolateApi
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.core.CallkeepCore
@@ -19,6 +20,7 @@ class CallLifecycleHandler(
     private val connectionController: CallConnectionController,
     private val stopService: () -> Unit,
     private var isolateHandler: FlutterIsolateHandler,
+    private val core: CallkeepCore = CallkeepCore.instance,
 ) : PHostBackgroundPushNotificationIsolateApi {
     internal var flutterApi: FlutterIsolateCommunicator? = null
 
@@ -55,18 +57,40 @@ class CallLifecycleHandler(
         })
     }
 
+    // Asks the push session to end the call on the server. The session's callback future, not
+    // this answer, decides when the service stops: the server's hangup comes back to the session,
+    // which records the call and finishes.
     fun performEndCall(metadata: CallMetadata) {
         val api = flutterApi
         if (api != null) {
             api.performEndCall(
                 metadata.callId,
-                onSuccess = { release() },
-                onFailure = { release() },
+                onSuccess = { Log.d(TAG, "performEndCall: the session ends ${metadata.callId} on the server") },
+                onFailure = { Log.w(TAG, "performEndCall: the session could not end ${metadata.callId}: $it") },
             )
         } else {
             Log.w(TAG, "performEndCall: flutterApi is null, releasing resources directly")
             release()
         }
+    }
+
+    /**
+     * Tells the push session that callkeep no longer needs it for the call: the app holds the
+     * call now, or it ended through another handler. The session finishes what it started and
+     * its callback future returns; a session that cannot be reached has nothing to finish.
+     */
+    fun performHandoff(metadata: CallMetadata) {
+        val api = flutterApi
+        if (api == null) {
+            Log.w(TAG, "performHandoff: flutterApi is null, releasing resources directly")
+            release()
+            return
+        }
+        api.performHandoff(
+            metadata.callId,
+            onSuccess = { Log.d(TAG, "performHandoff: the session let go of ${metadata.callId}") },
+            onFailure = { Log.w(TAG, "performHandoff: the session did not take the handoff of ${metadata.callId}: $it") },
+        )
     }
 
     fun terminateCall(
@@ -116,6 +140,16 @@ class CallLifecycleHandler(
             connectionController.hangUp(metadata)
             stopServiceFor(metadata.callId)
         })
+    }
+
+    override suspend fun reportEndCall(
+        callId: String,
+        reason: PEndCallReason,
+    ) {
+        // The core owns the end: it ends the call in the backend and remembers that the session
+        // knows, so the IC_RELEASE_ENDED that follows does not come back as performEndCall.
+        // The service keeps running for whatever the session still has to do.
+        core.reportCallEnded(CallMetadata(callId = callId), reason.value)
     }
 
     override suspend fun endCall(callId: String) {

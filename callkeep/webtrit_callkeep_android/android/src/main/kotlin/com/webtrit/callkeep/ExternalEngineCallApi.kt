@@ -13,6 +13,18 @@ import com.webtrit.callkeep.services.core.CallkeepCore
  * the active Telecom/standalone connection.
  */
 internal class ExternalEngineCallApi : PHostBackgroundPushNotificationIsolateApi {
+    override suspend fun reportEndCall(
+        callId: String,
+        reason: PEndCallReason,
+    ) {
+        try {
+            CallkeepCore.instance.reportCallEnded(CallMetadata(callId = callId), reason.value)
+        } catch (e: Exception) {
+            Log.e(TAG, "reportEndCall failed for callId=$callId", e)
+            throw e
+        }
+    }
+
     override suspend fun releaseCall(callId: String) {
         try {
             CallkeepCore.instance.startDeclineCall(CallMetadata(callId = callId))
