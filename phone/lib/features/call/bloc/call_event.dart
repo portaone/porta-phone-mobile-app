@@ -1470,6 +1470,7 @@ sealed class _CallMutationEvent extends CallEvent {
     required String callId,
     required int code,
     required String reason,
+    required bool wasHeld,
   }) = _CallMutationEventSignalingHangup;
   const factory _CallMutationEvent.signalingCallUpdating({
     required String callId,
@@ -1751,12 +1752,22 @@ class _CallMutationEventSignalingAccepted extends _CallMutationEvent {
 }
 
 class _CallMutationEventSignalingHangup extends _CallMutationEvent {
-  const _CallMutationEventSignalingHangup({required this.callId, required this.code, required this.reason});
+  const _CallMutationEventSignalingHangup({
+    required this.callId,
+    required this.code,
+    required this.reason,
+    required this.wasHeld,
+  });
   final String callId;
   final int code;
   final String reason;
+
+  /// Whether the bloc held the call when the hangup arrived. The mutation runs later and may
+  /// find the call gone by then - ended from this side meanwhile - which is not the same as a
+  /// call the bloc never held.
+  final bool wasHeld;
   @override
-  List<Object?> get props => [callId, code, reason];
+  List<Object?> get props => [callId, code, reason, wasHeld];
 }
 
 class _CallMutationEventSignalingCallUpdating extends _CallMutationEvent {

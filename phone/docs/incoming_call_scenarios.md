@@ -279,6 +279,13 @@ events to the Activity, which reports a hangup of its own accord - and the sessi
 service up through it. On a Samsung M32 cold start that gap between the Activity's socket and
 its delegate was 8.8 s; a caller hanging up inside it used to come back as a ghost call.
 
+The last stretch of that gap is covered on the Dart side, in callkeep: a hangup `CallBloc` hears
+for a call it does not hold is reported as `missedWhileConnecting`, and `Callkeep` records that
+id before the report crosses to the platform (on the M32 the replay got through the main looper
+3 s before it). The delegate callkeep hands the platform drops `didPresentIncomingCall` for a
+recorded id, and the bloc asks `Callkeep.wasEndedBeforePresented` after its contact lookup
+before it shows a presentation it received earlier. The bloc keeps no list of its own.
+
 ## Sequence — Case B (persistent / socket)
 
 > Caveat: the answer branch (Activity takeover, 200 OK, 4441 eviction) is the *intended* path,

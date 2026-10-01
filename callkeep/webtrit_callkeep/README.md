@@ -69,6 +69,12 @@ await Callkeep().reportUpdateCall(callId, ...);
 await Callkeep().reportEndCall(callId, CallkeepEndCallReason.remoteEnded);
 ```
 
+An end reported with `missedWhileConnecting` - the app learnt from signaling that a call it never
+held is over - is kept in `Callkeep` ahead of the platform: the delegate is not handed a
+`didPresentIncomingCall` for that id afterwards, and `Callkeep().wasEndedBeforePresented(callId)`
+answers true until the app registers the id anew. The map is bounded (32 entries); false does not
+mean the call is alive.
+
 ### Call control
 
 ```dart

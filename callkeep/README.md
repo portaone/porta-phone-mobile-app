@@ -131,7 +131,8 @@ Use these methods to notify the platform about call state changes.
 | `reportConnectingOutgoingCall(callId, handle, ...)` | Mark outgoing call as connecting |
 | `reportConnectedOutgoingCall(callId, handle, ...)` | Mark outgoing call as connected |
 | `reportUpdateCall(callId, ...)` | Update call metadata (display name, video, etc.) |
-| `reportEndCall(callId, reason)` | Notify platform the call ended |
+| `reportEndCall(callId, reason)` | Notify platform the call ended. With `missedWhileConnecting` (a call the app never held) the fact is kept in `Callkeep` too, ahead of the platform |
+| `wasEndedBeforePresented(callId)` | Whether the app reported the end of a call it never held and nothing reopened the id since; a presentation of that call is not handed to the delegate, and the app asks this before applying one it received earlier |
 | `startCall(callId, handle, ...)` | Initiate an outgoing call |
 | `answerCall(callId)` | Answer a call programmatically |
 | `endCall(callId)` | End a call |

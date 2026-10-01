@@ -1022,6 +1022,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       return;
     }
 
+    // The server may have hung this call up while the contact was being resolved: the hangup
+    // found no call here and was reported to callkeep, which ends the connection when the
+    // report gets through. Callkeep keeps that fact for the app, so it is asked here, after the
+    // wait, before anything is shown.
+    if (callkeep.wasEndedBeforePresented(event.callId)) {
+      _logger.warning(
+        '_onCallPushEventIncoming: callId ${event.callId} was hung up before it was held - not presented',
+      );
+      return;
+    }
+
     emit(
       state.copyWithPushActiveCall(
         ActiveCall(
@@ -1468,7 +1479,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     for (final request in queuedTerminationRequestsRepository.getAll.values) {
       if (request.callId == event.callId) queuedTerminationRequestsRepository.remove(request);
     }
-    add(_CallMutationEvent.signalingHangup(callId: event.callId, code: event.code, reason: event.reason));
+    add(
+      _CallMutationEvent.signalingHangup(
+        callId: event.callId,
+        code: event.code,
+        reason: event.reason,
+        wasHeld: call != null,
+      ),
+    );
   }
 
   Future<void> __onCallSignalingEventCallUpdating(
@@ -3462,6 +3480,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _signalingModule.cancelRequestsByCallId(event.callId);
 
     ActiveCall? call = state.retrieveActiveCall(event.callId);
+    if (call == null && event.wasHeld) {
+      // The call was here when the hangup arrived and left while this mutation waited its
+      // turn: ended from this side (performEnd pops it after its own request), or by an earlier
+      // hangup of the same call. Callkeep knows that end already. Reporting it as
+      // missedWhileConnecting would mark a call the app held as never presented, and keep its
+      // id from a transfer back.
+      _logger.info('__onMutationSignalingHangup: ${event.callId} was held when the hangup arrived and is gone now');
+      return;
+    }
     if (call == null) {
       // The call was never registered in state - the signaling hangup won the race against
       // a still-connecting incoming call (e.g. a push->foreground handoff where the caller hung
@@ -3471,10 +3498,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // rejected (no ghost). The flag is specific to this never-presented case, so a transfer-back
       // (which reuses a call the app did know) is unaffected. reportEndCall does not invoke
       // performEndCall and sends no server request - signaling already terminated the call.
-      //
-      // Not awaited: nothing here depends on the report having landed, it crosses to the platform
-      // through a queue a cold start keeps busy for seconds, and this handler runs sequentially -
-      // a hangup of another unknown call queued behind it must be reported without that wait.
+      // Callkeep also keeps this end for the app: a presentation of the call still on its way
+      // here is dropped, and one already received is checked against it before it is shown.
+      // Not awaited: the report crosses to the platform through a queue a cold start keeps
+      // busy for seconds, this handler runs sequentially, and a hangup of another unknown call
+      // queued behind it must be reported - and known to callkeep - without that wait.
       unawaited(
         callkeep
             .reportEndCall(event.callId, '', CallkeepEndCallReason.missedWhileConnecting)

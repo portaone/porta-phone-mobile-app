@@ -48,6 +48,7 @@ class CallBlocHarness {
     CallCapabilitiesConfig capabilities = const CallCapabilitiesConfig(),
     Duration conferenceAssemblyTimeout = const Duration(seconds: 20),
     FakePeerConnectionFactory? peerConnectionFactory,
+    ContactResolver? contactResolver,
   }) : peerFactory = peerConnectionFactory ?? FakePeerConnectionFactory() {
     TestWidgetsFlutterBinding.ensureInitialized();
     installPlatformStubs();
@@ -65,7 +66,7 @@ class CallBlocHarness {
       callkeep: callkeep,
       callkeepConnections: callkeepConnections ?? _FakeCallkeepConnections(),
       userMediaBuilder: userMediaBuilder ?? media,
-      contactResolver: _FakeContactResolver(),
+      contactResolver: contactResolver ?? _FakeContactResolver(),
       callErrorReporter: errors,
       sendPresenceSettings: sendPresenceSettings,
       capabilities: capabilities,
@@ -236,7 +237,10 @@ class FakeCallkeep extends Fake implements Callkeep {
     CallkeepHandle handle, {
     String? displayName,
     bool hasVideo = false,
-  }) async => incomingRegistrationError;
+  }) async {
+    if (incomingRegistrationError == null) endedUnseen.remove(callId);
+    return incomingRegistrationError;
+  }
 
   @override
   Future<void> reportUpdateCall(
@@ -261,8 +265,15 @@ class FakeCallkeep extends Fake implements Callkeep {
   @override
   void setDelegate(CallkeepDelegate? delegate) => _delegate = delegate;
 
-  /// While set, every end report is recorded at once but completes only when
-  /// the completer does - the platform taking seconds to hear it.
+  /// Ends the bloc reported for calls it never held, as the real Callkeep keeps them: recorded
+  /// before the platform hears of the end, forgotten when a registration of the id is accepted.
+  final Set<String> endedUnseen = {};
+
+  @override
+  bool wasEndedBeforePresented(String callId) => endedUnseen.contains(callId);
+
+  /// While set, every end report is recorded at once but completes only when released - the
+  /// platform roundtrip a cold start stretches to seconds.
   Completer<void>? endReportGate;
 
   /// Thrown by every end report while set: the platform refusing it.
@@ -270,6 +281,7 @@ class FakeCallkeep extends Fake implements Callkeep {
 
   @override
   Future<void> reportEndCall(String callId, String displayName, CallkeepEndCallReason reason) async {
+    if (reason == CallkeepEndCallReason.missedWhileConnecting) endedUnseen.add(callId);
     ended.add(callId);
     await endReportGate?.future;
     if (endReportError != null) throw endReportError!;
