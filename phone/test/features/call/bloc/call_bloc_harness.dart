@@ -261,9 +261,18 @@ class FakeCallkeep extends Fake implements Callkeep {
   @override
   void setDelegate(CallkeepDelegate? delegate) => _delegate = delegate;
 
+  /// While set, every end report is recorded at once but completes only when
+  /// the completer does - the platform taking seconds to hear it.
+  Completer<void>? endReportGate;
+
+  /// Thrown by every end report while set: the platform refusing it.
+  Object? endReportError;
+
   @override
   Future<void> reportEndCall(String callId, String displayName, CallkeepEndCallReason reason) async {
     ended.add(callId);
+    await endReportGate?.future;
+    if (endReportError != null) throw endReportError!;
   }
 
   /// While true the reports are held back instead of being delivered, so a

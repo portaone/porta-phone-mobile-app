@@ -3471,7 +3471,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // rejected (no ghost). The flag is specific to this never-presented case, so a transfer-back
       // (which reuses a call the app did know) is unaffected. reportEndCall does not invoke
       // performEndCall and sends no server request - signaling already terminated the call.
-      await callkeep.reportEndCall(event.callId, '', CallkeepEndCallReason.missedWhileConnecting);
+      //
+      // Not awaited: nothing here depends on the report having landed, it crosses to the platform
+      // through a queue a cold start keeps busy for seconds, and this handler runs sequentially -
+      // a hangup of another unknown call queued behind it must be reported without that wait.
+      unawaited(
+        callkeep
+            .reportEndCall(event.callId, '', CallkeepEndCallReason.missedWhileConnecting)
+            .catchError(
+              (Object e, StackTrace st) => _logger.warning('reportEndCall failed for ${event.callId}', e, st),
+            ),
+      );
       return;
     }
 
