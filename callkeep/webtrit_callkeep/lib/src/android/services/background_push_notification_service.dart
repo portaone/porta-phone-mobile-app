@@ -23,6 +23,21 @@ class BackgroundPushNotificationService {
     platform.setBackgroundServiceDelegate(delegate);
   }
 
+  /// Reports that the call [callId] ended (Android only): the server hung it up, nobody
+  /// answered, or it was gone before this session could see it.
+  ///
+  /// Callkeep ends the call in Telecom, keeps the end so that a replay or a late push cannot
+  /// present the call again, and does not ask this session to end the call a second time. Use
+  /// [CallkeepEndCallReason.missedWhileConnecting] for a call the app never presented.
+  ///
+  /// Ends the call, not the session: [IncomingCallService] keeps running, so the session can
+  /// still record the missed call and show its notification. Finish the session afterwards with
+  /// [releaseCall] or [handoffCall] as before.
+  Future<void> reportEndCall(String callId, CallkeepEndCallReason reason) {
+    if (kIsWeb || !Platform.isAndroid) return Future.value();
+    return platform.reportEndCallBackgroundPushNotificationService(callId, reason);
+  }
+
   /// Ends a background call by [callId] (Android only).
   Future<dynamic> endCall(String callId) {
     if (kIsWeb || !Platform.isAndroid) return Future.value();

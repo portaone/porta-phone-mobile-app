@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.webtrit.callkeep.PCallkeepIncomingCallData
+import com.webtrit.callkeep.PEndCallReason
 import com.webtrit.callkeep.PHostBackgroundPushNotificationIsolateApi
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.core.CallkeepCore
@@ -19,6 +20,7 @@ class CallLifecycleHandler(
     private val connectionController: CallConnectionController,
     private val stopService: () -> Unit,
     private var isolateHandler: FlutterIsolateHandler,
+    private val core: CallkeepCore = CallkeepCore.instance,
 ) : PHostBackgroundPushNotificationIsolateApi {
     internal var flutterApi: FlutterIsolateCommunicator? = null
 
@@ -116,6 +118,16 @@ class CallLifecycleHandler(
             connectionController.hangUp(metadata)
             stopServiceFor(metadata.callId)
         })
+    }
+
+    override suspend fun reportEndCall(
+        callId: String,
+        reason: PEndCallReason,
+    ) {
+        // The core owns the end: it ends the call in the backend and remembers that the session
+        // knows, so the IC_RELEASE_ENDED that follows does not come back as performEndCall.
+        // The service keeps running for whatever the session still has to do.
+        core.reportCallEnded(CallMetadata(callId = callId), reason.value)
     }
 
     override suspend fun endCall(callId: String) {

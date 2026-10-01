@@ -1369,6 +1369,14 @@ interface PHostBackgroundPushNotificationIsolateBootstrapApi {
 }
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface PHostBackgroundPushNotificationIsolateApi {
+  /**
+   * The session reports that [callId] ended: the server hung it up, nobody answered, or it
+   * was gone before the session could see it. Callkeep ends the call in Telecom, keeps the
+   * end so that a replay or a late push cannot present the call again, and does not ask the
+   * session to end it a second time. This ends the call, not the session: the service keeps
+   * running for whatever the session still has to do.
+   */
+  suspend fun reportEndCall(callId: String, reason: PEndCallReason)
   suspend fun endCall(callId: String)
   suspend fun endAllCalls()
   /**
@@ -1394,6 +1402,27 @@ interface PHostBackgroundPushNotificationIsolateApi {
     @JvmOverloads
     fun setUp(binaryMessenger: BinaryMessenger, api: PHostBackgroundPushNotificationIsolateApi?, messageChannelSuffix: String = "") {
       val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateApi.reportEndCall$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val callIdArg = args[0] as String
+            val reasonArg = args[1] as PEndCallReason
+            CoroutineScope(Dispatchers.Main).launch {
+              val wrapped: List<Any?> = try {
+                api.reportEndCall(callIdArg, reasonArg)
+                listOf(null)
+              } catch (exception: Throwable) {
+                GeneratedPigeonUtils.wrapError(exception)
+              }
+              reply.reply(wrapped)
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
       run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateApi.endCall$separatedMessageChannelSuffix", codec)
         if (api != null) {
