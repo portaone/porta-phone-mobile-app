@@ -4,7 +4,10 @@ import android.content.Context
 import android.os.Build
 import android.os.Looper
 import com.webtrit.callkeep.PCallkeepIncomingCallData
+import com.webtrit.callkeep.PEndCallReason
+import com.webtrit.callkeep.PEndCallReasonEnum
 import com.webtrit.callkeep.models.CallMetadata
+import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.services.incoming_call.handlers.CallLifecycleHandler
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -13,7 +16,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
@@ -118,17 +123,20 @@ class CallLifecycleHandlerTest {
     private lateinit var handler: CallLifecycleHandler
     private lateinit var communicator: FakeCommunicator
     private lateinit var fakeController: FakeConnectionController
+    private lateinit var core: CallkeepCore
     private val stopServiceCalls = mutableListOf<String>()
 
     @Before
     fun setUp() {
         communicator = FakeCommunicator()
         fakeController = FakeConnectionController()
+        core = mock(CallkeepCore::class.java)
         handler =
             CallLifecycleHandler(
                 connectionController = fakeController,
                 stopService = { stopServiceCalls.add("stop") },
                 isolateHandler = mock(com.webtrit.callkeep.services.services.incoming_call.handlers.FlutterIsolateHandler::class.java),
+                core = core,
             )
         handler.flutterApi = communicator
         handler.currentCallData =
@@ -375,6 +383,15 @@ class CallLifecycleHandlerTest {
     }
 
     @Test
+    fun `reportEndCall hands the end to the core and keeps the service`() {
+        runBlocking { handler.reportEndCall("call-1", PEndCallReason(value = PEndCallReasonEnum.MISSED_WHILE_CONNECTING)) }
+
+        verify(core).reportCallEnded(metadataWithId("call-1"), reason(PEndCallReasonEnum.MISSED_WHILE_CONNECTING))
+        assertTrue("the core ends the call; the handler must not decline it a second time", fakeController.declinedCallIds.isEmpty())
+        assertTrue("ending the call does not end the session", stopServiceCalls.isEmpty())
+    }
+
+    @Test
     fun `handoffCall for the shown call stops the service`() {
         runBlocking { handler.handoffCall("call-1") }
 
@@ -386,5 +403,20 @@ class CallLifecycleHandlerTest {
         runBlocking { handler.handoffCall("call-2") }
 
         assertTrue(stopServiceCalls.isEmpty())
+    }
+
+    // Mockito matchers return null; routing them through a type-parameter helper keeps Kotlin from
+    // inserting a null check where the value meets the mocked method's non-null parameter.
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> uninitialized(): T = null as T
+
+    private fun metadataWithId(callId: String): CallMetadata {
+        ArgumentMatchers.argThat<CallMetadata> { it.callId == callId }
+        return uninitialized()
+    }
+
+    private fun reason(value: PEndCallReasonEnum): PEndCallReasonEnum {
+        ArgumentMatchers.eq(value)
+        return uninitialized()
     }
 }

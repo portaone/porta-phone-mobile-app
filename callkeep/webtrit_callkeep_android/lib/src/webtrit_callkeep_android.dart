@@ -318,6 +318,11 @@ class WebtritCallkeepAndroid extends WebtritCallkeepPlatform {
   }
 
   @override
+  Future<void> reportEndCallBackgroundPushNotificationService(String callId, CallkeepEndCallReason reason) {
+    return _backgroundPushNotificationIsolateApi.reportEndCall(callId, PEndCallReason(value: reason.toPigeon()));
+  }
+
+  @override
   Future<dynamic> endCallBackgroundPushNotificationService(String callId) {
     return _backgroundPushNotificationIsolateApi.endCall(callId);
   }

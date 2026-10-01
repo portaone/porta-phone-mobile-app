@@ -1240,6 +1240,29 @@ class PHostBackgroundPushNotificationIsolateApi {
   final String pigeonVar_messageChannelSuffix;
 
 
+  /// The session reports that [callId] ended: the server hung it up, nobody answered, or it
+  /// was gone before the session could see it. Callkeep ends the call in Telecom, keeps the
+  /// end so that a replay or a late push cannot present the call again, and does not ask the
+  /// session to end it a second time. This ends the call, not the session: the service keeps
+  /// running for whatever the session still has to do.
+  Future<void> reportEndCall(String callId, PEndCallReason reason) async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateApi.reportEndCall$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, reason]);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
+
   Future<void> endCall(String callId) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateApi.endCall$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(

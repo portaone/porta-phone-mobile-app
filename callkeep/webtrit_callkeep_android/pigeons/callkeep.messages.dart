@@ -250,6 +250,14 @@ abstract class PHostBackgroundPushNotificationIsolateBootstrapApi {
 
 @HostApi()
 abstract class PHostBackgroundPushNotificationIsolateApi {
+  /// The session reports that [callId] ended: the server hung it up, nobody answered, or it
+  /// was gone before the session could see it. Callkeep ends the call in Telecom, keeps the
+  /// end so that a replay or a late push cannot present the call again, and does not ask the
+  /// session to end it a second time. This ends the call, not the session: the service keeps
+  /// running for whatever the session still has to do.
+  @async
+  void reportEndCall(String callId, PEndCallReason reason);
+
   @async
   void endCall(String callId);
 

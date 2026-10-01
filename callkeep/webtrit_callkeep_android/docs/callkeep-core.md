@@ -304,8 +304,9 @@ reason to end one.
 
 `reportCallEnded(metadata, reason)` is the app telling the core that a call is over: the remote
 party hung up, nobody answered, or the app never got to present it
-(`MISSED_WHILE_CONNECTING`). It is one fact whoever reports it - today the foreground bridge
-(`PHostApi.reportEndCall`) - and the core does the same four things at once:
+(`MISSED_WHILE_CONNECTING`). It is one fact whoever reports it - the foreground bridge
+(`PHostApi.reportEndCall`), the push session (`PHostBackgroundPushNotificationIsolateApi.reportEndCall`)
+or a hosted engine (`ExternalEngineCallApi`) - and the core does the same four things at once:
 
 1. marks the call terminated ahead of the backend's echo, which also rejects a registration
    still waiting on it;
@@ -316,8 +317,8 @@ party hung up, nobody answered, or the app never got to present it
    push session would otherwise send the server a decline for a call the server hung up;
 4. ends the call in the backend (`startDeclineCall`).
 
-It ends the call, not the session that holds the service: the incoming-call service keeps
-running for whatever that session still has to do. A presented call keeps its id free for a
+It ends the call, not the session that reported it: the incoming-call service keeps running for
+whatever that session still has to do. A presented call keeps its id free for a
 transfer-back.
 
 ## Related Components
