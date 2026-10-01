@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:logging/logging.dart';
 import 'package:webtrit_callkeep_platform_interface/webtrit_callkeep_platform_interface.dart';
 
 // TODO
@@ -51,10 +52,52 @@ class Callkeep {
   /// The [WebtritCallkeepPlatform] instance used to perform platform specific operations.
   static WebtritCallkeepPlatform get platform => WebtritCallkeepPlatform.instance;
 
+  /// Calls whose end the app reported before it ever held them, by call id, each with the
+  /// version of its report; the most recent report is last.
+  ///
+  /// The platform can still present such a call to the delegate afterwards - Android replays
+  /// a ringing connection to a delegate that attaches, iOS confirms a push registration - while
+  /// the report itself travels to the native side through a queue the app's own start keeps
+  /// busy. The knowledge that the call is over lives here, in the isolate that reported it, so
+  /// the delegate is never handed the call (see [setDelegate]) and the app can ask before it
+  /// applies a presentation it already received (see [wasEndedBeforePresented]).
+  ///
+  /// Only ends reported with [CallkeepEndCallReason.missedWhileConnecting] are kept: the end
+  /// of a call the app held is its own knowledge, and that call's id stays free for a transfer
+  /// back, as the platforms keep it. The map is bounded; the oldest report is forgotten first.
+  final Map<String, int> _endsReportedUnseen = <String, int>{};
+  int _endReportVersion = 0;
+  static const _kEndsReportedUnseenLimit = 32;
+
+  /// Whether the app reported the end of [callId] before it ever held that call, and nothing
+  /// has reopened the id since.
+  ///
+  /// True after `reportEndCall(callId, ..., missedWhileConnecting)` until
+  /// [reportNewIncomingCall] registers [callId] anew (returns null with no newer such report
+  /// made meanwhile), [tearDown] runs, or 32 newer such reports push the entry out. A local,
+  /// bounded fact of this [Callkeep] instance: false does not mean the call is alive, and the
+  /// end of a call the app held (any other reason) is never recorded here.
+  ///
+  /// Ask this before applying a [CallkeepDelegate.didPresentIncomingCall] that was received
+  /// earlier and waited on something asynchronous: the end may have been reported meanwhile.
+  bool wasEndedBeforePresented(String callId) => _endsReportedUnseen.containsKey(callId);
+
+  void _recordEndReportedUnseen(String callId) {
+    _endsReportedUnseen.remove(callId);
+    _endsReportedUnseen[callId] = ++_endReportVersion;
+    while (_endsReportedUnseen.length > _kEndsReportedUnseenLimit) {
+      _endsReportedUnseen.remove(_endsReportedUnseen.keys.first);
+    }
+  }
+
   /// Sets the delegate for receiving calkeep events from the native side.
   /// [CallkeepDelegate] needs to be implemented to receive callkeep events.
+  ///
+  /// The platform receives the delegate behind a gate: a
+  /// [CallkeepDelegate.didPresentIncomingCall] for a call the app reported ended before it
+  /// held it ([wasEndedBeforePresented]) is dropped here and never reaches [delegate].
   void setDelegate(CallkeepDelegate? delegate) {
-    platform.setDelegate(delegate);
+    platform.setDelegate(delegate == null ? null : _EndAwareDelegate(delegate, this));
   }
 
   /// Sets the delegate for receiving push registry events from the native side.
@@ -85,18 +128,31 @@ class Callkeep {
   /// Report the teardown state
   Future<void> tearDown() {
     _updateStatus(CallkeepStatus.terminating);
+    _endsReportedUnseen.clear();
     return platform.tearDown().then((_) => _updateStatus(CallkeepStatus.uninitialized));
   }
 
   /// Report a new incoming call with the given [callId], [handle], [displayName] and [hasVideo] flag.
   /// Returns [CallkeepIncomingCallError] if there is an error.
+  ///
+  /// A registration the platform accepts as new (null) reopens [callId] for presentation after
+  /// an end reported before the call was held ([wasEndedBeforePresented]) - unless a newer such
+  /// report was made while this call was in flight. Any other outcome leaves that fact as it
+  /// is, an adoption of a call the platform already holds included: the Android core answers
+  /// [CallkeepIncomingCallError.callIdAlreadyExists] for a call it holds, and CallKit refuses a
+  /// known UUID the same way, so a registration cannot reopen an id behind the old call's back.
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(
     String callId,
     CallkeepHandle handle, {
     String? displayName,
     bool hasVideo = false,
-  }) {
-    return platform.reportNewIncomingCall(callId, handle, displayName, hasVideo);
+  }) async {
+    final reportedAs = _endsReportedUnseen[callId];
+    final result = await platform.reportNewIncomingCall(callId, handle, displayName, hasVideo);
+    if (reportedAs != null && result == null && _endsReportedUnseen[callId] == reportedAs) {
+      _endsReportedUnseen.remove(callId);
+    }
+    return result;
   }
 
   /// Report that an outgoing call with given [callId] is connecting.
@@ -128,7 +184,13 @@ class Callkeep {
   /// The [displayName] of the call is required for reporting miseed call metadata.
   /// The [reason] for ending the call is required.
   /// Returns [Future] that completes when the operation is done.
+  ///
+  /// With [CallkeepEndCallReason.missedWhileConnecting] - the end of a call the app never held,
+  /// learnt from signaling - the fact is kept here before the platform hears of it, so a
+  /// presentation of that call the platform still has in flight is dropped
+  /// ([wasEndedBeforePresented]).
   Future<void> reportEndCall(String callId, String displayName, CallkeepEndCallReason reason) {
+    if (reason == CallkeepEndCallReason.missedWhileConnecting) _recordEndReportedUnseen(callId);
     return platform.reportEndCall(callId, displayName, reason);
   }
 
@@ -212,4 +274,83 @@ class Callkeep {
   Future<CallkeepCallRequestError?> setAudioDevice(String callId, CallkeepAudioDevice device) {
     return platform.setAudioDevice(callId, device);
   }
+}
+
+/// The delegate as the platform sees it: everything is forwarded to the app's delegate except
+/// the presentation of a call whose end the app already reported before holding it.
+///
+/// Implements the interface directly, without `noSuchMethod`: a method added to
+/// [CallkeepDelegate] must be forwarded here too, and the analyzer says so.
+class _EndAwareDelegate implements CallkeepDelegate {
+  const _EndAwareDelegate(this._delegate, this._callkeep);
+
+  /// Through `package:logging`, so the app's own sinks (logcat, its log file) carry the line:
+  /// a drop here is otherwise visible only by the absence of the presentation that follows.
+  static final _log = Logger('Callkeep');
+
+  final CallkeepDelegate _delegate;
+  final Callkeep _callkeep;
+
+  @override
+  void didPresentIncomingCall(
+    CallkeepHandle handle,
+    String? displayName,
+    bool video,
+    String callId,
+    CallkeepIncomingCallError? error,
+  ) {
+    if (_callkeep.wasEndedBeforePresented(callId)) {
+      _log.info('didPresentIncomingCall dropped: the app reported $callId ended before it held it');
+      return;
+    }
+    _delegate.didPresentIncomingCall(handle, displayName, video, callId, error);
+  }
+
+  @override
+  void continueStartCallIntent(CallkeepHandle handle, String? displayName, bool video) =>
+      _delegate.continueStartCallIntent(handle, displayName, video);
+
+  @override
+  Future<bool> performStartCall(
+    String callId,
+    CallkeepHandle handle,
+    String? displayNameOrContactIdentifier,
+    bool video,
+  ) => _delegate.performStartCall(callId, handle, displayNameOrContactIdentifier, video);
+
+  @override
+  Future<bool> performAnswerCall(String callId) => _delegate.performAnswerCall(callId);
+
+  @override
+  Future<bool> performEndCall(String callId) => _delegate.performEndCall(callId);
+
+  @override
+  Future<bool> performSetHeld(String callId, bool onHold) => _delegate.performSetHeld(callId, onHold);
+
+  @override
+  Future<bool> performSetMuted(String callId, bool muted) => _delegate.performSetMuted(callId, muted);
+
+  @override
+  Future<bool> performSendDTMF(String callId, String key) => _delegate.performSendDTMF(callId, key);
+
+  @override
+  Future<bool> performAudioDeviceSet(String callId, CallkeepAudioDevice device) =>
+      _delegate.performAudioDeviceSet(callId, device);
+
+  @override
+  Future<bool> performAudioDevicesUpdate(String callId, List<CallkeepAudioDevice> devices) =>
+      _delegate.performAudioDevicesUpdate(callId, devices);
+
+  @override
+  Future<bool> performSetCallGroup(String callId, String? groupWithCallId) =>
+      _delegate.performSetCallGroup(callId, groupWithCallId);
+
+  @override
+  void didActivateAudioSession() => _delegate.didActivateAudioSession();
+
+  @override
+  void didDeactivateAudioSession() => _delegate.didDeactivateAudioSession();
+
+  @override
+  void didReset() => _delegate.didReset();
 }
