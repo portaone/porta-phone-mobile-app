@@ -206,7 +206,12 @@ these futures only after the actual operation finishes, so the native side waits
 
 **Push enrichment** — an incoming call can arrive via push before signaling is ready. The BLoC
 creates a placeholder `ActiveCall(status: incomingFromPush)` and later merges the signaling
-offer into it when `IncomingCallEvent` arrives, instead of creating a duplicate entry.
+offer into it when `IncomingCallEvent` arrives, instead of creating a duplicate entry. The one
+placeholder it refuses is a call it already heard the server hang up while it held no entry for
+it: that hangup is reported to callkeep as `missedWhileConnecting`, callkeep keeps the fact
+(`Callkeep.wasEndedBeforePresented`) and drops the presentation itself when it is still on its
+way; a presentation already received and waiting on contact resolution is checked against it
+after the wait. The bloc holds no such list of its own.
 
 **ICE servers** — a peer connection's STUN/TURN servers come from `DefaultPeerConnectionFactory`,
 which resolves them per connection through `IceServersRepository` rather than holding a fixed list,
