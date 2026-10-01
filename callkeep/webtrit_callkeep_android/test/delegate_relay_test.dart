@@ -23,14 +23,14 @@ class _FakeCallkeepDelegate implements CallkeepDelegate {
   }
 
   @override
-  void didPushIncomingCall(
+  void didPresentIncomingCall(
     CallkeepHandle handle,
     String? displayName,
     bool video,
     String callId,
     CallkeepIncomingCallError? error,
   ) {
-    _record('didPushIncomingCall', [handle, displayName, video, callId, error]);
+    _record('didPresentIncomingCall', [handle, displayName, video, callId, error]);
   }
 
   @override
@@ -188,28 +188,28 @@ void main() {
       expect(() => WebtritCallkeepPlatform.instance.setDelegate(null), returnsNormally);
     });
 
-    test('didPushIncomingCall with null error forwards null error', () async {
-      await _send('$_prefix.PDelegateFlutterApi.didPushIncomingCall', [
+    test('didPresentIncomingCall with null error forwards null error', () async {
+      await _send('$_prefix.PDelegateFlutterApi.didPresentIncomingCall', [
         PHandle(type: PHandleTypeEnum.number, value: '555'),
         'Bob',
         false,
         'call-42',
         null,
       ]);
-      final args = fake.calls['didPushIncomingCall']![0];
+      final args = fake.calls['didPresentIncomingCall']![0];
       expect(args[3], 'call-42');
       expect(args[4], isNull);
     });
 
-    test('didPushIncomingCall converts PIncomingCallError to CallkeepIncomingCallError', () async {
-      await _send('$_prefix.PDelegateFlutterApi.didPushIncomingCall', [
+    test('didPresentIncomingCall converts PIncomingCallError to CallkeepIncomingCallError', () async {
+      await _send('$_prefix.PDelegateFlutterApi.didPresentIncomingCall', [
         PHandle(type: PHandleTypeEnum.number, value: '555'),
         null,
         false,
         'call-43',
         PIncomingCallError(value: PIncomingCallErrorEnum.callRejectedBySystem),
       ]);
-      final args = fake.calls['didPushIncomingCall']![0];
+      final args = fake.calls['didPresentIncomingCall']![0];
       expect(args[4], CallkeepIncomingCallError.callRejectedBySystem);
     });
 

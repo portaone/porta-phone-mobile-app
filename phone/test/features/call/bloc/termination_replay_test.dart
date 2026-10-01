@@ -60,7 +60,7 @@ void main() {
       final connections = _Connections();
       final h = CallBlocHarness(callkeepConnections: connections);
       addTearDown(h.close);
-      h.bloc.didPushIncomingCall(const CallkeepHandle.number('100'), null, false, 'call', null);
+      h.bloc.didPresentIncomingCall(const CallkeepHandle.number('100'), null, false, 'call', null);
       await pumpEventQueue();
       h.signaling.emitHandshake(_ringing(callId: 'call'));
       await connections.entered.future.timeout(const Duration(seconds: 2));

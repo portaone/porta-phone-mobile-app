@@ -710,22 +710,22 @@ void main() {
   //
   // Root cause: after the :callkeep_core process split, the DidPushIncomingCall
   // broadcast arrives ~200-300 ms AFTER the reportNewIncomingCall Pigeon response
-  // (cross-process IPC latency). Without the fix, didPushIncomingCall would fire
+  // (cross-process IPC latency). Without the fix, didPresentIncomingCall would fire
   // after the signaling-path entry already existed, causing CallBloc to append a
   // second ActiveCall entry (line -1 / incomingFromPush) alongside the first
   // (line 0 / incomingFromOffer), showing two identical ringing entries in the UI.
   //
   // Fix: ForegroundService.reportNewIncomingCall adds the callId to
   // reportedIncomingCallIds; handleCSReportDidPushIncomingCall suppresses
-  // didPushIncomingCall for those callIds.
+  // didPresentIncomingCall for those callIds.
   // -------------------------------------------------------------------------
 
   group('regression - signaling-path incoming call does not duplicate via push (Android only)',
       skip: kIsWeb || defaultTargetPlatform != TargetPlatform.android, () {
     // After reportNewIncomingCall (signaling path), the DidPushIncomingCall
-    // broadcast from :callkeep_core must NOT reach Flutter as didPushIncomingCall.
+    // broadcast from :callkeep_core must NOT reach Flutter as didPresentIncomingCall.
     // If it did, CallBloc would add a second ActiveCall for the same callId.
-    testWidgets('reportNewIncomingCall via signaling does not fire didPushIncomingCall', (WidgetTester _) async {
+    testWidgets('reportNewIncomingCall via signaling does not fire didPresentIncomingCall', (WidgetTester _) async {
       if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
         markTestSkipped('Android only');
         return;
@@ -742,14 +742,14 @@ void main() {
       expect(
         pushEventsForId,
         isEmpty,
-        reason: 'didPushIncomingCall must be suppressed for signaling-path calls '
+        reason: 'didPresentIncomingCall must be suppressed for signaling-path calls '
             'to prevent a duplicate ActiveCall entry in the app (incomingFromPush '
             'on top of incomingFromOffer)',
       );
     });
 
-    // Push path must still fire didPushIncomingCall (unchanged behaviour).
-    testWidgets('push-path reportNewIncomingCall still fires didPushIncomingCall', (WidgetTester _) async {
+    // Push path must still fire didPresentIncomingCall (unchanged behaviour).
+    testWidgets('push-path reportNewIncomingCall still fires didPresentIncomingCall', (WidgetTester _) async {
       if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
         markTestSkipped('Android only');
         return;
@@ -762,7 +762,7 @@ void main() {
             .reportNewIncomingCall(id, kTestHandle1, displayName: 'Push'),
       );
 
-      // Poll until didPushIncomingCall arrives or timeout
+      // Poll until didPresentIncomingCall arrives or timeout
       const pollInterval = Duration(milliseconds: 100);
       const maxWait = Duration(seconds: 5);
       final deadline = DateTime.now().add(maxWait);
@@ -773,8 +773,8 @@ void main() {
       }
 
       final events = delegate.didPushEvents.where((e) => e.callId == id).toList();
-      expect(events, isNotEmpty, reason: 'push-path must fire didPushIncomingCall');
-      expect(events.length, 1, reason: 'push-path must fire didPushIncomingCall exactly once');
+      expect(events, isNotEmpty, reason: 'push-path must fire didPresentIncomingCall');
+      expect(events.length, 1, reason: 'push-path must fire didPresentIncomingCall exactly once');
       expect(events.first.error, isNull);
     });
   });

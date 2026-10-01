@@ -243,7 +243,7 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
   }
 
   @override
-  void didPushIncomingCall(
+  void didPresentIncomingCall(
     PHandle handle,
     String? displayName,
     bool video,
@@ -252,7 +252,7 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
     PIncomingCallError? error,
   ) {
     _uuidToCallIdMapping.add(callId: callId, uuid: uuidString);
-    _delegate.didPushIncomingCall(handle.toCallkeep(), displayName, video, callId, error?.value.toCallkeep());
+    _delegate.didPresentIncomingCall(handle.toCallkeep(), displayName, video, callId, error?.value.toCallkeep());
   }
 
   @override

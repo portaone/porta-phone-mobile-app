@@ -104,7 +104,7 @@ Signaling: IncomingCallEvent (JSEP offer)
 iOS push path (app backgrounded/killed):
 
 ```
-PushKit push → didPushIncomingCall → _CallPushEventIncoming
+PushKit push → didPresentIncomingCall → _CallPushEventIncoming
   → ActiveCall(status: incomingFromPush)   ← placeholder until offer arrives
   → signaling connects → IncomingCallEvent enriches the existing ActiveCall
 ```

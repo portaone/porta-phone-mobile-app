@@ -849,7 +849,7 @@ class ForegroundService :
     }
 
     /**
-     * Notify the Flutter delegate of an incoming call via the public `didPushIncomingCall` callback.
+     * Notify the Flutter delegate of an incoming call via the public `didPresentIncomingCall` callback.
      * The single delivery point to the foreground delegate, used by the connection-state replay
      * ([handleCSReplayIncomingCall]) to seed a freshly attached delegate. A call already terminated
      * in the main-process tracker is skipped (see below); otherwise delivery is unconditional: the
@@ -868,12 +868,12 @@ class ForegroundService :
         if (handle == null) {
             // Cannot build a PHandle without a number; skip rather than crash on a
             // malformed/handle-less broadcast (the call is already promoted in the tracker).
-            logger.w("deliverIncomingToDelegate: missing handle for callId=${metadata.callId}; skipping didPushIncomingCall")
+            logger.w("deliverIncomingToDelegate: missing handle for callId=${metadata.callId}; skipping didPresentIncomingCall")
             return
         }
         logger.i("deliverIncomingToDelegate: delivering incoming callId=${metadata.callId} to delegate")
-        notifyFlutter("didPushIncomingCall") {
-            didPushIncomingCall(
+        notifyFlutter("didPresentIncomingCall") {
+            didPresentIncomingCall(
                 handleArg = handle.toPHandle(),
                 displayNameArg = metadata.displayName,
                 videoArg = metadata.hasVideo ?: false,

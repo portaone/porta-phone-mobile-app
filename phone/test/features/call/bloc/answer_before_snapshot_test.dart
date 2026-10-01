@@ -129,7 +129,7 @@ void main() {
             final media = _RecordingMediaBuilder();
             final h = CallBlocHarness(userMediaBuilder: media);
             addTearDown(h.close);
-            h.bloc.didPushIncomingCall(const CallkeepHandle.number('100'), null, pushVideo, 'push-call', null);
+            h.bloc.didPresentIncomingCall(const CallkeepHandle.number('100'), null, pushVideo, 'push-call', null);
             await pumpEventQueue();
             expect(h.bloc.state.activeCalls.single.video, pushVideo);
             expect(h.bloc.state.activeCalls.single.incomingOffer, isNull);

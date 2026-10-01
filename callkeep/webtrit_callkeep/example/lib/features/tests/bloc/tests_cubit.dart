@@ -118,7 +118,7 @@ class TestsCubit extends Cubit<TestsState> implements CallkeepDelegate, Callkeep
       emit(state.log(LogEntry.event('[cb] continueStartCallIntent: ${handle.value}')));
 
   @override
-  void didPushIncomingCall(
+  void didPresentIncomingCall(
     CallkeepHandle handle,
     String? displayName,
     bool video,
@@ -126,7 +126,7 @@ class TestsCubit extends Cubit<TestsState> implements CallkeepDelegate, Callkeep
     CallkeepIncomingCallError? error,
   ) {
     final errStr = error != null ? ' err=${error.name}' : '';
-    emit(state.log(LogEntry.event('[cb] didPushIncomingCall id=$callId$errStr')));
+    emit(state.log(LogEntry.event('[cb] didPresentIncomingCall id=$callId$errStr')));
   }
 
   @override

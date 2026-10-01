@@ -469,7 +469,7 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
       emit(state.log(LogEntry.event('[cb] continueStartCallIntent: ${handle.value}')));
 
   @override
-  void didPushIncomingCall(
+  void didPresentIncomingCall(
     CallkeepHandle handle,
     String? displayName,
     bool video,
@@ -480,7 +480,7 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
     // Ensure a line exists for this callId; select it when there is no error.
     var s = _ensureLine(state, callId);
     if (error == null) s = s.copyWith(activeLineId: callId);
-    emit(s.log(LogEntry.event('[cb] didPushIncomingCall id=$callId$errStr')));
+    emit(s.log(LogEntry.event('[cb] didPresentIncomingCall id=$callId$errStr')));
     if (error == null) await _syncConnections();
   }
 

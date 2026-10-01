@@ -35,7 +35,7 @@ enum class CallLifecycleEvent : ConnectionEvent {
 
     // An incoming PhoneConnection was created in :callkeep_core (onCreateIncomingConnection). The
     // main process registers it in the shadow state and then notifies the Flutter delegate via the
-    // public didPushIncomingCall callback. Named after the cross-process fact (a connection was
+    // public didPresentIncomingCall callback. Named after the cross-process fact (a connection was
     // reported), NOT the public callback -- the handler does register + deliver, not just deliver.
     IncomingConnectionReported,
 

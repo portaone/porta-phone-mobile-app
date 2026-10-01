@@ -2184,7 +2184,9 @@ class PHostConnectionsApi {
 abstract class PDelegateFlutterApi {
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
-  void didPushIncomingCall(PHandle handle, String? displayName, bool video, String callId, PIncomingCallError? error);
+  /// A ringing connection this delegate has not been handed yet: sent on delegate attach for a
+  /// connection an earlier engine presented (replay). `error` is always null on Android.
+  void didPresentIncomingCall(PHandle handle, String? displayName, bool video, String callId, PIncomingCallError? error);
 
   Future<bool> performStartCall(String callId, PHandle handle, String? displayNameOrContactIdentifier, bool video);
 
@@ -2216,7 +2218,7 @@ abstract class PDelegateFlutterApi {
     messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didPushIncomingCall$messageChannelSuffix', pigeonChannelCodec,
+          'dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.didPresentIncomingCall$messageChannelSuffix', pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
@@ -2229,7 +2231,7 @@ abstract class PDelegateFlutterApi {
           final String arg_callId = args[3]! as String;
           final PIncomingCallError? arg_error = args[4] as PIncomingCallError?;
           try {
-            api.didPushIncomingCall(arg_handle, arg_displayName, arg_video, arg_callId, arg_error);
+            api.didPresentIncomingCall(arg_handle, arg_displayName, arg_video, arg_callId, arg_error);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
