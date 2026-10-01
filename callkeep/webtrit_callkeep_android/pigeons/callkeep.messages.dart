@@ -267,6 +267,11 @@ abstract class PHostBackgroundPushNotificationIsolateApi {
   /// end so that a replay or a late push cannot present the call again, and does not ask the
   /// session to end it a second time. This ends the call, not the session: the service keeps
   /// running for whatever the session still has to do.
+  ///
+  /// Served off the platform thread: on a cold start the main looper is busy with the app's
+  /// own start for seconds, and this is the one call that must not wait for it - every
+  /// second it waits is a second Telecom keeps ringing a call the caller has already hung up.
+  @TaskQueue(type: TaskQueueType.serialBackgroundThread)
   @async
   void reportEndCall(String callId, PEndCallReason reason);
 

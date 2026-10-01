@@ -103,7 +103,10 @@ reach it via `startUpdateCall`.)
 `InProcessCallkeepCore` holds a single lazy `BroadcastReceiver` (`globalReceiver`) registered on
 the first listener or call-state operation. It remains registered when the last listener is
 removed: pending registrations and live calls outlast the activity bridge. Events are processed
-on the main thread, and core registration transitions run before listener delivery.
+on the main thread, and core registration transitions run before listener delivery. One entry
+point runs elsewhere: `reportCallEnded` (the push session's `reportEndCall`, served on a Pigeon
+background thread) records the terminal facts on its own thread and posts to the main looper
+only what lives there - the rejection of a waiting registration and the pending-release check.
 
 | Method                                 | Description                                                                                                             |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |

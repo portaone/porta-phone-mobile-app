@@ -1391,6 +1391,10 @@ interface PHostBackgroundPushNotificationIsolateApi {
    * end so that a replay or a late push cannot present the call again, and does not ask the
    * session to end it a second time. This ends the call, not the session: the service keeps
    * running for whatever the session still has to do.
+   *
+   * Served off the platform thread: on a cold start the main looper is busy with the app's
+   * own start for seconds, and this is the one call that must not wait for it - every
+   * second it waits is a second Telecom keeps ringing a call the caller has already hung up.
    */
   suspend fun reportEndCall(callId: String, reason: PEndCallReason)
   /**
@@ -1432,14 +1436,15 @@ interface PHostBackgroundPushNotificationIsolateApi {
     @JvmOverloads
     fun setUp(binaryMessenger: BinaryMessenger, api: PHostBackgroundPushNotificationIsolateApi?, messageChannelSuffix: String = "") {
       val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+      val taskQueue = binaryMessenger.makeBackgroundTaskQueue()
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateApi.reportEndCall$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateApi.reportEndCall$separatedMessageChannelSuffix", codec, taskQueue)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
             val reasonArg = args[1] as PEndCallReason
-            CoroutineScope(Dispatchers.Main).launch {
+            CoroutineScope(Dispatchers.Unconfined).launch {
               val wrapped: List<Any?> = try {
                 api.reportEndCall(callIdArg, reasonArg)
                 listOf(null)

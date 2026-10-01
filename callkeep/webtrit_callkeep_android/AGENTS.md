@@ -176,7 +176,12 @@ The public API is covered by integration tests in
 
 - Classes annotated `@Keep` in Kotlin **must not** be renamed or removed — they are referenced by
   ProGuard/R8 rules.
-- All Pigeon host API implementations run on the platform thread; do not block.
+- All Pigeon host API implementations run on the platform thread; do not block. The one
+  exception is the push session's `reportEndCall`, served on a Pigeon background thread so a
+  caller's hangup does not wait for a cold start: `CallkeepCore.reportCallEnded` and
+  `markTerminated` may be called off the platform thread, and anything they reach that lives on
+  the main looper (`IncomingRegistrations`, the `IncomingCallService.isRunning` check) is posted
+  there.
 - `PhoneConnectionService` runs in a separate process — it cannot share in-memory state with the
   main process; use IPC.
 - **Never call `connectionManager.*` from the main process.** Use `CallkeepCore.instance` instead.
