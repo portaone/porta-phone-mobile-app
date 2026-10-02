@@ -66,6 +66,7 @@ invariants) are documented in [connection-tracker.md](connection-tracker.md).
 | `get(callId)` / `getAll()`   | `CallMetadata` snapshot(s) of active calls                                                                              |
 | `getState(callId)`           | Last mirrored `PCallkeepConnectionState`                                                                                |
 | `toPCallkeepConnection(id)`  | Pigeon connection object, null if not active                                                                            |
+| `isReportedByApp(callId)`    | The foreground bridge reported this call itself; set in `registerIncomingCall`, cleared when the call terminates        |
 
 ## State Mutation API
 

@@ -36,6 +36,7 @@ void main() {
     _mockVoid('$_prefix.PHostApi.setUp');
     _mockVoid('$_prefix.PHostApi.tearDown');
     _mockVoid('$_prefix.PHostApi.onDelegateSet');
+    _mockVoid('$_prefix.PHostApi.onDelegateCleared');
     await WebtritCallkeepPlatform.instance.setUp(
       const CallkeepOptions(
         ios: CallkeepIOSOptions(
@@ -58,6 +59,25 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('WebtritCallkeepAndroid — PHostApi', () {
+    test('setDelegate tells native the delegate is set, and setDelegate(null) that it is cleared', () async {
+      final calls = <String>[];
+      for (final name in ['onDelegateSet', 'onDelegateCleared']) {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler(
+          '$_prefix.PHostApi.$name',
+          (message) async {
+            calls.add(name);
+            return const StandardMessageCodec().encodeMessage([]);
+          },
+        );
+      }
+
+      WebtritCallkeepPlatform.instance.setDelegate(_NoopDelegate());
+      WebtritCallkeepPlatform.instance.setDelegate(null);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(calls, ['onDelegateSet', 'onDelegateCleared']);
+    });
+
     test('isSetUp returns true', () async {
       _mockValue('$_prefix.PHostApi.isSetUp', true);
       expect(await WebtritCallkeepPlatform.instance.isSetUp(), true);
@@ -546,4 +566,9 @@ void main() {
       expect(report, isEmpty);
     });
   });
+}
+
+class _NoopDelegate implements CallkeepDelegate {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
 }

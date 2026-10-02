@@ -431,10 +431,11 @@ class IncomingCallService :
         // a zombie ActiveCall on the Dart side that was never set up natively.
         callDataSynced = true
         // startForeground() must be called within 5s of startForegroundService() on Android 12+.
-        // handle() satisfies this by posting a notification and calling startForeground().
-        // releaseIncomingCallNotification() immediately transitions it to a silent release
-        // notification, so the ringing UI is never visible to the user.
-        incomingCallHandler.handle(metadata)
+        // show() satisfies this by posting a notification and calling startForeground(); it
+        // gives the call to nobody - not to an isolate, not to the app. endRingingPhase()
+        // immediately transitions it to a silent release notification, so the ringing UI is
+        // never visible to the user.
+        incomingCallHandler.show(metadata)
         callLifecycleHandler.currentCallData = metadata.toPCallkeepIncomingCallData()
         // No session ran for this call, so there is nobody to finish: stop at once.
         endRingingPhase()

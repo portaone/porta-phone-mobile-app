@@ -117,6 +117,8 @@ class ForegroundServiceProxyTest {
         override suspend fun unsetCallGroup(callIds: List<String>): PCallRequestError? = null
 
         override fun onDelegateSet() = Unit
+
+        override fun onDelegateCleared() = Unit
     }
 
     private val handlers = mutableMapOf<String, BinaryMessenger.BinaryMessageHandler>()

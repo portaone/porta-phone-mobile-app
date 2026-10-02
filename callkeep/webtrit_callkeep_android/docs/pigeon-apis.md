@@ -46,6 +46,7 @@ The primary call-control API. All call lifecycle operations from Dart arrive her
 | `setCallGroup(groupId, callIds)`                                                     | Present these calls to the OS as one group                                                                                                     |
 | `unsetCallGroup(callIds)`                                                            | Take these calls out of their group                                                                                                            |
 | `onDelegateSet()`                                                                    | Dart signals it is ready to receive events                                                                                                     |
+| `onDelegateCleared()`                                                                | Dart removed its delegate (`setDelegate(null)`): a push call goes to a push session                                                            |
 
 `setCallGroup` names the group and takes its whole membership rather than a
 change to it. Both backends implement them by keeping the membership themselves; neither

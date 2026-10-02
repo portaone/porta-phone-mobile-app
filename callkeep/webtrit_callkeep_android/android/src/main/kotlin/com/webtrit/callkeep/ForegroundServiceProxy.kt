@@ -146,6 +146,8 @@ internal class ForegroundServiceProxy : PHostApi {
 
     override fun onDelegateSet() = target?.onDelegateSet() ?: Unit
 
+    override fun onDelegateCleared() = target?.onDelegateCleared() ?: Unit
+
     companion object {
         private const val TAG = "ForegroundServiceProxy"
     }

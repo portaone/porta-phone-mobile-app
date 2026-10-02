@@ -1959,6 +1959,11 @@ interface PHostApi {
   suspend fun setCallGroup(groupId: String, callIds: List<String>): PCallRequestError?
   suspend fun unsetCallGroup(callIds: List<String>): PCallRequestError?
   fun onDelegateSet()
+  /**
+   * The app removed its delegate: nothing on the Flutter side takes a call any more, so a call
+   * that arrives while the app is alive goes to a push session instead of being presented.
+   */
+  fun onDelegateCleared()
 
   companion object {
     /** The codec used by PHostApi. */
@@ -2336,6 +2341,22 @@ interface PHostApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.onDelegateSet()
+              listOf(null)
+            } catch (exception: Throwable) {
+              GeneratedPigeonUtils.wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.onDelegateCleared$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.onDelegateCleared()
               listOf(null)
             } catch (exception: Throwable) {
               GeneratedPigeonUtils.wrapError(exception)

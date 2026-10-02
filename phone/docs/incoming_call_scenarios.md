@@ -77,7 +77,7 @@ flowchart TB
     C_FGS["ForegroundService (callkeep)<br/>bound to Activity, PHostApi + events"]:::ck
     C_CKC["CallkeepCore.registerIncomingCall"]:::ck
     C_PCS["PhoneConnectionService<br/>:callkeep_core, Telecom"]:::ck
-    C_ICS["IncomingCallService (notification UI)<br/>app active -> SKIP background isolate"]:::ck
+    C_ICS["IncomingCallService (notification UI)<br/>call reported by the app -> no isolate, nothing presented back"]:::ck
     C_TEL["System call UI + ring (in-app)"]:::ext
 
     C_ACT --- C_SMOD
@@ -92,7 +92,12 @@ flowchart TB
 
 ## Case A — push-bound (FCM)
 
-App DEAD -> isolated push isolate; app ALIVE but backgrounded -> main app handles (no isolate).
+The call goes to the main app when its callkeep delegate is ready, and to a push isolate
+otherwise - the Activity lifecycle does not decide. callkeep gives the app the call
+(`didPresentIncomingCall`) rather than only skipping the isolate: the app may have closed its
+socket when the previous call ended in the background, and holding the call is what makes
+`CallBloc.onChange` reconnect - the handshake then delivers the offer or ends a call the server no
+longer has.
 
 ```mermaid
 flowchart TB
@@ -100,7 +105,7 @@ flowchart TB
   classDef app fill:#ffe6cc,stroke:#d79b00,color:#000
   classDef ext fill:#f5f5f5,stroke:#999999,color:#000
 
-  TITLE["CASE A - PUSH-BOUND (FCM)<br/>app DEAD -> isolated push isolate, app ALIVE but backgrounded -> main app handles (no isolate)"]:::ext
+  TITLE["CASE A - PUSH-BOUND (FCM)<br/>no delegate ready -> isolated push isolate, app delegate ready -> main app handles (no isolate)"]:::ext
   FCM["FCM high-priority push"]:::ext
   FMISO["firebase_messaging background isolate (APP)<br/>bootstrap.dart : _firebaseMessagingBackgroundHandler<br/>reports the call (no WebSocket here)"]:::app
   BOOT["reportNewIncomingCall (callkeep bootstrap API)"]:::ck
@@ -108,9 +113,9 @@ flowchart TB
   PCS["PhoneConnectionService<br/>:callkeep_core, Android Telecom"]:::ck
   TEL["System call UI + ring"]:::ext
   ICS["IncomingCallService (callkeep)<br/>starts FGS + shows the ringing UI"]:::ck
-  MIBH["IncomingCallHandler.maybeInitBackgroundHandling<br/>checks ActivityLifecycleState"]:::ck
-  PISO["[app DEAD] push isolate on callkeep engine (autoRegister = true)<br/>background_isolate_callbacks.dart : onPushNotificationSyncCallback<br/>-> PushNotificationIsolateManager.run, opens its own WebSocket"]:::app
-  ALIVE["[app ALIVE, backgrounded] main app already running (Activity ON_STOP)<br/>its CallBloc / signaling handle the call - NO new isolate"]:::app
+  MIBH["IncomingCallHandler.maybeInitBackgroundHandling<br/>checks the app's callkeep delegate is ready"]:::ck
+  PISO["[no delegate ready] push isolate on callkeep engine (autoRegister = true)<br/>background_isolate_callbacks.dart : onPushNotificationSyncCallback<br/>-> PushNotificationIsolateManager.run, opens its own WebSocket"]:::app
+  ALIVE["[app ALIVE, delegate ready] main app already running<br/>callkeep gives it the call (didPresentIncomingCall) - NO new isolate;<br/>CallBloc reconnects if its socket is closed"]:::app
   WS["Signaling server (WebSocket)"]:::ext
   ACT["Activity / main UI engine"]:::app
   FGS["ForegroundService (callkeep), bound to Activity<br/>PHostApi control + ConnectionEventListener events"]:::ck
@@ -121,8 +126,8 @@ flowchart TB
   BOOT --> CKC --> PCS --> TEL
   PCS -. "onShowIncomingCallUi -> start" .-> ICS
   ICS --> MIBH
-  MIBH -- "app DEAD (state null / ON_DESTROY)" --> PISO
-  MIBH -- "app ALIVE (ON_RESUME / ON_PAUSE / ON_STOP)" --> ALIVE
+  MIBH -- "no delegate ready (app dead, not built yet, cleared)" --> PISO
+  MIBH -- "delegate ready" --> ALIVE
   PISO <--> WS
   ALIVE <--> WS
   PISO -. "on answer: handoff -> Activity adopts (Activity sends 200 OK)" .-> ACT
@@ -184,7 +189,7 @@ flowchart TB
   FGSVC["ForegroundService (callkeep, main process)<br/>bound to the Activity (onAttachedToActivity)<br/>PHostApi: call-control from Dart<br/>ConnectionEventListener: CallkeepCore events -> Flutter"]:::ck
   CKC["CallkeepCore.registerIncomingCall"]:::ck
   PCS["PhoneConnectionService<br/>process :callkeep_core, Android Telecom"]:::ck
-  ICS["IncomingCallService (notification UI)<br/>maybeInitBackgroundHandling:<br/>app active -> SKIP background isolate"]:::ck
+  ICS["IncomingCallService (notification UI)<br/>maybeInitBackgroundHandling:<br/>call reported by the app -> no isolate, nothing presented back"]:::ck
   TEL["System call UI + ring (in-app)"]:::ext
 
   TITLE -.-> ACT
