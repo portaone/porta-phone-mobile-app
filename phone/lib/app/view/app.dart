@@ -116,6 +116,7 @@ class _AppState extends State<App> {
         audioProcessingSettingsRepository: context.read<AudioProcessingSettingsRepository>(),
         encodingPresetRepository: context.read<EncodingPresetRepository>(),
         iceSettingsRepository: context.read<IceSettingsRepository>(),
+        callAudioSettingsRepository: context.read<CallAudioSettingsRepository>(),
         incomingCallTypeRepository: context.read<IncomingCallTypeRepository>(),
         peerConnectionSettingsRepository: context.read<PeerConnectionSettingsRepository>(),
         videoCapturingSettingsRepository: context.read<VideoCapturingSettingsRepository>(),

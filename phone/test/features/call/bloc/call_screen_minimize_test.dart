@@ -121,6 +121,48 @@ void main() {
     expect(h.callkeep.proximityUpdates, isEmpty);
   });
 
+  group('with the speaker asked for on a call whose screen is away', () {
+    setUp(() async {
+      await h.close();
+      h = CallBlocHarness(speakerOnMinimize: () => true);
+    });
+
+    test('leaving the screen asks for the speaker and reports no proximity change', () async {
+      await seedCallOn(earpiece);
+
+      h.bloc.add(const CallScreenEvent.didPop());
+      await pumpEventQueue();
+
+      expect(events.audioDeviceRequests.map((e) => '$e'), [contains('speaker')]);
+      expect(h.callkeep.proximityUpdates, isEmpty);
+    });
+
+    test('coming back asks for the earpiece again', () async {
+      await seedCallOn(earpiece);
+
+      h.bloc.add(const CallScreenEvent.didPop());
+      await pumpEventQueue();
+      await h.bloc.performAudioDeviceSet('a', speaker);
+      await pumpEventQueue();
+      events.clear();
+
+      h.bloc.add(const CallScreenEvent.didPush());
+      await pumpEventQueue();
+
+      expect(events.audioDeviceRequests.map((e) => '$e'), [contains('earpiece')]);
+    });
+
+    test('a call already on the speaker is asked for nothing, either way', () async {
+      await seedCallOn(speaker);
+
+      h.bloc.add(const CallScreenEvent.didPop());
+      h.bloc.add(const CallScreenEvent.didPush());
+      await pumpEventQueue();
+
+      expect(events.audioDeviceRequests, isEmpty);
+    });
+  });
+
   group('starting a transfer', () {
     test('blind: minimizes and reports no proximity change', () async {
       h.seedEstablishedCall('a');

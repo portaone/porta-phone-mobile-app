@@ -110,6 +110,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// capabilities the UI reads. The same value the call screen gets.
   final CallCapabilitiesConfig capabilities;
 
+  /// Decides whether leaving the call screen moves an audio call to the loudspeaker.
+  final SpeakerOnMinimize _speakerOnMinimize;
+
   /// How long a merge may wait for the room's offer before this client gives
   /// the calls back; see [_armConferenceAssembly]. Longer than the server's
   /// own deadline, so its word wins whenever the socket is alive.
@@ -211,8 +214,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     this.onCallEnded,
     Stream<void>? foregroundCallPushSignal,
     this.conferenceAssemblyTimeout = const Duration(seconds: 20),
+    bool Function()? speakerOnMinimize,
   }) : _onMissedCall = onMissedCall,
        _connectivityService = connectivityService,
+       _speakerOnMinimize = SpeakerOnMinimize(isEnabled: speakerOnMinimize ?? () => false),
        super(const CallState()) {
     _mediaManager = CallMediaManager(callkeep: callkeep);
     _signalingModule = signalingModule;
@@ -4247,6 +4252,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // screen opening is the first moment every call passes through, so the flag is set
       // here; a call that already carries it is told the same value again.
       await callkeep.reportUpdateCall(currentCall.callId, proximityEnabled: state.shouldListenToProximity);
+
+      final device = _speakerOnMinimize.onCallScreenReturned(callId: currentCall.callId, current: state.audioDevice);
+      if (device != null) add(CallControlEvent.audioDeviceSet(currentCall.callId, device));
     } else {
       _logger.warning('__onCallScreenEventDidPush: activeCalls is empty');
     }
@@ -4258,8 +4266,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     if (shouldMinimize) {
       emit(state.copyWith(minimized: true));
-      // Nothing is reported to callkeep: leaving the screen changes neither the proximity
-      // sensor nor the audio route of the call.
+
+      // The proximity sensor is not touched for it. The audio device is, when the deployment
+      // or the person asked for the loudspeaker on a call whose screen is away.
+      final currentCall = state.activeCalls.current;
+      final device = _speakerOnMinimize.onCallScreenLeft(
+        callId: currentCall.callId,
+        video: currentCall.video,
+        current: state.audioDevice,
+        available: state.availableAudioDevices,
+      );
+      if (device != null) add(CallControlEvent.audioDeviceSet(currentCall.callId, device));
     }
   }
 

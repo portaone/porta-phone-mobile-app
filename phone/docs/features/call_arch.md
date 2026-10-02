@@ -253,10 +253,23 @@ attended-transfer branch - therefore takes the banner off the lists with it, wit
 knowing there is a banner.
 
 **Leaving the call screen** — `CallScreenEvent.didPop` and the start of a transfer set
-`minimized: true` and do nothing else: the call is drawn as an overlay, and neither the proximity
-sensor nor the audio device is touched. Coming back (`didPush`, a submitted blind transfer) sets
-`minimized: false` and chooses no audio device either - the one in use may have been changed
-from the system's call screen meanwhile.
+`minimized: true`: the call is drawn as an overlay and the proximity sensor is not touched.
+Coming back (`didPush`, a submitted blind transfer) sets `minimized: false`.
+
+Whether the audio device changes with it is one rule in one class, `SpeakerOnMinimize`
+(`features/call/utils/speaker_on_minimize.dart`), asked from exactly two places - the `didPop` and
+`didPush` handlers, which every way of leaving and returning passes through. With the option on, an
+audio call on the earpiece moves to the loudspeaker when its screen is left and back when the
+screen returns; a headset, a speaker the person turned on and a video call are left alone, and a
+device chosen while the screen was away is kept. With it off the audio device is never touched.
+The rule answers with a device and the bloc asks for it through the ordinary
+`CallControlEvent.audioDeviceSet`, so it reaches the platform the same way a tap on the speaker
+button does.
+
+The option is `callConfig.audio.speakerOnMinimize` in the app config (on by default), read every
+time the screen is left. Where the deployment sets `speakerOnMinimizeConfigurable`, media settings
+shows a switch and the device's choice wins (`CallAudioSettingsRepository`); see
+[`../application_config.md`](../application_config.md).
 
 `CallState.shouldListenToProximity` is therefore `isActive && isVoiceChat`, with no part for
 `minimized`. It used to be turned off for a minimized call, which on iOS is done by the
