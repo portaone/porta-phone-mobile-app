@@ -159,10 +159,11 @@ core: the bridge only sends the Flutter answer notification when `registerIncomi
 
 ### Sending the app back after a call on the lock screen
 
-When a confirmed call ends (`DeclineCall` / `HungUp`) while the device is locked
-(`Platform.isLockScreen`) and no other call is live or pending (`isLastCall`), the bridge calls
-`ActivityHolder.finish()`, which moves the task to the back (`moveTaskToBack(true)`). After
-unlocking, the user sees what was under the app, not the app.
+When a confirmed call ends (`DeclineCall` / `HungUp`) and no other call is live or pending
+(`isLastCall`), the bridge clears the lock-screen flags (`LockScreenPresence.release`) - the call
+alert may have set them before the app built its call screen - and, while the device is locked
+(`Platform.isLockScreen`), calls `ActivityHolder.finish()`, which moves the task to the back
+(`moveTaskToBack(true)`). After unlocking, the user sees what was under the app, not the app.
 
 The rule does not know how the app came to be on screen. A call brings the activity up over the
 lock screen (`showWhenLocked`), and the same rule sends it back afterwards - but it also sends back

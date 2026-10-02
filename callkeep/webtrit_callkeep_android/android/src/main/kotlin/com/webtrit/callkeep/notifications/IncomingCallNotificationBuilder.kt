@@ -149,7 +149,7 @@ class IncomingCallNotificationBuilder : NotificationBuilder() {
                     "fullScreenIntent: enabled=$isFullScreenEnabled permissionGranted=$hasFullScreenPermission → applied=$canUseFullScreen",
                 )
                 if (canUseFullScreen) {
-                    setFullScreenIntent(buildOpenAppIntent(context), true)
+                    setFullScreenIntent(buildCallAlertIntent(context), true)
                 }
             }
 

@@ -275,8 +275,8 @@ sticky ghost guard (5), the state-only-record semantics (2), and answered-blocks
   `getState` adoption (both the push and the signaling report go through it);
 - `deliverIncomingToDelegate` -- `isTerminated` suppresses seeding a dead call into CallBloc;
 - `syncScreenWakelock` -- `getAll` hasVideo;
-- `WebtritCallkeepPlugin` ON_START -- `getAll` + `getPendingCallIds` decide the lock-screen /
-  turn-screen-on flags (pending is included to cover the broadcast-lag window);
+- `LockScreenPresence` -- `getAll` + `getPendingCallIds` decide whether the call alert may take the
+  Activity over the keyguard (pending is included to cover the broadcast-lag window);
 - `ConnectionsApi.getConnection/getConnections` -- Flutter-facing snapshot;
 - `CallDiagnostics` -- `getAll` in the diagnostics report.
 

@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.webtrit.callkeep.LockScreenPresence
 import com.webtrit.callkeep.R
 import com.webtrit.callkeep.common.ContextHolder.context
 import com.webtrit.callkeep.common.Platform
@@ -66,5 +67,30 @@ abstract class NotificationBuilder {
         )
     }
 
+    /**
+     * The incoming-call alert's full-screen intent: opens the app like [buildOpenAppIntent] and
+     * marks the opening as the alert's, so callkeep may show the Activity over the keyguard
+     * ([com.webtrit.callkeep.LockScreenPresence]). It has a request code of its own: a pending
+     * intent that differs only in extras would otherwise be the content intent's, without the mark.
+     */
+    protected fun buildCallAlertIntent(context: Context): PendingIntent {
+        val hostAppActivity =
+            Platform.getLaunchActivity(context)?.apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                putExtra(LockScreenPresence.EXTRA_OPENED_BY_CALL_ALERT, true)
+            }
+
+        return PendingIntent.getActivity(
+            context,
+            CALL_ALERT_REQUEST_CODE,
+            hostAppActivity,
+            PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
     abstract fun build(): Notification
+
+    private companion object {
+        const val CALL_ALERT_REQUEST_CODE = 0x0CA11A1E
+    }
 }
