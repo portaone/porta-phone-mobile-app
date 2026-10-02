@@ -676,7 +676,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get contacts_agreement_description =>
-      'Цей застосунок потребує доступу до вашого списку контактів, щоб відображати їх у вкладці «Контакти» застосунку. \n\nДані контактів тимчасово зберігаються локально на вашому пристрої для забезпечення функцій, таких як здійснення дзвінків прямо зі застосунку. \n\nЦі дані не збираються, не передаються та не поширюються за межами застосунку.';
+      'З вашого дозволу застосунок показує контакти вашого телефона у вкладці «Контакти». Ви можете поділитися всіма контактами або лише вибраними. \n\nДані контактів тимчасово зберігаються локально на вашому пристрої для забезпечення функцій, таких як здійснення дзвінків прямо зі застосунку. \n\nЦі дані не збираються, не передаються та не поширюються за межами застосунку.';
 
   @override
   String get contacts_agreement_title => 'Збір даних';
@@ -695,6 +695,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get contacts_ExternalTabText_failure => 'Не вдалося отримати контакти з хмарного PBX';
+
+  @override
+  String get contacts_LocalTabButton_changeSelection => 'Змінити вибір';
 
   @override
   String get contacts_LocalTabButton_contactsAgreement => 'Відкрити Налаштування';
@@ -729,6 +732,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get contactsSourceLocal => 'Ваш телефон';
+
+  @override
+  String get contacts_LocalTabText_selectionOnly => 'Показано лише вибрані контакти';
+
+  @override
+  String get contacts_LocalTabText_selectionOnlyEmpty => 'Показуються лише вибрані контакти, і жодного ще не вибрано';
 
   @override
   String get contacts_DialogsInfoView_title => 'Інформація про дзвінки (BLF):';
@@ -930,7 +939,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get diagnostic_permission_contacts_description =>
-      'Цей застосунок потребує дозволу на доступ до контактів для здійснення дзвінків із вашої телефонної книги.';
+      'Контакти, якими ви поділилися, показуються в застосунку, щоб ви могли телефонувати їм і бачити, хто дзвонить. Достатньо поділитися лише вибраними контактами.';
 
   @override
   String get diagnostic_permission_contacts_title => 'Контакти';

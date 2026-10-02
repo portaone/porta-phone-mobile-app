@@ -311,6 +311,10 @@ const String contactsExtContactTileId = 'contactsExtContactTile';
 const contactsExtContactTileKey = Key(contactsExtContactTileId);
 const String contactsLocalContactTileId = 'contactsLocalContactTile';
 const contactsLocalContactTileKey = Key(contactsLocalContactTileId);
+const String contactsLocalGrantAccessId = 'contactsLocalGrantAccess';
+const contactsLocalGrantAccessKey = Key(contactsLocalGrantAccessId);
+const String contactsLocalChangeSelectionId = 'contactsLocalChangeSelection';
+const contactsLocalChangeSelectionKey = Key(contactsLocalChangeSelectionId);
 
 const String contactsTabExtId = 'contactsTabExt';
 const contactsTabExtKey = Key(contactsTabExtId);

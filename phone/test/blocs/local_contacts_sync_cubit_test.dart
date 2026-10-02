@@ -27,7 +27,7 @@ class _Harness {
       contactsRepository: store,
       isFeatureEnabled: () => feature(),
       isAgreementAccepted: () => agreement(),
-      isContactsPermissionGranted: () => permission(),
+      contactsAccess: () async => await permission() ? access : ContactsAccess.none,
     );
   }
 
@@ -40,6 +40,7 @@ class _Harness {
   Future<bool> Function() feature = () async => true;
   Future<bool> Function() agreement = () async => true;
   Future<bool> Function() permission = () async => true;
+  ContactsAccess access = ContactsAccess.all;
   Future<List<LocalContact>> Function() read = () async => _first;
   Future<void> Function() write = () async {};
 
@@ -135,7 +136,18 @@ void main() {
       h.permission = () async => true;
       unawaited(h.cubit.refresh());
       async.flushMicrotasks();
-      expect(h.cubit.state, const LocalContactsSyncSuccess());
+      expect(h.cubit.state, const LocalContactsSyncSuccess(access: ContactsAccess.all));
+      expect(h.writes, [_first]);
+      expect(h.changes.hasListener, isTrue);
+    });
+  });
+
+  test('a selection of contacts is read, stored and reported as a selection', () {
+    _check((async, h) {
+      h.access = ContactsAccess.selected;
+      unawaited(h.cubit.refresh());
+      async.flushMicrotasks();
+      expect(h.cubit.state, const LocalContactsSyncSuccess(access: ContactsAccess.selected));
       expect(h.writes, [_first]);
       expect(h.changes.hasListener, isTrue);
     });
@@ -162,7 +174,7 @@ void main() {
       write.complete();
       async.flushMicrotasks();
       expect(completed, 4);
-      expect(h.cubit.state, const LocalContactsSyncSuccess());
+      expect(h.cubit.state, const LocalContactsSyncSuccess(access: ContactsAccess.all));
       verify(() => h.device.fetchContacts()).called(1);
       verify(() => h.device.watchChanges()).called(1);
     });
@@ -201,7 +213,7 @@ void main() {
         async.flushMicrotasks();
         expect(completed, isTrue);
         expect(h.writes, [_first, _latest]);
-        expect(h.cubit.state, const LocalContactsSyncSuccess());
+        expect(h.cubit.state, const LocalContactsSyncSuccess(access: ContactsAccess.all));
         verify(() => h.device.fetchContacts()).called(1);
       });
     });
@@ -240,7 +252,7 @@ void main() {
       unawaited(h.cubit.refresh());
       async.flushMicrotasks();
       expect(h.writes, [_latest]);
-      expect(h.cubit.state, const LocalContactsSyncSuccess());
+      expect(h.cubit.state, const LocalContactsSyncSuccess(access: ContactsAccess.all));
     });
   });
 
@@ -255,7 +267,7 @@ void main() {
       read.completeError(Exception('Read failed'));
       async.flushMicrotasks();
       expect(h.writes, [_latest]);
-      expect(h.cubit.state, const LocalContactsSyncSuccess());
+      expect(h.cubit.state, const LocalContactsSyncSuccess(access: ContactsAccess.all));
     });
   });
 
@@ -273,7 +285,12 @@ void main() {
         async.elapse(const Duration(seconds: 1));
         expect(completed, isTrue);
         expect(h.writes, hasLength(4));
-        expect(h.cubit.state, recovers ? const LocalContactsSyncSuccess() : const LocalContactsSyncUpdateFailure());
+        expect(
+          h.cubit.state,
+          recovers
+              ? const LocalContactsSyncSuccess(access: ContactsAccess.all)
+              : const LocalContactsSyncUpdateFailure(),
+        );
         verify(() => h.device.fetchContacts()).called(1);
       });
     });
@@ -374,7 +391,7 @@ void main() {
       h.changes.add(null);
       async.flushMicrotasks();
       expect(h.writes, [_first, _first]);
-      expect(h.cubit.state, const LocalContactsSyncSuccess());
+      expect(h.cubit.state, const LocalContactsSyncSuccess(access: ContactsAccess.all));
     });
   });
 

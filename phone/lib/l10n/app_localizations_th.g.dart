@@ -643,7 +643,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get contacts_agreement_description =>
-      'แอปนี้ต้องการสิทธิ์เข้าถึงรายชื่อผู้ติดต่อของคุณ เพื่อแสดงผู้ติดต่อในแท็บผู้ติดต่อของแอป \n\nข้อมูลผู้ติดต่อจะถูกจัดเก็บไว้ชั่วคราวในเครื่องของคุณ เพื่อเปิดใช้คุณสมบัติต่าง ๆ เช่น การโทรออกจากแอปได้โดยตรง \n\nข้อมูลนี้จะไม่ถูกเก็บรวบรวม ส่งต่อ หรือแชร์ออกไปนอกแอป';
+      'เมื่อคุณอนุญาต แอปจะแสดงรายชื่อผู้ติดต่อจากโทรศัพท์ของคุณในแท็บผู้ติดต่อ คุณสามารถแชร์ทั้งหมดหรือเฉพาะรายชื่อที่คุณเลือกได้ \n\nข้อมูลผู้ติดต่อจะถูกจัดเก็บไว้ชั่วคราวในเครื่องของคุณ เพื่อเปิดใช้คุณสมบัติต่าง ๆ เช่น การโทรออกจากแอปได้โดยตรง \n\nข้อมูลนี้จะไม่ถูกเก็บรวบรวม ส่งต่อ หรือแชร์ออกไปนอกแอป';
 
   @override
   String get contacts_agreement_title => 'การเก็บรวบรวมข้อมูล';
@@ -662,6 +662,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get contacts_ExternalTabText_failure => 'ไม่สามารถดึงรายชื่อจาก PBX บนคลาวด์ได้';
+
+  @override
+  String get contacts_LocalTabButton_changeSelection => 'เปลี่ยนการเลือก';
 
   @override
   String get contacts_LocalTabButton_contactsAgreement => 'เปิดการตั้งค่า';
@@ -696,6 +699,13 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get contactsSourceLocal => 'โทรศัพท์ของคุณ';
+
+  @override
+  String get contacts_LocalTabText_selectionOnly => 'แสดงเฉพาะรายชื่อติดต่อที่คุณเลือก';
+
+  @override
+  String get contacts_LocalTabText_selectionOnlyEmpty =>
+      'แสดงเฉพาะรายชื่อติดต่อที่คุณเลือก และยังไม่ได้เลือกรายชื่อใดเลย';
 
   @override
   String get contacts_DialogsInfoView_title => 'ข้อมูลการโทร (BLF):';
@@ -895,7 +905,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get diagnostic_permission_contacts_description =>
-      'แอปนี้ต้องการสิทธิ์ในการเข้าถึงรายชื่อติดต่อเพื่อโทรหาคนในสมุดที่อยู่ของคุณ';
+      'รายชื่อติดต่อที่คุณแชร์จะแสดงในแอป เพื่อให้คุณโทรหาและเห็นว่าใครโทรมา การแชร์เฉพาะรายชื่อที่เลือกก็เพียงพอ';
 
   @override
   String get diagnostic_permission_contacts_title => 'รายชื่อติดต่อ';

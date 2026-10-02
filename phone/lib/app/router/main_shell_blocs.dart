@@ -113,7 +113,7 @@ class MainShellBlocs extends StatelessWidget {
               contactsRepository: context.read<ContactsRepository>(),
               isFeatureEnabled: isFutureEnabled,
               isAgreementAccepted: isAgreementAccepted,
-              isContactsPermissionGranted: () => appPermissions.isContactPermissionGranted(),
+              contactsAccess: () => appPermissions.contactsAccess(),
             );
 
             unawaited(cubit.refresh());

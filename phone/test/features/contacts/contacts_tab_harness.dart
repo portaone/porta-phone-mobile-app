@@ -152,6 +152,8 @@ class ContactsTabHarness {
     required List<Contact> contacts,
     bool markFavorites = false,
     ContactsLocalTabStatus status = ContactsLocalTabStatus.success,
+    bool searching = false,
+    bool selectionOnly = false,
 
     /// Non-null hosts the tab behind an app bar of this height, the way the
     /// real screens do. Null keeps the bare host the older tests expect.
@@ -163,7 +165,12 @@ class ContactsTabHarness {
     /// Controls completion independently from the tab's state stream.
     Future<void> Function()? refresh,
   }) async {
-    final initialState = ContactsLocalTabState(status: status, contacts: contacts);
+    final initialState = ContactsLocalTabState(
+      status: status,
+      contacts: contacts,
+      searching: searching,
+      selectionOnly: selectionOnly,
+    );
 
     whenListen(localBloc, states ?? const Stream<ContactsLocalTabState>.empty(), initialState: initialState);
     when(() => localBloc.refresh()).thenAnswer((_) => refresh?.call() ?? Future<void>.value());

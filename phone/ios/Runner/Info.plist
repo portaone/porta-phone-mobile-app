@@ -63,7 +63,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>This app requires permission to access the camera to make video calls and scan QR codes</string>
 	<key>NSContactsUsageDescription</key>
-	<string>This app requires permission to access contacts to make calls within your address book</string>
+	<string>Contacts you share are shown in the app, so you can call them and see who is calling.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app requires permission to access the microphone to make audio calls</string>
 	<key>UIApplicationSceneManifest</key>

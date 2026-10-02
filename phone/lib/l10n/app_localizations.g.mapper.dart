@@ -246,6 +246,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'contacts_ExternalTabText_emptyOnSearching' =>
         contacts_ExternalTabText_emptyOnSearching,
       'contacts_ExternalTabText_failure' => contacts_ExternalTabText_failure,
+      'contacts_LocalTabButton_changeSelection' =>
+        contacts_LocalTabButton_changeSelection,
       'contacts_LocalTabButton_contactsAgreement' =>
         contacts_LocalTabButton_contactsAgreement,
       'contacts_LocalTabButton_openAppSettings' =>
@@ -262,6 +264,10 @@ extension AppLocalizationsExtension on AppLocalizations {
       'contactsSourceFavorites' => contactsSourceFavorites,
       'contactsSourceExternal' => contactsSourceExternal,
       'contactsSourceLocal' => contactsSourceLocal,
+      'contacts_LocalTabText_selectionOnly' =>
+        contacts_LocalTabText_selectionOnly,
+      'contacts_LocalTabText_selectionOnlyEmpty' =>
+        contacts_LocalTabText_selectionOnlyEmpty,
       'contacts_DialogsInfoView_title' => contacts_DialogsInfoView_title,
       'contacts_ContactScreen_options' => contacts_ContactScreen_options,
       'contacts_ContactScreen_presenceViaSip' =>

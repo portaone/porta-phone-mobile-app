@@ -17,13 +17,15 @@ class LocalContactsSyncRefreshInProgress extends LocalContactsSyncInitial {
 }
 
 class LocalContactsSyncSuccess extends LocalContactsSyncState {
-  const LocalContactsSyncSuccess();
+  const LocalContactsSyncSuccess({required this.access});
+
+  /// What the device let the app read for this pass. With a selection the
+  /// stored list is complete as far as the app can see, yet not the whole
+  /// address book.
+  final ContactsAccess access;
 
   @override
-  bool operator ==(Object other) => identical(this, other);
-
-  @override
-  int get hashCode => identityHashCode(this);
+  List<Object?> get props => [access];
 }
 
 abstract class LocalContactsSyncFailure extends LocalContactsSyncState {

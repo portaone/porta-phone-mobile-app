@@ -1159,7 +1159,7 @@ abstract class AppLocalizations {
   /// No description provided for @contacts_agreement_description.
   ///
   /// In en, this message translates to:
-  /// **'This app requires access to your contact list to display your contacts in the app\'s Contacts tab. \n\nThe contact data is temporarily stored locally on your device to enable features like making calls directly from the app. \n\nThis data is not collected, transmitted, or shared outside the app.'**
+  /// **'With your permission, the app shows the contacts from your phone in its Contacts tab. You can share all of them or only the ones you choose. \n\nThe contact data is temporarily stored locally on your device to enable features like making calls directly from the app. \n\nThis data is not collected, transmitted, or shared outside the app.'**
   String get contacts_agreement_description;
 
   /// No description provided for @contacts_agreement_title.
@@ -1197,6 +1197,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to get cloud PBX contacts'**
   String get contacts_ExternalTabText_failure;
+
+  /// No description provided for @contacts_LocalTabButton_changeSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Change selection'**
+  String get contacts_LocalTabButton_changeSelection;
 
   /// No description provided for @contacts_LocalTabButton_contactsAgreement.
   ///
@@ -1263,6 +1269,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your phone'**
   String get contactsSourceLocal;
+
+  /// No description provided for @contacts_LocalTabText_selectionOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the contacts you selected are shown'**
+  String get contacts_LocalTabText_selectionOnly;
+
+  /// No description provided for @contacts_LocalTabText_selectionOnlyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Only contacts you select are shown, and none is selected yet'**
+  String get contacts_LocalTabText_selectionOnlyEmpty;
 
   /// No description provided for @contacts_DialogsInfoView_title.
   ///
@@ -1633,7 +1651,7 @@ abstract class AppLocalizations {
   /// No description provided for @diagnostic_permission_contacts_description.
   ///
   /// In en, this message translates to:
-  /// **'This app requires permission to access contacts to make calls within your address book.'**
+  /// **'Contacts you share are shown in the app, so you can call them and see who is calling. Sharing a selection of contacts is enough.'**
   String get diagnostic_permission_contacts_description;
 
   /// No description provided for @diagnostic_permission_contacts_title.

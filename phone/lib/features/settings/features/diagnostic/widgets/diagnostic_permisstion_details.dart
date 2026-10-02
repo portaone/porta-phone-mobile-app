@@ -22,7 +22,7 @@ class DiagnosticPermissionDetails extends StatelessWidget {
 
     final permissionTitle = permissionWithStatus.permission.title(context);
     final permissionDescription = permissionWithStatus.permission.description(context);
-    final statusColor = status.color(context);
+    final statusColor = permissionWithStatus.severity.color(context);
     final statusText = permissionWithStatus.status.title(context);
 
     return Container(
