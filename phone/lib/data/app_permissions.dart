@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
 export 'package:permission_handler/permission_handler.dart' show Permission, PermissionStatus;
@@ -230,17 +231,20 @@ class AppPermissions {
     return status.isGranted;
   }
 
-  Future<bool> isContactPermissionGranted() async {
-    if (!_isPermissionSupported(Permission.contacts)) return false;
-    return isPermissionGranted(Permission.contacts);
+  /// How much of the address book the app may read right now.
+  ///
+  /// A selection is access, not a refusal: reading succeeds and returns the
+  /// picked contacts, so it must not be folded into [ContactsAccess.none].
+  Future<ContactsAccess> contactsAccess() async {
+    if (!_isPermissionSupported(Permission.contacts)) return ContactsAccess.none;
+    return switch (await Permission.contacts.status) {
+      PermissionStatus.granted => ContactsAccess.all,
+      PermissionStatus.limited => ContactsAccess.selected,
+      _ => ContactsAccess.none,
+    };
   }
 
-  Future<bool> requestContactPermission() async {
-    if (!_isPermissionSupported(Permission.contacts)) return false;
-    final status = await Permission.contacts.request();
-    return status.isGranted;
-  }
-
+  Future<bool> isContactPermissionGranted() async => (await contactsAccess()).canRead;
   /// Full camera permission status (unlike the boolean helpers, callers need
   /// to distinguish a permanent denial to offer the settings screen instead
   /// of a pointless request).
