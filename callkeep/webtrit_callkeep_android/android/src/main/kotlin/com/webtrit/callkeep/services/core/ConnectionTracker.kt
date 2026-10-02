@@ -155,6 +155,12 @@ interface ConnectionTracker {
      */
     fun wasEndedWithoutFlutterState(callId: String): Boolean
 
+    /** Record that the app reported [callId] itself; cleared by [markTerminated] and [clear]. */
+    fun markReportedByApp(callId: String)
+
+    /** True while the live call [callId] is one the app reported itself. */
+    fun isReportedByApp(callId: String): Boolean
+
     // -------------------------------------------------------------------------
     // Read operations
     // -------------------------------------------------------------------------

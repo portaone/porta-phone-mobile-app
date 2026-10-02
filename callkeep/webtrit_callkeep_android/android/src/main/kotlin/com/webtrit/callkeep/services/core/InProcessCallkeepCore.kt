@@ -383,6 +383,8 @@ class InProcessCallkeepCore internal constructor(
 
     override fun wasEndedWithoutFlutterState(callId: String): Boolean = tracker.wasEndedWithoutFlutterState(callId)
 
+    override fun isReportedByApp(callId: String): Boolean = tracker.isReportedByApp(callId)
+
     // -------------------------------------------------------------------------
     // Connection event receivers
     // -------------------------------------------------------------------------
@@ -504,6 +506,8 @@ class InProcessCallkeepCore internal constructor(
         if (wasEndedWithoutFlutterState(callId)) {
             return PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED)
         }
+        // The foreground bridge is the app itself: a call it reports is the app's already.
+        if (client is CallEndListener) tracker.markReportedByApp(callId)
         checkIncomingDuplicate(callId)?.let { return adoptIncomingCall(metadata, it) }
 
         return incomingRegistrations.await(metadata, client) { registration ->

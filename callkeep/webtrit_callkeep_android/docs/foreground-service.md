@@ -44,6 +44,14 @@
 - Also sends `ReplayAudioState` to re-emit audio device/mute state for the Flutter UI. Not gated on
   the main-process tracker: the `:callkeep_core` handler iterates its live connections (a no-op when
   there are none), and the local tracker is transiently empty right after the replay above.
+- Marks the delegate ready (`isDelegateReady`): from now on the incoming-call service gives a push
+  call to the app instead of a push session.
+
+### `onDelegateCleared()`
+
+- Pigeon callback from Dart `setDelegate(null)`: nothing on the Flutter side takes calls any more.
+  Clears `isDelegateReady`, so a push call arriving now goes to a push session. `onDestroy()` clears
+  it too.
 
 ### `onDestroy()`
 

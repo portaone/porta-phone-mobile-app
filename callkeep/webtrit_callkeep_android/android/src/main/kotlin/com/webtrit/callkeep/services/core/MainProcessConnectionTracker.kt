@@ -193,6 +193,7 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
                 pendingAnswer = false,
                 state = PCallkeepConnectionState.STATE_DISCONNECTED,
                 groupId = null,
+                reportedByApp = false,
             )
         }
         releaseLoneGroupMembers()
@@ -418,6 +419,12 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
     }
 
     override fun wasEndedWithoutFlutterState(callId: String): Boolean = calls[callId]?.endedWithoutFlutterState == true
+
+    override fun markReportedByApp(callId: String) {
+        calls.compute(callId) { _, rec -> (rec ?: CallRecord()).copy(reportedByApp = true) }
+    }
+
+    override fun isReportedByApp(callId: String): Boolean = calls[callId]?.reportedByApp == true
 
     companion object {
         /**

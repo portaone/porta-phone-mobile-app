@@ -68,6 +68,7 @@ These record fields suppress duplicate or stale Dart notifications for the same 
 | `directNotified`           | yes                             | Termination notified directly via `performEndCall` in `tearDown()`. Suppresses the stale async `HungUp` broadcast that arrives after the next session starts. Consumed on read (`consumeDirectNotified`)                                                                                                                                                                                                           |
 | `endCallDispatched`        | yes                             | `performEndCall` was already dispatched (or a `HungUpCall` IPC sent). Prevents a second dispatch. `markEndCallDispatched` returns true only on first mark                                                                                                                                                                                                                                                          |
 | `endedWithoutFlutterState` | **no (sticky)**                 | The app ended this call while it was never presented in Flutter state (the call==null signaling-hangup path). Read by `reportNewIncomingCall` to reject EVERY stale ghost re-presentation of the dead call. Sticky by design: a stale handshake can replay the dead incoming several times, and a transfer-back reuses a call the app DID know, so its end never lands here. Cleared only by `clear()` on tearDown |
+| `reportedByApp`            | no (`markTerminated`)           | The foreground bridge reported this call itself (`markReportedByApp`, set by the core in `registerIncomingCall` before the call is dispatched). Read by the incoming-call service, which gives a push call to a ready app delegate only when the app does not hold it already. Lives for one life of the call id: termination clears it, so a refused report and a transfer-back reusing the id start unreported   |
 
 The asymmetry in the reset column is deliberate and load-bearing: resetting the ghost guard on
 reuse would let a replayed dead incoming ring again.
@@ -169,6 +170,7 @@ clear()
 | `getState(callId)`                | The record's `PCallkeepConnectionState?`                               |
 | `toPCallkeepConnection(id)`       | Pigeon connection built from one record; null unless `metadata` is set |
 | `wasEndedWithoutFlutterState(id)` | Sticky ghost-guard read (not consumed)                                 |
+| `isReportedByApp(id)`             | The record's `reportedByApp` flag                                      |
 
 ## Semantic Invariants
 

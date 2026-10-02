@@ -33,6 +33,9 @@ Triggered by an FCM message or a direct Dart call to `reportNewIncomingCall`.
         v
 7.  Delegate notification (NOT from the event above):
         |   - call arrived while app running -> Flutter signaling __onCallSignalingEventIncoming
+        |   - call only the push reported, app delegate ready ->
+        |     IncomingCallHandler gives it to the app: ReplayIncomingCall (present-only) ->
+        |     didPresentIncomingCall, no handoff release, the service keeps ringing
         |   - push->foreground handoff -> ReplayIncomingCall on delegate attach
         |     -> PDelegateFlutterApi.didPresentIncomingCall(callId, meta)
 ```

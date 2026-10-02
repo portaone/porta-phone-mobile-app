@@ -2154,6 +2154,26 @@ class PHostApi {
     )
     ;
   }
+
+  /// The app removed its delegate: nothing on the Flutter side takes a call any more, so a call
+  /// that arrives while the app is alive goes to a push session instead of being presented.
+  Future<void> onDelegateCleared() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.onDelegateCleared$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+  }
 }
 
 class PHostConnectionsApi {

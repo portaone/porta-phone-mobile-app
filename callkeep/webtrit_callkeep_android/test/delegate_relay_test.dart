@@ -171,6 +171,7 @@ void main() {
   setUp(() {
     WebtritCallkeepAndroid.registerWith();
     _mockVoid('$_prefix.PHostApi.onDelegateSet');
+    _mockVoid('$_prefix.PHostApi.onDelegateCleared');
   });
 
   // ---------------------------------------------------------------------------
