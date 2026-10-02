@@ -253,8 +253,10 @@ attended-transfer branch - therefore takes the banner off the lists with it, wit
 knowing there is a banner.
 
 **Leaving the call screen** — `CallScreenEvent.didPop` and the start of a transfer set
-`minimized: true` and report nothing to callkeep: the call is drawn as an overlay and its proximity
-sensor is left as it was.
+`minimized: true` and do nothing else: the call is drawn as an overlay, and neither the proximity
+sensor nor the audio device is touched. Coming back (`didPush`, a submitted blind transfer) sets
+`minimized: false` and chooses no audio device either - the one in use may have been changed
+from the system's call screen meanwhile.
 
 `CallState.shouldListenToProximity` is therefore `isActive && isVoiceChat`, with no part for
 `minimized`. It used to be turned off for a minimized call, which on iOS is done by the

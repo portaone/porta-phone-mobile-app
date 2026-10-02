@@ -1964,15 +1964,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _CallControlEventBlindTransferInitiated event,
     Emitter<CallState> emit,
   ) async {
-    final isSpeakerOn = state.audioDevice?.type == CallAudioDeviceType.speaker;
-
     var newState = state.copyWith(minimized: true);
 
     newState = newState.copyWithMappedActiveCall(event.callId, (activeCall) {
-      return activeCall.copyWith(
-        transfer: const Transfer.blindTransferInitiated(),
-        speakerOnBeforeMinimize: isSpeakerOn,
-      );
+      return activeCall.copyWith(transfer: const Transfer.blindTransferInitiated());
     });
 
     emit(newState);
@@ -1989,15 +1984,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _CallControlEventAttendedTransferInitiated event,
     Emitter<CallState> emit,
   ) async {
-    final isSpeakerOn = state.audioDevice?.type == CallAudioDeviceType.speaker;
-
-    var newState = state.copyWith(minimized: true);
-
-    newState = newState.copyWithMappedActiveCall(event.callId, (activeCall) {
-      return activeCall.copyWith(speakerOnBeforeMinimize: isSpeakerOn);
-    });
-
-    emit(newState);
+    emit(state.copyWith(minimized: true));
   }
 
   Future<void> _onCallControlEventBlindTransferSubmitted(
@@ -3157,16 +3144,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       });
       emit(newState);
 
-      final callBeingTransferred = state.retrieveActiveCall(e.callId);
-      if (callBeingTransferred?.speakerOnBeforeMinimize == true) {
-        final speakerDevice = state.availableAudioDevices.getSpeaker;
-        if (speakerDevice != null) {
-          add(CallControlEvent.audioDeviceSet(e.callId, speakerDevice));
-        } else {
-          _logger.warning('__onMutationControlBlindTransfer: speaker was on before minimize but its not available now');
-        }
-      }
-
       // After request succesfully submitted, transfer flow will continue
       // by TransferringEvent event from anus and handled in [_CallSignalingEventTransferring]
       // that means that call transfering is now in progress
@@ -4270,17 +4247,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // screen opening is the first moment every call passes through, so the flag is set
       // here; a call that already carries it is told the same value again.
       await callkeep.reportUpdateCall(currentCall.callId, proximityEnabled: state.shouldListenToProximity);
-
-      if (currentCall.speakerOnBeforeMinimize == true) {
-        final speakerDevice = state.availableAudioDevices.getSpeaker;
-        if (speakerDevice != null) {
-          add(CallControlEvent.audioDeviceSet(currentCall.callId, speakerDevice));
-        } else {
-          _logger.warning(
-            '_onCallControlEventBlindTransferSubmitted: speaker was on before minimize but its not available now',
-          );
-        }
-      }
     } else {
       _logger.warning('__onCallScreenEventDidPush: activeCalls is empty');
     }
@@ -4291,16 +4257,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _logger.info('__onCallScreenEventDidPop: shouldMinimize: $shouldMinimize');
 
     if (shouldMinimize) {
-      final currentCallId = state.activeCalls.current.callId;
-      final isSpeakerOn = state.audioDevice?.type == CallAudioDeviceType.speaker;
-
-      emit(
-        state
-            .copyWithMappedActiveCall(currentCallId, (call) {
-              return call.copyWith(speakerOnBeforeMinimize: isSpeakerOn);
-            })
-            .copyWith(minimized: true),
-      );
+      emit(state.copyWith(minimized: true));
       // Nothing is reported to callkeep: leaving the screen changes neither the proximity
       // sensor nor the audio route of the call.
     }

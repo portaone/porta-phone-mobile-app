@@ -44,7 +44,6 @@ class ActiveCall with _$ActiveCall implements CallEntry {
     this.transition,
     this.peerReportedConferenceMute,
     this.peerReportedConferenceHostAway,
-    this.speakerOnBeforeMinimize,
     this.iceCandidates = const [],
     this.iceConnectionIssue,
     this.networkQuality,
@@ -171,9 +170,6 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// with the call.
   @override
   final bool? peerReportedConferenceHostAway;
-
-  @override
-  final bool? speakerOnBeforeMinimize;
 
   @override
   final List<RTCIceCandidate> iceCandidates;
