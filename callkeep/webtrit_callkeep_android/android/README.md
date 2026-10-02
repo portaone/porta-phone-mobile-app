@@ -49,11 +49,11 @@ This is the main plugin class that registers and initializes:
 
 - Pigeon APIs (Permissions, Sound, Connections)
 - Background signaling and push notification services
-- Lifecycle observers
+- The lock-screen check on an Activity opened by the incoming-call alert (`LockScreenPresence`)
 - Communication bridges between services and Flutter via binary messengers
 
-The plugin supports `ActivityAware`, `ServiceAware`, and `LifecycleEventObserver` to manage
-binding/unbinding logic and isolate registration.
+The plugin supports `ActivityAware` and `ServiceAware` to manage binding/unbinding logic and
+isolate registration. It observes no Activity lifecycle.
 
 ---
 
