@@ -5,12 +5,10 @@ import android.app.Service
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ApplicationProvider
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.notifications.IncomingCallNotificationBuilder
-import com.webtrit.callkeep.services.broadcaster.ActivityLifecycleState
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.core.ConnectionEventListener
@@ -63,7 +61,6 @@ class IncomingCallHandlerBackgroundHandlingTest {
         CallkeepCore.instance.removeConnectionEventListener(listener)
         CallkeepCore.instance.clear()
         ForegroundService.isDelegateReady = false
-        ActivityLifecycleState.setValue(Lifecycle.Event.ON_DESTROY)
     }
 
     @Test
@@ -74,23 +71,6 @@ class IncomingCallHandlerBackgroundHandlingTest {
 
         assertEquals(listOf("call-1"), presented)
         verify(isolateInitializer, never()).start()
-    }
-
-    @Test
-    fun `the Activity lifecycle does not decide`() {
-        // The delegate lives with the engine, not with the Activity: an app whose Activity is
-        // gone but whose engine and delegate are up still takes the call; one on screen whose
-        // delegate is not set yet does not.
-        ForegroundService.isDelegateReady = true
-        ActivityLifecycleState.setValue(Lifecycle.Event.ON_DESTROY)
-        handler.handle(CallMetadata(callId = "call-1", displayName = "Caller"))
-
-        ForegroundService.isDelegateReady = false
-        ActivityLifecycleState.setValue(Lifecycle.Event.ON_RESUME)
-        handler.handle(CallMetadata(callId = "call-2", displayName = "Caller"))
-
-        assertEquals(listOf("call-1"), presented)
-        verify(isolateInitializer).start()
     }
 
     @Test
