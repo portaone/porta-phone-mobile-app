@@ -654,7 +654,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contacts_agreement_description =>
-      'This app requires access to your contact list to display your contacts in the app\'s Contacts tab. \n\nThe contact data is temporarily stored locally on your device to enable features like making calls directly from the app. \n\nThis data is not collected, transmitted, or shared outside the app.';
+      'With your permission, the app shows the contacts from your phone in its Contacts tab. You can share all of them or only the ones you choose. \n\nThe contact data is temporarily stored locally on your device to enable features like making calls directly from the app. \n\nThis data is not collected, transmitted, or shared outside the app.';
 
   @override
   String get contacts_agreement_title => 'Data collection';
@@ -917,7 +917,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diagnostic_permission_contacts_description =>
-      'This app requires permission to access contacts to make calls within your address book.';
+      'Contacts you share are shown in the app, so you can call them and see who is calling. Sharing a selection of contacts is enough.';
 
   @override
   String get diagnostic_permission_contacts_title => 'Contacts';

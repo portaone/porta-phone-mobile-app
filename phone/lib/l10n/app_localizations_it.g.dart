@@ -659,7 +659,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get contacts_agreement_description =>
-      'Questa app richiede l\'accesso alla tua rubrica per mostrare i tuoi contatti nella scheda Contatti dell\'app. \n\nI dati dei contatti vengono memorizzati temporaneamente sul tuo dispositivo per abilitare funzioni come le chiamate direttamente dall\'app. \n\nQuesti dati non vengono raccolti, trasmessi né condivisi al di fuori dell\'app.';
+      'Con il tuo permesso, l\'app mostra i contatti del tuo telefono nella scheda Contatti. Puoi condividerli tutti o solo quelli che scegli. \n\nI dati dei contatti vengono memorizzati temporaneamente sul tuo dispositivo per abilitare funzioni come le chiamate direttamente dall\'app. \n\nQuesti dati non vengono raccolti, trasmessi né condivisi al di fuori dell\'app.';
 
   @override
   String get contacts_agreement_title => 'Raccolta dati';
@@ -926,7 +926,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get diagnostic_permission_contacts_description =>
-      'Questa app richiede il permesso di accedere ai contatti per effettuare chiamate dalla tua rubrica.';
+      'I contatti che condividi vengono mostrati nell\'app, così puoi chiamarli e vedere chi ti chiama. Basta condividere una selezione di contatti.';
 
   @override
   String get diagnostic_permission_contacts_title => 'Contatti';
