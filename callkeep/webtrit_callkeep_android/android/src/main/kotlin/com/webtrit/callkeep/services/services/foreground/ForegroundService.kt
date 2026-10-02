@@ -833,7 +833,10 @@ class ForegroundService :
      * Dart CallBloc deduplicates by callId, so re-delivering a call the app already knows about
      * (e.g. from signaling) does not create a second ActiveCall.
      */
-    private fun deliverIncomingToDelegate(metadata: CallMetadata) {
+    private fun deliverIncomingToDelegate(
+        metadata: CallMetadata,
+        confirmsHandoff: Boolean = true,
+    ) {
         if (core.isTerminated(metadata.callId)) {
             // The call was already reported ended in the main process (e.g. a signaling hangup
             // arrived while the connection-state replay was still in flight from :callkeep_core).
@@ -849,7 +852,7 @@ class ForegroundService :
             return
         }
         logger.i("deliverIncomingToDelegate: delivering incoming callId=${metadata.callId} to delegate")
-        notifyFlutter("didPresentIncomingCall", onSuccess = { confirmHandoff(metadata.callId) }) {
+        notifyFlutter("didPresentIncomingCall", onSuccess = { if (confirmsHandoff) confirmHandoff(metadata.callId) }) {
             didPresentIncomingCall(
                 handleArg = handle.toPHandle(),
                 displayNameArg = metadata.displayName,
@@ -900,7 +903,12 @@ class ForegroundService :
      */
     private fun handleCSReplayIncomingCall(extras: Bundle?) {
         logger.d("handleCSReplayIncomingCall")
-        extras?.let { deliverIncomingToDelegate(CallMetadata.fromBundle(it)) }
+        // A call the incoming-call service hands to the app is only presented: no push session
+        // ran for it, and a handoff release would end the ringing phase of a call the user has
+        // not answered yet - the notification is the app's call UI while it is in the background.
+        extras?.let {
+            deliverIncomingToDelegate(CallMetadata.fromBundle(it), confirmsHandoff = !it.getBoolean(PRESENT_ONLY))
+        }
     }
 
     private fun handleCSReportDeclineCall(extras: Bundle?) {
@@ -1038,6 +1046,7 @@ class ForegroundService :
      */
     override fun onDelegateSet() {
         logger.d("onDelegateSet: Flutter delegate attached. Replaying connection state...")
+        isDelegateReady = true
 
         // Replay the current connection lifecycle now that the delegate is attached and GUARANTEED
         // to receive the re-fired events. This is the single replay trigger: it fires only once the
@@ -1057,6 +1066,12 @@ class ForegroundService :
         core.replayAudioState()
     }
 
+    /** The app removed its delegate: a call arriving now goes to a push session. */
+    override fun onDelegateCleared() {
+        logger.d("onDelegateCleared: Flutter delegate removed")
+        isDelegateReady = false
+    }
+
     //
     // --------------------------------
     // Handlers for ConnectionService reports to communicate with the Flutter side
@@ -1072,6 +1087,7 @@ class ForegroundService :
         super.onDestroy()
         logger.d("onDestroy")
         core.removeConnectionEventListener(this)
+        isDelegateReady = false
 
         pendingCallCleanupsByCallId.values.toList().forEach { it() }
         pendingCallCleanupsByCallId.clear()
@@ -1114,6 +1130,17 @@ class ForegroundService :
         val failedCallsStore = FailedCallsStore()
 
         var isRunning = false
+
+        /**
+         * The Flutter side has a delegate to take calls: set by onDelegateSet, cleared by
+         * onDelegateCleared and onDestroy. A bound service is not enough - the app's call
+         * handling may not be built yet.
+         */
+        @Volatile
+        var isDelegateReady = false
+
+        /** Extra on a [CallLifecycleEvent.ReplayIncomingCall]: present the call, confirm no handoff. */
+        const val PRESENT_ONLY = "present_only"
 
         private const val OUTGOING_CALL_TIMEOUT_MS = 5_000L
         private const val TEAR_DOWN_ACK_TIMEOUT_MS = 3_000L

@@ -187,6 +187,12 @@ interface CallkeepCore {
     /** See [ConnectionTracker.wasEndedWithoutFlutterState]. */
     fun wasEndedWithoutFlutterState(callId: String): Boolean
 
+    /**
+     * True while the live call [callId] is one the app reported itself through its foreground
+     * bridge. The incoming-call service presents a call to a live app only when it is not.
+     */
+    fun isReportedByApp(callId: String): Boolean
+
     // -------------------------------------------------------------------------
     // Connection event receivers
     // -------------------------------------------------------------------------

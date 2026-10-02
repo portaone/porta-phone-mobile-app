@@ -468,6 +468,10 @@ abstract class PHostApi {
   PCallRequestError? unsetCallGroup(List<String> callIds);
 
   void onDelegateSet();
+
+  /// The app removed its delegate: nothing on the Flutter side takes a call any more, so a call
+  /// that arrives while the app is alive goes to a push session instead of being presented.
+  void onDelegateCleared();
 }
 
 @HostApi()

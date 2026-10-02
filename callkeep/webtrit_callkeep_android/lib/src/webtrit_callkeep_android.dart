@@ -39,12 +39,12 @@ class WebtritCallkeepAndroid extends WebtritCallkeepPlatform {
   void setDelegate(CallkeepDelegate? delegate) {
     if (delegate != null) {
       PDelegateFlutterApi.setUp(_CallkeepDelegateRelay(delegate));
+      // The delegate is ready: native replays live calls to it and may hand it new ones.
+      _api.onDelegateSet();
     } else {
       PDelegateFlutterApi.setUp(null);
+      _api.onDelegateCleared();
     }
-
-    // Notify the Pigeon API that the delegate has been set.
-    _api.onDelegateSet();
   }
 
   @override

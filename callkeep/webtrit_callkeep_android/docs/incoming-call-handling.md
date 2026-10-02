@@ -28,9 +28,35 @@ flowchart TB
   GATE{"IncomingCallHandler.maybeInitBackgroundHandling"}:::dec
   IN --> GATE
   GATE -- "hosted on an external engine<br/>(WebtritCallkeep.attachToEngine)" --> HOST["the host engine owns the background work<br/>callkeep does NOT spawn an isolate"]:::app
-  GATE -- "app process active<br/>(ON_RESUME / ON_PAUSE / ON_STOP)" --> MAIN["the main app handles the call<br/>callkeep does NOT spawn an isolate"]:::app
-  GATE -- "else: app process dead<br/>(state null / ON_DESTROY)" --> OWN["callkeep spawns its OWN background isolate<br/>(IncomingCallService, automaticallyRegisterPlugins = true)"]:::ck
+  GATE -- "delegate ready,<br/>call reported by the app itself" --> HOLD["the app already holds the call<br/>nothing presented, no isolate"]:::app
+  GATE -- "delegate ready,<br/>call reported only by the push" --> MAIN["callkeep gives the call to the app's delegate<br/>(ReplayIncomingCall present-only -> didPresentIncomingCall)<br/>no isolate"]:::app
+  GATE -- "no delegate ready<br/>(app dead, call handling not built yet, or cleared)" --> OWN["callkeep spawns its OWN background isolate<br/>(IncomingCallService, automaticallyRegisterPlugins = true)"]:::ck
 ```
+
+One rule, the same as on iOS, where a call PushKit registered is reported to the app: a call
+the push registered goes to the app's delegate when one is ready, and to a push isolate otherwise.
+The Activity lifecycle plays no part. A visible or recently backgrounded Activity says nothing
+about who will take the call - the app closes its socket when a call ends in the background, and
+the OS may close it too. Until this rule, a call arriving while the app lived in the background
+without a socket skipped the isolate on the strength of the lifecycle alone, was owned by nobody
+and rang on after the caller hung up. Given the call through the same `ReplayIncomingCall` path a
+freshly attached delegate is seeded by, the app holds it and reconnects to learn whether it still
+rings; a call the server no longer has is ended by the handshake.
+
+What the gate reads:
+
+- **Delegate ready** - `ForegroundService.isDelegateReady`, set by `onDelegateSet` and cleared by
+  `onDelegateCleared` (`setDelegate(null)`) and the service's `onDestroy`. A bound service is not
+  enough: the app's call handling may not be built yet, and a presentation would wait unread.
+  Without a ready delegate the isolate runs and the app takes the call over through the usual
+  handoff when its delegate attaches.
+- **Reported by the app** - `CallkeepCore.isReportedByApp(callId)`: the foreground bridge reported
+  the call itself, so the app holds it and it is not presented back. The core sets the fact when
+  the bridge registers the call and clears it when the call terminates - which covers a refused
+  report, the app's own end report and a transfer-back that reuses the id.
+- **Present-only** - the hand-over confirms no handoff: no push session ran, and a handoff
+  release would end the ringing phase of a call nobody has answered; the service's notification is
+  the app's call UI while it is in the background. Answer and end still release it as before.
 
 ## Terminal outcomes
 

@@ -788,6 +788,50 @@ class IncomingRegistrationTest {
         verifyNoInteractions(listener)
     }
 
+    @Test
+    fun `a call the foreground bridge reports is the app's until it ends`() {
+        val bridge = mock(CallEndListener::class.java)
+        val waiting = report(bridge, "c1")
+        assertTrue(core.isReportedByApp("c1"))
+
+        event(CallLifecycleEvent.IncomingConnectionReported, "c1")
+        assertNull(waiting.result())
+        assertTrue(core.isReportedByApp("c1"))
+
+        event(CallLifecycleEvent.HungUp, "c1")
+        assertFalse(core.isReportedByApp("c1"))
+    }
+
+    @Test
+    fun `a call only the push reported is not the app's`() {
+        report("push", "c1")
+        event(CallLifecycleEvent.IncomingConnectionReported, "c1")
+
+        assertFalse(core.isReportedByApp("c1"))
+    }
+
+    @Test
+    fun `a call the bridge reported and Telecom refused is not the app's any more`() {
+        val waiting = report(mock(CallEndListener::class.java), "c1")
+
+        event(CallLifecycleEvent.IncomingFailure, "c1")
+
+        assertEquals(rejected(), waiting.result())
+        assertFalse(core.isReportedByApp("c1"))
+    }
+
+    @Test
+    fun `a transfer-back reusing an ended call's id starts unreported`() {
+        report(mock(CallEndListener::class.java), "c1")
+        event(CallLifecycleEvent.IncomingConnectionReported, "c1")
+        event(CallLifecycleEvent.HungUp, "c1")
+
+        report("push", "c1")
+        event(CallLifecycleEvent.IncomingConnectionReported, "c1")
+
+        assertFalse(core.isReportedByApp("c1"))
+    }
+
     private fun report(
         client: Any,
         callId: String,

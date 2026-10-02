@@ -6,17 +6,18 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.Lifecycle
 import com.webtrit.callkeep.WebtritCallkeep
 import com.webtrit.callkeep.common.startForegroundServiceCompat
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.notifications.IncomingCallNotificationBuilder
-import com.webtrit.callkeep.services.broadcaster.ActivityLifecycleState
+import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
+import com.webtrit.callkeep.services.core.CallkeepCore
+import com.webtrit.callkeep.services.services.foreground.ForegroundService
 
 /**
  * Handles the lifecycle of an incoming call within a foreground Service:
  *  - shows the initial high-priority incoming-call notification
- *  - launches background handling (isolate) unless the main app is already active
+ *  - gives the call to the app's delegate when one is ready, otherwise to a push isolate
  *  - transitions the notification to silent (ring muted) or releases it after answer
  *
  * This class is intentionally side-effectful and **does not** own Service lifecycle;
@@ -56,9 +57,17 @@ class IncomingCallHandler(
             TAG,
             "Handling incoming call: id=${metadata.callId}, handle=${metadata.handle}, " + "name=${metadata.displayName}, video=${metadata.hasVideo}",
         )
+        show(metadata)
+        maybeInitBackgroundHandling()
+    }
+
+    /**
+     * Posts the ringing notification and takes the service into the foreground, nothing more:
+     * the call is given to nobody. For a call that is released before it is shown.
+     */
+    fun show(metadata: CallMetadata) {
         lastMetadata = metadata
         showNotification(metadata)
-        maybeInitBackgroundHandling()
     }
 
     /**
@@ -175,20 +184,23 @@ class IncomingCallHandler(
             Log.d(TAG, "maybeInitBackgroundHandling: hosted on external engine, skipping isolate launch")
             return
         }
-        // Skip isolate launch when the main Flutter app is active (foreground or recently
-        // backgrounded). In that state the main SignalingModule already has an open WebSocket
-        // and handles the incoming call. Starting a second background isolate would open a
-        // duplicate signaling connection, causing both sides to receive IncomingCallEvent and
-        // fight over the same Telecom slot — resulting in callRejectedBySystem and a decline
-        // loop. When the app is not active (killed / not yet started) the state is null or
-        // ON_DESTROY, so the isolate launches normally.
-        val state = ActivityLifecycleState.currentValue
-        val isAppActive =
-            state == Lifecycle.Event.ON_RESUME ||
-                state == Lifecycle.Event.ON_PAUSE ||
-                state == Lifecycle.Event.ON_STOP
-        if (isAppActive) {
-            Log.d(TAG, "maybeInitBackgroundHandling: app is active (state=$state), skipping isolate launch")
+        // One rule, as on iOS where a push-registered call is reported to the app: a call the
+        // push registered goes to the app's delegate when one is ready, and to a push isolate
+        // otherwise. Whether an Activity is visible says nothing about who will take the call -
+        // the app closes its socket when a call ends in the background, and the OS may close it
+        // too - so holding the call is what makes the app reconnect and learn whether it still
+        // rings. A delegate that is not ready (call handling not built yet, or torn down) leaves
+        // the call to the isolate, and the app takes it over through the usual handoff once its
+        // delegate attaches.
+        val metadata = lastMetadata
+        if (metadata != null && ForegroundService.isDelegateReady) {
+            if (CallkeepCore.instance.isReportedByApp(metadata.callId)) {
+                // The app reported this call itself; presenting it back would duplicate it.
+                Log.d(TAG, "maybeInitBackgroundHandling: ${metadata.callId} was reported by the app")
+            } else {
+                Log.d(TAG, "maybeInitBackgroundHandling: delegate ready, presenting ${metadata.callId} to the app")
+                presentToApp(metadata)
+            }
             return
         }
         Log.d(TAG, "Launching isolate for callId: ${lastMetadata?.callId}")
@@ -198,4 +210,16 @@ class IncomingCallHandler(
     companion object {
         private const val TAG = "IncomingCallHandler"
     }
+}
+
+/**
+ * Gives an incoming call to the app's delegate through the path a freshly attached delegate is
+ * seeded by ([CallLifecycleEvent.ReplayIncomingCall] -> ForegroundService ->
+ * didPresentIncomingCall), marked present-only: no push session ran, so no handoff is confirmed,
+ * and the incoming-call service keeps ringing - its notification is the call UI while the app is
+ * in the background.
+ */
+private fun presentToApp(metadata: CallMetadata) {
+    val extras = metadata.toBundle().apply { putBoolean(ForegroundService.PRESENT_ONLY, true) }
+    CallkeepCore.instance.notifyConnectionEvent(CallLifecycleEvent.ReplayIncomingCall, extras)
 }
