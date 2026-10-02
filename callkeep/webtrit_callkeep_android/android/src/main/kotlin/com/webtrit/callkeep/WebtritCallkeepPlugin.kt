@@ -5,34 +5,34 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import com.webtrit.callkeep.common.ActivityHolder
 import com.webtrit.callkeep.common.AssetCacheManager
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
-import com.webtrit.callkeep.common.setShowWhenLockedCompat
-import com.webtrit.callkeep.common.setTurnScreenOnCompat
 import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.services.foreground.ForegroundService
 import com.webtrit.callkeep.services.services.incoming_call.IncomingCallService
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
-import io.flutter.embedding.engine.plugins.lifecycle.HiddenLifecycleReference
 import io.flutter.embedding.engine.plugins.service.ServiceAware
 import io.flutter.embedding.engine.plugins.service.ServicePluginBinding
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.PluginRegistry
 
 /** WebtritCallkeepAndroidPlugin */
 class WebtritCallkeepPlugin :
     FlutterPlugin,
     ActivityAware,
-    ServiceAware,
-    LifecycleEventObserver {
+    ServiceAware {
     private var activityPluginBinding: ActivityPluginBinding? = null
-    private var lifeCycle: Lifecycle? = null
+
+    // The call alert reopens an Activity that already exists (singleInstance) through onNewIntent.
+    private val newIntentListener =
+        PluginRegistry.NewIntentListener { intent ->
+            activityPluginBinding?.activity?.let { LockScreenPresence.onActivityIntent(it, intent) }
+            false
+        }
 
     private lateinit var messenger: BinaryMessenger
     private lateinit var context: Context
@@ -131,9 +131,10 @@ class WebtritCallkeepPlugin :
             binding.addRequestPermissionsResultListener(it)
         }
 
-        val lifecycle = (binding.lifecycle as HiddenLifecycleReference).lifecycle
-        lifeCycle = lifecycle
-        lifecycle.addObserver(this)
+        // An Activity the incoming-call alert opened on a locked phone goes over the keyguard now,
+        // before Flutter has built anything; the app takes the flags over from its call screen.
+        LockScreenPresence.onActivityIntent(binding.activity, binding.activity.intent)
+        binding.addOnNewIntentListener(newIntentListener)
 
         // Register the proxy immediately so setUp() calls from Dart are never lost
         // during the asynchronous bindService() window.
@@ -151,7 +152,7 @@ class WebtritCallkeepPlugin :
             activityPluginBinding?.removeRequestPermissionsResultListener(it)
         }
 
-        this.lifeCycle?.removeObserver(this)
+        activityPluginBinding?.removeOnNewIntentListener(newIntentListener)
 
         activityPluginBinding?.activity?.let { unbindAndStopForegroundService(it) }
         PHostApi.setUp(messenger, null)
@@ -189,73 +190,13 @@ class WebtritCallkeepPlugin :
 
     override fun onDetachedFromActivityForConfigChanges() {
         Log.i(TAG, "onDetachedFromActivityForConfigChanges id:${activityPluginBinding?.hashCode()}")
-        this.lifeCycle?.removeObserver(this)
+        activityPluginBinding?.removeOnNewIntentListener(newIntentListener)
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         Log.i(TAG, "onReattachedToActivityForConfigChanges id:${binding.hashCode()}")
-        val lifecycle = (binding.lifecycle as HiddenLifecycleReference).lifecycle
-        lifeCycle = lifecycle
-        lifecycle.addObserver(this)
-    }
-
-    override fun onStateChanged(
-        source: LifecycleOwner,
-        event: Lifecycle.Event,
-    ) {
-        Log.d(
-            TAG,
-            "onStateChanged: Lifecycle event received - $event, activity: ${activityPluginBinding?.activity}",
-        )
-
-        /*
-         * This block is essential for the incoming call flow on the lock screen.
-         *
-         * It manages the `setShowWhenLocked` and `setTurnScreenOn` permissions
-         * to reliably show the Activity. On modern Android versions,
-         * the `setFullScreenIntent` alone is often not enough to wake the
-         * device and show the Activity; these flags are required.
-         *
-         * We set these flags here programmatically *only when a call is active*,
-         * rather than in the `AndroidManifest.xml`. If set in the Manifest,
-         * the Activity would *always* attempt to show on the lock screen,
-         * which is not the desired behavior.
-         *
-         * `ON_START` is our only reliable "checkpoint" that fires every
-         * time the Activity becomes visible. This logic handles two scenarios:
-         *
-         * 1. (Activate) If the Activity starts *during* an active call,
-         * `hasActiveConnections` will be `true`, and we force
-         * the Activity over the lock screen and turn the screen on.
-         *
-         * 2. (Clear) If the Activity starts *after* a call has
-         * ended (or the user is just opening the app normally),
-         * `hasActiveConnections` will be `false`. This guarantees
-         * that we clear the flags.
-         *
-         * We don't use `ON_STOP` for clearing because, on some devices,
-         * it's called almost immediately after `ON_START` on the lock screen,
-         * which leads to a race condition (setting flags to `true` then
-         * immediately to `false`). This `ON_START`-only approach also solves
-         * the problem where flags could get "stuck" in `true` (e.g., if
-         * the app was force-stopped).
-         */
-        if (event == Lifecycle.Event.ON_START) {
-            val core = CallkeepCore.instance
-            val promoted = core.getAll()
-            // Also check pending calls to cover the broadcast-lag window: CS may have
-            // created a PhoneConnection and be about to send IncomingConnectionReported, but the
-            // core shadow has not yet promoted the call. Without this check, ON_START during
-            // that window would incorrectly clear the lock-screen and turn-screen-on flags.
-            val hasActiveConnections = promoted.isNotEmpty() || core.getPendingCallIds().isNotEmpty()
-            Log.i(
-                TAG,
-                "onStateChanged: ON_START. Has active connections: $hasActiveConnections" +
-                    " (promoted=${promoted.size}, pending=${core.getPendingCallIds().size})",
-            )
-            activityPluginBinding?.activity?.setShowWhenLockedCompat(hasActiveConnections)
-            activityPluginBinding?.activity?.setTurnScreenOnCompat(hasActiveConnections)
-        }
+        activityPluginBinding = binding
+        binding.addOnNewIntentListener(newIntentListener)
     }
 
     private fun bindForegroundService(activity: Context) {

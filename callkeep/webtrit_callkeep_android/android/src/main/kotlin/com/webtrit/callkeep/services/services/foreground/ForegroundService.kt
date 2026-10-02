@@ -13,6 +13,7 @@ import android.os.IBinder
 import android.os.Looper
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
+import com.webtrit.callkeep.LockScreenPresence
 import com.webtrit.callkeep.PAudioDevice
 import com.webtrit.callkeep.PCallRequestError
 import com.webtrit.callkeep.PCallRequestErrorEnum
@@ -930,8 +931,9 @@ class ForegroundService :
             notifyFlutter("performEndCall") { performEndCall(callId) }
             notifyFlutter("didDeactivateAudioSession") { didDeactivateAudioSession() }
 
-            if (Platform.isLockScreen(baseContext) && isLastCall(callId)) {
-                ActivityHolder.finish()
+            if (isLastCall(callId)) {
+                LockScreenPresence.release(ActivityHolder.getActivity())
+                if (Platform.isLockScreen(baseContext)) ActivityHolder.finish()
             }
         }
     }

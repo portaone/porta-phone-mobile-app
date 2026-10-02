@@ -79,7 +79,9 @@ Builds the notification shown while the phone is ringing, plus its silent varian
 - **Full-screen intent**: applied only when enabled by configuration and the full-screen
   intent permission is granted; it launches the **host app's launcher activity** over the
   lock screen - the plugin has no dedicated incoming-call activity (its only activities are
-  the answer trampolines).
+  the answer trampolines). The intent (`buildCallAlertIntent`) is marked as the alert's and
+  has a request code of its own, so `LockScreenPresence` can tell it from any other opening
+  of the app (see [plugin.md](plugin.md), Lock-Screen Flags).
 - **Decline**: a service `PendingIntent` back to `IncomingCallService` carrying the call's
   bundle.
 - **Answer**: an activity `PendingIntent` through `AnswerCallTrampolineActivity`, so the
