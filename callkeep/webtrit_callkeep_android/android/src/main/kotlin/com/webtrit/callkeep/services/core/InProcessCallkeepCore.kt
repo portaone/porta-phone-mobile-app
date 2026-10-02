@@ -294,6 +294,14 @@ class InProcessCallkeepCore internal constructor(
     ) = tracker.updateState(callId, state)
 
     override fun markTerminated(callId: String) {
+        if (Looper.myLooper() != mainHandler.looper) {
+            // The terminal fact is recorded on the calling thread, so nothing that reads the
+            // tracker waits for the main looper. The registrations live on the main looper: a
+            // registration still waiting on this call is rejected there, a moment later.
+            tracker.markTerminated(callId)
+            mainHandler.post { markTerminated(callId) }
+            return
+        }
         incomingRegistrations[callId]?.let {
             rejectIncomingRegistration(it, "app reported call ended")
             return
@@ -307,23 +315,37 @@ class InProcessCallkeepCore internal constructor(
     ) {
         val callId = metadata.callId
         Log.i(TAG, "Call ended by the app: $callId ($reason)")
-        // Terminated now, ahead of the DeclineCall echo from the backend: a late state replay for
-        // this call is already suppressed, and a registration still waiting on it is rejected.
-        markTerminated(callId)
+        // The push session reports from a Pigeon background thread (its reportEndCall is served
+        // off the platform thread): on a cold start the main looper is busy for seconds and the
+        // caller has already hung up. The facts below are recorded on the calling thread - the
+        // tracker is a concurrent map and the router only starts a service - in an order that
+        // holds against a registration of the same id running on the main looper at the same
+        // time: the replay guard first, so a registration arriving between the lines already
+        // sees a call that is never to be presented. What lives on the main looper is done there.
         // The app never presented this call, so a replay must not present it either. A call the
         // app did present (a transfer-back reuses one) stays eligible for a new registration.
         if (reason == PEndCallReasonEnum.MISSED_WHILE_CONNECTING) markEndedWithoutFlutterState(callId)
+        // Terminated now, ahead of the DeclineCall echo from the backend: a late state replay for
+        // this call is already suppressed, and a registration still waiting on it is rejected.
+        markTerminated(callId)
         // The app knows this end: the backend's terminal event must not turn into a request to
         // end the call again, in this engine or in the push session's.
         tracker.markEndCallDispatched(callId)
         // An incoming-call service started for this call after its end would present a call that
         // is over: the pending release lets its launch end the call without showing it. A running
         // service has its receiver up and takes the IC_RELEASE_ENDED that follows directly; a
-        // post for it would be an orphan entry, never consumed.
-        if (!IncomingCallService.isRunning) {
-            PendingBroadcastQueue.post(PendingBroadcastQueue.incomingReleaseKey(callId))
+        // post for it would be an orphan entry, never consumed. The check is atomic against the
+        // service's start only on the main looper, so that is where it runs.
+        runOnMain {
+            if (!IncomingCallService.isRunning) {
+                PendingBroadcastQueue.post(PendingBroadcastQueue.incomingReleaseKey(callId))
+            }
         }
         router.startDeclineCall(metadata)
+    }
+
+    private fun runOnMain(block: () -> Unit) {
+        if (Looper.myLooper() == mainHandler.looper) block() else mainHandler.post(block)
     }
 
     override fun clearAndMarkEndCallDispatched(callId: String): Boolean {
@@ -456,9 +478,11 @@ class InProcessCallkeepCore internal constructor(
     // Incoming registration
     // -------------------------------------------------------------------------
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     private val incomingRegistrations: IncomingRegistrations by lazy {
         IncomingRegistrations(
-            Handler(Looper.getMainLooper()),
+            mainHandler,
             timeoutMs = { incomingRegistrationTimeoutMs(runCatching { context }.getOrNull()) },
         ) { registration ->
             rejectIncomingRegistration(registration, "confirmation timeout") {

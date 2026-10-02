@@ -34,6 +34,8 @@ import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * The app reporting a call ended is one fact for every engine: the core ends the call in the
@@ -123,6 +125,41 @@ class ReportCallEndedTest {
 
         assertEquals(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED, late.result()?.value)
         verify(router, never()).startIncomingCall(anyArgument(), anyArgument(), anyArgument())
+    }
+
+    @Test
+    fun `an end reported off the main looper is terminal at once and rejects the waiting registration there`() {
+        val waiting = report("c1")
+
+        offMain { core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.MISSED_WHILE_CONNECTING) }
+
+        assertTrue("the terminal fact must not wait for the main looper", core.isTerminated("c1"))
+        assertTrue(core.wasEndedWithoutFlutterState("c1"))
+        verify(router).startDeclineCall(anyArgument())
+        idle()
+        assertEquals(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM, waiting.result()?.value)
+        assertFalse(core.isPending("c1"))
+    }
+
+    @Test
+    fun `an end reported off the main looper leaves the pending release once the main looper has looked`() {
+        offMain { core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED) }
+
+        assertFalse(
+            "whether a service is running is only known on the main looper",
+            PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")),
+        )
+        idle()
+        assertTrue(PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")))
+    }
+
+    private fun offMain(block: () -> Unit) {
+        val worker = Executors.newSingleThreadExecutor()
+        try {
+            worker.submit(block).get(5, TimeUnit.SECONDS)
+        } finally {
+            worker.shutdownNow()
+        }
     }
 
     private fun report(callId: String): Deferred<PIncomingCallError?> = scope.async { core.registerIncomingCall(CallMetadata(callId = callId), "push") }.also { idle() }
