@@ -252,6 +252,22 @@ in one direction. Every path that clears `transfer` - a signalling failure, the 
 attended-transfer branch - therefore takes the banner off the lists with it, without any of them
 knowing there is a banner.
 
+**Leaving the call screen** — `CallScreenEvent.didPop` and the start of a transfer set
+`minimized: true` and do nothing else: the call is drawn as an overlay, and neither the proximity
+sensor nor the audio device is touched. Coming back (`didPush`, a submitted blind transfer) sets
+`minimized: false` and chooses no audio device either - the one in use may have been changed
+from the system's call screen meanwhile.
+
+`CallState.shouldListenToProximity` is therefore `isActive && isVoiceChat`, with no part for
+`minimized`. It used to be turned off for a minimized call, which on iOS is done by the
+`VideoChat` session mode and so moved a private audio call to the loudspeaker the moment the user
+pressed back (WT-1833). The cost of keeping it on is the same on both platforms: with a minimized
+audio call the screen goes dark when the sensor is covered.
+
+`didPush` still reports `proximityEnabled` to callkeep. That is not a reaction to the screen: an
+incoming call is reported without the flag, Android keeps the sensor off for a call that has
+none, and the call screen opening is the first moment every call passes through.
+
 **iOS audio reset** — on the first and last call, the BLoC forces audio to earpiece via
 `AppleNativeAudioManagement` to work around a platform bug where speaker stays active across
 calls.
