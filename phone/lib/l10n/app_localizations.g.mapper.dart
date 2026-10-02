@@ -1133,6 +1133,11 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_certificateVerification_disabled,
       'settings_certificateVerification_warning' =>
         settings_certificateVerification_warning,
+      'settings_speakerOnMinimize_Section_title' =>
+        settings_speakerOnMinimize_Section_title,
+      'settings_speakerOnMinimize_Section_tooltip' =>
+        settings_speakerOnMinimize_Section_tooltip,
+      'settings_speakerOnMinimize_switch' => settings_speakerOnMinimize_switch,
       'settings_callerId_cancel_button' => settings_callerId_cancel_button,
       'settings_callerId_defaultTitle' => settings_callerId_defaultTitle,
       'settings_callerId_dialcode' => settings_callerId_dialcode,

@@ -151,6 +151,18 @@ class _MediaSettingsScreenState extends State<MediaSettingsScreen> {
                   ),
                   body: Padding(padding: sectionPadding, child: const CertificateVerificationContent()),
                 ),
+              if (cubit.state.speakerOnMinimizeConfigurable)
+                ExpansionPanelRadio(
+                  value: 6,
+                  canTapOnHeader: true,
+                  headerBuilder: (_, isExpanded) => HeadingSection(
+                    title: l10n.settings_speakerOnMinimize_Section_title,
+                    tooltip: l10n.settings_speakerOnMinimize_Section_tooltip,
+                    icon: const Icon(Icons.volume_up_outlined),
+                    selected: isExpanded,
+                  ),
+                  body: Padding(padding: sectionPadding, child: const SpeakerOnMinimizeContent()),
+                ),
             ],
           ),
         ),

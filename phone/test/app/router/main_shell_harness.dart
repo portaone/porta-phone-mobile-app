@@ -233,6 +233,7 @@ class MainShellHarness {
   late final audioProcessingSettingsRepository = AudioProcessingSettingsRepositoryPrefsImpl(appPreferences);
   late final encodingPresetRepository = EncodingPresetRepositoryPrefsImpl(appPreferences);
   late final iceSettingsRepository = IceSettingsRepositoryPrefsImpl(appPreferences);
+  late final callAudioSettingsRepository = CallAudioSettingsRepositoryPrefsImpl(appPreferences);
   late final incomingCallTypeRepository = IncomingCallTypeRepositoryPrefsImpl(appPreferences);
   late final peerConnectionSettingsRepository = PeerConnectionSettingsRepositoryPrefsImpl(appPreferences);
   late final videoCapturingSettingsRepository = VideoCapturingSettingsRepositoryPrefsImpl(appPreferences);
@@ -296,6 +297,7 @@ class MainShellHarness {
         RepositoryProvider<AudioProcessingSettingsRepository>.value(value: audioProcessingSettingsRepository),
         RepositoryProvider<EncodingPresetRepository>.value(value: encodingPresetRepository),
         RepositoryProvider<IceSettingsRepository>.value(value: iceSettingsRepository),
+        RepositoryProvider<CallAudioSettingsRepository>.value(value: callAudioSettingsRepository),
         RepositoryProvider<IncomingCallTypeRepository>.value(value: incomingCallTypeRepository),
         RepositoryProvider<PeerConnectionSettingsRepository>.value(value: peerConnectionSettingsRepository),
         RepositoryProvider<VideoCapturingSettingsRepository>.value(value: videoCapturingSettingsRepository),

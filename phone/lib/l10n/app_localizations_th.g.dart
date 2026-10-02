@@ -2559,6 +2559,16 @@ class AppLocalizationsTh extends AppLocalizations {
       'Without verification the connection to the relay server can be intercepted. Call audio and video stay encrypted either way. Turn it back on once the server is fixed.';
 
   @override
+  String get settings_speakerOnMinimize_Section_title => 'ลำโพงเมื่อออกจากหน้าจอการโทร';
+
+  @override
+  String get settings_speakerOnMinimize_Section_tooltip =>
+      'กำหนดว่าการโทรด้วยเสียงจะย้ายไปที่ลำโพงเมื่อคุณออกจากหน้าจอการโทร และกลับไปที่หูฟังเมื่อคุณกลับมาหรือไม่';
+
+  @override
+  String get settings_speakerOnMinimize_switch => 'เปิดลำโพงเมื่อออกจากหน้าจอการโทร';
+
+  @override
   String get settings_callerId_cancel_button => 'ยกเลิก';
 
   @override

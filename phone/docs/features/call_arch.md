@@ -267,7 +267,9 @@ The rule answers with a device and the bloc asks for it through the ordinary
 button does.
 
 The option is `callConfig.audio.speakerOnMinimize` in the app config (on by default), read every
-time the screen is left; see [`../application_config.md`](../application_config.md).
+time the screen is left. Where the deployment sets `speakerOnMinimizeConfigurable`, media settings
+shows a switch and the device's choice wins (`CallAudioSettingsRepository`); see
+[`../application_config.md`](../application_config.md).
 
 `CallState.shouldListenToProximity` is therefore `isActive && isVoiceChat`, with no part for
 `minimized`. It used to be turned off for a minimized call, which on iOS is done by the

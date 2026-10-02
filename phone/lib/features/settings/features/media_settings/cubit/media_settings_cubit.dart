@@ -16,11 +16,17 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
     this._peerConnectionSettingsRepository,
     this._videoCapturingSettingsRepository,
     this._encodingSettingsRepository, {
+    required CallAudioConfig audioConfig,
+    required CallAudioSettingsRepository callAudioSettingsRepository,
     MediaSettingsCrashlyticsContext crashlyticsContext = const MediaSettingsCrashlyticsContext(),
   }) : _crashlyticsContext = crashlyticsContext,
+       _audioConfig = audioConfig,
+       _callAudioSettingsRepository = callAudioSettingsRepository,
        super(
          MediaSettingsState(
            certificateVerificationConfigurable: _iceConfig.certificateVerificationConfigurable,
+           speakerOnMinimize: callAudioSettingsRepository.resolveSpeakerOnMinimize(audioConfig),
+           speakerOnMinimizeConfigurable: audioConfig.speakerOnMinimizeConfigurable,
            encodingSettings: _encodingSettingsRepository.getEncodingSettings(),
            encodingPreset: _encodingPresetRepository.getEncodingPreset(),
            audioProcessingSettings: _audioProcessingSettingsRepository.getAudioProcessingSettings(),
@@ -46,6 +52,8 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
   final VideoCapturingSettingsRepository _videoCapturingSettingsRepository;
   final EncodingSettingsRepository _encodingSettingsRepository;
   final MediaSettingsCrashlyticsContext _crashlyticsContext;
+  final CallAudioConfig _audioConfig;
+  final CallAudioSettingsRepository _callAudioSettingsRepository;
 
   void setEncodingSettings(EncodingSettings settings) {
     emit(state.copyWithEncodingSettings(settings));
@@ -72,6 +80,11 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
     // three selected - but it is the stored shape, so it is honoured: writing
     // null puts the device back to following the deployment's default.
     setIceSettings(state.iceSettings.copyWithCertificateVerification(verification));
+  }
+
+  void setSpeakerOnMinimize(bool value) {
+    emit(state.copyWithSpeakerOnMinimize(value));
+    _callAudioSettingsRepository.setSpeakerOnMinimize(value);
   }
 
   void setIceSettings(IceSettings settings) {
@@ -114,6 +127,8 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
         iceSettings: IceSettings.blank().copyWithCertificateVerification(_iceConfig.certificateVerification),
         pearConnectionSettings: _defaultPeerConnectionSettings,
         certificateVerificationConfigurable: _iceConfig.certificateVerificationConfigurable,
+        speakerOnMinimize: _audioConfig.speakerOnMinimize,
+        speakerOnMinimizeConfigurable: _audioConfig.speakerOnMinimizeConfigurable,
       ),
     );
 
@@ -122,6 +137,7 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
     _audioProcessingSettingsRepository.setAudioProcessingSettings(AudioProcessingSettings.blank());
     _videoCapturingSettingsRepository.setVideoCapturingSettings(VideoCapturingSettings.blank());
     _iceSettingsRepository.setIceSettings(IceSettings.blank());
+    _callAudioSettingsRepository.setSpeakerOnMinimize(null);
     _peerConnectionSettingsRepository.setPearConnectionSettings(_defaultPeerConnectionSettings);
   }
 }
