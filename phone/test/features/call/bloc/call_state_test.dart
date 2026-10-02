@@ -918,9 +918,9 @@ void main() {
       expect(state.shouldListenToProximity, isFalse);
     });
 
-    test('false when call screen is minimized (overlay)', () {
+    test('true for a voice call whose screen is minimized (overlay)', () {
       final state = CallState(activeCalls: [_makeCall(video: false)], minimized: true);
-      expect(state.shouldListenToProximity, isFalse);
+      expect(state.shouldListenToProximity, isTrue);
     });
   });
 
@@ -1302,12 +1302,6 @@ void main() {
       expect(next.activeCalls.length, 1);
       expect(next.activeCalls.first.callId, 'c2');
       expect(next.isActive, isTrue);
-    });
-
-    test('proximity sensor is off when call is minimized', () {
-      final call = _makeCall(video: false);
-      final minimized = CallState(activeCalls: [call], minimized: true);
-      expect(minimized.shouldListenToProximity, isFalse);
     });
   });
 

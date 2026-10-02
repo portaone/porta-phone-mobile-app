@@ -249,7 +249,12 @@ class FakeCallkeep extends Fake implements Callkeep {
     String? displayName,
     bool? hasVideo,
     bool? proximityEnabled,
-  }) async {}
+  }) async {
+    if (proximityEnabled != null) proximityUpdates.add((callId: callId, enabled: proximityEnabled));
+  }
+
+  /// What the OS was told about each call's proximity sensor, in order.
+  final List<({String callId, bool enabled})> proximityUpdates = [];
 
   final List<String> ended = [];
 

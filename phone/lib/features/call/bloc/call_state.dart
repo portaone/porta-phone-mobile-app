@@ -362,7 +362,9 @@ class CallState with _$CallState {
 
   bool get isBlingTransferInitiated => activeCalls.blindTransferInitiated != null;
 
-  bool get shouldListenToProximity => isActive && isVoiceChat && minimized != true;
+  /// Whether the call screen is open plays no part: turning the sensor off is what moves an
+  /// audio call to the loudspeaker on iOS, so leaving the screen must not do it.
+  bool get shouldListenToProximity => isActive && isVoiceChat;
 
   List<ActiveCall> callsToTerminate(Set<String> activeLineCallIds) {
     final result = <ActiveCall>[];

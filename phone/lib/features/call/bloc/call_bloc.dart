@@ -1977,8 +1977,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     emit(newState);
 
-    await callkeep.reportUpdateCall(state.activeCalls.current.callId, proximityEnabled: state.shouldListenToProximity);
-
     // Hendgehog been there and removed putting on hold
     // He knows it was nessacery for first implementation of attended! transfer when our code can't auto hold on new call creation
     // but now we have it and hold inside _onCallControlEventAttendedTransferInitiated removed too
@@ -3159,11 +3157,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       });
       emit(newState);
 
-      await callkeep.reportUpdateCall(
-        state.activeCalls.current.callId,
-        proximityEnabled: state.shouldListenToProximity,
-      );
-
       final callBeingTransferred = state.retrieveActiveCall(e.callId);
       if (callBeingTransferred?.speakerOnBeforeMinimize == true) {
         final speakerDevice = state.availableAudioDevices.getSpeaker;
@@ -4272,6 +4265,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
       final currentCall = state.activeCalls.current;
 
+      // Not a reaction to the screen: an incoming call is reported to callkeep without a
+      // proximity flag, and Android keeps the sensor off for a call that has none. The call
+      // screen opening is the first moment every call passes through, so the flag is set
+      // here; a call that already carries it is told the same value again.
       await callkeep.reportUpdateCall(currentCall.callId, proximityEnabled: state.shouldListenToProximity);
 
       if (currentCall.speakerOnBeforeMinimize == true) {
@@ -4304,8 +4301,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             })
             .copyWith(minimized: true),
       );
-
-      await callkeep.reportUpdateCall(currentCallId, proximityEnabled: state.shouldListenToProximity);
+      // Nothing is reported to callkeep: leaving the screen changes neither the proximity
+      // sensor nor the audio route of the call.
     }
   }
 
