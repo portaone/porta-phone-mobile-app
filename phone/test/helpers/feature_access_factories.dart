@@ -65,6 +65,7 @@ AppConfig createMockAppConfig() {
   final preset = MockEncodingDefaultPresetOverride();
   final peerConnection = MockAppConfigPeerConnection();
   final ice = MockAppConfigIce();
+  final audio = MockAppConfigCallAudio();
   final negotiation = MockAppConfigNegotiation();
   final contacts = MockAppConfigContacts();
   final contactDetails = MockAppConfigContactDetails();
@@ -99,6 +100,9 @@ AppConfig createMockAppConfig() {
   when(() => call.ice).thenReturn(ice);
   when(() => ice.certificateVerification).thenReturn('verify');
   when(() => ice.certificateVerificationConfigurable).thenReturn(false);
+  when(() => call.audio).thenReturn(audio);
+  when(() => audio.speakerOnMinimize).thenReturn(true);
+  when(() => audio.speakerOnMinimizeConfigurable).thenReturn(false);
 
   when(() => contacts.details).thenReturn(contactDetails);
   when(() => contactDetails.actions).thenReturn(contactActions);

@@ -400,6 +400,26 @@ Embedded web resource tab.
 - `enableBlindTransfer`: Enables blind call transfer.
 - `enableAttendedTransfer`: Enables attended call transfer.
 
+### Audio Configuration
+
+`callConfig.audio`:
+
+```json
+"audio": {
+  "speakerOnMinimize": true,
+  "speakerOnMinimizeConfigurable": false
+}
+```
+
+- `speakerOnMinimize`: whether an audio call moves to the loudspeaker when its screen is left (the
+  Back arrow, the start of a transfer) and back to the earpiece when the screen is opened again.
+  `true` by default. Only a call on the earpiece is moved: a headset or a speaker the person turned
+  on stays as it is, and so does a video call. Set it to `false` for a deployment where leaving the
+  call screen must not change where the call is heard.
+- `speakerOnMinimizeConfigurable`: whether media settings offers the switch, letting a person
+  change the value on their own device. `false` by default. Where it is offered the device's
+  choice wins; where it is not, a choice stored earlier is ignored and the value above applies.
+
 ### ICE Configuration
 
 - `certificateVerification`: `verify` (default) or `disabled`. An unrecognised value reads as

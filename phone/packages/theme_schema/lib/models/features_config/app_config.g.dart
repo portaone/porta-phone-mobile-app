@@ -254,13 +254,30 @@ const _$AppConfigJsonSchema = {
         'certificateVerification': {
           'type': 'string',
           'description':
-              "How a `turns:` certificate is verified: `auto`, `enabled` or `disabled`.\n\n`auto` - the default and the only value that changes nothing - verifies\nusing whatever trust anchors the deployment serves beside its ICE servers,\nand leaves the media library's own decision in place when it serves none.\n`disabled` stops verifying that connection ENTIRELY, hostname included; it\nexists for a deployment whose TURN certificate the library will not accept\nand whose calls cannot wait for that to be fixed properly.\n\nA value this build does not recognise reads as `auto`.",
-          'default': 'auto',
+              "How a `turns:` certificate is verified: `verify` or `disabled`.\n\n`verify` - the default and the only value that changes nothing - checks\nthe certificate using whatever trust anchors the deployment serves beside\nits ICE servers, and leaves the media library's own decision in place when\nit serves none. `disabled` stops verifying that connection ENTIRELY,\nhostname included; it exists for a deployment whose TURN certificate the\nlibrary will not accept and whose calls cannot wait for that to be fixed\nproperly.\n\nA value this build does not recognise reads as `verify`.",
+          'default': 'verify',
         },
         'certificateVerificationConfigurable': {
           'type': 'boolean',
           'description':
               'Whether media settings offers the control, so a person can change\n[certificateVerification] on their own device.\n\nOff by default: a switch that turns off certificate verification does not\nbelong in every build, only in one whose operator asked for it.',
+          'default': false,
+        },
+      },
+    },
+    'AppConfigCallAudio': {
+      'type': 'object',
+      'properties': {
+        'speakerOnMinimize': {
+          'type': 'boolean',
+          'description':
+              'Whether an audio call moves to the loudspeaker when its screen is left\nand back to the earpiece when the screen is opened again.\n\nOnly a call on the earpiece is moved: a headset or a speaker the person\nchose stays as it is, and a video call is not touched.',
+          'default': true,
+        },
+        'speakerOnMinimizeConfigurable': {
+          'type': 'boolean',
+          'description':
+              'Whether media settings offers the control, so a person can change\n[speakerOnMinimize] on their own device.',
           'default': false,
         },
       },
@@ -273,6 +290,7 @@ const _$AppConfigJsonSchema = {
         'encoding': {r'$ref': r'#/$defs/AppConfigEncoding'},
         'peerConnection': {r'$ref': r'#/$defs/AppConfigPeerConnection'},
         'ice': {r'$ref': r'#/$defs/AppConfigIce'},
+        'audio': {r'$ref': r'#/$defs/AppConfigCallAudio'},
       },
     },
     'AppConfigContactDetailsActions': {
@@ -532,6 +550,9 @@ AppConfigCall _$AppConfigCallFromJson(
   ice: json['ice'] == null
       ? const AppConfigIce()
       : AppConfigIce.fromJson(json['ice'] as Map<String, dynamic>),
+  audio: json['audio'] == null
+      ? const AppConfigCallAudio()
+      : AppConfigCallAudio.fromJson(json['audio'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$AppConfigCallToJson(AppConfigCall instance) =>
@@ -541,6 +562,7 @@ Map<String, dynamic> _$AppConfigCallToJson(AppConfigCall instance) =>
       'encoding': instance.encoding.toJson(),
       'peerConnection': instance.peerConnection.toJson(),
       'ice': instance.ice.toJson(),
+      'audio': instance.audio.toJson(),
     };
 
 AppConfigTransfer _$AppConfigTransferFromJson(Map<String, dynamic> json) =>
@@ -572,7 +594,8 @@ Map<String, dynamic> _$AppConfigEncodingToJson(AppConfigEncoding instance) =>
     };
 
 AppConfigIce _$AppConfigIceFromJson(Map<String, dynamic> json) => AppConfigIce(
-  certificateVerification: json['certificateVerification'] as String? ?? 'auto',
+  certificateVerification:
+      json['certificateVerification'] as String? ?? 'verify',
   certificateVerificationConfigurable:
       json['certificateVerificationConfigurable'] as bool? ?? false,
 );
@@ -582,6 +605,19 @@ Map<String, dynamic> _$AppConfigIceToJson(AppConfigIce instance) =>
       'certificateVerification': instance.certificateVerification,
       'certificateVerificationConfigurable':
           instance.certificateVerificationConfigurable,
+    };
+
+AppConfigCallAudio _$AppConfigCallAudioFromJson(Map<String, dynamic> json) =>
+    AppConfigCallAudio(
+      speakerOnMinimize: json['speakerOnMinimize'] as bool? ?? true,
+      speakerOnMinimizeConfigurable:
+          json['speakerOnMinimizeConfigurable'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$AppConfigCallAudioToJson(AppConfigCallAudio instance) =>
+    <String, dynamic>{
+      'speakerOnMinimize': instance.speakerOnMinimize,
+      'speakerOnMinimizeConfigurable': instance.speakerOnMinimizeConfigurable,
     };
 
 AppConfigPeerConnection _$AppConfigPeerConnectionFromJson(

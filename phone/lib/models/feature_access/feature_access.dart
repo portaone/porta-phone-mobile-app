@@ -1,5 +1,6 @@
 export 'bottom_menu_config.dart';
 export 'bottom_menu_feature.dart';
+export 'call_audio_config.dart';
 export 'call_config.dart';
 export 'call_pull_video_strategy.dart';
 export 'contact_details_config.dart';

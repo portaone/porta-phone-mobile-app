@@ -318,6 +318,7 @@ class AppConfigCall with _$AppConfigCall {
     this.encoding = const AppConfigEncoding(),
     this.peerConnection = const AppConfigPeerConnection(),
     this.ice = const AppConfigIce(),
+    this.audio = const AppConfigCallAudio(),
   });
 
   @override
@@ -334,6 +335,9 @@ class AppConfigCall with _$AppConfigCall {
 
   @override
   final AppConfigIce ice;
+
+  @override
+  final AppConfigCallAudio audio;
 
   factory AppConfigCall.fromJson(Map<String, Object?> json) => _$AppConfigCallFromJson(json);
 
@@ -405,6 +409,29 @@ class AppConfigIce with _$AppConfigIce {
   factory AppConfigIce.fromJson(Map<String, Object?> json) => _$AppConfigIceFromJson(json);
 
   Map<String, Object?> toJson() => _$AppConfigIceToJson(this);
+}
+
+@freezed
+@JsonSerializable(explicitToJson: true)
+class AppConfigCallAudio with _$AppConfigCallAudio {
+  const AppConfigCallAudio({this.speakerOnMinimize = true, this.speakerOnMinimizeConfigurable = false});
+
+  /// Whether an audio call moves to the loudspeaker when its screen is left
+  /// and back to the earpiece when the screen is opened again.
+  ///
+  /// Only a call on the earpiece is moved: a headset or a speaker the person
+  /// chose stays as it is, and a video call is not touched.
+  @override
+  final bool speakerOnMinimize;
+
+  /// Whether media settings offers the control, so a person can change
+  /// [speakerOnMinimize] on their own device.
+  @override
+  final bool speakerOnMinimizeConfigurable;
+
+  factory AppConfigCallAudio.fromJson(Map<String, Object?> json) => _$AppConfigCallAudioFromJson(json);
+
+  Map<String, Object?> toJson() => _$AppConfigCallAudioToJson(this);
 }
 
 @freezed

@@ -17,6 +17,7 @@ export 'rtp_traffic_monitor.dart';
 export 'sdp_mod_builder.dart';
 export 'sdp_munger.dart';
 export 'sdp_sanitizer.dart';
+export 'speaker_on_minimize.dart';
 export 'thumbnail_layout.dart';
 export 'user_media_builder.dart';
 export 'video_constraints_builder.dart';

@@ -42,6 +42,8 @@ class MockAppConfigPeerConnection extends Mock implements AppConfigPeerConnectio
 
 class MockAppConfigIce extends Mock implements AppConfigIce {}
 
+class MockAppConfigCallAudio extends Mock implements AppConfigCallAudio {}
+
 class MockAppConfigNegotiation extends Mock implements AppConfigNegotiationSettingsOverride {}
 
 class MockAppConfigContacts extends Mock implements AppConfigContacts {}

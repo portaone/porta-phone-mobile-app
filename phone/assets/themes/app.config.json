@@ -280,6 +280,10 @@
     "ice": {
       "certificateVerification": "verify",
       "certificateVerificationConfigurable": true
+    },
+    "audio": {
+      "speakerOnMinimize": true,
+      "speakerOnMinimizeConfigurable": true
     }
   },
   "contacts": {

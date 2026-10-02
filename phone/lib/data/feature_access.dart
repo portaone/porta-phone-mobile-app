@@ -512,6 +512,7 @@ abstract final class CallMapper {
     final encodingConfig = rawCallConfig.encoding;
     final peerConnectionConfig = rawCallConfig.peerConnection;
     final iceConfig = rawCallConfig.ice;
+    final audioConfig = rawCallConfig.audio;
     final defaultPresetOverride = encodingConfig.defaultPresetOverride;
 
     // Determine if the media settings UI should be accessible
@@ -581,6 +582,10 @@ abstract final class CallMapper {
             TurnCertificateVerification.tryParse(iceConfig.certificateVerification) ??
             TurnCertificateVerification.verify,
         certificateVerificationConfigurable: iceConfig.certificateVerificationConfigurable,
+      ),
+      audio: CallAudioConfig(
+        speakerOnMinimize: audioConfig.speakerOnMinimize,
+        speakerOnMinimizeConfigurable: audioConfig.speakerOnMinimizeConfigurable,
       ),
       peerConnection: PeerConnectionSettings(
         negotiationSettings: NegotiationSettings(

@@ -223,6 +223,7 @@ class MainShellBlocs extends StatelessWidget {
               peerConnectionPolicyApplier: pearConnectionPolicyApplier,
               sendPresenceSettings: featureAccess.sipPresenceConfig.hybridPresenceSupport,
               capabilities: featureAccess.callConfig.capabilities,
+              speakerOnMinimize: () => featureAccess.callConfig.audio.speakerOnMinimize,
               onCallEnded: PostCallRefresh(userInfoSync: userInfoSync, cdrsSync: cdrsSync).call,
               onDiagnosticReportRequested: (id, error) => diagnosticService.request(
                 DiagnosticType.androidCallkeepOnly,
