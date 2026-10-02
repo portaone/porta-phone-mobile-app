@@ -39,9 +39,11 @@ import 'app/startup_wave.dart';
 import 'firebase_options.dart';
 import 'services/services.dart';
 
-// Lazily initialised once per Firebase background isolate lifetime.
+// Initialised once per Firebase background isolate lifetime. Shared as the run, not as the
+// result: two pushes a third of a second apart both enter the handler before the first init
+// resolves, and the second must wait on it rather than start an init of its own.
 // Dart isolates do not share memory -- each background isolate gets its own instance.
-IsolateContext? _isolateContext;
+final _isolateContext = AsyncOnce(IsolateContext.init);
 
 /// A source of the [AppThemes] the app starts on. See [bootstrap].
 typedef AppThemesLoader = Future<AppThemes> Function();
@@ -577,7 +579,7 @@ Future<void> _recordBackgroundError(Object error, StackTrace stack, Logger logge
 /// Core logic for processing background messages.
 Future<void> _handleBackgroundMessage(RemoteMessage message, Logger logger) async {
   // Initialise shared isolate dependencies once per isolate lifetime.
-  _isolateContext ??= await IsolateContext.init();
+  final isolateContext = await _isolateContext();
 
   final appPush = AppRemotePush.fromFCM(message);
 
@@ -586,7 +588,7 @@ Future<void> _handleBackgroundMessage(RemoteMessage message, Logger logger) asyn
   if (!kIsWeb && appPush is PendingCallPush && Platform.isAndroid) {
     // Known issue: [SqliteException] with code 5 (database is locked) may occur
     // due to concurrent database access from multiple isolates.
-    final displayName = await _resolveContactDisplayNameWithFallback(appPush, logger);
+    final displayName = await _resolveContactDisplayNameWithFallback(appPush, logger, isolateContext.appPath);
 
     await AndroidCallkeepServices.backgroundPushNotificationBootstrapService
         .reportNewIncomingCall(
@@ -608,7 +610,7 @@ Future<void> _handleBackgroundMessage(RemoteMessage message, Logger logger) asyn
       time: DateTime.now(),
     );
 
-    final appPath = _isolateContext!.appPath;
+    final appPath = isolateContext.appPath;
     if (appPath != null) {
       await DatabaseScope(appPath.applicationDocumentsPath)
           .onError((e, _) => logger.warning('MessagePush DB write failed: $e'))
@@ -623,8 +625,7 @@ Future<void> _handleBackgroundMessage(RemoteMessage message, Logger logger) asyn
 /// This process is susceptible to [SqliteException] with code 5 (database is locked)
 /// when multiple isolates (e.g., background FCM and main app) access the database
 /// concurrently. If any error occurs, the display name from the push payload is returned.
-Future<String> _resolveContactDisplayNameWithFallback(PendingCallPush appPush, Logger logger) async {
-  final appPath = _isolateContext!.appPath;
+Future<String> _resolveContactDisplayNameWithFallback(PendingCallPush appPush, Logger logger, AppPath? appPath) async {
   if (appPath == null) return appPush.call.displayName;
 
   String? contactName;
