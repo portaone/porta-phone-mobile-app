@@ -26,6 +26,7 @@ class RepositoryUserSessionCleanupResolver implements UserSessionCleanupResolver
     required this.audioProcessingSettingsRepository,
     required this.encodingPresetRepository,
     required this.iceSettingsRepository,
+    required this.callAudioSettingsRepository,
     required this.incomingCallTypeRepository,
     required this.peerConnectionSettingsRepository,
     required this.videoCapturingSettingsRepository,
@@ -46,6 +47,7 @@ class RepositoryUserSessionCleanupResolver implements UserSessionCleanupResolver
   final AudioProcessingSettingsRepository audioProcessingSettingsRepository;
   final EncodingPresetRepository encodingPresetRepository;
   final IceSettingsRepository iceSettingsRepository;
+  final CallAudioSettingsRepository callAudioSettingsRepository;
   final IncomingCallTypeRepository incomingCallTypeRepository;
   final PeerConnectionSettingsRepository peerConnectionSettingsRepository;
   final VideoCapturingSettingsRepository videoCapturingSettingsRepository;
@@ -72,6 +74,7 @@ class RepositoryUserSessionCleanupResolver implements UserSessionCleanupResolver
       audioProcessingSettingsRepository.clear().suppressError('audioProcessingSettingsRepository'),
       encodingPresetRepository.clear().suppressError('encodingPresetRepository'),
       iceSettingsRepository.clear().suppressError('iceSettingsRepository'),
+      callAudioSettingsRepository.clear().suppressError('callAudioSettingsRepository'),
       incomingCallTypeRepository.clear().suppressError('incomingCallTypeRepository'),
       peerConnectionSettingsRepository.clear().suppressError('peerConnectionSettingsRepository'),
       videoCapturingSettingsRepository.clear().suppressError('videoCapturingSettingsRepository'),

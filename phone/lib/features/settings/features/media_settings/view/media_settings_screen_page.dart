@@ -26,6 +26,8 @@ class MediaSettingsScreenPage extends StatelessWidget {
         context.read<PeerConnectionSettingsRepository>(),
         context.read<VideoCapturingSettingsRepository>(),
         context.read<EncodingSettingsRepository>(),
+        audioConfig: callConfig.audio,
+        callAudioSettingsRepository: context.read<CallAudioSettingsRepository>(),
       ),
       child: const MediaSettingsScreen(),
     );

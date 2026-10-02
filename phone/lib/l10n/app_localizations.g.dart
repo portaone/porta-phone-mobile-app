@@ -4687,6 +4687,24 @@ abstract class AppLocalizations {
   /// **'Without verification the connection to the relay server can be intercepted. Call audio and video stay encrypted either way. Turn it back on once the server is fixed.'**
   String get settings_certificateVerification_warning;
 
+  /// No description provided for @settings_speakerOnMinimize_Section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker when leaving the call'**
+  String get settings_speakerOnMinimize_Section_title;
+
+  /// No description provided for @settings_speakerOnMinimize_Section_tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Whether an audio call moves to the loudspeaker when you leave the call screen, and back to the earpiece when you return to it.'**
+  String get settings_speakerOnMinimize_Section_tooltip;
+
+  /// No description provided for @settings_speakerOnMinimize_switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn the speaker on when leaving the call screen'**
+  String get settings_speakerOnMinimize_switch;
+
   /// No description provided for @settings_callerId_cancel_button.
   ///
   /// In en, this message translates to:

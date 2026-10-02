@@ -2575,6 +2575,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Without verification the connection to the relay server can be intercepted. Call audio and video stay encrypted either way. Turn it back on once the server is fixed.';
 
   @override
+  String get settings_speakerOnMinimize_Section_title => 'Speaker when leaving the call';
+
+  @override
+  String get settings_speakerOnMinimize_Section_tooltip =>
+      'Whether an audio call moves to the loudspeaker when you leave the call screen, and back to the earpiece when you return to it.';
+
+  @override
+  String get settings_speakerOnMinimize_switch => 'Turn the speaker on when leaving the call screen';
+
+  @override
   String get settings_callerId_cancel_button => 'Cancel';
 
   @override

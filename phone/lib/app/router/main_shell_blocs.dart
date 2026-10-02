@@ -127,6 +127,7 @@ class MainShellBlocs extends StatelessWidget {
             final audioProcessingSettingsRepository = context.read<AudioProcessingSettingsRepository>();
             final encodingPresetRepository = context.read<EncodingPresetRepository>();
             final iceSettingsRepository = context.read<IceSettingsRepository>();
+            final callAudioSettingsRepository = context.read<CallAudioSettingsRepository>();
             final peerConnectionSettingsRepository = context.read<PeerConnectionSettingsRepository>();
             final videoCapturingSettingsRepository = context.read<VideoCapturingSettingsRepository>();
             final encodingSettingsRepository = context.read<EncodingSettingsRepository>();
@@ -223,7 +224,8 @@ class MainShellBlocs extends StatelessWidget {
               peerConnectionPolicyApplier: pearConnectionPolicyApplier,
               sendPresenceSettings: featureAccess.sipPresenceConfig.hybridPresenceSupport,
               capabilities: featureAccess.callConfig.capabilities,
-              speakerOnMinimize: () => featureAccess.callConfig.audio.speakerOnMinimize,
+              speakerOnMinimize: () =>
+                  callAudioSettingsRepository.resolveSpeakerOnMinimize(featureAccess.callConfig.audio),
               onCallEnded: PostCallRefresh(userInfoSync: userInfoSync, cdrsSync: cdrsSync).call,
               onDiagnosticReportRequested: (id, error) => diagnosticService.request(
                 DiagnosticType.androidCallkeepOnly,

@@ -11,6 +11,8 @@ class MediaSettingsState with EquatableMixin {
     required this.iceSettings,
     required this.pearConnectionSettings,
     required this.certificateVerificationConfigurable,
+    required this.speakerOnMinimize,
+    required this.speakerOnMinimizeConfigurable,
   });
 
   final EncodingSettings encodingSettings;
@@ -32,6 +34,14 @@ class MediaSettingsState with EquatableMixin {
   /// then hide the section at runtime.
   final bool certificateVerificationConfigurable;
 
+  /// Whether an audio call moves to the loudspeaker when its screen is left -
+  /// the value in force, so the control shows what the next call will do.
+  final bool speakerOnMinimize;
+
+  /// Whether this deployment offers that control at all. Fixed for the life of
+  /// the screen, like [certificateVerificationConfigurable].
+  final bool speakerOnMinimizeConfigurable;
+
   MediaSettingsState copyWithEncodingPresets(EncodingPreset? preset) {
     return MediaSettingsState(
       encodingSettings: encodingSettings,
@@ -41,6 +51,8 @@ class MediaSettingsState with EquatableMixin {
       iceSettings: iceSettings,
       pearConnectionSettings: pearConnectionSettings,
       certificateVerificationConfigurable: certificateVerificationConfigurable,
+      speakerOnMinimize: speakerOnMinimize,
+      speakerOnMinimizeConfigurable: speakerOnMinimizeConfigurable,
     );
   }
 
@@ -53,6 +65,8 @@ class MediaSettingsState with EquatableMixin {
       iceSettings: iceSettings,
       pearConnectionSettings: pearConnectionSettings,
       certificateVerificationConfigurable: certificateVerificationConfigurable,
+      speakerOnMinimize: speakerOnMinimize,
+      speakerOnMinimizeConfigurable: speakerOnMinimizeConfigurable,
     );
   }
 
@@ -65,6 +79,8 @@ class MediaSettingsState with EquatableMixin {
       iceSettings: iceSettings,
       pearConnectionSettings: pearConnectionSettings,
       certificateVerificationConfigurable: certificateVerificationConfigurable,
+      speakerOnMinimize: speakerOnMinimize,
+      speakerOnMinimizeConfigurable: speakerOnMinimizeConfigurable,
     );
   }
 
@@ -77,6 +93,8 @@ class MediaSettingsState with EquatableMixin {
       iceSettings: iceSettings,
       pearConnectionSettings: pearConnectionSettings,
       certificateVerificationConfigurable: certificateVerificationConfigurable,
+      speakerOnMinimize: speakerOnMinimize,
+      speakerOnMinimizeConfigurable: speakerOnMinimizeConfigurable,
     );
   }
 
@@ -89,6 +107,8 @@ class MediaSettingsState with EquatableMixin {
       iceSettings: settings,
       pearConnectionSettings: pearConnectionSettings,
       certificateVerificationConfigurable: certificateVerificationConfigurable,
+      speakerOnMinimize: speakerOnMinimize,
+      speakerOnMinimizeConfigurable: speakerOnMinimizeConfigurable,
     );
   }
 
@@ -101,6 +121,22 @@ class MediaSettingsState with EquatableMixin {
       iceSettings: iceSettings,
       pearConnectionSettings: settings,
       certificateVerificationConfigurable: certificateVerificationConfigurable,
+      speakerOnMinimize: speakerOnMinimize,
+      speakerOnMinimizeConfigurable: speakerOnMinimizeConfigurable,
+    );
+  }
+
+  MediaSettingsState copyWithSpeakerOnMinimize(bool value) {
+    return MediaSettingsState(
+      encodingSettings: encodingSettings,
+      encodingPreset: encodingPreset,
+      audioProcessingSettings: audioProcessingSettings,
+      videoCapturingSettings: videoCapturingSettings,
+      iceSettings: iceSettings,
+      pearConnectionSettings: pearConnectionSettings,
+      certificateVerificationConfigurable: certificateVerificationConfigurable,
+      speakerOnMinimize: value,
+      speakerOnMinimizeConfigurable: speakerOnMinimizeConfigurable,
     );
   }
 
@@ -113,6 +149,8 @@ class MediaSettingsState with EquatableMixin {
     iceSettings,
     pearConnectionSettings,
     certificateVerificationConfigurable,
+    speakerOnMinimize,
+    speakerOnMinimizeConfigurable,
   ];
 
   @override

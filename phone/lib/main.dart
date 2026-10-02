@@ -234,6 +234,7 @@ class _RootAppState extends State<RootApp> {
           final audioProcessingSettingsRepository = AudioProcessingSettingsRepositoryPrefsImpl(prefs);
           final encodingPresetRepository = EncodingPresetRepositoryPrefsImpl(prefs);
           final iceSettingsRepository = IceSettingsRepositoryPrefsImpl(prefs);
+          final callAudioSettingsRepository = CallAudioSettingsRepositoryPrefsImpl(prefs);
           final incomingCallTypeRepository = IncomingCallTypeRepositoryPrefsImpl(prefs);
           final peerConnectionSettingsRepository = PeerConnectionSettingsRepositoryPrefsImpl(prefs);
           final specialPermissionsRepository = SpecialPermissionsRepositoryPrefsImpl(prefs);
@@ -260,6 +261,7 @@ class _RootAppState extends State<RootApp> {
               RepositoryProvider<AudioProcessingSettingsRepository>.value(value: audioProcessingSettingsRepository),
               RepositoryProvider<EncodingPresetRepository>.value(value: encodingPresetRepository),
               RepositoryProvider<IceSettingsRepository>.value(value: iceSettingsRepository),
+              RepositoryProvider<CallAudioSettingsRepository>.value(value: callAudioSettingsRepository),
               RepositoryProvider<IncomingCallTypeRepository>.value(value: incomingCallTypeRepository),
               RepositoryProvider<PeerConnectionSettingsRepository>.value(value: peerConnectionSettingsRepository),
               RepositoryProvider<SpecialPermissionsRepository>.value(value: specialPermissionsRepository),

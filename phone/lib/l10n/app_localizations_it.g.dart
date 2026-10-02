@@ -2601,6 +2601,16 @@ class AppLocalizationsIt extends AppLocalizations {
       'Without verification the connection to the relay server can be intercepted. Call audio and video stay encrypted either way. Turn it back on once the server is fixed.';
 
   @override
+  String get settings_speakerOnMinimize_Section_title => 'Vivavoce all\'uscita dalla chiamata';
+
+  @override
+  String get settings_speakerOnMinimize_Section_tooltip =>
+      'Se una chiamata audio passa al vivavoce quando si lascia la schermata della chiamata e torna all\'auricolare quando vi si rientra.';
+
+  @override
+  String get settings_speakerOnMinimize_switch => 'Attiva il vivavoce quando si lascia la schermata della chiamata';
+
+  @override
   String get settings_callerId_cancel_button => 'Annulla';
 
   @override

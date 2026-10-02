@@ -2611,6 +2611,16 @@ class AppLocalizationsUk extends AppLocalizations {
       'Без перевірки з\'єднання із сервером ретрансляції можна перехопити. Звук і відео дзвінка лишаються зашифрованими в обох випадках. Увімкніть назад, щойно сервер виправлять.';
 
   @override
+  String get settings_speakerOnMinimize_Section_title => 'Гучномовець при виході з дзвінка';
+
+  @override
+  String get settings_speakerOnMinimize_Section_tooltip =>
+      'Чи переходить аудіодзвінок на гучномовець, коли ви залишаєте екран дзвінка, і назад на розмовний динамік, коли повертаєтесь.';
+
+  @override
+  String get settings_speakerOnMinimize_switch => 'Вмикати гучномовець при виході з екрана дзвінка';
+
+  @override
   String get settings_callerId_cancel_button => 'Скасувати';
 
   @override
