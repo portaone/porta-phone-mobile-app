@@ -106,7 +106,7 @@ internal class StandaloneIncomingCallNotificationBuilder : NotificationBuilder()
 
         val builder =
             baseBuilder(content.title, content.description, content.smallIcon).apply {
-                // Guard against a null launch intent before calling buildOpenAppIntent: if no
+                // Guard against a null launch intent before calling buildCallAlertIntent: if no
                 // launchable activity exists, PendingIntent.getActivity() would receive a null
                 // Intent and behave unpredictably on some API levels.
                 val launchIntent = Platform.getLaunchActivity(context)
@@ -115,7 +115,7 @@ internal class StandaloneIncomingCallNotificationBuilder : NotificationBuilder()
                         StorageDelegate.IncomingCall.isFullScreen(context) &&
                         PermissionsHelper(context).canUseFullScreenIntent()
                 if (canUseFullScreen) {
-                    setFullScreenIntent(buildOpenAppIntent(context), true)
+                    setFullScreenIntent(buildCallAlertIntent(context), true)
                 }
             }
 

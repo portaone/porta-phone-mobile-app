@@ -1,10 +1,14 @@
 package com.webtrit.callkeep
 
+import android.app.Activity
 import android.content.Context
 import android.os.Build
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
+import com.webtrit.callkeep.common.ActivityHolder
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.models.CallMetadata
+import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.services.foreground.ForegroundService
 import org.junit.After
@@ -15,6 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /**
@@ -37,6 +42,7 @@ class ForegroundServiceLastCallTest {
 
     @After
     fun tearDown() {
+        ActivityHolder.setActivity(null)
         service.onDestroy()
         core.clear()
     }
@@ -90,4 +96,37 @@ class ForegroundServiceLastCallTest {
 
         assertFalse("B was reported and its screen is coming", service.isLastCall("A"))
     }
+
+    @Test
+    fun `the last call ending takes the activity back behind the keyguard`() {
+        // The call alert let the activity over the keyguard; the call ended before the app
+        // built its call screen, so the app never clears the flags itself.
+        val activity = overKeyguard()
+        ringing("A")
+
+        core.notifyConnectionEvent(CallLifecycleEvent.HungUp, CallMetadata(callId = "A").toBundle())
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertFalse(shadowOf(activity).showWhenLocked)
+        assertFalse(shadowOf(activity).turnScreenOn)
+    }
+
+    @Test
+    fun `a call ending while another rings keeps the activity over the keyguard`() {
+        val activity = overKeyguard()
+        ringing("A")
+        ringing("B")
+
+        core.notifyConnectionEvent(CallLifecycleEvent.HungUp, CallMetadata(callId = "B").toBundle())
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertTrue("A still rings", shadowOf(activity).showWhenLocked)
+    }
+
+    private fun overKeyguard(): Activity =
+        Robolectric.buildActivity(Activity::class.java).setup().get().also {
+            it.setShowWhenLocked(true)
+            it.setTurnScreenOn(true)
+            ActivityHolder.setActivity(it)
+        }
 }

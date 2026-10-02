@@ -44,8 +44,8 @@ a CS command issued before any entry point has run throws `IllegalStateException
 synchronous-throw case described under Incoming registration below. Swapping the `instance`
 assignment is the single point to change IPC strategy without touching call sites.
 
-Known consumers: `ForegroundService`, `ConnectionsApi`, `WebtritCallkeepPlugin` (lock-screen
-flags on ON_START), `BackgroundPushNotificationIsolateBootstrapApi`, `ExternalEngineCallApi`,
+Known consumers: `ForegroundService`, `ConnectionsApi`, `LockScreenPresence` (whether a call is
+there when the call alert opens the Activity), `BackgroundPushNotificationIsolateBootstrapApi`, `ExternalEngineCallApi`,
 `IncomingCallService` + its handlers/controller, `ActiveCallService`,
 `IncomingCallSmsTriggerReceiver`, `StandaloneCallService` (event delivery), `CallDiagnostics`.
 

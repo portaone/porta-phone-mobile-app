@@ -30,21 +30,17 @@ Called once when the Flutter engine attaches:
 Called when an `Activity` is available:
 
 - Saves `ActivityHolder.activity`.
-- Adds a `LifecycleObserver` to receive `ON_START` / `ON_STOP` events.
+- Hands the intent that opened the Activity to `LockScreenPresence` (see Lock-Screen Flags) and
+  registers a new-intent listener for the same check when the Activity is reopened.
 - Binds `ForegroundService` (see below).
 
 ### `onDetachedFromActivity()` / `onDetachedFromActivityForConfigChanges()`
 
-- Removes lifecycle observer.
+- Removes the new-intent listener.
 - Unbinds (and optionally stops) `ForegroundService`.
 
-### `onStateChanged(owner, event)`
-
-Responds to `Lifecycle.Event.ON_START`:
-
-- Reads current active-call state from `MainProcessConnectionTracker`.
-- Sets or clears `setShowWhenLockedCompat` / `setTurnScreenOnCompat` on the activity window so
-  the app appears over the lock screen only when a call is active.
+The plugin observes no Activity lifecycle: it takes no `Lifecycle` from the binding (Flutter
+reserves `HiddenLifecycleReference` for `flutter_plugin_android_lifecycle`).
 
 ## ForegroundService Binding
 
@@ -62,15 +58,22 @@ remaining Pigeon host API — `PHostApi` — which is implemented by `Foreground
 
 ## Lock-Screen Flags
 
-The plugin toggles two `Window` flags depending on whether any non-terminated call exists in
-`MainProcessConnectionTracker`:
+The show-when-locked and turn-screen-on flags belong to the app: it sets them while its call
+screen is shown and clears them when that screen goes (`ActivityControlApi.showOverLockscreen` /
+`wakeScreenOnShow`). Only the call screen may be over the keyguard; a minimized call, the keypad
+or the contacts must stay behind it.
 
-| Flag                            | Condition             |
-|---------------------------------|-----------------------|
-| `setShowWhenLockedCompat(true)` | An active call exists |
-| `setTurnScreenOnCompat(true)`   | An active call exists |
+Callkeep covers the one moment the app cannot, in `LockScreenPresence`:
 
-This ensures the incoming-call or in-call UI surfaces even when the device is locked.
+| Event | Flags | Why |
+| --- | --- | --- |
+| The Activity is opened (attach or new intent) by the incoming-call alert's full-screen intent, the phone is locked and a call is registered or pending | set | Behind the keyguard a Flutter view draws no frames, so the app never builds the call screen that would let it in; without this the call does not appear on a locked phone |
+| The last call ends (`ForegroundService`, `DeclineCall` / `HungUp` / `ConnectionNotFound`) | cleared | A call that ended before the app built its call screen leaves the flags to callkeep |
+
+The alert's intent carries `LockScreenPresence.EXTRA_OPENED_BY_CALL_ALERT`
+(`NotificationBuilder.buildCallAlertIntent`). An Activity opened any other way - from the
+launcher during a call, say - is never let over the keyguard by callkeep: the Activity would show
+whatever screen the app is on.
 
 ## Related Components
 
