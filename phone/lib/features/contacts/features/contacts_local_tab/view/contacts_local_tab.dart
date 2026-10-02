@@ -2,8 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:permission_handler/permission_handler.dart';
-
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -11,6 +9,7 @@ import 'package:webtrit_phone/theme/extension/elevated_button_styles.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../../../contacts.dart';
+import 'widgets/widgets.dart';
 
 class ContactsLocalTab extends StatefulWidget {
   const ContactsLocalTab({super.key, this.markFavorites = false});
@@ -61,6 +60,8 @@ class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBinding
     return BlocBuilder<ContactsLocalTabBloc, ContactsLocalTabState>(
       builder: (context, state) {
         final shown = state.contacts;
+        // A search that finds nothing is about the query, not about access.
+        final selectionNotice = state.selectionOnly && !state.searching;
 
         if (state.status == ContactsLocalTabStatus.initial) {
           return const Center(child: CircularProgressIndicator());
@@ -68,9 +69,10 @@ class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBinding
           return NoDataPlaceholder(
             content: Text(context.l10n.contacts_LocalTabText_permissionFailure),
             actions: [
-              TextButton(
-                onPressed: () => openAppSettings(),
-                child: Text(context.l10n.contacts_LocalTabButton_openAppSettings, textAlign: TextAlign.center),
+              ContactsSettingsButton(
+                key: contactsLocalGrantAccessKey,
+                identifier: contactsLocalGrantAccessId,
+                label: context.l10n.contacts_LocalTabButton_openAppSettings,
               ),
             ],
           );
@@ -84,8 +86,9 @@ class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBinding
             edgeOffset: MediaQuery.of(context).padding.top,
             onRefresh: _refreshContacts,
             child: ListView.builder(
-              itemCount: shown.length,
+              itemCount: shown.length + (selectionNotice ? 1 : 0),
               itemBuilder: (context, index) {
+                if (index == shown.length) return const ContactsSelectionNotice();
                 final contact = shown[index];
                 return ContactTileAdapter(
                   tileKey: contactsLocalContactTileKey,
@@ -123,6 +126,18 @@ class _ContactsLocalTabState extends State<ContactsLocalTab> with WidgetsBinding
           } else {
             if (state.searching) {
               return NoDataPlaceholder(content: Text(context.l10n.contacts_LocalTabText_emptyOnSearching));
+            } else if (selectionNotice) {
+              return NoDataPlaceholder(
+                content: Text(context.l10n.contacts_LocalTabText_selectionOnlyEmpty),
+                actions: [
+                  ContactsSettingsButton(
+                    key: contactsLocalChangeSelectionKey,
+                    identifier: contactsLocalChangeSelectionId,
+                    label: context.l10n.contacts_LocalTabButton_changeSelection,
+                  ),
+                  TextButton(onPressed: _refreshContacts, child: Text(context.l10n.contacts_LocalTabButton_refresh)),
+                ],
+              );
             } else {
               return NoDataPlaceholder(
                 content: Text(context.l10n.contacts_LocalTabText_empty),

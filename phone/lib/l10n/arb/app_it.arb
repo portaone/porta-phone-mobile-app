@@ -623,6 +623,8 @@
   "@contacts_ExternalTabText_failure": {
     "description": "Shown when loading cloud PBX contacts fails (e.g. invalid/expired token, no network connection, or other API errors)."
   },
+  "contacts_LocalTabButton_changeSelection": "Modifica selezione",
+  "@contacts_LocalTabButton_changeSelection": {},
   "contacts_LocalTabButton_contactsAgreement": "Apri Impostazioni",
   "@contacts_LocalTabButton_contactsAgreement": {},
   "contacts_LocalTabButton_openAppSettings": "Consenti l'accesso ai contatti del telefono",
@@ -649,6 +651,10 @@
   "@contactsSourceExternal": {},
   "contactsSourceLocal": "Il tuo telefono",
   "@contactsSourceLocal": {},
+  "contacts_LocalTabText_selectionOnly": "Sono mostrati solo i contatti selezionati",
+  "@contacts_LocalTabText_selectionOnly": {},
+  "contacts_LocalTabText_selectionOnlyEmpty": "Sono mostrati solo i contatti selezionati e nessuno è ancora stato selezionato",
+  "@contacts_LocalTabText_selectionOnlyEmpty": {},
   "contacts_DialogsInfoView_title": "Informazioni chiamate (BLF):",
   "@contacts_DialogsInfoView_title": {},
   "contacts_ContactTile_inCall": "In chiamata: {destination}",

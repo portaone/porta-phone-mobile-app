@@ -664,6 +664,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get contacts_ExternalTabText_failure => 'ไม่สามารถดึงรายชื่อจาก PBX บนคลาวด์ได้';
 
   @override
+  String get contacts_LocalTabButton_changeSelection => 'เปลี่ยนการเลือก';
+
+  @override
   String get contacts_LocalTabButton_contactsAgreement => 'เปิดการตั้งค่า';
 
   @override
@@ -696,6 +699,13 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get contactsSourceLocal => 'โทรศัพท์ของคุณ';
+
+  @override
+  String get contacts_LocalTabText_selectionOnly => 'แสดงเฉพาะรายชื่อติดต่อที่คุณเลือก';
+
+  @override
+  String get contacts_LocalTabText_selectionOnlyEmpty =>
+      'แสดงเฉพาะรายชื่อติดต่อที่คุณเลือก และยังไม่ได้เลือกรายชื่อใดเลย';
 
   @override
   String get contacts_DialogsInfoView_title => 'ข้อมูลการโทร (BLF):';

@@ -1198,6 +1198,12 @@ abstract class AppLocalizations {
   /// **'Failed to get cloud PBX contacts'**
   String get contacts_ExternalTabText_failure;
 
+  /// No description provided for @contacts_LocalTabButton_changeSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Change selection'**
+  String get contacts_LocalTabButton_changeSelection;
+
   /// No description provided for @contacts_LocalTabButton_contactsAgreement.
   ///
   /// In en, this message translates to:
@@ -1263,6 +1269,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your phone'**
   String get contactsSourceLocal;
+
+  /// No description provided for @contacts_LocalTabText_selectionOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the contacts you selected are shown'**
+  String get contacts_LocalTabText_selectionOnly;
+
+  /// No description provided for @contacts_LocalTabText_selectionOnlyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Only contacts you select are shown, and none is selected yet'**
+  String get contacts_LocalTabText_selectionOnlyEmpty;
 
   /// No description provided for @contacts_DialogsInfoView_title.
   ///

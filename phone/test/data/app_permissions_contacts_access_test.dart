@@ -33,8 +33,10 @@ void main() {
     answerWith(_limited);
     final appPermissions = await permissions();
 
-    expect(await appPermissions.contactsAccess(), ContactsAccess.selected);
-    expect(await appPermissions.isContactPermissionGranted(), isTrue);
+    final access = await appPermissions.contactsAccess();
+
+    expect(access, ContactsAccess.selected);
+    expect(access.canRead, isTrue);
   });
 
   test('full access reads the whole address book', () async {
@@ -42,7 +44,6 @@ void main() {
     final appPermissions = await permissions();
 
     expect(await appPermissions.contactsAccess(), ContactsAccess.all);
-    expect(await appPermissions.isContactPermissionGranted(), isTrue);
   });
 
   for (final (name, status) in [
@@ -54,8 +55,10 @@ void main() {
       answerWith(status);
       final appPermissions = await permissions();
 
-      expect(await appPermissions.contactsAccess(), ContactsAccess.none);
-      expect(await appPermissions.isContactPermissionGranted(), isFalse);
+      final access = await appPermissions.contactsAccess();
+
+      expect(access, ContactsAccess.none);
+      expect(access.canRead, isFalse);
     });
   }
 }

@@ -60,6 +60,13 @@ button in its empty state instead. The local tab also has states where a fetch
 is not the answer at all (contacts permission denied, contacts agreement not
 accepted) - they lead to the settings or to the agreement.
 
+On iOS 18 and later the user may share a selection of contacts instead of the
+whole address book. That is access, not a refusal: the read succeeds and
+returns the selected contacts. The list then ends with a line saying it holds
+only the selected contacts and a control that opens the system settings, where
+the selection is edited; an empty selection has its own wording and keeps
+Refresh. Search results carry no such line.
+
 The external tab calls `ContactsExternalTabBloc.refresh()` and awaits its exact
 result. The BLoC receives `PollingTaskRunner` from the `ExternalContactsSync`
 owner, so the pull joins a scheduled Contacts cycle when one is already
@@ -69,8 +76,13 @@ and unregister capabilities private.
 
 The local tab awaits `ContactsLocalTabBloc.refresh()`, which delegates to the
 shell-owned `LocalContactsSyncCubit`. One cycle checks feature access, agreement
-and permission, reads device contacts, and awaits their store transaction
-(including up to three retries). Refused attempts and failures also complete;
+and how much of the address book may be read (`ContactsAccess`: none, a
+selection, all), reads device contacts, and awaits their store transaction
+(including up to three retries). A successful cycle reports the access it read
+with; the tab keeps that answer through a pass in flight and through a failed
+one, because the stored contacts stay on screen, and drops it on a refusal.
+The access is sampled before the read, so a grant changed in the settings
+during a cycle is reflected by the next one. Refused attempts and failures also complete;
 the cubit's state supplies the outcome. Completion never depends on another
 state emission, so repeated permission refusals cannot leave a refresh pending.
 

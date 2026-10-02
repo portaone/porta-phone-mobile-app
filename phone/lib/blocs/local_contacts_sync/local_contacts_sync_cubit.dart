@@ -20,14 +20,14 @@ class LocalContactsSyncCubit extends Cubit<LocalContactsSyncState> {
     required this.contactsRepository,
     required this.isFeatureEnabled,
     required this.isAgreementAccepted,
-    required this.isContactsPermissionGranted,
+    required this.contactsAccess,
   }) : super(const LocalContactsSyncInitial());
 
   final ILocalContactsRepository localContactsRepository;
   final ContactsRepository contactsRepository;
   final Future<bool> Function() isFeatureEnabled;
   final Future<bool> Function() isAgreementAccepted;
-  final Future<bool> Function() isContactsPermissionGranted;
+  final Future<ContactsAccess> Function() contactsAccess;
 
   StreamSubscription<void>? _contactsSubscription;
   CancelableOperation<void>? _inFlight;
@@ -80,9 +80,9 @@ class LocalContactsSyncCubit extends Cubit<LocalContactsSyncState> {
         return;
       }
 
-      final permissionGranted = await isContactsPermissionGranted();
+      final access = await contactsAccess();
       if (isClosed) return;
-      if (!permissionGranted) {
+      if (!access.canRead) {
         emit(const LocalContactsSyncPermissionFailure());
         return;
       }
@@ -95,19 +95,19 @@ class LocalContactsSyncCubit extends Cubit<LocalContactsSyncState> {
       emit(const LocalContactsSyncRefreshInProgress());
       final contacts = await localContactsRepository.fetchContacts();
       if (isClosed) return;
-      await _syncContacts(contacts);
+      await _syncContacts(contacts, access);
     } catch (error, stackTrace) {
       _logger.warning('refresh failed', error, stackTrace);
       if (!isClosed) emit(const LocalContactsSyncRefreshFailure());
     }
   }
 
-  Future<void> _syncContacts(List<LocalContact> contacts) async {
+  Future<void> _syncContacts(List<LocalContact> contacts, ContactsAccess access) async {
     for (var attempt = 0; attempt < 4; attempt++) {
       if (isClosed) return;
       try {
         await contactsRepository.syncLocalContacts(contacts);
-        if (!isClosed) emit(const LocalContactsSyncSuccess());
+        if (!isClosed) emit(LocalContactsSyncSuccess(access: access));
         return;
       } catch (error, stackTrace) {
         _logger.warning('store update failed, attempt ${attempt + 1}', error, stackTrace);

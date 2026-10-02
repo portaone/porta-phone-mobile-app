@@ -33,6 +33,7 @@ class ContactsLocalTabBloc extends Bloc<ContactsLocalTabEvent, ContactsLocalTabS
       contactsRepository.watchContacts(event.search, ContactSourceType.local),
       onData: (List<Contact> contacts) => state.copyWith(
         status: _mapLocalContactsSyncStateToStatus(localContactsSyncCubit.state),
+        selectionOnly: _selectionOnly(localContactsSyncCubit.state),
         contacts: contacts,
         searching: event.search.isNotEmpty,
       ),
@@ -47,8 +48,10 @@ class ContactsLocalTabBloc extends Bloc<ContactsLocalTabEvent, ContactsLocalTabS
 
     final localContactsSyncStateForEachFuture = emit.forEach(
       localContactsSyncCubit.stream,
-      onData: (LocalContactsSyncState localContactsSyncState) =>
-          state.copyWith(status: _mapLocalContactsSyncStateToStatus(localContactsSyncState)),
+      onData: (LocalContactsSyncState localContactsSyncState) => state.copyWith(
+        status: _mapLocalContactsSyncStateToStatus(localContactsSyncState),
+        selectionOnly: _selectionOnly(localContactsSyncState),
+      ),
     );
 
     await Future.wait([
@@ -57,6 +60,18 @@ class ContactsLocalTabBloc extends Bloc<ContactsLocalTabEvent, ContactsLocalTabS
       localContactsSyncStateForEachFuture,
     ]);
   }
+
+  /// Only a finished read or a refusal answers what the list holds. A pass in
+  /// flight or one that failed leaves the stored contacts on screen, so the
+  /// last answer stays with them: dropping it would pass a selection off as
+  /// the whole address book, and blink the notice on every resume.
+  bool _selectionOnly(LocalContactsSyncState localContactsSyncState) => switch (localContactsSyncState) {
+    LocalContactsSyncSuccess(:final access) => access == ContactsAccess.selected,
+    LocalContactsSyncPermissionFailure() ||
+    ContactsAgreementMissingException() ||
+    ContactsFeatureDisabledException() => false,
+    _ => state.selectionOnly,
+  };
 
   ContactsLocalTabStatus _mapLocalContactsSyncStateToStatus(LocalContactsSyncState localContactsSyncState) {
     if (localContactsSyncState is LocalContactsSyncRefreshInProgress) {

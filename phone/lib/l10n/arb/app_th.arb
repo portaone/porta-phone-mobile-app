@@ -623,6 +623,8 @@
   "@contacts_ExternalTabText_failure": {
     "description": "Shown when loading cloud PBX contacts fails (e.g. invalid/expired token, no network connection, or other API errors)."
   },
+  "contacts_LocalTabButton_changeSelection": "เปลี่ยนการเลือก",
+  "@contacts_LocalTabButton_changeSelection": {},
   "contacts_LocalTabButton_contactsAgreement": "เปิดการตั้งค่า",
   "@contacts_LocalTabButton_contactsAgreement": {},
   "contacts_LocalTabButton_openAppSettings": "ให้สิทธิ์เข้าถึงรายชื่อติดต่อในโทรศัพท์ของคุณ",
@@ -649,6 +651,10 @@
   "@contactsSourceExternal": {},
   "contactsSourceLocal": "โทรศัพท์ของคุณ",
   "@contactsSourceLocal": {},
+  "contacts_LocalTabText_selectionOnly": "แสดงเฉพาะรายชื่อติดต่อที่คุณเลือก",
+  "@contacts_LocalTabText_selectionOnly": {},
+  "contacts_LocalTabText_selectionOnlyEmpty": "แสดงเฉพาะรายชื่อติดต่อที่คุณเลือก และยังไม่ได้เลือกรายชื่อใดเลย",
+  "@contacts_LocalTabText_selectionOnlyEmpty": {},
   "contacts_DialogsInfoView_title": "ข้อมูลการโทร (BLF):",
   "@contacts_DialogsInfoView_title": {},
   "contacts_ContactTile_inCall": "อยู่ในสาย: {destination}",

@@ -675,6 +675,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contacts_ExternalTabText_failure => 'Failed to get cloud PBX contacts';
 
   @override
+  String get contacts_LocalTabButton_changeSelection => 'Change selection';
+
+  @override
   String get contacts_LocalTabButton_contactsAgreement => 'Open Settings';
 
   @override
@@ -707,6 +710,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactsSourceLocal => 'Your phone';
+
+  @override
+  String get contacts_LocalTabText_selectionOnly => 'Only the contacts you selected are shown';
+
+  @override
+  String get contacts_LocalTabText_selectionOnlyEmpty => 'Only contacts you select are shown, and none is selected yet';
 
   @override
   String get contacts_DialogsInfoView_title => 'Calls information (BLF):';

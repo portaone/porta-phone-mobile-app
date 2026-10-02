@@ -680,6 +680,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get contacts_ExternalTabText_failure => 'Impossibile ottenere i contatti del centralino cloud';
 
   @override
+  String get contacts_LocalTabButton_changeSelection => 'Modifica selezione';
+
+  @override
   String get contacts_LocalTabButton_contactsAgreement => 'Apri Impostazioni';
 
   @override
@@ -713,6 +716,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get contactsSourceLocal => 'Il tuo telefono';
+
+  @override
+  String get contacts_LocalTabText_selectionOnly => 'Sono mostrati solo i contatti selezionati';
+
+  @override
+  String get contacts_LocalTabText_selectionOnlyEmpty =>
+      'Sono mostrati solo i contatti selezionati e nessuno è ancora stato selezionato';
 
   @override
   String get contacts_DialogsInfoView_title => 'Informazioni chiamate (BLF):';

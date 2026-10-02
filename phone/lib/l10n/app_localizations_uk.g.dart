@@ -697,6 +697,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get contacts_ExternalTabText_failure => 'Не вдалося отримати контакти з хмарного PBX';
 
   @override
+  String get contacts_LocalTabButton_changeSelection => 'Змінити вибір';
+
+  @override
   String get contacts_LocalTabButton_contactsAgreement => 'Відкрити Налаштування';
 
   @override
@@ -729,6 +732,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get contactsSourceLocal => 'Ваш телефон';
+
+  @override
+  String get contacts_LocalTabText_selectionOnly => 'Показано лише вибрані контакти';
+
+  @override
+  String get contacts_LocalTabText_selectionOnlyEmpty => 'Показуються лише вибрані контакти, і жодного ще не вибрано';
 
   @override
   String get contacts_DialogsInfoView_title => 'Інформація про дзвінки (BLF):';

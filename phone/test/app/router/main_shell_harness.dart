@@ -184,7 +184,7 @@ class MainShellHarness {
     when(() => systemInfoRepository.infoStream).thenAnswer((_) => systemInfoController.stream);
 
     when(() => appPermissions.isDenied).thenAnswer((_) async => false);
-    when(() => appPermissions.isContactPermissionGranted()).thenAnswer((_) async => false);
+    when(() => appPermissions.contactsAccess()).thenAnswer((_) async => ContactsAccess.none);
     when(() => appPermissions.isPermissionGranted(any())).thenAnswer((_) async => false);
 
     when(() => appLogger.updateRemoteLabels()).thenReturn(null);

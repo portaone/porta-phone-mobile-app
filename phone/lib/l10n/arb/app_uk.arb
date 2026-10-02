@@ -623,6 +623,8 @@
   "@contacts_ExternalTabText_failure": {
     "description": "Shown when loading cloud PBX contacts fails (e.g. invalid/expired token, no network connection, or other API errors)."
   },
+  "contacts_LocalTabButton_changeSelection": "Змінити вибір",
+  "@contacts_LocalTabButton_changeSelection": {},
   "contacts_LocalTabButton_contactsAgreement": "Відкрити Налаштування",
   "@contacts_LocalTabButton_contactsAgreement": {},
   "contacts_LocalTabButton_openAppSettings": "Надати доступ до контактів вашого телефону",
@@ -649,6 +651,10 @@
   "@contactsSourceExternal": {},
   "contactsSourceLocal": "Ваш телефон",
   "@contactsSourceLocal": {},
+  "contacts_LocalTabText_selectionOnly": "Показано лише вибрані контакти",
+  "@contacts_LocalTabText_selectionOnly": {},
+  "contacts_LocalTabText_selectionOnlyEmpty": "Показуються лише вибрані контакти, і жодного ще не вибрано",
+  "@contacts_LocalTabText_selectionOnlyEmpty": {},
   "contacts_DialogsInfoView_title": "Інформація про дзвінки (BLF):",
   "@contacts_DialogsInfoView_title": {},
   "contacts_ContactTile_inCall": "На дроті з: {destination}",

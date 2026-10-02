@@ -19,6 +19,8 @@ class _MockContactsRepository extends Mock implements ContactsRepository {}
 
 class _MockSearchBloc extends MockBloc<ContactsEvent, ContactsState> implements ContactsBloc {}
 
+ContactsAccess _allContacts() => ContactsAccess.all;
+
 void main() {
   late _MockDeviceRepository device;
   late _MockContactsRepository store;
@@ -39,12 +41,15 @@ void main() {
     );
   });
 
-  LocalContactsSyncCubit syncCubit(Future<bool> Function() permission) => LocalContactsSyncCubit(
+  LocalContactsSyncCubit syncCubit(
+    Future<bool> Function() permission, {
+    ContactsAccess Function() granted = _allContacts,
+  }) => LocalContactsSyncCubit(
     localContactsRepository: device,
     contactsRepository: store,
     isFeatureEnabled: () async => true,
     isAgreementAccepted: () async => true,
-    isContactsPermissionGranted: permission,
+    contactsAccess: () async => await permission() ? granted() : ContactsAccess.none,
   );
 
   ContactsLocalTabBloc tabBloc(LocalContactsSyncCubit sync) =>
@@ -110,6 +115,59 @@ void main() {
     expect(completed, isFalse);
     releaseStore.complete();
     await refresh;
-    expect(sync.state, const LocalContactsSyncSuccess());
+    expect(sync.state, const LocalContactsSyncSuccess(access: ContactsAccess.all));
+  });
+
+  test('the tab follows the access level across refreshes', () async {
+    var access = ContactsAccess.selected;
+    final sync = syncCubit(() async => true, granted: () => access);
+    addTearDown(sync.close);
+    final tab = tabBloc(sync);
+    addTearDown(tab.close);
+
+    await tab.refresh();
+    await pumpEventQueue();
+    expect(tab.state.status, ContactsLocalTabStatus.success);
+    expect(tab.state.selectionOnly, isTrue);
+
+    // The user widened the selection to the whole address book in settings.
+    access = ContactsAccess.all;
+    await tab.refresh();
+    await pumpEventQueue();
+    expect(tab.state.selectionOnly, isFalse);
+  });
+
+  test('a failed pass leaves the selection notice with the list it belongs to', () async {
+    final sync = syncCubit(() async => true, granted: () => ContactsAccess.selected);
+    addTearDown(sync.close);
+    final tab = tabBloc(sync);
+    addTearDown(tab.close);
+    await tab.refresh();
+    await pumpEventQueue();
+    expect(tab.state.selectionOnly, isTrue);
+
+    // The stored contacts stay on screen when a later read fails.
+    when(() => device.fetchContacts()).thenThrow(StateError('address book unavailable'));
+    await tab.refresh();
+    await pumpEventQueue();
+    expect(tab.state.status, ContactsLocalTabStatus.failure);
+    expect(tab.state.selectionOnly, isTrue);
+  });
+
+  test('a refusal drops the selection notice', () async {
+    var allowed = true;
+    final sync = syncCubit(() async => allowed, granted: () => ContactsAccess.selected);
+    addTearDown(sync.close);
+    final tab = tabBloc(sync);
+    addTearDown(tab.close);
+    await tab.refresh();
+    await pumpEventQueue();
+    expect(tab.state.selectionOnly, isTrue);
+
+    allowed = false;
+    await tab.refresh();
+    await pumpEventQueue();
+    expect(tab.state.status, ContactsLocalTabStatus.permissionFailure);
+    expect(tab.state.selectionOnly, isFalse);
   });
 }

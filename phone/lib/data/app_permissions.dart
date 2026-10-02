@@ -244,7 +244,6 @@ class AppPermissions {
     };
   }
 
-  Future<bool> isContactPermissionGranted() async => (await contactsAccess()).canRead;
   /// Full camera permission status (unlike the boolean helpers, callers need
   /// to distinguish a permanent denial to offer the settings screen instead
   /// of a pointless request).
