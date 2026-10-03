@@ -8,6 +8,17 @@ void main() {
   // PHandleTypeEnumConverter
   // ---------------------------------------------------------------------------
 
+  group('CallkeepAndroidOptionsConverter.toPigeon() incomingCallWhileRinging', () {
+    test('defaults to queue', () {
+      expect(const CallkeepAndroidOptions().toPigeon().incomingCallWhileRinging, PIncomingCallWhileRinging.queue);
+    });
+
+    test('reject maps to reject', () {
+      const options = CallkeepAndroidOptions(incomingCallWhileRinging: CallkeepIncomingCallWhileRinging.reject);
+      expect(options.toPigeon().incomingCallWhileRinging, PIncomingCallWhileRinging.reject);
+    });
+  });
+
   group('PHandleTypeEnumConverter.toCallkeep()', () {
     test('generic maps to CallkeepHandleType.generic', () {
       expect(PHandleTypeEnum.generic.toCallkeep(), CallkeepHandleType.generic);

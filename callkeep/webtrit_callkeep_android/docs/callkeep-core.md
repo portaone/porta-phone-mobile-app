@@ -266,6 +266,11 @@ Telecom lets one self-managed incoming call ring at a time (`MAX_RINGING_CALLS`,
 refuses the next one. Instead of letting it be refused and declined on the server, the core holds
 it back in `IncomingCallQueue`:
 
+- **Mode.** `CallkeepAndroidOptions.incomingCallWhileRinging` chooses this behaviour: `queue`
+  (the default) or `reject`. `setUp` stores it (`StorageDelegate.IncomingCall`), so a cold
+  start reads the last value; the core reads it per report. In `reject` mode nothing is held
+  back: the second call goes to Telecom, which refuses it, the report returns
+  `callRejectedBySystem` and the app declines it on the server (603), as before the queue.
 - **Decision.** `registerIncomingCall` accepts the call (no error) but does not dispatch it when
   another incoming call rings (`ConnectionTracker.getRingingCallIds`) or is being registered (a live
   `IncomingRegistrations` entry - on a cold start several pushes report before any call rings).

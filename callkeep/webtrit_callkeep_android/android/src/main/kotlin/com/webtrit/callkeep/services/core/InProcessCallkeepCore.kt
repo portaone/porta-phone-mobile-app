@@ -18,6 +18,7 @@ import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.PendingBroadcastQueue
+import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.models.CallConnectionState
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailureMetadata
@@ -51,6 +52,10 @@ class InProcessCallkeepCore internal constructor(
     private val tracker: ConnectionTracker = MainProcessConnectionTracker.instance,
     routerInit: () -> CallServiceRouter = { CallServiceRouter(ContextHolder.context) },
     private val queueNotifier: QueuedCallNotifier = QueuedCallNotifications(),
+    // Read per report: setUp may change it, and a cold start reads what the last setUp stored.
+    private val queuesWhileRinging: () -> Boolean = {
+        runCatching { StorageDelegate.IncomingCall.queuesWhileRinging(ContextHolder.context) }.getOrDefault(true)
+    },
 ) : CallkeepCore {
     // The context is read per call (not at construction time) so the singleton can be
     // created early without risking a NullPointerException. ContextHolder.init() must
@@ -482,6 +487,7 @@ class InProcessCallkeepCore internal constructor(
      */
     private fun holdsBack(callId: String?): Boolean =
         router.isTelecomSupported &&
+            queuesWhileRinging() &&
             (incomingRegistrations.snapshot().any { it.callId != callId } || tracker.getRingingCallIds().any { it != callId })
 
     /** Puts the next waiting call through when no incoming call rings any more. */

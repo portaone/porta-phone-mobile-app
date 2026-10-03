@@ -150,7 +150,19 @@ extension CallkeepAndroidOptionsConverter on CallkeepAndroidOptions {
       incomingCallTimeoutMs: incomingCallTimeoutMs,
       outgoingCallTimeoutMs: outgoingCallTimeoutMs,
       logFilePath: nativeLogFilePath,
+      incomingCallWhileRinging: incomingCallWhileRinging.toPigeon(),
     );
+  }
+}
+
+extension CallkeepIncomingCallWhileRingingConverter on CallkeepIncomingCallWhileRinging {
+  PIncomingCallWhileRinging toPigeon() {
+    switch (this) {
+      case CallkeepIncomingCallWhileRinging.queue:
+        return PIncomingCallWhileRinging.queue;
+      case CallkeepIncomingCallWhileRinging.reject:
+        return PIncomingCallWhileRinging.reject;
+    }
   }
 }
 

@@ -25,6 +25,7 @@ import com.webtrit.callkeep.PHandle
 import com.webtrit.callkeep.PHostApi
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
+import com.webtrit.callkeep.PIncomingCallWhileRinging
 import com.webtrit.callkeep.POptions
 import com.webtrit.callkeep.common.ActivityHolder
 import com.webtrit.callkeep.common.Log
@@ -264,6 +265,9 @@ class ForegroundService :
             options.android.incomingCallFullScreen?.let { StorageDelegate.IncomingCall.setFullScreen(baseContext, it) }
             options.android.incomingCallTimeoutMs?.let { StorageDelegate.Timeout.setIncomingCallTimeoutMs(baseContext, it) }
             options.android.outgoingCallTimeoutMs?.let { StorageDelegate.Timeout.setOutgoingCallTimeoutMs(baseContext, it) }
+            options.android.incomingCallWhileRinging?.let {
+                StorageDelegate.IncomingCall.setQueueWhileRinging(baseContext, it == PIncomingCallWhileRinging.QUEUE)
+            }
             options.android.logFilePath?.let {
                 StorageDelegate.Logging.setLogFilePath(baseContext, it)
                 Log.setLogFilePath(it)

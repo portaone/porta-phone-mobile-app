@@ -9,6 +9,7 @@ import com.webtrit.callkeep.PEndCallReasonEnum
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.ContextHolder
+import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailureMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
@@ -64,6 +65,8 @@ class CallQueueTest {
         ContextHolder.context.applicationInfo.apply {
             flags = flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
         }
+        // The mode lives in shared preferences, which outlive a test.
+        StorageDelegate.IncomingCall.setQueueWhileRinging(ContextHolder.context, true)
         router = mock(CallServiceRouter::class.java)
         `when`(router.isTelecomSupported).thenReturn(true)
         core = InProcessCallkeepCore(tracker = MainProcessConnectionTracker(), routerInit = { router }, queueNotifier = notifier)
@@ -211,6 +214,24 @@ class CallQueueTest {
         event(CallLifecycleEvent.DeclineCall, "A")
 
         verifyDispatched("B")
+    }
+
+    @Test
+    fun `in reject mode a call reported while another one rings goes to Telecom to be refused`() {
+        // setUp(incomingCallWhileRinging: reject) stores the mode; the core reads it per report.
+        StorageDelegate.IncomingCall.setQueueWhileRinging(ContextHolder.context, false)
+        ringing("A")
+
+        report("app", "B")
+
+        verifyDispatched("B")
+        assertFalse(core.isQueued("B"))
+        assertTrue("no waiting-call notification", notifier.shown.isEmpty())
+    }
+
+    @Test
+    fun `queue is the mode when setUp never set one`() {
+        assertTrue(StorageDelegate.IncomingCall.queuesWhileRinging(ContextHolder.context))
     }
 
     @Test

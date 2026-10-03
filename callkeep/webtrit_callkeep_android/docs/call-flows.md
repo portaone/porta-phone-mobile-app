@@ -75,7 +75,8 @@ promotes the call as active before notifying the foreground bridge.
 
 ## Second Incoming Call While One Rings (waiting call)
 
-Telecom lets one self-managed incoming call ring at a time. The core holds the second one back.
+Telecom lets one self-managed incoming call ring at a time. The core holds the second one back
+(`incomingCallWhileRinging: queue`, the default; with `reject` the flow is the next section's).
 
 ```text
 1.  B is reported (signaling, push or SMS) while A rings or is being registered

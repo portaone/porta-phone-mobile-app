@@ -60,6 +60,7 @@ Key models:
 | `CallkeepHandle` | Represents a phone number or generic handle; use factory constructors (`.number(...)`, `.generic(...)`) |
 | `CallkeepOptions` | Top-level config; contains `CallkeepIOSOptions` and `CallkeepAndroidOptions` |
 | `CallkeepIncomingCallMetadata` | Metadata passed to background isolate callbacks |
+| `CallkeepIncomingCallWhileRinging` | Android: a second incoming call while one rings waits in callkeep's queue (`queue`, default) or is refused and declined (`reject`); set in `CallkeepAndroidOptions` |
 | `CallkeepServiceStatus` | Combines `CallkeepLifecycleEvent` + optional `CallkeepSignalingStatus` |
 | `CallkeepConnection` | Snapshot of a tracked connection's state |
 | `CallkeepEndCallReason` | Enum for why a call ended (remoteEnded, failed, unanswered, etc.) |
