@@ -133,6 +133,28 @@ class IncomingCallHandler(
     }
 
     /**
+     * Takes the service back into the foreground with the silent notification of its call.
+     *
+     * Every startForegroundService must be answered with startForeground, even when the service
+     * shows nothing new: a second launch delivered after [detachForegroundNotification] finds the
+     * service out of the foreground, and the system kills the process when it stops without one
+     * (ForegroundServiceDidNotStartInTimeException).
+     */
+    fun returnToForegroundSilently() {
+        if (lastMetadata == null) {
+            Log.w(TAG, "returnToForegroundSilently: no metadata (service not initialized), skipping")
+            return
+        }
+        Log.d(TAG, "returnToForegroundSilently: id=$currentNotificationId")
+        service.startForegroundServiceCompat(
+            service,
+            currentNotificationId,
+            notificationBuilder.buildSilent(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL,
+        )
+    }
+
+    /**
      * Explicitly cancels the call-derived notification (ID ≥ 1000) if a call was handled.
      * Called from IncomingCallService.onDestroy() as a belt-and-suspenders cleanup:
      * stopForeground(REMOVE) does not reliably cancel the FGS notification on some Samsung

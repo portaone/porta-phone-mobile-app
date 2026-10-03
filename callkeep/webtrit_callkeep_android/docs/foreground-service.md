@@ -64,10 +64,10 @@
 
 ### Setup / Teardown
 
-| Method                               | Behavior                                                                                                                                                                                          |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `setUp(handle, ringtonePath, ...)`   | Registers phone account via `TelephonyUtils`, initializes notification channels (with retry on failure), stores config in `StorageDelegate`                                                       |
-| `tearDown()`                         | Ends all incoming registrations through `endIncomingRegistrations()`, notifies Dart for confirmed calls, sends `sendTearDownConnections()`, then awaits `TearDownComplete` before resetting state |
+| Method                             | Behavior                                                                                                                                                                                                      |
+|------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `setUp(handle, ringtonePath, ...)` | Registers phone account via `TelephonyUtils`, initializes notification channels (with retry on failure), stores config in `StorageDelegate`                                                                   |
+| `tearDown()`                       | Ends all incoming registrations through `endIncomingRegistrations()`, notifies Dart for confirmed and waiting calls, sends `sendTearDownConnections()`, then awaits `TearDownComplete` before resetting state |
 
 ### Call Reporting
 
@@ -81,18 +81,18 @@
 
 ### Call Control
 
-| Method                             | Behavior                                                                                                                                                                                   |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `startCall(callId, meta)`          | `CallkeepCore.startOutgoingCall()`                                                                                                                                                         |
-| `answerCall(callId)`               | Deferred if `PhoneConnection` not yet created (stored in `pendingAnswers`); otherwise `CallkeepCore.startAnswerCall()`                                                                     |
-| `endCall(callId)`                  | `CallkeepCore.appEndingCall()` completes any waiting report, then `CallkeepCore.startHungUpCall()`                                                                                         |
-| `setMuted(callId, muted)`          | `CallkeepCore.startMutingCall()`                                                                                                                                                           |
-| `setHeld(callId, held)`            | `CallkeepCore.startHoldingCall()`; answers `callIsGrouped` without forwarding when `CallkeepCore.isGrouped()` says the call is in a group                                                  |
-| `setSpeaker(callId, on)`           | `CallkeepCore.startSpeaker()`                                                                                                                                                              |
-| `setAudioDevice(callId, device)`   | `CallkeepCore.setAudioDevice()`                                                                                                                                                            |
-| `sendDTMF(callId, digit)`          | `CallkeepCore.startSendDtmf()`                                                                                                                                                             |
-| `setCallGroup(groupId, callIds)`   | `CallkeepCore.startSetCallGroup()`; its `CallGroupOutcome` becomes the answer: `maximumCallGroupsReached` when another group is live, `callGroupingNotSupported` when no backend took it   |
-| `unsetCallGroup(callIds)`          | `CallkeepCore.startUnsetCallGroup()`; the core releases the calls from the group on success                                                                                                |
+| Method                           | Behavior                                                                                                                                                                                 |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `startCall(callId, meta)`        | `CallkeepCore.startOutgoingCall()`                                                                                                                                                       |
+| `answerCall(callId)`             | A waiting call: `CallkeepCore.answerQueuedCall()`. Otherwise deferred if `PhoneConnection` not yet created (stored in `pendingAnswers`), else `CallkeepCore.startAnswerCall()`           |
+| `endCall(callId)`                | A waiting call leaves the queue and Flutter gets `performEndCall` at once. Otherwise `CallkeepCore.appEndingCall()` completes any waiting report, then `CallkeepCore.startHungUpCall()`  |
+| `setMuted(callId, muted)`        | `CallkeepCore.startMutingCall()`                                                                                                                                                         |
+| `setHeld(callId, held)`          | `CallkeepCore.startHoldingCall()`; answers `callIsGrouped` without forwarding when `CallkeepCore.isGrouped()` says the call is in a group                                                |
+| `setSpeaker(callId, on)`         | `CallkeepCore.startSpeaker()`                                                                                                                                                            |
+| `setAudioDevice(callId, device)` | `CallkeepCore.setAudioDevice()`                                                                                                                                                          |
+| `sendDTMF(callId, digit)`        | `CallkeepCore.startSendDtmf()`                                                                                                                                                           |
+| `setCallGroup(groupId, callIds)` | `CallkeepCore.startSetCallGroup()`; its `CallGroupOutcome` becomes the answer: `maximumCallGroupsReached` when another group is live, `callGroupingNotSupported` when no backend took it |
+| `unsetCallGroup(callIds)`        | `CallkeepCore.startUnsetCallGroup()`; the core releases the calls from the group on success                                                                                              |
 
 ## Call Groups
 
@@ -159,8 +159,8 @@ core: the bridge only sends the Flutter answer notification when `registerIncomi
 
 ### Sending the app back after a call on the lock screen
 
-When a confirmed call ends (`DeclineCall` / `HungUp`) and no other call is live or pending
-(`isLastCall`), the bridge clears the lock-screen flags (`LockScreenPresence.release`) - the call
+When a confirmed call ends (`DeclineCall` / `HungUp`) and no other call is live, pending or
+waiting in the queue (`isLastCall`), the bridge clears the lock-screen flags (`LockScreenPresence.release`) - the call
 alert may have set them before the app built its call screen - and, while the device is locked
 (`Platform.isLockScreen`), calls `ActivityHolder.finish()`, which moves the task to the back
 (`moveTaskToBack(true)`). After unlocking, the user sees what was under the app, not the app.

@@ -105,4 +105,29 @@ class IncomingCallHandlerDropActionsTest {
         verify(service, never()).startForeground(anyInt(), any(Notification::class.java))
         verify(service, never()).startForeground(anyInt(), any(Notification::class.java), anyInt())
     }
+
+    @Test
+    fun `a service that left the foreground enters it again with the silent notification`() {
+        `when`(notificationBuilder.build()).thenReturn(mock(Notification::class.java))
+        val silent = mock(Notification::class.java)
+        `when`(notificationBuilder.buildSilent()).thenReturn(silent)
+
+        handler.handle(CallMetadata(callId = "call-1", displayName = "Caller"))
+        handler.detachForegroundNotification()
+        clearInvocations(service)
+
+        handler.returnToForegroundSilently()
+
+        // Another launch arrived through startForegroundService; without this the process is
+        // killed when the service stops (ForegroundServiceDidNotStartInTimeException).
+        val notificationId = IncomingCallNotificationBuilder.notificationId("call-1")
+        verify(service).startForeground(eq(notificationId), eq(silent), anyInt())
+    }
+
+    @Test
+    fun `returning to the foreground before a call was shown is ignored`() {
+        handler.returnToForegroundSilently()
+
+        verifyNoInteractions(service)
+    }
 }

@@ -18,9 +18,11 @@ import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.PendingBroadcastQueue
+import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.models.CallConnectionState
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailureMetadata
+import com.webtrit.callkeep.notifications.QueuedCallNotifications
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.broadcaster.CallMediaEvent
 import com.webtrit.callkeep.services.broadcaster.ConnectionEvent
@@ -28,6 +30,10 @@ import com.webtrit.callkeep.services.broadcaster.ConnectionServicePerformBroadca
 import com.webtrit.callkeep.services.services.connection.ConnectionManager
 import com.webtrit.callkeep.services.services.connection.PhoneConnectionService
 import com.webtrit.callkeep.services.services.incoming_call.IncomingCallService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
@@ -45,6 +51,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 class InProcessCallkeepCore internal constructor(
     private val tracker: ConnectionTracker = MainProcessConnectionTracker.instance,
     routerInit: () -> CallServiceRouter = { CallServiceRouter(ContextHolder.context) },
+    private val queueNotifier: QueuedCallNotifier = QueuedCallNotifications(),
+    // Read per report: setUp may change it, and a cold start reads what the last setUp stored.
+    private val queuesWhileRinging: () -> Boolean = {
+        runCatching { StorageDelegate.IncomingCall.queuesWhileRinging(ContextHolder.context) }.getOrDefault(true)
+    },
 ) : CallkeepCore {
     // The context is read per call (not at construction time) so the singleton can be
     // created early without risking a NullPointerException. ContextHolder.init() must
@@ -114,8 +125,10 @@ class InProcessCallkeepCore internal constructor(
         event: ConnectionEvent,
         data: Bundle?,
     ) {
-        if (consumeRegistrationEvent(event, data)) return
-        listeners.forEach { it.onConnectionEvent(event, data) }
+        if (!consumeRegistrationEvent(event, data)) listeners.forEach { it.onConnectionEvent(event, data) }
+        // After the listeners: the bridge marks an ended call terminated in its own handler, and
+        // only then is the ringing slot free for a waiting call.
+        if (event in QUEUE_RELEASE_EVENTS) raiseQueuedIfFree()
     }
 
     /** True when a terminal event only rejected an unpresented call or was already notified. */
@@ -191,7 +204,7 @@ class InProcessCallkeepCore internal constructor(
 
             CallLifecycleEvent.IncomingFailure -> {
                 if (registration != null) {
-                    rejectIncomingRegistration(registration, "Telecom refused registration")
+                    rejectIncomingRegistration(registration, "Telecom refused registration", RaiseEnd.REFUSED)
                 } else if (isPending(callId)) {
                     // A dispatch-only SMS registration still owns a pending reservation.
                     rejectUnconfirmedIncomingCall(callId)
@@ -303,7 +316,7 @@ class InProcessCallkeepCore internal constructor(
             return
         }
         incomingRegistrations[callId]?.let {
-            rejectIncomingRegistration(it, "app reported call ended")
+            rejectIncomingRegistration(it, "app reported call ended", RaiseEnd.APP_ENDED)
             return
         }
         tracker.markTerminated(callId)
@@ -315,6 +328,11 @@ class InProcessCallkeepCore internal constructor(
     ) {
         val callId = metadata.callId
         Log.i(TAG, "Call ended by the app: $callId ($reason)")
+        // A waiting call never reached the backend: there is nothing to end there, and ending it
+        // there would answer with ConnectionNotFound for a call the bridge never had. Its end is
+        // recorded as for any call, so a late report of it (the push after the signaling) is not
+        // registered again.
+        if (endQueuedCall(callId, neverPresented = reason == PEndCallReasonEnum.MISSED_WHILE_CONNECTING)) return
         // The push session reports from a Pigeon background thread (its reportEndCall is served
         // off the platform thread): on a cold start the main looper is busy for seconds and the
         // caller has already hung up. The facts below are recorded on the calling thread - the
@@ -384,6 +402,138 @@ class InProcessCallkeepCore internal constructor(
     override fun wasEndedWithoutFlutterState(callId: String): Boolean = tracker.wasEndedWithoutFlutterState(callId)
 
     override fun isReportedByApp(callId: String): Boolean = tracker.isReportedByApp(callId)
+
+    // -------------------------------------------------------------------------
+    // Waiting calls
+    // -------------------------------------------------------------------------
+
+    private val queue = IncomingCallQueue()
+
+    // Registers a waiting call once the ringing slot is free. Main-thread work, like every
+    // registration; immediate, so the call is registered before anything else can take the slot.
+    private val raiseScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    /** How a call being put through was rejected, if it was; main thread only. */
+    private enum class RaiseEnd { REFUSED, APP_ENDED, SESSION_ENDED, OTHER }
+
+    private val raising = HashMap<String, RaiseEnd?>()
+
+    /** The core itself, registering a call it held back. */
+    private object QueueClient
+
+    override fun isQueued(callId: String): Boolean = queue.contains(callId)
+
+    override fun hasQueuedCalls(): Boolean = !queue.isEmpty()
+
+    override fun queuedCallIds(): List<String> = queue.callIds()
+
+    /**
+     * A waiting call that could not be put through, for a reason the app has not heard of: the
+     * reporter was told it was registered, so the app holds it as ringing. It ends here, and the
+     * listeners hear of it as of any call that ended, so the app declines it on the server.
+     */
+    private fun endRaiseFailed(
+        metadata: CallMetadata,
+        why: String,
+    ) {
+        Log.w(TAG, "Waiting call ${metadata.callId} could not be put through ($why): it ends")
+        tracker.markTerminated(metadata.callId)
+        val data = metadata.toBundle()
+        listeners.forEach { it.onConnectionEvent(CallLifecycleEvent.HungUp, data) }
+    }
+
+    override fun answerQueuedCall(callId: String): Boolean {
+        val entry = queue.markAnswerOnRaise(callId) ?: return false
+        Log.i(TAG, "Waiting call $callId answered: declining the ringing calls")
+        declineRingingCalls()
+        // Refused beside a live call before, it can ring only once no call is left: answering it
+        // ends the live calls too, or the answer would wait for them unseen.
+        if (entry.waitForIdle) getAll().forEach { if (it.callId != callId) startHungUpCall(it) }
+        // Nothing may be ringing any more (it ended a moment ago): put the call through now.
+        raiseQueuedIfFree()
+        return true
+    }
+
+    override fun declineRingingCalls() {
+        val ringing = tracker.getRingingCallIds() + incomingRegistrations.snapshot().map { it.callId }
+        ringing.forEach { callId -> startDeclineCall(get(callId) ?: CallMetadata(callId = callId)) }
+    }
+
+    override fun dropQueuedCall(callId: String): Boolean = endQueuedCall(callId, neverPresented = false)
+
+    /**
+     * Ends the waiting call [callId] where it is, in the queue, with the facts any ended call
+     * leaves: terminated, its end known to the app, and - when the app never presented it - never
+     * to be registered again. False when it is not waiting.
+     */
+    private fun endQueuedCall(
+        callId: String,
+        neverPresented: Boolean,
+    ): Boolean {
+        queue.remove(callId) ?: return false
+        queueNotifier.cancel(callId)
+        Log.i(TAG, "Waiting call $callId left the queue")
+        if (neverPresented) markEndedWithoutFlutterState(callId)
+        tracker.markTerminated(callId)
+        tracker.markEndCallDispatched(callId)
+        return true
+    }
+
+    /**
+     * True when an incoming call other than [callId] rings or is being registered: Telecom
+     * refuses a second ringing self-managed call. A registration counts before Telecom confirms
+     * it - on a cold start several pushes report within milliseconds, before any call rings.
+     * The standalone backend rings several calls itself and never queues.
+     */
+    private fun holdsBack(callId: String?): Boolean =
+        router.isTelecomSupported &&
+            queuesWhileRinging() &&
+            (incomingRegistrations.snapshot().any { it.callId != callId } || tracker.getRingingCallIds().any { it != callId })
+
+    /** Puts the next waiting call through when no incoming call rings any more. */
+    private fun raiseQueuedIfFree() {
+        runOnMain {
+            if (queue.isEmpty() || holdsBack(null)) return@runOnMain
+            val idle = getAll().isEmpty() && getPendingCallIds().isEmpty()
+            val entry = queue.pollNext(idle) ?: return@runOnMain
+            queueNotifier.cancel(entry.callId)
+            Log.i(TAG, "Putting waiting call ${entry.callId} through (answer=${entry.answerOnRaise})")
+            raising[entry.callId] = null
+            raiseScope.launch {
+                // Nothing may escape this coroutine: it runs on the main thread, and a dispatch
+                // that throws would take the process down with the live call in it.
+                val result = runCatching { registerIncomingCall(entry.metadata, QueueClient) }
+                val cause = raising.remove(entry.callId)
+                val error = result.getOrNull()
+                when {
+                    result.isSuccess && error == null -> {
+                        if (entry.answerOnRaise) {
+                            runCatching { startAnswerCall(entry.metadata) }
+                                .onFailure { Log.w(TAG, "Waiting call ${entry.callId} could not be answered", it) }
+                        }
+                    }
+
+                    // The app already holds this outcome: the call exists, or it ended it itself.
+                    error?.value in KNOWN_OUTCOMES || cause == RaiseEnd.APP_ENDED || cause == RaiseEnd.SESSION_ENDED -> {
+                        Log.i(TAG, "Waiting call ${entry.callId} not put through: ${error?.value ?: cause}")
+                    }
+
+                    cause == RaiseEnd.REFUSED && !idle -> {
+                        // Some vendors refuse an incoming call beside an active one too. It
+                        // waits again, now for no call at all: putting it through on every event
+                        // would only be refused again.
+                        Log.i(TAG, "Waiting call ${entry.callId} refused beside a live call; it waits for the end of all calls")
+                        queue.add(entry.metadata, waitForIdle = true)
+                        queueNotifier.show(entry.metadata)
+                    }
+
+                    else -> {
+                        endRaiseFailed(entry.metadata, result.exceptionOrNull()?.toString() ?: "${error?.value ?: cause}")
+                    }
+                }
+            }
+        }
+    }
 
     // -------------------------------------------------------------------------
     // Connection event receivers
@@ -508,7 +658,19 @@ class InProcessCallkeepCore internal constructor(
         }
         // The foreground bridge is the app itself: a call it reports is the app's already.
         if (client is CallEndListener) tracker.markReportedByApp(callId)
+        // A second report of a waiting call (the push after the signaling, say) joins it.
+        if (queue.contains(callId)) {
+            queue.add(metadata)
+            return null
+        }
         checkIncomingDuplicate(callId)?.let { return adoptIncomingCall(metadata, it) }
+        if (holdsBack(callId)) {
+            queue.add(metadata)
+            queueNotifier.show(metadata)
+            Log.i(TAG, "Incoming call $callId waits: another incoming call rings")
+            // The reporter holds it as an ordinary incoming call; that it waits is the core's.
+            return null
+        }
 
         return incomingRegistrations.await(metadata, client) { registration ->
             try {
@@ -566,7 +728,9 @@ class InProcessCallkeepCore internal constructor(
     }
 
     override fun endIncomingRegistrations() {
-        incomingRegistrations.snapshot().forEach { rejectIncomingRegistration(it, "session ended") }
+        // The session ends: waiting calls go first, so the rejections below do not put one through.
+        queue.clear().forEach(queueNotifier::cancel)
+        incomingRegistrations.snapshot().forEach { rejectIncomingRegistration(it, "session ended", RaiseEnd.SESSION_ENDED) }
     }
 
     override fun detachIncomingClient(client: Any) {
@@ -592,18 +756,21 @@ class InProcessCallkeepCore internal constructor(
     private fun rejectIncomingRegistration(
         registration: IncomingRegistrations.Registration,
         reason: String,
+        cause: RaiseEnd = RaiseEnd.OTHER,
         beforeAnswer: () -> Unit = {},
     ): Boolean =
-        incomingRegistrations.complete(
-            registration,
-            Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM)),
-            rejected = true,
-        ) {
-            Log.i(TAG, "Incoming registration rejected: ${registration.callId} ($reason)")
-            clearAndMarkEndCallDispatched(registration.callId)
-            markDirectNotified(registration.callId)
-            beforeAnswer()
-        }
+        incomingRegistrations
+            .complete(
+                registration,
+                Result.success(PIncomingCallError(PIncomingCallErrorEnum.CALL_REJECTED_BY_SYSTEM)),
+                rejected = true,
+            ) {
+                Log.i(TAG, "Incoming registration rejected: ${registration.callId} ($reason)")
+                if (registration.callId in raising) raising[registration.callId] = cause
+                clearAndMarkEndCallDispatched(registration.callId)
+                markDirectNotified(registration.callId)
+                beforeAnswer()
+            }.also { raiseQueuedIfFree() }
 
     private fun cancelRejectedIncomingCall(callId: String) {
         // A failed service start must not strand the host continuation. A late lifecycle
@@ -614,9 +781,17 @@ class InProcessCallkeepCore internal constructor(
 
     override fun startAnswerCall(metadata: CallMetadata) = router.startAnswerCall(metadata)
 
-    override fun startDeclineCall(metadata: CallMetadata) = router.startDeclineCall(metadata)
+    // A waiting call is not in the backend: ending it (the push session's decline or release of a
+    // call its caller hung up) takes it out of the queue instead.
+    override fun startDeclineCall(metadata: CallMetadata) {
+        if (endQueuedCall(metadata.callId, neverPresented = false)) return
+        router.startDeclineCall(metadata)
+    }
 
-    override fun startHungUpCall(metadata: CallMetadata) = router.startHungUpCall(metadata)
+    override fun startHungUpCall(metadata: CallMetadata) {
+        if (endQueuedCall(metadata.callId, neverPresented = false)) return
+        router.startHungUpCall(metadata)
+    }
 
     override fun startEstablishCall(metadata: CallMetadata) = router.startEstablishCall(metadata)
 
@@ -723,5 +898,16 @@ class InProcessCallkeepCore internal constructor(
         // The events after which a call is over, whoever ended it.
         internal val TERMINAL_EVENTS: Set<ConnectionEvent> =
             setOf(CallLifecycleEvent.DeclineCall, CallLifecycleEvent.HungUp, CallLifecycleEvent.ConnectionNotFound)
+
+        // The events after which an incoming call may no longer ring: it ended, or it was answered.
+        private val QUEUE_RELEASE_EVENTS: Set<ConnectionEvent> = TERMINAL_EVENTS + CallLifecycleEvent.AnswerCall
+
+        /** Results of putting a waiting call through that the app already holds. */
+        private val KNOWN_OUTCOMES =
+            setOf(
+                PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS,
+                PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED,
+                PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED,
+            )
     }
 }

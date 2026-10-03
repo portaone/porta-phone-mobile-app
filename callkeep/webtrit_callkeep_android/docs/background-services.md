@@ -40,6 +40,10 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
   before this service started. Every `onStartCommand` path returns `START_NOT_STICKY`: if
   the OS kills the service, a restart with a null intent must not re-post a notification
   for a call that is gone.
+- One call per instance. An `IC_INITIALIZE` for another call while one is shown or still
+  finishing (the next waiting call the core put through, a call beside an answered one) is
+  kept, and `onDestroy` starts the service again for it if the call still rings
+  (an answered or ended call has nothing to ask). A repeated `IC_INITIALIZE` for the shown call is ignored.
 - The notification's Answer and Decline buttons also enter through `onStartCommand`, as
   service `PendingIntent`s (`NotificationAction.Answer` / `Decline`); Answer additionally
   drops the notification buttons right away.

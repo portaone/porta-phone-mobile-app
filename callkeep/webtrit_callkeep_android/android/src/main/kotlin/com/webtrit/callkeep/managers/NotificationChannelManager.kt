@@ -17,6 +17,10 @@ object NotificationChannelManager {
     const val FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID = "FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID"
     const val ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID = "ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL"
 
+    // A call waiting in callkeep's queue while another incoming call rings. Low importance: it
+    // never heads up over the ringing call or an open app, and the ringing call has the sound.
+    const val QUEUED_CALL_NOTIFICATION_CHANNEL_ID = "QUEUED_CALL_NOTIFICATION_CHANNEL"
+
     /**
      * What each channel is worth, in one place.
      *
@@ -31,6 +35,7 @@ object NotificationChannelManager {
             INCOMING_CALL_NOTIFICATION_CHANNEL_ID to NotificationManager.IMPORTANCE_HIGH,
             ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID to NotificationManager.IMPORTANCE_LOW,
             FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID to NotificationManager.IMPORTANCE_LOW,
+            QUEUED_CALL_NOTIFICATION_CHANNEL_ID to NotificationManager.IMPORTANCE_LOW,
         )
 
     /** Channels that carry no tone of their own, because the app plays one. */
@@ -101,6 +106,18 @@ object NotificationChannelManager {
         registerActiveCallChannel(context)
         registerIncomingCallChannel(context)
         registerForegroundCallChannel(context)
+        registerQueuedCallChannel(context)
+    }
+
+    /** Registers the channel for calls waiting in the queue while another incoming call rings. */
+    private fun registerQueuedCallChannel(context: Context) {
+        registerNotificationChannel(
+            context,
+            channelId = QUEUED_CALL_NOTIFICATION_CHANNEL_ID,
+            title = context.getString(R.string.push_notification_queued_call_channel_title),
+            description = context.getString(R.string.push_notification_queued_call_channel_description),
+            importance = importanceOf(QUEUED_CALL_NOTIFICATION_CHANNEL_ID),
+        )
     }
 
     /**

@@ -201,6 +201,17 @@ class FlutterError (
   val details: Any? = null
 ) : RuntimeException()
 
+enum class PIncomingCallWhileRinging(val raw: Int) {
+  QUEUE(0),
+  REJECT(1);
+
+  companion object {
+    fun ofRaw(raw: Int): PIncomingCallWhileRinging? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
 enum class PCallkeepPermission(val raw: Int) {
   READ_PHONE_STATE(0),
   READ_PHONE_NUMBERS(1);
@@ -559,7 +570,12 @@ data class PAndroidOptions (
    * When set, all Log.d/i/w/e calls are appended to this file regardless
    * of whether the Flutter delegate is registered.
    */
-  val logFilePath: String? = null
+  val logFilePath: String? = null,
+  /**
+   * What happens to an incoming call reported while another incoming call rings. Null leaves the
+   * value set before (or the default, queue) in place.
+   */
+  val incomingCallWhileRinging: PIncomingCallWhileRinging? = null
 )
  {
   companion object {
@@ -570,7 +586,8 @@ data class PAndroidOptions (
       val incomingCallTimeoutMs = pigeonVar_list[3] as Long?
       val outgoingCallTimeoutMs = pigeonVar_list[4] as Long?
       val logFilePath = pigeonVar_list[5] as String?
-      return PAndroidOptions(ringtoneSound, ringbackSound, incomingCallFullScreen, incomingCallTimeoutMs, outgoingCallTimeoutMs, logFilePath)
+      val incomingCallWhileRinging = pigeonVar_list[6] as PIncomingCallWhileRinging?
+      return PAndroidOptions(ringtoneSound, ringbackSound, incomingCallFullScreen, incomingCallTimeoutMs, outgoingCallTimeoutMs, logFilePath, incomingCallWhileRinging)
     }
   }
   fun toList(): List<Any?> {
@@ -581,6 +598,7 @@ data class PAndroidOptions (
       incomingCallTimeoutMs,
       outgoingCallTimeoutMs,
       logFilePath,
+      incomingCallWhileRinging,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -591,7 +609,7 @@ data class PAndroidOptions (
       return true
     }
     val other = other as PAndroidOptions
-    return GeneratedPigeonUtils.deepEquals(this.ringtoneSound, other.ringtoneSound) && GeneratedPigeonUtils.deepEquals(this.ringbackSound, other.ringbackSound) && GeneratedPigeonUtils.deepEquals(this.incomingCallFullScreen, other.incomingCallFullScreen) && GeneratedPigeonUtils.deepEquals(this.incomingCallTimeoutMs, other.incomingCallTimeoutMs) && GeneratedPigeonUtils.deepEquals(this.outgoingCallTimeoutMs, other.outgoingCallTimeoutMs) && GeneratedPigeonUtils.deepEquals(this.logFilePath, other.logFilePath)
+    return GeneratedPigeonUtils.deepEquals(this.ringtoneSound, other.ringtoneSound) && GeneratedPigeonUtils.deepEquals(this.ringbackSound, other.ringbackSound) && GeneratedPigeonUtils.deepEquals(this.incomingCallFullScreen, other.incomingCallFullScreen) && GeneratedPigeonUtils.deepEquals(this.incomingCallTimeoutMs, other.incomingCallTimeoutMs) && GeneratedPigeonUtils.deepEquals(this.outgoingCallTimeoutMs, other.outgoingCallTimeoutMs) && GeneratedPigeonUtils.deepEquals(this.logFilePath, other.logFilePath) && GeneratedPigeonUtils.deepEquals(this.incomingCallWhileRinging, other.incomingCallWhileRinging)
   }
 
   override fun hashCode(): Int {
@@ -602,10 +620,11 @@ data class PAndroidOptions (
     result = 31 * result + GeneratedPigeonUtils.deepHash(this.incomingCallTimeoutMs)
     result = 31 * result + GeneratedPigeonUtils.deepHash(this.outgoingCallTimeoutMs)
     result = 31 * result + GeneratedPigeonUtils.deepHash(this.logFilePath)
+    result = 31 * result + GeneratedPigeonUtils.deepHash(this.incomingCallWhileRinging)
     return result
   }
   override fun toString(): String {
-    return "PAndroidOptions(ringtoneSound=$ringtoneSound, ringbackSound=$ringbackSound, incomingCallFullScreen=$incomingCallFullScreen, incomingCallTimeoutMs=$incomingCallTimeoutMs, outgoingCallTimeoutMs=$outgoingCallTimeoutMs, logFilePath=$logFilePath)"
+    return "PAndroidOptions(ringtoneSound=$ringtoneSound, ringbackSound=$ringbackSound, incomingCallFullScreen=$incomingCallFullScreen, incomingCallTimeoutMs=$incomingCallTimeoutMs, outgoingCallTimeoutMs=$outgoingCallTimeoutMs, logFilePath=$logFilePath, incomingCallWhileRinging=$incomingCallWhileRinging)"
   }
 }
 
@@ -1064,130 +1083,135 @@ private open class GeneratedPigeonCodec : StandardMessageCodec() {
     return when (type) {
       129.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallkeepPermission.ofRaw(it.toInt())
+          PIncomingCallWhileRinging.ofRaw(it.toInt())
         }
       }
       130.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PSpecialPermissionStatusTypeEnum.ofRaw(it.toInt())
+          PCallkeepPermission.ofRaw(it.toInt())
         }
       }
       131.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallkeepAndroidBatteryMode.ofRaw(it.toInt())
+          PSpecialPermissionStatusTypeEnum.ofRaw(it.toInt())
         }
       }
       132.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallkeepAndroidCallDeliveryMode.ofRaw(it.toInt())
+          PCallkeepAndroidBatteryMode.ofRaw(it.toInt())
         }
       }
       133.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PHandleTypeEnum.ofRaw(it.toInt())
+          PCallkeepAndroidCallDeliveryMode.ofRaw(it.toInt())
         }
       }
       134.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallInfoConsts.ofRaw(it.toInt())
+          PHandleTypeEnum.ofRaw(it.toInt())
         }
       }
       135.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PEndCallReasonEnum.ofRaw(it.toInt())
+          PCallInfoConsts.ofRaw(it.toInt())
         }
       }
       136.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PAudioDeviceType.ofRaw(it.toInt())
+          PEndCallReasonEnum.ofRaw(it.toInt())
         }
       }
       137.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PIncomingCallErrorEnum.ofRaw(it.toInt())
+          PAudioDeviceType.ofRaw(it.toInt())
         }
       }
       138.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallRequestErrorEnum.ofRaw(it.toInt())
+          PIncomingCallErrorEnum.ofRaw(it.toInt())
         }
       }
       139.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallkeepLifecycleEvent.ofRaw(it.toInt())
+          PCallRequestErrorEnum.ofRaw(it.toInt())
         }
       }
       140.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallkeepConnectionState.ofRaw(it.toInt())
+          PCallkeepLifecycleEvent.ofRaw(it.toInt())
         }
       }
       141.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          PCallkeepDisconnectCauseType.ofRaw(it.toInt())
+          PCallkeepConnectionState.ofRaw(it.toInt())
         }
       }
       142.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          PIOSOptions.fromList(it)
+        return (readValue(buffer) as Long?)?.let {
+          PCallkeepDisconnectCauseType.ofRaw(it.toInt())
         }
       }
       143.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PAndroidOptions.fromList(it)
+          PIOSOptions.fromList(it)
         }
       }
       144.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          POptions.fromList(it)
+          PAndroidOptions.fromList(it)
         }
       }
       145.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PAudioDevice.fromList(it)
+          POptions.fromList(it)
         }
       }
       146.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PPermissionResult.fromList(it)
+          PAudioDevice.fromList(it)
         }
       }
       147.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PHandle.fromList(it)
+          PPermissionResult.fromList(it)
         }
       }
       148.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PEndCallReason.fromList(it)
+          PHandle.fromList(it)
         }
       }
       149.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PIncomingCallError.fromList(it)
+          PEndCallReason.fromList(it)
         }
       }
       150.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallRequestError.fromList(it)
+          PIncomingCallError.fromList(it)
         }
       }
       151.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallkeepIncomingCallData.fromList(it)
+          PCallRequestError.fromList(it)
         }
       }
       152.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallkeepServiceStatus.fromList(it)
+          PCallkeepIncomingCallData.fromList(it)
         }
       }
       153.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallkeepDisconnectCause.fromList(it)
+          PCallkeepServiceStatus.fromList(it)
         }
       }
       154.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PCallkeepDisconnectCause.fromList(it)
+        }
+      }
+      155.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PCallkeepConnection.fromList(it)
         }
@@ -1197,108 +1221,112 @@ private open class GeneratedPigeonCodec : StandardMessageCodec() {
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
     when (value) {
-      is PCallkeepPermission -> {
+      is PIncomingCallWhileRinging -> {
         stream.write(129)
         writeValue(stream, value.raw.toLong())
       }
-      is PSpecialPermissionStatusTypeEnum -> {
+      is PCallkeepPermission -> {
         stream.write(130)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallkeepAndroidBatteryMode -> {
+      is PSpecialPermissionStatusTypeEnum -> {
         stream.write(131)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallkeepAndroidCallDeliveryMode -> {
+      is PCallkeepAndroidBatteryMode -> {
         stream.write(132)
         writeValue(stream, value.raw.toLong())
       }
-      is PHandleTypeEnum -> {
+      is PCallkeepAndroidCallDeliveryMode -> {
         stream.write(133)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallInfoConsts -> {
+      is PHandleTypeEnum -> {
         stream.write(134)
         writeValue(stream, value.raw.toLong())
       }
-      is PEndCallReasonEnum -> {
+      is PCallInfoConsts -> {
         stream.write(135)
         writeValue(stream, value.raw.toLong())
       }
-      is PAudioDeviceType -> {
+      is PEndCallReasonEnum -> {
         stream.write(136)
         writeValue(stream, value.raw.toLong())
       }
-      is PIncomingCallErrorEnum -> {
+      is PAudioDeviceType -> {
         stream.write(137)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallRequestErrorEnum -> {
+      is PIncomingCallErrorEnum -> {
         stream.write(138)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallkeepLifecycleEvent -> {
+      is PCallRequestErrorEnum -> {
         stream.write(139)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallkeepConnectionState -> {
+      is PCallkeepLifecycleEvent -> {
         stream.write(140)
         writeValue(stream, value.raw.toLong())
       }
-      is PCallkeepDisconnectCauseType -> {
+      is PCallkeepConnectionState -> {
         stream.write(141)
         writeValue(stream, value.raw.toLong())
       }
-      is PIOSOptions -> {
+      is PCallkeepDisconnectCauseType -> {
         stream.write(142)
-        writeValue(stream, value.toList())
+        writeValue(stream, value.raw.toLong())
       }
-      is PAndroidOptions -> {
+      is PIOSOptions -> {
         stream.write(143)
         writeValue(stream, value.toList())
       }
-      is POptions -> {
+      is PAndroidOptions -> {
         stream.write(144)
         writeValue(stream, value.toList())
       }
-      is PAudioDevice -> {
+      is POptions -> {
         stream.write(145)
         writeValue(stream, value.toList())
       }
-      is PPermissionResult -> {
+      is PAudioDevice -> {
         stream.write(146)
         writeValue(stream, value.toList())
       }
-      is PHandle -> {
+      is PPermissionResult -> {
         stream.write(147)
         writeValue(stream, value.toList())
       }
-      is PEndCallReason -> {
+      is PHandle -> {
         stream.write(148)
         writeValue(stream, value.toList())
       }
-      is PIncomingCallError -> {
+      is PEndCallReason -> {
         stream.write(149)
         writeValue(stream, value.toList())
       }
-      is PCallRequestError -> {
+      is PIncomingCallError -> {
         stream.write(150)
         writeValue(stream, value.toList())
       }
-      is PCallkeepIncomingCallData -> {
+      is PCallRequestError -> {
         stream.write(151)
         writeValue(stream, value.toList())
       }
-      is PCallkeepServiceStatus -> {
+      is PCallkeepIncomingCallData -> {
         stream.write(152)
         writeValue(stream, value.toList())
       }
-      is PCallkeepDisconnectCause -> {
+      is PCallkeepServiceStatus -> {
         stream.write(153)
         writeValue(stream, value.toList())
       }
-      is PCallkeepConnection -> {
+      is PCallkeepDisconnectCause -> {
         stream.write(154)
+        writeValue(stream, value.toList())
+      }
+      is PCallkeepConnection -> {
+        stream.write(155)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)

@@ -1,6 +1,7 @@
 export 'callkeep_android_battery_mode.dart';
 export 'callkeep_android_call_delivery_mode.dart';
 export 'callkeep_incoming_call_metadata.dart';
+export 'callkeep_incoming_call_while_ringing.dart';
 export 'callkeep_audio_device.dart';
 export 'callkeep_call_request_error.dart';
 export 'callkeep_connection.dart';

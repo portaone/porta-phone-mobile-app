@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:webtrit_callkeep_platform_interface/src/models/callkeep_handle.dart';
+import 'package:webtrit_callkeep_platform_interface/src/models/callkeep_incoming_call_while_ringing.dart';
 
 class CallkeepOptions extends Equatable {
   const CallkeepOptions({required this.ios, required this.android});
@@ -66,6 +67,7 @@ class CallkeepAndroidOptions extends Equatable {
     this.incomingCallTimeoutMs = 60000,
     this.outgoingCallTimeoutMs = 60000,
     this.nativeLogFilePath,
+    this.incomingCallWhileRinging = CallkeepIncomingCallWhileRinging.queue,
   });
 
   final String? ringtoneSound;
@@ -90,6 +92,11 @@ class CallkeepAndroidOptions extends Equatable {
   /// so both sides agree on the file location.
   final String? nativeLogFilePath;
 
+  /// What happens to an incoming call that arrives while another incoming call rings: it waits
+  /// in callkeep's queue ([CallkeepIncomingCallWhileRinging.queue], the default) or is refused
+  /// and declined on the server ([CallkeepIncomingCallWhileRinging.reject]).
+  final CallkeepIncomingCallWhileRinging incomingCallWhileRinging;
+
   @override
   List<Object?> get props => [
     ringtoneSound,
@@ -98,5 +105,6 @@ class CallkeepAndroidOptions extends Equatable {
     incomingCallTimeoutMs,
     outgoingCallTimeoutMs,
     nativeLogFilePath,
+    incomingCallWhileRinging,
   ];
 }

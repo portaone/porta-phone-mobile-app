@@ -48,6 +48,20 @@ object StorageDelegate {
 
     object IncomingCall {
         private const val FULL_SCREEN = "INCOMING_CALL_FULL_SCREEN"
+        private const val QUEUE_WHILE_RINGING = "INCOMING_CALL_QUEUE_WHILE_RINGING"
+
+        /**
+         * Persists whether an incoming call reported while another one rings waits in the core's
+         * queue (true, the default) or goes to Telecom to be refused (false).
+         */
+        fun setQueueWhileRinging(
+            context: Context,
+            queue: Boolean,
+        ) {
+            sharedPreferences(context).edit().putBoolean(QUEUE_WHILE_RINGING, queue).apply()
+        }
+
+        fun queuesWhileRinging(context: Context): Boolean = sharedPreferences(context).getBoolean(QUEUE_WHILE_RINGING, true)
 
         /** Persists whether incoming calls should launch in full-screen mode. Defaults to `true`. */
         fun setFullScreen(

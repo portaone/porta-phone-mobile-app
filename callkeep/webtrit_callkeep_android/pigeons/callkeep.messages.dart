@@ -41,7 +41,13 @@ class PAndroidOptions {
   /// When set, all Log.d/i/w/e calls are appended to this file regardless
   /// of whether the Flutter delegate is registered.
   late String? logFilePath;
+
+  /// What happens to an incoming call reported while another incoming call rings. Null leaves the
+  /// value set before (or the default, queue) in place.
+  late PIncomingCallWhileRinging? incomingCallWhileRinging;
 }
+
+enum PIncomingCallWhileRinging { queue, reject }
 
 class POptions {
   late PIOSOptions ios;

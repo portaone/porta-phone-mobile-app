@@ -13,6 +13,7 @@ import android.os.Looper
 import android.os.PowerManager
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
+import com.webtrit.callkeep.PCallkeepConnectionState
 import com.webtrit.callkeep.PDelegateBackgroundRegisterFlutterApi
 import com.webtrit.callkeep.PDelegateBackgroundServiceFlutterApi
 import com.webtrit.callkeep.R
@@ -52,6 +53,11 @@ class IncomingCallService :
     // arriving while the service is still processing a call (e.g. a second push while the first
     // call is still in the teardown window).
     private var isInitialized = false
+
+    // A call whose IC_INITIALIZE arrived while this instance still had another call: the next
+    // call the core put through once the first stopped ringing, or one beside an answered call.
+    // It is shown by a fresh instance when this one is destroyed, if it still rings then.
+    private var deferredLaunch: CallMetadata? = null
 
     // Set to true once syncPushIsolate has been dispatched. Prevents double-sync when both
     // the onStart() path (warm engine) and the establishFlutterCommunication() path (cold-start
@@ -300,6 +306,25 @@ class IncomingCallService :
         }
         isolateHandler.cleanup()
         super.onDestroy()
+        launchDeferred()
+    }
+
+    private fun launchDeferred() {
+        val metadata = deferredLaunch ?: return
+        deferredLaunch = null
+        val context = applicationContext
+        // Posted, not called here: a start made from onDestroy is attached to the record being
+        // destroyed, which then stops without startForeground and the system kills the process
+        // (ForegroundServiceDidNotStartInTimeException).
+        Handler(Looper.getMainLooper()).post {
+            // Shown only while it still rings: answered or ended meanwhile, it has nothing to ask.
+            if (CallkeepCore.instance.getState(metadata.callId) != PCallkeepConnectionState.STATE_RINGING) {
+                Log.i(TAG, "deferred ${metadata.callId} no longer rings, not shown")
+                return@post
+            }
+            Log.i(TAG, "showing deferred ${metadata.callId}")
+            start(context, metadata)
+        }
     }
 
     fun establishFlutterCommunication(
@@ -376,10 +401,19 @@ class IncomingCallService :
         // still in the teardown window of a previous call (stopTimeoutRunnable pending),
         // accepting it would cancel the stop timer, overwrite currentCallData, and start
         // a second Flutter isolate on the same engine — causing FlutterEngine conflicts and
-        // callRejectedBySystem from Telecom. Reject the duplicate; it will be delivered to
-        // a fresh service instance once the current one stops.
+        // callRejectedBySystem from Telecom. Another call is kept and launched in a fresh
+        // instance once this one is destroyed (onDestroy); a repeat of this call is ignored.
         if (isInitialized) {
-            Log.w(TAG, "handleLaunch: already initialized for ${callLifecycleHandler.currentCallData?.callId}, ignoring IC_INITIALIZE for ${metadata.callId}")
+            val current = callLifecycleHandler.currentCallData?.callId
+            if (metadata.callId != current) {
+                Log.i(TAG, "handleLaunch: busy with $current, ${metadata.callId} is shown once this service stops")
+                deferredLaunch = metadata
+            } else {
+                Log.w(TAG, "handleLaunch: already initialized for $current, ignoring a repeated IC_INITIALIZE")
+            }
+            // This launch came through startForegroundService too. A service that already left
+            // the foreground (its call answered) must enter it again before it stops.
+            if (hasYieldedNotification) incomingCallHandler.returnToForegroundSilently()
             return START_NOT_STICKY
         }
         isInitialized = true
