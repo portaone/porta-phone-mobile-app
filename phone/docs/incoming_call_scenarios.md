@@ -203,6 +203,32 @@ flowchart TB
   PCS -. "shows UI via" .-> ICS
 ```
 
+## A second call while one rings (Android)
+
+Telecom lets one incoming call ring at a time and refuses the next one. What happens to a call
+reported while another incoming call rings is set by
+`CallkeepAndroidOptions.incomingCallWhileRinging`; the app passes nothing, so the default,
+`queue`, applies. Callkeep side:
+`webtrit_callkeep_android/docs/call-flows.md` and `callkeep-core.md` (Waiting calls).
+
+With `queue` the second call (B) waits in callkeep's queue instead of reaching Telecom. The app
+is not told: `reportNewIncomingCall` succeeds, and CallBloc holds B as an ordinary incoming
+call - with the app open it is listed next to the ringing call (A) with its own answer and
+decline. Outside the app B has a silent "Call waiting" notification with two actions.
+
+| What happens | Callkeep | What the user sees |
+|---|---|---|
+| B is reported while A rings | B waits, silent notification posted | both calls in the app; "Call waiting" in the shade |
+| A ends (caller hung up, declined) | B is registered with Telecom | B rings like any incoming call |
+| A is answered | B is registered beside A at once | B rings as call waiting on top of A |
+| Answer on B (notification or app) | A is declined, B goes through and is answered | the call screen on B |
+| Decline current (notification) | A is declined, the oldest waiting call goes through | B rings |
+| B's caller hangs up while it waits | B leaves the queue, Telecom never sees it | a missed call |
+| The app declines B while it waits | B leaves the queue, `performEndCall(B)` | B is declined on the server |
+
+With `reject` nothing waits: Telecom refuses B, `reportNewIncomingCall` returns
+`callRejectedBySystem`, and CallBloc declines B on the server (the caller hears 603 Decline).
+
 ## Sequence — Case A (push-bound): answer / decline / missed
 
 ```mermaid
