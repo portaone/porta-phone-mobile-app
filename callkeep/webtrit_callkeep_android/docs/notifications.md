@@ -24,7 +24,7 @@ icon), so the ringing, silent and standalone variants stay in sync.
 
 **File**: `kotlin/com/webtrit/callkeep/managers/NotificationChannelManager.kt`
 
-Registers the three notification channels (and deletes the legacy
+Registers the four notification channels (and deletes the legacy
 `NOTIFICATION_ACTIVE_CALL_CHANNEL_ID` channel left behind by older versions). Called from
 `ForegroundService.setUp()` on the Telecom path and from `StandaloneCallService` on the
 standalone path.
@@ -34,6 +34,7 @@ standalone path.
 | `INCOMING_CALL_NOTIFICATION_CHANNEL_ID`    | `HIGH`     | Heads-up notification with ringtone for incoming calls                   |
 | `ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL` | `LOW`      | Persistent silent notification for active calls                          |
 | `FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID`  | `LOW`      | Standalone-service placeholder notification (see the standalone section) |
+| `QUEUED_CALL_NOTIFICATION_CHANNEL`         | `LOW`      | A call waiting in the core's queue while another incoming call rings     |
 
 ---
 
@@ -141,6 +142,25 @@ window, and switches to the incoming-call notification right after - that placeh
 sole producer on the foreground channel.
 
 ---
+
+## QueuedCallNotifications
+
+**File**: `kotlin/com/webtrit/callkeep/notifications/QueuedCallNotifications.kt`
+
+The notification of a call waiting in the core's queue ([callkeep-core.md](callkeep-core.md),
+Waiting calls). One per waiting call, id derived from `"queued:" + callId` so it never collides
+with the incoming notification the same call gets once it rings. Silent, low importance and
+ongoing: it never heads up over the ringing call or an open app, which shows every call itself.
+Posted when the call starts waiting, cancelled when it is put through or leaves the queue.
+
+- **Answer**: an activity `PendingIntent` to `QueuedCallTrampolineActivity`, which calls
+  `CallkeepCore.answerQueuedCall` and brings the host app up - answering has to end on the call
+  screen, and the tap carries the launch permission.
+- **Decline current**: a broadcast to `QueuedCallActionReceiver`, which calls
+  `CallkeepCore.declineRingingCalls`; the oldest waiting call then rings.
+- **Tap**: opens the app.
+
+Both actions are carried out by the core, so they work without a running Flutter engine.
 
 ## AudioManager
 

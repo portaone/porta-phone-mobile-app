@@ -73,6 +73,34 @@ promotes the call as active before notifying the foreground bridge.
 
 ---
 
+## Second Incoming Call While One Rings (waiting call)
+
+Telecom lets one self-managed incoming call ring at a time. The core holds the second one back.
+
+```text
+1.  B is reported (signaling, push or SMS) while A rings or is being registered
+        |   CallkeepCore.registerIncomingCall(B) -> no error, but no dispatch
+        |   IncomingCallQueue keeps B; QueuedCallNotifications posts its silent notification
+        |   The app holds B as an ordinary incoming call; the caller of B hears ringback
+        v
+2a. A ends (DeclineCall / HungUp / ConnectionNotFound)
+        |   after the listeners: nothing rings -> the oldest waiting call is registered
+        |   B rings like any incoming call; a B the app reported is the app's already, a B only
+        |   a push reported is presented (didPresentIncomingCall) or handled by a push session
+2b. A is answered (AnswerCall)
+        |   B is registered at once beside the active A: call waiting, waiting tone
+2c. The user answers B (notification action or the app's answer of B)
+        |   answerQueuedCall(B): A is declined, B goes through first and is answered once it rings
+2d. B's caller hangs up while B waits
+        |   reportCallEnded(B) -> B leaves the queue; nothing reaches Telecom, A is untouched
+2e. The app ends B while it waits (endCall)
+        |   B leaves the queue; performEndCall(B) at once, so the app declines it on the server
+```
+
+`callRejectedBySystem` below still happens when the core does not see the ringing call - another
+app's call, say - and when a vendor refuses B beside an active A (B then waits for the end of
+every call, see [callkeep-core.md](callkeep-core.md)).
+
 ## Incoming Call Rejected by Telecom (`callRejectedBySystem`)
 
 Android does not allow two self-managed calls to be simultaneously in RINGING state. When a

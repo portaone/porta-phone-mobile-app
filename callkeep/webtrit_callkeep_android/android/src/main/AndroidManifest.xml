@@ -153,6 +153,26 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <!--
+          Invisible trampoline behind the Answer action of a waiting call's notification (a call
+          callkeep holds in its queue while another incoming call rings). Answering ends the
+          ringing call, answers this one once it rings and has to open the call screen; the
+          activity PendingIntent carries the launch permission with the user's tap.
+        -->
+        <activity
+            android:name=".activities.QueuedCallTrampolineActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- The Decline current action of a waiting call's notification: ends the ringing call. -->
+        <receiver
+            android:name=".services.receivers.QueuedCallActionReceiver"
+            android:exported="false" />
+
+        <!--
           [Optional Integration] SMS Fallback Receiver
 
           This receiver is used to trigger the foreground service when an incoming call is announced via SMS,

@@ -260,6 +260,59 @@ disconnected. If Android refuses that command, the failure is logged and a later
 event retries it. Tests cover both command ordering and backend cancellation; device scenarios
 that never force a deadline do not establish cancellation delivery under OS restrictions.
 
+### Waiting calls
+
+Telecom lets one self-managed incoming call ring at a time (`MAX_RINGING_CALLS`, a CDD rule) and
+refuses the next one. Instead of letting it be refused and declined on the server, the core holds
+it back in `IncomingCallQueue`:
+
+- **Decision.** `registerIncomingCall` accepts the call (no error) but does not dispatch it when
+  another incoming call rings (`ConnectionTracker.getRingingCallIds`) or is being registered (a live
+  `IncomingRegistrations` entry - on a cold start several pushes report before any call rings).
+  The standalone backend rings several calls itself and never queues. A second report of a
+  waiting call (the push after the signaling) joins it. That the call waits stays inside the core:
+  the reporter holds it as an ordinary incoming call, and the app's answer, end and the caller's
+  hangup of it reach the core through the usual `answerCall`, `endCall` and `reportEndCall`.
+- **Notification.** `QueuedCallNotifier` (`QueuedCallNotifications`) posts a silent,
+  low-importance notification per waiting call - see [notifications.md](notifications.md).
+- **Putting a call through.** After the listeners of a terminal event or `AnswerCall`, and after
+  a registration is rejected, the core registers the next waiting call when nothing rings any
+  more: the one the user chose to answer, else the oldest. It registers it as `QueueClient`; a
+  call the app reported keeps its mark, so it is not presented to the app a second time. A call chosen to be answered is answered
+  (`startAnswerCall`) once Telecom confirms it. After an answer the call is put through beside
+  the active one, as call waiting; a vendor that refuses that too answers with
+  `IncomingFailure`, and the call waits again, now for the end of every call. Only that refusal
+  puts a call back: the registration is rejected with the same code for every reason, so the
+  core records why (`RaiseEnd`) while the call is put through. Ended by the app or by the end of
+  the session, nothing follows. Any other failure - refused with no call left, the confirmation
+  timeout, a dispatch that throws - ends the call for the app: the reporter was told it was
+  registered, so the listeners get a `HungUp` for it and the app declines it on the server.
+  Nothing thrown while putting a call through escapes the coroutine, which runs on the main
+  thread.
+- **Ending a waiting call.** `reportCallEnded`, `ForegroundService.endCall`, and
+  `startDeclineCall` / `startHungUpCall` (the push session's end or release of a call) take it
+  out of the queue without touching the backend, where it never was. It leaves the facts any
+  ended call leaves - terminated, its end dispatched, and for `MISSED_WHILE_CONNECTING` never to be
+  registered again - so a late report of it (the push after the signaling) does not ring it.
+- **User actions.** `answerQueuedCall(callId)` marks the call to be answered and declines the
+  ringing calls (`startDeclineCall`, the path of a ringing notification's own Decline button, so
+  the app or the push session ends them on the server); `declineRingingCalls()` only declines.
+  `ForegroundService.answerCall` turns an answer of a waiting call into `answerQueuedCall`. A call
+  that waits for no call at all (refused beside a live one) can ring only once the live calls end,
+  so answering it hangs them up too.
+- **Session end.** `endIncomingRegistrations` (and so `clear`) empties the queue first, so the
+  rejections that follow put nothing through. `ForegroundService.tearDown` reads
+  `queuedCallIds()` before that and sends Flutter `performEndCall` for each waiting call.
+- **Process death.** The queue lives in memory only. The waiting-call notification is ongoing, so
+  if the process dies while a call waits it stays until the next show or cancel of that id.
+
+| Method | Effect |
+| -------- | -------- |
+| `isQueued(callId)` / `hasQueuedCalls()` / `queuedCallIds()` | Whether a call waits, which ones |
+| `answerQueuedCall(callId)` | Decline the ringing calls, put `callId` through first and answer it |
+| `declineRingingCalls()` | Decline the ringing calls; the oldest waiting call follows |
+| `dropQueuedCall(callId)` | Take a waiting call out of the queue |
+
 ### In-Call Control
 
 `startAnswerCall`, `startDeclineCall`, `startHungUpCall`, `startEstablishCall`,

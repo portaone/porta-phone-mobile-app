@@ -181,6 +181,9 @@ interface ConnectionTracker {
      */
     fun getPendingCallIds(): Set<String>
 
+    /** Incoming calls registered with the backend and ringing: state RINGING, not answered. */
+    fun getRingingCallIds(): Set<String>
+
     /** Returns true if [callId] has been marked terminated. */
     fun isTerminated(callId: String): Boolean
 

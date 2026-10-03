@@ -272,6 +272,37 @@ interface CallkeepCore {
     // Incoming registration: waiting for Telecom's answer
     // -------------------------------------------------------------------------
 
+    // Waiting calls: Telecom lets one incoming call ring at a time. An incoming call reported
+    // while another one rings is not dispatched; registerIncomingCall accepts it as registered and
+    // the core holds it in its queue, with a silent notification, until the ringing call ends
+    // (the oldest waiting call is then registered as a normal incoming call) or is answered (it
+    // is then registered at once, as call waiting).
+
+    /** True while [callId] waits in the queue. */
+    fun isQueued(callId: String): Boolean
+
+    /** True while any call waits in the queue. */
+    fun hasQueuedCalls(): Boolean
+
+    /** The calls waiting in the queue, oldest first. */
+    fun queuedCallIds(): List<String>
+
+    /**
+     * The user answers the waiting call [callId]: the ringing calls are declined (and the live
+     * ones hung up when the call waits for no call at all), and [callId] is registered first and
+     * answered as soon as it rings. False when it is not waiting.
+     */
+    fun answerQueuedCall(callId: String): Boolean
+
+    /** Declines the incoming calls that ring; the queue then puts the next waiting call through. */
+    fun declineRingingCalls()
+
+    /**
+     * Takes the waiting call [callId] out of the queue without touching the backend, where it
+     * never was. False when it is not waiting.
+     */
+    fun dropQueuedCall(callId: String): Boolean
+
     /**
      * Registers once and waits for the backend's answer, joining an existing attempt for this id.
      * The core owns guards, dispatch, timeout, state promotion, and cleanup before returning.

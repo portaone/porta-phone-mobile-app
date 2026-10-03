@@ -522,6 +522,10 @@ class ForegroundService :
         // Step 1: Collect active call IDs from the core shadow state (promoted connections).
         val activeCallIds = core.getAll().map { it.callId }
 
+        // Waiting calls were reported to Flutter as registered: they end with the session too,
+        // and endIncomingRegistrations below empties the queue.
+        val waitingCallIds = core.queuedCallIds()
+
         // The session ends for every client, including push registrations. Core rejects
         // them and suppresses their later terminal broadcasts before pending calls are drained.
         core.endIncomingRegistrations()
@@ -551,6 +555,13 @@ class ForegroundService :
         // a duplicate startHungUpCall IPC if endCall() arrives during the tearDown window.
         unconnectedPending.forEach { callId ->
             core.markDirectNotified(callId)
+            core.clearAndMarkEndCallDispatched(callId)
+            notifyFlutter("performEndCall") { performEndCall(callId) }
+        }
+
+        // Step 4b: Notify Flutter for waiting calls. They never reached the backend, so no
+        // broadcast follows; the marks only keep a late endCall from firing a second time.
+        waitingCallIds.forEach { callId ->
             core.clearAndMarkEndCallDispatched(callId)
             notifyFlutter("performEndCall") { performEndCall(callId) }
         }
@@ -669,6 +680,12 @@ class ForegroundService :
     }
 
     override suspend fun answerCall(callId: String): PCallRequestError? {
+        // A waiting call is answered by the core: it declines the ringing call and answers this
+        // one as soon as it rings, which reaches the app as performAnswerCall like any answer.
+        if (core.answerQueuedCall(callId)) {
+            logger.i("answerCall $callId: waiting in the queue, the core puts it through answered.")
+            return null
+        }
         val metadata = CallMetadata(callId = callId)
         // IncomingConnectionReported is delivered via sendBroadcast() which is async. Between the
         // moment CS creates the PhoneConnection and the moment the broadcast reaches
@@ -703,6 +720,13 @@ class ForegroundService :
 
     override suspend fun endCall(callId: String): PCallRequestError? {
         logger.i("endCall $callId.")
+
+        // A waiting call never reached the backend: it leaves the queue, and the app gets the
+        // performEndCall it waits for after endCall, as for any call.
+        if (core.dropQueuedCall(callId)) {
+            notifyFlutter("performEndCall") { performEndCall(callId) }
+            return null
+        }
 
         core.appEndingCall(callId)
 
@@ -945,8 +969,12 @@ class ForegroundService :
      * ends took the screen away from a call still ringing (a second incoming call refused by
      * Telecom while the first rang). A refused call was never registered, so it never counts; a
      * call reported to Telecom but not yet connected (pending) does, since its screen is on the way.
+     * So does a call waiting in the queue: it is put through as soon as this one is gone.
      */
-    internal fun isLastCall(endedCallId: String): Boolean = core.getAll().none { it.callId != endedCallId } && core.getPendingCallIds().none { it != endedCallId }
+    internal fun isLastCall(endedCallId: String): Boolean =
+        core.getAll().none { it.callId != endedCallId } &&
+            core.getPendingCallIds().none { it != endedCallId } &&
+            !core.hasQueuedCalls()
 
     private fun handleCSReportAnswerCall(extras: Bundle?) {
         logger.d("handleCSReportAnswerCall")

@@ -260,6 +260,12 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
     /** Returns a non-destructive snapshot of all currently pending call IDs. */
     override fun getPendingCallIds(): Set<String> = calls.entries.filter { it.value.pending }.mapTo(mutableSetOf()) { it.key }
 
+    override fun getRingingCallIds(): Set<String> =
+        calls.entries
+            .filter { (_, rec) ->
+                rec.metadata != null && rec.state == PCallkeepConnectionState.STATE_RINGING && !rec.answered && !rec.pendingAnswer
+            }.mapTo(mutableSetOf()) { it.key }
+
     /**
      * Returns true if [callId] was previously observed (i.e. its [CallRecord.state] was set
      * via [promote], [updateState] or [markTerminated]) and is no longer registered, pending,
