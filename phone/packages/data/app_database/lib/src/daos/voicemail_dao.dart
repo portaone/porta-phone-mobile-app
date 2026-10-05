@@ -84,10 +84,20 @@ class VoicemailDao extends DatabaseAccessor<AppDatabase> with _$VoicemailDaoMixi
         leftOuterJoin(contactPhones, contactPhones.number.equalsExp(voicemail.sender)),
         leftOuterJoin(contacts, contacts.id.equalsExp(contactPhones.contactId)),
       ])
+      // Newest first by the message's own date, not by rowId: a message that
+      // arrives after the first sync is stored last, and the mailbox does not
+      // hand over forwarded messages in the order of their dates either. The
+      // date is the server's ISO 8601 UTC string, so it sorts as text. rowId
+      // only keeps messages of one date in a stable order.
+      //
       // The trailing source-priority term is a per-voicemail tie-break so a
       // sender number shared by a local and an external (PBX) contact
       // resolves to the external one (the first row kept by the collapse).
-      ..orderBy([OrderingTerm.asc(voicemail.rowId), ...contacts.sourcePriorityOrder()]);
+      ..orderBy([
+        OrderingTerm.desc(voicemail.date),
+        OrderingTerm.asc(voicemail.rowId),
+        ...contacts.sourcePriorityOrder(),
+      ]);
   }
 
   /// The contact join yields one row per matching contact; keep exactly one
