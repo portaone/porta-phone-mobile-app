@@ -110,15 +110,6 @@ abstract class VoicemailRepository implements Refreshable {
   /// Deletes several messages for good at once, wherever they are.
   Future<void> removeMultipleVoicemailsPermanently(List<String> messagesIds);
 
-  /// Names for the colleagues who forwarded messages on, by their user id.
-  ///
-  /// A forwarded message carries the id of whoever passed it along and nothing
-  /// else about them, so a screen showing "forwarded by" has to ask. Ids with
-  /// nobody behind them are simply absent from the answer: a colleague who has
-  /// left the address book is still a fact about the message, and their id is a
-  /// poor but honest stand-in for their name.
-  Future<Map<String, String>> resolveForwarderNames(Iterable<String> userIds);
-
   /// Passes a voicemail on to another user of the same backend, and answers
   /// with the id it now has in the RECIPIENT's list.
   ///
@@ -436,21 +427,6 @@ class VoicemailRepositoryImpl
     return trashed;
   }
 
-  @override
-  Future<Map<String, String>> resolveForwarderNames(Iterable<String> userIds) async {
-    final names = <String, String>{};
-
-    for (final userId in userIds.toSet()) {
-      // Matched on the id the backend issued, not on a number: a forward names
-      // a user, and the same person may answer on several numbers or none.
-      final contact = await _appDatabase.contactsDao.getContactBySource(ContactSourceTypeEnum.external, userId);
-      final name = contact == null ? null : contactFromDrift(contact.contact).maybeName;
-      if (name != null) names[userId] = name;
-    }
-
-    return names;
-  }
-
   /// The name to show for a number, or the number itself.
   ///
   /// A trashed message is not in the stored list - it left on its way to the
@@ -702,9 +678,6 @@ class EmptyVoicemailRepository implements VoicemailRepository {
 
   @override
   Future<void> removeMultipleVoicemailsPermanently(List<String> messagesIds) => Future.value();
-
-  @override
-  Future<Map<String, String>> resolveForwarderNames(Iterable<String> userIds) => Future.value(const {});
 
   @override
   Future<String> forwardVoicemail(String messageId, {required String toUserId, String? localeCode}) => Future.value('');
