@@ -40,12 +40,17 @@ class KeypadHarness {
   final MockCallBloc callBloc = MockCallBloc();
   final MockCallRoutingCubit routingCubit = MockCallRoutingCubit();
 
+  /// What the view asked the clipboard, in order, by platform method name.
+  final List<String> clipboardCalls = [];
+
   /// Answers the clipboard the way the platform would, with [text] on it.
   void withClipboard(String? text) {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
       (call) async {
+        if (call.method.startsWith('Clipboard.')) clipboardCalls.add(call.method);
         if (call.method == 'Clipboard.getData') return text == null ? null : <String, dynamic>{'text': text};
+        if (call.method == 'Clipboard.hasStrings') return <String, dynamic>{'value': text != null};
         return null;
       },
     );
