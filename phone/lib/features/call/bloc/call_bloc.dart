@@ -1502,6 +1502,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _CallSignalingEventCallUpdating event,
     Emitter<CallState> emit,
   ) async {
+    await _acceptCallUpdate(event, emit);
+  }
+
+  /// Marks the call as updating and queues the mutation that answers the
+  /// update. False when the update is dropped instead.
+  Future<bool> _acceptCallUpdate(_CallSignalingEventCallUpdating event, Emitter<CallState> emit) async {
     final handle = CallkeepHandle.number(event.caller);
     final contactName = (await contactResolver.resolve(handle.value))?.maybeName;
     final displayName = contactName ?? event.callerDisplayName;
@@ -1512,7 +1518,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _logger.warning(
         '__onCallSignalingEventCallUpdating: ignoring call update for callId ${event.callId} because call is disconnecting',
       );
-      return;
+      return false;
     }
 
     emit(
@@ -1538,6 +1544,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         jsep: event.jsep,
       ),
     );
+    return true;
   }
 
   Future<void> __onCallSignalingEventUpdating(_CallSignalingEventUpdating event, Emitter<CallState> emit) async {
@@ -3529,10 +3536,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _CallMutationEventSignalingCallUpdating event,
     Emitter<CallState> emit,
   ) async {
+    await _answerCallUpdate(event, emit);
+  }
+
+  /// Applies the far end's offer and sends the answer. True once the answer
+  /// has been sent.
+  Future<bool> _answerCallUpdate(_CallMutationEventSignalingCallUpdating event, Emitter<CallState> emit) async {
+    var answerSent = false;
     final handle = CallkeepHandle.number(event.caller);
     final displayName = event.callerDisplayName;
     final activeCall = state.retrieveActiveCall(event.callId);
-    if (activeCall == null) return;
+    if (activeCall == null) return false;
 
     await callkeep.reportUpdateCall(
       event.callId,
@@ -3617,6 +3631,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
                 jsep: localDescription.toMap(),
               ),
             );
+            answerSent = true;
 
             // Some events have double comfirmation like this,
             // so lets wait for the final result to make sure the update request is processed, and only then pass mutation queue to next event
@@ -3667,6 +3682,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _callPeerConnectionManager.completeError(event.callId, e);
       add(_ResetStateEvent.completeCall(event.callId));
     }
+    return answerSent;
   }
 
   /// Performs a safe renegotiation by first checking if the active call and peer connection still exist before proceeding and no "updating" state is detected on the call.
