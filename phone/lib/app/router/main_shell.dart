@@ -13,6 +13,7 @@ import 'package:signaling_service/signaling_service.dart' show SignalingModule, 
 import 'package:webtrit_phone/app/assets.gen.dart';
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/notifications/notifications.dart';
+import 'package:webtrit_phone/app/router/app_update_check.dart';
 import 'package:webtrit_phone/app/router/main_shell_blocs.dart';
 import 'package:webtrit_phone/app/router/main_shell_repositories.dart';
 import 'package:webtrit_phone/app/router/main_shell_services.dart';
@@ -20,7 +21,6 @@ import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
-import 'package:webtrit_phone/services/services.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
 final _logger = Logger('MainShell');
@@ -60,11 +60,6 @@ class _MainShellState extends State<MainShell> {
   /// Late subscribers (including [CallBloc]) receive all buffered session
   /// events via the replay stream.
   late final SignalingModule _signalingModule;
-
-  /// Drives the native Play Core update prompt; checked once on startup. No-op outside Android.
-  /// Constructed here on purpose - per session, so a fresh login checks (and
-  /// may re-prompt) anew; tests substitute behavior via its constructor handles.
-  final AppUpdateService _appUpdateService = AppUpdateService();
 
   /// Lazily initialised on first [build] once [CallBloc], [CallRoutingCubit],
   /// and [NotificationsBloc] are available in the widget tree. The `??=`
@@ -134,8 +129,6 @@ class _MainShellState extends State<MainShell> {
     // same reason, and cancelling in dispose drops a report that arrives after
     // the shell is gone.
     _sessionRejectionsSubscription = _apiClient.sessionRejections.take(1).listen(_onSessionRejected);
-
-    unawaited(_appUpdateService.check());
   }
 
   /// Tells the user why, then logs out: an account that is gone reads
@@ -197,10 +190,14 @@ class _MainShellState extends State<MainShell> {
                       child: CallShell(
                         child: MessagingShell(
                           child: SystemNotificationsShell(
-                            child: AutoRouter(
-                              navigatorObservers: () => [
-                                MainShellNavigatorObserver(context.read<MainShellRouteStateRepository>()),
-                              ],
+                            // Per session on purpose: a fresh login checks for an
+                            // update (and may prompt) anew.
+                            child: AppUpdateCheck(
+                              child: AutoRouter(
+                                navigatorObservers: () => [
+                                  MainShellNavigatorObserver(context.read<MainShellRouteStateRepository>()),
+                                ],
+                              ),
                             ),
                           ),
                         ),

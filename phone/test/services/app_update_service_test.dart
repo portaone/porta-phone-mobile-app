@@ -8,35 +8,16 @@ import 'package:in_app_update/in_app_update.dart';
 
 import 'package:webtrit_phone/services/services.dart';
 
-AppUpdateInfo _info({
-  UpdateAvailability updateAvailability = UpdateAvailability.updateNotAvailable,
-  bool immediateUpdateAllowed = false,
-  bool flexibleUpdateAllowed = false,
-  InstallStatus installStatus = InstallStatus.unknown,
-  int updatePriority = 0,
-  int? availableVersionCode,
-}) {
-  return AppUpdateInfo(
-    updateAvailability: updateAvailability,
-    immediateUpdateAllowed: immediateUpdateAllowed,
-    immediateAllowedPreconditions: null,
-    flexibleUpdateAllowed: flexibleUpdateAllowed,
-    flexibleAllowedPreconditions: null,
-    availableVersionCode: availableVersionCode,
-    installStatus: installStatus,
-    packageName: 'com.webtrit.phone',
-    clientVersionStalenessDays: null,
-    updatePriority: updatePriority,
-  );
-}
+import '../mocks/app_update_info.dart';
 
 void main() {
   late List<String> calls;
   late AppUpdateInfo info;
   late AppUpdateResult flexibleResult;
 
-  AppUpdateService buildService() {
+  AppUpdateService buildService({CanProceedWithUpdate? canProceed}) {
     return AppUpdateService(
+      canProceed: canProceed,
       checkForUpdate: () async {
         calls.add('check');
         return info;
@@ -58,7 +39,7 @@ void main() {
   setUp(() {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     calls = [];
-    info = _info();
+    info = appUpdateInfo();
     flexibleResult = AppUpdateResult.success;
   });
 
@@ -75,13 +56,14 @@ void main() {
   });
 
   test('no update available results in check only', () async {
-    await buildService().check();
+    final finished = await buildService().check();
 
+    expect(finished, isTrue);
     expect(calls, ['check']);
   });
 
   test('default priority runs the flexible flow and installs on success', () async {
-    info = _info(
+    info = appUpdateInfo(
       updateAvailability: UpdateAvailability.updateAvailable,
       immediateUpdateAllowed: true,
       flexibleUpdateAllowed: true,
@@ -94,7 +76,7 @@ void main() {
   });
 
   test('priority at the threshold escalates to the immediate flow', () async {
-    info = _info(
+    info = appUpdateInfo(
       updateAvailability: UpdateAvailability.updateAvailable,
       immediateUpdateAllowed: true,
       flexibleUpdateAllowed: true,
@@ -107,7 +89,7 @@ void main() {
   });
 
   test('immediate is used when flexible is not allowed regardless of priority', () async {
-    info = _info(
+    info = appUpdateInfo(
       updateAvailability: UpdateAvailability.updateAvailable,
       immediateUpdateAllowed: true,
       flexibleUpdateAllowed: false,
@@ -118,34 +100,23 @@ void main() {
     expect(calls, ['check', 'immediate']);
   });
 
-  test('declined flexible update is not re-prompted until a newer version code', () async {
-    final service = buildService();
-    info = _info(
+  test('a declined flexible update ends the check', () async {
+    info = appUpdateInfo(
       updateAvailability: UpdateAvailability.updateAvailable,
       flexibleUpdateAllowed: true,
       availableVersionCode: 42,
     );
     flexibleResult = AppUpdateResult.userDeniedUpdate;
 
-    await service.check();
-    await service.check();
+    final finished = await buildService().check();
 
-    expect(calls, ['check', 'startFlexible', 'check']);
-
-    info = _info(
-      updateAvailability: UpdateAvailability.updateAvailable,
-      flexibleUpdateAllowed: true,
-      availableVersionCode: 43,
-    );
-
-    await service.check();
-
-    expect(calls.last, 'startFlexible');
+    expect(finished, isTrue);
+    expect(calls, ['check', 'startFlexible']);
   });
 
   test('failed flexible update neither installs nor suppresses future prompts', () async {
     final service = buildService();
-    info = _info(
+    info = appUpdateInfo(
       updateAvailability: UpdateAvailability.updateAvailable,
       flexibleUpdateAllowed: true,
       availableVersionCode: 42,
@@ -160,7 +131,7 @@ void main() {
   });
 
   test('download completed while away triggers install without a new prompt', () async {
-    info = _info(installStatus: InstallStatus.downloaded);
+    info = appUpdateInfo(installStatus: InstallStatus.downloaded);
 
     await buildService().check();
 
@@ -168,7 +139,7 @@ void main() {
   });
 
   test('interrupted immediate update is resumed', () async {
-    info = _info(updateAvailability: UpdateAvailability.developerTriggeredUpdateInProgress);
+    info = appUpdateInfo(updateAvailability: UpdateAvailability.developerTriggeredUpdateInProgress);
 
     await buildService().check();
 
@@ -188,7 +159,7 @@ void main() {
       completeFlexibleUpdate: () async {},
     );
 
-    await service.check();
+    expect(await service.check(), isTrue, reason: 'a Play failure is not worth repeating');
 
     shouldThrow = false;
     await service.check();
@@ -196,23 +167,123 @@ void main() {
     expect(calls, ['check', 'check']);
   });
 
-  test('overlapping checks are ignored while one is in flight', () async {
-    final gate = Completer<AppUpdateInfo>();
-    final service = AppUpdateService(
-      checkForUpdate: () {
-        calls.add('check');
-        return gate.future;
-      },
-      performImmediateUpdate: () async => AppUpdateResult.success,
-      startFlexibleUpdate: () async => flexibleResult,
-      completeFlexibleUpdate: () async {},
-    );
+  group('when an update may not take the screen', () {
+    setUp(() {
+      info = appUpdateInfo(
+        updateAvailability: UpdateAvailability.updateAvailable,
+        immediateUpdateAllowed: true,
+        flexibleUpdateAllowed: true,
+        availableVersionCode: 2,
+      );
+    });
 
-    final first = service.check();
-    final second = service.check();
-    gate.complete(_info());
-    await Future.wait([first, second]);
+    test('Play is not asked at all, and the check is worth repeating', () async {
+      final finished = await buildService(canProceed: () async => false).check();
 
-    expect(calls, ['check']);
+      expect(finished, isFalse);
+      expect(calls, isEmpty);
+    });
+
+    test('an update found is not shown when the answer changes while Play is asked', () async {
+      final answers = [true, false];
+
+      await buildService(canProceed: () async => answers.removeAt(0)).check();
+
+      expect(calls, ['check']);
+    });
+
+    test('an immediate update is not shown either', () async {
+      info = appUpdateInfo(
+        updateAvailability: UpdateAvailability.updateAvailable,
+        immediateUpdateAllowed: true,
+        updatePriority: 5,
+      );
+      final answers = [true, false];
+
+      await buildService(canProceed: () async => answers.removeAt(0)).check();
+
+      expect(calls, ['check']);
+    });
+
+    test('a downloaded update is not installed', () async {
+      info = appUpdateInfo(installStatus: InstallStatus.downloaded);
+      final answers = [true, false];
+
+      await buildService(canProceed: () async => answers.removeAt(0)).check();
+
+      expect(calls, ['check']);
+    });
+
+    test('an interrupted immediate update is not resumed', () async {
+      info = appUpdateInfo(updateAvailability: UpdateAvailability.developerTriggeredUpdateInProgress);
+      final answers = [true, false];
+
+      await buildService(canProceed: () async => answers.removeAt(0)).check();
+
+      expect(calls, ['check']);
+    });
+
+    test('a download that ends after the answer changed is left for the next check to install', () async {
+      var allowed = true;
+      final download = Completer<AppUpdateResult>();
+      final service = AppUpdateService(
+        canProceed: () async => allowed,
+        checkForUpdate: () async {
+          calls.add('check');
+          return info;
+        },
+        startFlexibleUpdate: () {
+          calls.add('startFlexible');
+          return download.future;
+        },
+        completeFlexibleUpdate: () async {
+          calls.add('completeFlexible');
+        },
+      );
+
+      final check = service.check();
+      await pumpEventQueue();
+      allowed = false;
+      download.complete(AppUpdateResult.success);
+
+      expect(await check, isFalse);
+      expect(calls, ['check', 'startFlexible']);
+
+      allowed = true;
+      info = appUpdateInfo(installStatus: InstallStatus.downloaded);
+
+      expect(await service.check(), isTrue);
+
+      expect(calls, ['check', 'startFlexible', 'check', 'completeFlexible']);
+    });
+
+    test('the next check asks again and prompts', () async {
+      var allowed = false;
+      final service = buildService(canProceed: () async => allowed);
+
+      await service.check();
+      allowed = true;
+      await service.check();
+
+      expect(calls, ['check', 'startFlexible', 'completeFlexible']);
+    });
+
+    test('a failing answer is swallowed and the next check still runs', () async {
+      var shouldThrow = true;
+      final service = buildService(
+        canProceed: () async {
+          if (shouldThrow) {
+            throw StateError('no activity');
+          }
+          return true;
+        },
+      );
+
+      await service.check();
+      shouldThrow = false;
+      await service.check();
+
+      expect(calls, ['check', 'startFlexible', 'completeFlexible']);
+    });
   });
 }

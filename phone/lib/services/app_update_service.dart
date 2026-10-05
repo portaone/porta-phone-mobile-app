@@ -13,6 +13,11 @@ typedef PerformImmediateUpdate = Future<AppUpdateResult> Function();
 typedef StartFlexibleUpdate = Future<AppUpdateResult> Function();
 typedef CompleteFlexibleUpdate = Future<void> Function();
 
+/// Whether an update may take the screen right now. Every step of an update
+/// either opens a Play activity on top of the app's or restarts the app, so the
+/// caller answers false while something must stay visible - a call above all.
+typedef CanProceedWithUpdate = Future<bool> Function();
+
 /// Prompts the user to update the app via the Play Core in-app updates API.
 ///
 /// Android only: [check] is a silent no-op on other platforms, on devices
@@ -28,11 +33,13 @@ typedef CompleteFlexibleUpdate = Future<void> Function();
 class AppUpdateService {
   AppUpdateService({
     this.immediatePriorityThreshold = 4,
+    CanProceedWithUpdate? canProceed,
     CheckForUpdate? checkForUpdate,
     PerformImmediateUpdate? performImmediateUpdate,
     StartFlexibleUpdate? startFlexibleUpdate,
     CompleteFlexibleUpdate? completeFlexibleUpdate,
-  }) : _checkForUpdate = checkForUpdate ?? InAppUpdate.checkForUpdate,
+  }) : _canProceed = canProceed ?? _always,
+       _checkForUpdate = checkForUpdate ?? InAppUpdate.checkForUpdate,
        _performImmediateUpdate = performImmediateUpdate ?? InAppUpdate.performImmediateUpdate,
        _startFlexibleUpdate = startFlexibleUpdate ?? InAppUpdate.startFlexibleUpdate,
        _completeFlexibleUpdate = completeFlexibleUpdate ?? InAppUpdate.completeFlexibleUpdate;
@@ -41,54 +48,67 @@ class AppUpdateService {
   /// from a flexible prompt to the blocking immediate flow.
   final int immediatePriorityThreshold;
 
+  final CanProceedWithUpdate _canProceed;
   final CheckForUpdate _checkForUpdate;
   final PerformImmediateUpdate _performImmediateUpdate;
   final StartFlexibleUpdate _startFlexibleUpdate;
   final CompleteFlexibleUpdate _completeFlexibleUpdate;
 
-  bool _checkInProgress = false;
-  int? _declinedVersionCode;
+  static Future<bool> _always() async => true;
 
   bool get _isSupportedPlatform => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   /// Checks Google Play for an available update and drives the native flow.
   ///
-  /// Intended to be called on app startup and on every foreground resume;
-  /// overlapping calls are ignored while a check is in flight.
-  Future<void> check() async {
-    if (!_isSupportedPlatform || _checkInProgress) {
-      return;
+  /// [CanProceedWithUpdate] is asked before every step that shows Play's UI or
+  /// installs. Returns false when it refused one: the check stopped there and
+  /// is worth repeating once the update may proceed - an update already
+  /// downloaded is installed by that repeat. Returns true when nothing is left
+  /// to do: no update, the user answered Play's prompt, or Play failed.
+  ///
+  /// The service keeps no state between calls; one check at a time and when to
+  /// repeat it are the caller's (see `AppUpdateCheck`).
+  Future<bool> check() async {
+    if (!_isSupportedPlatform) {
+      return true;
     }
-    _checkInProgress = true;
     try {
-      await _check();
+      return await _check();
     } catch (e, stackTrace) {
       // Expected on devices without Play services and on sideloaded builds.
       _logger.fine('check failed - ignore', e, stackTrace);
-    } finally {
-      _checkInProgress = false;
+      return true;
     }
   }
 
-  Future<void> _check() async {
+  Future<bool> _check() async {
+    if (!await _canProceed()) {
+      return false;
+    }
     final info = await _checkForUpdate();
+
+    // Asked again: Play took its time to answer, and every branch below
+    // either opens a Play activity or restarts the app.
+    if (!await _canProceed()) {
+      return false;
+    }
 
     // An immediate update was interrupted (e.g. the app was restarted
     // mid-flow); Play requires the app to resume it.
     if (info.updateAvailability == UpdateAvailability.developerTriggeredUpdateInProgress) {
       await _performImmediateUpdate();
-      return;
+      return true;
     }
 
     // A flexible download finished while the app was away - install it now,
     // otherwise the user keeps running the old version until a cold restart.
     if (info.installStatus == InstallStatus.downloaded) {
       await _completeFlexibleUpdate();
-      return;
+      return true;
     }
 
     if (info.updateAvailability != UpdateAvailability.updateAvailable) {
-      return;
+      return true;
     }
 
     final immediate =
@@ -97,25 +117,26 @@ class AppUpdateService {
     if (immediate) {
       await _performImmediateUpdate();
     } else if (info.flexibleUpdateAllowed) {
-      await _runFlexibleUpdate(info);
+      return _runFlexibleUpdate(info);
     }
+    return true;
   }
 
-  Future<void> _runFlexibleUpdate(AppUpdateInfo info) async {
-    // The user already declined this very version - do not nag on every
-    // resume; a newer version code prompts again.
-    if (info.availableVersionCode != null && info.availableVersionCode == _declinedVersionCode) {
-      return;
-    }
-
+  Future<bool> _runFlexibleUpdate(AppUpdateInfo info) async {
     final result = await _startFlexibleUpdate();
     switch (result) {
       case AppUpdateResult.success:
+        // The download ran for as long as it took, and installing restarts
+        // the app. Left downloaded, the update is installed by the repeat.
+        if (!await _canProceed()) {
+          return false;
+        }
         await _completeFlexibleUpdate();
       case AppUpdateResult.userDeniedUpdate:
-        _declinedVersionCode = info.availableVersionCode;
+        break;
       case AppUpdateResult.inAppUpdateFailed:
         _logger.warning('flexible update failed for version code ${info.availableVersionCode}');
     }
+    return true;
   }
 }
