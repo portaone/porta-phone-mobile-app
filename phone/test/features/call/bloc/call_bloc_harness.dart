@@ -178,6 +178,7 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   /// flight.
   Completer<void>? gate;
 
+  void emitLifecycle(SignalingModuleEvent event) => _add(event);
   bool connected = true;
 
   /// Whether a request can be handed over at all. A real module answers a
@@ -231,6 +232,10 @@ class FakeSignalingModule extends Fake implements SignalingModule {
 
 /// Records what the bloc asked the OS to do; requests are accepted by default.
 class FakeCallkeep extends Fake implements Callkeep {
+  Object? updateError;
+
+  /// When set, the native update report does not return until the test completes it.
+  Completer<void>? updateGate;
   CallkeepIncomingCallError? incomingRegistrationError;
 
   @override
@@ -252,6 +257,8 @@ class FakeCallkeep extends Fake implements Callkeep {
     bool? hasVideo,
     bool? proximityEnabled,
   }) async {
+    if (updateError != null) throw updateError!;
+    if (updateGate != null) await updateGate!.future;
     if (proximityEnabled != null) proximityUpdates.add((callId: callId, enabled: proximityEnabled));
   }
 
@@ -381,6 +388,13 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   /// recognisable once its track has been taken off.
   final Map<FakeRtpSender, String> _kinds = {};
 
+  @override
+  RTCSignalingState get signalingState => RTCSignalingState.RTCSignalingStateStable;
+  @override
+  Future<RTCSignalingState> getSignalingState() async => signalingState;
+  @override
+  Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async =>
+      RTCSessionDescription('v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n', 'offer');
   int closes = 0;
   final List<FakeRtpSender> _senders = [];
   final List<MediaStreamTrack> addedTracks = [];
