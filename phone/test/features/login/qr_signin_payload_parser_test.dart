@@ -148,6 +148,32 @@ void main() {
         }
       });
 
+      test('rejects core override parameters in any letter case', () {
+        for (final key in ['CORE', 'Core', 'TENANT', 'Core_Url', 'TENANT_ID']) {
+          final result = parser().parse('csc:user:pass@EXAMPLE?brand=acme&$key=value');
+
+          expect((result as QrSigninParseFailure).error, QrSigninParseError.coreOverrideNotAllowed, reason: key);
+        }
+      });
+
+      test('rejects core override parameters padded with whitespace', () {
+        for (final key in ['+core', 'core+', 'tenant%20']) {
+          final result = parser().parse('csc:user:pass@EXAMPLE?$key=value');
+
+          expect((result as QrSigninParseFailure).error, QrSigninParseError.coreOverrideNotAllowed, reason: key);
+        }
+      });
+
+      test('reads the method parameter in any letter case', () {
+        expect(parser().parse('csc:user:pass@EXAMPLE?M=password'), isA<QrSigninCredentials>());
+
+        for (final query in ['M=autoprovision', 'm=password&M=autoprovision', 'M=autoprovision&m=password']) {
+          final result = parser().parse('csc:user:pass@EXAMPLE?$query');
+
+          expect((result as QrSigninParseFailure).error, QrSigninParseError.unsupportedMethod, reason: query);
+        }
+      });
+
       test('rejects malformed bodies', () {
         for (final raw in ['csc:userpassEXAMPLE', 'csc:user:pass@', 'csc:@EXAMPLE', 'csc::pass@EXAMPLE']) {
           final result = parser().parse(raw);
@@ -220,6 +246,20 @@ void main() {
 
           expect((result as QrSigninParseFailure).error, QrSigninParseError.coreOverrideNotAllowed, reason: key);
         }
+      });
+
+      test('rejects core override fields in any letter case or padded with whitespace', () {
+        for (final key in ['CORE', 'Tenant', 'Core_Url', 'TENANT_ID', ' core']) {
+          final result = parser().parse(payload({'user': 'u', 'password': 'p', key: 'value'}));
+
+          expect((result as QrSigninParseFailure).error, QrSigninParseError.coreOverrideNotAllowed, reason: key);
+        }
+      });
+
+      test('field names of the structure stay case-sensitive', () {
+        final result = parser().parse(payload({'USER': 'u', 'password': 'p'}));
+
+        expect((result as QrSigninParseFailure).error, QrSigninParseError.malformed);
       });
 
       test('ignores unknown fields', () {

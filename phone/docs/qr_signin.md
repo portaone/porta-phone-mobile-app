@@ -74,6 +74,9 @@ Parsing rules:
 - Query parameters that would redirect the sign-in to another core (`core`, `tenant`,
   `core_url`, `tenant_id`) are rejected: a scanned code must not choose where
   credentials are sent.
+- The reserved parameter names (`m` and the four above) are matched without regard to
+  letter case or surrounding whitespace: `?CORE=` is rejected like `?core=`, and `?M=`
+  is read like `?m=`. Parameter values stay exact (`m=Password` is not `password`).
 - A code with an empty or omitted password (`csc:user:@HOST`, `csc:user@HOST`) does
   not fail: the user reference is prefilled on the password tab and the user finishes
   signing in manually.
@@ -98,7 +101,8 @@ and is covered by a unit-test matrix in
 | `host`     | see note | Cloud/tenant identifier. When `expectedHost` is configured the field must be present and match; otherwise ignored. |
 
 Rules shared with the URI format: fields that would redirect the sign-in to another
-core (`core`, `tenant`, `core_url`, `tenant_id`) are rejected; unknown fields are
+core (`core`, `tenant`, `core_url`, `tenant_id`) are rejected, in any letter case;
+the format's own field names (`user`, `password`, ...) stay exact; unknown fields are
 ignored so the format can grow without breaking older builds. The JSON form is
 reserved for WebTrit-issued codes (nothing produces it yet); prefer the URI form for
 plain user+password codes - it makes a sparser, easier-to-scan QR.

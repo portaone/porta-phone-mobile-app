@@ -11,6 +11,8 @@ import 'qr_signin_payload_decoder.dart';
 /// cut off before the split; unknown query parameters are ignored so that
 /// generator-side extras do not break scanning. The reserved parameter `m`
 /// selects the sign-in method; only the default `password` method is supported.
+/// Reserved parameter names are matched case-insensitively (see
+/// [QrSigninReservedKeys]).
 ///
 /// [Uri.parse] is not applicable here: without a `//` the URI has no authority
 /// component, so the userinfo/host parts would not be recognized.
@@ -24,10 +26,6 @@ class UriQrSigninPayloadDecoder implements QrSigninPayloadDecoder {
   /// Query parameter selecting the sign-in method. Absent means password.
   static const _methodKey = 'm';
   static const _passwordMethod = 'password';
-
-  /// Query parameters that would redirect the sign-in to another core;
-  /// rejected because a scanned code must not choose where credentials go.
-  static const _coreOverrideKeys = {'core', 'tenant', 'core_url', 'tenant_id'};
 
   /// Marker suffix of a test (non-approved) host in the generator portal.
   static const _testHostSuffix = '*';
@@ -55,9 +53,11 @@ class UriQrSigninPayloadDecoder implements QrSigninPayloadDecoder {
       body = body.substring(0, queryStart);
     }
 
-    final method = query[_methodKey] ?? _passwordMethod;
-    if (method != _passwordMethod) return const QrSigninParseFailure(QrSigninParseError.unsupportedMethod);
-    if (query.keys.any(_coreOverrideKeys.contains)) {
+    for (final MapEntry(:key, value: method) in query.entries) {
+      if (QrSigninReservedKeys.normalize(key) != _methodKey) continue;
+      if (method != _passwordMethod) return const QrSigninParseFailure(QrSigninParseError.unsupportedMethod);
+    }
+    if (query.keys.any(QrSigninReservedKeys.isCoreOverride)) {
       return const QrSigninParseFailure(QrSigninParseError.coreOverrideNotAllowed);
     }
 
