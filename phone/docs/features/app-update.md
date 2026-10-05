@@ -4,14 +4,15 @@ How the app detects that it is incompatible with the backend, and how it
 prompts the user to update when a newer build is published: the core-version
 compatibility dialog and the Play Core in-app update flow.
 
-Last reviewed: 2026-06-11
+Last reviewed: 2026-10-05
 
 ## Where it lives
 
 - `lib/services/app_update_service.dart` - `AppUpdateService`: the Play Core
   in-app update flow (Android).
-- `lib/app/router/main_shell.dart` - calls `AppUpdateService.check()` on
-  startup and on every foreground resume.
+- `lib/app/router/app_update_check.dart` - `AppUpdateCheck`: mounted by
+  `MainShell`, decides when `AppUpdateService.check()` runs and whether an
+  update may take the screen.
 - `lib/features/main/` - the core-compatibility check and dialog:
     - `bloc/main_bloc.dart` - `MainBloc`: core-version verification + store lookup.
     - `bloc/main_state.dart` - `CoreVersionState` (`Unknown` / `Compatible` /
@@ -27,21 +28,40 @@ When a newer build is published in Google Play, the app surfaces the native
 Play Core update UI - no in-app dialogs and no client-side version comparison
 (Play compares the installed and published version codes itself).
 
-`AppUpdateService.check()` runs on startup and on every foreground resume:
+`AppUpdateCheck` follows `CallBloc` and starts `AppUpdateService.check()` when
+its state says the session has heard from the server (the handshake is
+established, whatever the registration turned out to be) or has failed to
+reach it, no call is tracked and the app is in front. Without a network
+nothing is decided.
+
+Every step below shows Play's UI in an activity of its own or restarts the
+app, so each one first asks whether it may. The answer is no while the phone
+is locked or that same state no longer holds. This is what keeps Play's screen
+off an incoming call: the app started by the call alert is shown over the
+keyguard, Play's activity is not, and the keyguard used to come back over a
+ringing call.
+
+A check that was refused is run again on the next state that allows it, so a
+call or a locked phone delays the update instead of losing it. A check that
+reached its end - nothing to offer, the user answered Play's prompt, or Play
+failed - is the last of the session; the next one comes with a cold start or a
+new login, not with a foreground resume.
+
+When it may proceed:
 
 1. An interrupted immediate update (`developerTriggeredUpdateInProgress`) is
    resumed - Play requires the app to finish it.
-2. A flexible download that finished while the app was away
-   (`InstallStatus.downloaded`) is installed right away, otherwise the user
-   keeps running the old version until a cold restart.
+2. A flexible download that finished earlier (`InstallStatus.downloaded`) is
+   installed. This is also how a download that ended during a call, on a
+   locked phone or with the app in the background gets installed: that check
+   was refused at the install step and is repeated.
 3. An available update runs as:
     - **flexible** (background download, install on completion) - the default;
     - **immediate** (blocking native overlay) - only when the release was
       published with in-app update priority >= 4 (Google Play Developer API
       `inAppUpdatePriority`, defaults to 0) or when flexible is not allowed.
-4. A declined flexible update is remembered by version code and not
-   re-prompted until a newer build is published (in-memory, resets on app
-   restart).
+4. A declined flexible update ends the check, so it is not offered again
+   until the next session.
 
 The whole flow is a silent no-op on non-Android platforms, on devices without
 Google Play services (some white-label fleets), and on sideloaded/debug builds
@@ -99,7 +119,7 @@ carry version `0.0.0`, so any store version compares as newer there.
 
 | Mechanism                   | Trigger                                                              | UX                                                             | Status                      |
 |-----------------------------|----------------------------------------------------------------------|----------------------------------------------------------------|-----------------------------|
-| Soft update prompt (above)  | newer build published in Google Play                                 | native Play Core prompt, app keeps working                     | this PR                     |
+| Soft update prompt (above)  | newer build published in Google Play                                 | native Play Core prompt, app keeps working                     | shipped                     |
 | Core compatibility (above)  | core version outside the app's constraint                            | blocking dialog, Update button when the store is newer         | shipped                     |
 | Backend-driven force update | backend declares `min_supported_app_version` above the app's version | non-dismissible update prompt + signaling socket not connected | backend done, app side TODO |
 | iOS soft update             | newer version in the App Store                                       | custom prompt -> App Store (no native API on iOS)              | future                      |
@@ -111,8 +131,8 @@ carry version `0.0.0`, so any store version compares as newer there.
   skip connecting the signaling socket. Open question for white-label builds:
   which version to compare - the per-client `versionName` differs from the
   canonical phone release line.
-- **iOS soft update (future)**: plug into the same `MainShell` seam (a single
-  `check()` on startup/resume); extract an interface from `AppUpdateService`
+- **iOS soft update (future)**: plug into the same `AppUpdateCheck` seam (a
+  single `check()` per session); extract an interface from `AppUpdateService`
   with platform implementations. iOS has no native update UI, so its
   implementation must surface a custom prompt (service code cannot touch
   `BuildContext` - emit an event/notification instead) and needs a version
