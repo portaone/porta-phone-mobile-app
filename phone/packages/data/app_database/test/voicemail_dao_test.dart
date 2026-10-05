@@ -15,10 +15,10 @@ void main() {
     await db.close();
   });
 
-  VoicemailData createVoicemail({String id = 'vm-1'}) {
+  VoicemailData createVoicemail({String id = 'vm-1', String date = '2026-01-01T00:00:00Z'}) {
     return VoicemailData(
       id: id,
-      date: '2026-01-01T00:00:00Z',
+      date: date,
       duration: 3.5,
       sender: '555001',
       receiver: '555002',
@@ -60,6 +60,60 @@ void main() {
       expect(rows.single.contact?.sourceType, ContactSourceTypeEnum.external);
     });
   });
+  group('ordering', () {
+    test('lists a voicemail stored later above the older ones it is newer than', () async {
+      await db.voicemailDao.insertOrUpdateVoicemail(createVoicemail(id: 'old', date: '2026-10-01T20:05:00Z'));
+      await db.voicemailDao.insertOrUpdateVoicemail(createVoicemail(id: 'older', date: '2026-09-25T20:06:00Z'));
+      await db.voicemailDao.insertOrUpdateVoicemail(createVoicemail(id: 'new', date: '2026-10-02T11:36:16Z'));
+
+      final rows = await db.voicemailDao.getVoicemailsWithContacts();
+
+      expect(rows.map((row) => row.voicemail.id), ['new', 'old', 'older']);
+    });
+
+    test('keeps voicemails of one date in the order they were stored', () async {
+      for (final id in ['first', 'second', 'third']) {
+        await db.voicemailDao.insertOrUpdateVoicemail(createVoicemail(id: id));
+      }
+
+      final rows = await db.voicemailDao.getVoicemailsWithContacts();
+
+      expect(rows.map((row) => row.voicemail.id), ['first', 'second', 'third']);
+    });
+
+    test('keeps one row per voicemail when senders share a contact number', () async {
+      await db.contactsDao.insertOnUniqueConflictUpdateContact(
+        ContactDataCompanion(
+          sourceType: Value(ContactSourceTypeEnum.local),
+          sourceId: Value('local-1'),
+          firstName: Value('Local'),
+          lastName: Value('Contact'),
+        ),
+      );
+      await db.contactsDao.insertOnUniqueConflictUpdateContact(
+        ContactDataCompanion(
+          sourceType: Value(ContactSourceTypeEnum.external),
+          sourceId: Value('pbx-1'),
+          firstName: Value('External'),
+          lastName: Value('Contact'),
+        ),
+      );
+      await db.contactPhonesDao.insertOnUniqueConflictUpdateContactPhone(
+        ContactPhoneDataCompanion(contactId: Value(1), number: Value('555001'), label: Value('Home')),
+      );
+      await db.contactPhonesDao.insertOnUniqueConflictUpdateContactPhone(
+        ContactPhoneDataCompanion(contactId: Value(2), number: Value('555001'), label: Value('Work')),
+      );
+      await db.voicemailDao.insertOrUpdateVoicemail(createVoicemail(id: 'old', date: '2026-10-01T20:05:00Z'));
+      await db.voicemailDao.insertOrUpdateVoicemail(createVoicemail(id: 'new', date: '2026-10-02T11:36:16Z'));
+
+      final rows = await db.voicemailDao.getVoicemailsWithContacts();
+
+      expect(rows.map((row) => row.voicemail.id), ['new', 'old']);
+      expect(rows.map((row) => row.contact?.sourceType), everyElement(ContactSourceTypeEnum.external));
+    });
+  });
+
   group('deleteVoicemailsNotIn', () {
     Future<void> seed(List<String> ids) async {
       for (final id in ids) {
