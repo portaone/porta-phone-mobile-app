@@ -52,11 +52,6 @@ class JsonQrSigninPayloadDecoder implements QrSigninPayloadDecoder {
   final String? expectedHost;
   final JsonQrSigninStructure structure;
 
-  /// Fields that would redirect the sign-in to another core; rejected
-  /// regardless of the structure because a scanned code must not choose where
-  /// credentials go.
-  static const _coreOverrideKeys = {'core', 'tenant', 'core_url', 'tenant_id'};
-
   @override
   QrSigninParseResult? decode(String raw) {
     // Cheap pre-check: JSON objects of interest always start with a brace.
@@ -76,7 +71,9 @@ class JsonQrSigninPayloadDecoder implements QrSigninPayloadDecoder {
       return const QrSigninParseFailure(QrSigninParseError.unsupportedVersion);
     }
 
-    if (decoded.keys.any(_coreOverrideKeys.contains)) {
+    // Rejected regardless of the structure; the structure's own field names
+    // stay exact.
+    if (decoded.keys.any(QrSigninReservedKeys.isCoreOverride)) {
       return const QrSigninParseFailure(QrSigninParseError.coreOverrideNotAllowed);
     }
 
