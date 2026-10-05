@@ -215,9 +215,12 @@ class KeypadViewState extends State<KeypadView> {
     // meaningful when the clipboard holds text. Guarding first also avoids focusing the hidden
     // input on a long-press that would surface nothing (which would leave a stray blinking
     // cursor and shift caret/toolbar timing for later key presses).
+    //
+    // The question is whether the clipboard holds text, not what the text is: reading the
+    // content here would make Android 12+ announce "pasted from your clipboard" for a paste
+    // nobody has asked for yet. The content is read by the field when Paste is tapped.
     final hasSelection = !_textController.selection.isCollapsed;
-    final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
-    final hasPasteableText = (clipboard?.text ?? '').isNotEmpty;
+    final hasPasteableText = await Clipboard.hasStrings();
     if (!mounted || (!hasSelection && !hasPasteableText)) return;
 
     _focusNode.requestFocus();
