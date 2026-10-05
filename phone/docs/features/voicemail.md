@@ -177,9 +177,10 @@ else about them. The cubit resolves those ids against the address book, matched
 on the id the backend issued rather than on a number, keeps each answer, and the
 tile shows the name on a line of its own under the date. It is not a
 replacement for the sender: both names matter and they answer different
-questions - who left the recording, and how it got here. A colleague the
-address book does not know falls back to their id, which is a poor name but a
-true one.
+questions - who left the recording, and how it got here. A colleague with no
+name is shown the way the address book shows them, by extension or else by
+number. A colleague the address book does not know falls back to their id,
+which is a poor name but a true one.
 
 ## Passing a message to a colleague
 
@@ -217,6 +218,7 @@ counting only once somebody opens the screen it sits on is of no use there.
 | File | What it pins |
 |---|---|
 | `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup, and which refusal re-reads the list |
+| `test/features/voicemail/bloc/voicemail_forwarder_names_test.dart` | the forwarder line over a real address book: a name, no name, an extension, nobody |
 | `test/features/voicemail/extensions/request_failure_test.dart` | which refusals mean the message is gone, and which only look like it |
 | `test/features/voicemail/voicemail_filter_test.dart` | which filters a deployment offers, and what each one shows |
 | `test/features/voicemail/voicemail_tile_test.dart` | what one row offers, including the actions a capability removes |

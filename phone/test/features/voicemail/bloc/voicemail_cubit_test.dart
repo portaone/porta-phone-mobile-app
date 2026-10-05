@@ -14,6 +14,15 @@ class _Repository extends Mock implements VoicemailRepository {}
 
 class _Contacts extends Mock implements ContactsRepository {}
 
+Contact _colleague(String userId, {String? firstName, String? lastName}) => Contact(
+  id: 1,
+  sourceType: ContactSourceType.external,
+  kind: ContactKind.visible,
+  sourceId: userId,
+  firstName: firstName,
+  lastName: lastName,
+);
+
 Voicemail _voicemail(String id, {bool? saved, String? forwardedBy}) => Voicemail(
   id: id,
   date: '2026-09-15T10:00:00Z',
@@ -31,12 +40,18 @@ Voicemail _voicemail(String id, {bool? saved, String? forwardedBy}) => Voicemail
 
 void main() {
   late _Repository repository;
+  late _Contacts contacts;
   late StreamController<List<Voicemail>> voicemails;
   late List<Object> said;
   late VoicemailCubit cubit;
 
+  setUpAll(() {
+    registerFallbackValue(ContactSourceType.external);
+  });
+
   setUp(() {
     repository = _Repository();
+    contacts = _Contacts();
     voicemails = StreamController<List<Voicemail>>.broadcast();
     // What the person would be shown. The channel is the app's notifications
     // bloc in the running app; here it is just a list of what was said.
@@ -46,7 +61,7 @@ void main() {
     when(() => repository.fetchVoicemails()).thenAnswer((_) async {});
     cubit = VoicemailCubit(
       repository: repository,
-      contactsRepository: _Contacts(),
+      contactsRepository: contacts,
       onCallStarted: (_) {},
       onSubmitNotification: said.add,
       saveSupported: true,
@@ -371,27 +386,21 @@ void main() {
   test('the caller of a message is asked for by the number that left it', () async {
     // The mailbox holds the number; the address book holds the card. A screen
     // reaching for a repository itself was how this used to be done.
-    final contacts = _Contacts();
     when(() => contacts.getContactByPhoneNumber(any())).thenAnswer((_) async => null);
-    final cubit = VoicemailCubit(
-      repository: repository,
-      contactsRepository: contacts,
-      onCallStarted: (_) {},
-      onSubmitNotification: said.add,
-      saveSupported: true,
-      trashSupported: true,
-      forwardSupported: true,
-    );
 
     await cubit.callerOf(_voicemail('1'));
 
     verify(() => contacts.getContactByPhoneNumber('101')).called(1);
-    await cubit.close();
   });
 
   group('who forwarded a message on', () {
+    void addressBookHolds(Map<String, Contact> byUserId) {
+      when(() => contacts.getContactBySource(ContactSourceType.external, any()))
+          .thenAnswer((invocation) async => byUserId[invocation.positionalArguments[1] as String]);
+    }
+
     test('a name is looked up once and then reused', () async {
-      when(() => repository.resolveForwarderNames(any())).thenAnswer((_) async => {'user-7': 'Iryna Shevchuk'});
+      addressBookHolds({'user-7': _colleague('user-7', firstName: 'Iryna', lastName: 'Shevchuk')});
 
       voicemails.add([_voicemail('1', forwardedBy: 'user-7')]);
       await pumpEventQueue();
@@ -403,11 +412,11 @@ void main() {
       voicemails.add([_voicemail('1', forwardedBy: 'user-7'), _voicemail('2', forwardedBy: 'user-7')]);
       await pumpEventQueue();
 
-      verify(() => repository.resolveForwarderNames(any())).called(1);
+      verify(() => contacts.getContactBySource(ContactSourceType.external, 'user-7')).called(1);
     });
 
     test('a colleague the address book does not know falls back to their id', () async {
-      when(() => repository.resolveForwarderNames(any())).thenAnswer((_) async => const {});
+      addressBookHolds(const {});
 
       voicemails.add([_voicemail('1', forwardedBy: 'user-9')]);
       await pumpEventQueue();
@@ -421,18 +430,29 @@ void main() {
       voicemails.add([_voicemail('1')]);
       await pumpEventQueue();
 
-      verifyNever(() => repository.resolveForwarderNames(any()));
+      verifyNever(() => contacts.getContactBySource(any(), any()));
       expect(cubit.state.forwarderOf(_voicemail('1')), isNull);
     });
 
     test('a lookup that fails leaves the list alone', () async {
-      when(() => repository.resolveForwarderNames(any())).thenThrow(Exception('offline'));
+      when(() => contacts.getContactBySource(any(), any())).thenThrow(Exception('offline'));
 
       voicemails.add([_voicemail('1', forwardedBy: 'user-7')]);
       await pumpEventQueue();
 
       expect(cubit.state.items.map((item) => item.id), ['1']);
       expect(cubit.state.forwarderOf(_voicemail('1', forwardedBy: 'user-7')), 'user-7');
+    });
+
+    test('a lookup that fails does not cost the names found beside it', () async {
+      addressBookHolds({'user-7': _colleague('user-7', firstName: 'Iryna', lastName: 'Shevchuk')});
+      when(() => contacts.getContactBySource(ContactSourceType.external, 'user-9')).thenThrow(Exception('offline'));
+
+      voicemails.add([_voicemail('1', forwardedBy: 'user-9'), _voicemail('2', forwardedBy: 'user-7')]);
+      await pumpEventQueue();
+
+      expect(cubit.state.forwarderOf(_voicemail('1', forwardedBy: 'user-9')), 'user-9');
+      expect(cubit.state.forwarderOf(_voicemail('2', forwardedBy: 'user-7')), 'Iryna Shevchuk');
     });
   });
 }

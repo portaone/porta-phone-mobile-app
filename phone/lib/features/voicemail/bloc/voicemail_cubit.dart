@@ -469,23 +469,44 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   /// is worth showing at once, and the line naming the forwarder appears a
   /// moment later. Only ids not already known are looked up, so a list that
   /// changes for other reasons costs nothing.
+  ///
+  /// A forwarded message carries the id of whoever passed it along and nothing
+  /// else about them, so the address book is asked - on that id, not on a
+  /// number: a forward names a user, and the same person may answer on several
+  /// numbers or none. The answer is the title the address book itself shows
+  /// the person under, so a colleague with no name reads here as they do
+  /// there, by extension or number. An id with nobody behind it stays unnamed:
+  /// a colleague who has left the address book is still a fact about the
+  /// message, and their id is a poor but honest stand-in for their name.
   Future<void> _resolveForwarders(List<Voicemail> items) async {
     final unknown = items
         .map((item) => item.forwardedBy)
         .nonNulls
         .where((userId) => !state.forwarderNames.containsKey(userId))
-        .toSet();
+        .toSet()
+        .toList();
     if (unknown.isEmpty) return;
 
-    try {
-      final resolved = await _repository.resolveForwarderNames(unknown);
-      if (resolved.isEmpty) return;
+    final names = await Future.wait(unknown.map(_forwarderName));
+    final resolved = {for (final (index, name) in names.indexed) unknown[index]: ?name};
+    if (resolved.isEmpty) return;
 
-      _safeEmit(state.copyWith(forwarderNames: {...state.forwarderNames, ...resolved}));
+    _safeEmit(state.copyWith(forwarderNames: {...state.forwarderNames, ...resolved}));
+  }
+
+  /// The title the address book shows this colleague under, or null when it
+  /// does not know them or could not be asked.
+  ///
+  /// Each colleague is asked about on their own: a name that could not be
+  /// looked up is not worth failing a list over, nor the names found beside
+  /// it. The tile falls back to the id and the message still reads correctly.
+  Future<String?> _forwarderName(String userId) async {
+    try {
+      final contact = await _contactsRepository.getContactBySource(ContactSourceType.external, userId);
+      return contact?.displayTitle;
     } catch (e, s) {
-      // A name that could not be looked up is not worth failing a list over;
-      // the tile falls back to the id and the message still reads correctly.
-      _logger.warning('Error resolving voicemail forwarder names: $e', e, s);
+      _logger.warning('Error resolving voicemail forwarder name: $e', e, s);
+      return null;
     }
   }
 
