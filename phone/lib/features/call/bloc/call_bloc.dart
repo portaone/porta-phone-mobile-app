@@ -1502,7 +1502,16 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _CallSignalingEventCallUpdating event,
     Emitter<CallState> emit,
   ) async {
-    await _acceptCallUpdate(event, emit);
+    var accepted = false;
+    try {
+      accepted = await _acceptCallUpdate(event, emit);
+    } finally {
+      if (accepted) {
+        _logger.info('__onCallSignalingEventCallUpdating: update of call ${event.callId} passed on to be answered');
+      } else {
+        _logger.warning('__onCallSignalingEventCallUpdating: update of call ${event.callId} dropped');
+      }
+    }
   }
 
   /// Marks the call as updating and queues the mutation that answers the
@@ -3536,7 +3545,16 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _CallMutationEventSignalingCallUpdating event,
     Emitter<CallState> emit,
   ) async {
-    await _answerCallUpdate(event, emit);
+    var answered = false;
+    try {
+      answered = await _answerCallUpdate(event, emit);
+    } finally {
+      if (answered) {
+        _logger.info('__onMutationSignalingCallUpdating: answer to the update of call ${event.callId} sent');
+      } else {
+        _logger.warning('__onMutationSignalingCallUpdating: update of call ${event.callId} left unanswered');
+      }
+    }
   }
 
   /// Applies the far end's offer and sends the answer. True once the answer
