@@ -40,6 +40,10 @@ part 'call_bloc.freezed.dart';
 
 part 'call_event.dart';
 
+part 'call_handshake_action_mapping.dart';
+
+part 'call_signaling_event_mapping.dart';
+
 part 'call_state.dart';
 
 const int _kUndefinedLine = -1;
@@ -266,7 +270,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         case SignalingHandshakeReceived(:final handshake):
           _handleHandshakeReceived(handshake);
         case SignalingProtocolEvent(:final event):
-          _handleSignalingEvent(event);
+          if (event.toCallEvent(activeCalls: state.activeCalls) case final callEvent?) add(callEvent);
       }
     });
 
@@ -4394,22 +4398,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           _logger.info('_handleHandshakeReceived: DeclineSignalingAction sent, callId=${action.callId}');
 
         case RestoreCallAction():
-          add(
-            _RestoreAcceptedCall(
-              line: action.line,
-              callId: action.callId,
-              acceptedEvent: action.acceptedEvent,
-              acceptedTime: action.acceptedTime,
-              incomingCallEvent: action.incomingCallEvent,
-              remoteCameraEnabled: action.mediaState?.video,
-            ),
-          );
+          add(action.toCallEvent());
 
         case HandleIncomingCallAction():
           // The caller's last word on the camera travels with the offer: a
           // media state dispatched after it would run before the mutation that
           // creates the call and find nothing to apply to.
-          _dispatchIncomingCall(action.event, remoteVideo: action.mediaState?.video);
+          _logger.info('_handleHandshakeReceived: HandleIncomingCallAction, callId=${action.event.callId}');
+          add(action.event.toCallEvent(remoteVideo: action.mediaState?.video));
 
         case DeliverOfferAction():
           // The handler is the same as for a live offer: it stores the offer
@@ -4420,7 +4416,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           final waiting = state.retrieveActiveCall(action.event.callId);
           if (waiting != null && waiting.awaitsOffer) {
             _logger.info('_handleHandshakeReceived: delivering offer to push-registered call ${action.event.callId}');
-            _dispatchIncomingCall(action.event, remoteVideo: action.mediaState?.video);
+            add(action.event.toCallEvent(remoteVideo: action.mediaState?.video));
           } else {
             _logger.info('_handleHandshakeReceived: offer for ${action.event.callId} no longer needed, skipping');
           }
@@ -4513,190 +4509,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         acceptedEvent: event.acceptedEvent,
       ),
     );
-  }
-
-  /// Turns an [IncomingCallEvent] into the bloc's incoming event, heard live
-  /// or restored from a log; [remoteVideo] is the caller's camera as the log
-  /// last reported it, which only a restored call has.
-  void _dispatchIncomingCall(IncomingCallEvent event, {bool? remoteVideo}) {
-    _logger.warning('[SIG] IncomingCallEvent: callId=${event.callId} caller=${event.caller} callee=${event.callee}');
-    add(
-      _CallSignalingEvent.incoming(
-        line: event.line,
-        callId: event.callId,
-        callee: event.callee,
-        caller: event.caller,
-        callerDisplayName: event.callerDisplayName,
-        referredBy: event.referredBy,
-        replaceCallId: event.replaceCallId,
-        isFocus: event.isFocus,
-        jsep: JsepValue.fromOptional(event.jsep),
-        remoteVideo: remoteVideo,
-      ),
-    );
-  }
-
-  void _handleSignalingEvent(Event event) {
-    _logger.info('[SIG] ${event.runtimeType}');
-    if (event is IncomingCallEvent) {
-      _dispatchIncomingCall(event);
-    } else if (event is RingingEvent) {
-      add(_CallSignalingEvent.ringing(line: event.line, callId: event.callId));
-    } else if (event is ProceedingEvent) {
-      add(_CallSignalingEvent.proceeding(line: event.line, callId: event.callId, code: event.code));
-    } else if (event is ProgressEvent) {
-      add(
-        _CallSignalingEvent.progress(
-          line: event.line,
-          callId: event.callId,
-          callee: event.callee,
-          jsep: JsepValue.fromOptional(event.jsep),
-        ),
-      );
-    } else if (event is AcceptedEvent) {
-      add(
-        _CallSignalingEvent.accepted(
-          line: event.line,
-          callId: event.callId,
-          callee: event.callee,
-          jsep: JsepValue.fromOptional(event.jsep),
-        ),
-      );
-    } else if (event is HangupEvent) {
-      _logger.warning('[SIG] HangupEvent: callId=${event.callId} code=${event.code} reason="${event.reason}"');
-      add(_CallSignalingEvent.hangup(line: event.line, callId: event.callId, code: event.code, reason: event.reason));
-    } else if (event is UpdatingCallEvent) {
-      add(
-        _CallSignalingEvent.callUpdating(
-          line: event.line,
-          callId: event.callId,
-          callee: event.callee,
-          caller: event.caller,
-          callerDisplayName: event.callerDisplayName,
-          referredBy: event.referredBy,
-          replaceCallId: event.replaceCallId,
-          isFocus: event.isFocus,
-          jsep: JsepValue.fromOptional(event.jsep),
-        ),
-      );
-    } else if (event is UpdatingEvent) {
-      add(_CallSignalingEvent.updating(line: event.line, callId: event.callId));
-    } else if (event is UpdatedEvent) {
-      add(_CallSignalingEvent.updated(line: event.line, callId: event.callId));
-    } else if (event is PeerMessageEvent) {
-      switch (event) {
-        case MediaStatePeerMessageEvent e:
-          add(_CallSignalingEvent.peerMediaState(line: e.line, callId: e.callId, video: e.video));
-        case ConferenceMutePeerMessageEvent e:
-          add(_CallSignalingEvent.peerConferenceMute(line: e.line, callId: e.callId, muted: e.muted));
-        case ConferenceHostAwayPeerMessageEvent e:
-          add(_CallSignalingEvent.peerConferenceHostAway(line: e.line, callId: e.callId, away: e.away));
-        case UnknownPeerMessageEvent e:
-          _logger.info('[SIG] PeerMessageEvent: ignoring unknown type "${e.type}"');
-      }
-    } else if (event is TransferEvent) {
-      add(
-        _CallSignalingEvent.transfer(
-          line: event.line,
-          referId: event.referId,
-          referTo: event.referTo,
-          referredBy: event.referredBy,
-          replaceCallId: event.replaceCallId,
-        ),
-      );
-    } else if (event is NotifyEvent) {
-      add(switch (event) {
-        ReferNotifyEvent event => _CallSignalingEvent.notifyRefer(
-          line: event.line,
-          callId: event.callId,
-          notify: event.notify,
-          subscriptionState: event.subscriptionState,
-          state: event.state,
-        ),
-        UnknownNotifyEvent event => _CallSignalingEvent.notifyUnknown(
-          line: event.line,
-          callId: event.callId,
-          notify: event.notify,
-          subscriptionState: event.subscriptionState,
-          contentType: event.contentType,
-          content: event.content,
-        ),
-      });
-    } else if (event is RegisteringEvent) {
-      add(const _CallSignalingEvent.registration(RegistrationStatus.registering));
-    } else if (event is RegisteredEvent) {
-      add(const _CallSignalingEvent.registration(RegistrationStatus.registered));
-    } else if (event is RegistrationFailedEvent) {
-      final registrationFailedEvent = _CallSignalingEvent.registration(
-        RegistrationStatus.registration_failed,
-        code: event.code,
-        reason: event.reason,
-      );
-      add(registrationFailedEvent);
-    } else if (event is UnregisteringEvent) {
-      add(const _CallSignalingEvent.registration(RegistrationStatus.unregistering));
-    } else if (event is UnregisteredEvent) {
-      add(const _CallSignalingEvent.registration(RegistrationStatus.unregistered));
-    } else if (event is TransferringEvent) {
-      add(_CallSignalingEvent.transferring(line: event.line, callId: event.callId));
-    } else if (event is TransferAcceptedEvent) {
-      add(_CallSignalingEvent.transferAccepted(line: event.line, callId: event.callId));
-    } else if (event is TransferFailedEvent) {
-      add(_CallSignalingEvent.transferFailed(line: event.line, callId: event.callId, code: event.code));
-    } else if (event is GlobalEvent) {
-      add(switch (event) {
-        NumberPresenceUpdate event => _GlobalEvent.numberPresenceUpdate(
-          number: event.number,
-          presenceInfo: event.presenceInfo,
-        ),
-        NumberDialogsUpdate event => _GlobalEvent.numberDialogsUpdate(
-          number: event.number,
-          dialogInfos: event.dialogInfos,
-        ),
-      });
-    } else if (event is CallingEvent) {
-      _logger.info('[SIG] CallingEvent: callId=${event.callId} line=${event.line} - remote is ringing');
-    } else if (event is HangingupEvent) {
-      _logger.info('[SIG] HangingupEvent: callId=${event.callId} line=${event.line} - hangup in progress');
-    } else if (event is IceHangupEvent) {
-      _logger.info('[SIG] IceHangupEvent: line=${event.line} reason="${event.reason}"');
-    } else if (event is IceSlowLinkEvent) {
-      final activeCall = state.activeCalls.firstWhereOrNull((c) => c.line == event.line);
-      if (activeCall != null) {
-        add(
-          _CallMutationEvent.slowlinkDetected(
-            callId: activeCall.callId,
-            uplink: event.uplink,
-            media: CallMediaKind.values.byName(event.media.name),
-            lost: event.lost,
-          ),
-        );
-      } else {
-        _logger.fine('[SIG] IceSlowLinkEvent: no active call on line=${event.line}');
-      }
-    } else if (event is CallErrorEvent) {
-      add(
-        _CallSignalingEvent.callError(line: event.line, callId: event.callId, code: event.code, reason: event.reason),
-      );
-    } else if (event is ConferenceOfferEvent) {
-      add(
-        _CallMutationEvent.conferenceOffer(
-          room: event.room,
-          jsep: JsepValue(event.jsep),
-          participants: event.participants,
-        ),
-      );
-    } else if (event is ConferenceIceTrickleEvent) {
-      add(_CallMutationEvent.conferenceRemoteCandidate(event.candidate?.toIceCandidate()));
-    } else if (event is ConferenceUpdatedEvent) {
-      add(_CallMutationEvent.conferenceUpdated(room: event.room, participants: event.participants));
-    } else if (event is ConferenceFailedEvent) {
-      add(_CallMutationEvent.conferenceFailed(room: event.room, reason: event.reason, detail: event.detail));
-    } else if (event is ConferenceTerminatedEvent) {
-      add(_CallMutationEvent.conferenceTerminated(room: event.room));
-    } else {
-      _logger.warning('unhandled signaling event $event');
-    }
   }
 
   // WidgetsBindingObserver
