@@ -3068,6 +3068,10 @@
   "@voicemail_Label_forward": {
     "description": "Menu action that passes a voicemail on to a colleague."
   },
+  "voicemail_Label_forwardAgain": "Forward again",
+  "@voicemail_Label_forwardAgain": {
+    "description": "Menu entry on a voicemail whose forward did not go through: tries it again to the same colleague."
+  },
   "voicemail_Label_forwardChoosing": "Choose who to forward to",
   "@voicemail_Label_forwardChoosing": {
     "description": "Banner shown while the user is browsing the address book for somebody to forward a voicemail to."
@@ -3088,6 +3092,15 @@
   "voicemail_Label_moveToTrash": "Move to trash",
   "@voicemail_Label_moveToTrash": {
     "description": "Menu action that moves a voicemail to the trash, where it can be restored."
+  },
+  "voicemail_Label_notForwarded": "Not forwarded · {name}",
+  "@voicemail_Label_notForwarded": {
+    "description": "Marker on a voicemail whose forward to the named colleague did not go through.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "voicemail_Label_openContact": "Open contact",
   "@voicemail_Label_openContact": {
@@ -3147,6 +3160,10 @@
         "type": "String"
       }
     }
+  },
+  "voicemail_SemanticsLabel_forwarding": "Forwarding",
+  "@voicemail_SemanticsLabel_forwarding": {
+    "description": "Announced on a voicemail row while the message is being forwarded to a colleague."
   },
   "voicemail_SemanticsLabel_loading": "Loading",
   "@voicemail_SemanticsLabel_loading": {
@@ -3210,9 +3227,14 @@
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."
   },
-  "voicemail_Snackbar_forwardFailed": "Could not forward",
+  "voicemail_Snackbar_forwardFailed": "Couldn't forward to {name}",
   "@voicemail_Snackbar_forwardFailed": {
-    "description": "Shown when forwarding failed for a reason the person cannot act on."
+    "description": "Shown when forwarding a voicemail to the named colleague failed for a reason the person cannot act on.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "voicemail_Snackbar_forwardRecipientFull": "{name} cannot receive more forwarded messages",
   "@voicemail_Snackbar_forwardRecipientFull": {

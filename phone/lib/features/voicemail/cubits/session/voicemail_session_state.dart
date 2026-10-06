@@ -9,6 +9,7 @@ class VoicemailSessionState with _$VoicemailSessionState, DiagnosticableTreeMixi
     this.items = const [],
     this.unreadCount = 0,
     this.forwarderNames = const {},
+    this.forwards = const {},
     this.error,
   });
 
@@ -33,6 +34,11 @@ class VoicemailSessionState with _$VoicemailSessionState, DiagnosticableTreeMixi
   /// saying nothing would hide that the message was forwarded at all.
   @override
   final Map<String, String> forwarderNames;
+
+  /// The messages being passed to a colleague, or whose passing did not go
+  /// through, by message id. A message that is in neither state is absent.
+  @override
+  final Map<String, VoicemailForward> forwards;
 
   /// Why the last read of the mailbox did not go through, or null when it did.
   @override

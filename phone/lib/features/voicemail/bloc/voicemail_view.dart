@@ -39,6 +39,13 @@ class VoicemailView {
     return mailbox.forwarderNames[forwardedBy] ?? forwardedBy;
   }
 
+  /// Where passing [voicemail] on stands, or null when there is nothing to
+  /// show about it.
+  ///
+  /// Nothing in the trash: a message there answers to restoring and deleting
+  /// only, and a mark it could not act on would be noise.
+  VoicemailForward? forwardOf(Voicemail voicemail) => isShowingTrash ? null : mailbox.forwards[voicemail.id];
+
   /// How many messages are still unheard, which is counted over the whole
   /// mailbox rather than over the current view - it is what the New filter is
   /// offering, so it has to read the same under every filter.

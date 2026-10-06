@@ -27,6 +27,7 @@ class VoicemailTile extends StatelessWidget {
     required this.onToggleSeenStatus,
     required this.onToggleSavedStatus,
     required this.onForwarded,
+    required this.onForwardRetried,
     required this.onOpenContact,
     required this.onRestored,
     required this.onDeletedPermanently,
@@ -37,6 +38,7 @@ class VoicemailTile extends StatelessWidget {
     this.trashSupported = false,
     this.forwardSupported = false,
     this.inTrash = false,
+    this.forward,
     this.thumbnail,
     this.thumbnailUrl,
   });
@@ -76,6 +78,19 @@ class VoicemailTile extends StatelessWidget {
   /// way out.
   final bool inTrash;
 
+  /// Where passing this message to a colleague stands, or null when there is
+  /// nothing to show about it.
+  ///
+  /// While the request is out a progress indicator stands in place of the
+  /// menu: the backend has not answered yet, and nothing the menu offers is
+  /// something to do to the message in the meantime. A forward that did not go
+  /// through, where trying again could change that, leaves a quiet mark - a
+  /// badge on the avatar and a line naming who it was for - and the menu
+  /// offers to forward again. The sentence about it, with its own way to try
+  /// again, is said once elsewhere and passes; the mark is what is still there
+  /// when the person looks at the list later.
+  final VoicemailForward? forward;
+
   final Uint8List? thumbnail;
   final Uri? thumbnailUrl;
 
@@ -84,6 +99,10 @@ class VoicemailTile extends StatelessWidget {
   final void Function(Voicemail) onToggleSeenStatus;
   final void Function(Voicemail) onToggleSavedStatus;
   final void Function(Voicemail) onForwarded;
+
+  /// Tries a forward that did not go through again, to the colleague it was
+  /// for.
+  final void Function(Voicemail, Contact recipient) onForwardRetried;
   final void Function(Voicemail) onOpenContact;
   final void Function(Voicemail) onRestored;
   final void Function(Voicemail) onDeletedPermanently;
@@ -100,6 +119,7 @@ class VoicemailTile extends StatelessWidget {
   /// lead to an empty screen.
   bool get _contactKnown => voicemail.displaySender != voicemail.sender;
   bool get _saved => voicemail.saved == true;
+  bool get _forwarding => forward is VoicemailForwardSending;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +135,12 @@ class VoicemailTile extends StatelessWidget {
         selected: selected,
         selectedTileColor: colorScheme.primaryContainer.withValues(alpha: .5),
         crossAxisAlignment: CrossAxisAlignment.start,
-        leading: LeadingAvatar(username: displayName, thumbnail: thumbnail, thumbnailUrl: thumbnailUrl),
+        leading: LeadingAvatar(
+          username: displayName,
+          thumbnail: thumbnail,
+          thumbnailUrl: thumbnailUrl,
+          badge: forward is VoicemailForwardFailed ? const _ForwardFailedBadge() : null,
+        ),
         title: Row(
           spacing: 6,
           children: [
@@ -134,29 +159,36 @@ class VoicemailTile extends StatelessWidget {
               ),
           ],
         ),
-        subtitle: _VoicemailSubtitle(voicemail: voicemail, dateFormat: dateFormat, forwardedByName: forwardedByName),
-        bottom: AudioView(path: voicemail.url!, cacheKey: voicemail.id, onPlaybackStarted: _onPlaybackStarted),
-        trailing: SemanticAction(
-          label: context.l10n.voicemail_SemanticsLabel_moreActions,
-          identifier: voicemailMenuId,
-          // The button's own tooltip is replaced rather than removed: it says
-          // "Show menu", which a screen reader reads on top of the name above
-          // (appended to it on iOS), and dropping it outright would take the
-          // long press with it - the row's long press would then fire instead
-          // and silently start selecting messages.
-          child: Tooltip(
-            message: context.l10n.voicemail_SemanticsLabel_moreActions,
-            excludeFromSemantics: true,
-            child: PopupMenuButton<_VoicemailMenuAction>(
-              padding: EdgeInsets.zero,
-              position: PopupMenuPosition.under,
-              tooltip: '',
-              onSelected: _onPopupMenuSelected,
-              itemBuilder: (context) => _buildMenuItems(context, colorScheme),
-              icon: Icon(Icons.more_vert, color: colorScheme.onSurface),
-            ),
-          ),
+        subtitle: _VoicemailSubtitle(
+          voicemail: voicemail,
+          dateFormat: dateFormat,
+          forwardedByName: forwardedByName,
+          forward: forward,
         ),
+        bottom: AudioView(path: voicemail.url!, cacheKey: voicemail.id, onPlaybackStarted: _onPlaybackStarted),
+        trailing: _forwarding
+            ? const _ForwardingIndicator()
+            : SemanticAction(
+                label: context.l10n.voicemail_SemanticsLabel_moreActions,
+                identifier: voicemailMenuId,
+                // The button's own tooltip is replaced rather than removed: it says
+                // "Show menu", which a screen reader reads on top of the name above
+                // (appended to it on iOS), and dropping it outright would take the
+                // long press with it - the row's long press would then fire instead
+                // and silently start selecting messages.
+                child: Tooltip(
+                  message: context.l10n.voicemail_SemanticsLabel_moreActions,
+                  excludeFromSemantics: true,
+                  child: PopupMenuButton<_VoicemailMenuAction>(
+                    padding: EdgeInsets.zero,
+                    position: PopupMenuPosition.under,
+                    tooltip: '',
+                    onSelected: _onPopupMenuSelected,
+                    itemBuilder: (context) => _buildMenuItems(context, colorScheme),
+                    icon: Icon(Icons.more_vert, color: colorScheme.onSurface),
+                  ),
+                ),
+              ),
       ),
     );
 
@@ -231,6 +263,15 @@ class VoicemailTile extends StatelessWidget {
           title: Text(context.l10n.voicemail_Label_forward),
         ),
       ),
+    // Only on a message that carries the mark of a forward that did not go
+    // through - which is kept only where trying again could end differently -
+    // and to the same colleague: the person already chose. Choosing somebody
+    // else is the entry above.
+    if (forwardSupported && forward is VoicemailForwardFailed)
+      PopupMenuItem(
+        value: _VoicemailMenuAction.forwardAgain,
+        child: ListTile(leading: const Icon(Icons.replay), title: Text(context.l10n.voicemail_Label_forwardAgain)),
+      ),
     PopupMenuItem(
       value: _VoicemailMenuAction.delete,
       child: ListTile(
@@ -268,6 +309,10 @@ class VoicemailTile extends StatelessWidget {
       case _VoicemailMenuAction.forward:
         onForwarded(voicemail);
         break;
+      case _VoicemailMenuAction.forwardAgain:
+        final forward = this.forward;
+        if (forward is VoicemailForwardFailed) onForwardRetried(voicemail, forward.recipient);
+        break;
       case _VoicemailMenuAction.restore:
         onRestored(voicemail);
         break;
@@ -282,17 +327,19 @@ class VoicemailTile extends StatelessWidget {
 /// It uses an [AnimatedSwitcher] to transition between an empty state, a loading indicator
 /// for unknown statuses, and a solid circle for unread messages
 class _VoicemailSubtitle extends StatelessWidget {
-  const _VoicemailSubtitle({required this.voicemail, required this.dateFormat, this.forwardedByName});
+  const _VoicemailSubtitle({required this.voicemail, required this.dateFormat, this.forwardedByName, this.forward});
 
   final Voicemail voicemail;
   final DateFormat dateFormat;
   final String? forwardedByName;
+  final VoicemailForward? forward;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final forwardedByName = this.forwardedByName;
+    final forward = this.forward;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,6 +357,23 @@ class _VoicemailSubtitle extends StatelessWidget {
                     context.l10n.voicemail_Label_forwardedBy(forwardedByName),
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (forward is VoicemailForwardFailed)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Row(
+              spacing: 4,
+              children: [
+                Icon(Icons.forward_to_inbox_outlined, size: 14, color: colorScheme.error),
+                Flexible(
+                  child: Text(
+                    context.l10n.voicemail_Label_notForwarded(forward.recipient.displayTitle),
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.error),
                   ),
                 ),
               ],
@@ -353,12 +417,62 @@ class _VoicemailSubtitle extends StatelessWidget {
   }
 }
 
+/// Stands where the menu does while the message is being forwarded, at the
+/// menu's own size so the row does not shift when the answer arrives.
+class _ForwardingIndicator extends StatelessWidget {
+  const _ForwardingIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      identifier: voicemailForwardingId,
+      label: context.l10n.voicemail_SemanticsLabel_forwarding,
+      liveRegion: true,
+      child: const SizedCircularProgressIndicator(
+        key: voicemailForwardingKey,
+        size: 20,
+        outerSize: kMinInteractiveDimension,
+        strokeWidth: 2,
+      ),
+    );
+  }
+}
+
+/// Marks the avatar of a message whose forward did not go through.
+///
+/// Decorative on purpose: the line under the date says the same thing in
+/// words, and a second announcement of it would only be noise.
+class _ForwardFailedBadge extends StatelessWidget {
+  const _ForwardFailedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: ExcludeSemantics(
+        child: Container(
+          key: voicemailForwardFailedBadgeKey,
+          decoration: BoxDecoration(
+            color: colorScheme.error,
+            shape: BoxShape.circle,
+            border: Border.all(color: colorScheme.surface, width: 2),
+          ),
+          child: Icon(Icons.priority_high, size: 10, color: colorScheme.onError),
+        ),
+      ),
+    );
+  }
+}
+
 enum _VoicemailMenuAction {
   call,
   toggleSeenStatus,
   toggleSavedStatus,
   openContact,
   forward,
+  forwardAgain,
   delete,
   restore,
   deletePermanently,

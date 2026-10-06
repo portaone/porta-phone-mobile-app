@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$VoicemailSessionState {
 
- VoicemailStatus get status; List<Voicemail> get items; int get unreadCount; Map<String, String> get forwarderNames; Object? get error;
+ VoicemailStatus get status; List<Voicemail> get items; int get unreadCount; Map<String, String> get forwarderNames; Map<String, VoicemailForward> get forwards; Object? get error;
 /// Create a copy of VoicemailSessionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,12 +25,12 @@ $VoicemailSessionStateCopyWith<VoicemailSessionState> get copyWith => _$Voicemai
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailSessionState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.unreadCount, unreadCount) || other.unreadCount == unreadCount)&&const DeepCollectionEquality().equals(other.forwarderNames, forwarderNames)&&const DeepCollectionEquality().equals(other.error, error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailSessionState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.unreadCount, unreadCount) || other.unreadCount == unreadCount)&&const DeepCollectionEquality().equals(other.forwarderNames, forwarderNames)&&const DeepCollectionEquality().equals(other.forwards, forwards)&&const DeepCollectionEquality().equals(other.error, error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),unreadCount,const DeepCollectionEquality().hash(forwarderNames),const DeepCollectionEquality().hash(error));
+int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),unreadCount,const DeepCollectionEquality().hash(forwarderNames),const DeepCollectionEquality().hash(forwards),const DeepCollectionEquality().hash(error));
 
 
 
@@ -41,7 +41,7 @@ abstract mixin class $VoicemailSessionStateCopyWith<$Res>  {
   factory $VoicemailSessionStateCopyWith(VoicemailSessionState value, $Res Function(VoicemailSessionState) _then) = _$VoicemailSessionStateCopyWithImpl;
 @useResult
 $Res call({
- VoicemailStatus status, List<Voicemail> items, int unreadCount, Map<String, String> forwarderNames, Object? error
+ VoicemailStatus status, List<Voicemail> items, int unreadCount, Map<String, String> forwarderNames, Map<String, VoicemailForward> forwards, Object? error
 });
 
 
@@ -58,13 +58,14 @@ class _$VoicemailSessionStateCopyWithImpl<$Res>
 
 /// Create a copy of VoicemailSessionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? items = null,Object? unreadCount = null,Object? forwarderNames = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? items = null,Object? unreadCount = null,Object? forwarderNames = null,Object? forwards = null,Object? error = freezed,}) {
   return _then(VoicemailSessionState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as VoicemailStatus,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<Voicemail>,unreadCount: null == unreadCount ? _self.unreadCount : unreadCount // ignore: cast_nullable_to_non_nullable
 as int,forwarderNames: null == forwarderNames ? _self.forwarderNames : forwarderNames // ignore: cast_nullable_to_non_nullable
-as Map<String, String>,error: freezed == error ? _self.error : error ,
+as Map<String, String>,forwards: null == forwards ? _self.forwards : forwards // ignore: cast_nullable_to_non_nullable
+as Map<String, VoicemailForward>,error: freezed == error ? _self.error : error ,
   ));
 }
 

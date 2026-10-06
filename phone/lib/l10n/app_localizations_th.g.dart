@@ -3387,6 +3387,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Label_forward => 'ส่งต่อ';
 
   @override
+  String get voicemail_Label_forwardAgain => 'ส่งต่ออีกครั้ง';
+
+  @override
   String get voicemail_Label_forwardChoosing => 'เลือกผู้รับการส่งต่อ';
 
   @override
@@ -3402,6 +3405,11 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get voicemail_Label_moveToTrash => 'ย้ายไปถังขยะ';
+
+  @override
+  String voicemail_Label_notForwarded(String name) {
+    return 'ยังไม่ได้ส่งต่อ · $name';
+  }
 
   @override
   String get voicemail_Label_openContact => 'เปิดรายชื่อติดต่อ';
@@ -3444,6 +3452,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String voicemail_SemanticsLabel_forwardTo(String name) {
     return 'ส่งต่อถึง $name';
   }
+
+  @override
+  String get voicemail_SemanticsLabel_forwarding => 'กำลังส่งต่อ';
 
   @override
   String get voicemail_SemanticsLabel_loading => 'กำลังโหลด';
@@ -3491,7 +3502,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get voicemail_Snackbar_movedToTrash => 'ย้ายไปถังขยะแล้ว';
 
   @override
-  String get voicemail_Snackbar_forwardFailed => 'ส่งต่อไม่สำเร็จ';
+  String voicemail_Snackbar_forwardFailed(String name) {
+    return 'ส่งต่อถึง $name ไม่สำเร็จ';
+  }
 
   @override
   String voicemail_Snackbar_forwardRecipientFull(String name) {

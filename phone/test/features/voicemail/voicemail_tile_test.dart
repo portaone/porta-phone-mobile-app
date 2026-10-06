@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/voicemail/bloc/voicemail_playback_controller.dart';
-import 'package:webtrit_phone/features/voicemail/models/voicemail_screen_context.dart';
+import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/features/voicemail/widgets/voicemail_tile.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -51,6 +51,8 @@ void main() {
     bool trashSupported = false,
     bool forwardSupported = false,
     bool inTrash = false,
+    VoicemailForward? forward,
+    void Function(Voicemail, Contact)? onForwardRetried,
     String? forwardedByName,
     void Function(Voicemail)? onOpenContact,
     void Function(Voicemail)? onToggleSavedStatus,
@@ -89,12 +91,14 @@ void main() {
               trashSupported: trashSupported,
               forwardSupported: forwardSupported,
               inTrash: inTrash,
+              forward: forward,
               forwardedByName: forwardedByName,
               onCall: (_) {},
               onDeleted: (_) {},
               onToggleSeenStatus: (_) {},
               onToggleSavedStatus: (it) => onToggleSavedStatus?.call(it),
               onForwarded: (it) => onForwarded?.call(it),
+              onForwardRetried: (it, recipient) => onForwardRetried?.call(it, recipient),
               onOpenContact: (it) => onOpenContact?.call(it),
               onRestored: (it) => onRestored?.call(it),
               onDeletedPermanently: (it) => onDeletedPermanently?.call(it),
@@ -120,6 +124,86 @@ void main() {
     expect(find.text('Delete'), findsOneWidget);
 
     handle.dispose();
+  });
+
+  testWidgets('a message being forwarded says so where its menu was', (tester) async {
+    // In place of the menu rather than beside it: nothing the menu offers is
+    // something to do to a message whose forward has not been answered yet.
+    final handle = tester.ensureSemantics();
+
+    await tester.pumpWidget(wrap(forward: const VoicemailForwardSending()));
+
+    expect(find.bySemanticsIdentifier(voicemailMenuId), findsNothing);
+    expect(
+      tester.getSemantics(find.bySemanticsIdentifier(voicemailForwardingId)),
+      isSemantics(label: 'Forwarding', identifier: voicemailForwardingId, isLiveRegion: true),
+    );
+
+    handle.dispose();
+  });
+
+  group('a forward that did not go through', () {
+    final colleague = Contact(
+      id: 1,
+      sourceType: ContactSourceType.external,
+      kind: ContactKind.visible,
+      sourceId: 'user-7',
+      isCurrentUser: false,
+      aliasName: 'Iryna Shevchuk',
+    );
+
+    VoicemailForwardFailed failed([VoicemailForwardOutcome outcome = VoicemailForwardOutcome.failed]) =>
+        VoicemailForwardFailed(outcome: outcome, recipient: colleague);
+
+    testWidgets('leaves a quiet mark: a badge on the avatar and who it was for', (tester) async {
+      await tester.pumpWidget(wrap(forward: failed()));
+
+      expect(find.byKey(voicemailForwardFailedBadgeKey), findsOneWidget);
+      expect(find.text('Not forwarded · Iryna Shevchuk'), findsOneWidget);
+      // Nothing to press in the row itself: the menu is where it is retried.
+      expect(find.byType(TextButton), findsNothing);
+      expect(find.byIcon(Icons.more_vert), findsOneWidget);
+    });
+
+    testWidgets('a message with no such forward carries no mark', (tester) async {
+      await tester.pumpWidget(wrap());
+
+      expect(find.byKey(voicemailForwardFailedBadgeKey), findsNothing);
+      expect(find.textContaining('Not forwarded'), findsNothing);
+    });
+
+    testWidgets('is forwarded again from the menu, to the colleague it was for', (tester) async {
+      Contact? retriedTo;
+      Voicemail? forwarded;
+      await tester.pumpWidget(
+        wrap(
+          forwardSupported: true,
+          forward: failed(),
+          onForwardRetried: (_, recipient) => retriedTo = recipient,
+          onForwarded: (it) => forwarded = it,
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      // Choosing somebody else stays on offer beside it.
+      expect(find.text('Forward'), findsOneWidget);
+      await tester.tap(find.text('Forward again'));
+      await tester.pumpAndSettle();
+
+      expect(retriedTo, colleague);
+      expect(forwarded, isNull);
+    });
+
+    testWidgets('the menu offers no second try where nothing was refused', (tester) async {
+      await tester.pumpWidget(wrap(forwardSupported: true));
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Forward'), findsOneWidget);
+      expect(find.text('Forward again'), findsNothing);
+    });
   });
 
   testWidgets('long-pressing the menu shows its own name and does not start selecting messages', (tester) async {

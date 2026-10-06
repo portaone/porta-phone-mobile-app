@@ -34,7 +34,11 @@ class VoicemailScreen extends StatelessWidget {
         ],
         bottom: const VoicemailFilterRow(),
       ),
-      body: const VoicemailBody(),
+      // Named with the settings list under it: a forward comes back through the
+      // root, and the page has to return to that list when it is closed.
+      body: const VoicemailBody(
+        origin: SettingsRouterPageRoute(children: [SettingsScreenPageRoute(), VoicemailScreenPageRoute()]),
+      ),
     );
   }
 

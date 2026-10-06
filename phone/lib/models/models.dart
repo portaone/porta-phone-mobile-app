@@ -39,6 +39,7 @@ export 'local_contact_email.dart';
 export 'local_contact_phone.dart';
 export 'login_flavor.dart';
 export 'destination_picking/destination_candidate.dart';
+export 'destination_picking/destination_pick_origin.dart';
 export 'destination_picking/destination_pick_purpose.dart';
 export 'destination_picking/destination_pick_precedence.dart';
 export 'destination_picking/destination_pick_report.dart';
