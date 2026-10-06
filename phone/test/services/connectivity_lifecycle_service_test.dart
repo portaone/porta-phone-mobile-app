@@ -9,7 +9,10 @@ import '../mocks/mock_refreshable_repository.dart';
 import '../mocks/mock_suspendable_repository.dart';
 
 void main() {
-  Logger.root.level = Level.OFF;
+  // For this file's tests only: the root level is global and outlives the file.
+  final previousLevel = Logger.root.level;
+  setUpAll(() => Logger.root.level = Level.OFF);
+  tearDownAll(() => Logger.root.level = previousLevel);
 
   group('ConnectivityLifecycleService', () {
     late FakeConnectivityService connectivity;

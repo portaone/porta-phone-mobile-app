@@ -15,7 +15,10 @@ void main() {
   // PollingService registers itself as a WidgetsBindingObserver on
   // construction, which needs a live binding even in plain tests.
   TestWidgetsFlutterBinding.ensureInitialized();
-  Logger.root.level = Level.OFF;
+  // For this file's tests only: the root level is global and outlives the file.
+  final previousLevel = Logger.root.level;
+  setUpAll(() => Logger.root.level = Level.OFF);
+  tearDownAll(() => Logger.root.level = previousLevel);
 
   group('PollingService', () {
     late FakeConnectivityService connectivity;

@@ -1,0 +1,53 @@
+pipeline {
+  agent { label 'centos-lxc-ci-2' }
+  options {
+    buildDiscarder(logRotator(daysToKeepStr:'14'))
+  }
+  environment {
+    DOCKER_IO_CREDS=credentials('docker_creds')
+    DOCKER_CONFIG="${WORKSPACE}/.docker"
+    TEST_IMAGE="mobile-app-callkeep-android-test:${BUILD_TAG}"
+  }
+  triggers {
+    gerrit(serverName: 'git.portaone.com',
+         gerritProjects: [[
+           compareType: 'PLAIN',
+           pattern: 'porta-phone/mobile-app',
+           branches: [[ compareType: 'REG_EXP', pattern: '.*' ]],
+           filePaths: [
+             [ compareType: 'ANT', pattern: 'callkeep/webtrit_callkeep_android/android/**' ],
+             [ compareType: 'ANT', pattern: 'Dockerfile' ],
+             [ compareType: 'ANT', pattern: '.dockerignore' ],
+             [ compareType: 'ANT', pattern: '.jenkins/gerrit_check_callkeep_android.groovy' ]
+           ],
+           disableStrictForbiddenFileVerification: false
+         ]],
+         triggerOnEvents: [patchsetCreated()]
+    )
+  }
+  stages {
+    stage('Login to Docker Hub') {
+      steps {
+        sh label: "Docker Hub login", script:
+          "echo ${DOCKER_IO_CREDS_PSW} | docker login --username ${DOCKER_IO_CREDS_USR} --password-stdin"
+      }
+    }
+    stage('Run unit tests') {
+      steps {
+        sh 'docker build --target callkeep-android-test -t "$TEST_IMAGE" .'
+        sh 'docker run --rm "$TEST_IMAGE"'
+      }
+      post {
+        always {
+          sh 'docker rmi "$TEST_IMAGE" || true'
+          sh "docker logout"
+        }
+      }
+    }
+  }
+  post {
+    always {
+      cleanWs()
+    }
+  }
+}
