@@ -125,6 +125,7 @@ class _CommentSection extends StatelessWidget {
         TextField(
           controller: controller,
           maxLines: 3,
+          textCapitalization: TextCapitalization.sentences,
           minLines: 2,
           style: theme.textTheme.bodyMedium,
           decoration: InputDecoration(
