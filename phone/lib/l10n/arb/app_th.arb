@@ -2127,6 +2127,10 @@
   "@session_Teardown_progressText": {
     "description": "Status message displayed while the application is performing cleanup during the logout process."
   },
+  "session_Restart_progressText": "กำลังนำการเปลี่ยนแปลงจากเซิร์ฟเวอร์มาใช้...",
+  "@session_Restart_progressText": {
+    "description": "Shown under a progress indicator while the app restarts its session by itself, because the server changed which features are available. On screen for a few seconds."
+  },
   "sessions_AppBar_title": "เซสชันที่ใช้งานอยู่",
   "@sessions_AppBar_title": {},
   "sessions_AppType_android": "แอป Android",

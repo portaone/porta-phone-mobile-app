@@ -1052,6 +1052,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessionStatus_subtitle_serviceUnavailable' =>
         sessionStatus_subtitle_serviceUnavailable,
       'session_Teardown_progressText' => session_Teardown_progressText,
+      'session_Restart_progressText' => session_Restart_progressText,
       'sessions_AppBar_title' => sessions_AppBar_title,
       'sessions_AppType_android' => sessions_AppType_android,
       'sessions_AppType_ios' => sessions_AppType_ios,

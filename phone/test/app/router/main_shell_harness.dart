@@ -25,7 +25,8 @@ import 'package:provider/provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:ssl_certificates/ssl_certificates.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
-import 'package:signaling_service/signaling_service.dart' show SignalingModule, SignalingModuleEvent;
+import 'package:signaling_service/signaling_service.dart'
+    show SignalingHandshakeReceived, SignalingModule, SignalingModuleEvent;
 
 import 'package:webtrit_phone/app/notifications/notifications.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
@@ -57,11 +58,21 @@ class MockNotificationsBloc extends MockBloc<NotificationsEvent, NotificationsSt
 /// take have no cheap fallback values, and a [Fake] names any member the shell
 /// starts using that the harness has not covered yet.
 class FakeCallkeep extends Fake implements Callkeep {
-  @override
-  Future<void> setUp(CallkeepOptions options) async {}
+  int setUps = 0;
+
+  /// When set, [tearDown] does not finish until it completes - the native
+  /// teardown still at work.
+  Completer<void>? tearDownGate;
 
   @override
-  Future<void> tearDown() async {}
+  Future<void> setUp(CallkeepOptions options) async {
+    setUps++;
+  }
+
+  @override
+  Future<void> tearDown() async {
+    await tearDownGate?.future;
+  }
 
   @override
   void setDelegate(CallkeepDelegate? delegate) {}
@@ -73,7 +84,13 @@ class FakeCallkeep extends Fake implements Callkeep {
   void setPushRegistryDelegate(PushRegistryDelegate? delegate) {}
 }
 
-class FakeCallkeepConnections extends Fake implements CallkeepConnections {}
+class FakeCallkeepConnections extends Fake implements CallkeepConnections {
+  @override
+  Future<List<CallkeepConnection>> getConnections() async => const [];
+
+  @override
+  Future<CallkeepConnection?> getConnection(String callId) async => null;
+}
 
 class FakeFirebaseMessaging extends Fake implements FirebaseMessaging {
   @override
@@ -93,7 +110,22 @@ class FakeFirebaseMessaging extends Fake implements FirebaseMessaging {
 /// "connected enough" for the shell to build.
 class FakeSignalingModule extends Fake implements SignalingModule {
   @override
-  StateHandshake? get sessionHandshake => null;
+  StateHandshake? sessionHandshake;
+
+  /// The server answers: registered, every line free.
+  void handshake() {
+    final handshake = StateHandshake(
+      keepaliveInterval: const Duration(seconds: 30),
+      timestamp: 0,
+      registration: const Registration(status: RegistrationStatus.registered),
+      lines: const [null],
+      dialogInfos: const [],
+      presenceInfos: const [],
+      guestLine: null,
+    );
+    sessionHandshake = handshake;
+    emit(SignalingHandshakeReceived(handshake: handshake));
+  }
 
   final _events = StreamController<SignalingModuleEvent>.broadcast();
 
@@ -109,19 +141,36 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   @override
   Future<void> disconnect() async {}
 
+  /// What the service would report to the session's blocs.
+  void emit(SignalingModuleEvent event) => _events.add(event);
+
+  /// When set, [dispose] does not finish until it completes - a teardown
+  /// that takes its time, as the real service's does.
+  Completer<void>? disposeGate;
+
+  bool disposed = false;
+
   @override
   Future<void> dispose() async {
+    await disposeGate?.future;
     await _events.close();
+    disposed = true;
   }
 }
 
+/// Hands every shell a signaling connection of its own and keeps them in the
+/// order they were asked for.
 class FakeSignalingServiceFactory extends SignalingServiceFactory {
-  const FakeSignalingServiceFactory(this.module);
+  FakeSignalingServiceFactory();
 
-  final FakeSignalingModule module;
+  final created = <FakeSignalingModule>[];
 
   @override
-  SignalingModule create({required config, required mode}) => module;
+  SignalingModule create({required config, required mode}) {
+    final module = FakeSignalingModule();
+    created.add(module);
+    return module;
+  }
 }
 
 // --- repositories and services --------------------------------------------
@@ -203,7 +252,7 @@ class MainShellHarness {
   final callkeep = FakeCallkeep();
   final callkeepConnections = FakeCallkeepConnections();
   final firebaseMessaging = FakeFirebaseMessaging();
-  final signalingModule = FakeSignalingModule();
+  final signalingFactory = FakeSignalingServiceFactory();
   final connectivityService = FakeConnectivityService();
   final systemInfoRepository = MockSystemInfoRepository();
   final systemInfoController = StreamController<WebtritSystemInfo>.broadcast();
@@ -255,6 +304,23 @@ class MainShellHarness {
   /// stream delivers when the backend's capabilities change mid-session.
   void pushFeatureAccess(FeatureAccess featureAccess) => featureAccessController.add(featureAccess);
 
+  /// What the backend offers by now, when that is no longer what the app was
+  /// started with; null while the two agree.
+  FeatureAccess? backendFeatureAccess;
+
+  late final startupFeatureAccessCheck = StartupFeatureAccessCheck(
+    systemInfoReads: systemInfoController.stream,
+    current: () async => backendFeatureAccess ?? initialFeatureAccess,
+  );
+
+  /// Replays the session's first read of the backend answering with
+  /// [featureAccess]: stored, handed to the reactive stream, and announced.
+  void backendAnswers(FeatureAccess featureAccess) {
+    backendFeatureAccess = featureAccess;
+    pushFeatureAccess(featureAccess);
+    systemInfoController.add(initialSystemInfo);
+  }
+
   Widget build(AppTime appTime) {
     return MultiProvider(
       providers: [
@@ -267,7 +333,8 @@ class MainShellHarness {
         ),
         Provider<Callkeep>.value(value: callkeep),
         Provider<CallkeepConnections>.value(value: callkeepConnections),
-        Provider<SignalingServiceFactory>.value(value: FakeSignalingServiceFactory(signalingModule)),
+        Provider<SignalingServiceFactory>.value(value: signalingFactory),
+        Provider<StartupFeatureAccessCheck>.value(value: startupFeatureAccessCheck),
         Provider<FirebaseMessaging>.value(value: firebaseMessaging),
         Provider<DiagnosticService>.value(value: diagnosticService),
         Provider<AppTime>.value(value: appTime),

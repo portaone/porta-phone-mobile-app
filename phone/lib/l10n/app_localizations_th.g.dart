@@ -2392,6 +2392,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get session_Teardown_progressText => 'กำลังออกจากระบบ...';
 
   @override
+  String get session_Restart_progressText => 'กำลังนำการเปลี่ยนแปลงจากเซิร์ฟเวอร์มาใช้...';
+
+  @override
   String get sessions_AppBar_title => 'เซสชันที่ใช้งานอยู่';
 
   @override

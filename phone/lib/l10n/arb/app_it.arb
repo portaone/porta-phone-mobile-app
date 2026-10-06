@@ -2124,6 +2124,10 @@
   "@session_Teardown_progressText": {
     "description": "Status message displayed while the application is performing cleanup during the logout process."
   },
+  "session_Restart_progressText": "Applicazione delle modifiche dal server...",
+  "@session_Restart_progressText": {
+    "description": "Shown under a progress indicator while the app restarts its session by itself, because the server changed which features are available. On screen for a few seconds."
+  },
   "sessions_AppBar_title": "Sessioni attive",
   "@sessions_AppBar_title": {},
   "sessions_AppType_android": "App Android",
