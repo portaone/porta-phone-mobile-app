@@ -225,6 +225,12 @@ list that would not load is a restore that happened, and the read says the rest
 in its own words. Reporting it the other way told the person the opposite of
 what the backend did, and offered to put back a message that was already back.
 
+Several messages restored together are all put back first and the mailbox is
+read once after the last. The read asks the backend about every message in the
+mailbox, one request each, so a read after every restore cost the whole mailbox
+again per message selected. It still follows a batch that was cut short, as
+long as something was put back.
+
 Two deliberate silences. A message the backend no longer has has a sentence of
 its own, said the same way - the list is already right, and saying it twice in
 two wordings is worse than saying it once. And a read that failed with nothing
@@ -353,3 +359,4 @@ sits on is of no use there.
 | `test/features/voicemail/utils/voicemail_forwarding_test.dart` | how a forward went, said by name: through, or refused with a retry to the same colleague; nothing said when nothing was sent |
 | `test/features/voicemail/forward_voicemail_purpose_test.dart` | who may be chosen, and how much narrower this is than a transfer |
 | `test/repository/voicemail_bulk_remove_test.dart` | the shared bulk loop and its policy |
+| `test/repository/voicemail_bulk_restore_test.dart` | a bulk restore: every message put back first, the mailbox read once afterwards |
