@@ -1,9 +1,12 @@
+import 'package:logging/logging.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:signaling/signaling.dart';
 
 import 'package:webtrit_phone/features/call/models/models.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
+
+final _logger = Logger('HandshakeProcessor');
 
 /// Actions returned by [HandshakeProcessor.process] describing what the BLoC
 /// should do after processing the signaling [StateHandshake].
@@ -261,9 +264,11 @@ class HandshakeProcessor {
 
       final restore = _restoreAction(log, activeCallIds);
       if (restore != null) {
+        _logger.info('process: call ${log.callId} is accepted on the server and not in the bloc, restoring it');
         actions.add(restore);
         continue;
       }
+      var planned = false;
 
       // Unanswered incoming call: deliver the IncomingCallEvent to the BLoC so
       // it can set up the call state and surface the ringing UI.
@@ -286,7 +291,9 @@ class HandshakeProcessor {
           log.accepted == null &&
           earliest is IncomingCallEvent &&
           !activeCallIds.contains(log.callId)) {
+        _logger.info('process: call ${log.callId} is an unanswered incoming call not in the bloc, handing it over');
         actions.add(HandleIncomingCallAction(event: earliest, mediaState: log.mediaState));
+        planned = true;
       }
 
       // A call the BLoC registered from a push and is still waiting to hear
@@ -294,7 +301,18 @@ class HandshakeProcessor {
       // is delivered once per line.
       if (callIdsAwaitingOffer.contains(log.callId)) {
         final offer = log.offer;
-        if (offer != null) deliveries.add(DeliverOfferAction(event: offer, mediaState: log.mediaState));
+        if (offer != null) {
+          _logger.info('process: call ${log.callId} waits in the bloc for its offer, delivering it from the log');
+          deliveries.add(DeliverOfferAction(event: offer, mediaState: log.mediaState));
+          planned = true;
+        }
+      }
+
+      if (!planned) {
+        _logger.info(
+          'process: call ${log.callId} needs nothing: inBloc=${activeCallIds.contains(log.callId)} '
+          'terminated=${log.isTerminated} accepted=${log.accepted != null}',
+        );
       }
     }
 
@@ -321,9 +339,13 @@ class HandshakeProcessor {
       final isGuest = guestLine?.callId == request.callId;
       final index = lines.indexWhere((line) => line?.callId == request.callId);
       if (!isGuest && index < 0) {
+        _logger.info(
+          'process: queued ${request.type.name} of call ${request.callId} dropped, the session no longer carries the call',
+        );
         queuedTerminationRequestsRepository.remove(request);
         continue;
       }
+      _logger.info('process: replaying the queued ${request.type.name} of call ${request.callId}');
       final line = request.line ?? (isGuest ? null : index);
       switch (request.type) {
         case QueuedTerminationRequestType.hangup:
@@ -350,8 +372,16 @@ class HandshakeProcessor {
 
     if (connection?.state == CallkeepConnectionState.stateDisconnected) {
       if (latest is IncomingCallEvent) {
+        _logger.warning(
+          'process: call ${latest.callId} is disconnected in callkeep and still rings on the server, declining it; '
+          'the plan ends here',
+        );
         return DeclineSignalingAction(line: latest.line, callId: latest.callId);
       } else if (!log.isTerminated) {
+        _logger.warning(
+          'process: call ${latest.callId} is disconnected in callkeep and still up on the server, hanging it up; '
+          'the plan ends here',
+        );
         return HangupSignalingAction(line: latest.line, callId: latest.callId);
       }
     } else if (connection == null &&
@@ -375,6 +405,10 @@ class HandshakeProcessor {
       //
       // On iOS getConnection() always returns null, so activeCallIds is the
       // decisive guard: calls that are still active in BLoC are not affected.
+      _logger.warning(
+        'process: call ${latest.callId} is up on the server while neither callkeep nor the bloc has it, hanging it up; '
+        'the plan ends here',
+      );
       return HangupSignalingAction(line: latest.line, callId: latest.callId);
     }
     return null;
@@ -407,18 +441,30 @@ class HandshakeProcessor {
     Set<String> activeCallIds,
   ) {
     final lineCallIds = allLines.map((line) => line.callId).toSet();
-    return [
-      for (final connection in connections)
-        if (!lineCallIds.contains(connection.callId) && !activeCallIds.contains(connection.callId))
-          EndLocalCallAction(callId: connection.callId),
-    ];
+    final actions = <HandshakeAction>[];
+    for (final connection in connections) {
+      if (!lineCallIds.contains(connection.callId) && !activeCallIds.contains(connection.callId)) {
+        _logger.info(
+          'process: callkeep connection ${connection.callId} is in neither the session nor the bloc, ending it',
+        );
+        actions.add(EndLocalCallAction(callId: connection.callId));
+      }
+    }
+    return actions;
   }
 
   /// What the two accounts of the room come to. Nothing when neither side has
   /// one, which is every handshake of a session that never conferenced.
   List<HandshakeAction> _conferenceActions(ConferenceInfo? conference, ConferenceState localConference) {
     if (conference != null && conference.room == localConference.room) {
+      _logger.info('process: conference room ${conference.room} stands on both sides, keeping it');
       return [AdoptConferenceAction(room: conference.room, participants: conference.participants)];
+    }
+    if (conference != null) {
+      _logger.info('process: conference room ${conference.room} is only on the server, hanging it up');
+    }
+    if (localConference.isPresent) {
+      _logger.info('process: the conference the client holds is not on the server, forgetting it');
     }
     return [
       if (conference != null) HangupStaleConferenceAction(room: conference.room),
