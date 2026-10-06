@@ -4369,6 +4369,12 @@ abstract class AppLocalizations {
   /// **'Signing out...'**
   String get session_Teardown_progressText;
 
+  /// Shown under a progress indicator while the app restarts its session by itself, because the server changed which features are available. On screen for a few seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying changes from the server...'**
+  String get session_Restart_progressText;
+
   /// Title of the screen listing the devices the account is currently signed in on.
   ///
   /// In en, this message translates to:

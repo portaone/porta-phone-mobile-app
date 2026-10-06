@@ -2432,6 +2432,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get session_Teardown_progressText => 'Disconnessione in corso...';
 
   @override
+  String get session_Restart_progressText => 'Applicazione delle modifiche dal server...';
+
+  @override
   String get sessions_AppBar_title => 'Sessioni attive';
 
   @override

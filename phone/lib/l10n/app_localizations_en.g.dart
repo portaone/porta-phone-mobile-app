@@ -2405,6 +2405,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_Teardown_progressText => 'Signing out...';
 
   @override
+  String get session_Restart_progressText => 'Applying changes from the server...';
+
+  @override
   String get sessions_AppBar_title => 'Active sessions';
 
   @override

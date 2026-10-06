@@ -17,6 +17,7 @@ import 'package:webtrit_phone/app/router/app_update_check.dart';
 import 'package:webtrit_phone/app/router/main_shell_blocs.dart';
 import 'package:webtrit_phone/app/router/main_shell_repositories.dart';
 import 'package:webtrit_phone/app/router/main_shell_services.dart';
+import 'package:webtrit_phone/app/router/startup_config_refresh.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
@@ -75,9 +76,19 @@ class _MainShellState extends State<MainShell> {
   /// session blocs that open screens still held - calls then died silently
   /// until an app restart. With the whole subtree reading one snapshot, the
   /// graph, the tabs and the screens always agree; configuration changes take
-  /// effect on the next login. Widgets outside the shell (login and friends)
-  /// keep following runtime updates as before.
+  /// effect on the next login or start of the app. Widgets outside the shell
+  /// (login and friends) keep following runtime updates as before.
+  ///
+  /// The one exception is a snapshot that was behind when it was taken: the
+  /// shell is then replaced as a whole (see [StartupConfigRefresh]).
   late final FeatureAccess _sessionFeatureAccess = context.read<FeatureAccess>();
+
+  /// Completes when this shell has stopped what it started. The session that
+  /// replaces it waits for that: call integration and signaling are each one
+  /// per process, and the end of either teardown would otherwise land on its
+  /// successor - on Android the callkeep one clears the calls the plugin
+  /// tracks and stops its service.
+  final _ended = Completer<void>();
 
   @override
   void initState() {
@@ -146,10 +157,17 @@ class _MainShellState extends State<MainShell> {
   @override
   void dispose() {
     unawaited(_sessionRejectionsSubscription.cancel());
-    _callkeep.tearDown();
-    unawaited(_tearDownSignaling());
+    unawaited(Future.wait([_tearDownCallkeep(), _tearDownSignaling()]).whenComplete(_ended.complete));
     _callController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _tearDownCallkeep() async {
+    try {
+      await _callkeep.tearDown();
+    } catch (e, st) {
+      _logger.warning('_tearDownCallkeep: callkeep.tearDown() failed', e, st);
+    }
   }
 
   Future<void> _tearDownSignaling() async {
@@ -193,10 +211,14 @@ class _MainShellState extends State<MainShell> {
                             // Per session on purpose: a fresh login checks for an
                             // update (and may prompt) anew.
                             child: AppUpdateCheck(
-                              child: AutoRouter(
-                                navigatorObservers: () => [
-                                  MainShellNavigatorObserver(context.read<MainShellRouteStateRepository>()),
-                                ],
+                              child: StartupConfigRefresh(
+                                signalingModule: _signalingModule,
+                                sessionEnded: _ended.future,
+                                child: AutoRouter(
+                                  navigatorObservers: () => [
+                                    MainShellNavigatorObserver(context.read<MainShellRouteStateRepository>()),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
