@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/theme/extension/written_text_style.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../extensions/extensions.dart';
@@ -144,7 +145,13 @@ class VoicemailTile extends StatelessWidget {
         title: Row(
           spacing: 6,
           children: [
-            Flexible(child: Text(voicemail.displaySender, overflow: TextOverflow.ellipsis)),
+            Flexible(
+              child: Text(
+                voicemail.displaySender,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.written,
+              ),
+            ),
             if (_saved)
               Icon(
                 Icons.bookmark,

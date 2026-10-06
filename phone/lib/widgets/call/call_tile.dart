@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/theme/extension/written_text_style.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 class TileMenuButton extends StatelessWidget {
@@ -250,18 +251,15 @@ class _CallTileState extends State<CallTile> {
         .where((action) => !(widget.expanded && action.icon == suppressedInlineIcon))
         .toList();
 
+    final nameStyle = themeData.textTheme.titleMedium?.written;
+
     final Widget nameText = widget.nameTrailing == null
-        ? Text(widget.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: themeData.textTheme.titleMedium)
+        ? Text(widget.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: nameStyle)
         : Row(
             spacing: _nameTrailingGap,
             children: [
               Flexible(
-                child: Text(
-                  widget.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: themeData.textTheme.titleMedium,
-                ),
+                child: Text(widget.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: nameStyle),
               ),
               widget.nameTrailing!,
             ],
@@ -272,7 +270,7 @@ class _CallTileState extends State<CallTile> {
             widget.subName!,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: themeData.textTheme.labelSmall,
+            style: themeData.textTheme.labelSmall?.written,
             textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: false, applyHeightToLastDescent: false),
           )
         : null;

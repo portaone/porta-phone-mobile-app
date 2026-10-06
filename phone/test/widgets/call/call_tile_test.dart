@@ -52,6 +52,38 @@ void main() {
     );
   }
 
+  group('CallTile written text', () {
+    // A name or a note may be in a script the app's typeface does not cover;
+    // the platform then draws it, and for most scripts it has no face between
+    // regular and bold. Any weight in between makes it heavier than Latin text.
+    testWidgets('the name is drawn at regular weight, with or without a mark after it', (tester) async {
+      for (final nameTrailing in [null, const Icon(Icons.star)]) {
+        await tester.pumpWidget(
+          buildTestable(
+            CallTile(
+              leading: const CircleAvatar(),
+              name: 'John Doe',
+              nameTrailing: nameTrailing,
+              callNumbers: const [],
+            ),
+          ),
+        );
+
+        final name = tester.widget<Text>(find.text('John Doe'));
+        final titleMedium = Theme.of(tester.element(find.text('John Doe'))).textTheme.titleMedium!;
+
+        expect(name.style!.fontWeight, FontWeight.w400);
+        expect(name.style!.fontSize, titleMedium.fontSize, reason: 'only the weight differs from the title style');
+      }
+    });
+
+    testWidgets('the line under the name is drawn at regular weight', (tester) async {
+      await tester.pumpWidget(buildTestable(buildTile()));
+
+      expect(tester.widget<Text>(find.text('1001')).style!.fontWeight, FontWeight.w400);
+    });
+  });
+
   group('CallTile expansion', () {
     testWidgets('collapsed tile does not show the actions bar', (tester) async {
       await tester.pumpWidget(

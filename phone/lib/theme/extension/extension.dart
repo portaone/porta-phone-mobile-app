@@ -23,3 +23,4 @@ export 'text_field_config.dart';
 export 'text_style_config.dart';
 export 'theme_json_serializable.dart';
 export 'theme_mode_extension.dart';
+export 'written_text_style.dart';

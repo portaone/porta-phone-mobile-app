@@ -1,7 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:webtrit_phone/theme/extension/written_text_style.dart';
+
 extension MsgViewExt on ThemeData {
-  TextStyle get userNameStyle => TextStyle(color: colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w600);
+  TextStyle get userNameStyle =>
+      TextStyle(color: colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w600).written;
 
   TextStyle get contentStyle => TextStyle(color: colorScheme.onSurface, fontSize: 14);
 
