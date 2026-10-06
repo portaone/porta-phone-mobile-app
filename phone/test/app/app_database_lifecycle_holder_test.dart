@@ -17,6 +17,9 @@ Future<bool> _isUsable(AppDatabase db) async {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // The lifecycle state is the binding's, shared by every test that runs after this one;
+  // paused/detached also stop frames, so a later widget test would never build.
+  tearDown(() => WidgetsBinding.instance.handleAppLifecycleStateChanged(AppLifecycleState.resumed));
 
   test('closes the connection it owns when released', () async {
     final db = AppDatabase(NativeDatabase.memory());

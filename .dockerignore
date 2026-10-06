@@ -1,0 +1,12 @@
+.git
+.claude
+**/.dart_tool
+**/build
+**/.gradle
+**/.kotlin
+**/.idea
+**/.fvm
+**/pubspec_overrides.yaml
+**/local.properties
+**/ios/Pods
+**/node_modules
