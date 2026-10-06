@@ -29,6 +29,16 @@ Defines the default font settings from [Google Fonts](https://fonts.google.com/)
 
 - `fontFamily`: Default font family (e.g., Montserrat)
 
+A white-label build fetches that family into `assets/fonts/` as one file per weight
+(`<Family>-<Weight>.ttf`): 400, 500, 600 and 700 always, plus any other weight the theme names.
+At startup the app registers all of them as one family under the name written here
+([`lib/theme/app_fonts.dart`](../lib/theme/app_fonts.dart)), so a style only names the
+family and the weight of each text picks its own face. A weight the family does not have is drawn
+with the nearest one it has.
+
+The app does not fetch a typeface at runtime. A checkout or a build with no font files in
+`assets/fonts/` draws its text in the platform font and does not ask for the family at all.
+
 ### Button Configuration
 
 Override the default button styles (primary, neutral, primaryOnDark, neutralOnDark) with custom
