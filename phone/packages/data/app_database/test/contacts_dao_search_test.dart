@@ -6,7 +6,13 @@ import 'package:app_database/app_database.dart';
 void main() {
   late AppDatabase database;
 
-  Future<void> insertContact(String firstName, String lastName, String number, {String? email}) async {
+  Future<void> insertContact(
+    String firstName,
+    String lastName,
+    String number, {
+    String? email,
+    String? secondNumber,
+  }) async {
     final contact = await database.contactsDao.insertOnUniqueConflictUpdateContact(
       ContactDataCompanion(
         sourceType: const Value(ContactSourceTypeEnum.external),
@@ -15,9 +21,15 @@ void main() {
         lastName: Value(lastName),
       ),
     );
-    await database.contactPhonesDao.insertOnUniqueConflictUpdateContactPhone(
-      ContactPhoneDataCompanion(contactId: Value(contact.id), number: Value(number), label: const Value('ext')),
-    );
+    for (final contactNumber in [number, ?secondNumber]) {
+      await database.contactPhonesDao.insertOnUniqueConflictUpdateContactPhone(
+        ContactPhoneDataCompanion(
+          contactId: Value(contact.id),
+          number: Value(contactNumber),
+          label: const Value('ext'),
+        ),
+      );
+    }
     if (email != null) {
       await database.contactEmailsDao.insertOnUniqueConflictUpdateContactEmail(
         ContactEmailDataCompanion(contactId: Value(contact.id), address: Value(email), label: const Value('work')),
@@ -46,6 +58,7 @@ void main() {
     await insertContact('Oleh', 'Dovzhenko', '1006');
     // Carries "yev" in the middle of the last name.
     await insertContact('Serhiy', 'Kyevsky', '1007');
+    await insertContact('Zoya', 'Melnyk', '2001', secondNumber: '2002');
   });
 
   tearDown(() async {
@@ -75,6 +88,14 @@ void main() {
 
     test('a match in the name is above a match in the email alone', () async {
       expect(await search('dov'), ['Oleh Dovzhenko', 'Yevhen Dovhopol', 'Yevhen Dem']);
+    });
+  });
+
+  group('a contact found by a search', () {
+    test('keeps every number when one of them matched', () async {
+      final contacts = await database.contactsDao.watchAllContacts(['2002']).first;
+
+      expect(contacts.single.phones.map((phone) => phone.number), unorderedEquals(['2001', '2002']));
     });
   });
 }
