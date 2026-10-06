@@ -831,6 +831,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         notifications_messageSnackBar_conferenceVideoLeg,
       'notifications_messageSnackBar_conferenceEnded' =>
         notifications_messageSnackBar_conferenceEnded,
+      'notifications_messageSnackBar_configurationUpdated' =>
+        notifications_messageSnackBar_configurationUpdated,
       'notifications_errorSnackBar_activeLineBlindTransferWarning' =>
         notifications_errorSnackBar_activeLineBlindTransferWarning,
       'notifications_errorSnackBar_blindTransferFailed' =>

@@ -3373,6 +3373,12 @@ abstract class AppLocalizations {
   /// **'The conference has ended, the calls continue'**
   String get notifications_messageSnackBar_conferenceEnded;
 
+  /// Snackbar shown right after the app restarted its session by itself, because the server changed which features are available. Explains why the screen went back to the start. Keep it short.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings updated'**
+  String get notifications_messageSnackBar_configurationUpdated;
+
   /// Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target.
   ///
   /// In en, this message translates to:

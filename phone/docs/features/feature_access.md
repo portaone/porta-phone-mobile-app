@@ -7,7 +7,7 @@ and service reads its answers from there. This doc explains where that object
 comes from, and - the part that matters most in practice - WHEN a change to the
 configuration actually takes effect.
 
-Last reviewed: 2026-08-18
+Last reviewed: 2026-10-06
 
 ## Where the configuration comes from
 
@@ -48,11 +48,56 @@ Consequences, in plain terms:
   restart mounts a fresh shell, which pins a fresh snapshot. Logging into a
   different account or a different core works the same way - the login flow
   fetches that backend's `system-info` before the shell mounts, so the new
-  session pins the new backend's capabilities.
+  session pins the new backend's capabilities. An app restart gets there by
+  another road - see "A start that is already behind" below.
 - Everything OUTSIDE the session subtree stays reactive. The login flow and
   the version gates read the live stream; the force-update gate can still
   interrupt a session. Theme and locale are separate streams, not part of
   `FeatureAccess`, and keep applying live (including mid-call).
+
+## A start that is already behind
+
+A started app does not wait for the network: the snapshot its first session
+pins is built from the `system-info` it stored before (`FetchPolicy.cacheOnly`
+in `FeatureAccessStreamFactory.getInitialSnapshot`). The backend is read only
+once that session runs - a second or two later - and by the rule above the
+answer cannot reach it. Left at that, a capability changed while the app was
+closed would show up one start late: the first start stores the answer, the
+second one uses it.
+
+So the first session of a run asks once whether it is behind
+(`StartupFeatureAccessCheck`, shared from bootstrap): when its first read of
+the backend has been stored, what a session mounted now would get is compared
+with what this one was mounted with. If they differ, the session is replaced
+as a whole - not updated in place:
+
+- `StartupConfigRefresh` (in the shell, below the blocs) waits until the
+  session has heard from the server and no call is tracked - neither by
+  `CallBloc` nor on a line of the signaling session. Both are asked: the bloc
+  takes up a call some turns after it learns of it (the calls of a handshake
+  after it reports the handshake, a presented call after the caller has been
+  looked up), while the session's lines carry it all along. A server that
+  cannot be reached is no answer, so the restart waits for the handshake. A
+  start for an incoming call is not cut short; the restart follows the call.
+- It then says in a snackbar that the settings were updated - the screen
+  is about to go back to the start - and takes the shell to
+  `SessionRestartScreenPageRoute`, which unmounts it with everything it built. That screen waits until the old shell has let go of
+  call integration and signaling - each is one per process, so a shell
+  setting them up during the previous one's teardown would have its state
+  wiped by it - and returns to
+  the main shell route. The guard there builds the session the way it does
+  after a sign-in, initial tab included.
+
+This happens at most once per run and only for its first session: a session
+after a sign-in was built from a fresh read, and the session that replaced a
+stale one is not asked again. A change that arrives later, in the middle of
+somebody's work, still waits for the next start - replacing the session then
+would throw away the screen they are on. A host that supplies its own
+configuration (the configurator's preview) is never asked.
+
+One case is not covered: an app started without a network whose first read
+lands minutes later. That read is still its first, and the session is replaced
+then, wherever the user is.
 
 ## Why it works this way
 

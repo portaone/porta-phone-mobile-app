@@ -1856,6 +1856,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications_messageSnackBar_conferenceEnded => 'The conference has ended, the calls continue';
 
   @override
+  String get notifications_messageSnackBar_configurationUpdated => 'Settings updated';
+
+  @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>
       'You are already on the line with the recipient you are trying to blind transfer to';
 

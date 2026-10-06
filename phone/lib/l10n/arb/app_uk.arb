@@ -1659,6 +1659,10 @@
   "@notifications_messageSnackBar_conferenceEnded": {
     "description": "Shown when the server ends a conference while its calls are still up; they go on as separate calls."
   },
+  "notifications_messageSnackBar_configurationUpdated": "Налаштування оновлено",
+  "@notifications_messageSnackBar_configurationUpdated": {
+    "description": "Snackbar shown right after the app restarted its session by itself, because the server changed which features are available. Explains why the screen went back to the start. Keep it short."
+  },
   "notifications_errorSnackBar_activeLineBlindTransferWarning": "Ви вже на лінії з одержувачем, до якого намагаєтеся здійснити безумовний переказ",
   "@notifications_errorSnackBar_activeLineBlindTransferWarning": {
     "description": "Shown in a notification or snackbar when a user tries to perform a blind transfer to a recipient they are already on the line with. Condition: the active call is with the same recipient as the blind transfer target."

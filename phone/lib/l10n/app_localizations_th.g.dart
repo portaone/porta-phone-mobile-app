@@ -1843,6 +1843,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get notifications_messageSnackBar_conferenceEnded => 'การประชุมสายสิ้นสุดแล้ว สายยังคงดำเนินต่อ';
 
   @override
+  String get notifications_messageSnackBar_configurationUpdated => 'อัปเดตการตั้งค่าแล้ว';
+
+  @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>
       'คุณกำลังอยู่ในสายกับผู้รับที่คุณพยายามโอนสายแบบไม่รอรับอยู่แล้ว';
 

@@ -187,6 +187,16 @@ Future<AppDependencies> _bootstrap({
   // This instance serves as the `initialData` for the `StreamProvider`, ensuring the UI
   // has valid feature flags immediately during the first frame.
   final featureAccess = await trace.measure('feature-access', featureAccessStreamFactory.getInitialSnapshot);
+  // A host that draws its own configuration has nothing the backend could
+  // put behind (see [configurePresentation] below).
+  deps.share(
+    configurePresentation == null
+        ? StartupFeatureAccessCheck(
+            systemInfoReads: systemInfoRepository.infoStream,
+            current: featureAccessStreamFactory.getInitialSnapshot,
+          )
+        : StartupFeatureAccessCheck.never(),
+  );
 
   // Utilities - Capturing instances that were previously just `await Class.init()`
   deps.share(await trace.measure('push-environment', PushEnvironment.init));

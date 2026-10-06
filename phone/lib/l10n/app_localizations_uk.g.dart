@@ -1888,6 +1888,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notifications_messageSnackBar_conferenceEnded => 'Конференцію завершено, дзвінки тривають';
 
   @override
+  String get notifications_messageSnackBar_configurationUpdated => 'Налаштування оновлено';
+
+  @override
   String get notifications_errorSnackBar_activeLineBlindTransferWarning =>
       'Ви вже на лінії з одержувачем, до якого намагаєтеся здійснити безумовний переказ';
 

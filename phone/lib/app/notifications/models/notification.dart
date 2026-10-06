@@ -142,6 +142,17 @@ class SessionExpiredNotification extends MessageNotification {
   }
 }
 
+/// Said after the session was started anew on a configuration the backend
+/// changed: the screen the person was on is gone, and this is why.
+class ConfigurationUpdatedNotification extends MessageNotification {
+  const ConfigurationUpdatedNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.notifications_messageSnackBar_configurationUpdated;
+  }
+}
+
 class AccountNotFoundNotification extends MessageNotification {
   const AccountNotFoundNotification();
 
