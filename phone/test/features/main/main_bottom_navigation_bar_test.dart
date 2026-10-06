@@ -17,7 +17,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 class _MockUnreadCountCubit extends MockCubit<UnreadCountState> implements UnreadCountCubit {}
 
-class _MockVoicemailUnreadCubit extends MockCubit<int> implements VoicemailUnreadCubit {}
+class _MockVoicemailSessionCubit extends MockCubit<VoicemailSessionState> implements VoicemailSessionCubit {}
 
 void main() {
   final tabs = <BottomMenuTab>[
@@ -72,13 +72,13 @@ void main() {
   ];
 
   late _MockUnreadCountCubit unreadCountCubit;
-  late _MockVoicemailUnreadCubit voicemailUnreadCubit;
+  late _MockVoicemailSessionCubit voicemailSessionCubit;
 
   setUp(() {
     unreadCountCubit = _MockUnreadCountCubit();
     when(() => unreadCountCubit.state).thenReturn(UnreadCountState.initial());
-    voicemailUnreadCubit = _MockVoicemailUnreadCubit();
-    when(() => voicemailUnreadCubit.state).thenReturn(0);
+    voicemailSessionCubit = _MockVoicemailSessionCubit();
+    when(() => voicemailSessionCubit.state).thenReturn(const VoicemailSessionState());
   });
 
   Widget wrap({
@@ -103,7 +103,7 @@ void main() {
           ? MultiBlocProvider(
               providers: [
                 BlocProvider<UnreadCountCubit>.value(value: unreadCountCubit),
-                BlocProvider<VoicemailUnreadCubit>.value(value: voicemailUnreadCubit),
+                BlocProvider<VoicemailSessionCubit>.value(value: voicemailSessionCubit),
               ],
               child: scaffold,
             )
@@ -197,7 +197,7 @@ void main() {
     // them. A composition that dropped one, or let one wrap every entry, is
     // exactly what this catches.
     when(() => unreadCountCubit.state).thenReturn(UnreadCountState.fromCountPerChat(const {1: 2}, const {}));
-    when(() => voicemailUnreadCubit.state).thenReturn(3);
+    when(() => voicemailSessionCubit.state).thenReturn(const VoicemailSessionState(unreadCount: 3));
 
     await tester.pumpWidget(
       wrap(

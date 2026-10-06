@@ -15,12 +15,14 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
+import '../cubits/cubits.dart';
 import '../models/models.dart';
 import '../utils/utils.dart';
 import 'empty_mailbox_view.dart';
 import 'failure_retry_view.dart';
 import 'feature_not_supported_view.dart';
 import 'voicemail_tile.dart';
+import 'voicemail_view_builder.dart';
 
 /// The list of voicemails and everything it shows in place of one: the feature
 /// being unavailable, the first load, an empty mailbox, a failed fetch.
@@ -33,72 +35,98 @@ class VoicemailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<VoicemailCubit, VoicemailState>(
-      listenWhen: (previous, current) => previous.visibleItems != current.visibleItems,
-      listener: _stopPlaybackOfRemovedVoicemail,
-      builder: (context, state) {
-        if (state.isFeatureNotSupported) {
-          return const FeatureNotSupportedView();
-        }
-        if (state.isInitializing) {
-          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-        }
-        if (state.isLoadedWithError) {
-          return FailureRetryView(onRetry: () => context.read<VoicemailCubit>().refresh());
-        }
-
-        return RefreshIndicator(
-          // The bottom-menu section runs its body behind the bar, so without an
-          // offset the spinner settles a bar's height out of sight and the pull
-          // looks like it did nothing. A host that keeps its body below an app
-          // bar hands this a top padding of zero, so the one figure serves both.
-          edgeOffset: MediaQuery.of(context).padding.top,
-          // A refresh means whichever list is on screen: the stored mailbox for
-          // three of the filters, a fresh read of the trash for the fourth.
-          onRefresh: () => context.read<VoicemailCubit>().refresh(),
-          child: Stack(
-            children: [
-              if (state.isRefreshing) const LinearProgressIndicator(minHeight: 1),
-              if (state.isVoicemailsExists)
-                Column(
-                  children: [
-                    Expanded(
-                      child: VoicemailListView(
-                        items: state.visibleItems,
-                        selectedVoicemailsIds: state.selectedVoicemailsIds,
-                        isMultipleVoicemailsSelection: state.isMultipleVoicemailsSelection,
-                        saveSupported: state.saveSupported,
-                        trashSupported: state.trashSupported,
-                        forwardSupported: state.forwardSupported,
-                        inTrash: state.isShowingTrash,
-                        forwarderOf: state.forwarderOf,
-                      ),
-                    ),
-                    // The one thing about the trash a person cannot see by
-                    // looking at it: a message in here is still occupying the
-                    // mailbox, so leaving it here is not the same as deleting
-                    // it.
-                    if (state.filter == VoicemailFilter.trash) const _TrashFootnote(),
-                  ],
-                )
-              else
-                EmptyMailboxView(filter: state.filter),
-            ],
-          ),
-        );
-      },
+    // What is on screen can change from either side - the mailbox or the
+    // screen's own filter and trash - so both are listened to.
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<VoicemailSessionCubit, VoicemailSessionState>(
+          listenWhen: (previous, current) => previous.items != current.items,
+          listener: (context, _) => _stopPlaybackOfRemovedVoicemail(context),
+        ),
+        BlocListener<VoicemailCubit, VoicemailState>(
+          listenWhen: (previous, current) =>
+              previous.filter != current.filter || previous.trashedItems != current.trashedItems,
+          listener: (context, _) => _stopPlaybackOfRemovedVoicemail(context),
+        ),
+      ],
+      child: VoicemailViewBuilder(builder: (context, view) => _VoicemailList(state: view)),
     );
   }
 
   // The player is screen-scoped and not owned by the tiles, so when the active
   // voicemail leaves the list (deleted on this device or remotely, or simply
   // filtered out from under it) nothing else stops the audio.
-  void _stopPlaybackOfRemovedVoicemail(BuildContext context, VoicemailState state) {
+  void _stopPlaybackOfRemovedVoicemail(BuildContext context) {
     final controller = context.read<VoicemailPlaybackController>();
     final activeId = controller.activeId;
-    if (activeId != null && !state.visibleItems.any((it) => it.id == activeId)) {
+    final visibleItems = VoicemailView(
+      mailbox: context.read<VoicemailSessionCubit>().state,
+      screen: context.read<VoicemailCubit>().state,
+    ).visibleItems;
+    if (activeId != null && !visibleItems.any((it) => it.id == activeId)) {
       unawaited(controller.stop());
     }
+  }
+}
+
+/// What stands where the list is: the list, or whatever is shown in place of
+/// one.
+class _VoicemailList extends StatelessWidget {
+  const _VoicemailList({required this.state});
+
+  final VoicemailView state;
+
+  @override
+  Widget build(BuildContext context) {
+    if (state.isFeatureNotSupported) {
+      return const FeatureNotSupportedView();
+    }
+    if (state.isInitializing) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+    if (state.isLoadedWithError) {
+      return FailureRetryView(onRetry: () => context.read<VoicemailCubit>().refresh());
+    }
+
+    return RefreshIndicator(
+      // The bottom-menu section runs its body behind the bar, so without an
+      // offset the spinner settles a bar's height out of sight and the pull
+      // looks like it did nothing. A host that keeps its body below an app
+      // bar hands this a top padding of zero, so the one figure serves both.
+      edgeOffset: MediaQuery.of(context).padding.top,
+      // A refresh means whichever list is on screen: the stored mailbox for
+      // three of the filters, a fresh read of the trash for the fourth.
+      onRefresh: () => context.read<VoicemailCubit>().refresh(),
+      child: Stack(
+        children: [
+          if (state.isRefreshing) const LinearProgressIndicator(minHeight: 1),
+          if (state.isVoicemailsExists)
+            Column(
+              children: [
+                Expanded(
+                  child: VoicemailListView(
+                    items: state.visibleItems,
+                    selectedVoicemailsIds: state.selectedVoicemailsIds,
+                    isMultipleVoicemailsSelection: state.isMultipleVoicemailsSelection,
+                    saveSupported: state.saveSupported,
+                    trashSupported: state.trashSupported,
+                    forwardSupported: state.forwardSupported,
+                    inTrash: state.isShowingTrash,
+                    forwarderOf: state.forwarderOf,
+                  ),
+                ),
+                // The one thing about the trash a person cannot see by
+                // looking at it: a message in here is still occupying the
+                // mailbox, so leaving it here is not the same as deleting
+                // it.
+                if (state.filter == VoicemailFilter.trash) const _TrashFootnote(),
+              ],
+            )
+          else
+            EmptyMailboxView(filter: state.filter),
+        ],
+      ),
+    );
   }
 }
 

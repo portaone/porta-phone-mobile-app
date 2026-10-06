@@ -6,6 +6,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:api/api.dart';
 
 import 'package:webtrit_phone/features/voicemail/bloc/voicemail_cubit.dart';
+import 'package:webtrit_phone/features/voicemail/cubits/cubits.dart';
 import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
@@ -43,6 +44,7 @@ void main() {
   late _Contacts contacts;
   late StreamController<List<Voicemail>> voicemails;
   late List<Object> said;
+  late VoicemailSessionCubit session;
   late VoicemailCubit cubit;
 
   setUpAll(() {
@@ -58,9 +60,14 @@ void main() {
     said = [];
     when(() => repository.isFeatureSupported).thenReturn(true);
     when(() => repository.watchVoicemails()).thenAnswer((_) => voicemails.stream);
+    when(() => repository.watchUnreadVoicemailsCount()).thenAnswer((_) => const Stream.empty());
     when(() => repository.fetchVoicemails()).thenAnswer((_) async {});
+    // The mailbox is the session's and the screen follows it, so the two are
+    // built the way the app builds them: one over the other.
+    session = VoicemailSessionCubit(repository: repository, contactsRepository: contacts)..init();
     cubit = VoicemailCubit(
       repository: repository,
+      session: session,
       contactsRepository: contacts,
       onCallStarted: (_) {},
       onSubmitNotification: said.add,
@@ -72,6 +79,7 @@ void main() {
 
   tearDown(() async {
     await cubit.close();
+    await session.close();
     await voicemails.close();
   });
 
@@ -98,6 +106,34 @@ void main() {
       await pumpEventQueue();
 
       expect(cubit.state.selectedVoicemailsIds, ['3']);
+    });
+
+    test('a message that stops matching the view leaves the selection', () async {
+      // On New, a picked message that gets heard is gone from the list on
+      // screen though it is still in the mailbox. Left picked, the header
+      // would go on counting it and Delete would reach a message nobody sees.
+      final heard = Voicemail(
+        id: '1',
+        date: '2026-09-15T10:00:00Z',
+        duration: 1,
+        sender: '101',
+        displaySender: '101',
+        receiver: '102',
+        status: ReadStatus.read,
+        size: 1,
+        type: 'voice',
+        url: null,
+      );
+      voicemails.add([_voicemail('1'), _voicemail('2')]);
+      await pumpEventQueue();
+      cubit.setFilter(VoicemailFilter.unheard);
+      cubit.toggleSelection(_voicemail('1'));
+      cubit.toggleSelection(_voicemail('2'));
+
+      voicemails.add([heard, _voicemail('2')]);
+      await pumpEventQueue();
+
+      expect(cubit.state.selectedVoicemailsIds, ['2']);
     });
 
     test('deleting the selection ends selection mode once the list reflects it', () async {
@@ -149,7 +185,7 @@ void main() {
 
       // The list is still there and still usable; what did not happen is the
       // one message's flag, which the next refresh reports either way.
-      expect(cubit.state.status, VoicemailStatus.loaded);
+      expect(cubit.view.isLoading, isFalse);
     });
   });
 
@@ -158,6 +194,90 @@ void main() {
       when(() => repository.restoreVoicemail(any())).thenAnswer((_) async {});
       when(() => repository.removeVoicemailPermanently(any())).thenAnswer((_) async {});
       when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) async => const []);
+    });
+
+    test('an answer from the trash that lands after the trash was left is dropped', () async {
+      // The read is a request per message and can take seconds. By then the
+      // person is back on the mailbox and has picked something there.
+      final answer = Completer<List<Voicemail>>();
+      when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) => answer.future);
+      voicemails.add([_voicemail('1'), _voicemail('2')]);
+      await pumpEventQueue();
+      cubit.setFilter(VoicemailFilter.trash);
+      cubit.setFilter(VoicemailFilter.all);
+      cubit.toggleSelection(_voicemail('1'));
+
+      answer.complete([_voicemail('9')]);
+      await pumpEventQueue();
+
+      expect(cubit.state.selectedVoicemailsIds, ['1']);
+      expect(cubit.state.trashedItems, isEmpty);
+      expect(cubit.view.isLoading, isFalse);
+    });
+
+    test('and one that failed after the trash was left is not said', () async {
+      final answer = Completer<List<Voicemail>>();
+      when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) => answer.future);
+      voicemails.add([_voicemail('1')]);
+      await pumpEventQueue();
+      cubit.setFilter(VoicemailFilter.trash);
+      cubit.setFilter(VoicemailFilter.all);
+      said.clear();
+
+      answer.completeError(Exception('offline'));
+      await pumpEventQueue();
+
+      expect(said, isEmpty);
+      expect(cubit.state.trashError, isNull);
+    });
+
+    test('a read of the trash still out is not ended by the mailbox changing', () async {
+      // Two reads of two lists. The mailbox is the session's and changes
+      // whenever polling or another screen says so; that says nothing about
+      // whether the trash has answered.
+      final answer = Completer<List<Voicemail>>();
+      when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) => answer.future);
+      cubit.setFilter(VoicemailFilter.trash);
+      await pumpEventQueue();
+      expect(cubit.view.isInitializing, isTrue);
+
+      voicemails.add([_voicemail('1')]);
+      await session.fetchVoicemails();
+      await pumpEventQueue();
+
+      expect(cubit.view.isInitializing, isTrue);
+
+      answer.complete([_voicemail('9')]);
+      await pumpEventQueue();
+
+      expect(cubit.view.isLoading, isFalse);
+      expect(cubit.view.visibleItems.map((item) => item.id), ['9']);
+    });
+
+    test('a read of the trash that failed stays failed when the mailbox changes', () async {
+      when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) async => throw Exception('offline'));
+      cubit.setFilter(VoicemailFilter.trash);
+      await pumpEventQueue();
+      expect(cubit.view.isLoadedWithError, isTrue);
+
+      voicemails.add([_voicemail('1')]);
+      await pumpEventQueue();
+
+      expect(cubit.view.isLoadedWithError, isTrue);
+    });
+
+    test('what is picked in the trash is not unpicked by the mailbox changing', () async {
+      // The selection was made over the trash, so only the trash can say a
+      // picked message is gone.
+      when(() => repository.fetchTrashedVoicemails()).thenAnswer((_) async => [_voicemail('8'), _voicemail('9')]);
+      cubit.setFilter(VoicemailFilter.trash);
+      await pumpEventQueue();
+      cubit.toggleSelection(_voicemail('9'));
+
+      voicemails.add([_voicemail('1')]);
+      await pumpEventQueue();
+
+      expect(cubit.state.selectedVoicemailsIds, ['9']);
     });
 
     test('restoring while the trash is on screen re-reads the trash', () async {
@@ -371,6 +491,20 @@ void main() {
       expect(said, [isA<VoicemailRefreshFailedNotification>()]);
     });
 
+    test('a read that failed over a mailbox with messages is not the failure view under an empty filter', () async {
+      // The messages are there; the Saved view just matches none of them.
+      // That is an empty view, not a failed read.
+      voicemails.add([_voicemail('1', saved: false)]);
+      await pumpEventQueue();
+      when(() => repository.fetchVoicemails()).thenAnswer((_) async => throw Exception('offline'));
+      await cubit.refresh();
+
+      cubit.setFilter(VoicemailFilter.saved);
+
+      expect(cubit.view.visibleItems, isEmpty);
+      expect(cubit.view.isLoadedWithError, isFalse);
+    });
+
     test('a read that failed with nothing to show leaves it to the retry view', () async {
       // The screen puts a retry in place of the list and says it there. A
       // snackbar on top of it would be the same thing said twice.
@@ -378,7 +512,7 @@ void main() {
 
       await cubit.refresh();
 
-      expect(cubit.state.isLoadedWithError, isTrue);
+      expect(cubit.view.isLoadedWithError, isTrue);
       expect(said, isEmpty);
     });
   });
@@ -405,7 +539,7 @@ void main() {
       voicemails.add([_voicemail('1', forwardedBy: 'user-7')]);
       await pumpEventQueue();
 
-      expect(cubit.state.forwarderOf(_voicemail('1', forwardedBy: 'user-7')), 'Iryna Shevchuk');
+      expect(cubit.view.forwarderOf(_voicemail('1', forwardedBy: 'user-7')), 'Iryna Shevchuk');
 
       // The same list arriving again, or another message from the same
       // colleague, costs no second lookup.
@@ -423,7 +557,7 @@ void main() {
 
       // A poor name but a true one. Saying nothing would hide that the message
       // was forwarded at all.
-      expect(cubit.state.forwarderOf(_voicemail('1', forwardedBy: 'user-9')), 'user-9');
+      expect(cubit.view.forwarderOf(_voicemail('1', forwardedBy: 'user-9')), 'user-9');
     });
 
     test('a list with nothing forwarded asks nobody', () async {
@@ -431,7 +565,7 @@ void main() {
       await pumpEventQueue();
 
       verifyNever(() => contacts.getContactBySource(any(), any()));
-      expect(cubit.state.forwarderOf(_voicemail('1')), isNull);
+      expect(cubit.view.forwarderOf(_voicemail('1')), isNull);
     });
 
     test('a lookup that fails leaves the list alone', () async {
@@ -440,8 +574,8 @@ void main() {
       voicemails.add([_voicemail('1', forwardedBy: 'user-7')]);
       await pumpEventQueue();
 
-      expect(cubit.state.items.map((item) => item.id), ['1']);
-      expect(cubit.state.forwarderOf(_voicemail('1', forwardedBy: 'user-7')), 'user-7');
+      expect(session.state.items.map((item) => item.id), ['1']);
+      expect(cubit.view.forwarderOf(_voicemail('1', forwardedBy: 'user-7')), 'user-7');
     });
 
     test('a lookup that fails does not cost the names found beside it', () async {
@@ -451,8 +585,8 @@ void main() {
       voicemails.add([_voicemail('1', forwardedBy: 'user-9'), _voicemail('2', forwardedBy: 'user-7')]);
       await pumpEventQueue();
 
-      expect(cubit.state.forwarderOf(_voicemail('1', forwardedBy: 'user-9')), 'user-9');
-      expect(cubit.state.forwarderOf(_voicemail('2', forwardedBy: 'user-7')), 'Iryna Shevchuk');
+      expect(cubit.view.forwarderOf(_voicemail('1', forwardedBy: 'user-9')), 'user-9');
+      expect(cubit.view.forwarderOf(_voicemail('2', forwardedBy: 'user-7')), 'Iryna Shevchuk');
     });
   });
 }

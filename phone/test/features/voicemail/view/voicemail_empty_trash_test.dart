@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/voicemail/bloc/bloc.dart';
+import 'package:webtrit_phone/features/voicemail/cubits/cubits.dart';
 import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/features/voicemail/view/voicemail_screen.dart';
 import 'package:webtrit_phone/features/voicemail/widgets/widgets.dart';
@@ -21,6 +22,8 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/utils/view_params/presence_view_params.dart';
 
 class _MockVoicemailCubit extends MockCubit<VoicemailState> implements VoicemailCubit {}
+
+class _MockVoicemailSessionCubit extends MockCubit<VoicemailSessionState> implements VoicemailSessionCubit {}
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
@@ -41,6 +44,7 @@ Voicemail _voicemail(String id) => Voicemail(
 // two of them side by side is how the wrong one gets pressed.
 void main() {
   late _MockVoicemailCubit cubit;
+  late _MockVoicemailSessionCubit session;
   late _MockAudioPlayer player;
   late StreamController<PlayerState> playerStateController;
   late VoicemailPlaybackController controller;
@@ -51,6 +55,7 @@ void main() {
 
   setUp(() {
     cubit = _MockVoicemailCubit();
+    session = _MockVoicemailSessionCubit();
     player = _MockAudioPlayer();
     playerStateController = StreamController<PlayerState>.broadcast(sync: true);
 
@@ -71,6 +76,14 @@ void main() {
     await playerStateController.close();
   });
 
+  /// What the session knows of the mailbox, which the screen reads beside its
+  /// own state.
+  void mailboxHolds(List<Voicemail> items) => whenListen(
+    session,
+    const Stream<VoicemailSessionState>.empty(),
+    initialState: VoicemailSessionState(status: VoicemailStatus.loaded, items: items),
+  );
+
   VoicemailState loaded({
     VoicemailFilter filter = VoicemailFilter.all,
     List<VoicemailFilter> filters = VoicemailFilter.values,
@@ -78,13 +91,8 @@ void main() {
   }) {
     final messages = [for (var i = 0; i < count; i++) _voicemail('vm-$i')];
     final inTrash = filter == VoicemailFilter.trash;
-    return VoicemailState(
-      status: VoicemailStatus.loaded,
-      items: inTrash ? const [] : messages,
-      trashedItems: inTrash ? messages : const [],
-      filter: filter,
-      filters: filters,
-    );
+    mailboxHolds(inTrash ? const [] : messages);
+    return VoicemailState(trashedItems: inTrash ? messages : const [], filter: filter, filters: filters);
   }
 
   Widget host(Widget screen) {
@@ -95,6 +103,7 @@ void main() {
       home: MultiProvider(
         providers: [
           BlocProvider<VoicemailCubit>.value(value: cubit),
+          BlocProvider<VoicemailSessionCubit>.value(value: session),
           Provider<AppCacheManager>(create: (_) => AppCacheManager(sections: const [])),
           Provider<VoicemailScreenContext>(
             create: (_) => VoicemailScreenContext(

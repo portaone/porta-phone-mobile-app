@@ -1,44 +1,24 @@
 part of 'voicemail_cubit.dart';
 
-enum VoicemailStatus { loading, loaded, featureNotSupported }
-
 // TODO(Serdun): DiagnosticableTreeMixin is required only because `foundation.dart`
 // is imported transitively through DefaultErrorNotification (via material.dart).
 // Remove this mixin once that indirect dependency is eliminated.
+/// What one voicemail screen holds for itself.
+///
+/// The mailbox is not here: it is the session's, in `VoicemailSessionState`.
+/// What a widget shows is the two read together - see [VoicemailView].
 @freezed
 class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   const VoicemailState({
-    this.status = VoicemailStatus.loading,
-    this.items = const [],
-    this.trashedItems = const [],
-    this.selectedVoicemailsIds = const [],
     this.filter = VoicemailFilter.all,
     this.filters = const [VoicemailFilter.all, VoicemailFilter.unheard],
     this.forwardSupported = false,
-    this.forwarderNames = const {},
-    this.error,
+    this.selectedVoicemailsIds = const [],
+    this.trashedItems = const [],
+    this.trashStatus = VoicemailStatus.loaded,
+    this.trashError,
+    this.busy = false,
   });
-
-  @override
-  final VoicemailStatus status;
-
-  /// The mailbox as it is stored, which is every message that is not in the
-  /// trash. Three of the four filters are this list with a condition applied.
-  @override
-  final List<Voicemail> items;
-
-  /// The trash as the last fetch of it found it, empty whenever the screen is
-  /// not showing the trash.
-  ///
-  /// Separate from [items] rather than mixed into it: the trash is fetched on
-  /// demand and never stored, so anything reading the mailbox - the unheard
-  /// count, the badge, a refresh - would otherwise have to remember to exclude
-  /// it, and would be wrong the one time it forgot.
-  @override
-  final List<Voicemail> trashedItems;
-
-  @override
-  final List<String> selectedVoicemailsIds;
 
   /// Which view is on.
   @override
@@ -58,32 +38,30 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   @override
   final bool forwardSupported;
 
-  /// Names for the colleagues who forwarded messages on, by their user id.
+  @override
+  final List<String> selectedVoicemailsIds;
+
+  /// The trash as the last fetch of it found it, empty whenever the screen is
+  /// not showing the trash.
   ///
-  /// Only the ones the address book knows. An id with nobody behind it stays
-  /// out, and the tile shows the id: it is a poor name but a true one, and
-  /// saying nothing would hide that the message was forwarded at all.
+  /// The screen's rather than the session's: the trash is fetched on demand
+  /// and never stored, and it is read only while somebody is looking at it.
   @override
-  final Map<String, String> forwarderNames;
+  final List<Voicemail> trashedItems;
 
+  /// Where the last read of the trash stands. Apart from how the read of the
+  /// mailbox stands, which is the session's: they are two reads of two lists.
   @override
-  final Object? error;
+  final VoicemailStatus trashStatus;
 
-  /// The messages the current filter shows.
-  List<Voicemail> get visibleItems => switch (filter) {
-    VoicemailFilter.all => items,
-    VoicemailFilter.unheard => items.where((item) => !item.status.isRead).toList(),
-    VoicemailFilter.saved => items.where((item) => item.saved == true).toList(),
-    VoicemailFilter.trash => trashedItems,
-  };
+  /// Why the last read of the trash did not go through, or null when it did.
+  @override
+  final Object? trashError;
 
-  /// What to show for who passed [voicemail] along, or null when nobody did.
-  String? forwarderOf(Voicemail voicemail) {
-    final forwardedBy = voicemail.forwardedBy;
-    if (forwardedBy == null) return null;
-
-    return forwarderNames[forwardedBy] ?? forwardedBy;
-  }
+  /// Whether this screen is in the middle of something the person asked for -
+  /// deleting, restoring, keeping, marking.
+  @override
+  final bool busy;
 
   /// Whether this mailbox can keep a message.
   ///
@@ -99,29 +77,6 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   /// Whether the screen is showing the trash, where a message answers to a
   /// different pair of actions than anywhere else.
   bool get isShowingTrash => filter == VoicemailFilter.trash;
-
-  /// How many messages are still unheard, which is counted over the whole
-  /// mailbox rather than over the current view - it is what the New filter is
-  /// offering, so it has to read the same under every filter.
-  int get unheardCount => items.where((item) => !item.status.isRead).length;
-
-  /// Status to show when the user is refreshing or updating the list of voicemails.
-  bool get isRefreshing => status == VoicemailStatus.loading && visibleItems.isNotEmpty;
-
-  /// Status to show when the user is loading the list of voicemails.
-  bool get isInitializing => status == VoicemailStatus.loading && visibleItems.isEmpty && error == null;
-
-  /// Status to show when the user is loading the list of voicemails and there are no items available.
-  bool get isLoadedWithEmptyResult => status == VoicemailStatus.loaded && visibleItems.isEmpty && error == null;
-
-  /// Status to show when the user is loading the list of voicemails and there is an error.
-  bool get isLoadedWithError => status == VoicemailStatus.loaded && error != null && visibleItems.isEmpty;
-
-  /// Status show when feature is not supported, adapter not supported.
-  bool get isFeatureNotSupported => status == VoicemailStatus.featureNotSupported;
-
-  /// Status to show when the user is loading the list of voicemails and there are items available.
-  bool get isVoicemailsExists => visibleItems.isNotEmpty;
 
   bool get isMultipleVoicemailsSelection => selectedVoicemailsIds.isNotEmpty;
 }

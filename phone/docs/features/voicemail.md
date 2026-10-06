@@ -3,14 +3,14 @@
 The mailbox: what the backend recorded for this account, and everything the
 person can do with one message - hear it, keep it, throw it away, call back,
 open the caller's card, pass it to a colleague.
-Last reviewed: 2026-09-18.
+Last reviewed: 2026-10-06.
 
 ## Where it lives
 
 ```
 lib/features/voicemail/
-  bloc/        VoicemailCubit + VoicemailState, VoicemailPlaybackController
-  cubits/      VoicemailUnreadCubit (the badge on the tab)
+  bloc/        VoicemailCubit + VoicemailState (one screen), VoicemailPlaybackController
+  cubits/      VoicemailSessionCubit (what the whole session shares)
   models/      ForwardVoicemailPurpose, VoicemailForwardOutcome, VoicemailScreenContext
   utils/       VoicemailForwarding (sending a message on), media headers
   view/        the router page, the two hosts, the screen
@@ -31,6 +31,63 @@ Both wrap `VoicemailScreen` in `VoicemailScreenHost`, which builds
 `VoicemailCubit`, the playback controller and `VoicemailScreenContext` (the
 media cache path, the date format and the headers an authenticated media
 request needs).
+
+## Who holds what
+
+Two cubits, split by how long what they hold has to live, and no copy of either
+in the other.
+
+| | `VoicemailSessionCubit` | `VoicemailCubit` |
+|---|---|---|
+| Lives | the whole session, provided eagerly in `main_shell_blocs.dart` | one screen, built by `VoicemailScreenHost` |
+| Holds | the stored mailbox, the count of waiting messages, the forwarders' names, how the last read of the mailbox went | which view is on, what is picked, the trash and how its read went, whether an action of this screen is in progress |
+| Does | reads the mailbox when asked | everything the person does to a message, and says what came of it |
+
+The mailbox is the session's because it outlives any one screen: voicemail is
+shown from two places and counted on a third, and the screen reached from
+settings is torn down and built again as the person moves about. A copy held by
+each screen is a copy that can disagree with the badge beside it.
+
+A widget needs both - the list is the session's, the filter over it the
+screen's - and reads them together as a `VoicemailView`
+(`bloc/voicemail_view.dart`), built by `VoicemailViewBuilder` from the two
+states each time either changes and stored nowhere. Every answer the old state
+used to carry - `visibleItems`, `isRefreshing`, `isLoadedWithError`,
+`forwarderOf` - is worked out there. Nothing is mirrored, so no field has two
+owners: the read of the mailbox and the read of the trash are two statuses in
+two places, and one finishing cannot end the other.
+
+The session cubit follows the count from the start, because a badge reads it,
+and the mailbox only while a screen is showing it: `VoicemailCubit` calls
+`attach()` when it is built and `detach()` when it closes. The query behind the
+list joins the address book and runs again on every write to either, which is
+not a cost to carry for somebody who never opens voicemail.
+
+It never reads the mailbox on its own. The repository is registered for polling
+and for refresh on connectivity recovery; a screen asks for a read when it
+opens and on a pull to refresh.
+
+A list arriving from the store says nothing about how the read of it went, so
+it changes neither `status` nor `error`. The store emits for reasons that are
+not a read - a write to the address book the query is joined with, the cached
+copy the repository shows before it asks - and one of those must not end the
+progress of a read still out or pass a failed one off as good.
+
+A failed read stands in for the list (`VoicemailView.isLoadedWithError`) only
+when the list that was read is empty - the whole mailbox, or the trash while it
+is shown. A view that matches none of a mailbox's messages is an empty view.
+
+The selection follows the list it was made over: the visible one. A picked
+message that is deleted, or stops matching the view - heard while New is
+showing - leaves the selection. A read of the trash that lands after the person
+left the trash is dropped whole.
+
+Whether the backend serves voicemail at all is asked of the repository every
+time it could have changed - when a screen attaches, around a read, when the
+list arrives - not once. The repository learns it from its own first read,
+keeps it as a plain flag, and from then on answers every read with nothing
+rather than an error; a flag read once at the start of the session would be
+read before that.
 
 The tab is a **router**, not the screen (`view/voicemail_router_page.dart`): a
 message names the person who left it, and opening that person's card is a
@@ -61,8 +118,8 @@ filling a mailbox it gives its user no way to empty (see `deleteUserVoicemail`).
 
 ## The list and its filters
 
-`VoicemailCubit` holds the mailbox as it is stored plus what the trash returned,
-and the screen shows one filtered view of it (`VoicemailFilter`):
+The screen shows one filtered view (`VoicemailFilter`) of the session's mailbox,
+or what the trash returned:
 
 - **all** and **unheard** - local, over the stored mailbox;
 - **saved** - local, the kept ones;
@@ -173,9 +230,9 @@ not happen in its own words, and the sentences are `models/notifications.dart`.
 ## The forwarder's name on a tile
 
 A forwarded message arrives with the id of whoever passed it along and nothing
-else about them. The cubit resolves those ids against the address book, matched
-on the id the backend issued rather than on a number, keeps each answer, and the
-tile shows the name on a line of its own under the date. It is not a
+else about them. `VoicemailSessionCubit` resolves those ids against the address
+book, matched on the id the backend issued rather than on a number, keeps each
+answer, and the tile shows the name on a line of its own under the date. It is not a
 replacement for the sender: both names matter and they answer different
 questions - who left the recording, and how it got here. A colleague with no
 name is shown the way the address book shows them, by extension or else by
@@ -209,15 +266,19 @@ forward at all, or a request that never got there, is.
 
 ## The badge on the tab
 
-`VoicemailUnreadCubit` counts unheard messages for the tab icon
-(`widgets/voicemail_flavor_overlay.dart`). It is eager: a badge that starts
-counting only once somebody opens the screen it sits on is of no use there.
+`VoicemailSessionCubit` carries the count of unheard messages for the tab icon
+(`widgets/voicemail_flavor_overlay.dart`) and for the settings row
+(`lib/features/settings/widgets/unread_voicemail_count_builder.dart`). Both
+select the count alone, so a message changing does not rebuild them. The cubit
+is eager: a badge that starts counting only once somebody opens the screen it
+sits on is of no use there.
 
 ## Tests
 
 | File | What it pins |
 |---|---|
-| `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup, and which refusal re-reads the list |
+| `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup, which refusal re-reads the list, and the read of the trash kept apart from the mailbox's - over a real session cubit |
+| `test/features/voicemail/cubits/voicemail_session_cubit_test.dart` | the count, the mailbox followed only while a screen shows it, forwarder names, a backend with no voicemail noticed late, a read asked for and how it can end |
 | `test/features/voicemail/bloc/voicemail_forwarder_names_test.dart` | the forwarder line over a real address book: a name, no name, an extension, nobody |
 | `test/features/voicemail/extensions/request_failure_test.dart` | which refusals mean the message is gone, and which only look like it |
 | `test/features/voicemail/voicemail_filter_test.dart` | which filters a deployment offers, and what each one shows |

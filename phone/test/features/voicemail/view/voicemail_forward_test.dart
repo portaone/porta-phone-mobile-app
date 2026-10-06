@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/voicemail/bloc/bloc.dart';
+import 'package:webtrit_phone/features/voicemail/cubits/cubits.dart';
 import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/features/voicemail/view/voicemail_screen.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -22,6 +23,8 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/view_params/presence_view_params.dart';
 
 class _MockVoicemailCubit extends MockCubit<VoicemailState> implements VoicemailCubit {}
+
+class _MockVoicemailSessionCubit extends MockCubit<VoicemailSessionState> implements VoicemailSessionCubit {}
 
 class _MockRepository extends Mock implements VoicemailRepository {}
 
@@ -56,6 +59,7 @@ Voicemail _voicemail(String id) => Voicemail(
 // what happens when they are, belongs to the purpose and is tested with it.
 void main() {
   late _MockVoicemailCubit cubit;
+  late _MockVoicemailSessionCubit session;
   late DestinationPickingCubit picking;
   late _MockRepository repository;
   late _MockFeatureAccess featureAccess;
@@ -72,6 +76,7 @@ void main() {
 
   setUp(() {
     cubit = _MockVoicemailCubit();
+    session = _MockVoicemailSessionCubit();
     picking = DestinationPickingCubit();
     repository = _MockRepository();
     featureAccess = _MockFeatureAccess();
@@ -112,12 +117,18 @@ void main() {
     when(() => featureAccess.bottomMenuConfig).thenReturn(menu);
   }
 
-  VoicemailState loaded() => VoicemailState(
-    status: VoicemailStatus.loaded,
-    items: [_voicemail('vm-1')],
-    filters: VoicemailFilter.values,
-    forwardSupported: true,
+  /// What the session knows of the mailbox, which the screen reads beside its
+  /// own state.
+  void mailboxHolds(List<Voicemail> items) => whenListen(
+    session,
+    const Stream<VoicemailSessionState>.empty(),
+    initialState: VoicemailSessionState(status: VoicemailStatus.loaded, items: items),
   );
+
+  VoicemailState loaded() {
+    mailboxHolds([_voicemail('vm-1')]);
+    return const VoicemailState(filters: VoicemailFilter.values, forwardSupported: true);
+  }
 
   Future<void> pump(WidgetTester tester) async {
     await tester.pumpWidget(
@@ -131,6 +142,7 @@ void main() {
           home: MultiProvider(
             providers: [
               BlocProvider<VoicemailCubit>.value(value: cubit),
+              BlocProvider<VoicemailSessionCubit>.value(value: session),
               BlocProvider<DestinationPickingCubit>.value(value: picking),
               RepositoryProvider<VoicemailRepository>.value(value: repository),
               Provider<FeatureAccess>.value(value: featureAccess),

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/features/voicemail/bloc/bloc.dart';
+import 'package:webtrit_phone/features/voicemail/cubits/cubits.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -14,6 +15,7 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 void main() {
   late _Repository repository;
   late StreamController<List<Voicemail>> mailbox;
+  late VoicemailSessionCubit session;
 
   setUp(() {
     repository = _Repository();
@@ -23,15 +25,19 @@ void main() {
     when(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode'))).thenAnswer((_) async {});
     when(() => repository.fetchTrashedVoicemails(localeCode: any(named: 'localeCode')))
         .thenAnswer((_) async => const []);
+    when(repository.watchUnreadVoicemailsCount).thenAnswer((_) => const Stream.empty());
+    session = VoicemailSessionCubit(repository: repository, contactsRepository: _Contacts())..init();
   });
 
   tearDown(() async {
+    await session.close();
     await mailbox.close();
   });
 
   VoicemailCubit build({bool saveSupported = true, bool trashSupported = true, bool forwardSupported = true}) =>
       VoicemailCubit(
         repository: repository,
+        session: session,
         contactsRepository: _Contacts(),
         onCallStarted: (_) {},
         onSubmitNotification: (_) {},
@@ -88,13 +94,13 @@ void main() {
     });
 
     test('All shows the whole mailbox', () {
-      expect(cubit.state.visibleItems, everything);
+      expect(cubit.view.visibleItems, everything);
     });
 
     test('New shows only what has not been heard', () {
       cubit.setFilter(VoicemailFilter.unheard);
 
-      expect(cubit.state.visibleItems.map((item) => item.id), ['unheard']);
+      expect(cubit.view.visibleItems.map((item) => item.id), ['unheard']);
     });
 
     test('Saved shows only what is kept, and a mailbox that cannot keep counts as not kept', () {
@@ -102,7 +108,7 @@ void main() {
 
       // A null `saved` means the mailbox cannot hold the flag at all, so the
       // message is not kept - it is a message the control does not apply to.
-      expect(cubit.state.visibleItems.map((item) => item.id), ['kept']);
+      expect(cubit.view.visibleItems.map((item) => item.id), ['kept']);
     });
 
     test('the unheard count reads the mailbox, not the current view', () async {
@@ -111,7 +117,7 @@ void main() {
 
       // It is what the New filter is offering, so it has to say the same thing
       // whichever filter happens to be on.
-      expect(cubit.state.unheardCount, 1);
+      expect(cubit.view.unheardCount, 1);
     });
   });
 
@@ -127,8 +133,8 @@ void main() {
       cubit.setFilter(VoicemailFilter.trash);
       await pumpEventQueue();
 
-      expect(cubit.state.visibleItems, trashed);
-      expect(cubit.state.items.map((item) => item.id), ['inbox']);
+      expect(cubit.view.visibleItems, trashed);
+      expect(session.state.items.map((item) => item.id), ['inbox']);
       verify(() => repository.fetchTrashedVoicemails(localeCode: any(named: 'localeCode'))).called(1);
       verifyNever(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode')));
 

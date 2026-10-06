@@ -9,6 +9,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/voicemail/bloc/voicemail_cubit.dart';
+import 'package:webtrit_phone/features/voicemail/cubits/cubits.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -29,6 +30,7 @@ void main() {
 
   late AppDatabase appDatabase;
   late StreamController<List<Voicemail>> voicemails;
+  late VoicemailSessionCubit session;
   late VoicemailCubit cubit;
 
   final forwarded = Voicemail(
@@ -68,7 +70,7 @@ void main() {
     voicemails.add([forwarded]);
     await pumpEventQueue();
 
-    return cubit.state.forwarderOf(forwarded);
+    return cubit.view.forwarderOf(forwarded);
   }
 
   setUp(() {
@@ -77,14 +79,20 @@ void main() {
     final repository = _Repository();
     when(() => repository.isFeatureSupported).thenReturn(true);
     when(() => repository.watchVoicemails()).thenAnswer((_) => voicemails.stream);
+    when(() => repository.watchUnreadVoicemailsCount()).thenAnswer((_) => const Stream.empty());
     when(() => repository.fetchVoicemails()).thenAnswer((_) async {});
+    final contacts = ContactsRepository(
+      appDatabase: appDatabase,
+      contactsRemoteDataSource: null,
+      contactsLocalDataSource: null,
+    );
+    // The names are looked up by the session, which owns the mailbox; the
+    // screen shows what it found.
+    session = VoicemailSessionCubit(repository: repository, contactsRepository: contacts)..init();
     cubit = VoicemailCubit(
       repository: repository,
-      contactsRepository: ContactsRepository(
-        appDatabase: appDatabase,
-        contactsRemoteDataSource: null,
-        contactsLocalDataSource: null,
-      ),
+      session: session,
+      contactsRepository: contacts,
       onCallStarted: (_) {},
       onSubmitNotification: (_) {},
       saveSupported: true,
@@ -95,6 +103,7 @@ void main() {
 
   tearDown(() async {
     await cubit.close();
+    await session.close();
     await voicemails.close();
     await appDatabase.close();
   });
