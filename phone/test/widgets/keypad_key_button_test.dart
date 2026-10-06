@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,7 +43,9 @@ void main() {
     final handle = tester.ensureSemantics();
 
     final pressed = <String>[];
-    await tester.pumpWidget(wrap(KeypadKeyButton(text: '0', subtext: '+', onKeyPressed: pressed.add)));
+    await tester.pumpWidget(
+      wrap(KeypadKeyButton(text: '0', subtext: '+', alternate: '+', onKeyPressed: pressed.add, onKeyHeld: (_, _) {})),
+    );
 
     final finder = find.bySemanticsIdentifier(keypadKeyId('0'));
     final node = tester.getSemantics(finder);
@@ -59,15 +62,23 @@ void main() {
   });
 
   group('a finger on a key', () {
-    late List<String> entered;
+    /// What the key reported, in order: `0` for an entered character,
+    /// `0>+` for a long press asking to exchange it for the alternate.
+    late List<String> log;
 
-    Future<void> pumpKey(WidgetTester tester, String text, String subtext) {
-      entered = [];
+    Future<void> pumpKey(WidgetTester tester, String text, String subtext, {bool held = true}) {
+      log = [];
       return tester.pumpWidget(
         wrap(
           SizedBox.square(
             dimension: 96,
-            child: KeypadKeyButton(text: text, subtext: subtext, onKeyPressed: entered.add),
+            child: KeypadKeyButton(
+              text: text,
+              subtext: subtext,
+              onKeyPressed: log.add,
+              alternate: subtext.length == 1 ? subtext : null,
+              onKeyHeld: held ? (entered, alternate) => log.add('$entered>$alternate') : null,
+            ),
           ),
         ),
       );
@@ -83,12 +94,12 @@ void main() {
       await pumpKey(tester, '5', 'J K L');
 
       final finger = await touch(tester);
-      expect(entered, ['5']);
+      expect(log, ['5']);
 
       await tester.pump(short);
       await finger.up();
       await tester.pumpAndSettle();
-      expect(entered, ['5']);
+      expect(log, ['5']);
     });
 
     testWidgets('a digit stays entered when the finger slides off the key', (tester) async {
@@ -99,7 +110,7 @@ void main() {
       await finger.moveBy(const Offset(0, 120));
       await finger.up();
       await tester.pumpAndSettle();
-      expect(entered, ['5']);
+      expect(log, ['5']);
     });
 
     testWidgets('a digit held for long is entered once', (tester) async {
@@ -109,43 +120,120 @@ void main() {
       await tester.pump(pastLongPress);
       await finger.up();
       await tester.pumpAndSettle();
-      expect(entered, ['5']);
+      expect(log, ['5']);
     });
 
-    testWidgets('zero is entered on the lift of a short press', (tester) async {
+    testWidgets('zero is entered on the touch like any digit', (tester) async {
       await pumpKey(tester, '0', '+');
 
       final finger = await touch(tester);
-      await tester.pump(short);
-      expect(entered, isEmpty);
+      expect(log, ['0']);
 
+      await tester.pump(short);
       await finger.up();
       await tester.pumpAndSettle();
-      expect(entered, ['0']);
+      expect(log, ['0']);
     });
 
-    testWidgets('zero held enters a plus, once', (tester) async {
+    testWidgets('of two fingers on the zero only the later one is a long press', (tester) async {
+      await pumpKey(tester, '0', '+');
+      final centre = tester.getCenter(find.byType(KeypadKeyButton));
+
+      final first = await tester.startGesture(centre, pointer: 1);
+      await tester.pump(const Duration(milliseconds: 100));
+      final second = await tester.startGesture(centre, pointer: 2);
+      expect(log, ['0', '0']);
+
+      // Past the first finger's long press, short of the second one's.
+      await tester.pump(const Duration(milliseconds: 450));
+      expect(log, ['0', '0']);
+
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(log, ['0', '0', '0>+']);
+
+      await first.up();
+      await second.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a finger that lifted is no long press even if the key is touched again', (tester) async {
+      await pumpKey(tester, '0', '+');
+      final centre = tester.getCenter(find.byType(KeypadKeyButton));
+
+      final first = await tester.startGesture(centre, pointer: 1);
+      await tester.pump(short);
+      await first.up();
+      final second = await tester.startGesture(centre, pointer: 2);
+      await tester.pump(short);
+      await second.up();
+      await tester.pump(pastLongPress);
+      expect(log, ['0', '0']);
+    });
+
+    testWidgets('a mouse that drifts a little while held is still a long press', (tester) async {
+      await pumpKey(tester, '0', '+');
+
+      final mouse = await tester.startGesture(
+        tester.getCenter(find.byType(KeypadKeyButton)),
+        kind: PointerDeviceKind.mouse,
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await mouse.moveBy(const Offset(3, 0));
+      await tester.pump(pastLongPress);
+      expect(log, ['0', '0>+']);
+
+      await mouse.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a stylus with its button held enters the key like a finger', (tester) async {
+      await pumpKey(tester, '5', 'J K L');
+
+      final stylus = await tester.startGesture(
+        tester.getCenter(find.byType(KeypadKeyButton)),
+        kind: PointerDeviceKind.stylus,
+        buttons: kPrimaryButton | kPrimaryStylusButton,
+      );
+      expect(log, ['5']);
+
+      await stylus.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a key taken off the screen mid-hold leaves no long press behind', (tester) async {
+      await pumpKey(tester, '0', '+');
+
+      await touch(tester);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(pastLongPress);
+      expect(log, ['0']);
+    });
+
+    testWidgets('zero held becomes a plus, once', (tester) async {
       await pumpKey(tester, '0', '+');
 
       final finger = await touch(tester);
       await tester.pump(pastLongPress);
-      expect(entered, ['+']);
+      expect(log, ['0', '0>+']);
 
       await finger.up();
       await tester.pumpAndSettle();
-      expect(entered, ['+']);
+      expect(log, ['0', '0>+']);
     });
 
-    testWidgets('a short press of zero that slides off the key still enters the zero', (tester) async {
-      await pumpKey(tester, '0', '+');
+    // WT-1722: this gesture used to enter nothing at all.
+    testWidgets('zero stays a zero when the finger slides away before the long press', (tester) async {
+      for (final slide in const [Offset(0, 24), Offset(0, 120)]) {
+        await pumpKey(tester, '0', '+');
 
-      final finger = await touch(tester);
-      await tester.pump(short);
-      await finger.moveBy(const Offset(0, 120));
-      await tester.pump(short);
-      await finger.up();
-      await tester.pumpAndSettle();
-      expect(entered, ['0']);
+        final finger = await touch(tester);
+        await tester.pump(const Duration(milliseconds: 300));
+        await finger.moveBy(slide);
+        await tester.pump(const Duration(milliseconds: 400));
+        await finger.up();
+        await tester.pumpAndSettle();
+        expect(log, ['0'], reason: 'slide by $slide');
+      }
     });
 
     testWidgets('a slide inside the touch slop does not stop the long press', (tester) async {
@@ -157,38 +245,30 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       await finger.up();
       await tester.pumpAndSettle();
-      expect(entered, ['+']);
+      expect(log, ['0', '0>+']);
     });
 
-    testWidgets('a touch of zero the system takes away enters nothing', (tester) async {
+    testWidgets('a touch the system takes away has still entered its character', (tester) async {
       await pumpKey(tester, '0', '+');
 
       final finger = await touch(tester);
       await tester.pump(short);
       await finger.cancel();
       await tester.pumpAndSettle();
-      expect(entered, isEmpty);
+      expect(log, ['0']);
     });
 
-    // WT-1722, as it is today: the slide cancels the long press and the lift
-    // comes too late for the zero.
-    testWidgets('zero that slides away before the long press and lifts after it enters nothing', (tester) async {
-      for (final slide in const [Offset(0, 24), Offset(0, 120)]) {
-        await pumpKey(tester, '0', '+');
+    testWidgets('without a hold handler zero has no long press', (tester) async {
+      await pumpKey(tester, '0', '+', held: false);
 
-        final finger = await touch(tester);
-        await tester.pump(const Duration(milliseconds: 300));
-        await finger.moveBy(slide);
-        await tester.pump(const Duration(milliseconds: 400));
-        await finger.up();
-        await tester.pumpAndSettle();
-        expect(entered, isEmpty, reason: 'slide by $slide');
-      }
+      final finger = await touch(tester);
+      await tester.pump(pastLongPress);
+      await finger.up();
+      await tester.pumpAndSettle();
+      expect(log, ['0']);
     });
 
-    // As it is today: the zero is entered on its lift, the next key on its
-    // touch, so a second thumb landing early gets ahead of the zero.
-    testWidgets('a key touched while zero is still down is entered before the zero', (tester) async {
+    testWidgets('two fingers enter their keys in the order they touched', (tester) async {
       final entered = <String>[];
       await tester.pumpWidget(
         wrap(
@@ -198,13 +278,14 @@ void main() {
               for (final (text, subtext) in const [('0', '+'), ('*', '')])
                 SizedBox.square(
                   dimension: 96,
-                  child: KeypadKeyButton(text: text, subtext: subtext, onKeyPressed: entered.add),
+                  child: KeypadKeyButton(text: text, subtext: subtext, onKeyPressed: entered.add, onKeyHeld: (_, _) {}),
                 ),
             ],
           ),
         ),
       );
 
+      // The second thumb lands before the first one lifts.
       final first = await tester.startGesture(tester.getCenter(find.byKey(const Key('0'))), pointer: 1);
       await tester.pump(const Duration(milliseconds: 40));
       final second = await tester.startGesture(tester.getCenter(find.byKey(const Key('*'))), pointer: 2);
@@ -213,8 +294,20 @@ void main() {
       await tester.pump(const Duration(milliseconds: 40));
       await second.up();
       await tester.pumpAndSettle();
-      expect(entered, ['*', '0']);
+      expect(entered, ['0', '*']);
     });
+  });
+
+  testWidgets('zero key without a hold handler offers no long press and no alternate', (tester) async {
+    final handle = tester.ensureSemantics();
+
+    await tester.pumpWidget(wrap(KeypadKeyButton(text: '0', subtext: '', alternate: '+', onKeyPressed: (_) {})));
+
+    final node = tester.getSemantics(find.bySemanticsIdentifier(keypadKeyId('0')));
+    expect(node.getSemanticsData().hasAction(SemanticsAction.longPress), isFalse);
+    expect(node.label, '0');
+
+    handle.dispose();
   });
 
   testWidgets('star and pound keys get readable stable ids', (tester) async {

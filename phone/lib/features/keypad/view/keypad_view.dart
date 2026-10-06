@@ -57,6 +57,10 @@ class KeypadViewState extends State<KeypadView> {
   void initState() {
     super.initState();
     _textController.addListener(() {
+      // Whatever a held key could still exchange is settled by any later
+      // change of the number or of the caret.
+      final entry = _exchangeable;
+      if (entry != null && !entry.stillAsEntered(_textController.value)) _exchangeable = null;
       // deffer value set, let app concentrate on gesture handling on low-end devices
       _setValueDebounce.schedule(() {
         if (mounted) _keypadCubit.setValue(_textController.text);
@@ -152,7 +156,7 @@ class KeypadViewState extends State<KeypadView> {
           ),
         ),
         RepaintBoundary(
-          child: Keypad(onKeypadPressed: _addChar, style: widget.style?.keypadStyle),
+          child: Keypad(onKeypadPressed: _addChar, onKeypadHeld: _exchangeEntry, style: widget.style?.keypadStyle),
         ),
         SizedBox(height: scaledInset),
         RepaintBoundary(
@@ -305,6 +309,12 @@ class KeypadViewState extends State<KeypadView> {
     _popNumber();
   }
 
+  /// What a key just entered, for as long as it may still be exchanged for
+  /// the key's alternate. Any later change of the number or of the caret
+  /// drops it - the next edit ends the previous key - so a long press that
+  /// comes after one changes nothing.
+  _KeypadEntry? _exchangeable;
+
   void _addChar(String keyText) {
     if (!_textController.selection.isValid) {
       _textController.selection = TextSelection.collapsed(offset: _textController.text.length);
@@ -319,6 +329,25 @@ class KeypadViewState extends State<KeypadView> {
     _keypadTextFieldEditableTextState?.userUpdateTextEditingValue(value, SelectionChangedCause.keyboard);
 
     _keypadTextFieldEditableTextState?.hideToolbar();
+
+    // Remembered only once the field really holds the entry where it was put.
+    final entry = _KeypadEntry(keyText, at: textBefore.length, text: newText, selection: newSelection);
+    _exchangeable = entry.stillAsEntered(_textController.value) ? entry : null;
+  }
+
+  /// A held key: [alternate] takes the place of the [entered] character, if
+  /// that entry is still the last thing that happened to the field.
+  void _exchangeEntry(String entered, String alternate) {
+    final entry = _exchangeable;
+    if (entry == null || entry.character != entered) return;
+
+    final value = _textController.value.copyWith(
+      text: entry.text.replaceRange(entry.at, entry.at + entered.length, alternate),
+      selection: TextSelection.collapsed(offset: entry.at + alternate.length),
+    );
+    _keypadTextFieldEditableTextState?.userUpdateTextEditingValue(value, SelectionChangedCause.keyboard);
+    // The long press is confirmed only when it changed something.
+    Feedback.forLongPress(context);
   }
 
   void _removeLastChar() {
@@ -368,4 +397,18 @@ class KeypadViewState extends State<KeypadView> {
 
     _keypadTextFieldEditableTextState?.hideToolbar();
   }
+}
+
+/// A character a key put into the number: which one, where, and what the
+/// field looked like right after.
+class _KeypadEntry {
+  const _KeypadEntry(this.character, {required this.at, required this.text, required this.selection});
+
+  final String character;
+  final int at;
+  final String text;
+  final TextSelection selection;
+
+  /// Whether [value] is still the number and the caret this entry left.
+  bool stillAsEntered(TextEditingValue value) => value.text == text && value.selection == selection;
 }

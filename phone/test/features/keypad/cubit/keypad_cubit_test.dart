@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -58,4 +60,23 @@ void main() {
       verifyNever(() => resolver.resolve(any()));
     },
   );
+
+  test('a lookup that answers after the number has changed is not shown under the new number', () async {
+    final slow = Completer<Contact?>();
+    when(() => resolver.resolve('40')).thenAnswer((_) => slow.future);
+    when(() => resolver.resolve('4+')).thenAnswer((_) async => null);
+    final cubit = KeypadCubit(resolver);
+
+    await cubit.setValue('40');
+    await Future<void>.delayed(debounceWait);
+    await cubit.setValue('4+');
+    await Future<void>.delayed(debounceWait);
+
+    slow.complete(_contact('Forty'));
+    await Future<void>.delayed(Duration.zero);
+
+    expect(cubit.state.value, '4+');
+    expect(cubit.state.contact, isNull);
+    await cubit.close();
+  });
 }

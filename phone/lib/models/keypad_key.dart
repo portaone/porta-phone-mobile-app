@@ -10,12 +10,17 @@ class KeypadKey {
     KeypadKey('8', 'T U V'),
     KeypadKey('9', 'W X Y Z'),
     KeypadKey('*'),
-    KeypadKey('0', '+'),
+    KeypadKey('0', '+', '+'),
     KeypadKey('#'),
   ];
 
-  const KeypadKey(this.text, [this.subtext = '']);
+  const KeypadKey(this.text, [this.subtext = '', this.alternate]);
 
   final String text;
+
+  /// The caption drawn under [text].
   final String subtext;
+
+  /// The character a long press on the key gives instead of [text].
+  final String? alternate;
 }

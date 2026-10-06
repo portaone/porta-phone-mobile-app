@@ -481,7 +481,9 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
           return [
             KeypadKeyButton(
               text: k.text,
-              subtext: k.subtext,
+              // A tone cannot be taken back for another, so the key has no long
+              // press here and must not show the character one would give.
+              subtext: k.alternate == null ? k.subtext : '',
               onKeyPressed: _enterKeypadKey,
               style: KeypadKeyStyle(
                 buttonStyle: widget.style?.key,
