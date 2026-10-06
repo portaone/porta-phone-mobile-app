@@ -10,7 +10,10 @@ import 'package:webtrit_phone/utils/connectivity_checker.dart';
 class _MockWebtritApiClient extends Mock implements WebtritApiClient {}
 
 void main() {
-  Logger.root.level = Level.OFF;
+  // For this file's tests only: the root level is global and outlives the file.
+  final previousLevel = Logger.root.level;
+  setUpAll(() => Logger.root.level = Level.OFF);
+  tearDownAll(() => Logger.root.level = previousLevel);
 
   group('DefaultConnectivityChecker', () {
     late _MockWebtritApiClient oldClient;
