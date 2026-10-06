@@ -1,5 +1,4 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:webtrit_phone/theme/theme.dart';
 
@@ -13,15 +12,5 @@ class TextThemeDataFactory implements ThemeStyleFactory<TextTheme> {
   final ThemeData themeData;
 
   @override
-  TextTheme create() {
-    final fontFamily = config.fontFamily;
-    final baseTextTheme = themeData.textTheme;
-
-    if (fontFamily == null) return baseTextTheme;
-    try {
-      return GoogleFonts.getTextTheme(fontFamily, baseTextTheme);
-    } catch (e) {
-      return baseTextTheme;
-    }
-  }
+  TextTheme create() => AppFonts.textTheme(config.family, themeData.textTheme);
 }

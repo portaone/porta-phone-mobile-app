@@ -54,11 +54,14 @@ Package info, app info, device info, secure storage, preferences, certificates,
 themes and the local Remote Config cache form another concurrent wave. Bootstrap
 waits for every operation in this wave to settle before reporting a failure so
 that successful, not-yet-registered disposable results can be released safely.
-Consequently, a fast failure can still wait for the slowest sibling. Theme
-fonts are generated into the application assets at build time, so startup no
-longer has a runtime font preload or font-network timeout. This affects failed
-startup latency only; the successful path pays the maximum sibling duration
-rather than their sum.
+Consequently, a fast failure can still wait for the slowest sibling. This
+affects failed startup latency only; the successful path pays the maximum
+sibling duration rather than their sum.
+
+Theme fonts are bundled into the application assets at build time, so startup
+has no font-network request or timeout. The `app-themes` stage reads the
+bundled faces of the theme's typeface and registers them before the first
+frame; see [fonts.md](fonts.md) for the measured cost.
 
 Remote Config uses the SDK's already activated values and the local cache for
 the first frame. Its network configuration and fetch are scheduled after that

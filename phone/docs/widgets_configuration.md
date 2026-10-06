@@ -29,6 +29,9 @@ Defines the default font settings from [Google Fonts](https://fonts.google.com/)
 
 - `fontFamily`: Default font family (e.g., Montserrat)
 
+How that family reaches the app - the build step that bundles it, its registration at startup
+and the weights - is in [fonts.md](fonts.md).
+
 ### Button Configuration
 
 Override the default button styles (primary, neutral, primaryOnDark, neutralOnDark) with custom
