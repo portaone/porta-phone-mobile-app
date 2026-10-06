@@ -1,61 +1,67 @@
-import 'package:logging/logging.dart';
-
-import 'package:api/api.dart';
-
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.dart';
 import 'package:webtrit_phone/models/models.dart';
-import 'package:webtrit_phone/repositories/repositories.dart';
-import 'package:webtrit_phone/utils/crashlytics_utils.dart';
 
+import '../cubits/cubits.dart';
 import '../extensions/extensions.dart';
 import '../models/models.dart';
 
-final _logger = Logger('VoicemailForwarding');
-
 /// Passes a message to a colleague and says what came of it.
 ///
-/// It outlives the voicemail screen because it has to: the colleague is chosen
-/// two sections away, and by the time the backend answers, the screen that
-/// started this is long gone. Nothing of it is kept between forwards, so there
-/// is no state to lose - the message and the colleague are the arguments, and
-/// the answer goes to the one place that is still on screen.
+/// The request itself, and the mark a message carries while it is out or
+/// after it was refused, belong to [VoicemailSessionCubit], which lives as
+/// long as the session does. This is the part that cannot live there: the
+/// sentences. They are resolved when the person asks for the forward rather
+/// than when the answer arrives, because the colleague is chosen two sections
+/// away and by then the screen that started this, and its context, can be
+/// gone. The answer goes to the one place that is still on screen.
 ///
-/// The sentences are resolved when the person asks for a forward rather than
-/// when the answer arrives, for the same reason: there is no context left to
-/// resolve them against by then.
+/// A refusal is said once, with a way to try again at hand. The sentence
+/// passes; what stays is the mark on the message, and trying again later is
+/// in the message's own menu.
 class VoicemailForwarding {
   const VoicemailForwarding({
-    required VoicemailRepository repository,
     required DestinationPickingCubit picking,
+    required VoicemailSessionCubit session,
     required AppLocalizations l10n,
-  }) : _repository = repository,
-       _picking = picking,
+  }) : _picking = picking,
+       _session = session,
        _l10n = l10n;
 
-  final VoicemailRepository _repository;
   final DestinationPickingCubit _picking;
+  final VoicemailSessionCubit _session;
   final AppLocalizations _l10n;
 
   Future<void> send(Voicemail message, Contact recipient) async {
-    var outcome = VoicemailForwardOutcome.sent;
-    try {
-      await _repository.forwardVoicemail(message.id, toUserId: recipient.sourceId!);
-    } catch (e, s) {
-      // Only a refusal from the backend carries a meaning worth telling apart.
-      // A socket that died on the way there says nothing about the message or
-      // the colleague, so it is the plain failure.
-      outcome = e is RequestFailure ? e.voicemailForwardOutcome : VoicemailForwardOutcome.failed;
-      // A message too large and a colleague who is full are answers, not
-      // faults: the request reached the backend and it said no for a reason
-      // the person is about to be told. Only the rest is worth recording.
-      if (outcome == VoicemailForwardOutcome.failed || outcome == VoicemailForwardOutcome.unavailable) {
-        _logger.severe('Error forwarding voicemail with id ${message.id}: $e', e, s);
-        CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailForwarding.send');
-      }
-    }
+    _closeChoiceFor(message);
+
+    final outcome = await _session.forward(message, recipient);
+    // A forward of this message was already out, so nothing was sent and
+    // there is nothing to say: the one that is out will be said when it lands.
+    if (outcome == null) return;
+
+    // The session can end while the request is out, and a closed cubit
+    // refuses an emit.
+    if (_picking.isClosed) return;
 
     _picking.announce(_report(outcome, message, recipient));
+  }
+
+  /// Takes back a request for somebody to be chosen for [message], if one is
+  /// still standing.
+  ///
+  /// The message is being sent now - by a choice, which closes its own
+  /// request anyway, or by trying again to whoever it was for. A request left
+  /// standing through the second would keep the lists offering to forward a
+  /// message that is already on its way, and a pick made there would be
+  /// answered with nothing.
+  void _closeChoiceFor(Voicemail message) {
+    if (_picking.isClosed) return;
+
+    final purpose = _picking.state.purpose;
+    if (purpose is ForwardVoicemailPurpose && purpose.messageId == message.id) {
+      _picking.withdraw<ForwardVoicemailPurpose>();
+    }
   }
 
   DestinationPickReport _report(VoicemailForwardOutcome outcome, Voicemail message, Contact recipient) {
@@ -66,12 +72,7 @@ class VoicemailForwarding {
     }
 
     return DestinationPickReport(
-      message: switch (outcome) {
-        VoicemailForwardOutcome.tooLarge => _l10n.voicemail_Snackbar_forwardTooLarge,
-        VoicemailForwardOutcome.recipientFull => _l10n.voicemail_Snackbar_forwardRecipientFull(name),
-        VoicemailForwardOutcome.unavailable => _l10n.voicemail_Snackbar_forwardUnavailable,
-        _ => _l10n.voicemail_Snackbar_forwardFailed,
-      },
+      message: outcome.failureText(_l10n, name),
       isFailure: true,
       // Offered only where trying again could end differently. A recording
       // that is too big stays too big, and a colleague who is full stays full.

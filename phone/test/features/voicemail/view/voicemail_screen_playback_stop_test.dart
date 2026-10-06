@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/voicemail/bloc/bloc.dart';
+import 'package:webtrit_phone/features/voicemail/cubits/cubits.dart';
 import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/features/voicemail/view/voicemail_screen.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -19,6 +20,8 @@ import 'package:webtrit_phone/models/voicemail/user_voicemail.dart';
 import 'package:webtrit_phone/utils/view_params/presence_view_params.dart';
 
 class _MockVoicemailCubit extends MockCubit<VoicemailState> implements VoicemailCubit {}
+
+class _MockVoicemailSessionCubit extends MockCubit<VoicemailSessionState> implements VoicemailSessionCubit {}
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
@@ -35,8 +38,8 @@ Voicemail _voicemail(String id) => Voicemail(
   url: 'https://example.com/vm/$id.mp3',
 );
 
-VoicemailState _loadedState(List<Voicemail> items) =>
-    const VoicemailState().copyWith(items: items, status: VoicemailStatus.loaded);
+VoicemailSessionState _mailbox(List<Voicemail> items) =>
+    VoicemailSessionState(status: VoicemailStatus.loaded, items: items);
 
 void main() {
   setUpAll(() {
@@ -44,12 +47,14 @@ void main() {
   });
 
   late _MockVoicemailCubit cubit;
+  late _MockVoicemailSessionCubit session;
   late _MockAudioPlayer player;
   late StreamController<PlayerState> playerStateController;
   late VoicemailPlaybackController controller;
 
   setUp(() {
     cubit = _MockVoicemailCubit();
+    session = _MockVoicemailSessionCubit();
     player = _MockAudioPlayer();
     playerStateController = StreamController<PlayerState>.broadcast(sync: true);
 
@@ -76,6 +81,7 @@ void main() {
       home: MultiProvider(
         providers: [
           BlocProvider<VoicemailCubit>.value(value: cubit),
+          BlocProvider<VoicemailSessionCubit>.value(value: session),
           Provider<AppCacheManager>(create: (_) => AppCacheManager(sections: const [])),
           Provider<VoicemailScreenContext>(
             create: (_) => VoicemailScreenContext(
@@ -100,12 +106,13 @@ void main() {
     final vm1 = _voicemail('vm-1');
     final vm2 = _voicemail('vm-2');
 
+    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: const VoicemailState());
     whenListen(
-      cubit,
+      session,
       Stream.fromIterable([
-        _loadedState([vm2]),
+        _mailbox([vm2]),
       ]),
-      initialState: _loadedState([vm1, vm2]),
+      initialState: _mailbox([vm1, vm2]),
     );
 
     await controller.play(id: 'vm-1', uri: Uri.parse(vm1.url!), isLocal: true);
@@ -123,12 +130,13 @@ void main() {
     final vm1 = _voicemail('vm-1');
     final vm2 = _voicemail('vm-2');
 
+    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: const VoicemailState());
     whenListen(
-      cubit,
+      session,
       Stream.fromIterable([
-        _loadedState([vm1]),
+        _mailbox([vm1]),
       ]),
-      initialState: _loadedState([vm1, vm2]),
+      initialState: _mailbox([vm1, vm2]),
     );
 
     await controller.play(id: 'vm-1', uri: Uri.parse(vm1.url!), isLocal: true);

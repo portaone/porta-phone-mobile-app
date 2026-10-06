@@ -8,6 +8,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 import '../bloc/bloc.dart';
+import '../cubits/cubits.dart';
 
 /// Size of the marks around the filter's name, and the space between them.
 ///
@@ -38,39 +39,40 @@ class VoicemailFilterRow extends StatelessWidget implements PreferredSizeWidget 
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return BlocBuilder<VoicemailCubit, VoicemailState>(
-      buildWhen: (previous, current) =>
-          previous.filter != current.filter ||
-          previous.filters != current.filters ||
-          previous.unheardCount != current.unheardCount,
-      builder: (context, state) {
-        // One filter is no choice, so the control that offers the choice is not
-        // drawn. That is the plain mailbox: no save, no trash, nothing to pick
-        // between but All and New.
-        if (state.filters.length < 2) return const SizedBox.shrink();
+    // Each of the three alone. This row sits in the app bar and has no
+    // interest in a message being picked, kept or forwarded, all of which
+    // change one state or the other.
+    final filters = context.select<VoicemailCubit, List<VoicemailFilter>>((cubit) => cubit.state.filters);
+    final filter = context.select<VoicemailCubit, VoicemailFilter>((cubit) => cubit.state.filter);
+    final unheardCount = context.select<VoicemailSessionCubit, int>(
+      (cubit) => cubit.state.items.where((item) => !item.status.isRead).length,
+    );
 
-        return Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, bottom: kMainAppBarBottomPaddingGap),
-          child: SizedBox(
-            height: kMainAppBarBottomControlHeight,
-            child: Row(
-              children: [
-                VoicemailFilterPicker(
-                  filters: state.filters,
-                  selected: state.filter,
-                  onSelected: (filter) => context.read<VoicemailCubit>().setFilter(filter),
-                ),
-                const Spacer(),
-                if (state.unheardCount > 0)
-                  Text(
-                    context.l10n.voicemail_Label_unheardCount(state.unheardCount),
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  ),
-              ],
+    // One filter is no choice, so the control that offers the choice is not
+    // drawn. That is the plain mailbox: no save, no trash, nothing to pick
+    // between but All and New.
+    if (filters.length < 2) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 16, bottom: kMainAppBarBottomPaddingGap),
+      child: SizedBox(
+        height: kMainAppBarBottomControlHeight,
+        child: Row(
+          children: [
+            VoicemailFilterPicker(
+              filters: filters,
+              selected: filter,
+              onSelected: (filter) => context.read<VoicemailCubit>().setFilter(filter),
             ),
-          ),
-        );
-      },
+            const Spacer(),
+            if (unheardCount > 0)
+              Text(
+                context.l10n.voicemail_Label_unheardCount(unheardCount),
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

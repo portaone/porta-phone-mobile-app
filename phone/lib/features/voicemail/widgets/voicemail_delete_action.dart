@@ -6,6 +6,7 @@ import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
+import '../cubits/cubits.dart';
 
 /// The header's destructive control: what is picked, the trash, or - where the
 /// header offers it - the whole mailbox.
@@ -34,51 +35,53 @@ class VoicemailDeleteAction extends StatefulWidget {
 class _VoicemailDeleteActionState extends State<VoicemailDeleteAction> {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<VoicemailCubit, VoicemailState>(
-      builder: (context, state) {
-        final selecting = state.isMultipleVoicemailsSelection;
+    // The screen's own state, and one fact about the list: whether there is
+    // anything in the view to delete. The mailbox changes for many reasons
+    // this button does not care about.
+    final state = context.watch<VoicemailCubit>().state;
+    final hasMessages = context.select<VoicemailSessionCubit, bool>(
+      (cubit) => VoicemailView(mailbox: cubit.state, screen: state).isVoicemailsExists,
+    );
 
-        if (!selecting && state.isShowingTrash) {
-          return _EmptyTrashAction(count: state.trashedItems.length);
-        }
+    final selecting = state.isMultipleVoicemailsSelection;
 
-        // Where there is a trash, deleting every message is not offered. The
-        // trash already carries the one bulk action that ends in messages being
-        // gone, and multi-select covers anything narrower; a second sweep next
-        // to it would differ only in which of them can be taken back.
-        if (!selecting && (!widget.offersDeleteAll || state.trashSupported)) return const SizedBox.shrink();
+    if (!selecting && state.isShowingTrash) {
+      return _EmptyTrashAction(count: state.trashedItems.length);
+    }
 
-        // The button names itself, so while selecting it says how much it would
-        // delete as part of that name - a count of its own would become a
-        // second, nameless stop next to it. The badge draws the number and
-        // stays silent.
-        return SemanticAction(
-          label: selecting
-              ? '${context.l10n.voicemail_Label_delete}, '
-                    '${context.l10n.common_SemanticsValue_selectedCount(state.selectedVoicemailsIds.length)}'
-              : context.l10n.voicemail_Label_delete,
-          child: Stack(
-            alignment: AlignmentDirectional.topCenter,
-            children: [
-              IconButton(
-                icon: Icon(state.isShowingTrash ? Icons.delete_forever : Icons.delete),
-                onPressed: state.visibleItems.isNotEmpty
-                    ? () => selecting ? _onDeleteSelected() : _onDeleteAll()
-                    : null,
-              ),
-              if (selecting)
-                CountBadge(
-                  count: state.selectedVoicemailsIds.length,
-                  size: 16,
-                  // The count belongs to a destructive action, not to the
-                  // accent every other badge carries.
-                  color: Theme.of(context).colorScheme.error,
-                  onColor: Theme.of(context).colorScheme.onError,
-                ),
-            ],
+    // Where there is a trash, deleting every message is not offered. The
+    // trash already carries the one bulk action that ends in messages being
+    // gone, and multi-select covers anything narrower; a second sweep next
+    // to it would differ only in which of them can be taken back.
+    if (!selecting && (!widget.offersDeleteAll || state.trashSupported)) return const SizedBox.shrink();
+
+    // The button names itself, so while selecting it says how much it would
+    // delete as part of that name - a count of its own would become a
+    // second, nameless stop next to it. The badge draws the number and
+    // stays silent.
+    return SemanticAction(
+      label: selecting
+          ? '${context.l10n.voicemail_Label_delete}, '
+                '${context.l10n.common_SemanticsValue_selectedCount(state.selectedVoicemailsIds.length)}'
+          : context.l10n.voicemail_Label_delete,
+      child: Stack(
+        alignment: AlignmentDirectional.topCenter,
+        children: [
+          IconButton(
+            icon: Icon(state.isShowingTrash ? Icons.delete_forever : Icons.delete),
+            onPressed: hasMessages ? () => selecting ? _onDeleteSelected() : _onDeleteAll() : null,
           ),
-        );
-      },
+          if (selecting)
+            CountBadge(
+              count: state.selectedVoicemailsIds.length,
+              size: 16,
+              // The count belongs to a destructive action, not to the
+              // accent every other badge carries.
+              color: Theme.of(context).colorScheme.error,
+              onColor: Theme.of(context).colorScheme.onError,
+            ),
+        ],
+      ),
     );
   }
 

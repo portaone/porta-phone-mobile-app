@@ -6223,6 +6223,12 @@ abstract class AppLocalizations {
   /// **'Forward'**
   String get voicemail_Label_forward;
 
+  /// Menu entry on a voicemail whose forward did not go through: tries it again to the same colleague.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward again'**
+  String get voicemail_Label_forwardAgain;
+
   /// Banner shown while the user is browsing the address book for somebody to forward a voicemail to.
   ///
   /// In en, this message translates to:
@@ -6252,6 +6258,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move to trash'**
   String get voicemail_Label_moveToTrash;
+
+  /// Marker on a voicemail whose forward to the named colleague did not go through.
+  ///
+  /// In en, this message translates to:
+  /// **'Not forwarded · {name}'**
+  String voicemail_Label_notForwarded(String name);
 
   /// Menu action that opens the card of whoever left the voicemail.
   ///
@@ -6324,6 +6336,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Forward to {name}'**
   String voicemail_SemanticsLabel_forwardTo(String name);
+
+  /// Announced on a voicemail row while the message is being forwarded to a colleague.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwarding'**
+  String get voicemail_SemanticsLabel_forwarding;
 
   /// Announced while a voicemail is being prepared for playback.
   ///
@@ -6403,11 +6421,11 @@ abstract class AppLocalizations {
   /// **'Moved to trash'**
   String get voicemail_Snackbar_movedToTrash;
 
-  /// Shown when forwarding failed for a reason the person cannot act on.
+  /// Shown when forwarding a voicemail to the named colleague failed for a reason the person cannot act on.
   ///
   /// In en, this message translates to:
-  /// **'Could not forward'**
-  String get voicemail_Snackbar_forwardFailed;
+  /// **'Couldn\'t forward to {name}'**
+  String voicemail_Snackbar_forwardFailed(String name);
 
   /// Shown when the colleague has as many forwarded messages as they are allowed.
   ///

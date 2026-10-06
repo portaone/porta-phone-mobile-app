@@ -1,8 +1,14 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:auto_route/auto_route.dart';
+
 import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/models/models.dart';
+
+class _Origin extends PageRouteInfo<void> {
+  const _Origin() : super('Origin');
+}
 
 // Passing a message to a colleague, as one of the reasons the app sends
 // somebody to its own lists. What it will take is narrower than a transfer's:
@@ -14,6 +20,7 @@ void main() {
     announcement: 'Choose who to forward to',
     pickLabel: (name) => 'Forward to $name',
     messageId: 'vm-1',
+    origin: const _Origin(),
     onPicked: picked.add,
   );
 
@@ -98,6 +105,7 @@ void main() {
       announcement: 'Choose who to forward to',
       pickLabel: (name) => 'Forward to $name',
       messageId: 'vm-2',
+      origin: const _Origin(),
       onPicked: picked.add,
     );
 

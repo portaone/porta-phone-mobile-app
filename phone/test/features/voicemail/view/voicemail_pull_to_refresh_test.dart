@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/voicemail/bloc/bloc.dart';
+import 'package:webtrit_phone/features/voicemail/cubits/cubits.dart';
 import 'package:webtrit_phone/features/voicemail/models/models.dart';
 import 'package:webtrit_phone/features/voicemail/view/voicemail_screen.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -19,6 +20,8 @@ import 'package:webtrit_phone/models/voicemail/user_voicemail.dart';
 import 'package:webtrit_phone/utils/view_params/presence_view_params.dart';
 
 class _MockVoicemailCubit extends MockCubit<VoicemailState> implements VoicemailCubit {}
+
+class _MockVoicemailSessionCubit extends MockCubit<VoicemailSessionState> implements VoicemailSessionCubit {}
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
@@ -35,8 +38,8 @@ Voicemail _voicemail(String id) => Voicemail(
   url: 'https://example.com/vm/$id.mp3',
 );
 
-VoicemailState _loadedState(List<Voicemail> items) =>
-    const VoicemailState().copyWith(items: items, status: VoicemailStatus.loaded);
+VoicemailSessionState _mailbox(List<Voicemail> items) =>
+    VoicemailSessionState(status: VoicemailStatus.loaded, items: items);
 
 void main() {
   setUpAll(() {
@@ -44,12 +47,14 @@ void main() {
   });
 
   late _MockVoicemailCubit cubit;
+  late _MockVoicemailSessionCubit session;
   late _MockAudioPlayer player;
   late StreamController<PlayerState> playerStateController;
   late VoicemailPlaybackController controller;
 
   setUp(() {
     cubit = _MockVoicemailCubit();
+    session = _MockVoicemailSessionCubit();
     player = _MockAudioPlayer();
     playerStateController = StreamController<PlayerState>.broadcast(sync: true);
 
@@ -75,6 +80,7 @@ void main() {
       home: MultiProvider(
         providers: [
           BlocProvider<VoicemailCubit>.value(value: cubit),
+          BlocProvider<VoicemailSessionCubit>.value(value: session),
           Provider<AppCacheManager>(create: (_) => AppCacheManager(sections: const [])),
           Provider<VoicemailScreenContext>(
             create: (_) => VoicemailScreenContext(
@@ -104,7 +110,8 @@ void main() {
   // first: a list that cannot scroll swallows the drag unless it is told to
   // accept one anyway.
   testWidgets('pulling a list too short to scroll fetches the mailbox again', (tester) async {
-    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: _loadedState([_voicemail('vm-1')]));
+    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: const VoicemailState());
+    whenListen(session, const Stream<VoicemailSessionState>.empty(), initialState: _mailbox([_voicemail('vm-1')]));
 
     await tester.pumpWidget(host());
     await pullDown(tester);
@@ -113,7 +120,8 @@ void main() {
   });
 
   testWidgets('pulling an empty mailbox fetches it again', (tester) async {
-    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: _loadedState([]));
+    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: const VoicemailState());
+    whenListen(session, const Stream<VoicemailSessionState>.empty(), initialState: _mailbox([]));
 
     await tester.pumpWidget(host());
     await pullDown(tester);

@@ -2940,6 +2940,10 @@
   "@voicemail_Label_forward": {
     "description": "Menu action that passes a voicemail on to a colleague."
   },
+  "voicemail_Label_forwardAgain": "Переслати ще раз",
+  "@voicemail_Label_forwardAgain": {
+    "description": "Menu entry on a voicemail whose forward did not go through: tries it again to the same colleague."
+  },
   "voicemail_Label_forwardChoosing": "Виберіть, кому переслати",
   "@voicemail_Label_forwardChoosing": {
     "description": "Banner shown while the user is browsing the address book for somebody to forward a voicemail to."
@@ -2960,6 +2964,15 @@
   "voicemail_Label_moveToTrash": "Перемістити в кошик",
   "@voicemail_Label_moveToTrash": {
     "description": "Menu action that moves a voicemail to the trash, where it can be restored."
+  },
+  "voicemail_Label_notForwarded": "Не переслано · {name}",
+  "@voicemail_Label_notForwarded": {
+    "description": "Marker on a voicemail whose forward to the named colleague did not go through.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "voicemail_Label_openContact": "Відкрити контакт",
   "@voicemail_Label_openContact": {
@@ -3020,6 +3033,10 @@
       }
     }
   },
+  "voicemail_SemanticsLabel_forwarding": "Пересилання",
+  "@voicemail_SemanticsLabel_forwarding": {
+    "description": "Announced on a voicemail row while the message is being forwarded to a colleague."
+  },
   "voicemail_SemanticsLabel_loading": "Завантаження",
   "@voicemail_SemanticsLabel_loading": {
     "description": "Announced while a voicemail is being prepared for playback."
@@ -3060,9 +3077,14 @@
   "@voicemail_Snackbar_movedToTrash": {
     "description": "Confirms that a voicemail was moved to the trash."
   },
-  "voicemail_Snackbar_forwardFailed": "Не вдалося переслати",
+  "voicemail_Snackbar_forwardFailed": "Не вдалося переслати: {name}",
   "@voicemail_Snackbar_forwardFailed": {
-    "description": "Shown when forwarding failed for a reason the person cannot act on."
+    "description": "Shown when forwarding a voicemail to the named colleague failed for a reason the person cannot act on.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "voicemail_Snackbar_forwardRecipientFull": "{name} більше не може приймати переслані повідомлення",
   "@voicemail_Snackbar_forwardRecipientFull": {

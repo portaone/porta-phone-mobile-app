@@ -3468,6 +3468,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Label_forward => 'Переслати';
 
   @override
+  String get voicemail_Label_forwardAgain => 'Переслати ще раз';
+
+  @override
   String get voicemail_Label_forwardChoosing => 'Виберіть, кому переслати';
 
   @override
@@ -3483,6 +3486,11 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get voicemail_Label_moveToTrash => 'Перемістити в кошик';
+
+  @override
+  String voicemail_Label_notForwarded(String name) {
+    return 'Не переслано · $name';
+  }
 
   @override
   String get voicemail_Label_openContact => 'Відкрити контакт';
@@ -3534,6 +3542,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String voicemail_SemanticsLabel_forwardTo(String name) {
     return 'Переслати: $name';
   }
+
+  @override
+  String get voicemail_SemanticsLabel_forwarding => 'Пересилання';
 
   @override
   String get voicemail_SemanticsLabel_loading => 'Завантаження';
@@ -3591,7 +3602,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get voicemail_Snackbar_movedToTrash => 'Переміщено в кошик';
 
   @override
-  String get voicemail_Snackbar_forwardFailed => 'Не вдалося переслати';
+  String voicemail_Snackbar_forwardFailed(String name) {
+    return 'Не вдалося переслати: $name';
+  }
 
   @override
   String voicemail_Snackbar_forwardRecipientFull(String name) {

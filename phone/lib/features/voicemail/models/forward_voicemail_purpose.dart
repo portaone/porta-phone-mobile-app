@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:equatable/equatable.dart';
 
 import 'package:webtrit_phone/models/models.dart';
@@ -11,12 +12,13 @@ import '../extensions/contact.dart';
 /// The second reason the app sends somebody to its own lists to choose a
 /// person, and the reason choosing became a mechanism rather than something
 /// blind transfer kept to itself.
-class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpose {
+class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpose, DestinationPickOrigin {
   const ForwardVoicemailPurpose({
     required this.announcement,
     required String Function(String name) pickLabel,
     required void Function(Contact recipient) onPicked,
     required this.messageId,
+    required this.origin,
   }) : _pickLabel = pickLabel,
        _onPicked = onPicked;
 
@@ -26,6 +28,13 @@ class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpos
   /// The message being passed on. Carried so that two forwards in a row are
   /// not the same purpose, and the scope above the lists notices the change.
   final String messageId;
+
+  /// The voicemail screen the forward was asked from. The message is shown
+  /// there as being forwarded and the list is where the person was working, so
+  /// a choice sends them back to it rather than leaving them in the address
+  /// book.
+  @override
+  final PageRouteInfo origin;
 
   final String Function(String name) _pickLabel;
   final void Function(Contact recipient) _onPicked;
@@ -74,5 +83,5 @@ class ForwardVoicemailPurpose extends Equatable implements DestinationPickPurpos
   void submit(DestinationCandidate candidate) => _onPicked(candidate.contact!);
 
   @override
-  List<Object?> get props => [announcement, messageId];
+  List<Object?> get props => [announcement, messageId, origin];
 }

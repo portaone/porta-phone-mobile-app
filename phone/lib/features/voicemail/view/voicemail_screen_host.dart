@@ -10,6 +10,7 @@ import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 import '../bloc/bloc.dart';
+import '../cubits/cubits.dart';
 import '../models/models.dart';
 import '../utils/utils.dart';
 
@@ -19,9 +20,10 @@ import 'voicemail_screen.dart';
 /// offered from: the settings list and the bottom menu.
 ///
 /// Built per entry point rather than for the session: the cubit's state is the
-/// screen's - what it is loading, what failed, what is selected - and the
-/// playback controller stops the audio when the screen it belongs to goes away.
-/// The count behind a badge is a separate, session-scoped thing.
+/// screen's - which view is on, what is selected, the trash while it is looked
+/// at - and the playback controller stops the audio when the screen it belongs
+/// to goes away. The mailbox itself, and the count behind a badge, are the
+/// session's: `VoicemailSessionCubit`, which the screen's cubit follows.
 class VoicemailScreenHost extends StatelessWidget {
   const VoicemailScreenHost({super.key, required this.child});
 
@@ -50,6 +52,7 @@ class VoicemailScreenHost extends StatelessWidget {
         BlocProvider(
           create: (context) => VoicemailCubit(
             repository: context.read<VoicemailRepository>(),
+            session: context.read<VoicemailSessionCubit>(),
             contactsRepository: context.read<ContactsRepository>(),
             onCallStarted: (number) => callBloc.add(CallControlEvent.started(number: number, video: false)),
             onSubmitNotification: (n) => notificationsBloc.add(NotificationsSubmitted(n)),

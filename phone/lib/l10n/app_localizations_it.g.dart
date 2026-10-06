@@ -3458,6 +3458,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Label_forward => 'Inoltra';
 
   @override
+  String get voicemail_Label_forwardAgain => 'Inoltra di nuovo';
+
+  @override
   String get voicemail_Label_forwardChoosing => 'Scegli a chi inoltrare';
 
   @override
@@ -3473,6 +3476,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get voicemail_Label_moveToTrash => 'Sposta nel cestino';
+
+  @override
+  String voicemail_Label_notForwarded(String name) {
+    return 'Non inoltrato · $name';
+  }
 
   @override
   String get voicemail_Label_openContact => 'Apri contatto';
@@ -3517,6 +3525,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String voicemail_SemanticsLabel_forwardTo(String name) {
     return 'Inoltra a $name';
   }
+
+  @override
+  String get voicemail_SemanticsLabel_forwarding => 'Inoltro in corso';
 
   @override
   String get voicemail_SemanticsLabel_loading => 'Caricamento';
@@ -3574,7 +3585,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voicemail_Snackbar_movedToTrash => 'Spostato nel cestino';
 
   @override
-  String get voicemail_Snackbar_forwardFailed => 'Impossibile inoltrare';
+  String voicemail_Snackbar_forwardFailed(String name) {
+    return 'Impossibile inoltrare a $name';
+  }
 
   @override
   String voicemail_Snackbar_forwardRecipientFull(String name) {
