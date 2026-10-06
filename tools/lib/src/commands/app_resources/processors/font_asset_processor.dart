@@ -7,20 +7,37 @@ import 'package:path/path.dart' as path;
 
 /// Downloads the predefined Google Font selected by the generated theme.
 class FontAssetProcessor {
-  FontAssetProcessor({required Logger logger}) : _logger = logger;
+  FontAssetProcessor({
+    required Logger logger,
+    http.Client? client,
+    Duration retryPause = const Duration(seconds: 2),
+  })  : _logger = logger,
+        _client = client ?? http.Client(),
+        _retryPause = retryPause;
 
   final Logger _logger;
+  final http.Client _client;
+  final Duration _retryPause;
 
   static const _ignoredFamilies = {'MaterialIcons'};
-  static const _defaultWeights = [400, 500, 600, 700];
+  static const _faceExtensions = {'.ttf', '.otf'};
+  static const _licenseFile = 'OFL.txt';
+  static const _attempts = 3;
+
+  /// The weights the app asks for whatever the theme says: the text styles of
+  /// the design system use 400 and 500, and the app's own widgets 600 and 700.
+  ///
+  /// A theme names a weight only where it overrides a style, so the weights
+  /// it mentions are a subset of what gets drawn. Bundling just those left
+  /// out the regular face, the one most of the text is set in.
+  @visibleForTesting
+  static const appWeights = {400, 500, 600, 700};
 
   /// How a weight is spelled in a font file's name.
   ///
-  /// Not a choice: the app finds a bundled face by asking whether an asset's
-  /// name ends with the one the `google_fonts` package builds, so a file named
-  /// anything else is not found and the text renders in the platform font -
-  /// silently, which is the worst way for this to be wrong. These are that
-  /// package's own names.
+  /// The app reads the family from the part of the name before the last
+  /// hyphen and leaves the weight to the face itself, so the spelling only
+  /// has to keep the names apart; these are the ones Google Fonts uses.
   @visibleForTesting
   static const weightNames = <int, String>{
     100: 'Thin',
@@ -35,59 +52,33 @@ class FontAssetProcessor {
   };
   static const _httpTimeout = Duration(seconds: 30);
 
+  /// Where the faces go: the one directory the app's `pubspec.yaml` declares.
+  ///
+  /// An asset directory is not recursive, so a face written into a folder of
+  /// its own below this one never reaches the bundle - and the app, which does
+  /// not fetch at runtime, then draws everything in the platform font.
+  @visibleForTesting
+  static const directory = 'assets/fonts';
+
   Future<void> process({
     required Map<String, dynamic> lightConfig,
     required Map<String, dynamic> darkConfig,
     required String Function(String) resolvePath,
   }) async {
-    // The theme declares its typeface in one place, `fonts.fontFamily`, and an
-    // app carries exactly one. Collecting every `fontFamily` the configuration
-    // mentions instead used to look equivalent and is not: the walk reaches into
-    // anything nested, including the style of the initials drawn on an avatar
-    // placeholder, and a value there was enough to refuse the whole build. Three
-    // brands in production could not be built for that reason.
-    final declared = <String>{
-      for (final family in [_declaredFamily(lightConfig), _declaredFamily(darkConfig)])
-        if (family != null) family,
-    }..removeAll(_ignoredFamilies);
+    // The directory is bundled whole and the app registers what it finds
+    // there, so what an earlier build left goes first - also when this build
+    // ends up fetching nothing.
+    final target = Directory(resolvePath(directory));
+    await _removeFaces(target);
 
-    if (declared.isEmpty) {
-      _logger.warn('Theme declares no font family; leaving the app on its built-in typeface');
-      return;
-    }
-
-    final family = declared.first;
-    if (declared.length > 1) {
-      // Light and dark are separate configurations and can drift apart. Until
-      // the typeface belongs to the theme rather than to each appearance, the
-      // light one is what a build carries - it is the one that gets edited.
-      _logger.warn('Light and dark declare different fonts ($declared); building with $family');
-    }
-    final asked = {..._weights(lightConfig), ..._weights(darkConfig)};
-    // Only the nine weights a font file can be named after. A theme asking for
-    // anything else - 550, say - makes the service answer with the two weights
-    // either side of it, which is more faces than were asked for and none of
-    // them the one requested.
-    final weights = asked.where(weightNames.containsKey).toSet();
-    final unnameable = asked.difference(weights);
-    if (unnameable.isNotEmpty) {
-      _logger.warn('Ignoring weight(s) ${unnameable.join(', ')}: a font file can only be named after 100 to 900');
-    }
-    if (weights.isEmpty) {
-      _logger.warn('No usable font weight in the theme; leaving the app on its built-in typeface');
-      return;
-    }
-    final safeFamily = _safeFamily(family);
-    final target = Directory(resolvePath(path.join('assets/fonts', safeFamily)));
-    if (target.existsSync()) {
-      await target.delete(recursive: true);
-    }
-    await target.create(recursive: true);
+    final request = requestFor(lightConfig: lightConfig, darkConfig: darkConfig);
+    if (request == null) return;
+    final (:family, :weights) = request;
 
     final cssUri = Uri.https('fonts.googleapis.com', '/css2', {
       'family': '$family:wght@${weights.join(';')}',
     });
-    final response = await http.get(cssUri, headers: const {'User-Agent': 'curl/8'}).timeout(_httpTimeout);
+    final response = await _get(cssUri, headers: const {'User-Agent': 'curl/8'});
     if (response.statusCode != 200) {
       throw HttpException('Google Font $family lookup failed: ${response.statusCode}');
     }
@@ -103,15 +94,12 @@ class FontAssetProcessor {
     if (absent.isNotEmpty) {
       _logger.warn('$family has no ${absent.join(', ')}; the app will render those at the nearest weight it has');
     }
+
+    // Nothing is written until every face is in hand: the app takes whatever
+    // the directory holds for the whole family, so two faces out of four would
+    // be drawn as if they were all of it.
+    final faces = <String, List<int>>{};
     for (final entry in entries) {
-      final fontResponse = await http.get(Uri.parse(entry.url)).timeout(_httpTimeout);
-      if (fontResponse.statusCode != 200) {
-        throw HttpException('Google Font $family ${entry.weight} download failed: ${fontResponse.statusCode}');
-      }
-      final bytes = fontResponse.bodyBytes;
-      if (bytes.isEmpty) {
-        throw StateError('Downloaded empty font for $family ${entry.weight}');
-      }
       final suffix = weightNames[entry.weight];
       if (suffix == null) {
         // Cannot happen from a weight this asked for - the request is filtered
@@ -121,20 +109,104 @@ class FontAssetProcessor {
         _logger.warn('Google Fonts answered with weight ${entry.weight}, which has no standard name; skipping it');
         continue;
       }
-      await File(path.join(target.path, '$family-$suffix.ttf')).writeAsBytes(bytes);
+      final fontResponse = await _get(Uri.parse(entry.url));
+      if (fontResponse.statusCode != 200) {
+        throw HttpException('Google Font $family ${entry.weight} download failed: ${fontResponse.statusCode}');
+      }
+      if (fontResponse.bodyBytes.isEmpty) {
+        throw StateError('Downloaded empty font for $family ${entry.weight}');
+      }
+      faces['$family-$suffix.ttf'] = fontResponse.bodyBytes;
     }
-    final licenseResponse = await http
-        .get(Uri.parse(
-          'https://raw.githubusercontent.com/google/fonts/main/ofl/${_slug(family)}/OFL.txt',
-        ))
-        .timeout(_httpTimeout);
+    final licenseResponse = await _get(
+      Uri.parse('https://raw.githubusercontent.com/google/fonts/main/ofl/${_slug(family)}/$_licenseFile'),
+    );
+
+    await target.create(recursive: true);
+    for (final MapEntry(key: name, value: bytes) in faces.entries) {
+      await File(path.join(target.path, name)).writeAsBytes(bytes);
+    }
     if (licenseResponse.statusCode == 200) {
-      await File(path.join(target.path, 'OFL.txt')).writeAsString(licenseResponse.body);
+      await File(path.join(target.path, _licenseFile)).writeAsString(licenseResponse.body);
     } else {
       _logger.warn('License unavailable for $family (${licenseResponse.statusCode})');
     }
-    _logger.info('Downloaded $family font assets (${entries.length} variants)');
+    _logger.info('Downloaded $family font assets (${faces.length} variants)');
   }
+
+  /// One request, repeated when the network or the service fails it.
+  ///
+  /// A build runs unattended and a single dropped connection would otherwise
+  /// cost the brand its typeface. An answer the service means - a 404 for a
+  /// licence that is not there - is returned as it is.
+  Future<http.Response> _get(Uri uri, {Map<String, String>? headers}) async {
+    for (var attempt = 1;; attempt++) {
+      try {
+        final response = await _client.get(uri, headers: headers).timeout(_httpTimeout);
+        if (response.statusCode < 500 || attempt == _attempts) return response;
+        _logger.warn('${uri.host} answered ${response.statusCode}; attempt $attempt of $_attempts');
+      } on Exception catch (error) {
+        if (attempt == _attempts) rethrow;
+        _logger.warn('${uri.host} did not answer ($error); attempt $attempt of $_attempts');
+      }
+      await Future<void>.delayed(_retryPause * attempt);
+    }
+  }
+
+  /// The typeface a build fetches and the weights of it, or null when the
+  /// theme leaves the app on its built-in typeface.
+  @visibleForTesting
+  ({String family, Set<int> weights})? requestFor({
+    required Map<String, dynamic> lightConfig,
+    required Map<String, dynamic> darkConfig,
+  }) {
+    // The theme declares its typeface in one place, `fonts.fontFamily`, and an
+    // app carries exactly one. Collecting every `fontFamily` the configuration
+    // mentions instead used to look equivalent and is not: the walk reaches into
+    // anything nested, including the style of the initials drawn on an avatar
+    // placeholder, and a value there was enough to refuse the whole build. Three
+    // brands in production could not be built for that reason.
+    final declared = <String>{
+      for (final family in [_declaredFamily(lightConfig), _declaredFamily(darkConfig)])
+        if (family != null) family,
+    }..removeAll(_ignoredFamilies);
+
+    if (declared.isEmpty) {
+      _logger.warn('Theme declares no font family; leaving the app on its built-in typeface');
+      return null;
+    }
+
+    final family = declared.first;
+    if (declared.length > 1) {
+      // Light and dark are separate configurations and can drift apart. Until
+      // the typeface belongs to the theme rather than to each appearance, the
+      // light one is what a build carries - it is the one that gets edited.
+      _logger.warn('Light and dark declare different fonts ($declared); building with $family');
+    }
+    _validateFamily(family);
+
+    final asked = {...appWeights, ..._weights(lightConfig), ..._weights(darkConfig)};
+    // Only the nine weights a font file can be named after. A theme asking for
+    // anything else - 550, say - makes the service answer with the two weights
+    // either side of it, which is more faces than were asked for and none of
+    // them the one requested.
+    final weights = asked.where(weightNames.containsKey).toSet();
+    final unnameable = asked.difference(weights);
+    if (unnameable.isNotEmpty) {
+      _logger.warn('Ignoring weight(s) ${unnameable.join(', ')}: a font file can only be named after 100 to 900');
+    }
+    return (family: family, weights: weights);
+  }
+
+  Future<void> _removeFaces(Directory target) async {
+    if (!target.existsSync()) return;
+    await for (final entry in target.list()) {
+      if (entry is File && _isBundledByThis(entry.path)) await entry.delete();
+    }
+  }
+
+  bool _isBundledByThis(String file) =>
+      _faceExtensions.contains(path.extension(file).toLowerCase()) || path.basename(file) == _licenseFile;
 
   /// The family the theme declares, not every family it happens to mention.
   String? _declaredFamily(Map<String, dynamic> config) {
@@ -159,7 +231,7 @@ class FontAssetProcessor {
     }
 
     visit(config);
-    return result.isEmpty ? _defaultWeights.toSet() : result;
+    return result;
   }
 
   List<({int weight, String url})> _parseCss(String css) {
@@ -176,12 +248,11 @@ class FontAssetProcessor {
         .toList();
   }
 
-  String _safeFamily(String family) {
+  void _validateFamily(String family) {
     final valid = RegExp(r'^[\p{L}\p{N}][\p{L}\p{N} _-]*$', unicode: true).firstMatch(family)?.group(0) == family;
     if (!valid) {
       throw FormatException('Invalid Google Font family: $family');
     }
-    return family.replaceAll(RegExp(r'\s+'), '_');
   }
 
   String _slug(String family) => family.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');

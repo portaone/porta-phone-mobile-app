@@ -1,9 +1,13 @@
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:test/test.dart';
 
 import 'package:webtrit_phone_tools/src/commands/app_resources/processors/font_asset_processor.dart';
 
-/// Which typeface a build fetches.
+/// Which typeface a build fetches, and what it leaves in the app for it.
 ///
 /// It used to be whatever the configuration mentioned anywhere, collected by
 /// walking every nested object - so the style of the initials drawn on an avatar
@@ -11,13 +15,21 @@ import 'package:webtrit_phone_tools/src/commands/app_resources/processors/font_a
 /// refusal blocked three brands in production. A theme declares its typeface in
 /// one place, and that is the one place this reads.
 void main() {
+  late Directory target;
+  late _GoogleFonts service;
   late FontAssetProcessor processor;
-  late Logger logger;
 
   setUp(() {
-    logger = Logger(level: Level.quiet);
-    processor = FontAssetProcessor(logger: logger);
+    target = Directory.systemTemp.createTempSync('font_asset_processor_test');
+    service = _GoogleFonts();
+    processor = FontAssetProcessor(
+      logger: Logger(level: Level.quiet),
+      client: MockClient(service.answer),
+      retryPause: Duration.zero,
+    );
   });
+
+  tearDown(() => target.deleteSync(recursive: true));
 
   Map<String, dynamic> config({String? declared, String? nested}) => {
         if (declared != null) 'fonts': {'fontFamily': declared},
@@ -29,70 +41,166 @@ void main() {
           },
       };
 
-  test('a font named inside an avatar style is not a second choice', () async {
-    // Ten applications in production carry exactly this: a nested style whose
-    // family differs from the theme's. Only one family is ever bundled, so a
-    // style naming another renders in the platform default - silently.
-    var attempted = '';
-    await processor
-        .process(
-          lightConfig: config(declared: 'Be Vietnam Pro', nested: 'Montserrat'),
-          darkConfig: config(declared: 'Be Vietnam Pro'),
-          resolvePath: (path) {
-            attempted = path;
-            return '/tmp/does-not-matter/$path';
-          },
-        )
-        .catchError((_) {});
-
-    expect(attempted, contains('Be_Vietnam_Pro'), reason: 'the declared family is what gets fetched');
-    expect(attempted, isNot(contains('Montserrat')), reason: 'the nested one is not a choice at all');
-  });
-
-  test('names a face the way the app looks for it', () async {
-    // Not a naming preference: the app finds a bundled face by asking whether an
-    // asset name ends with what the google_fonts package builds from the weight.
-    // A file named anything else is not found, and the text renders in the
-    // platform font without a word about it.
-    const expected = {
-      100: 'Thin',
-      200: 'ExtraLight',
-      300: 'Light',
-      400: 'Regular',
-      500: 'Medium',
-      600: 'SemiBold',
-      700: 'Bold',
-      800: 'ExtraBold',
-      900: 'Black',
-    };
-
-    for (final entry in expected.entries) {
-      expect(
-        FontAssetProcessor.weightNames[entry.key],
-        entry.value,
-        reason: 'weight ${entry.key} must be spelled the way google_fonts spells it',
+  Future<void> build({String? declared = 'Be Vietnam Pro'}) => processor.process(
+        lightConfig: config(declared: declared),
+        darkConfig: config(declared: declared),
+        resolvePath: (path) => '${target.path}/$path',
       );
-    }
-  });
 
-  test('covers every weight a theme can name, not only the four it used to', () async {
-    // A brand in production asks for 800, and the step threw on it - so the
-    // brand chose a typeface and shipped with the platform one.
-    expect(FontAssetProcessor.weightNames.keys, containsAll(<int>[100, 200, 300, 800, 900]));
-  });
+  Directory bundled() => Directory('${target.path}/${FontAssetProcessor.directory}');
 
-  test('a theme that declares nothing leaves the app alone', () async {
-    var touched = false;
+  List<String> filesIn(Directory directory) =>
+      [for (final entry in directory.listSync()) entry.uri.pathSegments.last]..sort();
 
-    await processor.process(
-      lightConfig: config(nested: 'Montserrat'),
-      darkConfig: config(),
-      resolvePath: (path) {
-        touched = true;
-        return '/tmp/$path';
-      },
+  test('a font named inside an avatar style is not a second choice', () {
+    // Ten applications in production carry exactly this: a nested style whose
+    // family differs from the theme's. Only one family is ever bundled.
+    final request = processor.requestFor(
+      lightConfig: config(declared: 'Be Vietnam Pro', nested: 'Montserrat'),
+      darkConfig: config(declared: 'Be Vietnam Pro'),
     );
 
-    expect(touched, isFalse, reason: 'nothing to fetch, so nothing to write');
+    expect(request?.family, 'Be Vietnam Pro', reason: 'the declared family is what gets fetched');
   });
+
+  test('the faces go straight into the directory the app declares', () async {
+    // An asset directory is not recursive. Faces used to be written into a
+    // folder named after the family below it, which no pubspec entry covers,
+    // so a build fetched them and then shipped without them.
+    await build();
+
+    expect(FontAssetProcessor.directory, 'assets/fonts', reason: 'the entry in phone/pubspec.yaml');
+    expect(filesIn(bundled()), [
+      'Be Vietnam Pro-Bold.ttf',
+      'Be Vietnam Pro-Medium.ttf',
+      'Be Vietnam Pro-Regular.ttf',
+      'Be Vietnam Pro-SemiBold.ttf',
+      'OFL.txt',
+    ]);
+  });
+
+  test('a build replaces what the one before it left and nothing else', () async {
+    bundled().createSync(recursive: true);
+    File('${bundled().path}/Old Family-Regular.ttf').writeAsStringSync('stale');
+    File('${bundled().path}/OFL.txt').writeAsStringSync('the licence of the old family');
+    File('${bundled().path}/.gitkeep').writeAsStringSync('');
+    service.licence = 404;
+
+    await build();
+
+    expect(filesIn(bundled()), [
+      '.gitkeep',
+      'Be Vietnam Pro-Bold.ttf',
+      'Be Vietnam Pro-Medium.ttf',
+      'Be Vietnam Pro-Regular.ttf',
+      'Be Vietnam Pro-SemiBold.ttf',
+    ]);
+  });
+
+  test('a theme that declares nothing leaves no typeface behind', () async {
+    // The directory is bundled whole: the faces of another brand left in a
+    // reused workspace would ship with this one.
+    bundled().createSync(recursive: true);
+    File('${bundled().path}/Old Family-Regular.ttf').writeAsStringSync('stale');
+    File('${bundled().path}/.gitkeep').writeAsStringSync('');
+
+    await build(declared: null);
+
+    expect(filesIn(bundled()), ['.gitkeep']);
+    expect(service.asked, isEmpty, reason: 'nothing to fetch');
+  });
+
+  test('a face that cannot be fetched leaves no part of the family', () async {
+    // The app registers whatever faces the directory holds as the whole
+    // family: two out of four would be drawn as if nothing were missing.
+    service.failing = 'SemiBold';
+
+    await expectLater(build(), throwsA(isA<HttpException>()));
+
+    expect(bundled().existsSync() ? filesIn(bundled()) : <String>[], isEmpty);
+  });
+
+  test('a request the network drops is made again', () async {
+    service.dropFirst = 2;
+
+    await build();
+
+    expect(filesIn(bundled()), hasLength(5));
+  });
+
+  test('the weights the app draws are fetched whatever the theme names', () {
+    // The stock theme names 500, 600 and 700 and never 400: a weight appears
+    // in a theme only where it overrides a style. Fetching just those left a
+    // build without the regular face.
+    final request = processor.requestFor(
+      lightConfig: {
+        ...config(declared: 'Montserrat'),
+        'button': {
+          'textStyle': {
+            'fontWeight': {'weight': 800},
+          },
+        },
+      },
+      darkConfig: config(declared: 'Montserrat'),
+    );
+
+    expect(request?.weights, {400, 500, 600, 700, 800});
+  });
+
+  test('a weight no font file is named after is left out', () {
+    final request = processor.requestFor(
+      lightConfig: {
+        ...config(declared: 'Montserrat'),
+        'button': {
+          'fontWeight': {'weight': 550},
+        },
+      },
+      darkConfig: config(declared: 'Montserrat'),
+    );
+
+    expect(request?.weights, FontAssetProcessor.appWeights);
+  });
+
+  test('every weight a theme can name has a file name', () {
+    expect(FontAssetProcessor.weightNames.keys, [100, 200, 300, 400, 500, 600, 700, 800, 900]);
+    expect(FontAssetProcessor.weightNames.values.toSet(), hasLength(9), reason: 'two weights must not share a file');
+  });
+}
+
+/// The three hosts a build talks to, answering from memory.
+class _GoogleFonts {
+  /// Every request made, in order.
+  final asked = <Uri>[];
+
+  /// The weight name whose face the service refuses, if any.
+  String? failing;
+
+  /// How many requests are dropped before one gets through.
+  int dropFirst = 0;
+
+  /// The status the licence is answered with.
+  int licence = 200;
+
+  Future<http.Response> answer(http.Request request) async {
+    asked.add(request.url);
+    if (dropFirst > 0) {
+      dropFirst--;
+      throw const SocketException('connection reset');
+    }
+    return switch (request.url.host) {
+      'fonts.googleapis.com' => http.Response(_css(request.url.queryParameters['family']!), 200),
+      'fonts.gstatic.com' => _face(request.url),
+      _ => http.Response('licence', licence),
+    };
+  }
+
+  http.Response _face(Uri url) =>
+      failing != null && url.path.contains(failing!) ? http.Response('', 404) : http.Response('face', 200);
+
+  String _css(String family) => [
+        for (final weight in family.split('@').last.split(';'))
+          "@font-face { font-weight: $weight; src: url(https://fonts.gstatic.com/s/${_name(weight)}.ttf) format('truetype'); }",
+      ].join('\n');
+
+  String _name(String weight) => FontAssetProcessor.weightNames[int.parse(weight)]!;
 }
