@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use_from_same_package
 
+import 'package:clock/clock.dart';
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -33,6 +34,9 @@ class KeypadKeyButton extends StatefulWidget {
 
   final String text;
   final String subtext;
+
+  /// A press entered a character: [text], or the [subtext] of a key that has
+  /// an alternate and was held (see [_KeypadKeyButtonState._alternate]).
   final void Function(String) onKeyPressed;
 
   final KeypadKeyStyle? style;
@@ -51,7 +55,36 @@ class KeypadKeyButton extends StatefulWidget {
 }
 
 class _KeypadKeyButtonState extends State<KeypadKeyButton> {
-  DateTime? _pointerDownAt;
+  /// When the finger now on the key touched it.
+  DateTime? _touchedAt;
+
+  /// The character a long press enters instead of the key's own: a
+  /// one-character subtext - the "+" under "0". The letters under the digits
+  /// are a caption, not an alternate.
+  String? get _alternate => widget.subtext.length == 1 ? widget.subtext : null;
+
+  /// A key without an alternate enters its character on the touch, not on the
+  /// lift: a lift-based tap is cancelled by the framework once the finger
+  /// travels 18 logical pixels, which fast typing does all the time - the key
+  /// lights up and enters nothing (WT-1436).
+  ///
+  /// A key with an alternate cannot do that, because its touch may still turn
+  /// into a long press; it waits for the lift, see [_onPointerUp].
+  void _onPointerDown(PointerDownEvent event) {
+    _touchedAt = clock.now();
+    if (_alternate == null) widget.onKeyPressed(widget.text);
+  }
+
+  /// The lift of a key with an alternate enters the key's own character when
+  /// it comes before the long-press timeout. After it the long press of the
+  /// button below has entered the alternate ([_enterAlternate]).
+  void _onPointerUp(PointerUpEvent event) {
+    final touchedAt = _touchedAt;
+    if (touchedAt == null) return;
+    if (clock.now().difference(touchedAt) < kLongPressTimeout) widget.onKeyPressed(widget.text);
+  }
+
+  void _enterAlternate(String alternate) => widget.onKeyPressed(alternate);
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +113,8 @@ class _KeypadKeyButtonState extends State<KeypadKeyButton> {
       height: 1.0,
     );
 
-    final hasLongPress = widget.subtext.length == 1;
+    final alternate = _alternate;
+    final onLongPress = alternate == null ? null : () => _enterAlternate(alternate);
 
     // The pointer input stays on the Listener below; this node carries the
     // accessibility contract for the key. The subtree is excluded so the
@@ -93,25 +127,16 @@ class _KeypadKeyButtonState extends State<KeypadKeyButton> {
       button: true,
       excludeSemantics: true,
       onTap: () => widget.onKeyPressed(widget.text),
-      onLongPress: hasLongPress ? () => widget.onKeyPressed(widget.subtext) : null,
+      onLongPress: onLongPress,
       child: Listener(
         key: Key(widget.text),
-        onPointerDown: (_) {
-          _pointerDownAt = DateTime.now();
-          if (!hasLongPress) widget.onKeyPressed(widget.text);
-        },
-        onPointerUp: hasLongPress
-            ? (_) {
-                final downAt = _pointerDownAt;
-                if (downAt == null) return;
-                if (DateTime.now().difference(downAt) < kLongPressTimeout) {
-                  widget.onKeyPressed(widget.text);
-                }
-              }
-            : null,
+        onPointerDown: _onPointerDown,
+        onPointerUp: alternate == null ? null : _onPointerUp,
         child: TextButton(
+          // The button draws the press and tells a long press from a short
+          // one; what a short press enters is decided by the Listener.
           onPressed: () {},
-          onLongPress: hasLongPress ? () => widget.onKeyPressed(widget.subtext) : null,
+          onLongPress: onLongPress,
           style: merged.buttonStyle,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
