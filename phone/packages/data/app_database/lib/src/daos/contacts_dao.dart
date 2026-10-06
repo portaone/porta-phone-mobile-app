@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:app_database/src/app_database.dart';
+import 'package:app_database/src/daos/contact_search.dart';
 
 part 'contacts_dao.g.dart';
 
@@ -72,6 +73,37 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
   /// employee's number contains the company main number as a prefix, which is
   /// how the main number came to be labelled with a colleague's name.
   Expression<bool> _phoneEndsWith(String number) => contactPhonesTable.number.substr(-number.length).equals(number);
+
+  /// The contact carries [word]: a name of it, one of its numbers or one of
+  /// its emails contains it, in any letter case.
+  ///
+  /// This is a condition on the CONTACT. Numbers and emails are asked as "the
+  /// contact id is among the owners of a matching number" and never through
+  /// the rows of the joined query: that query has one row per number and
+  /// email of a contact, so a condition on its rows keeps only the rows that
+  /// matched and hands the contact back without its other numbers.
+  ///
+  /// The two subqueries name nothing of the outer query on purpose. SQLite
+  /// then works each out once; a subquery tied to the contact id (EXISTS ...
+  /// WHERE contact_id = contacts.id) is run again for every contact and, with
+  /// no index on contact_id, reads the whole table each time - measured at
+  /// six to seven times the cost of reading the full list of 5000 contacts.
+  Expression<bool> _carries(ContactSearchWord word) {
+    Expression<bool> has(Expression<String> text) => text.regexp(word.pattern, caseSensitive: false);
+
+    final ownersOfNumber = selectOnly(contactPhonesTable)
+      ..addColumns([contactPhonesTable.contactId])
+      ..where(has(contactPhonesTable.number));
+    final ownersOfEmail = selectOnly(contactEmailsTable)
+      ..addColumns([contactEmailsTable.contactId])
+      ..where(has(contactEmailsTable.address));
+
+    return has(contactsTable.lastName) |
+        has(contactsTable.firstName) |
+        has(contactsTable.aliasName) |
+        contactsTable.id.isInQuery(ownersOfNumber) |
+        contactsTable.id.isInQuery(ownersOfEmail);
+  }
 
   /// Resolves [phoneMatch] to the single winning contact id, respecting
   /// external-over-local source priority.
@@ -240,23 +272,16 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
     ContactSourceTypeEnum? sourceType,
     ContactKindTypeEnum kind = ContactKindTypeEnum.visible,
   ]) {
-    final query = _joinFullData(_selectAllContacts(sourceType: sourceType, kind: kind));
+    final search = ContactSearch(searchBits ?? const []);
 
-    if (searchBits != null) {
-      query.where(
-        searchBits
-            .map((searchBit) {
-              return [
-                contactsTable.lastName,
-                contactsTable.firstName,
-                contactsTable.aliasName,
-                contactPhonesTable.number,
-                contactEmailsTable.address,
-              ].map((c) => c.regexp('.*${_escapeRegExp(searchBit)}.*', caseSensitive: false)).reduce((v, e) => v | e);
-            })
-            .reduce((v, e) => v | e),
-      );
+    // The database keeps the contacts that carry every word, so the rest of
+    // the list is never read; the search then puts the kept ones in order.
+    final contacts = _selectAllContacts(sourceType: sourceType, kind: kind);
+    if (search.words.isNotEmpty) {
+      contacts.where((_) => search.words.map(_carries).reduce((v, e) => v & e));
     }
+
+    final query = _joinFullData(contacts);
 
     query.orderBy([
       OrderingTerm(
@@ -278,7 +303,7 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
       ),
     ]);
 
-    return query.watch().map(_gatherMultipleContacts);
+    return query.watch().map(_gatherMultipleContacts).map(search.rank);
   }
 
   Future<List<FullContactData>> getServiceContacts() async {
@@ -330,11 +355,3 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
         .go();
   }
 }
-
-final _regExpMetaChars = RegExp(r'[\\^$.|?*+()[\]{}]');
-
-/// Escapes regular-expression metacharacters so a raw, user-typed search string
-/// can be safely interpolated into the pattern passed to the SQL `REGEXP`
-/// operator (backed by Dart's [RegExp]). Without this, characters such as
-/// `( [ * +` would produce an invalid pattern and break the contacts search.
-String _escapeRegExp(String input) => input.replaceAllMapped(_regExpMetaChars, (match) => '\\${match[0]}');
