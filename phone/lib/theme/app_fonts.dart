@@ -6,7 +6,8 @@ import 'package:logging/logging.dart';
 
 final _logger = Logger('AppFonts');
 
-/// The app's typeface: where it comes from and how the text theme names it.
+/// The app's typeface: where it comes from, how the text theme names it and
+/// which weights the type scale asks of it.
 ///
 /// Everything the app knows about fonts is here, and nothing else in it talks
 /// to google_fonts.
@@ -114,6 +115,45 @@ abstract final class AppFonts {
   }
 
   static bool _fetchingAllowed() => GoogleFonts.config.allowRuntimeFetching;
+
+  /// [scale] with every weight of it moved to regular or bold.
+  ///
+  /// Text may be in a script the theme's typeface has no letters for - a
+  /// name, a note, a translation. The platform then draws it with a typeface
+  /// of its own, at the weight asked, and for most scripts it has a regular
+  /// and a bold face with nothing between: asked for 500 it answers with
+  /// bold, beside Latin text in a medium face. Regular and bold exist for
+  /// every script and in any typeface a brand picks, so the type scale asks
+  /// for nothing else. A weight below 600 becomes 400, one from 600 up 700.
+  static Typography typography(Typography scale) => scale.copyWith(
+    englishLike: _regularOrBold(scale.englishLike),
+    dense: _regularOrBold(scale.dense),
+    tall: _regularOrBold(scale.tall),
+  );
+
+  static TextTheme _regularOrBold(TextTheme styles) => styles.copyWith(
+    displayLarge: _atRegularOrBold(styles.displayLarge),
+    displayMedium: _atRegularOrBold(styles.displayMedium),
+    displaySmall: _atRegularOrBold(styles.displaySmall),
+    headlineLarge: _atRegularOrBold(styles.headlineLarge),
+    headlineMedium: _atRegularOrBold(styles.headlineMedium),
+    headlineSmall: _atRegularOrBold(styles.headlineSmall),
+    titleLarge: _atRegularOrBold(styles.titleLarge),
+    titleMedium: _atRegularOrBold(styles.titleMedium),
+    titleSmall: _atRegularOrBold(styles.titleSmall),
+    bodyLarge: _atRegularOrBold(styles.bodyLarge),
+    bodyMedium: _atRegularOrBold(styles.bodyMedium),
+    bodySmall: _atRegularOrBold(styles.bodySmall),
+    labelLarge: _atRegularOrBold(styles.labelLarge),
+    labelMedium: _atRegularOrBold(styles.labelMedium),
+    labelSmall: _atRegularOrBold(styles.labelSmall),
+  );
+
+  static TextStyle? _atRegularOrBold(TextStyle? style) {
+    final weight = style?.fontWeight;
+    if (style == null || weight == null) return style;
+    return style.copyWith(fontWeight: weight.value >= FontWeight.w600.value ? FontWeight.w700 : FontWeight.w400);
+  }
 
   /// The font files among [assets], grouped by the family each belongs to.
   ///

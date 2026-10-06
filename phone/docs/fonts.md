@@ -17,9 +17,9 @@ assets/fonts/<Family>-<Weight>.ttf        one file per weight, straight in the d
    v
 one family named <Family>, every weight in it
    |
-   |  theme (TextThemeDataFactory -> AppFonts.textTheme)
+   |  theme (TextThemeDataFactory -> AppFonts.textTheme, ThemeProvider -> AppFonts.typography)
    v
-every text style names <Family>; the engine picks the face for the weight of each text
+every text style names <Family> and asks for regular or bold; the engine picks the face
 ```
 
 ## Theme setting
@@ -77,8 +77,27 @@ Measured cost of `AppFonts.load` with four faces of 180 KB each, Samsung M32, pr
 start: the `app-themes` stage takes 40 ms instead of 24 ms, and the Dart startup total 470-485 ms
 instead of 463-464 ms. See [startup_performance.md](startup_performance.md) for how to measure.
 
+## Type scale
+
+Text may be in a script the theme's typeface has no letters for - a name, a note, a translation.
+The platform then draws it with a typeface of its own, at the weight asked, and for most scripts
+it has a regular and a bold face with nothing between: a name asked at 500 came out bold beside a
+Latin name in a medium face.
+
+Regular and bold exist for every script and in any typeface a brand picks, so the type scale of
+the app asks for nothing else. `AppFonts.typography` takes the Material type scale and moves every
+weight of it to the nearer of the two - below 600 to 400, from 600 up to 700 - and
+`ThemeProvider` builds the theme with that scale. This is the one place the rule lives: a widget
+takes a style of the theme (`titleMedium`, `labelLarge`) as before and needs to know nothing of it.
+
+A widget that sets a weight of its own between the two (`FontWeight.w600`) is outside the rule:
+the theme's typeface draws it semi-bold, a platform face without that weight draws it bold.
+
+The scripts still do not look identical: a platform face has a design of its own and may be
+darker than the theme's at the same weight.
+
 ## Verification
 
-- Unit tests: `test/theme/app_fonts_test.dart`, `test/theme/app_fonts_text_theme_test.dart`; the
-  build step in `tools/test/src/commands/app_resources/processors/font_asset_processor_test.dart`.
+- Unit tests: `test/theme/app_fonts_test.dart`, `test/theme/app_fonts_text_theme_test.dart`,
+  `test/theme/app_fonts_typography_test.dart`; the build step in `tools/test/src/commands/app_resources/processors/font_asset_processor_test.dart`.
 - A built APK carries the faces as `assets/flutter_assets/assets/fonts/<Family>-<Weight>.ttf`.
