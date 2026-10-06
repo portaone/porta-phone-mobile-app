@@ -54,7 +54,8 @@ enum VoicemailReadOutcome {
 /// It does not read the mailbox on its own. The repository is registered for
 /// polling, whose leading cycle refreshes it at the start of the session and
 /// every interval after, and for refresh on connectivity recovery; this
-/// follows what that leaves in the store, and reads when it is asked to.
+/// follows what that leaves in the store, and reads when it is asked to -
+/// see `VoicemailCubit` for when a screen asks.
 ///
 /// Where voicemail is not available for the session the repository is the
 /// empty one, whose streams are a constant nothing, so this needs no gate of

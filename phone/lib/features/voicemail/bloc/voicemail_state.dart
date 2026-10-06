@@ -15,7 +15,7 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
     this.forwardSupported = false,
     this.selectedVoicemailsIds = const [],
     this.trashedItems = const [],
-    this.trashStatus = VoicemailStatus.loaded,
+    this.trashStatus = VoicemailStatus.initial,
     this.trashError,
     this.busy = false,
   });
@@ -49,8 +49,9 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   @override
   final List<Voicemail> trashedItems;
 
-  /// Where the last read of the trash stands. Apart from how the read of the
-  /// mailbox stands, which is the session's: they are two reads of two lists.
+  /// Where the last read of the trash stands; [VoicemailStatus.initial] while
+  /// the trash is not being looked at. Apart from how the read of the mailbox
+  /// stands, which is the session's: they are two reads of two lists.
   @override
   final VoicemailStatus trashStatus;
 

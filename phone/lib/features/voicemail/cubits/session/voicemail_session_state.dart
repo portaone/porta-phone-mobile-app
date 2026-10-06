@@ -5,14 +5,15 @@ part of 'voicemail_session_cubit.dart';
 @freezed
 class VoicemailSessionState with _$VoicemailSessionState, DiagnosticableTreeMixin {
   const VoicemailSessionState({
-    this.status = VoicemailStatus.loading,
+    this.status = VoicemailStatus.initial,
     this.items = const [],
     this.unreadCount = 0,
     this.forwarderNames = const {},
     this.error,
   });
 
-  /// Where the last read of the mailbox stands.
+  /// Where the last read of the mailbox stands; [VoicemailStatus.initial]
+  /// until the mailbox has been asked for in this session.
   @override
   final VoicemailStatus status;
 

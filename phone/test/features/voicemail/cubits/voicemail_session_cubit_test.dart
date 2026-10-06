@@ -265,6 +265,29 @@ void main() {
       expect(cubit.state.error, failure);
     });
 
+    test('is what takes the mailbox out of its initial state, however it goes', () async {
+      // Nobody has asked yet is a state of its own: a screen reads it to
+      // decide whether the mailbox still has to be asked for.
+      expect(cubit.state.status, VoicemailStatus.initial);
+      when(() => repository.fetchVoicemails()).thenAnswer((_) => Future.error(Exception('no route to host')));
+
+      await cubit.fetchVoicemails();
+
+      expect(cubit.state.status, VoicemailStatus.loaded);
+      expect(cubit.state.error, isNotNull);
+    });
+
+    test('is not what a list arriving from the store counts as', () async {
+      // The store holds what an earlier session left. Seeing it is not having
+      // asked the backend.
+      cubit.attach();
+      mailbox.add([_voicemail('1')]);
+      await pumpEventQueue();
+
+      expect(cubit.state.items, hasLength(1));
+      expect(cubit.state.status, VoicemailStatus.initial);
+    });
+
     test('whose answer arrives after the session ended is not an error', () async {
       final answer = Completer<void>();
       when(() => repository.fetchVoicemails()).thenAnswer((_) => answer.future);

@@ -149,7 +149,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
         filter: filter,
         trashedItems: const [],
         selectedVoicemailsIds: const [],
-        trashStatus: VoicemailStatus.loaded,
+        trashStatus: VoicemailStatus.initial,
         trashError: null,
       ),
     );
@@ -480,7 +480,32 @@ class VoicemailCubit extends Cubit<VoicemailState> {
 
     if (_session.state.isFeatureNotSupported) return;
 
-    fetchVoicemails();
+    _readOnOpening();
+  }
+
+  /// Asks for the mailbox as the screen opens, where that is still worth
+  /// doing. What is worth doing is read off the session's state.
+  ///
+  /// A mailbox nobody has asked for yet is asked for, and a failure is said:
+  /// that read is how a person finds out the list they are looking at is not
+  /// current. After it the list is kept fresh by polling and by a pull to
+  /// refresh, so a later screen does not ask again - the screen reached from
+  /// settings is built on every visit, and on a connection that is down each
+  /// of those reads would fail the same way.
+  ///
+  /// The exception is a mailbox whose last read failed: nothing else would
+  /// clear that failure where the mailbox is empty, because a poll that finds
+  /// nothing writes nothing. That read is tried again, and quietly - the
+  /// person has been told once, and a second sentence would push aside
+  /// whatever else they were just told.
+  void _readOnOpening() {
+    final mailbox = _session.state;
+
+    if (mailbox.status == VoicemailStatus.initial) {
+      fetchVoicemails();
+    } else if (mailbox.error != null) {
+      _session.fetchVoicemails();
+    }
   }
 
   /// A selection made over the mailbox follows the mailbox.
