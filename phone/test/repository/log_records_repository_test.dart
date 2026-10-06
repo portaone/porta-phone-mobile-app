@@ -11,7 +11,10 @@ import 'package:webtrit_phone/repositories/log_records/log_records_repository.da
 import 'package:webtrit_phone/repositories/log_records/native_log_forwarder.dart';
 
 void main() {
-  Logger.root.level = Level.ALL;
+  // For this file's tests only: the root level is global and outlives the file.
+  final previousLevel = Logger.root.level;
+  setUpAll(() => Logger.root.level = Level.ALL);
+  tearDownAll(() => Logger.root.level = previousLevel);
 
   // ---------------------------------------------------------------------------
   // LogRecordsMemoryRepositoryImpl

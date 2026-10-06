@@ -142,21 +142,26 @@ class CallBlocHarness {
     await signaling.close();
   }
 
-  static bool _stubsInstalled = false;
-
   /// flutter_webrtc and callkeep reach for platform channels the moment the
   /// bloc touches media or the native call UI; in a test there is nobody on
   /// the other side, so the calls are answered with nothing. Installed by
   /// the harness; a test of a part that touches media without the bloc
-  /// installs them itself.
+  /// installs them itself. They last for the current test only: left in place, they would
+  /// answer the next file's widgets too (a renderer told `null` instead of a texture id).
   static void installPlatformStubs() {
-    if (_stubsInstalled) return;
-    _stubsInstalled = true;
+    final previousCallkeep = WebtritCallkeepPlatform.instance;
     WebtritCallkeepPlatform.instance = _FakeCallkeepPlatform();
     final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-    for (final channel in const ['FlutterWebRTC.Method', 'FlutterWebRTC.Event']) {
+    const channels = ['FlutterWebRTC.Method', 'FlutterWebRTC.Event'];
+    for (final channel in channels) {
       messenger.setMockMethodCallHandler(MethodChannel(channel), (_) async => null);
     }
+    addTearDown(() {
+      WebtritCallkeepPlatform.instance = previousCallkeep;
+      for (final channel in channels) {
+        messenger.setMockMethodCallHandler(MethodChannel(channel), null);
+      }
+    });
   }
 }
 
