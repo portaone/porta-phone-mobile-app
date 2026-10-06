@@ -2432,6 +2432,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get session_Teardown_progressText => 'Вихід із системи...';
 
   @override
+  String get session_Restart_progressText => 'Застосовуємо зміни із сервера...';
+
+  @override
   String get sessions_AppBar_title => 'Активні сесії';
 
   @override

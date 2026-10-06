@@ -316,6 +316,9 @@ class AppRouter extends RootStackRouter {
           path: 'teardown',
           onNavigation: onTeardownScreenGuardNavigation,
         ),
+        // Unguarded: it leaves for the main shell by itself, and that guard
+        // decides where a session that ended meanwhile goes.
+        AutoRoute(page: SessionRestartScreenPageRoute.page, path: 'session-restart'),
         AutoRoute(page: TermsConditionsScreenPageRoute.page, path: 'terms-conditions'),
         AutoRoute(page: ErrorDetailsScreenPageRoute.page, path: 'error-details'),
         AutoRoute(page: LogRecordsConsoleScreenPageRoute.page, path: 'log-records-console'),
