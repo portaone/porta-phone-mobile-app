@@ -54,7 +54,8 @@ enum VoicemailReadOutcome {
 /// It does not read the mailbox on its own. The repository is registered for
 /// polling, whose leading cycle refreshes it at the start of the session and
 /// every interval after, and for refresh on connectivity recovery; this
-/// follows what that leaves in the store, and reads when it is asked to.
+/// follows what that leaves in the store, and reads when it is asked to -
+/// see `VoicemailCubit` for when a screen asks.
 ///
 /// Where voicemail is not available for the session the repository is the
 /// empty one, whose streams are a constant nothing, so this needs no gate of
@@ -76,6 +77,11 @@ class VoicemailSessionCubit extends Cubit<VoicemailSessionState> {
 
   /// How many screens are showing the mailbox.
   int _screens = 0;
+
+  /// Whether the mailbox has been asked for in this session, however that
+  /// went.
+  bool get readAsked => _readAsked;
+  bool _readAsked = false;
 
   void init() {
     _logger.fine('Initializing');
@@ -110,6 +116,7 @@ class VoicemailSessionCubit extends Cubit<VoicemailSessionState> {
   /// state. Whether a failure is worth a sentence depends on what is on screen
   /// at the time, so saying it is left to whoever asked.
   Future<VoicemailReadOutcome> fetchVoicemails() async {
+    _readAsked = true;
     if (_checkSupport()) return VoicemailReadOutcome.notSupported;
 
     try {

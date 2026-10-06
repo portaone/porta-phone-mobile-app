@@ -480,7 +480,30 @@ class VoicemailCubit extends Cubit<VoicemailState> {
 
     if (_session.state.isFeatureNotSupported) return;
 
-    fetchVoicemails();
+    _readOnOpening();
+  }
+
+  /// Asks for the mailbox as the screen opens, where that is still worth
+  /// doing.
+  ///
+  /// The first screen of a session asks, and says so if it fails: that read
+  /// is how a person finds out the list they are looking at is not current.
+  /// After it the list is kept fresh by polling and by a pull to refresh, so a
+  /// later screen does not ask again - the screen reached from settings is
+  /// built on every visit, and on a connection that is down each of those
+  /// reads would fail the same way.
+  ///
+  /// The exception is a session whose last read failed: nothing else would
+  /// clear that failure where the mailbox is empty, because a poll that finds
+  /// nothing writes nothing. That read is tried again, and quietly - the
+  /// person has been told once, and a second sentence would push aside
+  /// whatever else they were just told.
+  void _readOnOpening() {
+    if (!_session.readAsked) {
+      fetchVoicemails();
+    } else if (_session.state.error != null) {
+      _session.fetchVoicemails();
+    }
   }
 
   /// A selection made over the mailbox follows the mailbox.

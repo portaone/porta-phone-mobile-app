@@ -51,6 +51,103 @@ void main() {
     await pumpEventQueue();
   }
 
+  group('reading the mailbox as a screen opens', () {
+    late List<Object> said;
+
+    VoicemailCubit open() => VoicemailCubit(
+      repository: repository,
+      session: session,
+      contactsRepository: _Contacts(),
+      onCallStarted: (_) {},
+      onSubmitNotification: said.add,
+      saveSupported: true,
+      trashSupported: true,
+      forwardSupported: true,
+    );
+
+    setUp(() => said = []);
+
+    test('the first screen of a session asks for it', () async {
+      final cubit = open();
+      await pumpEventQueue();
+
+      verify(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode'))).called(1);
+      await cubit.close();
+    });
+
+    test('a screen opened after that does not ask again', () async {
+      // The screen reached from settings is built again on every visit. With
+      // the connection down each of those reads would fail the same way, and
+      // its sentence would push aside whatever else the person was just told.
+      final first = open();
+      await pumpEventQueue();
+      await first.close();
+      clearInteractions(repository);
+
+      final second = open();
+      await pumpEventQueue();
+
+      verifyNever(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode')));
+      await second.close();
+    });
+
+    test('unless the last read failed: then it asks again, and says nothing twice', () async {
+      // A poll that finds an empty mailbox writes nothing, so nothing else
+      // would ever clear the failure the first read left.
+      when(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode')))
+          .thenAnswer((_) async => throw Exception('offline'));
+      // An empty mailbox: with a list on screen, the list arriving from the
+      // store is what clears a failed read, and here nothing arrives.
+      final first = open();
+      await pumpEventQueue();
+      await first.close();
+      expect(session.state.error, isNotNull);
+      final saidAfterFirst = said.length;
+      when(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode'))).thenAnswer((_) async {});
+      clearInteractions(repository);
+
+      final second = open();
+      await pumpEventQueue();
+
+      verify(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode'))).called(1);
+      expect(session.state.error, isNull);
+      expect(said.length, saidAfterFirst);
+      await second.close();
+    });
+
+    test('and a failure of that second read is not said again either', () async {
+      when(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode')))
+          .thenAnswer((_) async => throw Exception('offline'));
+      // An empty mailbox: with a list on screen, the list arriving from the
+      // store is what clears a failed read, and here nothing arrives.
+      final first = open();
+      await pumpEventQueue();
+      await first.close();
+      expect(session.state.error, isNotNull);
+      final saidAfterFirst = said.length;
+
+      final second = open();
+      await pumpEventQueue();
+
+      expect(said.length, saidAfterFirst);
+      await second.close();
+    });
+
+    test('a pull to refresh always reads', () async {
+      final first = open();
+      await pumpEventQueue();
+      await first.close();
+      final second = open();
+      await pumpEventQueue();
+      clearInteractions(repository);
+
+      await second.refresh();
+
+      verify(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode'))).called(1);
+      await second.close();
+    });
+  });
+
   group('which filters are offered', () {
     test('a mailbox that does everything offers all four', () {
       expect(build().state.filters, VoicemailFilter.values);

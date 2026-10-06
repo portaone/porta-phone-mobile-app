@@ -64,8 +64,19 @@ list joins the address book and runs again on every write to either, which is
 not a cost to carry for somebody who never opens voicemail.
 
 It never reads the mailbox on its own. The repository is registered for polling
-and for refresh on connectivity recovery; a screen asks for a read when it
-opens and on a pull to refresh.
+and for refresh on connectivity recovery. A screen asks for a read
+(`VoicemailCubit._readOnOpening`):
+
+- **the first screen of a session** - and says so if the read fails;
+- **a later screen only if the last read failed**, and then quietly: a poll that
+  finds an empty mailbox writes nothing, so nothing else would clear the
+  failure, but the person has been told once already;
+- **on a pull to refresh**, always.
+
+A screen does not read on every visit. The screen reached from settings is
+built each time, and with the connection down each of those reads would fail
+the same way, its sentence pushing aside whatever else the person was just
+told.
 
 A list arriving from the store says nothing about how the read of it went, so
 it changes neither `status` nor `error`. The store emits for reasons that are
