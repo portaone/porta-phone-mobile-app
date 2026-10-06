@@ -241,15 +241,75 @@ class HandshakeProcessor {
     final actions = <HandshakeAction>[..._conferenceActions(conference, localConference)];
     final activeCallIds = activeCalls.map((call) => call.callId).toSet();
     final callIdsAwaitingOffer = activeCalls.where((call) => call.awaitsOffer).map((call) => call.callId).toSet();
-    // Kept apart from [actions]: an early return above leaves them out, as an
-    // offer is of no use to a session being torn down.
-    final offerActions = <DeliverOfferAction>[];
+    // What is handed to a call the BLoC already holds. Kept apart from
+    // [actions]: an early return below leaves them out, as an offer is of no
+    // use to a session being torn down.
+    final deliveries = <HandshakeAction>[];
 
-    /// Prepare termination queue actions
-    final queuedTerminationCallIds = <String>{};
-    final queuedTerminationRequests = queuedTerminationRequestsRepository.getAll;
+    final queuedTerminationCallIds = _planQueuedTerminations(lines, guestLine, actions);
 
-    for (final request in queuedTerminationRequests.values) {
+    final allLines = [
+      ...lines,
+      guestLine,
+    ].whereType<Line>().where((line) => !queuedTerminationCallIds.contains(line.callId)).toList();
+
+    for (final line in allLines) {
+      final log = _LineLog(line);
+
+      final teardown = _teardownAction(log, lineConnections, activeCallIds);
+      if (teardown != null) return [...actions, teardown];
+
+      final restore = _restoreAction(log, activeCallIds);
+      if (restore != null) {
+        actions.add(restore);
+        continue;
+      }
+
+      // Unanswered incoming call: deliver the IncomingCallEvent to the BLoC so
+      // it can set up the call state and surface the ringing UI.
+      //
+      // The earliest event (not the latest) identifies the call direction
+      // because SIP UAs — notably iOS CallKit — append RingingEvent or
+      // ProceedingEvent almost immediately after the call is placed. By the time
+      // a WebSocket reconnect completes and a new StateHandshake arrives, the
+      // server log already contains multiple entries (e.g. [RingingEvent,
+      // IncomingCallEvent]). Using the latest entry would misidentify those calls.
+      //
+      // Guard rationale:
+      // - not terminated          : skip calls the server already ended.
+      // - not accepted            : accepted calls are handled by RestoreCallAction above.
+      // - earliest is IncomingCallEvent: confirms the call is incoming, not outgoing.
+      // - not in activeCallIds    : skip calls already tracked in BLoC state to avoid
+      //   re-triggering the incoming-call flow for an already-ringing call.
+      final earliest = log.earliest;
+      if (!log.isTerminated &&
+          log.accepted == null &&
+          earliest is IncomingCallEvent &&
+          !activeCallIds.contains(log.callId)) {
+        actions.add(HandleIncomingCallAction(event: earliest, mediaState: log.mediaState));
+      }
+
+      // A call the BLoC registered from a push and is still waiting to hear
+      // the offer for: the newest log entry carrying one is the offer, and it
+      // is delivered once per line.
+      if (callIdsAwaitingOffer.contains(log.callId)) {
+        final offer = log.offer;
+        if (offer != null) deliveries.add(DeliverOfferAction(event: offer, mediaState: log.mediaState));
+      }
+    }
+
+    actions.addAll(_orphanedConnectionActions(connections, allLines, activeCallIds));
+
+    return [...actions, ...deliveries];
+  }
+
+  /// Adds to [actions] the terminations recorded while the server could not
+  /// be told, and returns the ids of their calls: those lines are not planned
+  /// as calls.
+  Set<String> _planQueuedTerminations(List<Line?> lines, Line? guestLine, List<HandshakeAction> actions) {
+    final callIds = <String>{};
+
+    for (final request in queuedTerminationRequestsRepository.getAll.values) {
       // A recorded termination is an intent to end the call, kept until the
       // server confirms it: a hangup for the call, a refusal of the request,
       // or - decided here - a session that no longer carries the call, in
@@ -271,135 +331,87 @@ class HandshakeProcessor {
         case QueuedTerminationRequestType.decline:
           actions.add(DeclineSignalingAction(line: line, callId: request.callId));
       }
-      queuedTerminationCallIds.add(request.callId);
+      callIds.add(request.callId);
     }
 
-    /// Prepare callkeep connections actions
-    final allLines = [
-      ...lines,
-      guestLine,
-    ].whereType<Line>().where((line) => !queuedTerminationCallIds.contains(line.callId)).toList();
-    final localConnections = connections;
+    return callIds;
+  }
 
-    for (final activeLine in allLines) {
-      // callLogs is newest-first: firstOrNull = latest, lastOrNull = earliest.
-      // Materialise once and reuse for both the connection guards below and the
-      // restoration logic further down to avoid redundant traversals.
-      final callEventLogEntries = activeLine.callLogs.whereType<CallEventLog>().toList();
-      final callEvent = callEventLogEntries.firstOrNull?.callEvent; // latest event
-      final earliestCallEvent = callEventLogEntries.lastOrNull?.callEvent;
+  /// The action that ends the plan at this line, if the line calls for one:
+  /// the session is being torn down, and nothing planned after it is of use.
+  HandshakeAction? _teardownAction(
+    _LineLog log,
+    Map<String, CallkeepConnection?> lineConnections,
+    Set<String> activeCallIds,
+  ) {
+    final latest = log.latest;
+    if (latest == null) return null;
+    final connection = lineConnections[latest.callId];
 
-      // AcceptedEvent may not be the latest entry after a re-INVITE or transfer -
-      // search the full log list rather than checking only the newest entry.
-      final acceptedLogEntry = callEventLogEntries.where((log) => log.callEvent is AcceptedEvent).firstOrNull;
-      // Newest first, so the first media state found is the one that stands.
-      final mediaState = callEventLogEntries
-          .map((log) => log.callEvent)
-          .whereType<MediaStatePeerMessageEvent>()
-          .firstOrNull;
-
-      // A call is server-terminated when the latest event is a final hangup or missed.
-      final isTerminated = callEvent is HangupEvent || callEvent is MissedCallEvent;
-
-      CallkeepConnection? connection;
-      if (callEvent != null) {
-        connection = lineConnections[callEvent.callId];
-
-        if (connection?.state == CallkeepConnectionState.stateDisconnected) {
-          if (callEvent is IncomingCallEvent) {
-            return [...actions, DeclineSignalingAction(line: callEvent.line, callId: callEvent.callId)];
-          } else if (!isTerminated) {
-            return [...actions, HangupSignalingAction(line: callEvent.line, callId: callEvent.callId)];
-          }
-        } else if (connection == null &&
-            !activeCallIds.contains(activeLine.callId) &&
-            earliestCallEvent is! IncomingCallEvent &&
-            !isTerminated &&
-            acceptedLogEntry == null) {
-          // Orphaned outgoing call: the server still has the call but both
-          // CallKeep and BLoC have no record of it. This happens when the user
-          // hangs up while offline — performEndCall removed the local state but
-          // the HangupRequest never reached the server.
-          //
-          // earliestCallEvent (not callEvent/latest) is used to identify the
-          // call direction: after a ProceedingEvent or RingingEvent the latest
-          // entry is no longer IncomingCallEvent, so using callEvent here would
-          // incorrectly trigger HangupSignalingAction for unanswered incoming calls.
-          //
-          // acceptedLogEntry == null ensures we never hang up a call that should
-          // be restored (app-restart case where connection is null but the call
-          // was previously accepted).
-          //
-          // On iOS getConnection() always returns null, so activeCallIds is the
-          // decisive guard: calls that are still active in BLoC are not affected.
-          return [...actions, HangupSignalingAction(line: callEvent.line, callId: callEvent.callId)];
-        }
+    if (connection?.state == CallkeepConnectionState.stateDisconnected) {
+      if (latest is IncomingCallEvent) {
+        return DeclineSignalingAction(line: latest.line, callId: latest.callId);
+      } else if (!log.isTerminated) {
+        return HangupSignalingAction(line: latest.line, callId: latest.callId);
       }
-
-      if (!isTerminated &&
-          acceptedLogEntry != null &&
-          (acceptedLogEntry.callEvent as AcceptedEvent).line != null &&
-          !activeCallIds.contains(activeLine.callId)) {
-        final acceptedEvent = acceptedLogEntry.callEvent as AcceptedEvent;
-        actions.add(
-          RestoreCallAction(
-            line: acceptedEvent.line!,
-            callId: activeLine.callId,
-            acceptedEvent: acceptedEvent,
-            acceptedTime: DateTime.fromMillisecondsSinceEpoch(acceptedLogEntry.timestamp),
-            incomingCallEvent: earliestCallEvent is IncomingCallEvent ? earliestCallEvent : null,
-            mediaState: mediaState,
-          ),
-        );
-        continue;
-      }
-
-      // Unanswered incoming call: deliver the IncomingCallEvent to the BLoC so
-      // it can set up the call state and surface the ringing UI.
+    } else if (connection == null &&
+        !activeCallIds.contains(log.callId) &&
+        log.earliest is! IncomingCallEvent &&
+        !log.isTerminated &&
+        log.accepted == null) {
+      // Orphaned outgoing call: the server still has the call but both
+      // CallKeep and BLoC have no record of it. This happens when the user
+      // hangs up while offline — performEndCall removed the local state but
+      // the HangupRequest never reached the server.
       //
-      // earliestCallEvent (not callEvent/latest) identifies the call direction
-      // because SIP UAs — notably iOS CallKit — append RingingEvent or
-      // ProceedingEvent almost immediately after the call is placed. By the time
-      // a WebSocket reconnect completes and a new StateHandshake arrives, the
-      // server log already contains multiple entries (e.g. [RingingEvent,
-      // IncomingCallEvent]). Using the latest entry would misidentify those calls.
+      // The earliest event (not the latest) is used to identify the call
+      // direction: after a ProceedingEvent or RingingEvent the latest entry
+      // is no longer IncomingCallEvent, so using the latest here would
+      // incorrectly trigger HangupSignalingAction for unanswered incoming calls.
       //
-      // Guard rationale:
-      // - !isTerminated           : skip calls the server already ended.
-      // - acceptedLogEntry == null: accepted calls are handled by RestoreCallAction above.
-      // - earliestCallEvent is IncomingCallEvent: confirms the call is incoming, not outgoing.
-      // - !activeCallIds.contains : skip calls already tracked in BLoC state to avoid
-      //   re-triggering the incoming-call flow for an already-ringing call.
-      if (!isTerminated &&
-          acceptedLogEntry == null &&
-          earliestCallEvent is IncomingCallEvent &&
-          !activeCallIds.contains(activeLine.callId)) {
-        actions.add(HandleIncomingCallAction(event: earliestCallEvent, mediaState: mediaState));
-      }
-
-      // A call the BLoC registered from a push and is still waiting to hear
-      // the offer for: the newest log entry carrying one is the offer, and it
-      // is delivered once per line.
-      if (callIdsAwaitingOffer.contains(activeLine.callId)) {
-        final offerEvent = callEventLogEntries
-            .map((log) => log.callEvent)
-            .whereType<IncomingCallEvent>()
-            .where((event) => event.jsep != null)
-            .firstOrNull;
-        if (offerEvent != null) {
-          offerActions.add(DeliverOfferAction(event: offerEvent, mediaState: mediaState));
-        }
-      }
+      // No accepted entry ensures we never hang up a call that should be
+      // restored (app-restart case where connection is null but the call was
+      // previously accepted).
+      //
+      // On iOS getConnection() always returns null, so activeCallIds is the
+      // decisive guard: calls that are still active in BLoC are not affected.
+      return HangupSignalingAction(line: latest.line, callId: latest.callId);
     }
+    return null;
+  }
 
-    final lineCallIds = allLines.map((l) => l.callId).toSet();
-    for (final connection in localConnections) {
-      if (!lineCallIds.contains(connection.callId) && !activeCallIds.contains(connection.callId)) {
-        actions.add(EndLocalCallAction(callId: connection.callId));
-      }
-    }
+  /// A call the server holds as answered and the BLoC does not have.
+  RestoreCallAction? _restoreAction(_LineLog log, Set<String> activeCallIds) {
+    final accepted = log.accepted;
+    if (log.isTerminated || accepted == null || activeCallIds.contains(log.callId)) return null;
+    final acceptedEvent = accepted.callEvent as AcceptedEvent;
+    final line = acceptedEvent.line;
+    if (line == null) return null;
 
-    return [...actions, ...offerActions];
+    final earliest = log.earliest;
+    return RestoreCallAction(
+      line: line,
+      callId: log.callId,
+      acceptedEvent: acceptedEvent,
+      acceptedTime: DateTime.fromMillisecondsSinceEpoch(accepted.timestamp),
+      incomingCallEvent: earliest is IncomingCallEvent ? earliest : null,
+      mediaState: log.mediaState,
+    );
+  }
+
+  /// A local Callkeep connection whose call neither the session nor the BLoC
+  /// has is ended.
+  List<HandshakeAction> _orphanedConnectionActions(
+    List<CallkeepConnection> connections,
+    List<Line> allLines,
+    Set<String> activeCallIds,
+  ) {
+    final lineCallIds = allLines.map((line) => line.callId).toSet();
+    return [
+      for (final connection in connections)
+        if (!lineCallIds.contains(connection.callId) && !activeCallIds.contains(connection.callId))
+          EndLocalCallAction(callId: connection.callId),
+    ];
   }
 
   /// What the two accounts of the room come to. Nothing when neither side has
@@ -413,4 +425,34 @@ class HandshakeProcessor {
       if (localConference.isPresent) const ForgetConferenceAction(),
     ];
   }
+}
+
+/// What the plan reads from the log of one line. The log is newest first;
+/// each fact is worked out once, when first asked for.
+class _LineLog {
+  _LineLog(Line line) : callId = line.callId, _events = line.callLogs.whereType<CallEventLog>().toList();
+
+  final String callId;
+  final List<CallEventLog> _events;
+
+  late final latest = _events.firstOrNull?.callEvent;
+  late final earliest = _events.lastOrNull?.callEvent;
+
+  /// AcceptedEvent may not be the latest entry after a re-INVITE or transfer,
+  /// so the whole log is searched rather than its newest entry.
+  late final accepted = _events.where((log) => log.callEvent is AcceptedEvent).firstOrNull;
+
+  /// The remote side's media state that stands: the newest one.
+  late final mediaState = _events.map((log) => log.callEvent).whereType<MediaStatePeerMessageEvent>().firstOrNull;
+
+  /// The server has ended the call: its latest event is a final hangup or a
+  /// missed call.
+  late final bool isTerminated = latest is HangupEvent || latest is MissedCallEvent;
+
+  /// The newest entry that carries the caller's offer.
+  late final offer = _events
+      .map((log) => log.callEvent)
+      .whereType<IncomingCallEvent>()
+      .where((event) => event.jsep != null)
+      .firstOrNull;
 }
