@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -133,6 +135,78 @@ void main() {
     });
   });
 
+  group('where a choice leaves the person', () {
+    late DestinationPickingCubit picking;
+    late _Router router;
+    late BuildContext pickingContext;
+
+    setUpAll(() => registerFallbackValue(const _Route('Fallback')));
+
+    Future<void> pumpPicking(WidgetTester tester) async {
+      picking = DestinationPickingCubit();
+      router = _Router();
+      when(() => router.navigate(any())).thenAnswer((_) async {});
+      when(() => router.maybePop()).thenAnswer((_) async => true);
+      when(() => router.popUntilRoot()).thenReturn(null);
+
+      await tester.pumpWidget(
+        StackRouterScope(
+          controller: router,
+          stateHash: 0,
+          child: BlocProvider<DestinationPickingCubit>.value(
+            value: picking,
+            child: Builder(
+              builder: (context) {
+                pickingContext = context;
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('a step back, where the purpose names no screen of its own', (tester) async {
+      // A transfer is brought back to its call by the call; the list only has
+      // to get out of the way.
+      final purpose = _Purpose();
+      await pumpPicking(tester);
+      picking.ask(purpose);
+
+      pickDestination(pickingContext, purpose, const DestinationCandidate(number: '1001'));
+
+      verify(() => router.maybePop()).called(1);
+      verifyNever(() => router.navigate(any()));
+    });
+
+    testWidgets('on the screen that asked, where the purpose names it', (tester) async {
+      // Nothing brings a forwarded message's list forward by itself, and the
+      // list is where the person sees the forward running.
+      const origin = _Route('Asker');
+      final purpose = _ReturningPurpose(origin);
+      await pumpPicking(tester);
+      picking.ask(purpose);
+
+      pickDestination(pickingContext, purpose, const DestinationCandidate(number: '1001'));
+
+      // The list is left clean first: a colleague's card the choice was made
+      // on would otherwise be what the section shows on the next visit.
+      verifyInOrder([() => router.popUntilRoot(), () => router.navigate(origin)]);
+      verifyNever(() => router.maybePop());
+    });
+
+    testWidgets('nowhere, when the choice was refused', (tester) async {
+      final purpose = _ReturningPurpose(const _Route('Asker'), takes: false);
+      await pumpPicking(tester);
+      picking.ask(purpose);
+
+      pickDestination(pickingContext, purpose, const DestinationCandidate(number: '1001'));
+
+      verifyNever(() => router.navigate(any()));
+      verifyNever(() => router.maybePop());
+    });
+  });
+
   group('what one row is offered', () {
     // Every list asks the same two questions of the same purpose. Answered by
     // hand they were four lines written out five times, and a copy that asks
@@ -228,6 +302,20 @@ class _Purpose implements DestinationPickPurpose {
 
   @override
   void submit(DestinationCandidate candidate) => submitted.add(candidate);
+}
+
+class _Router extends Mock implements StackRouter {}
+
+class _Route extends PageRouteInfo<void> {
+  const _Route(super.name);
+}
+
+/// A purpose that knows which screen asked for the choice.
+class _ReturningPurpose extends _Purpose implements DestinationPickOrigin {
+  _ReturningPurpose(this.origin, {super.takes});
+
+  @override
+  final PageRouteInfo origin;
 }
 
 /// Two of these are equal, the way the real ones are.

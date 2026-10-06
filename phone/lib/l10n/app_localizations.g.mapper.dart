@@ -1576,6 +1576,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Label_emptyTrashAction' => voicemail_Label_emptyTrashAction,
       'voicemail_Label_emptyTrashHint' => voicemail_Label_emptyTrashHint,
       'voicemail_Label_forward' => voicemail_Label_forward,
+      'voicemail_Label_forwardAgain' => voicemail_Label_forwardAgain,
       'voicemail_Label_forwardChoosing' => voicemail_Label_forwardChoosing,
       'voicemail_Label_markAsHeard' => voicemail_Label_markAsHeard,
       'voicemail_Label_markAsNew' => voicemail_Label_markAsNew,
@@ -1589,6 +1590,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Label_trashFootnote' => voicemail_Label_trashFootnote,
       'voicemail_Label_undo' => voicemail_Label_undo,
       'voicemail_Label_unsave' => voicemail_Label_unsave,
+      'voicemail_SemanticsLabel_forwarding' =>
+        voicemail_SemanticsLabel_forwarding,
       'voicemail_SemanticsLabel_loading' => voicemail_SemanticsLabel_loading,
       'voicemail_SemanticsLabel_moreActions' =>
         voicemail_SemanticsLabel_moreActions,
@@ -1603,7 +1606,6 @@ extension AppLocalizationsExtension on AppLocalizations {
       'voicemail_Snackbar_refreshFailed' => voicemail_Snackbar_refreshFailed,
       'voicemail_Snackbar_messageGone' => voicemail_Snackbar_messageGone,
       'voicemail_Snackbar_movedToTrash' => voicemail_Snackbar_movedToTrash,
-      'voicemail_Snackbar_forwardFailed' => voicemail_Snackbar_forwardFailed,
       'voicemail_Snackbar_forwardTooLarge' =>
         voicemail_Snackbar_forwardTooLarge,
       'voicemail_Snackbar_forwardUnavailable' =>
@@ -2309,6 +2311,12 @@ extension AppLocalizationsExtension on AppLocalizations {
           'voicemail_Label_forwardedBy requires 1 arguments',
         ),
       },
+      'voicemail_Label_notForwarded' => switch (args) {
+        [final String name] => voicemail_Label_notForwarded(name),
+        _ => throw ArgumentError(
+          'voicemail_Label_notForwarded requires 1 arguments',
+        ),
+      },
       'voicemail_Label_unheardCount' => switch (args) {
         [final int count] => voicemail_Label_unheardCount(count),
         _ => throw ArgumentError(
@@ -2337,6 +2345,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final int count] => voicemail_Snackbar_restoreFailed(count),
         _ => throw ArgumentError(
           'voicemail_Snackbar_restoreFailed requires 1 arguments',
+        ),
+      },
+      'voicemail_Snackbar_forwardFailed' => switch (args) {
+        [final String name] => voicemail_Snackbar_forwardFailed(name),
+        _ => throw ArgumentError(
+          'voicemail_Snackbar_forwardFailed requires 1 arguments',
         ),
       },
       'voicemail_Snackbar_forwardRecipientFull' => switch (args) {

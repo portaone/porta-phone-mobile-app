@@ -12,6 +12,7 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/crashlytics_utils.dart';
 
+import '../../extensions/extensions.dart';
 import '../../models/models.dart';
 
 part 'voicemail_session_state.dart';
@@ -32,8 +33,9 @@ enum VoicemailReadOutcome {
 }
 
 /// What every part of the app shares about voicemail for as long as the person
-/// is signed in: the stored mailbox, how many messages are waiting, and who
-/// forwarded the ones that were passed along.
+/// is signed in: the stored mailbox, how many messages are waiting, who
+/// forwarded the ones that were passed along, and the messages the person is
+/// passing on themselves.
 ///
 /// Session-scoped because these outlive any one screen. Voicemail is shown
 /// from two places and counted on a third, and the screen reached from
@@ -142,6 +144,87 @@ class VoicemailSessionCubit extends Cubit<VoicemailSessionState> {
     }
   }
 
+  /// Passes [message] to [recipient] and answers what the backend made of it,
+  /// or null when nothing was sent because a forward of that message is
+  /// already out.
+  ///
+  /// The message is marked as on its way for exactly as long as the request is
+  /// out. A forward that did not go through for a reason another try could
+  /// change stays on the message, with who it was for, until another forward
+  /// of that message goes through or the message leaves the mailbox. One that
+  /// went through, or was refused for good, leaves nothing. Saying how it went
+  /// is the caller's business.
+  ///
+  /// One at a time for a message: a refusal can be answered from two places,
+  /// the sentence that says it and the menu of the message, and each try has
+  /// an idempotency key of its own - two at once would put two copies in the
+  /// colleague's mailbox.
+  ///
+  /// Here rather than on a screen because the request outlives every screen
+  /// that could start it: the colleague is chosen on another section, and the
+  /// voicemail screen reached from settings is torn down on the way there.
+  ///
+  /// Never throws: a refusal is an answer.
+  Future<VoicemailForwardOutcome?> forward(Voicemail message, Contact recipient) async {
+    if (state.forwards[message.id] is VoicemailForwardSending) return null;
+
+    _setForward(message.id, const VoicemailForwardSending());
+
+    var outcome = VoicemailForwardOutcome.sent;
+    try {
+      await _repository.forwardVoicemail(message.id, toUserId: recipient.sourceId!);
+    } catch (e, s) {
+      // Only a refusal from the backend carries a meaning worth telling apart.
+      // A socket that died on the way there says nothing about the message or
+      // the colleague, so it is the plain failure.
+      outcome = e is RequestFailure ? e.voicemailForwardOutcome : VoicemailForwardOutcome.failed;
+      // A message too large and a colleague who is full are answers, not
+      // faults: the request reached the backend and it said no for a reason
+      // the person is about to be told. Only the rest is worth recording.
+      if (outcome == VoicemailForwardOutcome.failed || outcome == VoicemailForwardOutcome.unavailable) {
+        _logger.severe('Error forwarding voicemail with id ${message.id}: $e', e, s);
+        CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailSessionCubit.forward');
+      }
+    }
+
+    // A refusal is kept on the message only where trying again could end
+    // differently. A recording that is too big stays too big and a colleague
+    // who is full stays full: said once, there is nothing left to do about
+    // them, and a mark nothing could take off would only be a blemish.
+    _setForward(
+      message.id,
+      outcome.isRetryable ? VoicemailForwardFailed(outcome: outcome, recipient: recipient) : null,
+    );
+    return outcome;
+  }
+
+  void _setForward(String messageId, VoicemailForward? forward) {
+    final forwards = {...state.forwards};
+    if (forward == null) {
+      forwards.remove(messageId);
+    } else {
+      forwards[messageId] = forward;
+    }
+
+    _safeEmit(state.copyWith(forwards: forwards));
+  }
+
+  /// The forwards still worth keeping once the mailbox is [items].
+  ///
+  /// A refusal is a mark on a message, and goes with it: moved to the trash or
+  /// deleted, the message is no longer there to carry it, and one that comes
+  /// back from the trash should not come back wearing an old refusal. A
+  /// forward still out is kept whatever happens to the message - its request
+  /// is in flight and its answer will settle it.
+  Map<String, VoicemailForward> _forwardsAmong(List<Voicemail> items) {
+    final ids = items.map((item) => item.id).toSet();
+
+    return {
+      for (final MapEntry(key: id, value: forward) in state.forwards.entries)
+        if (forward is VoicemailForwardSending || ids.contains(id)) id: forward,
+    };
+  }
+
   void _onItems(List<Voicemail> items) {
     if (_checkSupport() || state.isFeatureNotSupported) return;
 
@@ -150,7 +233,7 @@ class VoicemailSessionCubit extends Cubit<VoicemailSessionState> {
     // book it is joined with, the cached copy the repository shows before it
     // asks - and one of those must neither end the progress of a read still
     // out nor pass a failed one off as good.
-    _safeEmit(state.copyWith(items: items));
+    _safeEmit(state.copyWith(items: items, forwards: _forwardsAmong(items)));
     unawaited(_resolveForwarders(items));
   }
 

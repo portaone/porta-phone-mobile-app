@@ -11,8 +11,8 @@ Last reviewed: 2026-10-06.
 lib/features/voicemail/
   bloc/        VoicemailCubit + VoicemailState (one screen), VoicemailPlaybackController
   cubits/      VoicemailSessionCubit (what the whole session shares)
-  models/      ForwardVoicemailPurpose, VoicemailForwardOutcome, VoicemailScreenContext
-  utils/       VoicemailForwarding (sending a message on), media headers
+  models/      ForwardVoicemailPurpose, VoicemailForward, VoicemailForwardOutcome, VoicemailScreenContext
+  utils/       VoicemailForwarding (saying how a forward went), media headers
   view/        the router page, the two hosts, the screen
   widgets/     the list body, a tile, playback, filters, header actions
 lib/repositories/voicemail/   VoicemailRepository - the only thing that talks to the backend and the database
@@ -40,8 +40,8 @@ in the other.
 | | `VoicemailSessionCubit` | `VoicemailCubit` |
 |---|---|---|
 | Lives | the whole session, provided eagerly in `main_shell_blocs.dart` | one screen, built by `VoicemailScreenHost` |
-| Holds | the stored mailbox, the count of waiting messages, the forwarders' names, how the last read of the mailbox went | which view is on, what is picked, the trash and how its read went, whether an action of this screen is in progress |
-| Does | reads the mailbox when asked | everything the person does to a message, and says what came of it |
+| Holds | the stored mailbox, the count of waiting messages, the forwarders' names, how the last read of the mailbox went, where each forward stands | which view is on, what is picked, the trash and how its read went, whether an action of this screen is in progress |
+| Does | reads the mailbox when asked, passes a message to a colleague | everything the person does to a message, and says what came of it |
 
 The mailbox is the session's because it outlives any one screen: voicemail is
 shown from two places and counted on a third, and the screen reached from
@@ -258,17 +258,67 @@ destination-picking mechanism: [`../destination_picking.md`](../destination_pick
 
 ```
 menu -> Forward
-  voicemail_body.dart          picking.ask(ForwardVoicemailPurpose(...)) + navigate to contacts
+  voicemail_body.dart          picking.ask(ForwardVoicemailPurpose(..., origin)) + navigate to contacts
   forward_voicemail_purpose    who may be chosen: a contact from the backend, with the
                                server's own id, and not the person forwarding
-  a row is tapped              submit -> VoicemailForwarding.send(message, recipient)
-  voicemail_forwarding.dart    POST /user/voicemails/{id}/forward, then announce a report
-  the shell's presenter        the sentence, and a retry where one could end differently
+  a row is tapped              submit -> VoicemailForwarding.send(message, recipient),
+                               then pickDestination navigates to the purpose's origin
+  voicemail_session_cubit      forward(): marks the message as sending,
+                               POST /user/voicemails/{id}/forward, then clears the mark
+                               or leaves a VoicemailForwardFailed on the message
+  voicemail_tile.dart          sending: a progress indicator in place of the menu;
+                               failed: a badge on the avatar, "Not forwarded - <who>",
+                               and Forward again in the menu
+  voicemail_forwarding.dart    how it went, as a report to the shell's presenter:
+                               "Forwarded to <who>", or the refusal with Try again
 ```
 
-Nothing of this is kept between forwards: the message and the colleague are
-arguments, the sentences are resolved when the person asks for the forward, and
-the answer goes to the one thing still on screen by the time it arrives.
+The choice brings the person back to the voicemail screen the forward was asked
+from. `origin` is that screen's route, handed to the body by the screen itself
+because voicemail is offered from two places: the bottom-menu section
+(`MainScreenPageRoute` with `VoicemailRouterPageRoute`) and the settings list
+(`SettingsRouterPageRoute` with the settings list and `VoicemailScreenPageRoute`
+under it, so closing the page lands on the list as before).
+
+Where a forward stands is the session's (`VoicemailSessionState.forwards`, by
+message id), for the same reason the mailbox is: reached from settings, the
+screen is torn down on the way to the address book and built again on the way
+back. Two states are kept, and a forward that went through is neither:
+
+- **sending** - from the call until the backend answers. The menu is withheld
+  and the message cannot be picked for the bulk actions: `toggleSelection`
+  refuses it, and one already picked leaves the selection as its forward
+  starts.
+- **failed** - the outcome and who it was for, kept only where trying again
+  could end differently. A recording that is too big stays too big and a
+  colleague who is full stays full: those are said once and leave nothing, since
+  a mark that nothing could take off would only be a blemish. The mark stays on
+  the message until another forward of that message goes through, or the
+  message leaves the mailbox: it goes with the message, so one moved to the
+  trash carries none there and one restored comes back without it.
+
+Trying again closes a request for a colleague that is still standing for that
+message (`VoicemailForwarding._closeChoiceFor`): the lists must not go on
+offering to forward a message that is already on its way.
+
+One forward at a time for a message. A refusal can be answered from two places
+- the snackbar and the message's menu - and each try carries an idempotency key
+of its own, so `forward()` sends nothing while one for that message is out.
+
+A refusal is told twice, on purpose, by two things with different lifetimes:
+
+- **the snackbar** says it at once - "Couldn't forward to <who>" - with Try
+  again where trying again could end differently. It is the moment's way out,
+  and it passes: a snackbar is replaced by the next one.
+- **the mark on the message** is what is still there when the person looks at
+  the list later: a badge on the avatar and "Not forwarded - <who>" in the error
+  colour. The row grows no buttons for it. Trying again later is the menu's
+  **Forward again**, which goes to the same colleague without choosing again;
+  it is there exactly when the mark is, which is the same rule as the
+  snackbar's retry. **Forward** is always there for choosing somebody else.
+
+The sentences are resolved when the person asks for the forward, because there
+may be no context left by the time the answer arrives.
 
 What each refusal means is `extensions/request_failure.dart` ->
 `VoicemailForwardOutcome`: a recording too large and a colleague who is full are
@@ -289,14 +339,14 @@ sits on is of no use there.
 | File | What it pins |
 |---|---|
 | `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup, which refusal re-reads the list, and the read of the trash kept apart from the mailbox's - over a real session cubit |
-| `test/features/voicemail/cubits/voicemail_session_cubit_test.dart` | the count, the mailbox followed only while a screen shows it, forwarder names, a backend with no voicemail noticed late, a read asked for and how it can end |
+| `test/features/voicemail/cubits/voicemail_session_cubit_test.dart` | the count, the mailbox followed only while a screen shows it, forwarder names, a backend with no voicemail noticed late, a read asked for and how it can end, a forward marked while out, kept when refused, sent one at a time, dropped with its message |
 | `test/features/voicemail/bloc/voicemail_forwarder_names_test.dart` | the forwarder line over a real address book: a name, no name, an extension, nobody |
 | `test/features/voicemail/extensions/request_failure_test.dart` | which refusals mean the message is gone, and which only look like it |
 | `test/features/voicemail/voicemail_filter_test.dart` | which filters a deployment offers, and what each one shows |
 | `test/features/voicemail/voicemail_tile_test.dart` | what one row offers, including the actions a capability removes |
 | `test/features/voicemail/view/voicemail_selection_test.dart` | the header over the trash: restore, delete for good, and the count in the dialog |
-| `test/features/voicemail/view/voicemail_forward_test.dart` | the screen leaving a request and sending the person to the address book |
+| `test/features/voicemail/view/voicemail_forward_test.dart` | the screen leaving a request that names itself as the way back, the row of a message being forwarded, and a forward that did not go through: marked, forwarded again from the menu, unmarked in the trash |
 | `test/features/voicemail/view/voicemail_open_contact_test.dart` | opening the caller, and a caller who is no longer there |
-| `test/features/voicemail/utils/voicemail_forwarding_test.dart` | the send itself and every refusal turned into a sentence |
+| `test/features/voicemail/utils/voicemail_forwarding_test.dart` | how a forward went, said by name: through, or refused with a retry to the same colleague; nothing said when nothing was sent |
 | `test/features/voicemail/forward_voicemail_purpose_test.dart` | who may be chosen, and how much narrower this is than a transfer |
 | `test/repository/voicemail_bulk_remove_test.dart` | the shared bulk loop and its policy |

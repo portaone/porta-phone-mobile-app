@@ -277,6 +277,168 @@ void main() {
     });
   });
 
+  group('passing a message to a colleague', () {
+    final message = _voicemail('1');
+    final colleague = Contact(
+      id: 1,
+      sourceType: ContactSourceType.external,
+      kind: ContactKind.visible,
+      sourceId: 'user-7',
+      isCurrentUser: false,
+      aliasName: 'Iryna Shevchuk',
+    );
+    final refused = VoicemailForwardFailed(outcome: VoicemailForwardOutcome.failed, recipient: colleague);
+
+    void answers(Future<String> answer) {
+      when(() => repository.forwardVoicemail(any(), toUserId: any(named: 'toUserId'))).thenAnswer((_) => answer);
+    }
+
+    test('marks the message from the call until the backend answers, then leaves nothing', () async {
+      final answer = Completer<String>();
+      answers(answer.future);
+
+      final forwarding = cubit.forward(message, colleague);
+
+      // Before anything is awaited: the person is taken back to the list in
+      // the same frame, and the row has to say so by the time it is drawn.
+      expect(cubit.state.forwards, {'1': const VoicemailForwardSending()});
+
+      answer.complete('fwd_1');
+
+      expect(await forwarding, VoicemailForwardOutcome.sent);
+      expect(cubit.state.forwards, isEmpty);
+      verify(() => repository.forwardVoicemail('1', toUserId: 'user-7')).called(1);
+    });
+
+    test('keeps a refusal on the message, with who it was for, where another try could change it', () async {
+      answers(
+        Future.error(
+          EndpointNotSupportedException(
+            url: Uri(),
+            requestId: 'r',
+            statusCode: 501,
+            recognizedNotSupportedCodes: const [],
+          ),
+        ),
+      );
+
+      expect(await cubit.forward(message, colleague), VoicemailForwardOutcome.unavailable);
+      expect(cubit.state.forwards, {
+        '1': VoicemailForwardFailed(outcome: VoicemailForwardOutcome.unavailable, recipient: colleague),
+      });
+    });
+
+    test('leaves no mark for a refusal nothing can change', () async {
+      // A recording that is too big stays too big. It is said once; a mark
+      // that no later try could take off would only be a blemish.
+      answers(Future.error(VoicemailForwardAttachmentTooLargeException(url: Uri(), requestId: 'r', statusCode: 413)));
+
+      expect(await cubit.forward(message, colleague), VoicemailForwardOutcome.tooLarge);
+      expect(cubit.state.forwards, isEmpty);
+    });
+
+    test('a request that never reached the backend is the plain failure', () async {
+      answers(Future.error(Exception('no route to host')));
+
+      expect(await cubit.forward(message, colleague), VoicemailForwardOutcome.failed);
+      expect(cubit.state.forwards, {'1': refused});
+    });
+
+    test('a later try that goes through clears what the first left', () async {
+      answers(Future.error(Exception('no route to host')));
+      await cubit.forward(message, colleague);
+      answers(Future.value('fwd_1'));
+
+      await cubit.forward(message, colleague);
+
+      expect(cubit.state.forwards, isEmpty);
+    });
+
+    test('sends one at a time for a message: a second while the first is out sends nothing', () async {
+      // Each try carries an idempotency key of its own, so two at once would
+      // be two copies in the colleague's mailbox.
+      final answer = Completer<String>();
+      answers(answer.future);
+      final first = cubit.forward(message, colleague);
+
+      expect(await cubit.forward(message, colleague), isNull);
+
+      verify(() => repository.forwardVoicemail('1', toUserId: 'user-7')).called(1);
+      expect(cubit.state.forwards, {'1': const VoicemailForwardSending()});
+      answer.complete('fwd_1');
+      await first;
+    });
+
+    test('another message is forwarded alongside', () async {
+      final first = Completer<String>();
+      final second = Completer<String>();
+      when(() => repository.forwardVoicemail('1', toUserId: any(named: 'toUserId'))).thenAnswer((_) => first.future);
+      when(() => repository.forwardVoicemail('2', toUserId: any(named: 'toUserId'))).thenAnswer((_) => second.future);
+      final forwardingFirst = cubit.forward(message, colleague);
+      final forwardingSecond = cubit.forward(_voicemail('2'), colleague);
+
+      first.complete('fwd_1');
+      await forwardingFirst;
+
+      expect(cubit.state.forwards, {'2': const VoicemailForwardSending()});
+      second.complete('fwd_2');
+      await forwardingSecond;
+    });
+
+    test('a refusal goes with its message when the message leaves the mailbox', () async {
+      // Moved to the trash or deleted, the message is no longer there to carry
+      // the mark, and one restored later must not come back wearing it.
+      cubit.attach();
+      mailbox.add([message, _voicemail('2')]);
+      await pumpEventQueue();
+      answers(Future.error(Exception('no route to host')));
+      await cubit.forward(message, colleague);
+      expect(cubit.state.forwards, {'1': refused});
+
+      mailbox.add([_voicemail('2')]);
+      await pumpEventQueue();
+
+      expect(cubit.state.forwards, isEmpty);
+    });
+
+    test('a forward still out outlives its message leaving, and is settled by its answer', () async {
+      final answer = Completer<String>();
+      answers(answer.future);
+      cubit.attach();
+      mailbox.add([message]);
+      await pumpEventQueue();
+      final forwarding = cubit.forward(message, colleague);
+
+      mailbox.add(const []);
+      await pumpEventQueue();
+
+      expect(cubit.state.forwards, {'1': const VoicemailForwardSending()});
+      answer.complete('fwd_1');
+      await forwarding;
+      expect(cubit.state.forwards, isEmpty);
+    });
+
+    test('an answer that arrives after the session ended is not an error', () async {
+      final answer = Completer<String>();
+      answers(answer.future);
+      final forwarding = cubit.forward(message, colleague);
+
+      await cubit.close();
+      answer.complete('fwd_1');
+
+      expect(await forwarding, VoicemailForwardOutcome.sent);
+    });
+
+    test('and starting one on an ended session is not an error either', () async {
+      // The retry of a refusal can be tapped on a sentence that outlived the
+      // session by a frame.
+      answers(Future.value('fwd_1'));
+      await cubit.close();
+
+      expect(await cubit.forward(message, colleague), VoicemailForwardOutcome.sent);
+    });
+  });
+
   test('releases its subscriptions when closed', () async {
     cubit.attach();
     expect(counts.hasListener, isTrue);

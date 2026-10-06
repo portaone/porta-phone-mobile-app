@@ -455,7 +455,13 @@ class VoicemailCubit extends Cubit<VoicemailState> {
 
   /// Adds [voicemail] to the multi-select set, or removes it when it is
   /// already there. Selection only: nothing is sent to the server.
+  ///
+  /// A message whose forward is out cannot be picked: picking is the way to
+  /// the bulk actions, and deleting a message from under its own forward is
+  /// what its menu is withheld for.
   void toggleSelection(Voicemail voicemail) {
+    if (_session.state.forwards[voicemail.id] is VoicemailForwardSending) return;
+
     final selectedVoicemailsIds = List.of(state.selectedVoicemailsIds);
 
     if (selectedVoicemailsIds.contains(voicemail.id)) {
@@ -514,18 +520,23 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   }
 
   /// Keeps only what is picked among [items], the list the selection was made
-  /// over.
+  /// over, and nothing whose forward is out.
   ///
   /// A selection only means something for messages the person can see: once a
   /// selected message is deleted, or stops matching the view that is on - a
   /// message heard while New is showing - its id must leave the set too, or
   /// the app bar goes on counting, and the bulk actions go on reaching,
-  /// messages nobody is looking at.
+  /// messages nobody is looking at. A message that starts being forwarded
+  /// leaves it for the reason it could not have been picked.
   void _keepSelectionWithin(List<Voicemail> items) {
     if (state.selectedVoicemailsIds.isEmpty) return;
 
-    final ids = items.map((item) => item.id).toSet();
-    final selectedVoicemailsIds = state.selectedVoicemailsIds.where(ids.contains).toList();
+    final forwards = _session.state.forwards;
+    final pickable = {
+      for (final item in items)
+        if (forwards[item.id] is! VoicemailForwardSending) item.id,
+    };
+    final selectedVoicemailsIds = state.selectedVoicemailsIds.where(pickable.contains).toList();
     if (selectedVoicemailsIds.length == state.selectedVoicemailsIds.length) return;
 
     _safeEmit(state.copyWith(selectedVoicemailsIds: selectedVoicemailsIds));

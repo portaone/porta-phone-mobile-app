@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -35,7 +36,7 @@ class VoicemailTabScreen extends StatelessWidget {
       // No inset of its own: the body runs behind the bar and Scaffold already
       // hands it a MediaQuery whose top padding is the bar plus the status bar,
       // which a list with no padding of its own takes.
-      body: const VoicemailBody(),
+      body: const VoicemailBody(origin: MainScreenPageRoute(children: [VoicemailRouterPageRoute()])),
     );
   }
 }

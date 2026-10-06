@@ -11,7 +11,6 @@ import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/app_localizations.g.mapper.dart';
 import 'package:webtrit_phone/models/models.dart';
-import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
@@ -31,7 +30,12 @@ import 'voicemail_view_builder.dart';
 /// it - the settings sub-screen its own, a section of the bottom menu the bar
 /// every section carries.
 class VoicemailBody extends StatelessWidget {
-  const VoicemailBody({super.key});
+  const VoicemailBody({super.key, required this.origin});
+
+  /// The route of the screen this body is shown on. Voicemail is offered from
+  /// two places, and a forward has to bring the person back to the one they
+  /// started it from.
+  final PageRouteInfo origin;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +53,9 @@ class VoicemailBody extends StatelessWidget {
           listener: (context, _) => _stopPlaybackOfRemovedVoicemail(context),
         ),
       ],
-      child: VoicemailViewBuilder(builder: (context, view) => _VoicemailList(state: view)),
+      child: VoicemailViewBuilder(
+        builder: (context, view) => _VoicemailList(state: view, origin: origin),
+      ),
     );
   }
 
@@ -72,9 +78,10 @@ class VoicemailBody extends StatelessWidget {
 /// What stands where the list is: the list, or whatever is shown in place of
 /// one.
 class _VoicemailList extends StatelessWidget {
-  const _VoicemailList({required this.state});
+  const _VoicemailList({required this.state, required this.origin});
 
   final VoicemailView state;
+  final PageRouteInfo origin;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +120,8 @@ class _VoicemailList extends StatelessWidget {
                     forwardSupported: state.forwardSupported,
                     inTrash: state.isShowingTrash,
                     forwarderOf: state.forwarderOf,
+                    forwardOf: state.forwardOf,
+                    origin: origin,
                   ),
                 ),
                 // The one thing about the trash a person cannot see by
@@ -154,6 +163,8 @@ class VoicemailListView extends StatelessWidget {
     required this.items,
     required this.selectedVoicemailsIds,
     required this.isMultipleVoicemailsSelection,
+    required this.origin,
+    this.forwardOf,
     this.saveSupported = false,
     this.trashSupported = false,
     this.forwardSupported = false,
@@ -171,6 +182,13 @@ class VoicemailListView extends StatelessWidget {
 
   /// Who passed a given message along, or null when nobody did.
   final String? Function(Voicemail)? forwarderOf;
+
+  /// Where passing a given message on stands, or null when there is nothing
+  /// to show about it.
+  final VoicemailForward? Function(Voicemail)? forwardOf;
+
+  /// Where a forward brings the person back to: the screen this list is on.
+  final PageRouteInfo origin;
 
   @override
   Widget build(BuildContext context) {
@@ -195,10 +213,12 @@ class VoicemailListView extends StatelessWidget {
           trashSupported: trashSupported,
           forwardSupported: forwardSupported,
           inTrash: inTrash,
+          forward: forwardOf?.call(item),
           forwardedByName: forwarderOf?.call(item),
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
           onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
           onForwarded: (it) => _onForwardVoicemail(context, it),
+          onForwardRetried: (it, recipient) => _forwarding(context).send(it, recipient),
           onOpenContact: (it) => _onOpenContact(context, it),
           onRestored: (it) => cubit.restoreVoicemail(it.id),
           onDeletedPermanently: (it) => _onDeletePermanently(context, it),
@@ -257,27 +277,27 @@ class VoicemailListView extends StatelessWidget {
   /// Sends the person to the address book to choose a colleague.
   ///
   /// The request outlives this screen, which is the point: the colleague is
-  /// chosen two sections away, and by the time the backend answers, this
-  /// screen is long gone. Refused where somebody is already choosing for a
-  /// call in hand - then the person stays where they are rather than being
-  /// sent to a list that would be picking for something else.
+  /// chosen two sections away, and reached from settings this screen is torn
+  /// down on the way there. The choice brings the person back to [origin],
+  /// where the message shows that it is being forwarded, and afterwards
+  /// carries a mark if that did not go through. Refused where somebody is
+  /// already choosing for a call in hand - then the person stays where they
+  /// are rather than being sent to a list that would be picking for something
+  /// else.
   void _onForwardVoicemail(BuildContext context, Voicemail voicemail) {
     final contacts = context.read<FeatureAccess>().bottomMenuConfig.getTabEnabled<ContactsBottomMenuTab>();
     if (contacts == null) return;
 
     final l10n = context.l10n;
     final picking = context.read<DestinationPickingCubit>();
-    final forwarding = VoicemailForwarding(
-      repository: context.read<VoicemailRepository>(),
-      picking: picking,
-      l10n: l10n,
-    );
+    final forwarding = _forwarding(context);
 
     final asked = picking.ask(
       ForwardVoicemailPurpose(
         announcement: l10n.voicemail_Label_forwardChoosing,
         pickLabel: l10n.voicemail_SemanticsLabel_forwardTo,
         messageId: voicemail.id,
+        origin: origin,
         onPicked: (recipient) => forwarding.send(voicemail, recipient),
       ),
     );
@@ -285,6 +305,15 @@ class VoicemailListView extends StatelessWidget {
 
     context.router.navigate(MainScreenPageRoute(children: [contactsRouteOf(contacts)]));
   }
+
+  /// What sends a message on. Built where the person asks - for a first try or
+  /// for another - because the sentences about how a forward went have to be
+  /// resolved while there is still a context to resolve them against.
+  VoicemailForwarding _forwarding(BuildContext context) => VoicemailForwarding(
+    picking: context.read<DestinationPickingCubit>(),
+    session: context.read<VoicemailSessionCubit>(),
+    l10n: context.l10n,
+  );
 
   void _onDeletePermanently(BuildContext context, Voicemail voicemail) async {
     final cubit = context.read<VoicemailCubit>();

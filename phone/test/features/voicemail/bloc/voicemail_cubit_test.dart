@@ -83,6 +83,41 @@ void main() {
     await voicemails.close();
   });
 
+  group('a forward of a message', () {
+    final colleague = _colleague('user-7', firstName: 'Iryna');
+
+    test('is shown as the session holds it, until it goes through', () async {
+      when(() => repository.forwardVoicemail(any(), toUserId: any(named: 'toUserId')))
+          .thenAnswer((_) => Future.error(Exception('no route to host')));
+      final message = _voicemail('1');
+      voicemails.add([message]);
+      await pumpEventQueue();
+
+      await session.forward(message, colleague);
+
+      expect(cubit.view.forwardOf(message), isA<VoicemailForwardFailed>());
+
+      when(() => repository.forwardVoicemail(any(), toUserId: any(named: 'toUserId'))).thenAnswer((_) async => 'fwd_1');
+      await session.forward(message, colleague);
+
+      expect(cubit.view.forwardOf(message), isNull);
+    });
+
+    test('is the session s business: the screen is not in the middle of anything', () async {
+      final answer = Completer<String>();
+      when(() => repository.forwardVoicemail(any(), toUserId: any(named: 'toUserId'))).thenAnswer((_) => answer.future);
+      voicemails.add([_voicemail('1')]);
+      await pumpEventQueue();
+
+      final forwarding = session.forward(_voicemail('1'), colleague);
+      await pumpEventQueue();
+
+      expect(cubit.view.isLoading, isFalse);
+      answer.complete('fwd_1');
+      await forwarding;
+    });
+  });
+
   group('selection', () {
     test('toggleSelection adds a message and removes it again', () {
       final message = _voicemail('1');
@@ -134,6 +169,37 @@ void main() {
       await pumpEventQueue();
 
       expect(cubit.state.selectedVoicemailsIds, ['2']);
+    });
+
+    test('a message whose forward is out cannot be picked', () async {
+      final answer = Completer<String>();
+      when(() => repository.forwardVoicemail(any(), toUserId: any(named: 'toUserId'))).thenAnswer((_) => answer.future);
+      voicemails.add([_voicemail('1'), _voicemail('2')]);
+      await pumpEventQueue();
+      final forwarding = session.forward(_voicemail('1'), _colleague('user-7'));
+
+      cubit.toggleSelection(_voicemail('1'));
+      cubit.toggleSelection(_voicemail('2'));
+
+      expect(cubit.state.selectedVoicemailsIds, ['2']);
+      answer.complete('fwd_1');
+      await forwarding;
+    });
+
+    test('a picked message that starts being forwarded leaves the selection', () async {
+      final answer = Completer<String>();
+      when(() => repository.forwardVoicemail(any(), toUserId: any(named: 'toUserId'))).thenAnswer((_) => answer.future);
+      voicemails.add([_voicemail('1'), _voicemail('2')]);
+      await pumpEventQueue();
+      cubit.toggleSelection(_voicemail('1'));
+      cubit.toggleSelection(_voicemail('2'));
+
+      final forwarding = session.forward(_voicemail('1'), _colleague('user-7'));
+      await pumpEventQueue();
+
+      expect(cubit.state.selectedVoicemailsIds, ['2']);
+      answer.complete('fwd_1');
+      await forwarding;
     });
 
     test('deleting the selection ends selection mode once the list reflects it', () async {

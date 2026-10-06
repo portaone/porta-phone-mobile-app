@@ -2,7 +2,7 @@
 
 How a feature asks the user to pick somebody out of the contacts, recents,
 favourites and keypad, and what those lists do while the choice is being made.
-Last reviewed: 2026-09-17.
+Last reviewed: 2026-10-06.
 
 ## The three pieces
 
@@ -20,6 +20,7 @@ The lists know nothing about the features that ask. They know one thing: a
 | `DestinationPicking` | `lib/widgets/destination_picking.dart` | The scope above the sections; what a list asks |
 | `DestinationPickingCubit` | `lib/blocs/destination_picking/destination_picking_cubit.dart` | Where a feature leaves its request, and what it has to say afterwards |
 | `DestinationPickReport` | `lib/models/destination_picking/destination_pick_report.dart` | What came of a choice, in the feature's own words |
+| `DestinationPickOrigin` | `lib/models/destination_picking/destination_pick_origin.dart` | Optional: the screen that asked, for a purpose that wants the person back on it |
 
 ```dart
 abstract interface class DestinationPickPurpose {
@@ -230,8 +231,24 @@ not the person forwarding, because a forward addresses an account rather than
 dialling a number. That also keeps it off the keypad, where nothing typed could
 be one. It asks in `voicemail_body.dart` and sends the person to the address
 book itself; the sending and what came of it are
-`lib/features/voicemail/utils/voicemail_forwarding.dart`, which announces a
-report rather than holding any state of its own.
+`VoicemailSessionCubit.forward`, which lives as long as the session does and
+keeps what a message shows while its forward is out or after it was refused;
+`lib/features/voicemail/utils/voicemail_forwarding.dart` announces the report
+of how it went.
+
+### Where a choice leaves the person
+
+`pickDestination` hands the choice over and then leaves the list. For most
+purposes that is a step back (`router.maybePop()`): a transfer is brought back
+to its call by the call itself, which un-minimises the moment the target is
+submitted. A purpose with no such owner implements `DestinationPickOrigin` and
+names the route of the screen that asked; the mechanism navigates there
+instead, after taking the list it was on back to its root - the choice can be
+made on a colleague's card pushed over the list, and a card left there would be
+what the section shows on the next visit. The voicemail forward does this, so
+the person lands back on the list where the message shows that it is being
+forwarded. The interface is separate from `DestinationPickPurpose` because
+having a screen to return to is the exception.
 
 ### Who owns the mode, and the bridge that follows from it
 
@@ -285,4 +302,4 @@ banner, at `main_screen.dart`.
 | `test/features/call/widgets/blind_transfer_picking_test.dart` | The bridge, including a transfer that ends without taking somebody else's request with it |
 | `test/widgets/destination_pick_report_presenter_test.dart` | What a feature has to say, the retry offered only where one can change the answer, and a report that was waiting before the presenter arrived |
 | `test/features/voicemail/forward_voicemail_purpose_test.dart` | The second purpose, and how much narrower it is |
-| `test/features/voicemail/utils/voicemail_forwarding_test.dart` | The message being sent, and each of the backend's refusals turned into a sentence |
+| `test/features/voicemail/utils/voicemail_forwarding_test.dart` | How a forward went, said by name: through, or refused with a retry to the same colleague |

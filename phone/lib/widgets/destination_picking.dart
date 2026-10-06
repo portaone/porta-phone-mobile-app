@@ -61,10 +61,22 @@ bool submitDestination(BuildContext context, DestinationPickPurpose purpose, Des
 /// place they came from with nothing left to do there. A choice the purpose
 /// refuses leaves the screen where it is: nothing happened, so there is
 /// nothing to come back from.
+///
+/// Where the purpose names the screen that asked, leaving means going there.
+/// Otherwise it is a step back, and whoever owns the request brings its own
+/// screen forward.
 bool pickDestination(BuildContext context, DestinationPickPurpose purpose, DestinationCandidate candidate) {
   if (!submitDestination(context, purpose, candidate)) return false;
 
-  context.router.maybePop();
+  if (purpose case final DestinationPickOrigin asker) {
+    // The choice may have been made on a screen pushed over the list - a
+    // colleague's card. Left there, it would be what the section shows the
+    // next time the person comes to it.
+    context.router.popUntilRoot();
+    context.router.navigate(asker.origin);
+  } else {
+    context.router.maybePop();
+  }
   return true;
 }
 
