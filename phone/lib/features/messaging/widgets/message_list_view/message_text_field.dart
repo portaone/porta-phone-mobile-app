@@ -83,6 +83,7 @@ class _MessageTextFieldState extends State<MessageTextField> {
                   identifier: messageInputId,
                   child: TextFormField(
                     keyboardType: TextInputType.multiline,
+                    textCapitalization: .sentences,
                     maxLines: 4,
                     minLines: 1,
                     maxLength: widget.maxLength,

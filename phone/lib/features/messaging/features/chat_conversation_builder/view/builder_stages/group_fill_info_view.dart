@@ -41,6 +41,7 @@ class _GroupFillInfoViewState extends State<GroupFillInfoView> {
                     const SizedBox(height: 32),
                     TextFormField(
                       controller: groupNameController,
+                      textCapitalization: TextCapitalization.sentences,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       decoration: InputDecoration(
                         labelText: context.l10n.messaging_ConversationBuilders_nameFieldLabel,

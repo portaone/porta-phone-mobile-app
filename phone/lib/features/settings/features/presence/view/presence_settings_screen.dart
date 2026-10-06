@@ -263,6 +263,7 @@ class _PresenceSettingsScreenState extends State<PresenceSettingsScreen> {
                                       identifier: presenceSettingsNoteId,
                                       child: TextFormField(
                                         initialValue: state.note,
+                                        textCapitalization: TextCapitalization.sentences,
                                         decoration: InputDecoration(
                                           labelText: l10n.presence_settings_note_label,
                                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

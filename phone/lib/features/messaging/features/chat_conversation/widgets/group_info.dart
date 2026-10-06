@@ -230,6 +230,7 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
 
     return TextFormField(
       initialValue: chat.name,
+      textCapitalization: TextCapitalization.sentences,
       enabled: canChangeName,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
