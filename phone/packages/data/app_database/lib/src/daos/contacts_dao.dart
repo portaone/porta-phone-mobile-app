@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:app_database/src/app_database.dart';
+import 'package:app_database/src/daos/contact_search.dart';
 
 part 'contacts_dao.g.dart';
 
@@ -87,9 +88,8 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
   /// WHERE contact_id = contacts.id) is run again for every contact and, with
   /// no index on contact_id, reads the whole table each time - measured at
   /// six to seven times the cost of reading the full list of 5000 contacts.
-  Expression<bool> _carries(String word) {
-    final pattern = '.*${_escapeRegExp(word)}.*';
-    Expression<bool> has(Expression<String> text) => text.regexp(pattern, caseSensitive: false);
+  Expression<bool> _carries(ContactSearchWord word) {
+    Expression<bool> has(Expression<String> text) => text.regexp(word.pattern, caseSensitive: false);
 
     final ownersOfNumber = selectOnly(contactPhonesTable)
       ..addColumns([contactPhonesTable.contactId])
@@ -272,9 +272,13 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
     ContactSourceTypeEnum? sourceType,
     ContactKindTypeEnum kind = ContactKindTypeEnum.visible,
   ]) {
+    final search = ContactSearch(searchBits ?? const []);
+
+    // The database keeps the contacts that carry every word, so the rest of
+    // the list is never read; the search then puts the kept ones in order.
     final contacts = _selectAllContacts(sourceType: sourceType, kind: kind);
-    if (searchBits != null && searchBits.isNotEmpty) {
-      contacts.where((_) => searchBits.map(_carries).reduce((v, e) => v | e));
+    if (search.words.isNotEmpty) {
+      contacts.where((_) => search.words.map(_carries).reduce((v, e) => v & e));
     }
 
     final query = _joinFullData(contacts);
@@ -299,7 +303,7 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
       ),
     ]);
 
-    return query.watch().map(_gatherMultipleContacts);
+    return query.watch().map(_gatherMultipleContacts).map(search.rank);
   }
 
   Future<List<FullContactData>> getServiceContacts() async {
@@ -351,11 +355,3 @@ class ContactsDao extends DatabaseAccessor<AppDatabase> with _$ContactsDaoMixin 
         .go();
   }
 }
-
-final _regExpMetaChars = RegExp(r'[\\^$.|?*+()[\]{}]');
-
-/// Escapes regular-expression metacharacters so a raw, user-typed search string
-/// can be safely interpolated into the pattern passed to the SQL `REGEXP`
-/// operator (backed by Dart's [RegExp]). Without this, characters such as
-/// `( [ * +` would produce an invalid pattern and break the contacts search.
-String _escapeRegExp(String input) => input.replaceAllMapped(_regExpMetaChars, (match) => '\\${match[0]}');

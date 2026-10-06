@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:test/test.dart';
 
 import 'package:app_database/app_database.dart';
+import 'package:app_database/src/daos/contact_search.dart';
 
 void main() {
   late AppDatabase database;
@@ -97,5 +98,46 @@ void main() {
 
       expect(contacts.single.phones.map((phone) => phone.number), unorderedEquals(['2001', '2002']));
     });
+  });
+
+  group('the database and the ranking agree on what is found', () {
+    // The database keeps and the ranking orders. Both read a word through one
+    // pattern, so the contacts the database keeps have to be exactly the ones
+    // the ranking can place.
+    setUp(() async {
+      await insertContact('Тарас', 'Шевченко', '3001', email: 'KOBZAR@example.com');
+      await insertContact('  Anna', 'Acme (HQ)', '+380 (50) 300-20-02');
+      await insertContact('C++', 'Developer', '3003', email: 'c.plus@example.com');
+    });
+
+    for (final query in [
+      'yev',
+      'YEV',
+      'ШЕВ',
+      'шевч',
+      'kobzar',
+      '(hq)',
+      'c++',
+      '.*',
+      '+380',
+      '(50)',
+      'anna acme',
+      'yevhen do',
+      'Yevhen 1001',
+      'тарас kobzar 3001',
+      'zzzz',
+    ]) {
+      test('for "$query"', () async {
+        final words = query.split(' ');
+        final everyContact = await database.contactsDao.watchAllContacts().first;
+        final search = ContactSearch(words);
+        final answering = everyContact.where((data) => search.matchOf(data) != null).toList();
+        final ranked = search.rank(answering).map((data) => data.contact.id);
+
+        final found = await database.contactsDao.watchAllContacts(words).first;
+
+        expect(found.map((data) => data.contact.id), ranked);
+      });
+    }
   });
 }

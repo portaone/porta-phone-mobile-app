@@ -104,10 +104,12 @@ void main() {
       expect(likeContacts.length, 2);
       expect(likeContacts.any((contact) => contact.contact.lastName == 'Тарас Шевченко'), isTrue);
       expect(likeContacts.any((contact) => contact.contact.lastName == 'Шевченко Кобзар'), isTrue);
-      expect(likeContacts.first.emails.length, 1);
-      expect(likeContacts.first.emails.first.address, 'taras@example.com');
-      expect(likeContacts.first.phones.length, 1);
-      expect(likeContacts.first.phones.first.number, '1234567890');
+
+      final taras = likeContacts.singleWhere((contact) => contact.contact.lastName == 'Тарас Шевченко');
+      expect(taras.emails.length, 1);
+      expect(taras.emails.first.address, 'taras@example.com');
+      expect(taras.phones.length, 1);
+      expect(taras.phones.first.number, '1234567890');
     });
 
     test('all contacts', () async {
