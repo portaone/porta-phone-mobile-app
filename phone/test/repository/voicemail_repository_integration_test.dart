@@ -55,10 +55,8 @@ void main() {
     expect(persisted.seen, isTrue);
     expect(persisted.attachmentPath, harness.client.getVoicemailAttachmentUrl('message-1'));
     expect(updates.last.single.sender, '1001');
-    expect(harness.requests.map((request) => request.url.path), [
-      '/api/v1/user/voicemails',
-      '/api/v1/user/voicemails/message-1',
-    ]);
+    // The list is the whole read: no message is asked about on its own.
+    expect(harness.requests.map((request) => request.url.path), ['/api/v1/user/voicemails']);
   });
 
   for (final status in [401, 503]) {
@@ -84,17 +82,6 @@ void main() {
       expect((await harness.dao.getVoicemailById('message-1'))!.sender, '1001');
     });
   }
-
-  test('a detail failure fails the cycle instead of treating the list response as success', () async {
-    harness.respond = (request) async => request.url.path.endsWith('/message-1')
-        ? http.Response('detail unavailable', 503)
-        : VoicemailRepositoryIntegrationHarness.listResponse();
-    final task = _register(harness);
-    await _failed(task);
-    expect(task.state.error, isA<api.RequestFailure>());
-    expect(harness.requests, hasLength(2));
-    expect(await harness.dao.getVoicemailById('message-1'), VoicemailRepositoryIntegrationHarness.cached);
-  });
 
   for (final source in ['write', 'fallbackRead']) {
     test('$source failure preserves the original cycle outcome for polling and joiners', () async {
@@ -147,9 +134,7 @@ void main() {
   }
 }
 
-Future<http.Response> _success(http.Request request) async => request.url.path.endsWith('/message-1')
-    ? VoicemailRepositoryIntegrationHarness.detailsResponse()
-    : VoicemailRepositoryIntegrationHarness.listResponse();
+Future<http.Response> _success(http.Request request) async => VoicemailRepositoryIntegrationHarness.listResponse();
 
 Future<(Object, StackTrace)> _failure(Future<void> future) => future.then<(Object, StackTrace)>(
   (_) => throw StateError('A failed refresh completed normally.'),

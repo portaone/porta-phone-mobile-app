@@ -29,6 +29,20 @@ void main() {
       expect(parsed.saved, isNull);
     });
 
+    test('a backend that lists the sender and receiver has them read', () {
+      final parsed = UserVoicemailSummary.fromJson(item({'sender': '123010', 'receiver': '123009'}));
+
+      expect(parsed.sender, '123010');
+      expect(parsed.receiver, '123009');
+    });
+
+    test('a backend that lists neither leaves both null', () {
+      final parsed = UserVoicemailSummary.fromJson(item({}));
+
+      expect(parsed.sender, isNull);
+      expect(parsed.receiver, isNull);
+    });
+
     test('a forwarded message names who passed it on', () {
       final parsed = UserVoicemailSummary.fromJson(item({'saved': false, 'forwarded_by': '123044'}));
 

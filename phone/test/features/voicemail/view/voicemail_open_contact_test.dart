@@ -28,12 +28,12 @@ class _MockContactsRepository extends Mock implements ContactsRepository {}
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
-Voicemail _voicemail(String id) => Voicemail(
+Voicemail _voicemail(String id, {String sender = '555001', String displaySender = 'User 555001'}) => Voicemail(
   id: id,
   date: '2026-09-15 10:00:00',
   duration: 10.0,
-  sender: '555001',
-  displaySender: 'User 555001',
+  sender: sender,
+  displaySender: displaySender,
   receiver: '555002',
   status: ReadStatus.read,
   size: 1024,
@@ -152,5 +152,34 @@ void main() {
 
     final asked = verify(() => cubit.callerOf(captureAny())).captured.single as Voicemail;
     expect(asked.sender, '555001');
+  });
+
+  group('a message the backend listed without a sender', () {
+    // It could not read who left that one. The recording is there to be heard;
+    // there is nobody to call back and no card to open.
+    VoicemailState nameless() {
+      mailboxHolds([_voicemail('vm-1', sender: '', displaySender: '')]);
+      return const VoicemailState(filters: VoicemailFilter.values);
+    }
+
+    testWidgets('is shown under the name for an unknown caller', (tester) async {
+      whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: nameless());
+
+      await tester.pumpWidget(host());
+
+      expect(find.text('Unknown'), findsOneWidget);
+    });
+
+    testWidgets('offers neither a call back nor a contact to open, and keeps the rest', (tester) async {
+      whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: nameless());
+
+      await tester.pumpWidget(host());
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Call'), findsNothing);
+      expect(find.text('Open contact'), findsNothing);
+      expect(find.text('Move to trash'), findsOneWidget);
+    });
   });
 }
