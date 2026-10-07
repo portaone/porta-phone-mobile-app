@@ -38,6 +38,14 @@ class Voicemail {
   final String type;
   final String? url;
 
+  /// Whether it is known who left the message.
+  ///
+  /// The backend lists a message whose headers it could not read without a
+  /// sender, and [sender] is then empty. There is nobody to call back and no
+  /// contact to open, and the name shown is the app's word for an unknown
+  /// caller.
+  bool get hasSender => sender.isNotEmpty;
+
   /// Whether the user is keeping this message.
   ///
   /// Null means the mailbox behind this backend cannot hold the flag at all,

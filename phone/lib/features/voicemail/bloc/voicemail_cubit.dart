@@ -256,7 +256,11 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   /// name, and what it does not have is the row's id. One query on a
   /// deliberate tap against a column and a mapping on every message ever
   /// listed.
-  Future<Contact?> callerOf(Voicemail voicemail) => _contactsRepository.getContactByPhoneNumber(voicemail.sender);
+  Future<Contact?> callerOf(Voicemail voicemail) async {
+    if (!voicemail.hasSender) return null;
+
+    return _contactsRepository.getContactByPhoneNumber(voicemail.sender);
+  }
 
   /// Deletes a message, which means the trash where there is one.
   ///
@@ -450,6 +454,9 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   }
 
   void startCall(Voicemail voicemail) {
+    // The menu does not offer it for such a message; this is for any other way in.
+    if (!voicemail.hasSender) return;
+
     onCallStarted(voicemail.sender);
   }
 

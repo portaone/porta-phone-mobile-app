@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:api/api.dart';
 
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/mappers/mappers.dart';
 
 import '../mocks/voicemails_fixture_factory.dart';
@@ -13,7 +14,7 @@ class _Mapper with VoicemailMapper {}
 void main() {
   final mapper = _Mapper();
 
-  UserVoicemailSummary summary({bool? saved, String? forwardedBy}) => UserVoicemailSummary(
+  UserVoicemailSummary summary({bool? saved, String? forwardedBy, String? sender = '123010'}) => UserVoicemailSummary(
     id: 'vm-1',
     date: '2026-09-15T10:00:00Z',
     duration: 3.45,
@@ -22,31 +23,38 @@ void main() {
     type: 'voice',
     saved: saved,
     forwardedBy: forwardedBy,
+    sender: sender,
+    receiver: sender == null ? null : '123009',
   );
 
-  const details = UserVoicemail(
-    id: 'vm-1',
-    date: '2026-09-15T10:00:00Z',
-    duration: 3.45,
-    sender: '123010',
-    receiver: '123009',
-    seen: false,
-    size: 5,
-    type: 'voice',
-    attachments: [],
-  );
+  VoicemailData row(UserVoicemailSummary item) => mapper.voicemailToDrift(item, 'https://a/vm-1.mp3');
 
   group('into the database', () {
     test('carries both flags when the backend reported them', () {
-      final row = mapper.voicemailToDrift(summary(saved: true, forwardedBy: '123044'), details, 'https://a/vm-1.mp3');
+      final stored = row(summary(saved: true, forwardedBy: '123044'));
 
-      expect(row.saved, isTrue);
-      expect(row.forwardedBy, '123044');
+      expect(stored.saved, isTrue);
+      expect(stored.forwardedBy, '123044');
     });
 
     test('keeps a mailbox that cannot hold the flag distinct from one that says no', () {
-      expect(mapper.voicemailToDrift(summary(), details, 'url').saved, isNull);
-      expect(mapper.voicemailToDrift(summary(saved: false), details, 'url').saved, isFalse);
+      expect(row(summary()).saved, isNull);
+      expect(row(summary(saved: false)).saved, isFalse);
+    });
+
+    test('takes who the message is from and to off the list item', () {
+      final stored = row(summary());
+
+      expect(stored.sender, '123010');
+      expect(stored.receiver, '123009');
+    });
+
+    test('stores a message the backend listed without a sender, with an empty one', () {
+      // Left out, its recording could not be heard at all.
+      final stored = row(summary(sender: null));
+
+      expect(stored.sender, isEmpty);
+      expect(stored.receiver, isEmpty);
     });
   });
 

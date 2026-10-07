@@ -13,10 +13,9 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 
 class _Client extends Mock implements api.WebtritApiClient {}
 
-// Putting several messages back from the trash. The read that follows a
-// restore asks the backend about every message in the mailbox, so what these
-// pin is how often it runs: once for the batch, not once per message. The real
-// repository and DAO against a client that keeps an inbox and a trash and
+// Putting several messages back from the trash. What these pin is how often
+// the mailbox is read for it: once for the batch, not once per message. The
+// real repository and DAO against a client that keeps an inbox and a trash and
 // writes down every request it is sent.
 void main() {
   late AppDatabase appDatabase;
@@ -40,18 +39,8 @@ void main() {
     seen: true,
     size: 100,
     type: 'audio',
-  );
-
-  api.UserVoicemail details(String id) => api.UserVoicemail(
-    id: id,
-    date: '2026-09-15T10:00:00Z',
-    duration: 12,
     sender: '1000',
     receiver: '2000',
-    seen: true,
-    size: 100,
-    type: 'audio',
-    attachments: const [],
   );
 
   Future<api.UserVoicemailListResponse> listed(Invocation invocation) async {
@@ -63,12 +52,6 @@ void main() {
       hasNewMessages: false,
       items: [for (final id in inTrash ? trash : inbox) summary(id)],
     );
-  }
-
-  Future<api.UserVoicemail> detailed(Invocation invocation) async {
-    final id = invocation.positionalArguments[1] as String;
-    requests.add('details $id');
-    return details(id);
   }
 
   Future<void> restored(Invocation invocation) async {
@@ -109,7 +92,6 @@ void main() {
         locale: any(named: 'locale'),
       ),
     ).thenAnswer(listed);
-    when(() => client.getUserVoicemail(any(), any(), locale: any(named: 'locale'))).thenAnswer(detailed);
     when(() => client.getVoicemailAttachmentUrl(any(), fileFormat: any(named: 'fileFormat'))).thenReturn('url');
     when(
       () => client.restoreUserVoicemail(
@@ -137,28 +119,20 @@ void main() {
 
     await repository.restoreMultipleVoicemails(['tr-0', 'tr-1']);
 
-    expect(requests, [
-      'restore tr-0',
-      'restore tr-1',
-      'list inbox',
-      'details tr-1',
-      'details tr-0',
-      'details in-0',
-      'details in-1',
-    ]);
+    expect(requests, ['restore tr-0', 'restore tr-1', 'list inbox']);
     expect(await storedIds(), unorderedEquals(['tr-0', 'tr-1', 'in-0', 'in-1']));
   });
 
-  test('the read does not grow with the number of messages put back', () async {
-    // It used to: a read after each restore made ten messages into a mailbox of
-    // thirty cost 375 requests, one after another.
+  test('the batch costs its restores and one list, whatever the size of the mailbox', () async {
+    // It used to cost 375 requests for ten messages into a mailbox of thirty: a
+    // read after each restore, and every read asking about every message.
     await mailbox(inboxSize: 30, trashSize: 10);
 
     await repository.restoreMultipleVoicemails([for (var i = 0; i < 10; i++) 'tr-$i']);
 
     expect(count('restore'), 10);
     expect(count('list inbox'), 1);
-    expect(count('details'), 40);
+    expect(requests, hasLength(11));
   });
 
   test('a message the backend refuses does not stop the rest, and the mailbox is still read once', () async {
@@ -237,13 +211,21 @@ void main() {
         }
         await restored(invocation);
       });
-      when(() => client.getUserVoicemail(any(), any(), locale: any(named: 'locale'))).thenAnswer((invocation) async {
+      when(
+        () => client.getUserVoicemailList(
+          any(),
+          folder: any(named: 'folder'),
+          locale: any(named: 'locale'),
+        ),
+      ).thenAnswer((invocation) async {
+        // The listing is taken now, before the restores; only its delivery waits.
+        final listing = await listed(invocation);
         if (!otherReadListed.isCompleted) {
           otherReadListed.complete();
           await otherReadMayFinish.future;
           if (failing) throw Exception('no route to host');
         }
-        return detailed(invocation);
+        return listing;
       });
 
       final batch = repository.restoreMultipleVoicemails(['tr-0', 'tr-1']);
@@ -281,6 +263,6 @@ void main() {
 
     await repository.restoreVoicemail('tr-0');
 
-    expect(requests, ['restore tr-0', 'list inbox', 'details tr-0', 'details in-0']);
+    expect(requests, ['restore tr-0', 'list inbox']);
   });
 }

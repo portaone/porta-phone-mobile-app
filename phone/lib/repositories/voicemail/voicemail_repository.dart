@@ -216,10 +216,8 @@ class VoicemailRepositoryImpl
       final remoteItems = await _webtritApiClient.getUserVoicemailList(_token, locale: localeCode);
 
       for (final item in remoteItems.items) {
-        final details = await _webtritApiClient.getUserVoicemail(_token, item.id, locale: localeCode);
-
         await _appDatabase.voicemailDao.insertOrUpdateVoicemail(
-          voicemailToDrift(item, details, _webtritApiClient.getVoicemailAttachmentUrl(item.id)),
+          voicemailToDrift(item, _webtritApiClient.getVoicemailAttachmentUrl(item.id)),
         );
       }
 
@@ -419,12 +417,9 @@ class VoicemailRepositoryImpl
 
     final trashed = <Voicemail>[];
     for (final item in response.items) {
-      // The listing carries no sender, so the message itself is asked for -
-      // the same shape the inbox refresh needs, for the same reason.
-      final details = await _webtritApiClient.getUserVoicemail(_token, item.id, locale: localeCode);
-      final row = voicemailToDrift(item, details, _webtritApiClient.getVoicemailAttachmentUrl(item.id));
+      final row = voicemailToDrift(item, _webtritApiClient.getVoicemailAttachmentUrl(item.id));
 
-      trashed.add(voicemailFromDrift(row, await _displayNameFor(details.sender)));
+      trashed.add(voicemailFromDrift(row, await _displayNameFor(row.sender)));
     }
 
     return trashed;
@@ -438,6 +433,9 @@ class VoicemailRepositoryImpl
   /// exact-number match that join uses, so a message reads the same on either
   /// side of the trash.
   Future<String> _displayNameFor(String sender) async {
+    // A message listed without a sender has nobody to look up.
+    if (sender.isEmpty) return sender;
+
     final contact = await _appDatabase.contactsDao.getContactByPhoneNumber(sender);
     if (contact == null) return sender;
 

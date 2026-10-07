@@ -3,6 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/utils/core_support.dart';
 
+import 'package:pub_semver/pub_semver.dart';
+
+import '../helpers/feature_access_factories.dart';
+
 void main() {
   CoreSupport createCoreSupportWithFlags(List<String> flags) {
     return CoreSupportImpl(flags);
@@ -94,6 +98,44 @@ void main() {
       expect(cs.supportsVoicemail, isTrue);
       expect(cs.supportsSms, isTrue);
       expect(cs.supportsChats, isTrue);
+    });
+  });
+
+  group('voicemail on a core whose list does not name the sender', () {
+    // The app reads who left a message off the list and nowhere else, so the
+    // adapter advertising voicemail is not enough: the core has to list it.
+    test('is not supported, whatever the adapter advertises', () {
+      final cs = CoreSupportImpl(const [kVoicemailFeatureFlag], voicemailListNamesSender: false);
+
+      expect(cs.supportsVoicemail, isFalse);
+    });
+
+    test('is supported once the core lists it', () {
+      final cs = CoreSupportImpl(const [kVoicemailFeatureFlag], voicemailListNamesSender: true);
+
+      expect(cs.supportsVoicemail, isTrue);
+    });
+
+    test('a core that lists it does not stand in for the adapter flag', () {
+      final cs = CoreSupportImpl(const [], voicemailListNamesSender: true);
+
+      expect(cs.supportsVoicemail, isFalse);
+    });
+
+    test('the factory takes it from the core version', () {
+      final old = CoreSupportFactory.create(
+        systemInfoWithSupported(const [kVoicemailFeatureFlag], coreVersion: Version(1, 0, 0)),
+      );
+      final current = CoreSupportFactory.create(
+        systemInfoWithSupported(const [kVoicemailFeatureFlag], coreVersion: Version(1, 1, 0)),
+      );
+
+      expect(old.supportsVoicemail, isFalse);
+      expect(current.supportsVoicemail, isTrue);
+    });
+
+    test('the factory supports nothing before the core has answered', () {
+      expect(CoreSupportFactory.create(null).supportsVoicemail, isFalse);
     });
   });
 
