@@ -32,7 +32,12 @@ Voicemail _voicemail(String id) => Voicemail(
   date: '2026-09-15 10:00:00',
   duration: 10.0,
   sender: '555001',
-  displaySender: 'User 555001',
+  senderContact: Contact(
+    id: 1,
+    sourceType: ContactSourceType.external,
+    kind: ContactKind.visible,
+    aliasName: 'User 555001',
+  ),
   receiver: '555002',
   status: ReadStatus.read,
   size: 1024,

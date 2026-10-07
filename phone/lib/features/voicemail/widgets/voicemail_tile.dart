@@ -117,7 +117,6 @@ class VoicemailTile extends StatelessWidget {
   /// unless a contact was found for it, so a name that differs from the number
   /// means there is a card to open. Offering the action for a stranger would
   /// lead to an empty screen.
-  bool get _contactKnown => voicemail.hasSender && voicemail.displaySender != voicemail.sender;
   bool get _saved => voicemail.saved == true;
   bool get _forwarding => forward is VoicemailForwardSending;
 
@@ -255,7 +254,9 @@ class VoicemailTile extends StatelessWidget {
           title: Text(_saved ? context.l10n.voicemail_Label_unsave : context.l10n.voicemail_Label_save),
         ),
       ),
-    if (_contactKnown)
+    // Asked of the message, not read off the name it shows: a contact without
+    // a name is shown by its number, exactly like a stranger.
+    if (voicemail.isFromContact)
       PopupMenuItem(
         value: _VoicemailMenuAction.openContact,
         child: ListTile(

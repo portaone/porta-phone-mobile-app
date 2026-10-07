@@ -68,11 +68,41 @@ class VoicemailDao extends DatabaseAccessor<AppDatabase> with _$VoicemailDaoMixi
 
   Future<List<VoicemailWithContact>> getVoicemailsWithContacts() async {
     final rows = await _voicemailsWithContactsQuery().get();
-    return _collapseVoicemailRows(rows);
+    return _withContactPhones(_collapseVoicemailRows(rows));
   }
 
   Stream<List<VoicemailWithContact>> watchVoicemailsWithContacts() {
-    return _voicemailsWithContactsQuery().watch().map(_collapseVoicemailRows);
+    return _voicemailsWithContactsQuery().watch().asyncMap((rows) => _withContactPhones(_collapseVoicemailRows(rows)));
+  }
+
+  /// Gives each contact found its numbers.
+  ///
+  /// The join matches a contact through the one number the message came from,
+  /// which is enough to find the contact and not enough to name it: a contact
+  /// without a name is titled by its extension or its main number, and those
+  /// are other rows. One query for all the contacts on the list, rather than a
+  /// wider join that would multiply every message by its sender's numbers.
+  ///
+  /// The join watches the phones table, so a number added or changed runs this
+  /// again.
+  Future<List<VoicemailWithContact>> _withContactPhones(List<VoicemailWithContact> items) async {
+    final contactIds = {for (final item in items) ?item.contact?.id};
+    if (contactIds.isEmpty) return items;
+
+    final phones = await (select(db.contactPhonesTable)..where((t) => t.contactId.isIn(contactIds))).get();
+    final byContact = <int, List<ContactPhoneData>>{};
+    for (final phone in phones) {
+      byContact.putIfAbsent(phone.contactId, () => []).add(phone);
+    }
+
+    return [
+      for (final item in items)
+        VoicemailWithContact(
+          voicemail: item.voicemail,
+          contact: item.contact,
+          contactPhones: byContact[item.contact?.id] ?? const [],
+        ),
+    ];
   }
 
   JoinedSelectStatement _voicemailsWithContactsQuery() {
@@ -121,5 +151,8 @@ class VoicemailWithContact {
   final VoicemailData voicemail;
   final ContactData? contact;
 
-  VoicemailWithContact({required this.voicemail, this.contact});
+  /// Every number of [contact], empty when there is none.
+  final List<ContactPhoneData> contactPhones;
+
+  VoicemailWithContact({required this.voicemail, this.contact, this.contactPhones = const []});
 }

@@ -38,7 +38,6 @@ void main() {
     date: '2026-09-15T10:00:00Z',
     duration: 1,
     sender: '101',
-    displaySender: '101',
     receiver: '102',
     status: ReadStatus.unread,
     size: 1,
