@@ -2441,6 +2441,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get session_Teardown_progressText => 'Вихід із системи...';
 
   @override
+  String get session_Restart_progressText => 'Застосовуємо зміни із сервера...';
+
+  @override
   String get sessions_AppBar_title => 'Активні сесії';
 
   @override
@@ -2513,6 +2516,20 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get settings_AboutText_ApplicationEmbeddedLinks => 'Вбудовані посилання застосунку';
+
+  @override
+  String get settings_AboutText_BackendCapabilities => 'Можливості бекенда';
+
+  @override
+  String get settings_AboutBackendCapabilities_none => 'Бекенд не називає жодної можливості.';
+
+  @override
+  String get settings_AboutBackendCapabilities_removedOnServer =>
+      'Вимкнено на сервері - діє до наступного запуску застосунку';
+
+  @override
+  String get settings_AboutBackendCapabilities_addedOnServer =>
+      'Увімкнено на сервері - почне діяти після наступного запуску застосунку';
 
   @override
   String get settings_AboutText_ThirdPartyLicenses => 'Ліцензії третіх сторін';

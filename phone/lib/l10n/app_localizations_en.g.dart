@@ -2405,6 +2405,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_Teardown_progressText => 'Signing out...';
 
   @override
+  String get session_Restart_progressText => 'Applying changes from the server...';
+
+  @override
   String get sessions_AppBar_title => 'Active sessions';
 
   @override
@@ -2477,6 +2480,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_AboutText_ApplicationEmbeddedLinks => 'Application embedded links';
+
+  @override
+  String get settings_AboutText_BackendCapabilities => 'Backend capabilities';
+
+  @override
+  String get settings_AboutBackendCapabilities_none => 'The backend names no capabilities.';
+
+  @override
+  String get settings_AboutBackendCapabilities_removedOnServer =>
+      'Turned off on the server - still in use until the app is started again';
+
+  @override
+  String get settings_AboutBackendCapabilities_addedOnServer =>
+      'Turned on on the server - not in use until the app is started again';
 
   @override
   String get settings_AboutText_ThirdPartyLicenses => 'Third-party licenses';

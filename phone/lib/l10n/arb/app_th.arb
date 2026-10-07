@@ -2127,6 +2127,10 @@
   "@session_Teardown_progressText": {
     "description": "Status message displayed while the application is performing cleanup during the logout process."
   },
+  "session_Restart_progressText": "กำลังนำการเปลี่ยนแปลงจากเซิร์ฟเวอร์มาใช้...",
+  "@session_Restart_progressText": {
+    "description": "Shown under a progress indicator while the app restarts its session by itself, because the server changed which features are available. On screen for a few seconds."
+  },
   "sessions_AppBar_title": "เซสชันที่ใช้งานอยู่",
   "@sessions_AppBar_title": {},
   "sessions_AppType_android": "แอป Android",
@@ -2185,6 +2189,22 @@
   "@sessions_Tile_revokeTooltip": {},
   "settings_AboutText_ApplicationEmbeddedLinks": "ลิงก์ที่ฝังในแอปพลิเคชัน",
   "@settings_AboutText_ApplicationEmbeddedLinks": {},
+  "settings_AboutText_BackendCapabilities": "ความสามารถของแบ็กเอนด์",
+  "@settings_AboutText_BackendCapabilities": {
+    "description": "Button on the About screen and title of the dialog it opens: the list of capability names the backend reported."
+  },
+  "settings_AboutBackendCapabilities_none": "แบ็กเอนด์ไม่ได้ระบุความสามารถใด ๆ",
+  "@settings_AboutBackendCapabilities_none": {
+    "description": "Shown in the backend capabilities dialog when the backend reported an empty list."
+  },
+  "settings_AboutBackendCapabilities_removedOnServer": "ปิดบนเซิร์ฟเวอร์แล้ว - ยังใช้งานอยู่จนกว่าจะเปิดแอปอีกครั้ง",
+  "@settings_AboutBackendCapabilities_removedOnServer": {
+    "description": "Under a capability name: the server has turned it off, the running app still uses it."
+  },
+  "settings_AboutBackendCapabilities_addedOnServer": "เปิดบนเซิร์ฟเวอร์แล้ว - ยังไม่ใช้งานจนกว่าจะเปิดแอปอีกครั้ง",
+  "@settings_AboutBackendCapabilities_addedOnServer": {
+    "description": "Under a capability name: the server has turned it on, the running app does not use it yet."
+  },
   "settings_AboutText_ThirdPartyLicenses": "ใบอนุญาตของบุคคลที่สาม",
   "@settings_AboutText_ThirdPartyLicenses": {},
   "settings_AboutText_AppSessionIdentifier": "ตัวระบุเซสชันของแอปพลิเคชัน",

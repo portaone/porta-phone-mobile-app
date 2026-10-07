@@ -1052,6 +1052,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessionStatus_subtitle_serviceUnavailable' =>
         sessionStatus_subtitle_serviceUnavailable,
       'session_Teardown_progressText' => session_Teardown_progressText,
+      'session_Restart_progressText' => session_Restart_progressText,
       'sessions_AppBar_title' => sessions_AppBar_title,
       'sessions_AppType_android' => sessions_AppType_android,
       'sessions_AppType_ios' => sessions_AppType_ios,
@@ -1078,6 +1079,14 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessions_Tile_revokeTooltip' => sessions_Tile_revokeTooltip,
       'settings_AboutText_ApplicationEmbeddedLinks' =>
         settings_AboutText_ApplicationEmbeddedLinks,
+      'settings_AboutText_BackendCapabilities' =>
+        settings_AboutText_BackendCapabilities,
+      'settings_AboutBackendCapabilities_none' =>
+        settings_AboutBackendCapabilities_none,
+      'settings_AboutBackendCapabilities_removedOnServer' =>
+        settings_AboutBackendCapabilities_removedOnServer,
+      'settings_AboutBackendCapabilities_addedOnServer' =>
+        settings_AboutBackendCapabilities_addedOnServer,
       'settings_AboutText_ThirdPartyLicenses' =>
         settings_AboutText_ThirdPartyLicenses,
       'settings_AboutText_AppSessionIdentifier' =>
