@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 import 'package:equatable/equatable.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:webtrit_phone/app/assets.gen.dart';
 import 'package:webtrit_phone/theme/theme.dart';
@@ -59,10 +58,7 @@ class AppThemes {
 
     final themes = [AppTheme(settings: settings)];
 
-    // Fonts are selected and bundled by webtrit_phone_tools during the
-    // white-label build. Runtime fetching would reintroduce startup network
-    // work and hide a broken generated asset, so production builds fail fast.
-    GoogleFonts.config.allowRuntimeFetching = false;
+    await AppFonts.load({?themeWidgetLightConfig.fonts.family, ?themeWidgetDarkConfig.fonts.family});
 
     return AppThemes(values: themes, appConfig: appConfig, embeddedResources: embeddedResources);
   }

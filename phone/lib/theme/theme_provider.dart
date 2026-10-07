@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:material_color_utilities/material_color_utilities.dart';
 
+import 'app_fonts.dart';
 import 'factory/factory.dart';
 import 'models/models.dart';
 import 'extension/extension.dart';
@@ -105,7 +106,10 @@ class ThemeProvider extends InheritedWidget {
       seedThemeData: seedThemeData,
     );
 
-    return ThemeData.from(colorScheme: colorScheme, textTheme: style.defaultTextTheme, useMaterial3: true).copyWith(
+    final base = ThemeData.from(colorScheme: colorScheme, textTheme: style.defaultTextTheme, useMaterial3: true);
+
+    return base.copyWith(
+      typography: AppFonts.typography(base.typography),
       primaryColorLight: colorScheme.secondaryContainer,
       primaryColorDark: colorScheme.onSecondaryContainer,
       scaffoldBackgroundColor: colorScheme.surfaceBright,

@@ -27,6 +27,7 @@ The application offers extensive customization options:
 
 - **[Color Scheme](docs/color_scheme.md)** – Customize the application's color palette.
 - **[Widgets](docs/widgets_configuration.md)** – Configure UI widgets according to your needs.
+- **[Fonts](docs/fonts.md)** – How the theme's typeface is bundled, loaded and drawn.
 - **[Pages](docs/page_configuration.md)** – Customize pages and their layouts.
 - **[Features](docs/application_config.md)** – Enable or disable specific features.
   - [Custom Login](docs/custom_login.md) – Implement a custom login page.
