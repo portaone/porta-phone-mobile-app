@@ -12,9 +12,12 @@ export 'keypad_style.dart';
 export 'keypad_styles.dart';
 
 class Keypad extends StatelessWidget {
-  const Keypad({super.key, required this.onKeypadPressed, this.style});
+  const Keypad({super.key, required this.onKeypadPressed, this.onKeypadHeld, this.style});
 
   final void Function(String) onKeypadPressed;
+
+  /// See [KeypadKeyButton.onKeyHeld].
+  final void Function(String entered, String alternate)? onKeypadHeld;
 
   final KeypadStyle? style;
 
@@ -32,7 +35,14 @@ class Keypad extends StatelessWidget {
       style: TextButtonsTableStyle(buttonStyle: merged.buttonStyle, minimumSize: Size.square(minimumDimension)),
       children: [
         for (final k in KeypadKey.numbers)
-          KeypadKeyButton(text: k.text, subtext: k.subtext, onKeyPressed: onKeypadPressed, style: merged.keyStyle),
+          KeypadKeyButton(
+            text: k.text,
+            subtext: k.subtext,
+            onKeyPressed: onKeypadPressed,
+            alternate: k.alternate,
+            onKeyHeld: onKeypadHeld,
+            style: merged.keyStyle,
+          ),
       ],
     );
   }

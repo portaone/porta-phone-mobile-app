@@ -35,6 +35,9 @@ class KeypadCubit extends Cubit<KeypadState> {
   Future<void> _fetchContact(String number) async {
     final contact = await _contactResolver.resolve(number);
     if (isClosed) return;
+    // The number moved on while the lookup was out: its answer is for a number
+    // nobody is looking at any more.
+    if (state.value?.trim() != number) return;
 
     emit(state.copyWith(contact: contact));
   }

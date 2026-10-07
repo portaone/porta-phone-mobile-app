@@ -130,8 +130,9 @@ segment of a `SegmentedButton` lands on the merged node (see Traps).
 A raw `Semantics` is still the right tool in two situations. One is a node that
 declares the name, the identifier **and** the action itself, which is how the
 keypad keys are done (`lib/widgets/keypad_key_button.dart`): the key takes pointer
-input through a bare `Listener` for performance, so the node has to supply the
-action that assistive technology activates. That shape is only safe together with
+input through a bare `Listener`, because it enters its character on the touch and a
+gesture recognizer would cancel that for a sliding finger - so the node has to supply
+the action that assistive technology activates. That shape is only safe together with
 `excludeSemantics: true` - without it the widgets below (there is a decorative
 `TextButton` among them) keep forming nodes of their own, and you are back to a
 nameless inner node owning the activation. The other situation is a node that is
@@ -392,8 +393,8 @@ test.
    tooltip you want visually, but mark it `excludeFromSemantics: true` and put the
    name on the semantics node, the way `CallActionButton` does.
 6. **Input taken through a raw `Listener` has no semantic action at all.** The
-   keypad keys read pointer events directly for performance, so a screen reader
-   press produced visual feedback and no digit. Such a control needs the action
+   keypad keys read pointer events directly, to enter a character on the touch,
+   so a screen reader press produced visual feedback and no digit. Such a control needs the action
    declared next to the listener, not only the name.
 7. **Material may have named the control already.** On Android the back button
    ships `Icon(semanticLabel: backButtonTooltip)` deliberately (framework
