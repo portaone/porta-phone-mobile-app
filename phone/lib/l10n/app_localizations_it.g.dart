@@ -2509,6 +2509,20 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_AboutText_ApplicationEmbeddedLinks => 'Collegamenti incorporati dell\'applicazione';
 
   @override
+  String get settings_AboutText_BackendCapabilities => 'Funzionalità del backend';
+
+  @override
+  String get settings_AboutBackendCapabilities_none => 'Il backend non indica alcuna funzionalità.';
+
+  @override
+  String get settings_AboutBackendCapabilities_removedOnServer =>
+      'Disattivata sul server - ancora in uso fino al prossimo avvio dell\'app';
+
+  @override
+  String get settings_AboutBackendCapabilities_addedOnServer =>
+      'Attivata sul server - non in uso fino al prossimo avvio dell\'app';
+
+  @override
   String get settings_AboutText_ThirdPartyLicenses => 'Licenze di terze parti';
 
   @override

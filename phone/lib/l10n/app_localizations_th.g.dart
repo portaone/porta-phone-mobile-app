@@ -2468,6 +2468,20 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settings_AboutText_ApplicationEmbeddedLinks => 'ลิงก์ที่ฝังในแอปพลิเคชัน';
 
   @override
+  String get settings_AboutText_BackendCapabilities => 'ความสามารถของแบ็กเอนด์';
+
+  @override
+  String get settings_AboutBackendCapabilities_none => 'แบ็กเอนด์ไม่ได้ระบุความสามารถใด ๆ';
+
+  @override
+  String get settings_AboutBackendCapabilities_removedOnServer =>
+      'ปิดบนเซิร์ฟเวอร์แล้ว - ยังใช้งานอยู่จนกว่าจะเปิดแอปอีกครั้ง';
+
+  @override
+  String get settings_AboutBackendCapabilities_addedOnServer =>
+      'เปิดบนเซิร์ฟเวอร์แล้ว - ยังไม่ใช้งานจนกว่าจะเปิดแอปอีกครั้ง';
+
+  @override
   String get settings_AboutText_ThirdPartyLicenses => 'ใบอนุญาตของบุคคลที่สาม';
 
   @override

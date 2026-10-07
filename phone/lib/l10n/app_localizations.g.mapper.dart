@@ -1079,6 +1079,14 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessions_Tile_revokeTooltip' => sessions_Tile_revokeTooltip,
       'settings_AboutText_ApplicationEmbeddedLinks' =>
         settings_AboutText_ApplicationEmbeddedLinks,
+      'settings_AboutText_BackendCapabilities' =>
+        settings_AboutText_BackendCapabilities,
+      'settings_AboutBackendCapabilities_none' =>
+        settings_AboutBackendCapabilities_none,
+      'settings_AboutBackendCapabilities_removedOnServer' =>
+        settings_AboutBackendCapabilities_removedOnServer,
+      'settings_AboutBackendCapabilities_addedOnServer' =>
+        settings_AboutBackendCapabilities_addedOnServer,
       'settings_AboutText_ThirdPartyLicenses' =>
         settings_AboutText_ThirdPartyLicenses,
       'settings_AboutText_AppSessionIdentifier' =>

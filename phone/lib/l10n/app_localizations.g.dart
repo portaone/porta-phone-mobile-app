@@ -4513,6 +4513,30 @@ abstract class AppLocalizations {
   /// **'Application embedded links'**
   String get settings_AboutText_ApplicationEmbeddedLinks;
 
+  /// Button on the About screen and title of the dialog it opens: the list of capability names the backend reported.
+  ///
+  /// In en, this message translates to:
+  /// **'Backend capabilities'**
+  String get settings_AboutText_BackendCapabilities;
+
+  /// Shown in the backend capabilities dialog when the backend reported an empty list.
+  ///
+  /// In en, this message translates to:
+  /// **'The backend names no capabilities.'**
+  String get settings_AboutBackendCapabilities_none;
+
+  /// Under a capability name: the server has turned it off, the running app still uses it.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned off on the server - still in use until the app is started again'**
+  String get settings_AboutBackendCapabilities_removedOnServer;
+
+  /// Under a capability name: the server has turned it on, the running app does not use it yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned on on the server - not in use until the app is started again'**
+  String get settings_AboutBackendCapabilities_addedOnServer;
+
   /// No description provided for @settings_AboutText_ThirdPartyLicenses.
   ///
   /// In en, this message translates to:

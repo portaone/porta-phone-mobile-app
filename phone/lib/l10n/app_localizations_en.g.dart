@@ -2482,6 +2482,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_AboutText_ApplicationEmbeddedLinks => 'Application embedded links';
 
   @override
+  String get settings_AboutText_BackendCapabilities => 'Backend capabilities';
+
+  @override
+  String get settings_AboutBackendCapabilities_none => 'The backend names no capabilities.';
+
+  @override
+  String get settings_AboutBackendCapabilities_removedOnServer =>
+      'Turned off on the server - still in use until the app is started again';
+
+  @override
+  String get settings_AboutBackendCapabilities_addedOnServer =>
+      'Turned on on the server - not in use until the app is started again';
+
+  @override
   String get settings_AboutText_ThirdPartyLicenses => 'Third-party licenses';
 
   @override
