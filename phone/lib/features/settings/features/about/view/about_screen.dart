@@ -3,9 +3,12 @@ import 'package:material_ui/material_ui.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -150,6 +153,21 @@ class _AboutScreenState extends State<AboutScreen> {
                 ),
               ),
               Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16),
+                child: SemanticAction(
+                  identifier: aboutBackendCapabilitiesButtonId,
+                  child: TextButton.icon(
+                    onPressed: () => _showBackendCapabilitiesDialog(context),
+                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                    icon: const Icon(Icons.fact_check_outlined),
+                    label: Text(
+                      context.l10n.settings_AboutText_BackendCapabilities,
+                      style: themeData.textTheme.bodyMedium,
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
                 padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
                 child: TextButton.icon(
                   onPressed: () => _showLicenses(context),
@@ -196,6 +214,23 @@ class _AboutScreenState extends State<AboutScreen> {
             child: Text(context.l10n.alertDialogActions_ok),
           ),
         ],
+      ),
+    );
+  }
+
+  /// What this session was started with, against what the backend said the
+  /// last time it was read - the stored answer, so opening the dialog asks
+  /// the backend nothing.
+  Future<void> _showBackendCapabilitiesDialog(BuildContext context) async {
+    final session = context.read<FeatureAccess>().coreSupport.supported;
+    final stored = await context.read<SystemInfoRepository>().getSystemInfo(fetchPolicy: FetchPolicy.cacheOnly);
+    if (!context.mounted) return;
+
+    final server = stored?.adapter?.supported?.toSet();
+    await showDialog<void>(
+      context: context,
+      builder: (_) => BackendCapabilitiesDialog(
+        capabilities: BackendCapability.compare(session: session, server: server),
       ),
     );
   }

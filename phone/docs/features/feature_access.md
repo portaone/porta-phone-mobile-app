@@ -99,6 +99,17 @@ One case is not covered: an app started without a network whose first read
 lands minutes later. That read is still its first, and the session is replaced
 then, wherever the user is.
 
+## Seeing what a session runs on
+
+Settings -> About -> **Backend capabilities** lists the capability names the
+running session was started with, as the backend spells them, against the
+backend's answer stored last. A name the two disagree on says which way: off
+on the server and still in use, or on on the server and not in use yet. With
+the rule above this is the only place that tells "the backend changed" from
+"the app acts on it" without going to look for the feature a capability gates
+(`BackendCapabilitiesDialog`; identifiers `aboutBackendCapabilitiesButton`
+and `aboutBackendCapabilities` for automation).
+
 ## Why it works this way
 
 Before the pin, the shell rebuilt its provider tree on every `FeatureAccess`
