@@ -2344,6 +2344,14 @@ extension AppLocalizationsExtension on AppLocalizations {
           'voicemail_SemanticsLabel_forwardTo requires 1 arguments',
         ),
       },
+      'voicemail_SemanticsAnnouncement_selectedCount' => switch (args) {
+        [final int count] => voicemail_SemanticsAnnouncement_selectedCount(
+          count,
+        ),
+        _ => throw ArgumentError(
+          'voicemail_SemanticsAnnouncement_selectedCount requires 1 arguments',
+        ),
+      },
       'voicemail_Snackbar_deleteFailed' => switch (args) {
         [final int count] => voicemail_Snackbar_deleteFailed(count),
         _ => throw ArgumentError(

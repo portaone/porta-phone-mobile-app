@@ -3012,7 +3012,7 @@
   "@voicemail_Dialog_deleteSelectedPermanentlyContent": {
     "description": "Warns that deleting the picked voicemails for good cannot be undone."
   },
-  "voicemail_Dialog_deleteSelectedPermanentlyTitle": "Delete {count} messages permanently?",
+  "voicemail_Dialog_deleteSelectedPermanentlyTitle": "{count, plural, one{Delete the message permanently?} other{Delete {count} messages permanently?}}",
   "@voicemail_Dialog_deleteSelectedPermanentlyTitle": {
     "description": "Asks before deleting the picked voicemails for good.",
     "placeholders": {
@@ -3043,7 +3043,7 @@
   "@voicemail_Filter_unheard": {
     "description": "Voicemail filter showing only the messages not yet heard."
   },
-  "voicemail_Dialog_emptyTrashContent": "All {count} messages in the trash will be removed and the space they use will be freed.",
+  "voicemail_Dialog_emptyTrashContent": "{count, plural, one{The message in the trash will be removed and the space it uses will be freed.} other{All {count} messages in the trash will be removed and the space they use will be freed.}}",
   "@voicemail_Dialog_emptyTrashContent": {
     "description": "Warns how much emptying the trash removes and that it frees that space.",
     "placeholders": {
@@ -3178,6 +3178,15 @@
     "placeholders": {
       "name": {
         "type": "String"
+      }
+    }
+  },
+  "voicemail_SemanticsAnnouncement_selectedCount": "{count, plural, =0{Nothing selected} one{{count} message selected} other{{count} messages selected}}",
+  "@voicemail_SemanticsAnnouncement_selectedCount": {
+    "description": "Announced by a screen reader, on its own, each time the number of picked voicemails changes. Stands alone: no control name is spoken before it.",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },

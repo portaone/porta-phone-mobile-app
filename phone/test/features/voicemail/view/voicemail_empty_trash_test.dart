@@ -155,6 +155,24 @@ void main() {
       verify(() => cubit.emptyVoicemailTrash()).called(1);
     });
 
+    testWidgets('a trash of one message is asked about as one', (tester) async {
+      whenListen(
+        cubit,
+        const Stream<VoicemailState>.empty(),
+        initialState: loaded(filter: VoicemailFilter.trash, count: 1),
+      );
+
+      await tester.pumpWidget(host(const VoicemailScreen()));
+      await tester.tap(find.byIcon(Icons.delete_sweep));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('The message in the trash will be removed and the space it uses will be freed.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('1 messages'), findsNothing);
+    });
+
     testWidgets('is offered by the header that does not offer deleting everything', (tester) async {
       // That header is the bottom-menu tab's. It is where most people live and
       // where the trash is reached from, so refusing to finish the job there

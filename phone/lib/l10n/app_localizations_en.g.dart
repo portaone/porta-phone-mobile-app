@@ -3358,7 +3358,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count) {
-    return 'Delete $count messages permanently?';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count messages permanently?',
+      one: 'Delete the message permanently?',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -3385,7 +3391,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String voicemail_Dialog_emptyTrashContent(int count) {
-    return 'All $count messages in the trash will be removed and the space they use will be freed.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'All $count messages in the trash will be removed and the space they use will be freed.',
+      one: 'The message in the trash will be removed and the space it uses will be freed.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -3495,6 +3507,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String voicemail_SemanticsLabel_forwardTo(String name) {
     return 'Forward to $name';
+  }
+
+  @override
+  String voicemail_SemanticsAnnouncement_selectedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messages selected',
+      one: '$count message selected',
+      zero: 'Nothing selected',
+    );
+    return '$_temp0';
   }
 
   @override

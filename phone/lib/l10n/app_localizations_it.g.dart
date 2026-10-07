@@ -3544,6 +3544,18 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String voicemail_SemanticsAnnouncement_selectedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count messaggi selezionati',
+      one: '$count messaggio selezionato',
+      zero: 'Nessun messaggio selezionato',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_forwarding => 'Inoltro in corso';
 
   @override

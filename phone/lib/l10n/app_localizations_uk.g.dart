@@ -3403,8 +3403,10 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Видалити $count повідомлень назавжди?',
-      one: 'Видалити повідомлення назавжди?',
+      other: 'Видалити $count повідомлення назавжди?',
+      many: 'Видалити $count повідомлень назавжди?',
+      few: 'Видалити $count повідомлення назавжди?',
+      one: 'Видалити $count повідомлення назавжди?',
     );
     return '$_temp0';
   }
@@ -3436,8 +3438,10 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Усі $count повідомлень у кошику буде вилучено, а місце, яке вони займають, звільнено.',
-      one: 'Повідомлення в кошику буде вилучено, а місце, яке воно займає, звільнено.',
+      other: '$count повідомлення з кошика буде вилучено, а місце, яке вони займають, звільнено.',
+      many: '$count повідомлень з кошика буде вилучено, а місце, яке вони займають, звільнено.',
+      few: '$count повідомлення з кошика буде вилучено, а місце, яке вони займають, звільнено.',
+      one: '$count повідомлення з кошика буде вилучено, а місце, яке вони займають, звільнено.',
     );
     return '$_temp0';
   }
@@ -3558,6 +3562,20 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String voicemail_SemanticsLabel_forwardTo(String name) {
     return 'Переслати: $name';
+  }
+
+  @override
+  String voicemail_SemanticsAnnouncement_selectedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Вибрано $count повідомлення',
+      many: 'Вибрано $count повідомлень',
+      few: 'Вибрано $count повідомлення',
+      one: 'Вибрано $count повідомлення',
+      zero: 'Нічого не вибрано',
+    );
+    return '$_temp0';
   }
 
   @override

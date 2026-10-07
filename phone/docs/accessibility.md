@@ -139,6 +139,34 @@ nameless inner node owning the activation. The other situation is a node that is
 not a control at all: a status or progress message published with
 `liveRegion: true`, or a value read out next to a meter.
 
+## Saying that something changed
+
+A state on a node - selected, checked - is read when focus comes to the node. At
+the moment it changes under a press the reader may say nothing at all: on the
+voicemail list TalkBack read a picked row's name again, without "selected". When
+the change itself has to be heard, announce it - `_announcePicked` in
+`features/voicemail/widgets/voicemail_body.dart` is the first use:
+
+- **Listen to the state, not to the press.** A `BlocListener` on what changed,
+  so that a change nobody pressed for (a poll, a bulk action, another filter) is
+  said too.
+- **Ask whether the platform takes announcements** -
+  `MediaQuery.supportsAnnounceOf(context)` - before
+  `SemanticsService.sendAnnouncement(View.of(context), text, Directionality.of(context))`.
+  Android has deprecated announcement events; where support is not reported the
+  announcement is not sent, and what is left is the state read on focus.
+- **Give it its own string**, in words that stand alone - "2 messages selected",
+  "Nothing selected" - because it is heard without the control it is about. A
+  suffix written to follow a control's name (`common_SemanticsValue_selectedCount`)
+  is not such a string.
+
+`liveRegion: true` is for a message that appears or is replaced on its own. On a
+control whose name merely changes it was not read out (the header's
+"Delete, 2 selected", Redmi A5, Android 15, 2026-10-07).
+
+Measured on Android 15 with TalkBack 17.1 only. Not checked: Android 16 and
+later, where the announcement may no longer be sent at all, and VoiceOver.
+
 ## Helpers that already exist
 
 Reach for these before writing anything new; each one carries a rule that is easy
