@@ -358,30 +358,33 @@ class VoicemailRepositoryImpl
   }
 
   @override
-  Future<void> restoreVoicemail(String messageId, {String? localeCode}) async {
-    if (_fetching != null) {
+  Future<void> restoreVoicemail(String messageId, {String? localeCode}) =>
+      _restoreVoicemails([messageId], localeCode: localeCode);
+
+  /// Reads the mailbox after something was restored into it.
+  ///
+  /// The row went when the message was trashed, and what comes back carries
+  /// more than a restore answers with, so the mailbox is asked again rather
+  /// than the row guessed at.
+  ///
+  /// A failure here is the refresh's own and is not thrown: the restore
+  /// happened, and reporting it as a failed restore would be telling the
+  /// caller the opposite of what the backend did. What is left is a list that
+  /// is behind, which the next read puts right and reports for itself.
+  Future<void> _rereadAfterRestore({String? localeCode}) async {
+    // A read already under way cannot be the one to end on: polling does not
+    // wait for a restore, so it may have listed the mailbox before the last
+    // message came back, and joining it would leave that message out. It is
+    // waited out and a read started after the restores is made instead. How it
+    // ended is its own callers' to hear, not this one's.
+    try {
       await _fetching;
-    }
+    } catch (_) {}
 
-    await _webtritApiClient.restoreUserVoicemail(
-      _token,
-      messageId,
-      locale: localeCode,
-      options: RequestOptions.withNoRetries(),
-    );
-
-    // The row went when the message was trashed, and what comes back carries
-    // more than a restore answers with, so the mailbox is asked again rather
-    // than the row guessed at.
-    //
-    // A failure here is the refresh's own and is not thrown: the restore
-    // happened, and reporting it as a failed restore would be telling the
-    // caller the opposite of what the backend did. What is left is a list that
-    // is behind, which the next read puts right and reports for itself.
     try {
       await fetchVoicemails(localeCode: localeCode);
     } catch (e, s) {
-      _logger.warning('Restored $messageId but could not re-read the mailbox', e, s);
+      _logger.warning('Restored but could not re-read the mailbox', e, s);
     }
   }
 
@@ -563,12 +566,41 @@ class VoicemailRepositoryImpl
   }
 
   @override
-  Future<void> restoreMultipleVoicemails(List<String> messagesIds) async {
+  Future<void> restoreMultipleVoicemails(List<String> messagesIds) => _restoreVoicemails(messagesIds);
+
+  /// Puts every one of [messageIds] back, then reads the mailbox once.
+  ///
+  /// Once for the batch rather than once per message: the read asks the
+  /// backend about every message in the mailbox, so reading after each restore
+  /// made ten messages into a mailbox of thirty cost several hundred requests,
+  /// one after another, with the trash on screen unchanged until the last.
+  ///
+  /// The read follows whatever the batch came to, as long as something was
+  /// restored - a batch that stopped halfway still moved messages, and the
+  /// stored list has to learn of them. Its own failure is not thrown, for the
+  /// reason [_rereadAfterRestore] gives.
+  Future<void> _restoreVoicemails(Iterable<String> messageIds, {String? localeCode}) async {
     if (_fetching != null) {
       await _fetching;
     }
 
-    await _applyToEach(messagesIds, restoreVoicemail);
+    var restoredAny = false;
+
+    Future<void> restoreOne(String messageId) async {
+      await _webtritApiClient.restoreUserVoicemail(
+        _token,
+        messageId,
+        locale: localeCode,
+        options: RequestOptions.withNoRetries(),
+      );
+      restoredAny = true;
+    }
+
+    try {
+      await _applyToEach(messageIds, restoreOne);
+    } finally {
+      if (restoredAny) await _rereadAfterRestore(localeCode: localeCode);
+    }
   }
 
   @override
