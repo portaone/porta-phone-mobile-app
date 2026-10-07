@@ -1,3 +1,5 @@
+import 'package:flutter/semantics.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -73,6 +75,9 @@ void main() {
     void Function(Voicemail)? onForwarded,
     void Function(Voicemail)? onRestored,
     void Function(Voicemail)? onDeletedPermanently,
+    bool selected = false,
+    bool picking = true,
+    VoidCallback? onTap,
   }) {
     final item = voicemail ?? message(from: known);
     return MaterialApp(
@@ -100,7 +105,8 @@ void main() {
             child: VoicemailTile(
               voicemail: item,
               displayName: 'User 555002',
-              selected: false,
+              selected: selected,
+              selecting: picking,
               saveSupported: saveSupported,
               trashSupported: trashSupported,
               forwardSupported: forwardSupported,
@@ -117,7 +123,8 @@ void main() {
               onRestored: (it) => onRestored?.call(it),
               onDeletedPermanently: (it) => onDeletedPermanently?.call(it),
               onLongPress: (_) => onLongPress?.call(),
-              onTap: (_) {},
+              // The screen gives the tile a tap only while messages are being picked.
+              onTap: picking ? (_) => onTap?.call() : null,
             ),
           ),
         ),
@@ -437,6 +444,84 @@ void main() {
       await tester.pumpWidget(wrap());
 
       expect(find.textContaining('Forwarded by'), findsNothing);
+    });
+  });
+
+  group('a message being picked, for a screen reader', () {
+    // The tile draws a picked message with a tinted background, which says
+    // nothing to somebody who does not see it. A picked row used to reach the
+    // accessibility tree exactly like any other.
+    Finder row() => find.byType(VoicemailTile);
+
+    testWidgets('a picked message is read as selected', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(wrap(selected: true));
+
+      expect(tester.getSemantics(row()), isSemantics(hasSelectedState: true, isSelected: true));
+      handle.dispose();
+    });
+
+    testWidgets('the others are read as not selected while messages are being picked', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(wrap(selected: false));
+
+      expect(tester.getSemantics(row()), isSemantics(hasSelectedState: true, isSelected: false));
+      handle.dispose();
+    });
+
+    testWidgets('an ordinary list says nothing about selection', (tester) async {
+      // Otherwise every message of every mailbox would be read out as "not
+      // selected".
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(wrap(selected: false, picking: false));
+
+      expect(tester.getSemantics(row()), isSemantics(hasSelectedState: false));
+      handle.dispose();
+    });
+
+    testWidgets('the row that says it is not selected is the one a double tap picks', (tester) async {
+      // The state and the action have to sit on one node: a reader that hears
+      // "not selected" activates that node, not a pointer position.
+      final handle = tester.ensureSemantics();
+      var taps = 0;
+      await tester.pumpWidget(wrap(selected: false, onTap: () => taps++));
+
+      await tapViaSemantics(tester, row());
+
+      expect(taps, 1);
+      handle.dispose();
+    });
+
+    testWidgets('a double tap and hold on an ordinary row starts picking', (tester) async {
+      final handle = tester.ensureSemantics();
+      var holds = 0;
+      await tester.pumpWidget(wrap(picking: false, onLongPress: () => holds++));
+
+      final node = tester.getSemantics(find.text('User 555002'));
+      expect(node.getSemanticsData().hasAction(SemanticsAction.longPress), isTrue, reason: 'no long press on $node');
+      node.owner!.performAction(node.id, SemanticsAction.longPress);
+      await tester.pump();
+
+      expect(holds, 1);
+      handle.dispose();
+    });
+
+    testWidgets('a message on its way to somebody neither reads as pickable nor takes the press', (tester) async {
+      // The mailbox refuses to pick it. A row that reads "not selected" and
+      // answers a double tap with silence is what this change is here to end.
+      final handle = tester.ensureSemantics();
+      var taps = 0;
+      var holds = 0;
+      await tester.pumpWidget(
+        wrap(forward: const VoicemailForwardSending(), onTap: () => taps++, onLongPress: () => holds++),
+      );
+
+      final data = tester.getSemantics(row()).getSemanticsData();
+      expect(tester.getSemantics(row()), isSemantics(hasSelectedState: false));
+      expect(data.hasAction(SemanticsAction.tap), isFalse);
+      expect(data.hasAction(SemanticsAction.longPress), isFalse);
+      expect((taps, holds), (0, 0));
+      handle.dispose();
     });
   });
 

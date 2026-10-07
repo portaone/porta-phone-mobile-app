@@ -99,33 +99,46 @@ class _VoicemailDeleteActionState extends State<VoicemailDeleteAction> {
     }
   }
 
-  /// Deleting what is picked, which in the trash is the end of the line.
+  /// Deleting what is picked, which is one of three things.
   ///
-  /// Everywhere else the messages go to the trash and can be had back, so the
-  /// question is milder and the same one it has always been. In the trash there
-  /// is nowhere further for them to go, and the question says so and counts
-  /// them - which is the part a person cannot check once the dialog is over
-  /// the list.
+  /// - In the trash there is nowhere further for the messages to go: the
+  ///   question says so and counts them, which is the part a person cannot
+  ///   check once the dialog is over the list.
+  /// - In the mailbox of a backend that has a trash they go there and can be
+  ///   had back, so nothing is asked - as nothing is asked for one message
+  ///   deleted from its menu. A question before every delete trains people to
+  ///   dismiss it, and this one has nothing to warn about; the mailbox says
+  ///   they were moved and offers the way back.
+  /// - In the mailbox of a backend without a trash the same press is final,
+  ///   and it asks first.
+  ///
+  /// The mailbox used to ask the last of these on every backend, telling a
+  /// person their messages were gone for good while they sat in the trash.
   void _onDeleteSelected() async {
-    final state = context.read<VoicemailCubit>().state;
+    final l10n = context.l10n;
+    final cubit = context.read<VoicemailCubit>();
+    final state = cubit.state;
     final count = state.selectedVoicemailsIds.length;
     final permanent = state.isShowingTrash;
 
-    final confirmed =
-        (await ConfirmDialog.showDangerous(
-          context,
-          title: permanent
-              ? context.l10n.voicemail_Dialog_deleteSelectedPermanentlyTitle(count)
-              : context.l10n.voicemail_Dialog_deleteSelectedTitle,
-          content: permanent
-              ? context.l10n.voicemail_Dialog_deleteSelectedPermanentlyContent
-              : context.l10n.voicemail_Dialog_deleteSelectedContent,
-        )) ??
-        false;
+    if (!permanent && state.trashSupported) return cubit.removeSelectedVoicemails();
+
+    final question = permanent
+        ? ConfirmDialog.showDangerous(
+            context,
+            title: l10n.voicemail_Dialog_deleteSelectedPermanentlyTitle(count),
+            content: l10n.voicemail_Dialog_deleteSelectedPermanentlyContent,
+          )
+        : ConfirmDialog.showDangerous(
+            context,
+            title: l10n.voicemail_Dialog_deleteSelectedTitle,
+            content: l10n.voicemail_Dialog_deleteSelectedContent,
+          );
+
+    final confirmed = (await question) ?? false;
 
     if (!confirmed || !mounted) return;
 
-    final cubit = context.read<VoicemailCubit>();
     // A plain delete in the trash would send an already-trashed message to the
     // trash again, which the backend accepts and which does nothing at all.
     permanent ? cubit.removeSelectedVoicemailsPermanently() : cubit.removeSelectedVoicemails();

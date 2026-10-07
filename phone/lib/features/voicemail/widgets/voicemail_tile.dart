@@ -22,6 +22,7 @@ class VoicemailTile extends StatelessWidget {
     required this.voicemail,
     required this.displayName,
     required this.selected,
+    this.selecting = false,
     required this.onCall,
     required this.onDeleted,
     required this.onToggleSeenStatus,
@@ -46,6 +47,13 @@ class VoicemailTile extends StatelessWidget {
   final Voicemail voicemail;
   final String displayName;
   final bool selected;
+
+  /// Whether messages are being picked on this screen right now.
+  ///
+  /// Said outright rather than read off whether a tap was passed: the tile
+  /// tells a screen reader whether it is selected only while this is on, and a
+  /// tap may one day be given for another reason.
+  final bool selecting;
 
   /// Whether this mailbox can keep a message at all.
   ///
@@ -125,74 +133,87 @@ class VoicemailTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final dateFormat = context.read<VoicemailScreenContext>().dateFormat;
 
-    final tile = GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onLongPress: () => onLongPress(voicemail),
-      onTap: onTap != null ? () => onTap!(voicemail) : null,
-      child: PlainListTile(
-        contentPadding: EdgeInsetsGeometry.all(16),
-        selected: selected,
-        selectedTileColor: colorScheme.primaryContainer.withValues(alpha: .5),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        leading: LeadingAvatar(
-          username: displayName,
-          thumbnail: thumbnail,
-          thumbnailUrl: thumbnailUrl,
-          badge: forward is VoicemailForwardFailed ? const _ForwardFailedBadge() : null,
-        ),
-        title: Row(
-          spacing: 6,
-          children: [
-            Flexible(
-              child: Text(
-                voicemail.hasSender ? voicemail.displaySender : context.l10n.notifications_missedCall_unknownCaller,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (_saved)
-              Icon(
-                Icons.bookmark,
-                size: 16,
-                color: colorScheme.primary,
-                // Named rather than decorative. The design leaves the mark
-                // silent because it writes the whole tile's name itself; this
-                // tile does not, so without a name here the one difference
-                // between a kept message and any other is invisible to a
-                // reader.
-                semanticLabel: context.l10n.voicemail_SemanticsLabel_saved,
-              ),
-          ],
-        ),
-        subtitle: _VoicemailSubtitle(
-          voicemail: voicemail,
-          dateFormat: dateFormat,
-          forwardedByName: forwardedByName,
-          forward: forward,
-        ),
-        bottom: AudioView(path: voicemail.url!, cacheKey: voicemail.id, onPlaybackStarted: _onPlaybackStarted),
-        trailing: _forwarding
-            ? const _ForwardingIndicator()
-            : SemanticAction(
-                label: context.l10n.voicemail_SemanticsLabel_moreActions,
-                identifier: voicemailMenuId,
-                // The button's own tooltip is replaced rather than removed: it says
-                // "Show menu", which a screen reader reads on top of the name above
-                // (appended to it on iOS), and dropping it outright would take the
-                // long press with it - the row's long press would then fire instead
-                // and silently start selecting messages.
-                child: Tooltip(
-                  message: context.l10n.voicemail_SemanticsLabel_moreActions,
-                  excludeFromSemantics: true,
-                  child: PopupMenuButton<_VoicemailMenuAction>(
-                    padding: EdgeInsets.zero,
-                    position: PopupMenuPosition.under,
-                    tooltip: '',
-                    onSelected: _onPopupMenuSelected,
-                    itemBuilder: (context) => _buildMenuItems(context, colorScheme),
-                    icon: Icon(Icons.more_vert, color: colorScheme.onSurface),
-                  ),
+    // What the tile draws with a tinted background, said for a screen reader:
+    // the row is picked or it is not. Stated only while messages are being
+    // picked, so an ordinary list is not read as a list of things that are all
+    // "not selected".
+    //
+    // A message on its way to somebody cannot be picked - the mailbox refuses
+    // it - so it neither says it is "not selected" nor offers the press: a row
+    // that reads as pickable and then answers a press with silence is the very
+    // thing this is here to prevent.
+    final pickable = selecting && !_forwarding;
+    final tile = Semantics(
+      selected: pickable ? selected : null,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: _forwarding ? null : () => onLongPress(voicemail),
+        onTap: onTap != null && !_forwarding ? () => onTap!(voicemail) : null,
+        child: PlainListTile(
+          contentPadding: EdgeInsetsGeometry.all(16),
+          selected: selected,
+          selectedTileColor: colorScheme.primaryContainer.withValues(alpha: .5),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          leading: LeadingAvatar(
+            username: displayName,
+            thumbnail: thumbnail,
+            thumbnailUrl: thumbnailUrl,
+            badge: forward is VoicemailForwardFailed ? const _ForwardFailedBadge() : null,
+          ),
+          title: Row(
+            spacing: 6,
+            children: [
+              Flexible(
+                child: Text(
+                  voicemail.hasSender ? voicemail.displaySender : context.l10n.notifications_missedCall_unknownCaller,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (_saved)
+                Icon(
+                  Icons.bookmark,
+                  size: 16,
+                  color: colorScheme.primary,
+                  // Named rather than decorative. The design leaves the mark
+                  // silent because it writes the whole tile's name itself; this
+                  // tile does not, so without a name here the one difference
+                  // between a kept message and any other is invisible to a
+                  // reader.
+                  semanticLabel: context.l10n.voicemail_SemanticsLabel_saved,
+                ),
+            ],
+          ),
+          subtitle: _VoicemailSubtitle(
+            voicemail: voicemail,
+            dateFormat: dateFormat,
+            forwardedByName: forwardedByName,
+            forward: forward,
+          ),
+          bottom: AudioView(path: voicemail.url!, cacheKey: voicemail.id, onPlaybackStarted: _onPlaybackStarted),
+          trailing: _forwarding
+              ? const _ForwardingIndicator()
+              : SemanticAction(
+                  label: context.l10n.voicemail_SemanticsLabel_moreActions,
+                  identifier: voicemailMenuId,
+                  // The button's own tooltip is replaced rather than removed: it says
+                  // "Show menu", which a screen reader reads on top of the name above
+                  // (appended to it on iOS), and dropping it outright would take the
+                  // long press with it - the row's long press would then fire instead
+                  // and silently start selecting messages.
+                  child: Tooltip(
+                    message: context.l10n.voicemail_SemanticsLabel_moreActions,
+                    excludeFromSemantics: true,
+                    child: PopupMenuButton<_VoicemailMenuAction>(
+                      padding: EdgeInsets.zero,
+                      position: PopupMenuPosition.under,
+                      tooltip: '',
+                      onSelected: _onPopupMenuSelected,
+                      itemBuilder: (context) => _buildMenuItems(context, colorScheme),
+                      icon: Icon(Icons.more_vert, color: colorScheme.onSurface),
+                    ),
+                  ),
+                ),
+        ),
       ),
     );
 

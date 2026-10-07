@@ -216,6 +216,45 @@ void main() {
       expect(cubit.state.selectedVoicemailsIds, isEmpty);
       expect(cubit.state.isMultipleVoicemailsSelection, isFalse);
     });
+
+    test('deleting the selection where there is a trash says they were moved, and Undo puts those back', () async {
+      // Nothing is asked before such a delete, so this is where the person
+      // learns what happened and how to take it back.
+      when(() => repository.removeMultipleVoicemails(any())).thenAnswer((_) async {});
+      when(() => repository.restoreMultipleVoicemails(any())).thenAnswer((_) async {});
+      voicemails.add([_voicemail('1'), _voicemail('2'), _voicemail('3')]);
+      await pumpEventQueue();
+      cubit.toggleSelection(_voicemail('1'));
+      cubit.toggleSelection(_voicemail('2'));
+
+      cubit.removeSelectedVoicemails();
+      await pumpEventQueue();
+      voicemails.add([_voicemail('3')]);
+      await pumpEventQueue();
+      // Something else is picked by the time Undo is pressed: it puts back what
+      // was deleted, not what is picked now.
+      cubit.toggleSelection(_voicemail('3'));
+
+      final moved = said.whereType<VoicemailMovedToTrashNotification>().single;
+      moved.onUndo();
+      await pumpEventQueue();
+
+      verify(() => repository.restoreMultipleVoicemails(['1', '2'])).called(1);
+      expect(cubit.state.selectedVoicemailsIds, ['3']);
+    });
+
+    test('a bulk delete that fails does not say the messages were moved', () async {
+      when(() => repository.removeMultipleVoicemails(any())).thenAnswer((_) => Future.error(Exception('offline')));
+      voicemails.add([_voicemail('1'), _voicemail('2')]);
+      await pumpEventQueue();
+      cubit.toggleSelection(_voicemail('1'));
+
+      cubit.removeSelectedVoicemails();
+      await pumpEventQueue();
+
+      expect(said.whereType<VoicemailMovedToTrashNotification>(), isEmpty);
+      expect(said.whereType<VoicemailDeleteFailedNotification>(), hasLength(1));
+    });
   });
 
   group('keeping a message', () {

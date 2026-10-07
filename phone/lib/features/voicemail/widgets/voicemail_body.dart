@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/semantics.dart';
+
 import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
@@ -52,11 +54,43 @@ class VoicemailBody extends StatelessWidget {
               previous.filter != current.filter || previous.trashedItems != current.trashedItems,
           listener: (context, _) => _stopPlaybackOfRemovedVoicemail(context),
         ),
+        BlocListener<VoicemailCubit, VoicemailState>(
+          listenWhen: (previous, current) =>
+              previous.selectedVoicemailsIds.length != current.selectedVoicemailsIds.length,
+          listener: (context, state) => _announcePicked(context, state.selectedVoicemailsIds.length),
+        ),
       ],
       child: VoicemailViewBuilder(
         builder: (context, view) => _VoicemailList(state: view, origin: origin),
       ),
     );
+  }
+
+  /// Says how many messages are picked now, for a screen reader.
+  ///
+  /// A picked row is tinted, and tells a screen reader it is selected - but
+  /// only when focus comes to it. At the moment of the press nothing on the
+  /// screen is read out, so somebody who does not see the tint cannot tell the
+  /// press took (TalkBack 17.1 on Android 15, 2026-10-07: silence, or the row's
+  /// name again with no word of selection; a live region on the header's count
+  /// was not read either).
+  ///
+  /// Listened for on the selection itself, not at the press: what is picked
+  /// also changes without one - a message deleted elsewhere drops out of it,
+  /// a bulk action or another filter clears it - and those are the changes a
+  /// person has least reason to expect.
+  ///
+  /// Only where the platform takes announcements. It asks for that itself:
+  /// Android has deprecated them, and where it reports no support nothing is
+  /// said here - the rows still read as selected on focus.
+  void _announcePicked(BuildContext context, int picked) {
+    if (!MediaQuery.supportsAnnounceOf(context)) return;
+
+    SemanticsService.sendAnnouncement(
+      View.of(context),
+      context.l10n.voicemail_SemanticsAnnouncement_selectedCount(picked),
+      Directionality.of(context),
+    ).ignore();
   }
 
   // The player is screen-scoped and not owned by the tiles, so when the active
@@ -223,6 +257,7 @@ class VoicemailListView extends StatelessWidget {
           onRestored: (it) => cubit.restoreVoicemail(it.id),
           onDeletedPermanently: (it) => _onDeletePermanently(context, it),
           onCall: (it) => cubit.startCall(it),
+          selecting: isMultipleVoicemailsSelection,
           onLongPress: (it) => cubit.toggleSelection(it),
           onTap: isMultipleVoicemailsSelection ? (it) => cubit.toggleSelection(it) : null,
         );

@@ -163,6 +163,40 @@ stop the rest, the first refusal is what the caller is told about, and a
 condition that will hold for every message stops the loop rather than being
 asked a hundred times.
 
+What a bulk delete asks first follows where the messages go
+(`_onDeleteSelected`): in the trash, whether to delete them for good, with their
+count; in the mailbox of a backend without a trash, whether to delete them
+permanently, because there they are. In the mailbox of a backend that has a
+trash it asks nothing - the messages can be had back, as one message deleted
+from its menu can - and the mailbox then says "Moved to trash" with Undo, which
+puts back the messages that were deleted, not whatever is picked by then
+(`VoicemailCubit._putBack`).
+
+The questions that carry a count have a form for every plural category of their
+language. In Ukrainian `one` is every number ending in 1 except 11, so that form
+names the number too: without it 21 messages were asked about as "the message".
+An exact `=1` form does not get round that - the generator folds it into `one`.
+`test/l10n/voicemail_plural_test.dart` pins the forms.
+
+While messages are being picked, each row tells a screen reader whether it is
+selected (`Semantics(selected:)` in `widgets/voicemail_tile.dart`, on the
+tile's explicit `selecting`); the tinted background alone said it only to the
+eye. Outside picking the rows say nothing about selection, so an ordinary list
+is not read as "not selected" throughout. A message on its way to somebody
+cannot be picked, so its row neither says "not selected" nor offers the press.
+
+That state is read when focus comes to the row - "selected. <name>" - and not at
+the moment of the press: TalkBack then says nothing, or the row's name again
+with no word of selection (Redmi A5, Android 15, TalkBack 17.1, 2026-10-07). So
+the number picked is announced whenever it changes (`_announcePicked` in
+`widgets/voicemail_body.dart`): "1 message selected", "2 messages selected",
+"Nothing selected". It listens to the selection, not to the press, because what
+is picked also changes without one - a message deleted elsewhere drops out, a
+bulk action or another filter clears it. It is said only where the platform
+takes announcements (`MediaQuery.supportsAnnounceOf`); Android has deprecated
+them, and where it reports no support nothing is said at the moment of the
+press. A live region on the header's count was tried first and was not read out.
+
 ## A message that is not where the list has it
 
 The list is drawn from what was true when it was read, and a mailbox moves on:

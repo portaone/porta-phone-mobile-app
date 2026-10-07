@@ -2884,7 +2884,7 @@
   "@voicemail_Dialog_deleteSelectedPermanentlyContent": {
     "description": "Warns that deleting the picked voicemails for good cannot be undone."
   },
-  "voicemail_Dialog_deleteSelectedPermanentlyTitle": "{count, plural, one{Видалити повідомлення назавжди?} other{Видалити {count} повідомлень назавжди?}}",
+  "voicemail_Dialog_deleteSelectedPermanentlyTitle": "{count, plural, one{Видалити {count} повідомлення назавжди?} few{Видалити {count} повідомлення назавжди?} many{Видалити {count} повідомлень назавжди?} other{Видалити {count} повідомлення назавжди?}}",
   "@voicemail_Dialog_deleteSelectedPermanentlyTitle": {
     "description": "Asks before deleting the picked voicemails for good.",
     "placeholders": {
@@ -2915,7 +2915,7 @@
   "@voicemail_Filter_unheard": {
     "description": "Voicemail filter showing only the messages not yet heard."
   },
-  "voicemail_Dialog_emptyTrashContent": "{count, plural, one{Повідомлення в кошику буде вилучено, а місце, яке воно займає, звільнено.} other{Усі {count} повідомлень у кошику буде вилучено, а місце, яке вони займають, звільнено.}}",
+  "voicemail_Dialog_emptyTrashContent": "{count, plural, one{{count} повідомлення з кошика буде вилучено, а місце, яке вони займають, звільнено.} few{{count} повідомлення з кошика буде вилучено, а місце, яке вони займають, звільнено.} many{{count} повідомлень з кошика буде вилучено, а місце, яке вони займають, звільнено.} other{{count} повідомлення з кошика буде вилучено, а місце, яке вони займають, звільнено.}}",
   "@voicemail_Dialog_emptyTrashContent": {
     "description": "Warns how much emptying the trash removes and that it frees that space.",
     "placeholders": {
@@ -3050,6 +3050,14 @@
     "placeholders": {
       "name": {
         "type": "String"
+      }
+    }
+  },
+  "voicemail_SemanticsAnnouncement_selectedCount": "{count, plural, =0{Нічого не вибрано} one{Вибрано {count} повідомлення} few{Вибрано {count} повідомлення} many{Вибрано {count} повідомлень} other{Вибрано {count} повідомлення}}",
+  "@voicemail_SemanticsAnnouncement_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },

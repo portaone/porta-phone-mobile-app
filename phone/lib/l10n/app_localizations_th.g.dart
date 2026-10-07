@@ -3471,6 +3471,17 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String voicemail_SemanticsAnnouncement_selectedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'เลือกแล้ว $count ข้อความ',
+      zero: 'ไม่ได้เลือกข้อความ',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get voicemail_SemanticsLabel_forwarding => 'กำลังส่งต่อ';
 
   @override

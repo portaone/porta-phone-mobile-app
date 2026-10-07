@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -56,6 +58,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(AudioSource.uri(Uri.parse('file:///fallback')));
+    registerFallbackValue(_voicemail('fallback'));
   });
 
   setUp(() {
@@ -90,7 +93,7 @@ void main() {
     initialState: VoicemailSessionState(status: VoicemailStatus.loaded, items: items),
   );
 
-  VoicemailState selecting({VoicemailFilter filter = VoicemailFilter.all, int count = 2}) {
+  VoicemailState selecting({VoicemailFilter filter = VoicemailFilter.all, int count = 2, bool trashSupported = true}) {
     final messages = [for (var i = 0; i < count; i++) _voicemail('vm-$i')];
     final inTrash = filter == VoicemailFilter.trash;
     mailboxHolds(inTrash ? const [] : messages);
@@ -98,7 +101,11 @@ void main() {
       trashedItems: inTrash ? messages : const [],
       selectedVoicemailsIds: messages.map((message) => message.id).toList(),
       filter: filter,
-      filters: VoicemailFilter.values,
+      // A backend has a trash exactly when the screen offers the trash filter.
+      filters: [
+        for (final offered in VoicemailFilter.values)
+          if (trashSupported || offered != VoicemailFilter.trash) offered,
+      ],
     );
   }
 
@@ -138,12 +145,49 @@ void main() {
     await tester.tap(find.byIcon(Icons.delete));
     await tester.pumpAndSettle();
 
+    // Nothing is asked: they can be had back, as one message deleted from its
+    // menu can. It used to ask whether to delete them permanently, while they
+    // went to the trash.
+    expect(find.byKey(confirmDialogYesButtonKey), findsNothing);
+    expect(find.textContaining('permanently'), findsNothing);
+
+    verify(() => cubit.removeSelectedVoicemails()).called(1);
+    verifyNever(() => cubit.removeSelectedVoicemailsPermanently());
+  });
+
+  testWidgets('in the mailbox of a backend without a trash the same press is final, and the question says so', (
+    tester,
+  ) async {
+    // There the messages do not go anywhere they could be had back from, so
+    // the old question is the true one.
+    whenListen(cubit, const Stream<VoicemailState>.empty(), initialState: selecting(trashSupported: false));
+
+    await tester.pumpWidget(host());
+    await tester.tap(find.byIcon(Icons.delete));
+    await tester.pumpAndSettle();
+
     expect(find.text('Delete selected voicemails?'), findsOneWidget);
+    expect(find.text('Selected voicemails will be permanently deleted. Do you want to continue?'), findsOneWidget);
+    expect(find.textContaining('trash'), findsNothing);
     await tester.tap(find.byKey(confirmDialogYesButtonKey));
     await tester.pumpAndSettle();
 
     verify(() => cubit.removeSelectedVoicemails()).called(1);
-    verifyNever(() => cubit.removeSelectedVoicemailsPermanently());
+  });
+
+  testWidgets('one message picked in the trash is asked about as one', (tester) async {
+    whenListen(
+      cubit,
+      const Stream<VoicemailState>.empty(),
+      initialState: selecting(filter: VoicemailFilter.trash, count: 1),
+    );
+
+    await tester.pumpWidget(host());
+    await tester.tap(find.byIcon(Icons.delete_forever));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Delete the message permanently?'), findsOneWidget);
+    expect(find.textContaining('1 messages'), findsNothing);
   });
 
   testWidgets('in the trash the same control ends them, and counts them first', (tester) async {
@@ -165,6 +209,98 @@ void main() {
     // again: accepted by the backend, and doing nothing at all.
     verify(() => cubit.removeSelectedVoicemailsPermanently()).called(1);
     verifyNever(() => cubit.removeSelectedVoicemails());
+  });
+
+  group('what is picked, for a screen reader', () {
+    // A picked row is tinted and says "selected" when focus comes to it, but at
+    // the moment of the press nothing is read out: TalkBack stayed silent or
+    // read the row's name again. So the number picked is announced whenever it
+    // changes - and it changes without a press too.
+
+    /// What the app asked the screen reader to say, in order.
+    List<String> announcements(WidgetTester tester) {
+      final said = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, (
+        message,
+      ) async {
+        final event = message as Map<dynamic, dynamic>;
+        if (event['type'] == 'announce') said.add((event['data'] as Map<dynamic, dynamic>)['message'] as String);
+      });
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockDecodedMessageHandler<dynamic>(
+          SystemChannels.accessibility,
+          null,
+        ),
+      );
+      return said;
+    }
+
+    /// The screen over a mailbox whose selection goes through [steps], on a
+    /// platform that does or does not take announcements.
+    Future<void> pick(WidgetTester tester, List<List<String>> steps, {bool announces = true}) async {
+      final first = selecting(count: 3).copyWith(selectedVoicemailsIds: const []);
+      final states = StreamController<VoicemailState>();
+      addTearDown(states.close);
+      whenListen(cubit, states.stream, initialState: first);
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: MediaQueryData(supportsAnnounce: announces),
+          child: host(),
+        ),
+      );
+      for (final picked in steps) {
+        states.add(first.copyWith(selectedVoicemailsIds: picked));
+        await tester.pump();
+      }
+    }
+
+    testWidgets('each change says how many are picked now, in words that stand alone', (tester) async {
+      final said = announcements(tester);
+
+      await pick(tester, [
+        ['vm-0'],
+        ['vm-0', 'vm-1'],
+        ['vm-0'],
+        [],
+      ]);
+
+      expect(said, ['1 message selected', '2 messages selected', '1 message selected', 'Nothing selected']);
+    });
+
+    testWidgets('a change nobody pressed for is said too', (tester) async {
+      // A message deleted elsewhere drops out of what is picked; a bulk action
+      // clears it. Announcing from the press would leave both silent.
+      final said = announcements(tester);
+
+      await pick(tester, [
+        ['vm-0', 'vm-1', 'vm-2'],
+        ['vm-0', 'vm-1'],
+      ]);
+
+      expect(said, ['3 messages selected', '2 messages selected']);
+    });
+
+    testWidgets('the same number again says nothing', (tester) async {
+      final said = announcements(tester);
+
+      await pick(tester, [
+        ['vm-0'],
+        ['vm-0'],
+      ]);
+
+      expect(said, ['1 message selected']);
+    });
+
+    testWidgets('nothing is announced where the platform does not take announcements', (tester) async {
+      final said = announcements(tester);
+
+      await pick(tester, [
+        ['vm-0'],
+      ], announces: false);
+
+      expect(said, isEmpty);
+    });
   });
 
   testWidgets('putting the picked messages back is not offered in the mailbox', (tester) async {

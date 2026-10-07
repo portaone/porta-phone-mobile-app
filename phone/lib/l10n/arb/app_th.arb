@@ -3056,6 +3056,14 @@
       }
     }
   },
+  "voicemail_SemanticsAnnouncement_selectedCount": "{count, plural, =0{ไม่ได้เลือกข้อความ} other{เลือกแล้ว {count} ข้อความ}}",
+  "@voicemail_SemanticsAnnouncement_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_forwarding": "กำลังส่งต่อ",
   "@voicemail_SemanticsLabel_forwarding": {
     "description": "Announced on a voicemail row while the message is being forwarded to a colleague."

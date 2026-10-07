@@ -6124,7 +6124,7 @@ abstract class AppLocalizations {
   /// Asks before deleting the picked voicemails for good.
   ///
   /// In en, this message translates to:
-  /// **'Delete {count} messages permanently?'**
+  /// **'{count, plural, one{Delete the message permanently?} other{Delete {count} messages permanently?}}'**
   String voicemail_Dialog_deleteSelectedPermanentlyTitle(int count);
 
   /// No description provided for @voicemail_Dialog_deleteSelectedTitle.
@@ -6172,7 +6172,7 @@ abstract class AppLocalizations {
   /// Warns how much emptying the trash removes and that it frees that space.
   ///
   /// In en, this message translates to:
-  /// **'All {count} messages in the trash will be removed and the space they use will be freed.'**
+  /// **'{count, plural, one{The message in the trash will be removed and the space it uses will be freed.} other{All {count} messages in the trash will be removed and the space they use will be freed.}}'**
   String voicemail_Dialog_emptyTrashContent(int count);
 
   /// No description provided for @voicemail_Dialog_emptyTrashTitle.
@@ -6366,6 +6366,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Forward to {name}'**
   String voicemail_SemanticsLabel_forwardTo(String name);
+
+  /// Announced by a screen reader, on its own, each time the number of picked voicemails changes. Stands alone: no control name is spoken before it.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing selected} one{{count} message selected} other{{count} messages selected}}'**
+  String voicemail_SemanticsAnnouncement_selectedCount(int count);
 
   /// Announced on a voicemail row while the message is being forwarded to a colleague.
   ///

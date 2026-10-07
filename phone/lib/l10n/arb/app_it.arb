@@ -3053,6 +3053,14 @@
       }
     }
   },
+  "voicemail_SemanticsAnnouncement_selectedCount": "{count, plural, =0{Nessun messaggio selezionato} one{{count} messaggio selezionato} other{{count} messaggi selezionati}}",
+  "@voicemail_SemanticsAnnouncement_selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_forwarding": "Inoltro in corso",
   "@voicemail_SemanticsLabel_forwarding": {
     "description": "Announced on a voicemail row while the message is being forwarded to a colleague."

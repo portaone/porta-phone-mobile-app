@@ -181,12 +181,17 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     // Held before anything is emitted: what was picked is cleared as the list
     // is put right, and the sentence about a failure needs to know how many
     // messages it was about.
-    final selected = state.selectedVoicemailsIds;
+    final selected = List.of(state.selectedVoicemailsIds);
+    final toTrash = state.trashSupported;
 
     try {
       _safeEmit(state.copyWith(busy: true));
       await _repository.removeMultipleVoicemails(selected);
       _safeEmit(state.copyWith(busy: false));
+      // Where there is a trash nothing was asked beforehand, so this is where
+      // the person learns what happened and how to take it back - the same
+      // sentence and the same offer as for one message, for all of them.
+      if (toTrash) onSubmitNotification(VoicemailMovedToTrashNotification(onUndo: () => _putBack(selected)));
     } on RequestFailure catch (e, s) {
       _safeEmit(state.copyWith(busy: false));
       _logger.severe('Error removing selected voicemails: $e', e, s);
@@ -223,6 +228,29 @@ class VoicemailCubit extends Cubit<VoicemailState> {
       // Whatever happened, some of them may have moved, so the list on screen
       // is re-read rather than guessed at.
       await _afterTrashChange();
+    }
+  }
+
+  /// Puts back the messages a bulk delete has just moved to the trash.
+  ///
+  /// By their ids and not by what is picked now: the selection was cleared
+  /// when they left the list, and by the time Undo is pressed something else
+  /// may be picked.
+  Future<void> _putBack(List<String> messageIds) async {
+    try {
+      await _repository.restoreMultipleVoicemails(messageIds);
+    } on RequestFailure catch (e, s) {
+      _logger.severe('Error putting back deleted voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit._putBack');
+      onSubmitNotification(VoicemailRestoreFailedNotification(e, count: messageIds.length));
+    } catch (e, s) {
+      _logger.severe('Error putting back deleted voicemails: $e', e, s);
+      CrashlyticsUtils.recordError(e, stack: s, reason: 'VoicemailCubit._putBack');
+      onSubmitNotification(VoicemailRestoreFailedNotification(null, count: messageIds.length));
+    } finally {
+      // The trash, if it is what is on screen now, no longer holds them. What
+      // is picked there is left alone: this is not the action it was picked for.
+      await _readAgainIfShowingTrash();
     }
   }
 
