@@ -226,10 +226,30 @@ in its own words. Reporting it the other way told the person the opposite of
 what the backend did, and offered to put back a message that was already back.
 
 Several messages restored together are all put back first and the mailbox is
-read once after the last. The read asks the backend about every message in the
-mailbox, one request each, so a read after every restore cost the whole mailbox
-again per message selected. It still follows a batch that was cut short, as
-long as something was put back.
+read once after the last: a read after every restore cost the whole mailbox
+again per message selected. The read still follows a batch that was cut short,
+as long as something was put back, and it is one of its own - a read polling
+started in the middle of the batch listed the mailbox before the last message
+came back, so it is waited out rather than joined.
+
+### What a read costs
+
+A read is one list request, for the mailbox and for the trash alike. Who left a
+message is on the list item (`UserVoicemailSummary.sender`, `receiver`), and the
+request for a single message, which a read used to make for every one of them -
+about two seconds each on a real PBX, one after another - is not made at all.
+
+A message listed without a sender is kept all the same: stored with an empty
+one and shown under the app's name for an unknown caller
+(`Voicemail.hasSender`). It can be played, kept, trashed and forwarded; calling
+back and opening a contact are not offered.
+
+Two kinds of backend list such messages. One that lists senders may leave a
+single message without its own, where it could not read that message's headers,
+rather than fail the list. And one too old to list senders at all leaves every
+message without: voicemail still runs against it, with every caller unknown.
+That was chosen over asking such a backend about each message, which is what
+made the mailbox slow, and over withdrawing voicemail there.
 
 Two deliberate silences. A message the backend no longer has has a sentence of
 its own, said the same way - the list is already right, and saying it twice in
@@ -360,3 +380,4 @@ sits on is of no use there.
 | `test/features/voicemail/forward_voicemail_purpose_test.dart` | who may be chosen, and how much narrower this is than a transfer |
 | `test/repository/voicemail_bulk_remove_test.dart` | the shared bulk loop and its policy |
 | `test/repository/voicemail_bulk_restore_test.dart` | a bulk restore: every message put back first, the mailbox read once afterwards |
+| `test/repository/voicemail_list_sender_test.dart` | a read is the list alone: the sender comes off the item, a message listed without one is kept |

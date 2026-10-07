@@ -4,17 +4,18 @@ import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 mixin VoicemailMapper {
-  VoicemailData voicemailToDrift(
-    UserVoicemailSummary userVoicemailItem,
-    UserVoicemail userVoicemailDetails,
-    String attachmentUrl,
-  ) {
+  /// A row is built from the list item alone. The backend may list a message
+  /// without its sender - one whose headers it could not read, or every one on
+  /// a backend too old to list senders - and such a row is stored with an empty
+  /// one rather than left out: the recording is still there to be heard. See
+  /// [Voicemail.hasSender].
+  VoicemailData voicemailToDrift(UserVoicemailSummary userVoicemailItem, String attachmentUrl) {
     final voicemail = VoicemailData(
       id: userVoicemailItem.id,
       date: userVoicemailItem.date,
       duration: userVoicemailItem.duration,
-      sender: userVoicemailDetails.sender,
-      receiver: userVoicemailDetails.receiver,
+      sender: userVoicemailItem.sender ?? '',
+      receiver: userVoicemailItem.receiver ?? '',
       seen: userVoicemailItem.seen,
       size: userVoicemailItem.size,
       type: userVoicemailItem.type,

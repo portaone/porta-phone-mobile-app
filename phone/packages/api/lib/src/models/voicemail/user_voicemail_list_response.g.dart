@@ -33,6 +33,8 @@ UserVoicemailSummary _$UserVoicemailSummaryFromJson(
   type: json['type'] as String,
   saved: json['saved'] as bool?,
   forwardedBy: json['forwarded_by'] as String?,
+  sender: json['sender'] as String?,
+  receiver: json['receiver'] as String?,
 );
 
 Map<String, dynamic> _$UserVoicemailSummaryToJson(
@@ -46,4 +48,6 @@ Map<String, dynamic> _$UserVoicemailSummaryToJson(
   'type': instance.type,
   'saved': instance.saved,
   'forwarded_by': instance.forwardedBy,
+  'sender': instance.sender,
+  'receiver': instance.receiver,
 };

@@ -22,10 +22,8 @@ class UserVoicemailListResponse with _$UserVoicemailListResponse {
 
 /// One message as the LIST reports it, which is less than the message has.
 ///
-/// There is no sender, no receiver and no attachment description here, so
-/// anything needing those asks for the message itself - see [UserVoicemail].
-/// The two are separate types rather than one with optional fields precisely so
-/// that a sender read off [UserVoicemail] is known to be there.
+/// There is no attachment description here - that is on the message itself,
+/// [UserVoicemail] - and the sender and receiver are optional: see [sender].
 @freezed
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class UserVoicemailSummary with _$UserVoicemailSummary {
@@ -38,6 +36,8 @@ class UserVoicemailSummary with _$UserVoicemailSummary {
     required this.type,
     this.saved,
     this.forwardedBy,
+    this.sender,
+    this.receiver,
   });
 
   @override
@@ -74,6 +74,18 @@ class UserVoicemailSummary with _$UserVoicemailSummary {
   /// colleague who passed it along.
   @override
   final String? forwardedBy;
+
+  /// Who left the message, when the list says.
+  ///
+  /// Null on a single message whose headers the backend could not read: it
+  /// lists such a row without a sender rather than failing the whole list. Null
+  /// on every row of an older backend, whose list did not carry senders at all.
+  @override
+  final String? sender;
+
+  /// Whose mailbox the message was left in; null where [sender] would be.
+  @override
+  final String? receiver;
 
   factory UserVoicemailSummary.fromJson(Map<String, dynamic> json) => _$UserVoicemailSummaryFromJson(json);
 
