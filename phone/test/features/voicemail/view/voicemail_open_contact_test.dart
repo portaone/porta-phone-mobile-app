@@ -28,18 +28,23 @@ class _MockContactsRepository extends Mock implements ContactsRepository {}
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
-Voicemail _voicemail(String id, {String sender = '555001', String displaySender = 'User 555001'}) => Voicemail(
-  id: id,
-  date: '2026-09-15 10:00:00',
-  duration: 10.0,
-  sender: sender,
-  displaySender: displaySender,
-  receiver: '555002',
-  status: ReadStatus.read,
-  size: 1024,
-  type: 'voicemail',
-  url: 'https://example.test/$id.mp3',
-);
+/// A message from [sender]; [name] is what the address book calls them, and
+/// without [inAddressBook] it has no card for them at all.
+Voicemail _voicemail(String id, {String sender = '555001', String? name = 'User 555001', bool inAddressBook = true}) =>
+    Voicemail(
+      id: id,
+      date: '2026-09-15 10:00:00',
+      duration: 10.0,
+      sender: sender,
+      senderContact: inAddressBook
+          ? Contact(id: 5, sourceType: ContactSourceType.external, kind: ContactKind.visible, aliasName: name)
+          : null,
+      receiver: '555002',
+      status: ReadStatus.read,
+      size: 1024,
+      type: 'voicemail',
+      url: 'https://example.test/$id.mp3',
+    );
 
 // Opening the card of whoever left a message. The tile knows a contact exists
 // because it is showing that person's name; what it does not have is the row's
@@ -154,11 +159,49 @@ void main() {
     expect(asked.sender, '555001');
   });
 
+  testWidgets('a contact without a name has its card opened like any other', (tester) async {
+    // Such a contact is shown by its number, exactly as a stranger is; the
+    // menu used to take that for "not a contact" and leave the action out.
+    when(() => cubit.callerOf(any())).thenAnswer((_) async => null);
+    mailboxHolds([_voicemail('vm-1', name: null)]);
+    whenListen(
+      cubit,
+      const Stream<VoicemailState>.empty(),
+      initialState: const VoicemailState(filters: VoicemailFilter.values),
+    );
+
+    await tester.pumpWidget(host());
+    expect(find.text('555001'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open contact'));
+    await tester.pumpAndSettle();
+
+    final asked = verify(() => cubit.callerOf(captureAny())).captured.single as Voicemail;
+    expect(asked.sender, '555001');
+  });
+
+  testWidgets('a number the address book does not know has no card to open', (tester) async {
+    mailboxHolds([_voicemail('vm-1', inAddressBook: false)]);
+    whenListen(
+      cubit,
+      const Stream<VoicemailState>.empty(),
+      initialState: const VoicemailState(filters: VoicemailFilter.values),
+    );
+
+    await tester.pumpWidget(host());
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Call'), findsOneWidget);
+    expect(find.text('Open contact'), findsNothing);
+  });
+
   group('a message the backend listed without a sender', () {
     // It could not read who left that one. The recording is there to be heard;
     // there is nobody to call back and no card to open.
     VoicemailState nameless() {
-      mailboxHolds([_voicemail('vm-1', sender: '', displaySender: '')]);
+      mailboxHolds([_voicemail('vm-1', sender: '', inAddressBook: false)]);
       return const VoicemailState(filters: VoicemailFilter.values);
     }
 

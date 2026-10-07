@@ -1,3 +1,5 @@
+import 'package:webtrit_phone/models/contact.dart';
+
 /// Represents the synchronization or read status of the voicemail.
 enum ReadStatus {
   read,
@@ -17,7 +19,6 @@ class Voicemail {
     required this.date,
     required this.duration,
     required this.sender,
-    required this.displaySender,
     required this.receiver,
     required this.status,
     required this.size,
@@ -25,13 +26,13 @@ class Voicemail {
     required this.url,
     this.saved,
     this.forwardedBy,
+    this.senderContact,
   });
 
   final String id;
   final String date;
   final double duration;
   final String sender;
-  final String displaySender;
   final String receiver;
   final ReadStatus status;
   final int size;
@@ -45,6 +46,22 @@ class Voicemail {
   /// [sender] is then empty. There is nobody to call back and no contact to
   /// open, and the name shown is the app's word for an unknown caller.
   bool get hasSender => sender.isNotEmpty;
+
+  /// The address book's card for whoever left the message, null when [sender]
+  /// is nobody the address book knows.
+  ///
+  /// Carried as the card itself rather than as a name: a contact may have no
+  /// name, and a name alone could not tell such a contact from a stranger -
+  /// which is what hid "Open contact" for one. It is the card as it was when
+  /// the list was drawn; the address book may have moved on since.
+  final Contact? senderContact;
+
+  /// Whether [sender] is somebody in the address book.
+  bool get isFromContact => senderContact != null;
+
+  /// What to call whoever left the message: the contact's name where there is
+  /// a contact and it has one, the number otherwise.
+  String get displaySender => senderContact?.maybeName ?? sender;
 
   /// Whether the user is keeping this message.
   ///

@@ -419,27 +419,25 @@ class VoicemailRepositoryImpl
     for (final item in response.items) {
       final row = voicemailToDrift(item, _webtritApiClient.getVoicemailAttachmentUrl(item.id));
 
-      trashed.add(voicemailFromDrift(row, await _displayNameFor(row.sender)));
+      trashed.add(voicemailFromDrift(row, await _contactOf(row.sender)));
     }
 
     return trashed;
   }
 
-  /// The name to show for a number, or the number itself.
+  /// The address book's card for a number, null when it has none.
   ///
   /// A trashed message is not in the stored list - it left on its way to the
   /// trash - so the contact join that names the inbox cannot reach it, and the
   /// number is resolved one message at a time instead. The lookup is the same
-  /// exact-number match that join uses, so a message reads the same on either
-  /// side of the trash.
-  Future<String> _displayNameFor(String sender) async {
+  /// exact-number match that join uses, and the card is built from the same
+  /// row, so a message reads the same on either side of the trash.
+  Future<Contact?> _contactOf(String sender) async {
     // A message listed without a sender has nobody to look up.
-    if (sender.isEmpty) return sender;
+    if (sender.isEmpty) return null;
 
     final contact = await _appDatabase.contactsDao.getContactByPhoneNumber(sender);
-    if (contact == null) return sender;
-
-    return contactFromDrift(contact.contact).maybeName ?? sender;
+    return contact != null ? contactFromDrift(contact.contact) : null;
   }
 
   @override
@@ -544,9 +542,13 @@ class VoicemailRepositoryImpl
   }
 
   Voicemail _voicemailFromDriftWithContact(VoicemailWithContact data, {ReadStatus? readStatus}) {
-    final displayName = data.contact != null ? contactFromDrift(data.contact!).maybeName : null;
+    final contact = data.contact;
 
-    return voicemailFromDrift(data.voicemail, displayName ?? data.voicemail.sender, readStatus: readStatus);
+    return voicemailFromDrift(
+      data.voicemail,
+      contact != null ? contactFromDrift(contact) : null,
+      readStatus: readStatus,
+    );
   }
 
   @override

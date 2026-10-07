@@ -18,12 +18,20 @@ import '../../helpers/helpers.dart';
 class _MockPlaybackController extends Mock implements VoicemailPlaybackController {}
 
 void main() {
-  Voicemail message({bool? saved, String? forwardedBy, String displaySender = 'User 555002'}) => Voicemail(
+  /// The address book's card for the caller; [name] is left out for a contact
+  /// that has none, which the address book shows by its number.
+  Contact card({String? name = 'User 555002'}) =>
+      Contact(id: 7, sourceType: ContactSourceType.external, kind: ContactKind.visible, aliasName: name);
+
+  final known = card();
+
+  /// A message from 555002. [from] is the caller's card, null for a stranger.
+  Voicemail message({bool? saved, String? forwardedBy, Contact? from}) => Voicemail(
     id: 'vm-1',
     date: '2026-08-12T08:17:00Z',
     duration: 4.2,
     sender: '555002',
-    displaySender: displaySender,
+    senderContact: from,
     receiver: '555001',
     status: ReadStatus.read,
     size: 17,
@@ -60,7 +68,7 @@ void main() {
     void Function(Voicemail)? onRestored,
     void Function(Voicemail)? onDeletedPermanently,
   }) {
-    final item = voicemail ?? message();
+    final item = voicemail ?? message(from: known);
     return MaterialApp(
       locale: const Locale('en'),
       localizationsDelegates: appLocalizationsDelegates,
@@ -408,7 +416,7 @@ void main() {
     testWidgets('says who passed it along, without displacing the caller', (tester) async {
       await tester.pumpWidget(
         wrap(
-          voicemail: message(forwardedBy: 'user-7'),
+          voicemail: message(forwardedBy: 'user-7', from: known),
           forwardedByName: 'Iryna Shevchuk',
         ),
       );
@@ -444,13 +452,33 @@ void main() {
     });
 
     testWidgets('a stranger cannot', (tester) async {
-      // The tile shows the number because no contact was found for it, and
-      // offering the action anyway would lead to an empty screen.
-      await tester.pumpWidget(wrap(voicemail: message(displaySender: '555002')));
+      // No contact was found for the number, and offering the action anyway
+      // would lead to an empty screen.
+      await tester.pumpWidget(wrap(voicemail: message()));
 
       await openMenu(tester);
 
+      expect(find.text('555002'), findsOneWidget);
       expect(find.text('Open contact'), findsNothing);
+    });
+
+    testWidgets('a contact without a name can, although it is shown by its number', (tester) async {
+      // Shown exactly like a stranger - which is what used to hide the action:
+      // the tile read "is a contact" off the name differing from the number.
+      Voicemail? opened;
+      await tester.pumpWidget(
+        wrap(
+          voicemail: message(from: card(name: null)),
+          onOpenContact: (it) => opened = it,
+        ),
+      );
+
+      expect(find.text('555002'), findsOneWidget);
+      await openMenu(tester);
+      await tester.tap(find.text('Open contact'));
+      await tester.pumpAndSettle();
+
+      expect(opened?.senderContact?.id, 7);
     });
   });
 }

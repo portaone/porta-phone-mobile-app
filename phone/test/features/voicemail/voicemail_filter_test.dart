@@ -310,7 +310,6 @@ Voicemail _voicemail(String id, {ReadStatus status = ReadStatus.read, bool? save
   date: '2026-09-15T10:00:00Z',
   duration: 10,
   sender: '1000',
-  displaySender: '1000',
   receiver: '2000',
   status: status,
   size: 100,

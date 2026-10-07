@@ -151,7 +151,7 @@ the filter rather than the caller.
 | Mark heard / new | `toggleSeenStatus` | the patch is awaited and reverted if the backend refuses |
 | Keep / stop keeping | `toggleSavedStatus` | `voicemailSave` only |
 | Call back | `startCall` | dials the number that left the message |
-| Open contact | `callerOf` + `widgets/voicemail_body.dart` | the card is looked up on the tap rather than carried on every message; a caller who has left the address book says so |
+| Open contact | `Voicemail.senderContact`, `callerOf` + `widgets/voicemail_body.dart` | offered when the message carries the address book's card for its sender (`isFromContact`) - not when the shown name differs from the number, which hid it for a contact without a name; the card is looked up again on the tap, because the one on the message is as old as the list, and a caller who has left the address book since is said to be gone |
 | Move to trash, restore, delete for good | `removeVoicemail`, `restoreVoicemail`, `removeVoicemailPermanently` | |
 | Forward | see below | `voicemailForward` only |
 
@@ -381,3 +381,4 @@ sits on is of no use there.
 | `test/repository/voicemail_bulk_remove_test.dart` | the shared bulk loop and its policy |
 | `test/repository/voicemail_bulk_restore_test.dart` | a bulk restore: every message put back first, the mailbox read once afterwards |
 | `test/repository/voicemail_list_sender_test.dart` | a read is the list alone: the sender comes off the item, a message listed without one is kept |
+| `test/repository/voicemail_sender_contact_test.dart` | the sender's card on a message, in the mailbox and in the trash: a named contact, a contact without a name, a stranger |

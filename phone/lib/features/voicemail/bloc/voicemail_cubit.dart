@@ -251,11 +251,11 @@ class VoicemailCubit extends Cubit<VoicemailState> {
   /// The card of whoever left [voicemail], or null when the address book no
   /// longer knows them.
   ///
-  /// Looked up when it is asked for rather than carried on every message: the
-  /// tile already knows a contact exists, because it is showing that person's
-  /// name, and what it does not have is the row's id. One query on a
-  /// deliberate tap against a column and a mapping on every message ever
-  /// listed.
+  /// Looked up again when it is asked for, although the message carries the
+  /// card it was drawn with ([Voicemail.senderContact]): that one is as old as
+  /// the list, and the trash is read once and kept. A contact deleted since -
+  /// on another device, by a sync - is found gone here, and the person is told
+  /// so instead of being shown a card that is no longer there.
   Future<Contact?> callerOf(Voicemail voicemail) async {
     if (!voicemail.hasSender) return null;
 
