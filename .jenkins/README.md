@@ -2,10 +2,11 @@
 
 ## Gerrit checks (WT-2002)
 
-Every patchset uploaded to `porta-phone/mobile-app`, on any branch, runs the unit tests
-of the parts it touches and votes **Verified +1** (passed) or **-1** (failed) through
-the Gerrit Trigger plugin. One job per part; each runs only when the patchset changes
-its paths (`filePaths` in its groovy) or the root `Dockerfile`:
+Every patchset uploaded to `porta-phone/mobile-app`, on any branch, triggers all four
+jobs, and they vote **Verified +1** (passed) or **-1** (failed) through the Gerrit
+Trigger plugin. Each job runs its unit tests only when the patchset changes its paths
+(`TEST_PATHS` in its groovy) or the root `Dockerfile`; otherwise it passes without
+running them, so every patchset still gets a vote:
 
 | Pipeline | Paths | Dockerfile stage | Runs |
 |---|---|---|---|
