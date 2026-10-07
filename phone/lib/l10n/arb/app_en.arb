@@ -3172,6 +3172,48 @@
       }
     }
   },
+  "common_SemanticsValue_durationSeconds": "{seconds, plural, one{{seconds} second} other{{seconds} seconds}}",
+  "@common_SemanticsValue_durationSeconds": {
+    "description": "A length of time in whole seconds, as a screen reader says it. Part of a longer phrase or said alone.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "common_SemanticsValue_durationMinutes": "{minutes, plural, one{{minutes} minute} other{{minutes} minutes}}",
+  "@common_SemanticsValue_durationMinutes": {
+    "description": "A length of time in whole minutes, as a screen reader says it. Part of a longer phrase or said alone.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "common_SemanticsValue_durationMinutesSeconds": "{minutes} {seconds}",
+  "@common_SemanticsValue_durationMinutesSeconds": {
+    "description": "A length of time said as minutes and seconds; both parts arrive already worded, e.g. '1 minute' and '5 seconds'.",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "voicemail_SemanticsValue_playbackPosition": "{position} of {duration}",
+  "@voicemail_SemanticsValue_playbackPosition": {
+    "description": "What a screen reader says for the playback slider of a voicemail: how far into the message, of how long. Both arrive already worded, e.g. '5 seconds' and '10 seconds'.",
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_forwardTo": "Forward to {name}",
   "@voicemail_SemanticsLabel_forwardTo": {
     "description": "Accessibility name of a row in the forward picker.",

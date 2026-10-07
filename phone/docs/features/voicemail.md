@@ -197,6 +197,35 @@ takes announcements (`MediaQuery.supportsAnnounceOf`); Android has deprecated
 them, and where it reports no support nothing is said at the moment of the
 press. A live region on the header's count was tried first and was not read out.
 
+## How long a message is
+
+Each message is listed with its length, and the player shows it before anybody
+presses play: `0:00` and `0:10` on the idle slider (`_InactiveAudioView` in
+`widgets/audio_view.dart`, given `Voicemail.length`). That is the moment a
+person decides what to listen to; until the recording was loaded the player
+used to draw `0:00` on both sides. Once it is loaded the player has measured
+the recording itself, and that length stands in place of the listed one
+(`AudioPlayerInterface`: `player.duration ?? listedLength`).
+
+The length is optional on the backend - the PBX adapter passes on what the
+mailbox reports - so the list item's `duration` is nullable. A message listed
+without one is stored with zero, and `Voicemail.length` is the one place that
+reads zero as "not known". The player then draws no time at all, neither
+`0:00` nor a dash, until the recording is loaded.
+
+A screen reader is told the length in words. `0:10` read aloud is a time of
+day, so the drawn times are hidden from it (`AudioSlider`) and two things speak
+instead, both through `spokenDuration` (`utils/spoken_duration.dart`):
+
+- the message's row says the length - "10 seconds" - whatever the player is
+  doing (`Semantics` around the player in `AudioView`);
+- the slider, which exists only once playback has started, says where it is:
+  "5 seconds of 10 seconds" (`semanticFormatterCallback`) in place of a
+  percentage.
+
+The idle slider stays hidden from assistive technology as a control: it
+neither moves nor takes input.
+
 ## A message that is not where the list has it
 
 The list is drawn from what was true when it was read, and a mailbox moves on:

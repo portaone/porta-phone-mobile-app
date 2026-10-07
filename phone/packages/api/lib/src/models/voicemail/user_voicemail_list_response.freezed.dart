@@ -202,7 +202,7 @@ case _:
 /// @nodoc
 mixin _$UserVoicemailSummary {
 
- String get id; String get date; double get duration; bool get seen; int get size; String get type; bool? get saved; String? get forwardedBy; String? get sender; String? get receiver;
+ String get id; String get date; double? get duration; bool get seen; int get size; String get type; bool? get saved; String? get forwardedBy; String? get sender; String? get receiver;
 /// Create a copy of UserVoicemailSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -233,7 +233,7 @@ abstract mixin class $UserVoicemailSummaryCopyWith<$Res>  {
   factory $UserVoicemailSummaryCopyWith(UserVoicemailSummary value, $Res Function(UserVoicemailSummary) _then) = _$UserVoicemailSummaryCopyWithImpl;
 @useResult
 $Res call({
- String id, String date, double duration, bool seen, int size, String type, bool? saved, String? forwardedBy, String? sender, String? receiver
+ String id, String date, bool seen, int size, String type, double? duration, bool? saved, String? forwardedBy, String? sender, String? receiver
 });
 
 
@@ -250,15 +250,15 @@ class _$UserVoicemailSummaryCopyWithImpl<$Res>
 
 /// Create a copy of UserVoicemailSummary
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? duration = null,Object? seen = null,Object? size = null,Object? type = null,Object? saved = freezed,Object? forwardedBy = freezed,Object? sender = freezed,Object? receiver = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? seen = null,Object? size = null,Object? type = null,Object? duration = freezed,Object? saved = freezed,Object? forwardedBy = freezed,Object? sender = freezed,Object? receiver = freezed,}) {
   return _then(UserVoicemailSummary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
-as String,duration: null == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
-as double,seen: null == seen ? _self.seen : seen // ignore: cast_nullable_to_non_nullable
+as String,seen: null == seen ? _self.seen : seen // ignore: cast_nullable_to_non_nullable
 as bool,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
 as int,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
-as String,saved: freezed == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
+as String,duration: freezed == duration ? _self.duration : duration // ignore: cast_nullable_to_non_nullable
+as double?,saved: freezed == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
 as bool?,forwardedBy: freezed == forwardedBy ? _self.forwardedBy : forwardedBy // ignore: cast_nullable_to_non_nullable
 as String?,sender: freezed == sender ? _self.sender : sender // ignore: cast_nullable_to_non_nullable
 as String?,receiver: freezed == receiver ? _self.receiver : receiver // ignore: cast_nullable_to_non_nullable

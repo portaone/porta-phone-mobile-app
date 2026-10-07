@@ -217,6 +217,17 @@ that would otherwise be read as a bare number or letter: an avatar initial is
 announced as a stray letter and collides with everything else on screen. A count
 has a standard of its own - see below.
 
+## Saying a length of time
+
+A drawn `0:00` is read aloud as a time of day ("zero hundred").
+Where a length or a position in time is shown that way, hide the drawn text
+from the reader (`ExcludeSemantics`) and say it in words instead:
+`spokenDuration` in `features/voicemail/utils/spoken_duration.dart` builds
+"10 seconds" / "1 minute 5 seconds" from `common_SemanticsValue_duration*`,
+cutting a part of a second off the way the drawn form does. A `Slider` over
+time takes a `semanticFormatterCallback`; without one it reads a percentage.
+The voicemail player (`AudioSlider`, `AudioView`) is the first use.
+
 ## Counting things
 
 A count is drawn as a bare glyph almost everywhere in this app, and a bare glyph

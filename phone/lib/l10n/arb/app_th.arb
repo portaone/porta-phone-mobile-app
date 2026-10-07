@@ -3047,6 +3047,44 @@
       }
     }
   },
+  "common_SemanticsValue_durationSeconds": "{seconds, plural, other{{seconds} วินาที}}",
+  "@common_SemanticsValue_durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "common_SemanticsValue_durationMinutes": "{minutes, plural, other{{minutes} นาที}}",
+  "@common_SemanticsValue_durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "common_SemanticsValue_durationMinutesSeconds": "{minutes} {seconds}",
+  "@common_SemanticsValue_durationMinutesSeconds": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "voicemail_SemanticsValue_playbackPosition": "{position} จาก {duration}",
+  "@voicemail_SemanticsValue_playbackPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_forwardTo": "ส่งต่อถึง {name}",
   "@voicemail_SemanticsLabel_forwardTo": {
     "description": "Accessibility name of a row in the forward picker.",

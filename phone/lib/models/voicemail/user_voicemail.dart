@@ -39,6 +39,16 @@ class Voicemail {
   final String type;
   final String? url;
 
+  /// How long the recording is, as the mailbox listed it; null when it did not
+  /// say.
+  ///
+  /// The backend may list a message without its length, and such a message is
+  /// stored with a zero one. A recording of no length at all is nothing anybody
+  /// left, so zero reads as "not known" here, and this is the one place that
+  /// reads it that way: the player then shows no time until it has loaded the
+  /// recording and measured it.
+  Duration? get length => duration > 0 ? Duration(milliseconds: (duration * 1000).round()) : null;
+
   /// Whether it is known who left the message.
   ///
   /// The backend lists a message whose headers it could not read without a

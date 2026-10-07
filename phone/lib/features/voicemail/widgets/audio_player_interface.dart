@@ -6,11 +6,21 @@ import 'audio_slider.dart';
 import 'playback_button.dart';
 
 class AudioPlayerInterface extends StatelessWidget {
-  const AudioPlayerInterface({super.key, required this.player, required this.onToggle, required this.onSeek});
+  const AudioPlayerInterface({
+    super.key,
+    required this.player,
+    required this.onToggle,
+    required this.onSeek,
+    this.listedLength,
+  });
 
   final AudioPlayer player;
   final VoidCallback onToggle;
   final ValueChanged<Duration> onSeek;
+
+  /// The length the mailbox listed, shown until the player has measured the
+  /// recording itself; the measured one then stands.
+  final Duration? listedLength;
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +28,8 @@ class AudioPlayerInterface extends StatelessWidget {
       stream: player.positionStream,
       builder: (context, snapshot) {
         final position = snapshot.data ?? Duration.zero;
-        final duration = player.duration ?? Duration.zero;
-        final clampedPosition = position > duration ? duration : position;
+        final duration = player.duration ?? listedLength;
+        final clampedPosition = duration != null && position > duration ? duration : position;
 
         return Row(
           children: [

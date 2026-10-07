@@ -41,7 +41,7 @@ void main() {
     when(() => screenContext.mediaCacheBasePath).thenReturn('/tmp/vm-cache');
   });
 
-  Widget wrap() {
+  Widget wrap({Duration? length}) {
     return MaterialApp(
       locale: const Locale('en'),
       localizationsDelegates: appLocalizationsDelegates,
@@ -52,15 +52,16 @@ void main() {
             ChangeNotifierProvider<VoicemailPlaybackController>.value(value: controller),
             Provider<VoicemailScreenContext>.value(value: screenContext),
           ],
-          child: const AudioView(path: path),
+          child: AudioView(path: path, length: length),
         ),
       ),
     );
   }
 
-  AudioPlayer stubPlayer({required bool playing}) {
+  AudioPlayer stubPlayer({required bool playing, Duration? at}) {
     final player = _MockAudioPlayer();
-    when(() => player.positionStream).thenAnswer((_) => const Stream<Duration>.empty());
+    when(() => player.positionStream)
+        .thenAnswer((_) => at == null ? const Stream<Duration>.empty() : Stream<Duration>.value(at));
     when(() => player.duration).thenReturn(const Duration(seconds: 30));
     when(() => player.playing).thenReturn(playing);
     return player;
@@ -200,5 +201,96 @@ void main() {
     expect(find.semantics.byValue('0%'), findsNothing);
 
     handle.dispose();
+  });
+
+  group('how long a message is', () {
+    // The mailbox lists every message with its length. The player used to draw
+    // 0:00 on both sides until the recording was loaded - that is, until after
+    // the person had already chosen what to listen to - and a screen reader was
+    // told no length at all.
+    testWidgets('is shown before anybody presses play', (tester) async {
+      when(() => controller.activeId).thenReturn(null);
+      await tester.pumpWidget(wrap(length: const Duration(milliseconds: 10783)));
+
+      expect(find.text('0:00'), findsOneWidget);
+      expect(find.text('0:10'), findsOneWidget);
+    });
+
+    testWidgets('is said in words, not as a time of day, and the idle slider still is no control', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      when(() => controller.activeId).thenReturn(null);
+      await tester.pumpWidget(wrap(length: const Duration(milliseconds: 10783)));
+
+      expect(find.bySemanticsLabel(RegExp('10 seconds')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('0:10')), findsNothing);
+      expect(find.semantics.byValue(RegExp('seconds')), findsNothing);
+
+      handle.dispose();
+    });
+
+    testWidgets('a message listed without a length shows no time at all', (tester) async {
+      // Neither 0:00 nor a dash: both would be a length the message does not
+      // have.
+      final handle = tester.ensureSemantics();
+
+      when(() => controller.activeId).thenReturn(null);
+      await tester.pumpWidget(wrap());
+
+      expect(find.text('0:00'), findsNothing);
+      expect(find.bySemanticsLabel(RegExp('second')), findsNothing);
+      expect(find.byType(Slider), findsOneWidget);
+
+      handle.dispose();
+    });
+
+    testWidgets('once the recording is loaded its own length replaces the listed one', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      final player = stubPlayer(playing: true, at: const Duration(seconds: 12));
+      when(() => controller.activeId).thenReturn(path);
+      when(() => controller.player).thenReturn(player);
+      await tester.pumpWidget(wrap(length: const Duration(seconds: 4)));
+      await tester.pump();
+
+      expect(find.text('0:30'), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('30 seconds')), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('4 seconds')), findsNothing);
+
+      handle.dispose();
+    });
+
+    testWidgets('a message without a listed length gets one when its recording is loaded', (tester) async {
+      final handle = tester.ensureSemantics();
+
+      final player = stubPlayer(playing: false);
+      when(() => controller.activeId).thenReturn(path);
+      when(() => controller.player).thenReturn(player);
+      await tester.pumpWidget(wrap());
+      await tester.pump();
+
+      expect(find.text('0:30'), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('30 seconds')), findsOneWidget);
+
+      handle.dispose();
+    });
+
+    testWidgets('the slider says how far into the message it is, in time', (tester) async {
+      // It used to say a percentage, and the drawn 0:12 next to it was read as
+      // twelve minutes past midnight.
+      final handle = tester.ensureSemantics();
+
+      final player = stubPlayer(playing: true, at: const Duration(seconds: 12));
+      when(() => controller.activeId).thenReturn(path);
+      when(() => controller.player).thenReturn(player);
+      await tester.pumpWidget(wrap(length: const Duration(seconds: 30)));
+      await tester.pump();
+
+      expect(find.semantics.byValue('12 seconds of 30 seconds'), findsOne);
+      expect(find.text('0:12'), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('0:12')), findsNothing);
+
+      handle.dispose();
+    });
   });
 }

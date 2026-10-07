@@ -2338,6 +2338,32 @@ extension AppLocalizationsExtension on AppLocalizations {
           'voicemail_SemanticsLabel_filter requires 1 arguments',
         ),
       },
+      'common_SemanticsValue_durationSeconds' => switch (args) {
+        [final int seconds] => common_SemanticsValue_durationSeconds(seconds),
+        _ => throw ArgumentError(
+          'common_SemanticsValue_durationSeconds requires 1 arguments',
+        ),
+      },
+      'common_SemanticsValue_durationMinutes' => switch (args) {
+        [final int minutes] => common_SemanticsValue_durationMinutes(minutes),
+        _ => throw ArgumentError(
+          'common_SemanticsValue_durationMinutes requires 1 arguments',
+        ),
+      },
+      'common_SemanticsValue_durationMinutesSeconds' => switch (args) {
+        [final String minutes, final String seconds] =>
+          common_SemanticsValue_durationMinutesSeconds(minutes, seconds),
+        _ => throw ArgumentError(
+          'common_SemanticsValue_durationMinutesSeconds requires 2 arguments',
+        ),
+      },
+      'voicemail_SemanticsValue_playbackPosition' => switch (args) {
+        [final String position, final String duration] =>
+          voicemail_SemanticsValue_playbackPosition(position, duration),
+        _ => throw ArgumentError(
+          'voicemail_SemanticsValue_playbackPosition requires 2 arguments',
+        ),
+      },
       'voicemail_SemanticsLabel_forwardTo' => switch (args) {
         [final String name] => voicemail_SemanticsLabel_forwardTo(name),
         _ => throw ArgumentError(

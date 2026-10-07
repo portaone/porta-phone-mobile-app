@@ -3560,6 +3560,42 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String common_SemanticsValue_durationSeconds(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: '$seconds секунди',
+      many: '$seconds секунд',
+      few: '$seconds секунди',
+      one: '$seconds секунда',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String common_SemanticsValue_durationMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes хвилини',
+      many: '$minutes хвилин',
+      few: '$minutes хвилини',
+      one: '$minutes хвилина',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String common_SemanticsValue_durationMinutesSeconds(String minutes, String seconds) {
+    return '$minutes $seconds';
+  }
+
+  @override
+  String voicemail_SemanticsValue_playbackPosition(String position, String duration) {
+    return '$position із $duration';
+  }
+
+  @override
   String voicemail_SemanticsLabel_forwardTo(String name) {
     return 'Переслати: $name';
   }

@@ -30,10 +30,10 @@ class UserVoicemailSummary with _$UserVoicemailSummary {
   const UserVoicemailSummary({
     required this.id,
     required this.date,
-    required this.duration,
     required this.seen,
     required this.size,
     required this.type,
+    this.duration,
     this.saved,
     this.forwardedBy,
     this.sender,
@@ -46,8 +46,14 @@ class UserVoicemailSummary with _$UserVoicemailSummary {
   @override
   final String date;
 
+  /// How long the recording is, in seconds; null when the backend lists the
+  /// message without it.
+  ///
+  /// The field is optional all the way down - the PBX adapter passes on what
+  /// the mailbox reports and has nothing to put in its place - so a message
+  /// without a length must not cost the client the whole list.
   @override
-  final double duration;
+  final double? duration;
 
   @override
   final bool seen;

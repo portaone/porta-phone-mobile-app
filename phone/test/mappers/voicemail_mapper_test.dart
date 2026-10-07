@@ -14,10 +14,15 @@ class _Mapper with VoicemailMapper {}
 void main() {
   final mapper = _Mapper();
 
-  UserVoicemailSummary summary({bool? saved, String? forwardedBy, String? sender = '123010'}) => UserVoicemailSummary(
+  UserVoicemailSummary summary({
+    bool? saved,
+    String? forwardedBy,
+    String? sender = '123010',
+    double? duration = 3.45,
+  }) => UserVoicemailSummary(
     id: 'vm-1',
     date: '2026-09-15T10:00:00Z',
-    duration: 3.45,
+    duration: duration,
     seen: false,
     size: 5,
     type: 'voice',
@@ -55,6 +60,20 @@ void main() {
 
       expect(stored.sender, isEmpty);
       expect(stored.receiver, isEmpty);
+    });
+
+    test('a message listed without its length is stored, and its length reads as not known', () {
+      // The length is optional on the backend. Parsed as required, one such
+      // message cost the whole list.
+      final stored = row(summary(duration: null));
+
+      expect(mapper.voicemailFromDrift(stored, null).length, isNull);
+    });
+
+    test('a listed length comes back as the message said it', () {
+      final stored = row(summary(duration: 10.783));
+
+      expect(mapper.voicemailFromDrift(stored, null).length, const Duration(milliseconds: 10783));
     });
   });
 

@@ -13,7 +13,9 @@ mixin VoicemailMapper {
     final voicemail = VoicemailData(
       id: userVoicemailItem.id,
       date: userVoicemailItem.date,
-      duration: userVoicemailItem.duration,
+      // A message listed without its length is stored with none: see
+      // [Voicemail.length].
+      duration: userVoicemailItem.duration ?? 0,
       sender: userVoicemailItem.sender ?? '',
       receiver: userVoicemailItem.receiver ?? '',
       seen: userVoicemailItem.seen,

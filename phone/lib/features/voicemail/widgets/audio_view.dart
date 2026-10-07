@@ -11,15 +11,22 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/bloc.dart';
 import '../models/models.dart';
+import '../utils/utils.dart';
 import 'audio_player_interface.dart';
 import 'audio_slider.dart';
 import 'playback_button.dart';
 
 class AudioView extends StatelessWidget {
-  const AudioView({required this.path, super.key, this.cacheKey, this.onPlaybackStarted});
+  const AudioView({required this.path, super.key, this.cacheKey, this.length, this.onPlaybackStarted});
 
   final String path;
   final String? cacheKey;
+
+  /// How long the message is, as the mailbox listed it; null when it did not
+  /// say. Shown before the recording is loaded, which is before anybody has
+  /// pressed play - the moment a person decides what to listen to.
+  final Duration? length;
+
   final VoidCallback? onPlaybackStarted;
 
   String get _id => cacheKey ?? path;
@@ -29,21 +36,30 @@ class AudioView extends StatelessWidget {
     final controller = context.watch<VoicemailPlaybackController>();
     final isActive = controller.activeId == _id;
 
+    final Widget view;
+    Duration? known = length;
     if (isActive && controller.isLoading) {
-      return const AudioLoadingView();
-    }
-    if (isActive && controller.error != null) {
-      return _AudioErrorView(onRetry: () => _startPlayback(context));
-    }
-    if (isActive) {
-      return AudioPlayerInterface(
+      view = const AudioLoadingView();
+    } else if (isActive && controller.error != null) {
+      view = _AudioErrorView(onRetry: () => _startPlayback(context));
+    } else if (isActive) {
+      // Once the recording is loaded its own length is the true one.
+      known = controller.player.duration ?? length;
+      view = AudioPlayerInterface(
         player: controller.player,
         onToggle: () => _handleToggle(context, controller),
         onSeek: controller.seek,
+        listedLength: length,
       );
+    } else {
+      view = _InactiveAudioView(onPlay: () => _startPlayback(context), length: length);
     }
 
-    return _InactiveAudioView(onPlay: () => _startPlayback(context));
+    if (known == null) return view;
+    // The length belongs to the message, so it is said with the message - on
+    // its row, whatever the player is doing - and not only by a slider that
+    // exists once playback has started.
+    return Semantics(label: spokenDuration(context.l10n, known), child: view);
   }
 
   void _startPlayback(BuildContext context) {
@@ -73,9 +89,10 @@ class AudioView extends StatelessWidget {
 }
 
 class _InactiveAudioView extends StatelessWidget {
-  const _InactiveAudioView({required this.onPlay});
+  const _InactiveAudioView({required this.onPlay, required this.length});
 
   final VoidCallback onPlay;
+  final Duration? length;
 
   @override
   Widget build(BuildContext context) {
@@ -86,10 +103,11 @@ class _InactiveAudioView extends StatelessWidget {
         Expanded(
           // A placeholder for the real slider: it neither moves nor accepts
           // input until playback starts, so assistive technology must not
-          // offer it as a control at all.
+          // offer it as a control at all. It does show how long the message
+          // is, when the mailbox said so.
           child: ExcludeSemantics(
             child: IgnorePointer(
-              child: AudioSlider(position: Duration.zero, duration: Duration.zero, onSeek: (_) {}),
+              child: AudioSlider(position: Duration.zero, duration: length, onSeek: (_) {}),
             ),
           ),
         ),

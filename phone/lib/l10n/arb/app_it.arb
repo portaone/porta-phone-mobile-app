@@ -3044,6 +3044,44 @@
       }
     }
   },
+  "common_SemanticsValue_durationSeconds": "{seconds, plural, one{{seconds} secondo} other{{seconds} secondi}}",
+  "@common_SemanticsValue_durationSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "common_SemanticsValue_durationMinutes": "{minutes, plural, one{{minutes} minuto} other{{minutes} minuti}}",
+  "@common_SemanticsValue_durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "common_SemanticsValue_durationMinutesSeconds": "{minutes} {seconds}",
+  "@common_SemanticsValue_durationMinutesSeconds": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
+  },
+  "voicemail_SemanticsValue_playbackPosition": "{position} di {duration}",
+  "@voicemail_SemanticsValue_playbackPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "voicemail_SemanticsLabel_forwardTo": "Inoltra a {name}",
   "@voicemail_SemanticsLabel_forwardTo": {
     "description": "Accessibility name of a row in the forward picker.",
