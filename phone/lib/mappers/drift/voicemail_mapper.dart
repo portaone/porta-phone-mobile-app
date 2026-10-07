@@ -29,14 +29,16 @@ mixin VoicemailMapper {
     return voicemail;
   }
 
-  Voicemail voicemailFromDrift(VoicemailData voicemailData, String? contactName, {ReadStatus? readStatus}) {
+  /// [senderContact] is the address book's card for the sender, where there is
+  /// one; the caller looks it up, because the two folders reach it differently.
+  Voicemail voicemailFromDrift(VoicemailData voicemailData, Contact? senderContact, {ReadStatus? readStatus}) {
     final currentReadStatus = readStatus ?? (voicemailData.seen ? ReadStatus.read : ReadStatus.unread);
     return Voicemail(
       id: voicemailData.id,
       date: voicemailData.date,
       duration: voicemailData.duration,
       sender: voicemailData.sender,
-      displaySender: contactName ?? voicemailData.sender,
+      senderContact: senderContact,
       receiver: voicemailData.receiver,
       status: currentReadStatus,
       size: voicemailData.size,
