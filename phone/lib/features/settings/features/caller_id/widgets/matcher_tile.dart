@@ -10,6 +10,8 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/caller_id_settings.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'dial_code_country.dart';
+
 class MatcherTile extends StatelessWidget {
   const MatcherTile({required this.matcher, required this.index, super.key});
 
@@ -44,7 +46,7 @@ class MatcherTile extends StatelessWidget {
                 child: Row(
                   children: [
                     CountryCodePicker(
-                      initialSelection: matcher.prefix,
+                      initialSelection: countrySelectionForDialCode(matcher.prefix),
                       showFlag: true,
                       showFlagDialog: true,
                       showCountryOnly: false,
