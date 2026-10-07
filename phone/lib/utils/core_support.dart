@@ -61,9 +61,10 @@ abstract class CoreSupport {
 }
 
 class CoreSupportImpl extends Equatable implements CoreSupport {
-  CoreSupportImpl(List<String>? supported, {bool iceServersConfigured = false})
+  CoreSupportImpl(List<String>? supported, {bool iceServersConfigured = false, bool voicemailListNamesSender = true})
     : _flags = {...?supported},
-      _iceServersConfigured = iceServersConfigured;
+      _iceServersConfigured = iceServersConfigured,
+      _voicemailListNamesSender = voicemailListNamesSender;
 
   final Set<String> _flags;
 
@@ -71,10 +72,17 @@ class CoreSupportImpl extends Equatable implements CoreSupport {
   /// in `system-info`, not in `adapter.supported`.
   final bool _iceServersConfigured;
 
+  /// Not an adapter flag either: whether the core's voicemail list says who
+  /// left each message, which its version decides
+  /// ([CoreInfo.listsVoicemailSender]). The adapter advertising voicemail is
+  /// not enough without it - the app reads the sender off the list and nowhere
+  /// else, so on an older core voicemail does not run at all.
+  final bool _voicemailListNamesSender;
+
   bool _has(String flag) => _flags.contains(flag);
 
   @override
-  bool get supportsVoicemail => _has(kVoicemailFeatureFlag);
+  bool get supportsVoicemail => _has(kVoicemailFeatureFlag) && _voicemailListNamesSender;
 
   @override
   bool get supportsVoicemailSave => _has(kVoicemailSaveFeatureFlag);
@@ -118,7 +126,7 @@ class CoreSupportImpl extends Equatable implements CoreSupport {
   @override
   List<Object?> get props {
     final sortedFlags = _flags.toList()..sort();
-    return [List.unmodifiable(sortedFlags), _iceServersConfigured];
+    return [List.unmodifiable(sortedFlags), _iceServersConfigured, _voicemailListNamesSender];
   }
 }
 
@@ -127,6 +135,7 @@ class CoreSupportFactory {
     return CoreSupportImpl(
       systemInfo?.adapter?.supported,
       iceServersConfigured: systemInfo?.core.iceServersConfigured ?? false,
+      voicemailListNamesSender: systemInfo?.core.listsVoicemailSender ?? false,
     );
   }
 }

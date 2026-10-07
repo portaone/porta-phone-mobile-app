@@ -51,4 +51,11 @@ class CoreInfo with EquatableMixin {
     // peer_message app-to-app side channel was added in 0.33.0
     return verifyVersionStr('>=0.33.0-alpha <2.0.0');
   }
+
+  bool get listsVoicemailSender {
+    // The voicemail list names who left each message since 1.1.0. Before it a
+    // client had to ask for every message to learn that, which this app no
+    // longer does - so voicemail runs only against a core that lists it.
+    return verifyVersionStr('>=1.1.0-alpha <2.0.0');
+  }
 }

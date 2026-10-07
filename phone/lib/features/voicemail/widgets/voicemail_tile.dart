@@ -117,7 +117,7 @@ class VoicemailTile extends StatelessWidget {
   /// unless a contact was found for it, so a name that differs from the number
   /// means there is a card to open. Offering the action for a stranger would
   /// lead to an empty screen.
-  bool get _contactKnown => voicemail.displaySender != voicemail.sender;
+  bool get _contactKnown => voicemail.hasSender && voicemail.displaySender != voicemail.sender;
   bool get _saved => voicemail.saved == true;
   bool get _forwarding => forward is VoicemailForwardSending;
 
@@ -144,7 +144,12 @@ class VoicemailTile extends StatelessWidget {
         title: Row(
           spacing: 6,
           children: [
-            Flexible(child: Text(voicemail.displaySender, overflow: TextOverflow.ellipsis)),
+            Flexible(
+              child: Text(
+                voicemail.hasSender ? voicemail.displaySender : context.l10n.notifications_missedCall_unknownCaller,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             if (_saved)
               Icon(
                 Icons.bookmark,
@@ -222,10 +227,13 @@ class VoicemailTile extends StatelessWidget {
   ];
 
   List<PopupMenuEntry<_VoicemailMenuAction>> _mailboxMenuItems(BuildContext context, ColorScheme colorScheme) => [
-    PopupMenuItem(
-      value: _VoicemailMenuAction.call,
-      child: ListTile(leading: const Icon(Icons.call), title: Text(context.l10n.voicemail_Label_call)),
-    ),
+    // Left out rather than disabled where nobody is known to have called:
+    // there is no number behind it to dial.
+    if (voicemail.hasSender)
+      PopupMenuItem(
+        value: _VoicemailMenuAction.call,
+        child: ListTile(leading: const Icon(Icons.call), title: Text(context.l10n.voicemail_Label_call)),
+      ),
     PopupMenuItem(
       value: _VoicemailMenuAction.toggleSeenStatus,
       enabled: !voicemail.status.isUnknown,

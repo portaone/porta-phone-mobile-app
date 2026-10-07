@@ -55,4 +55,12 @@ void main() {
     expect(CoreInfo(version: Version(0, 36, 2)).supportsSessionTracking, true);
     expect(CoreInfo(version: Version(2, 0, 0)).supportsSessionTracking, false);
   });
+
+  test('listsVoicemailSender', () {
+    expect(CoreInfo(version: Version(1, 0, 0)).listsVoicemailSender, false);
+    expect(CoreInfo(version: Version(1, 1, 0, pre: 'alpha')).listsVoicemailSender, true);
+    expect(CoreInfo(version: Version(1, 1, 0)).listsVoicemailSender, true);
+    expect(CoreInfo(version: Version(1, 4, 2)).listsVoicemailSender, true);
+    expect(CoreInfo(version: Version(2, 0, 0)).listsVoicemailSender, false);
+  });
 }

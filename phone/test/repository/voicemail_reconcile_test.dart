@@ -51,18 +51,6 @@ void main() {
   api.UserVoicemailSummary summary(String id) =>
       api.UserVoicemailSummary(id: id, date: '2026-09-15T10:00:00Z', duration: 1, seen: false, size: 1, type: 'voice');
 
-  api.UserVoicemail details(String id) => api.UserVoicemail(
-    id: id,
-    date: '2026-09-15T10:00:00Z',
-    duration: 1,
-    sender: '1',
-    receiver: '2',
-    seen: false,
-    size: 1,
-    type: 'voice',
-    attachments: const [],
-  );
-
   void listReturns(List<String> ids) {
     when(
       () => client.getUserVoicemailList(
@@ -71,14 +59,6 @@ void main() {
         locale: any(named: 'locale'),
       ),
     ).thenAnswer((_) async => api.UserVoicemailListResponse(hasNewMessages: false, items: ids.map(summary).toList()));
-  }
-
-  void detailsReturn({String? failOn}) {
-    when(() => client.getUserVoicemail(any(), any(), locale: any(named: 'locale'))).thenAnswer((invocation) async {
-      final id = invocation.positionalArguments[1] as String;
-      if (id == failOn) throw StateError('details unavailable');
-      return details(id);
-    });
   }
 
   Future<void> store(List<String> ids) async {
@@ -92,7 +72,6 @@ void main() {
 
   test('a message the mailbox no longer reports is dropped', () async {
     listReturns([]);
-    detailsReturn();
     await buildRepository();
 
     await store(['gone', 'kept']);
@@ -105,7 +84,6 @@ void main() {
 
   test('an empty mailbox empties the list', () async {
     listReturns([]);
-    detailsReturn();
     await buildRepository();
 
     await store(['gone']);
@@ -113,22 +91,6 @@ void main() {
     await repository.fetchVoicemails();
 
     expect(await storedIds(), isEmpty);
-  });
-
-  test('a half-finished refresh decides nothing', () async {
-    // The listing arrives, then one message's details fail. The set is
-    // incomplete, so nothing may be read as "the mailbox no longer has it".
-    listReturns([]);
-    detailsReturn();
-    await buildRepository();
-
-    await store(['stored-earlier']);
-    listReturns(['a', 'b']);
-    detailsReturn(failOn: 'b');
-
-    await expectLater(repository.fetchVoicemails(), throwsA(isA<StateError>()));
-
-    expect(await storedIds(), contains('stored-earlier'));
   });
 
   test('a listing that never arrived decides nothing', () async {

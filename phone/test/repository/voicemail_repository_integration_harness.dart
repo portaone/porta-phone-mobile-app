@@ -44,12 +44,13 @@ class VoicemailRepositoryIntegrationHarness {
     'seen': true,
     'size': 200,
     'type': 'audio',
+    'sender': '1001',
+    'receiver': '2000',
   };
   static http.Response listResponse({bool empty = false}) => _json({
     'has_new_messages': false,
     'items': empty ? [] : [item],
   });
-  static http.Response detailsResponse() => _json({...item, 'sender': '1001', 'receiver': '2000', 'attachments': []});
   static http.Response _json(Object body) =>
       http.Response(jsonEncode(body), 200, headers: {'content-type': 'application/json'});
 

@@ -34,18 +34,8 @@ void main() {
     type: 'audio',
     saved: saved,
     forwardedBy: forwardedBy,
-  );
-
-  api.UserVoicemail details(String id, {String sender = '1000'}) => api.UserVoicemail(
-    id: id,
-    date: '2026-09-15T10:00:00Z',
-    duration: 12,
-    sender: sender,
+    sender: '1000',
     receiver: '2000',
-    seen: true,
-    size: 100,
-    type: 'audio',
-    attachments: const [],
   );
 
   // The inbox listing the constructor's eager fetch runs into. Kept empty so a
@@ -75,14 +65,6 @@ void main() {
     client = _Client();
     inboxIsEmpty();
     when(() => client.getVoicemailAttachmentUrl(any(), fileFormat: any(named: 'fileFormat'))).thenReturn('url');
-    when(
-      () => client.getUserVoicemail(
-        any(),
-        any(),
-        locale: any(named: 'locale'),
-        options: any(named: 'options'),
-      ),
-    ).thenAnswer((invocation) async => details(invocation.positionalArguments[1] as String));
     repository = VoicemailRepositoryImpl(
       webtritApiClient: client,
       token: 'token',
@@ -121,19 +103,18 @@ void main() {
     verifyNever(() => client.getUserVoicemail(any(), any(), locale: any(named: 'locale')));
   });
 
-  test('a message is built from the listing and its own details', () async {
+  test('a message is built from the listing alone', () async {
     trashHolds([summary('trashed-1', saved: true, forwardedBy: 'colleague')]);
 
     final trashed = await repository.fetchTrashedVoicemails();
 
     expect(trashed, hasLength(1));
-    // The listing carries neither sender nor receiver, so a message that has
-    // them proves the per-message fetch happened and was mapped in.
     expect(trashed.single.id, 'trashed-1');
     expect(trashed.single.sender, '1000');
     expect(trashed.single.receiver, '2000');
     expect(trashed.single.saved, isTrue);
     expect(trashed.single.forwardedBy, 'colleague');
+    verifyNever(() => client.getUserVoicemail(any(), any(), locale: any(named: 'locale')));
   });
 
   test('a stored contact names the sender', () async {
@@ -165,13 +146,12 @@ void main() {
     expect(await storedIds(), ['inbox-1']);
   });
 
-  test('the locale reaches the listing and every message read for it', () async {
+  test('the locale reaches the listing', () async {
     trashHolds([summary('trashed-1')]);
 
     await repository.fetchTrashedVoicemails(localeCode: 'uk');
 
     verify(() => client.getUserVoicemailList('token', folder: api.VoicemailFolder.trash, locale: 'uk')).called(1);
-    verify(() => client.getUserVoicemail('token', 'trashed-1', locale: 'uk')).called(1);
   });
 
   test('a 401 is rethrown', () async {
@@ -184,17 +164,6 @@ void main() {
       ),
     ).thenAnswer((_) => Future.error(error));
 
-    await expectLater(repository.fetchTrashedVoicemails(), throwsA(same(error)));
-  });
-
-  test('a failure on one message fails the read rather than hiding it', () async {
-    final error = api.RequestFailure(url: Uri(), requestId: 'request', statusCode: 500);
-    trashHolds([summary('trashed-1')]);
-    when(() => client.getUserVoicemail('token', 'trashed-1', locale: any(named: 'locale')))
-        .thenAnswer((_) => Future.error(error));
-
-    // A trash screen showing a short list is worse than one showing an error:
-    // the missing message is exactly the one the user came to recover.
     await expectLater(repository.fetchTrashedVoicemails(), throwsA(same(error)));
   });
 }

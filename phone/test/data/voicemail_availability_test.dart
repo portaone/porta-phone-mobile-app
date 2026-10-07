@@ -30,7 +30,12 @@ void main() {
       icon: '0xe518',
     );
 
-    FeatureAccess access({required bool settingsRow, required List<String> flags, bool bottomMenuTab = false}) {
+    FeatureAccess access({
+      required bool settingsRow,
+      required List<String> flags,
+      bool bottomMenuTab = false,
+      bool coreListsSender = true,
+    }) {
       return FeatureAccess.create(
         AppConfig(
           mainConfig: AppConfigMain(
@@ -52,11 +57,35 @@ void main() {
           ),
         ),
         [createMockTermsResource()],
-        CoreSupportImpl(flags),
+        CoreSupportImpl(flags, voicemailListNamesSender: coreListsSender),
         null,
         const FeatureOverrides(),
       );
     }
+
+    test('a core whose list does not name the sender keeps it unavailable, with everything hanging off it', () {
+      // Older than 1.1.0. The adapter advertises all of it and both placements
+      // are configured; none of it runs, because the app would have nobody to
+      // show a message as being from.
+      final featureAccess = access(
+        settingsRow: true,
+        bottomMenuTab: true,
+        flags: [
+          kVoicemailFeatureFlag,
+          kVoicemailSaveFeatureFlag,
+          kVoicemailTrashFeatureFlag,
+          kVoicemailForwardFeatureFlag,
+        ],
+        coreListsSender: false,
+      );
+
+      expect(featureAccess.settingsConfig.voicemailsEnabled, isFalse);
+      expect(featureAccess.bottomMenuConfig.getTabEnabled<VoicemailBottomMenuTab>(), isNull);
+      expect(featureAccess.voicemailAvailable, isFalse);
+      expect(featureAccess.voicemailSaveAvailable, isFalse);
+      expect(featureAccess.voicemailTrashAvailable, isFalse);
+      expect(featureAccess.voicemailForwardAvailable, isFalse);
+    });
 
     test('a configured row on a core that advertises voicemail makes it available', () {
       final featureAccess = access(settingsRow: true, flags: [kVoicemailFeatureFlag]);
