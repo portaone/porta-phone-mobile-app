@@ -2518,6 +2518,20 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_AboutText_ApplicationEmbeddedLinks => 'Вбудовані посилання застосунку';
 
   @override
+  String get settings_AboutText_BackendCapabilities => 'Можливості бекенда';
+
+  @override
+  String get settings_AboutBackendCapabilities_none => 'Бекенд не називає жодної можливості.';
+
+  @override
+  String get settings_AboutBackendCapabilities_removedOnServer =>
+      'Вимкнено на сервері - діє до наступного запуску застосунку';
+
+  @override
+  String get settings_AboutBackendCapabilities_addedOnServer =>
+      'Увімкнено на сервері - почне діяти після наступного запуску застосунку';
+
+  @override
   String get settings_AboutText_ThirdPartyLicenses => 'Ліцензії третіх сторін';
 
   @override

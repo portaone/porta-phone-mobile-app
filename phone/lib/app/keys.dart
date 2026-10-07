@@ -189,6 +189,8 @@ const String messageExchangeConfirmId = 'messageExchangeConfirm';
 const String conversationMenuId = 'conversationMenu';
 
 // Identifier-only entries: controls that have no widget-test key.
+const String aboutBackendCapabilitiesButtonId = 'aboutBackendCapabilitiesButton';
+const String aboutBackendCapabilitiesId = 'aboutBackendCapabilities';
 const String actionPadOverflowId = 'actionPadOverflow';
 const String appSnackBarId = 'appSnackBar';
 const String actionPadTransferId = 'actionPadTransfer';
