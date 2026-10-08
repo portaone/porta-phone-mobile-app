@@ -66,12 +66,23 @@ class KeypadHarness {
   /// [purpose] puts the pad inside a choice being made; [transferEnabled] is
   /// the call-transfer configuration, which must not decide whether a choice
   /// can be answered.
-  Widget build({DestinationPickPurpose? purpose, bool transferEnabled = false}) {
+  ///
+  /// [appBar] and [bottomNavigationBar] put the pad where the app puts it:
+  /// behind an app bar the body is drawn under, above the tabs.
+  Widget build({
+    DestinationPickPurpose? purpose,
+    bool transferEnabled = false,
+    PreferredSizeWidget? appBar,
+    Widget? bottomNavigationBar,
+  }) {
     return MaterialApp(
       locale: const Locale('en'),
       localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
+        extendBodyBehindAppBar: appBar != null,
+        appBar: appBar,
+        bottomNavigationBar: bottomNavigationBar,
         body: CallControllerScope(
           controller: MockCallController(),
           child: MultiBlocProvider(
