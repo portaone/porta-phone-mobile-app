@@ -92,8 +92,9 @@ when the list that was read is empty - the whole mailbox, or the trash while it
 is shown. A view that matches none of a mailbox's messages is an empty view.
 
 The selection follows the list it was made over: the visible one. A picked
-message that is deleted, or stops matching the view - heard while New is
-showing - leaves the selection. A read of the trash that lands after the person
+message that is deleted, or stops matching the view - marked heard from the
+menu while New is showing, or let go of by New after being listened to there -
+leaves the selection. A read of the trash that lands after the person
 left the trash is dropped whole.
 
 Whether the backend serves voicemail at all is asked of the repository every
@@ -142,6 +143,39 @@ or what the trash returned:
 
 `refresh()` therefore means different things per filter, which is why it asks
 the filter rather than the caller.
+
+**unheard** also shows what was heard by listening to it from New
+(`VoicemailState.heardByListening`). Playing a new message is what marks it
+heard, so without this it left New the moment it started and the player, which
+is stopped when its message is no longer listed, stopped with it: a new message
+could not be listened to from New at all. The cubit notes the message when the
+mark comes from playback (`markHeardByListening`) and not when it comes from
+the menu (`toggleSeenStatus`): a message marked heard by hand is done with and
+leaves at once. The rows stay - without the dot, and not counted as new -
+through any number of messages listened to one after another.
+
+They are let go of (`forgetHeardByListening`) when the filter changes, when
+the person asks for the list again - a pull to refresh or a retry, not the
+re-read an action falls back on when its message turned out to be gone - and
+once nobody is looking at the list and nobody is in the middle of a message
+(`_HeardByListeningRelease` in `widgets/voicemail_body.dart`). A message the
+menu marks, heard or new, is let go of by itself: what is said by hand is the
+last word on it.
+
+The last of the three is for the section of the bottom menu, which is never
+torn down: without it the rows would still be under New the next day. Not
+looking is the app in the background or, for the section, another section
+shown. Which place the list is in is asked of the router - the bottom menu's
+`TabsRouter` above it, if there is one, and whether the section this route is
+in is its current one - so a host has nothing to pass and nothing to forget.
+
+A message that was started and has not played to the end holds the rows
+(`VoicemailPlaybackController.isMidMessage`): playing from another section,
+paused for a look at the keypad, or cut short by the screen locking - the app
+stops the sound in the background. The person comes back to it where they left
+it. The rows go when it has played out, and a message left paused keeps them
+for as long as it stays paused. The player itself knows nothing of the rows:
+it is stopped, as before, when its message is not in the list on screen.
 
 ## One message, and several at once
 
@@ -434,7 +468,8 @@ sits on is of no use there.
 | `test/features/voicemail/cubits/voicemail_session_cubit_test.dart` | the count, the mailbox followed only while a screen shows it, forwarder names, a backend with no voicemail noticed late, a read asked for and how it can end, a forward marked while out, kept when refused, sent one at a time, dropped with its message |
 | `test/features/voicemail/bloc/voicemail_forwarder_names_test.dart` | the forwarder line over a real address book: a name, no name, an extension, nobody |
 | `test/features/voicemail/extensions/request_failure_test.dart` | which refusals mean the message is gone, and which only look like it |
-| `test/features/voicemail/voicemail_filter_test.dart` | which filters a deployment offers, and what each one shows |
+| `test/features/voicemail/voicemail_filter_test.dart` | which filters a deployment offers, what each one shows, and what New keeps for having been heard by listening: one message and the next, not one marked from the menu or listened to under another filter, gone with the filter, a refresh or when let go of |
+| `test/features/voicemail/view/voicemail_screen_playback_stop_test.dart` | when the player is stopped - its message deleted or no longer listed - and not when playing a new message under New marks it heard; when New is told to let go: in the background or behind another section, unless a message is left part-way; and that the player goes with the rows |
 | `test/features/voicemail/voicemail_tile_test.dart` | what one row offers, including the actions a capability removes |
 | `test/features/voicemail/view/voicemail_selection_test.dart` | the header over the trash: restore, delete for good, and the count in the dialog |
 | `test/features/voicemail/view/voicemail_forward_test.dart` | the screen leaving a request that names itself as the way back, the row of a message being forwarded, and a forward that did not go through: marked, forwarded again from the menu, unmarked in the trash |

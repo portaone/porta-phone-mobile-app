@@ -14,6 +14,7 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
     this.filters = const [VoicemailFilter.all, VoicemailFilter.unheard],
     this.forwardSupported = false,
     this.selectedVoicemailsIds = const [],
+    this.heardByListening = const [],
     this.trashedItems = const [],
     this.trashStatus = VoicemailStatus.initial,
     this.trashError,
@@ -40,6 +41,16 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
 
   @override
   final List<String> selectedVoicemailsIds;
+
+  /// The messages that playing marked heard while New is showing, which New
+  /// goes on listing.
+  ///
+  /// Playing a new message is what marks it heard, so without this it left
+  /// New the moment it started and its player stopped with it. Emptied when
+  /// the filter changes, on a refresh, and once nobody is looking at the list
+  /// - so it never holds a message New was not showing as new.
+  @override
+  final List<String> heardByListening;
 
   /// The trash as the last fetch of it found it, empty whenever the screen is
   /// not showing the trash.

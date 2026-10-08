@@ -116,6 +116,7 @@ void main() {
               onCall: (_) {},
               onDeleted: (_) {},
               onToggleSeenStatus: (_) {},
+              onListened: (_) {},
               onToggleSavedStatus: (it) => onToggleSavedStatus?.call(it),
               onForwarded: (it) => onForwarded?.call(it),
               onForwardRetried: (it, recipient) => onForwardRetried?.call(it, recipient),

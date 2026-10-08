@@ -53,6 +53,60 @@ void main() {
       });
     });
 
+    group('isMidMessage', () {
+      setUp(() {
+        when(() => player.setAudioSource(any())).thenAnswer((_) async => null);
+        when(() => player.play()).thenAnswer((_) async {});
+        when(() => player.pause()).thenAnswer((_) async {});
+      });
+
+      test('nothing held is nothing in the middle', () {
+        expect(controller.isMidMessage, isFalse);
+      });
+
+      test('true from the press, before anything has loaded or played', () {
+        unawaited(controller.play(id: 'track1', uri: uri, isLocal: true));
+
+        // Neither loading nor playing yet: the one moment that would otherwise
+        // read as "nothing going on".
+        expect(controller.isLoading, isFalse);
+        expect(controller.isPlaying, isFalse);
+        expect(controller.isMidMessage, isTrue);
+      });
+
+      test('stays true through a pause', () async {
+        await controller.play(id: 'track1', uri: uri, isLocal: true);
+        await controller.pause();
+
+        expect(controller.isMidMessage, isTrue);
+      });
+
+      test('false once the message has played out, though it is still held', () async {
+        await controller.play(id: 'track1', uri: uri, isLocal: true);
+
+        playerStateController.add(PlayerState(false, ProcessingState.completed));
+
+        expect(controller.activeId, 'track1');
+        expect(controller.isMidMessage, isFalse);
+      });
+
+      test('true again when a played-out message is started again', () async {
+        await controller.play(id: 'track1', uri: uri, isLocal: true);
+        playerStateController.add(PlayerState(false, ProcessingState.completed));
+
+        await controller.play(id: 'track1', uri: uri, isLocal: true);
+
+        expect(controller.isMidMessage, isTrue);
+      });
+
+      test('false after stop()', () async {
+        await controller.play(id: 'track1', uri: uri, isLocal: true);
+        await controller.stop();
+
+        expect(controller.isMidMessage, isFalse);
+      });
+    });
+
     group('play() -- new track', () {
       test('sets activeId immediately before any await', () {
         when(() => player.setAudioSource(any())).thenAnswer((_) async => null);

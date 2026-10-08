@@ -33,6 +33,7 @@ class VoicemailPlaybackController extends ChangeNotifier with WidgetsBindingObse
   String? _activeId;
   bool _lastPlaying = false;
   bool _isLoading = false;
+  bool _playedOut = false;
   Object? _error;
   final _loadingDebounce = Debounce(const Duration(milliseconds: 200));
   int _generation = 0;
@@ -43,6 +44,12 @@ class VoicemailPlaybackController extends ChangeNotifier with WidgetsBindingObse
   AudioPlayer get player => _player;
 
   bool get isPlaying => _player.playing;
+
+  /// Whether the player holds a message that was started and has not played
+  /// to the end: playing, loading, paused, or cut short by the app going to
+  /// the background. A message that played out is still held - it can be
+  /// played again - but nobody is in the middle of it.
+  bool get isMidMessage => _activeId != null && _error == null && !_playedOut;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -59,6 +66,7 @@ class VoicemailPlaybackController extends ChangeNotifier with WidgetsBindingObse
   }) async {
     // Resume same track -- but fall through if previous attempt left an error.
     if (_activeId == id && _error == null) {
+      _playedOut = false;
       if (!_player.playing && !_isLoading) await _player.play();
       return;
     }
@@ -66,6 +74,7 @@ class VoicemailPlaybackController extends ChangeNotifier with WidgetsBindingObse
     final generation = ++_generation;
 
     _activeId = id;
+    _playedOut = false;
     _error = null;
     // Show the player UI immediately (optimistic); only show loading spinner
     // if setAudioSource takes longer than the debounce threshold (e.g. slow network).
@@ -126,7 +135,10 @@ class VoicemailPlaybackController extends ChangeNotifier with WidgetsBindingObse
 
   Future<void> pause() => _player.pause();
 
-  Future<void> resume() => _player.play();
+  Future<void> resume() {
+    _playedOut = false;
+    return _player.play();
+  }
 
   void seek(Duration position) => _player.seek(position);
 
@@ -169,6 +181,10 @@ class VoicemailPlaybackController extends ChangeNotifier with WidgetsBindingObse
     if (state.processingState == ProcessingState.completed) {
       _player.stop();
       _player.seek(Duration.zero);
+      if (!_playedOut) {
+        _playedOut = true;
+        notifyListeners();
+      }
     }
     // The play/pause control reads `isPlaying`, and pause() / resume() alone
     // rebuild nothing: without this the button keeps offering the action it
