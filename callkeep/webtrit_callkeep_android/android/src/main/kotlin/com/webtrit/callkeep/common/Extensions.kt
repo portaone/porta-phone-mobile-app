@@ -89,9 +89,24 @@ inline fun <reified T : Parcelable> Bundle.parcelableArrayList(key: String): Arr
         }
     }
 
+/**
+ * Makes the ringtone repeat until it is stopped.
+ *
+ * `Ringtone.setLooping` became public in API 28. The platform carries the same method, with the
+ * same body, from API 24 on - only hidden - so below 28 it is reached by name. A vendor build
+ * without it plays the ringtone once.
+ */
 fun Ringtone.setLoopingCompat(looping: Boolean) {
     if (SDK_INT >= Build.VERSION_CODES.P) {
         isLooping = looping
+        return
+    }
+    try {
+        Ringtone::class.java
+            .getMethod("setLooping", Boolean::class.javaPrimitiveType)
+            .invoke(this, looping)
+    } catch (e: ReflectiveOperationException) {
+        Log.w("Ringtone", "setLoopingCompat: no setLooping on API $SDK_INT, the ringtone plays once", e)
     }
 }
 
