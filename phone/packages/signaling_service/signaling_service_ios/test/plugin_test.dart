@@ -449,21 +449,31 @@ void main() {
   // -------------------------------------------------------------------------
 
   group('WebtritSignalingServiceIos -- dispose()', () {
-    test(
-      'closes the events stream',
-      () async {
-        final plugin = _buildPlugin(_failingFactory(Exception('x')));
+    test('leaves the events stream open for the next start()', () async {
+      // The plugin is a process-wide singleton: a subscriber made before a logout
+      // has to go on receiving after the login that follows. A closed stream would
+      // end that subscription with onDone and nothing would tell the subscriber.
+      final plugin = _buildPlugin(_successFactory(_FakeSignalingClient()));
+      addTearDown(plugin.dispose);
 
-        final done = Completer<void>();
-        plugin.events.listen(null, onDone: done.complete);
+      final events = <SignalingModuleEvent>[];
+      var done = false;
+      plugin.events.listen(events.add, onDone: () => done = true);
 
-        await plugin.dispose();
-        await done.future.timeout(const Duration(seconds: 1));
-      },
-      // TODO(WT-2002): stale since WT-1911 - dispose() deliberately leaves the events
-      // stream open (logout / re-login). Rewrite or drop the test, then remove the skip.
-      skip: 'Stale since WT-1911: dispose() keeps the events stream open',
-    );
+      await plugin.start(_kConfig);
+      await Future<void>.delayed(Duration.zero);
+      await plugin.dispose();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(done, isFalse);
+
+      events.clear();
+      await plugin.start(_kConfig);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(done, isFalse);
+      expect(events.whereType<SignalingConnected>(), hasLength(1));
+    });
 
     test('disposes the active module', () async {
       final client = _FakeSignalingClient();
