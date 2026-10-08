@@ -106,6 +106,11 @@ class KeypadViewState extends State<KeypadView> {
             onLongPress: _showInputContextMenu,
             child: Container(
               margin: EdgeInsets.symmetric(horizontal: scaledInset),
+              // The screen draws its body behind the app bar, so the top of this
+              // region lies under it. The number is centred in what is left below
+              // the bar: on a short screen the middle of the whole region is
+              // still behind the bar.
+              padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
               alignment: Alignment.center,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
