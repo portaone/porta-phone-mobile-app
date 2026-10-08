@@ -134,30 +134,25 @@ void _aUnionOffersItsVariants() {
       }
     });
 
-    test(
-      'a supported feature and a bottom menu tab offer theirs too',
-      () {
-        expect(discriminatorsOf(AppConfig.jsonSchema, 'SupportedFeature'), {
-          'themeMode',
-          'videoCall',
-          'loggingConfig',
-          'systemNotifications',
-          'hybridPresence',
-          'callPull',
-        });
-        expect(discriminatorsOf(AppConfig.jsonSchema, 'BottomMenuTabScheme'), {
-          'favorites',
-          'recents',
-          'contacts',
-          'keypad',
-          'messaging',
-          'voicemail',
-          'embedded',
-        });
-      },
-      // TODO(WT-2002): stale since WT-1935 added the callCenter menu section.
-      // Add it to the expected set, then remove the skip.
-      skip: 'Stale since WT-1935: callCenter is not in the expected set',
-    );
+    test('a supported feature and a bottom menu tab offer theirs too', () {
+      expect(discriminatorsOf(AppConfig.jsonSchema, 'SupportedFeature'), {
+        'themeMode',
+        'videoCall',
+        'loggingConfig',
+        'systemNotifications',
+        'hybridPresence',
+        'callPull',
+      });
+      expect(discriminatorsOf(AppConfig.jsonSchema, 'BottomMenuTabScheme'), {
+        'favorites',
+        'recents',
+        'contacts',
+        'keypad',
+        'messaging',
+        'voicemail',
+        'callCenter',
+        'embedded',
+      });
+    });
   });
 }
