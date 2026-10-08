@@ -219,11 +219,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     Stream<void>? foregroundCallPushSignal,
     this.conferenceAssemblyTimeout = const Duration(seconds: 20),
     bool Function()? speakerOnMinimize,
+    CallMediaManager? mediaManager,
   }) : _onMissedCall = onMissedCall,
        _connectivityService = connectivityService,
        _speakerOnMinimize = SpeakerOnMinimize(isEnabled: speakerOnMinimize ?? () => false),
        super(const CallState()) {
-    _mediaManager = CallMediaManager(callkeep: callkeep);
+    _mediaManager = mediaManager ?? CallMediaManager(callkeep: callkeep);
     _signalingModule = signalingModule;
     _callPeerConnectionManager = callPeerConnectionManager;
     _handshakeProcessor = HandshakeProcessor(queuedTerminationRequestsRepository: queuedTerminationRequestsRepository);
@@ -740,41 +741,26 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> _onNavigatorMediaDevicesChange(_NavigatorMediaDevicesChange event, Emitter<CallState> emit) async {
-    if (Platform.isIOS) {
-      // Cleanup devices info if change happened after hangup
-      // to avoid presenting stale data on next call initialization
-      if (state.activeCalls.isEmpty) return emit(state.copyWith(availableAudioDevices: [], audioDevice: null));
+    if (!_mediaManager.reportsRouteAfterEveryRequest) return;
 
-      final devices = await navigator.mediaDevices.enumerateDevices();
-      final output = devices.where((d) => d.kind == 'audiooutput').toList();
-      final input = devices.where((d) => d.kind == 'audioinput').toList();
-      _logger.info('Devices change - out:${output.map((e) => e.str).toList()}, in:${input.map((e) => e.str).toList()}');
-
-      final available = [
-        CallAudioDevice(type: CallAudioDeviceType.speaker),
-        ...input.map(CallAudioDevice.fromMediaInput),
-      ];
-
-      CallAudioDevice current;
-
-      if (output.isNotEmpty) {
-        current = CallAudioDevice.fromMediaOutput(output.first);
-      } else {
-        // Fallback behavior for iOS when out:[]
-        // We prioritize the Earpiece (Receiver) if available (derived from MicrophoneBuiltIn),
-        // otherwise fallback to the first available device (which is Speaker based on the list above).
-        current = available.firstWhere(
-          (device) => device.type == CallAudioDeviceType.earpiece,
-          orElse: () => available.first,
-        );
-
-        _logger.warning(
-          'No "audiooutput" devices reported. Fallback selected: ${current.name} (type: ${current.type})',
-        );
-      }
-
-      emit(state.copyWith(availableAudioDevices: available, audioDevice: current));
+    // Cleanup devices info if change happened after hangup
+    // to avoid presenting stale data on next call initialization
+    if (state.activeCalls.isEmpty) {
+      return emit(state.copyWith(availableAudioDevices: [], audioDevice: null, audioDeviceRequest: null));
     }
+
+    final route = await _mediaManager.readRoute();
+
+    // A request the platform is still working on outlives this report: the route read now is one
+    // on the way to the device asked for. A request that is over is replaced by what was read.
+    final request = state.audioDeviceRequest;
+    emit(
+      state.copyWith(
+        availableAudioDevices: route.available,
+        audioDevice: route.current,
+        audioDeviceRequest: request != null && !request.applied ? request : null,
+      ),
+    );
   }
 
   // processing the registration event change
@@ -1970,7 +1956,24 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   Future<void> _onCallControlEventAudioDeviceSet(_CallControlEventAudioDeviceSet event, Emitter<CallState> emit) async {
     await state.performOnActiveCall(event.callId, (activeCall) async {
-      await _mediaManager.setDevice(event.callId, event.device, hasVideo: activeCall.video);
+      // Where the route in use is reported back after every request, the device asked for is
+      // shown at once: the switch itself takes the system about 0.4 s. It is kept apart from the
+      // route in use and gives way to the first report that comes after the request is over.
+      final request = _mediaManager.reportsRouteAfterEveryRequest ? AudioDeviceRequest(event.device) : null;
+      if (request != null) emit(state.copyWith(audioDeviceRequest: request));
+      try {
+        await _mediaManager.setDevice(event.callId, event.device, hasVideo: activeCall.video);
+      } finally {
+        if (request != null && !isClosed) {
+          // A newer request has taken this one's place: its own end settles it.
+          if (identical(state.audioDeviceRequest, request)) {
+            emit(state.copyWith(audioDeviceRequest: request.asApplied()));
+          }
+          // The plugin reports after its speaker call, which is not always the last one of a
+          // request, and not at all after one that threw: the route is read once more.
+          add(const _NavigatorMediaDevicesChange());
+        }
+      }
     });
   }
 
@@ -3062,7 +3065,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (e.enabled) {
         await _mediaManager.onVideoEnabled(e.callId, speakerDevice: state.availableAudioDevices.getSpeaker);
       } else {
-        final speakerActive = state.audioDevice?.type == CallAudioDeviceType.speaker;
+        final speakerActive = state.shownAudioDevice?.type == CallAudioDeviceType.speaker;
         await _mediaManager.onVideoDisabled(
           e.callId,
           speakerActive: speakerActive,
@@ -4291,7 +4294,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // here; a call that already carries it is told the same value again.
       await callkeep.reportUpdateCall(currentCall.callId, proximityEnabled: state.shouldListenToProximity);
 
-      final device = _speakerOnMinimize.onCallScreenReturned(callId: currentCall.callId, current: state.audioDevice);
+      final device = _speakerOnMinimize.onCallScreenReturned(
+        callId: currentCall.callId,
+        current: state.shownAudioDevice,
+      );
       if (device != null) add(CallControlEvent.audioDeviceSet(currentCall.callId, device));
     } else {
       _logger.warning('__onCallScreenEventDidPush: activeCalls is empty');
@@ -4311,7 +4317,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       final device = _speakerOnMinimize.onCallScreenLeft(
         callId: currentCall.callId,
         video: currentCall.video,
-        current: state.audioDevice,
+        current: state.shownAudioDevice,
         available: state.availableAudioDevices,
       );
       if (device != null) add(CallControlEvent.audioDeviceSet(currentCall.callId, device));

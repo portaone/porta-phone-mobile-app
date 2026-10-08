@@ -266,6 +266,21 @@ The rule answers with a device and the bloc asks for it through the ordinary
 `CallControlEvent.audioDeviceSet`, so it reaches the platform the same way a tap on the speaker
 button does.
 
+**Which audio device the call screen shows** - `CallState.audioDevice` is the route in use as the
+platform last reported it: on Android the route Telecom moved to (`performAudioDeviceSet`), on iOS
+the route `CallMediaManager.readRoute` reads from the audio session after a device-change event of
+the WebRTC plugin. The screen, the minimize rule and the camera-off rule read
+`CallState.shownAudioDevice` instead: the device the person asked for while the platform is still
+moving the audio, the route in use otherwise.
+
+A request (`CallControlEvent.audioDeviceSet`) is kept in `CallState.audioDeviceRequest` only where a
+report follows every request, also a refused one (`CallMediaManager.reportsRouteAfterEveryRequest`,
+iOS). There the button answers the press while the system is still moving the audio, about 0.4 s on
+an iPhone 12 mini. The request outlives every report that arrives while its platform calls are
+running - a route read then is a route on the way - and gives way to the first report after they
+are over, which the bloc asks for itself. On Android a refused request leaves no report, so nothing
+is kept and the button follows Telecom.
+
 The option is `callConfig.audio.speakerOnMinimize` in the app config (on by default), read every
 time the screen is left. Where the deployment sets `speakerOnMinimizeConfigurable`, media settings
 shows a switch and the device's choice wins (`CallAudioSettingsRepository`); see
