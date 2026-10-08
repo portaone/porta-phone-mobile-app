@@ -65,8 +65,9 @@ class StandaloneCallService : Service() {
     // notification when there is no call in progress.
     private var isForeground = false
 
-    // What the foreground notification currently shows. There is one notification id on this
-    // path, so the incoming and ongoing variants overwrite each other, and a refresh has to know
+    // What the foreground notification currently shows. The calls of this path share one
+    // notification id (only the placeholder has another, see PLACEHOLDER_NOTIFICATION_ID), so the
+    // incoming and ongoing variants overwrite each other, and a refresh has to know
     // which one is on screen: re-posting the ongoing variant over a ringing call would take away
     // its Answer and Decline. Remembering only "the last ongoing call" got that wrong.
     private sealed interface ShownNotification {
@@ -361,7 +362,7 @@ class StandaloneCallService : Service() {
                 .setOngoing(true)
                 .build()
         try {
-            startForegroundServiceCompat(this, NOTIFICATION_ID, placeholder, ringingForegroundServiceType)
+            startForegroundServiceCompat(this, PLACEHOLDER_NOTIFICATION_ID, placeholder, ringingForegroundServiceType)
         } catch (e: SecurityException) {
             Log.e(TAG, "promoteToForeground: startForeground rejected, stopping service to avoid a crash loop", e)
             stopSelf()
@@ -387,7 +388,9 @@ class StandaloneCallService : Service() {
         // API 31+.  The placeholder uses FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID (low importance)
         // only to satisfy the 5-second startForeground() ANR window; this call switches to
         // INCOMING_CALL_NOTIFICATION_CHANNEL_ID (high importance) so the system treats it as a
-        // ringing call rather than a silent ongoing service notification.
+        // ringing call rather than a silent ongoing service notification. It goes out under an
+        // id of its own (see PLACEHOLDER_NOTIFICATION_ID), so the system takes it for a new
+        // notification and sends its full-screen intent.
         showIncomingCallNotification(metadata)
 
         // Notify the main process that the call has been registered. ForegroundService listens
@@ -865,6 +868,13 @@ class StandaloneCallService : Service() {
 
         // Arbitrary notification ID that does not collide with main-process notification IDs.
         private const val NOTIFICATION_ID = 97
+
+        // The placeholder of promoteToForeground() has an id of its own. The system sends a
+        // full-screen intent only for a notification it has not shown yet: an incoming call
+        // notification posted under the placeholder's id is an update of the placeholder, so
+        // the call alert never opened the app and a sleeping device stayed dark while it rang.
+        // Starting the foreground state under another id takes the placeholder away.
+        private const val PLACEHOLDER_NOTIFICATION_ID = 96
 
         @Volatile
         var isRunning: Boolean = false
