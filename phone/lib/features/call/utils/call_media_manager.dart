@@ -7,6 +7,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
+import '../extensions/extensions.dart';
 import '../models/models.dart';
 
 final _logger = Logger('CallMediaManager');
@@ -130,6 +131,37 @@ class CallMediaManager {
   // ---------------------------------------------------------------------------
   // Device selection
   // ---------------------------------------------------------------------------
+
+  /// Whether the route in use is read from the audio session ([readRoute]) and reported after
+  /// every [setDevice], also one that changed nothing. iOS: the plugin sends a device change once
+  /// its speaker call is done. On Android the route comes from Telecom, which reports only a route
+  /// it moved to, so a refused request would leave no report.
+  bool get reportsRouteAfterEveryRequest => !kIsWeb && Platform.isIOS;
+
+  /// The route in use and the devices the person can choose from, as the audio session has them
+  /// now. Only where [reportsRouteAfterEveryRequest].
+  Future<({List<CallAudioDevice> available, CallAudioDevice current})> readRoute() async {
+    final devices = await navigator.mediaDevices.enumerateDevices();
+    final output = devices.where((d) => d.kind == 'audiooutput').toList();
+    final input = devices.where((d) => d.kind == 'audioinput').toList();
+    _logger.info('Devices change - out:${output.map((e) => e.str).toList()}, in:${input.map((e) => e.str).toList()}');
+
+    final available = [
+      const CallAudioDevice(type: CallAudioDeviceType.speaker),
+      ...input.map(CallAudioDevice.fromMediaInput),
+    ];
+
+    if (output.isNotEmpty) return (available: available, current: CallAudioDevice.fromMediaOutput(output.first));
+
+    // No output reported: the earpiece if there is one (it comes with the built-in microphone),
+    // else the first device of the list, which is the speaker.
+    final current = available.firstWhere(
+      (device) => device.type == CallAudioDeviceType.earpiece,
+      orElse: () => available.first,
+    );
+    _logger.warning('No "audiooutput" devices reported. Fallback selected: ${current.name} (type: ${current.type})');
+    return (available: available, current: current);
+  }
 
   /// Routes audio to [device] for the given [callId].
   ///
