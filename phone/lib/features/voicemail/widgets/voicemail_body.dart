@@ -51,7 +51,9 @@ class VoicemailBody extends StatelessWidget {
         ),
         BlocListener<VoicemailCubit, VoicemailState>(
           listenWhen: (previous, current) =>
-              previous.filter != current.filter || previous.trashedItems != current.trashedItems,
+              previous.filter != current.filter ||
+              previous.trashedItems != current.trashedItems ||
+              previous.heardByListening != current.heardByListening,
           listener: (context, _) => _stopPlaybackOfRemovedVoicemail(context),
         ),
         BlocListener<VoicemailCubit, VoicemailState>(
@@ -60,8 +62,10 @@ class VoicemailBody extends StatelessWidget {
           listener: (context, state) => _announcePicked(context, state.selectedVoicemailsIds.length),
         ),
       ],
-      child: VoicemailViewBuilder(
-        builder: (context, view) => _VoicemailList(state: view, origin: origin),
+      child: _HeardByListeningRelease(
+        child: VoicemailViewBuilder(
+          builder: (context, view) => _VoicemailList(state: view, origin: origin),
+        ),
       ),
     );
   }
@@ -107,6 +111,87 @@ class VoicemailBody extends StatelessWidget {
       unawaited(controller.stop());
     }
   }
+}
+
+/// Ends what New keeps listed for having been heard by listening, once
+/// nobody is looking at the list and nobody is in the middle of a message.
+///
+/// New keeps those messages so that going through what is new does not pull
+/// the list from under the person. That has to end somewhere, and a section of
+/// the bottom menu is never torn down: without this the rows would still be
+/// there the next day, under a filter that says it shows what is new.
+///
+/// Not looking is the app in the background or, where the list is in a section
+/// of the bottom menu, another section shown. Which of the two places the list
+/// is in is asked of the router rather than told by the host, so a host cannot
+/// forget to say.
+///
+/// A message that was started and has not played to the end holds the rows:
+/// playing from another section, paused for a look at the keypad, or cut
+/// short by the screen locking. The person comes back to it where they left
+/// it. So the rows go when the last message has played out, or at once when
+/// none was left part-way.
+class _HeardByListeningRelease extends StatefulWidget {
+  const _HeardByListeningRelease({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_HeardByListeningRelease> createState() => _HeardByListeningReleaseState();
+}
+
+class _HeardByListeningReleaseState extends State<_HeardByListeningRelease> with WidgetsBindingObserver {
+  late final VoicemailPlaybackController _controller = context.read<VoicemailPlaybackController>();
+
+  /// The bottom menu's router, or null on a screen of its own.
+  late final TabsRouter? _sections = TabsRouterScope.of(context)?.controller;
+
+  /// The section of the bottom menu this list is in: the route above this one
+  /// that the bottom menu's router holds.
+  late final RouteData? _section = _sectionOf(_sections);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _controller.addListener(_releaseWhenAway);
+    _sections?.addListener(_releaseWhenAway);
+  }
+
+  @override
+  void dispose() {
+    _sections?.removeListener(_releaseWhenAway);
+    _controller.removeListener(_releaseWhenAway);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) => _releaseWhenAway();
+
+  RouteData? _sectionOf(TabsRouter? sections) {
+    if (sections == null) return null;
+
+    final held = sections.stackData;
+    RouteData? route = RouteData.of(context);
+    while (route != null && !held.contains(route)) {
+      route = route.parent;
+    }
+    return route;
+  }
+
+  bool get _isAway =>
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.paused ||
+      (_section != null && _sections?.currentChild != _section);
+
+  void _releaseWhenAway() {
+    if (!mounted || !_isAway || _controller.isMidMessage) return;
+
+    context.read<VoicemailCubit>().forgetHeardByListening();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// What stands where the list is: the list, or whatever is shown in place of
@@ -250,6 +335,7 @@ class VoicemailListView extends StatelessWidget {
           forward: forwardOf?.call(item),
           forwardedByName: forwarderOf?.call(item),
           onToggleSeenStatus: (it) => cubit.toggleSeenStatus(it),
+          onListened: (it) => cubit.markHeardByListening(it),
           onToggleSavedStatus: (it) => cubit.toggleSavedStatus(it),
           onForwarded: (it) => _onForwardVoicemail(context, it),
           onForwardRetried: (it, recipient) => _forwarding(context).send(it, recipient),

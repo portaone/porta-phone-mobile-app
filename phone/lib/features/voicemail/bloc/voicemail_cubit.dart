@@ -129,11 +129,24 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     }
   }
 
+  /// Fetches whatever the current filter is showing, because the person asked:
+  /// a pull to refresh or a retry.
+  ///
+  /// It also ends what New kept listed for having been heard by listening:
+  /// asking for the list again is asking what is new now.
+  Future<void> refresh() {
+    forgetHeardByListening();
+
+    return _readAgain();
+  }
+
   /// Fetches whatever the current filter is showing.
   ///
-  /// What a pull to refresh and a retry both mean. Three of the four filters
-  /// read the stored mailbox, so they refresh it; the trash is its own fetch.
-  Future<void> refresh() => state.filter.isRemote ? fetchTrashedVoicemails() : fetchVoicemails();
+  /// Three of the four filters read the stored mailbox, so they refresh it;
+  /// the trash is its own fetch. Also what an action falls back on when the
+  /// message it was for turned out to be gone - which is no reason to take
+  /// the message being listened to off the list.
+  Future<void> _readAgain() => state.filter.isRemote ? fetchTrashedVoicemails() : fetchVoicemails();
 
   /// Shows a different view of the mailbox.
   ///
@@ -149,6 +162,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
         filter: filter,
         trashedItems: const [],
         selectedVoicemailsIds: const [],
+        heardByListening: const [],
         trashStatus: VoicemailStatus.initial,
         trashError: null,
       ),
@@ -303,7 +317,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     } on VoicemailMessageGoneException catch (e, s) {
       _logger.warning('VoicemailCubit.removeVoicemail: the message was already gone: $e', e, s);
       _safeEmit(state.copyWith(busy: false));
-      await refresh();
+      await _readAgain();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
     } on RequestFailure catch (e, s) {
@@ -341,7 +355,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     } on VoicemailMessageGoneException catch (e, s) {
       _logger.warning('VoicemailCubit.restoreVoicemail: the message was already gone: $e', e, s);
       _safeEmit(state.copyWith(busy: false));
-      await refresh();
+      await _readAgain();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
     } on RequestFailure catch (e, s) {
@@ -375,7 +389,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     } on VoicemailMessageGoneException catch (e, s) {
       _logger.warning('VoicemailCubit.removeVoicemailPermanently: the message was already gone: $e', e, s);
       _safeEmit(state.copyWith(busy: false));
-      await refresh();
+      await _readAgain();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
     } on RequestFailure catch (e, s) {
@@ -397,7 +411,46 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     await _readAgainIfShowingTrash();
   }
 
+  /// Marks [voicemail] heard because the person started listening to it.
+  ///
+  /// Apart from [toggleSeenStatus], which the menu asks for: a message marked
+  /// heard by hand is done with and leaves New, while one that is being
+  /// listened to has to stay where the person found it. A message that was
+  /// heard already has nothing to mark.
+  Future<void> markHeardByListening(Voicemail voicemail) async {
+    if (!voicemail.status.isUnread) return;
+
+    if (state.filter == VoicemailFilter.unheard && !state.heardByListening.contains(voicemail.id)) {
+      _safeEmit(state.copyWith(heardByListening: [...state.heardByListening, voicemail.id]));
+    }
+
+    await _toggleSeenStatus(voicemail);
+  }
+
+  /// Lets New list only what is new again.
+  ///
+  /// The selection follows: a picked message that leaves the list with this
+  /// must not stay picked where nobody can see it.
+  void forgetHeardByListening() {
+    if (state.heardByListening.isEmpty) return;
+
+    _safeEmit(state.copyWith(heardByListening: const []));
+    _keepSelectionWithin(view.visibleItems);
+  }
+
+  /// Marks [voicemail] heard or new, as the menu asks.
+  ///
+  /// What the person says by hand is the last word on the message: New no
+  /// longer keeps it for having been listened to, whichever way it is marked.
   Future<void> toggleSeenStatus(Voicemail voicemail) async {
+    if (state.heardByListening.contains(voicemail.id)) {
+      _safeEmit(state.copyWith(heardByListening: state.heardByListening.where((id) => id != voicemail.id).toList()));
+    }
+
+    await _toggleSeenStatus(voicemail);
+  }
+
+  Future<void> _toggleSeenStatus(Voicemail voicemail) async {
     _safeEmit(state.copyWith(busy: true));
 
     try {
@@ -405,7 +458,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     } on VoicemailMessageGoneException catch (e, s) {
       _logger.warning('VoicemailCubit.toggleSeenStatus: the message was already gone: $e', e, s);
       _safeEmit(state.copyWith(busy: false));
-      await refresh();
+      await _readAgain();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
     } on RequestFailure catch (e, s) {
@@ -436,7 +489,7 @@ class VoicemailCubit extends Cubit<VoicemailState> {
     } on VoicemailMessageGoneException catch (e, s) {
       _logger.warning('VoicemailCubit.toggleSavedStatus: the message was already gone: $e', e, s);
       _safeEmit(state.copyWith(busy: false));
-      await refresh();
+      await _readAgain();
       onSubmitNotification(const VoicemailMessageGoneNotification());
       return;
     } on RequestFailure catch (e, s) {

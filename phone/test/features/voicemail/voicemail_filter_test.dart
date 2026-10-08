@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mocktail/mocktail.dart';
 
+import 'package:api/api.dart';
+
 import 'package:webtrit_phone/features/voicemail/bloc/bloc.dart';
 import 'package:webtrit_phone/features/voicemail/cubits/cubits.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -272,6 +274,133 @@ void main() {
       verify(() => repository.fetchVoicemails(localeCode: any(named: 'localeCode'))).called(1);
 
       await cubit.close();
+    });
+  });
+
+  group('a message heard by listening to it under New', () {
+    late VoicemailCubit cubit;
+    final first = _voicemail('first', status: ReadStatus.unread);
+    final second = _voicemail('second', status: ReadStatus.unread);
+
+    /// What the mailbox reads once the backend has taken the mark.
+    Voicemail heard(Voicemail voicemail) => _voicemail(voicemail.id);
+
+    setUp(() async {
+      when(() => repository.updateVoicemailSeenStatus(any(), any())).thenAnswer((_) async {});
+      cubit = build();
+      await deliver(cubit, [first, second]);
+      cubit.setFilter(VoicemailFilter.unheard);
+    });
+
+    tearDown(() async {
+      await cubit.close();
+    });
+
+    test('stays listed', () async {
+      await cubit.markHeardByListening(first);
+      await deliver(cubit, [heard(first), second]);
+
+      // Playing a message is what marks it heard. Dropped from New at that
+      // moment, it would take its player with it and never be listened to.
+      expect(cubit.view.visibleItems.map((item) => item.id), ['first', 'second']);
+      // The count is of what is still new, and that message is not.
+      expect(cubit.view.unheardCount, 1);
+      verify(() => repository.updateVoicemailSeenStatus('first', true)).called(1);
+    });
+
+    test('and so does the one listened to after it', () async {
+      await cubit.markHeardByListening(first);
+      await deliver(cubit, [heard(first), second]);
+      await cubit.markHeardByListening(second);
+      await deliver(cubit, [heard(first), heard(second)]);
+
+      // Going through what is new, one message after another: starting the
+      // second must not take the first from the list.
+      expect(cubit.view.visibleItems.map((item) => item.id), ['first', 'second']);
+    });
+
+    test('a message marked heard from the menu leaves New at once', () async {
+      await cubit.toggleSeenStatus(first);
+      await deliver(cubit, [heard(first), second]);
+
+      expect(cubit.view.visibleItems.map((item) => item.id), ['second']);
+    });
+
+    test('and so does one that was listened to before the menu was used on it', () async {
+      // The mark made by playing did not go through - the mailbox still lists
+      // the message as new - and the person then marks it by hand.
+      await cubit.markHeardByListening(first);
+      await cubit.toggleSeenStatus(first);
+      await deliver(cubit, [heard(first), second]);
+
+      // What is said by hand is the last word: listening earlier must not
+      // keep a message under New that the person has just marked heard.
+      expect(cubit.view.visibleItems.map((item) => item.id), ['second']);
+    });
+
+    test('stays when an action on another message finds that one gone', () async {
+      when(() => repository.removeVoicemail('second'))
+          .thenThrow(VoicemailMessageGoneException(url: Uri(), requestId: 'r', statusCode: 404));
+      await cubit.markHeardByListening(first);
+      await deliver(cubit, [heard(first), second]);
+
+      await cubit.removeVoicemail('second');
+      await deliver(cubit, [heard(first)]);
+
+      // The list is read again because of the other message. That is no
+      // reason to take the one being listened to off it.
+      expect(cubit.view.visibleItems.map((item) => item.id), ['first']);
+    });
+
+    test('leaves New when the filter changes', () async {
+      await cubit.markHeardByListening(first);
+      await deliver(cubit, [heard(first), second]);
+
+      cubit.setFilter(VoicemailFilter.all);
+      cubit.setFilter(VoicemailFilter.unheard);
+
+      expect(cubit.view.visibleItems.map((item) => item.id), ['second']);
+    });
+
+    test('leaves New on a refresh', () async {
+      await cubit.markHeardByListening(first);
+      await deliver(cubit, [heard(first), second]);
+
+      await cubit.refresh();
+
+      // Asking for the list again is asking what is new now.
+      expect(cubit.view.visibleItems.map((item) => item.id), ['second']);
+    });
+
+    test('leaves New and the selection when it is let go of', () async {
+      await cubit.markHeardByListening(first);
+      await deliver(cubit, [heard(first), second]);
+      cubit.toggleSelection(heard(first));
+      cubit.toggleSelection(second);
+
+      cubit.forgetHeardByListening();
+
+      expect(cubit.view.visibleItems.map((item) => item.id), ['second']);
+      // A bulk action must not reach a message nobody is looking at.
+      expect(cubit.state.selectedVoicemailsIds, ['second']);
+    });
+
+    test('is not remembered when it was listened to under another filter', () async {
+      cubit.setFilter(VoicemailFilter.all);
+      await cubit.markHeardByListening(first);
+      await deliver(cubit, [heard(first), second]);
+
+      cubit.setFilter(VoicemailFilter.unheard);
+
+      // New never showed it as new to this person, so it has no place there.
+      expect(cubit.view.visibleItems.map((item) => item.id), ['second']);
+    });
+
+    test('a message that was already heard is not marked again', () async {
+      await cubit.markHeardByListening(heard(first));
+
+      verifyNever(() => repository.updateVoicemailSeenStatus(any(), any()));
+      expect(cubit.state.heardByListening, isEmpty);
     });
   });
 

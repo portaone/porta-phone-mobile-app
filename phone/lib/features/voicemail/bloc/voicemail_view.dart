@@ -24,9 +24,15 @@ class VoicemailView {
   bool get isMultipleVoicemailsSelection => screen.isMultipleVoicemailsSelection;
 
   /// The messages the current filter shows.
+  ///
+  /// New also shows what was heard by listening to it from New
+  /// ([VoicemailState.heardByListening]): the person is going through what is
+  /// new, and a list that drops each message as it starts cannot be gone
+  /// through at all.
   List<Voicemail> get visibleItems => switch (screen.filter) {
     VoicemailFilter.all => mailbox.items,
-    VoicemailFilter.unheard => mailbox.items.where((item) => !item.status.isRead).toList(),
+    VoicemailFilter.unheard =>
+      mailbox.items.where((item) => !item.status.isRead || screen.heardByListening.contains(item.id)).toList(),
     VoicemailFilter.saved => mailbox.items.where((item) => item.saved == true).toList(),
     VoicemailFilter.trash => screen.trashedItems,
   };

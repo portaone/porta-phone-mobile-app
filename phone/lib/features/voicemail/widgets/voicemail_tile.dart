@@ -26,6 +26,7 @@ class VoicemailTile extends StatelessWidget {
     required this.onCall,
     required this.onDeleted,
     required this.onToggleSeenStatus,
+    required this.onListened,
     required this.onToggleSavedStatus,
     required this.onForwarded,
     required this.onForwardRetried,
@@ -105,6 +106,11 @@ class VoicemailTile extends StatelessWidget {
   final void Function(Voicemail) onCall;
   final void Function(Voicemail) onDeleted;
   final void Function(Voicemail) onToggleSeenStatus;
+
+  /// The person started listening to the message, which is what marks a new
+  /// one heard. Reported for every message; whether there is anything to mark
+  /// is not the row's to decide.
+  final void Function(Voicemail) onListened;
   final void Function(Voicemail) onToggleSavedStatus;
   final void Function(Voicemail) onForwarded;
 
@@ -320,9 +326,7 @@ class VoicemailTile extends StatelessWidget {
     ),
   ];
 
-  void _onPlaybackStarted() {
-    if (voicemail.status.isUnread) onToggleSeenStatus(voicemail);
-  }
+  void _onPlaybackStarted() => onListened(voicemail);
 
   void _onPopupMenuSelected(_VoicemailMenuAction action) {
     switch (action) {

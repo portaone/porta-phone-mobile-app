@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$VoicemailState {
 
- VoicemailFilter get filter; List<VoicemailFilter> get filters; bool get forwardSupported; List<String> get selectedVoicemailsIds; List<Voicemail> get trashedItems; VoicemailStatus get trashStatus; Object? get trashError; bool get busy;
+ VoicemailFilter get filter; List<VoicemailFilter> get filters; bool get forwardSupported; List<String> get selectedVoicemailsIds; List<String> get heardByListening; List<Voicemail> get trashedItems; VoicemailStatus get trashStatus; Object? get trashError; bool get busy;
 /// Create a copy of VoicemailState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,12 +25,12 @@ $VoicemailStateCopyWith<VoicemailState> get copyWith => _$VoicemailStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailState&&(identical(other.filter, filter) || other.filter == filter)&&const DeepCollectionEquality().equals(other.filters, filters)&&(identical(other.forwardSupported, forwardSupported) || other.forwardSupported == forwardSupported)&&const DeepCollectionEquality().equals(other.selectedVoicemailsIds, selectedVoicemailsIds)&&const DeepCollectionEquality().equals(other.trashedItems, trashedItems)&&(identical(other.trashStatus, trashStatus) || other.trashStatus == trashStatus)&&const DeepCollectionEquality().equals(other.trashError, trashError)&&(identical(other.busy, busy) || other.busy == busy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailState&&(identical(other.filter, filter) || other.filter == filter)&&const DeepCollectionEquality().equals(other.filters, filters)&&(identical(other.forwardSupported, forwardSupported) || other.forwardSupported == forwardSupported)&&const DeepCollectionEquality().equals(other.selectedVoicemailsIds, selectedVoicemailsIds)&&const DeepCollectionEquality().equals(other.heardByListening, heardByListening)&&const DeepCollectionEquality().equals(other.trashedItems, trashedItems)&&(identical(other.trashStatus, trashStatus) || other.trashStatus == trashStatus)&&const DeepCollectionEquality().equals(other.trashError, trashError)&&(identical(other.busy, busy) || other.busy == busy));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,filter,const DeepCollectionEquality().hash(filters),forwardSupported,const DeepCollectionEquality().hash(selectedVoicemailsIds),const DeepCollectionEquality().hash(trashedItems),trashStatus,const DeepCollectionEquality().hash(trashError),busy);
+int get hashCode => Object.hash(runtimeType,filter,const DeepCollectionEquality().hash(filters),forwardSupported,const DeepCollectionEquality().hash(selectedVoicemailsIds),const DeepCollectionEquality().hash(heardByListening),const DeepCollectionEquality().hash(trashedItems),trashStatus,const DeepCollectionEquality().hash(trashError),busy);
 
 
 
@@ -41,7 +41,7 @@ abstract mixin class $VoicemailStateCopyWith<$Res>  {
   factory $VoicemailStateCopyWith(VoicemailState value, $Res Function(VoicemailState) _then) = _$VoicemailStateCopyWithImpl;
 @useResult
 $Res call({
- VoicemailFilter filter, List<VoicemailFilter> filters, bool forwardSupported, List<String> selectedVoicemailsIds, List<Voicemail> trashedItems, VoicemailStatus trashStatus, Object? trashError, bool busy
+ VoicemailFilter filter, List<VoicemailFilter> filters, bool forwardSupported, List<String> selectedVoicemailsIds, List<String> heardByListening, List<Voicemail> trashedItems, VoicemailStatus trashStatus, Object? trashError, bool busy
 });
 
 
@@ -58,12 +58,13 @@ class _$VoicemailStateCopyWithImpl<$Res>
 
 /// Create a copy of VoicemailState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? filter = null,Object? filters = null,Object? forwardSupported = null,Object? selectedVoicemailsIds = null,Object? trashedItems = null,Object? trashStatus = null,Object? trashError = freezed,Object? busy = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? filter = null,Object? filters = null,Object? forwardSupported = null,Object? selectedVoicemailsIds = null,Object? heardByListening = null,Object? trashedItems = null,Object? trashStatus = null,Object? trashError = freezed,Object? busy = null,}) {
   return _then(VoicemailState(
 filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
 as VoicemailFilter,filters: null == filters ? _self.filters : filters // ignore: cast_nullable_to_non_nullable
 as List<VoicemailFilter>,forwardSupported: null == forwardSupported ? _self.forwardSupported : forwardSupported // ignore: cast_nullable_to_non_nullable
 as bool,selectedVoicemailsIds: null == selectedVoicemailsIds ? _self.selectedVoicemailsIds : selectedVoicemailsIds // ignore: cast_nullable_to_non_nullable
+as List<String>,heardByListening: null == heardByListening ? _self.heardByListening : heardByListening // ignore: cast_nullable_to_non_nullable
 as List<String>,trashedItems: null == trashedItems ? _self.trashedItems : trashedItems // ignore: cast_nullable_to_non_nullable
 as List<Voicemail>,trashStatus: null == trashStatus ? _self.trashStatus : trashStatus // ignore: cast_nullable_to_non_nullable
 as VoicemailStatus,trashError: freezed == trashError ? _self.trashError : trashError ,busy: null == busy ? _self.busy : busy // ignore: cast_nullable_to_non_nullable
