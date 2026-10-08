@@ -129,8 +129,8 @@ active channels; the standalone answer goes through `StandaloneAnswerTrampolineA
 all action intents target `StandaloneCallService` instead of the dual-process services.
 
 `StandaloneActiveCallNotificationBuilder` also takes the calls grouped with the one it is
-built from. There is a single notification id on this path, so a group cannot be shown as
-one entry per call - the entries would overwrite each other and leave whichever call was
+built from. The calls of this path share a single notification id, so a group cannot be shown
+as one entry per call - the entries would overwrite each other and leave whichever call was
 answered last standing for the whole group. A grouped notification names every member, and
 its hang-up action ends every one of them, through
 `StandaloneServiceAction.HungUpCallGroup` rather than the single-call `HungUpCall`.
@@ -140,6 +140,13 @@ placeholder notification (built without any of these builders) on
 `FOREGROUND_CALL_NOTIFICATION_CHANNEL_ID`, only to satisfy the 5-second `startForeground`
 window, and switches to the incoming-call notification right after - that placeholder is the
 sole producer on the foreground channel.
+
+The placeholder has a notification id of its own; the incoming and ongoing notifications share
+the other one. The system sends a full-screen intent only for a notification it has not shown
+yet, so an incoming-call notification posted under the placeholder's id would be an update of
+the placeholder and its call alert would never open the app - on a sleeping device the call
+rang behind a dark screen. Moving the foreground state to the call's id removes the
+placeholder.
 
 ---
 

@@ -19,8 +19,8 @@ import org.robolectric.annotation.Config
 /**
  * Service-level tests for the standalone foreground notification across grouping and call end.
  *
- * There is one notification id on this path, so the incoming and ongoing variants overwrite
- * each other. These cases pin down that a refresh never takes Answer and Decline away from a
+ * The calls of this path share one notification id, so the incoming and ongoing variants
+ * overwrite each other. These cases pin down that a refresh never takes Answer and Decline away from a
  * ringing call, and that ending the call the notification was built from hands it to a
  * surviving call rebuilt from what is actually left.
  *
