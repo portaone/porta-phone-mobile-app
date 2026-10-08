@@ -9,6 +9,7 @@ class CallState with _$CallState {
     this.activeCalls = const [],
     this.minimized,
     this.audioDevice,
+    this.audioDeviceRequest,
     this.availableAudioDevices = const [],
     this.selectedCallId,
     this.conference = const ConferenceState(),
@@ -29,8 +30,19 @@ class CallState with _$CallState {
   @override
   final bool? minimized;
 
+  /// The route in use, as the platform last reported it.
   @override
   final CallAudioDevice? audioDevice;
+
+  /// A device the person asked for that the platform has not confirmed yet; null when
+  /// nothing is asked for, and always null where the platform reports only a route it
+  /// moved to.
+  @override
+  final AudioDeviceRequest? audioDeviceRequest;
+
+  /// The device the person takes the call to be on: the one asked for while the
+  /// platform is still moving the audio, the route in use otherwise.
+  CallAudioDevice? get shownAudioDevice => audioDeviceRequest?.device ?? audioDevice;
 
   @override
   final List<CallAudioDevice> availableAudioDevices;

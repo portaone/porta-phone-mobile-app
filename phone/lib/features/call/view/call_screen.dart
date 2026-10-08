@@ -76,7 +76,7 @@ class _CallScreenState extends State<CallScreen> with AutoRouteAwareStateMixin {
               activeCalls: state.activeCalls,
               // isActive guarantees at least one call, so focusedCall is non-null.
               focusedCall: state.focusedCall!,
-              audioDevice: state.audioDevice,
+              audioDevice: state.shownAudioDevice,
               availableAudioDevices: state.availableAudioDevices,
               callConfig: widget.callConfig,
               canMerge: state.canMerge(isConferenceEnabled: widget.callConfig.isConferenceEnabled),
