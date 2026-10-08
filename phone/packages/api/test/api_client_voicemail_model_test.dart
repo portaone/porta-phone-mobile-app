@@ -43,6 +43,14 @@ void main() {
       expect(parsed.receiver, isNull);
     });
 
+    test('a message listed without its length is still read', () {
+      // Optional in the backend's own model; `null` and an absent field both
+      // arrive from it.
+      expect(UserVoicemailSummary.fromJson(item({})..remove('duration')).duration, isNull);
+      expect(UserVoicemailSummary.fromJson(item({'duration': null})).duration, isNull);
+      expect(UserVoicemailSummary.fromJson(item({'duration': 10.783})).duration, 10.783);
+    });
+
     test('a forwarded message names who passed it on', () {
       final parsed = UserVoicemailSummary.fromJson(item({'saved': false, 'forwarded_by': '123044'}));
 

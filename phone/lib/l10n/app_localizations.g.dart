@@ -6361,6 +6361,30 @@ abstract class AppLocalizations {
   /// **'Filter, currently {filter}'**
   String voicemail_SemanticsLabel_filter(String filter);
 
+  /// A length of time in whole seconds, as a screen reader says it. Part of a longer phrase or said alone.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds, plural, one{{seconds} second} other{{seconds} seconds}}'**
+  String common_SemanticsValue_durationSeconds(int seconds);
+
+  /// A length of time in whole minutes, as a screen reader says it. Part of a longer phrase or said alone.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, one{{minutes} minute} other{{minutes} minutes}}'**
+  String common_SemanticsValue_durationMinutes(int minutes);
+
+  /// A length of time said as minutes and seconds; both parts arrive already worded, e.g. '1 minute' and '5 seconds'.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} {seconds}'**
+  String common_SemanticsValue_durationMinutesSeconds(String minutes, String seconds);
+
+  /// What a screen reader says for the playback slider of a voicemail: how far into the message, of how long. Both arrive already worded, e.g. '5 seconds' and '10 seconds'.
+  ///
+  /// In en, this message translates to:
+  /// **'{position} of {duration}'**
+  String voicemail_SemanticsValue_playbackPosition(String position, String duration);
+
   /// Accessibility name of a row in the forward picker.
   ///
   /// In en, this message translates to:

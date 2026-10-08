@@ -189,7 +189,12 @@ class VoicemailTile extends StatelessWidget {
             forwardedByName: forwardedByName,
             forward: forward,
           ),
-          bottom: AudioView(path: voicemail.url!, cacheKey: voicemail.id, onPlaybackStarted: _onPlaybackStarted),
+          bottom: AudioView(
+            path: voicemail.url!,
+            cacheKey: voicemail.id,
+            length: voicemail.length,
+            onPlaybackStarted: _onPlaybackStarted,
+          ),
           trailing: _forwarding
               ? const _ForwardingIndicator()
               : SemanticAction(

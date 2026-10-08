@@ -3505,6 +3505,38 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String common_SemanticsValue_durationSeconds(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: '$seconds seconds',
+      one: '$seconds second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String common_SemanticsValue_durationMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '$minutes minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String common_SemanticsValue_durationMinutesSeconds(String minutes, String seconds) {
+    return '$minutes $seconds';
+  }
+
+  @override
+  String voicemail_SemanticsValue_playbackPosition(String position, String duration) {
+    return '$position of $duration';
+  }
+
+  @override
   String voicemail_SemanticsLabel_forwardTo(String name) {
     return 'Forward to $name';
   }

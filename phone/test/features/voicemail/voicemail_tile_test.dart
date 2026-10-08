@@ -525,6 +525,16 @@ void main() {
     });
   });
 
+  group('how long the message is, for a screen reader', () {
+    testWidgets('the row of a message says its length before it was ever played', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(wrap(picking: false));
+
+      expect(tester.getSemantics(find.text('User 555002')).label, contains('4 seconds'));
+      handle.dispose();
+    });
+  });
+
   group('opening the caller', () {
     Future<void> openMenu(WidgetTester tester) async {
       await tester.tap(find.byIcon(Icons.more_vert));
