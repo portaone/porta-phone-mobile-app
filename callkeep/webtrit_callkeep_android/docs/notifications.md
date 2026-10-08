@@ -141,6 +141,13 @@ placeholder notification (built without any of these builders) on
 window, and switches to the incoming-call notification right after - that placeholder is the
 sole producer on the foreground channel.
 
+The placeholder has a notification id of its own; the incoming and ongoing notifications share
+the other one. The system sends a full-screen intent only for a notification it has not shown
+yet, so an incoming-call notification posted under the placeholder's id would be an update of
+the placeholder and its call alert would never open the app - on a sleeping device the call
+rang behind a dark screen. Moving the foreground state to the call's id removes the
+placeholder.
+
 ---
 
 ## QueuedCallNotifications
