@@ -14,6 +14,7 @@ services, broadcast-based IPC, and a Pigeon bridge to the Flutter layer.
 | [connection-tracker.md](connection-tracker.md)             | `MainProcessConnectionTracker` — shadow call-state registry                 |
 | [phone-connection-service.md](phone-connection-service.md) | `PhoneConnectionService` — Telecom `ConnectionService` in `:callkeep_core`  |
 | [phone-connection.md](phone-connection.md)                 | `PhoneConnection` — single call object inside Telecom                       |
+| [standalone-call-service.md](standalone-call-service.md)   | `StandaloneCallService` — the call backend where Telecom cannot host calls  |
 | [call-connection.md](call-connection.md)                   | `CallConnection` / `CallGroup` — shared call state and membership           |
 | [foreground-service.md](foreground-service.md)             | Call groups — declared membership, kept with the calls in the core          |
 | [connection-manager.md](connection-manager.md)             | `ConnectionManager` — call registry inside `:callkeep_core`                 |
