@@ -75,6 +75,22 @@ The alert's intent carries `LockScreenPresence.EXTRA_OPENED_BY_CALL_ALERT`
 launcher during a call, say - is never let over the keyguard by callkeep: the Activity would show
 whatever screen the app is on.
 
+### Waking the screen
+
+On the standalone call path the same moment may leave the screen off. The turn-screen-on flag
+acts only when a window goes from hidden to shown. An Activity that was on top when the device
+went to sleep with no keyguard up - the screen timed out and the lock delay has not passed, or
+the device has no lock screen - is still shown as far as the window manager goes, so the alert
+reopening it wakes nothing (seen on Android 7; newer releases wake the device for a full-screen
+intent themselves).
+
+`LockScreenPresence.onActivityIntent` therefore wakes the screen itself when all of these hold
+(`needsWake`): the Activity was opened by the call alert, a call is registered or pending, the
+screen is not interactive, and Telecom does not host the calls on this device. It does so with
+a screen wake lock that causes a wakeup, the only way open to an app on every supported
+release, held for a second: acquiring it is the wakeup, and the screen then follows the device's
+own timeout. The Telecom path is not touched.
+
 ## Related Components
 
 - [foreground-service.md](foreground-service.md) — bound service wired up here

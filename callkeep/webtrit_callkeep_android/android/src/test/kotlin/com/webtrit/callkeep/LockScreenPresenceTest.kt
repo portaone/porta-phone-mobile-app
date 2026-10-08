@@ -7,7 +7,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PowerManager
+import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.models.CallMetadata
@@ -23,6 +26,7 @@ import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowPowerManager
 
 /**
  * Only the incoming-call alert may take the Activity over the keyguard on callkeep's side. An
@@ -39,6 +43,7 @@ class LockScreenPresenceTest {
     @Before
     fun setUp() {
         ContextHolder.init(app)
+        ShadowPowerManager.reset()
         activity = Robolectric.buildActivity(Activity::class.java).setup().get()
     }
 
@@ -89,6 +94,74 @@ class LockScreenPresenceTest {
     }
 
     @Test
+    fun `the call alert on a sleeping device with no keyguard wakes the screen`() {
+        telecomHostsCalls(false)
+        locked(false)
+        screenOn(false)
+        ringing("c1")
+
+        LockScreenPresence.onActivityIntent(activity, alertIntent())
+
+        assertTrue(wokeTheScreen())
+    }
+
+    @Test
+    fun `the call alert on a sleeping locked device wakes the screen and goes over the keyguard`() {
+        telecomHostsCalls(false)
+        locked(true)
+        screenOn(false)
+        ringing("c1")
+
+        LockScreenPresence.onActivityIntent(activity, alertIntent())
+
+        assertTrue(wokeTheScreen())
+        assertTrue(shadowOf(activity).showWhenLocked)
+    }
+
+    @Test
+    fun `the call alert with the screen already on wakes nothing`() {
+        telecomHostsCalls(false)
+        screenOn(true)
+        ringing("c1")
+
+        LockScreenPresence.onActivityIntent(activity, alertIntent())
+
+        assertFalse(wokeTheScreen())
+    }
+
+    @Test
+    fun `an activity opened from the launcher during a call does not wake the screen`() {
+        telecomHostsCalls(false)
+        screenOn(false)
+        ringing("c1")
+
+        LockScreenPresence.onActivityIntent(activity, Intent(Intent.ACTION_MAIN))
+
+        assertFalse(wokeTheScreen())
+    }
+
+    @Test
+    fun `a stale call alert with no call left does not wake the screen`() {
+        telecomHostsCalls(false)
+        screenOn(false)
+
+        LockScreenPresence.onActivityIntent(activity, alertIntent())
+
+        assertFalse(wokeTheScreen())
+    }
+
+    @Test
+    fun `the call alert does not wake the screen where Telecom hosts the calls`() {
+        telecomHostsCalls(true)
+        screenOn(false)
+        ringing("c1")
+
+        LockScreenPresence.onActivityIntent(activity, alertIntent())
+
+        assertFalse(wokeTheScreen())
+    }
+
+    @Test
     fun `release takes the activity back behind the keyguard`() {
         locked(true)
         ringing("c1")
@@ -125,6 +198,20 @@ class LockScreenPresenceTest {
             )
         }
     }
+
+    // What TelephonyUtils.isTelecomSupported reads: the Telecom feature, else a phone type.
+    private fun telecomHostsCalls(value: Boolean) {
+        shadowOf(app.packageManager).setSystemFeature(PackageManager.FEATURE_TELECOM, value)
+        shadowOf(app.getSystemService(TelephonyManager::class.java))
+            .setPhoneType(if (value) TelephonyManager.PHONE_TYPE_GSM else TelephonyManager.PHONE_TYPE_NONE)
+    }
+
+    private fun screenOn(value: Boolean) {
+        shadowOf(app.getSystemService(PowerManager::class.java)).setIsInteractive(value)
+    }
+
+    // The lock is taken only to wake the screen, so one taken at all is the wakeup.
+    private fun wokeTheScreen(): Boolean = ShadowPowerManager.getLatestWakeLock() != null
 
     private fun locked(value: Boolean) {
         shadowOf(app.getSystemService(KeyguardManager::class.java)).setKeyguardLocked(value)
