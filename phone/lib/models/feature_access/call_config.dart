@@ -52,6 +52,7 @@ class CallCapabilitiesConfig extends Equatable {
     this.callPullVideoStrategy = CallPullVideoStrategy.softMute,
     this.isPeerMessageEnabled = false,
     this.isConferenceEnabled = false,
+    this.isConferenceRejoinEnabled = false,
   });
 
   /// Whether the UI should show video call functionality.
@@ -91,6 +92,18 @@ class CallCapabilitiesConfig extends Equatable {
   /// ever fail. Defaults to `false` so a backend that says nothing hides it.
   final bool isConferenceEnabled;
 
+  /// Whether the remote core has the `conference_rejoin` request, which puts
+  /// the host back into a running room after his connection to it was lost.
+  ///
+  /// Gated by the core version for the same reason as [isPeerMessageEnabled]:
+  /// an older core answers the unknown request by closing the signaling socket
+  /// (code 4600), and the room is still there on the handshake that follows.
+  /// Where it is `false` a lost room is ended and its calls handed back.
+  ///
+  /// Temporary: it goes together with [CoreInfo.supportsConferenceRejoin],
+  /// once no accepted core is older than the one that has the request.
+  final bool isConferenceRejoinEnabled;
+
   @override
   List<Object?> get props => [
     isVideoCallEnabled,
@@ -100,5 +113,6 @@ class CallCapabilitiesConfig extends Equatable {
     callPullVideoStrategy,
     isPeerMessageEnabled,
     isConferenceEnabled,
+    isConferenceRejoinEnabled,
   ];
 }

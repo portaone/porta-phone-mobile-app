@@ -15,6 +15,11 @@ enum ConferencePhase {
 
   /// The room's offer was answered: the legs are mixed on the server.
   active,
+
+  /// The host's connection to the room was lost while the room stands: the
+  /// legs go on being mixed on the server, and the host is on his way back in
+  /// over a new connection. To the user it is the same room.
+  rejoining,
 }
 
 /// The conference room this client hosts, as the app knows it.
@@ -56,6 +61,10 @@ class ConferenceState with _$ConferenceState {
 
   /// A room exists, whether still assembling or already active.
   bool get isPresent => phase != ConferencePhase.none;
+
+  /// The host is not in the room yet, or not any more, and the offer that
+  /// lets him in has not been answered.
+  bool get awaitsOffer => phase == ConferencePhase.assembling || phase == ConferencePhase.rejoining;
 
   /// Whether an event naming [room] is about the room this client holds.
   ///

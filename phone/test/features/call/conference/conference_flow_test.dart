@@ -22,6 +22,60 @@ CallBlocHarness _harness({bool peerMessages = false}) => CallBlocHarness(
   capabilities: CallCapabilitiesConfig(isConferenceEnabled: true, isPeerMessageEnabled: peerMessages),
 );
 
+/// A harness against a server that has `conference_rejoin`.
+CallBlocHarness _rejoinHarness({ManualOfferDeadline? deadline}) => CallBlocHarness(
+  capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true, isConferenceRejoinEnabled: true),
+  offerDeadline: deadline,
+);
+
+/// Room 7 with legs a and b, up and carrying audio: the mixer's connection
+/// has reached it. Returns leg a's connection and the mixer's.
+Future<({FakePeerConnection a, FakePeerConnection mixer})> _roomUp(CallBlocHarness h) async {
+  final a = h.seedEstablishedCall('a', line: 0);
+  h.seedEstablishedCall('b', line: 1);
+  await _merge(h, ['a', 'b']);
+  await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+  final mixer = h.peerFactory.created.single;
+  mixer.onConnectionState!(RTCPeerConnectionState.RTCPeerConnectionStateConnected);
+  return (a: a, mixer: mixer);
+}
+
+/// The handshake of a session that has just come up, with room 7 and both of
+/// its legs still standing on the server.
+StateHandshake _handshakeWithRoom() => StateHandshake(
+  keepaliveInterval: const Duration(seconds: 30),
+  timestamp: 0,
+  registration: const Registration(status: RegistrationStatus.registered),
+  lines: [
+    Line(
+      callId: 'a',
+      callLogs: [CallEventLog(timestamp: 0, callEvent: const AcceptedEvent(line: 0, callId: 'a'))],
+    ),
+    Line(
+      callId: 'b',
+      callLogs: [CallEventLog(timestamp: 0, callEvent: const AcceptedEvent(line: 1, callId: 'b'))],
+    ),
+  ],
+  presenceInfos: const [],
+  dialogInfos: const [],
+  guestLine: null,
+  conference: ConferenceInfo(room: 7, participants: [_participant('a', 0), _participant('b', 1)]),
+);
+
+/// The session goes: the module is down and says so.
+Future<void> _loseSession(CallBlocHarness h) async {
+  h.signaling.connected = false;
+  h.signaling.emitLifecycle(SignalingDisconnecting());
+  await pumpEventQueue();
+}
+
+/// The mixer's connection loses its path, the way a network outage ends it.
+Future<void> _failMixer(FakePeerConnection mixer) async {
+  mixer.connectionState = RTCPeerConnectionState.RTCPeerConnectionStateFailed;
+  mixer.onConnectionState!(RTCPeerConnectionState.RTCPeerConnectionStateFailed);
+  await pumpEventQueue();
+}
+
 Future<void> _merge(CallBlocHarness h, List<String> callIds) async {
   h.bloc.add(CallControlEvent.merged(callIds));
   await pumpEventQueue();
@@ -878,6 +932,465 @@ void main() {
     expect(_restored(h, a, 'a'), isTrue);
     expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), hasLength(1));
     expect(h.notifications.single, isA<ConferenceEndedNotification>());
+  });
+
+  group('rejoin after the mixer connection is lost', () {
+    test('the room is kept and the server is asked for its offer again', () async {
+      final h = _rejoinHarness();
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      final before = h.bloc.state.conference;
+
+      await _failMixer(room.mixer);
+
+      expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), hasLength(1));
+      expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), isEmpty);
+      expect(h.bloc.state.conference, before.copyWith(phase: ConferencePhase.rejoining));
+      expect(room.mixer.closes, 1, reason: 'the dead connection is closed');
+      expect(_quiet(h, room.a, 'a'), isTrue, reason: 'the legs stay in the mix, not handed back');
+      expect(h.notifications, isEmpty);
+      expect(h.callkeep.held, isEmpty);
+    });
+
+    test('the new offer for the same room is answered on a fresh connection', () async {
+      final h = _rejoinHarness();
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      await _failMixer(room.mixer);
+      final answersBefore = h.signaling.requests.whereType<ConferenceAnswerRequest>().length;
+
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      await _settle(h, () => h.bloc.state.conference.phase == ConferencePhase.active);
+
+      expect(h.bloc.state.conference.phase, ConferencePhase.active);
+      expect(h.peerFactory.created, hasLength(2));
+      expect(h.peerFactory.created.last.remoteDescriptions.single.type, 'offer');
+      expect(h.signaling.requests.whereType<ConferenceAnswerRequest>(), hasLength(answersBefore + 1));
+      expect(h.bloc.state.conference.legs, {'a': 0, 'b': 1});
+      expect(_quiet(h, room.a, 'a'), isTrue);
+      expect(h.notifications, isEmpty);
+    });
+
+    test('the host\'s mute is carried into the new connection', () async {
+      final h = _rejoinHarness();
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      h.bloc.add(const CallControlEvent.conferenceSelfMuted(true));
+      await pumpEventQueue();
+      await _failMixer(room.mixer);
+
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      await _settle(h, () => h.bloc.state.conference.phase == ConferencePhase.active);
+
+      expect(h.bloc.state.conference.selfMuted, isTrue);
+      expect(h.peerFactory.created.last.fakeSenders.single.track, isNull);
+    });
+
+    test('a candidate of the dead connection is not trickled', () async {
+      final h = _rejoinHarness();
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      final gathering = room.mixer.onIceCandidate!;
+      await _failMixer(room.mixer);
+      final before = h.signaling.requests.whereType<ConferenceIceTrickleRequest>().length;
+
+      gathering(RTCIceCandidate('candidate:stale', '0', 0));
+      await pumpEventQueue();
+
+      expect(h.signaling.requests.whereType<ConferenceIceTrickleRequest>(), hasLength(before));
+    });
+
+    test('a refused rejoin gives the calls back', () async {
+      final h = _rejoinHarness();
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      h.signaling.failure = const WebtritSignalingErrorException(1, 0, 'no_conference');
+
+      await _failMixer(room.mixer);
+      h.signaling.failure = null;
+      await _settle(h, () => !h.bloc.state.conference.isPresent);
+
+      expect(h.bloc.state.conference, const ConferenceState());
+      expect(_restored(h, room.a, 'a'), isTrue);
+      expect(h.notifications.single, isA<ConferenceEndedNotification>());
+    });
+
+    test('a rejoin refused because an offer is already on its way waits for it, under the deadline', () async {
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      h.signaling.failure = const WebtritSignalingErrorException(1, 0, 'conference_not_established');
+
+      await _failMixer(room.mixer);
+      h.signaling.failure = null;
+      await pumpEventQueue();
+
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+      expect(h.notifications, isEmpty);
+
+      // The offer it promised never comes: the wait has an end all the same.
+      expect(deadline.isArmed, isTrue);
+      deadline.pass();
+      await _settle(h, () => !h.bloc.state.conference.isPresent);
+
+      expect(h.bloc.state.conference, const ConferenceState());
+      expect(_restored(h, room.a, 'a'), isTrue);
+    });
+
+    test('a rejoin lost with the socket is an outage, not an error', () async {
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      // The request is on its way when the socket closes under it.
+      final inFlight = Completer<void>();
+      h.signaling.gate = inFlight;
+      await _failMixer(room.mixer);
+      expect(deadline.isArmed, isTrue, reason: 'the deadline starts with the request, not with its answer');
+      await _loseSession(h);
+      h.signaling.failure = const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 1006, null);
+      inFlight.complete();
+      h.signaling.gate = null;
+      await pumpEventQueue();
+      h.signaling.failure = null;
+
+      expect(h.errors.errors, isEmpty);
+      expect(deadline.isArmed, isFalse, reason: 'a request that never got there brings no offer to wait for');
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining, reason: 'the next handshake asks again');
+      expect(_quiet(h, room.a, 'a'), isTrue);
+    });
+
+    test('the session going takes the wait for its offer with it, deadline included', () async {
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      await _failMixer(room.mixer);
+      expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), hasLength(1));
+      expect(deadline.isArmed, isTrue);
+
+      // The request was taken, and then the socket dropped before the offer.
+      await _loseSession(h);
+
+      expect(deadline.isArmed, isFalse);
+
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining, reason: 'a dead session owes no offer');
+      expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), isEmpty);
+      expect(_quiet(h, room.a, 'a'), isTrue);
+    });
+
+    test('a rejoin that could not be sent on a session that is up is ended by the deadline', () async {
+      // Nothing will ask again - the session is there, so no handshake comes -
+      // and nothing says so either: the deadline that started with the
+      // request is what ends the wait.
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      h.signaling.failure = StateError('the request could not be encoded');
+
+      await _failMixer(room.mixer);
+      h.signaling.failure = null;
+      await pumpEventQueue();
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+      expect(deadline.isArmed, isTrue);
+
+      deadline.pass();
+      await _settle(h, () => !h.bloc.state.conference.isPresent);
+
+      expect(h.bloc.state.conference, const ConferenceState());
+      expect(_restored(h, room.a, 'a'), isTrue);
+    });
+
+    test('an answer the lost session reports as sent does not put the host in the room', () async {
+      // The request queue answers a request it could not send on a session
+      // that went meanwhile as if it had been sent. That acknowledgement is
+      // the lost session's: the room is not active, and the next session asks.
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      await _failMixer(room.mixer);
+      final inFlight = Completer<void>();
+      h.signaling.gate = inFlight;
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      h.signaling.gate = null;
+      await _loseSession(h);
+
+      inFlight.complete();
+      await pumpEventQueue();
+
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining, reason: 'the answer never left');
+      expect(deadline.isArmed, isFalse);
+
+      h.signaling.connected = true;
+      h.signaling.emitHandshake(_handshakeWithRoom());
+      await pumpEventQueue();
+
+      expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), hasLength(2));
+      expect(deadline.isArmed, isTrue);
+    });
+
+    test('a rejoin that failed with the old session does not end the room on the new one', () async {
+      // The old request's failure is handled when the next session is already
+      // up. Judged by the connection of that moment it would read as "could
+      // not be sent on a live session" and end the room.
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      final inFlight = Completer<void>();
+      h.signaling.gate = inFlight;
+      await _failMixer(room.mixer);
+      h.signaling.gate = null;
+      await _loseSession(h);
+      h.signaling.connected = true;
+
+      h.signaling.failure = const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 1006, null);
+      inFlight.complete();
+      await pumpEventQueue();
+      h.signaling.failure = null;
+
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+      expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), isEmpty);
+      expect(h.notifications, isEmpty);
+      expect(_quiet(h, room.a, 'a'), isTrue);
+
+      h.signaling.emitHandshake(_handshakeWithRoom());
+      await pumpEventQueue();
+
+      expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), hasLength(2));
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+    });
+
+    test('a refusal that comes back from the old session does not end the room on the new one', () async {
+      final h = _rejoinHarness();
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      final inFlight = Completer<void>();
+      h.signaling.gate = inFlight;
+      await _failMixer(room.mixer);
+      h.signaling.gate = null;
+      await _loseSession(h);
+      h.signaling.connected = true;
+      h.signaling.emitHandshake(_handshakeWithRoom());
+      await pumpEventQueue();
+
+      h.signaling.failure = const WebtritSignalingErrorException(1, 0, 'no_conference');
+      inFlight.complete();
+      await pumpEventQueue();
+      h.signaling.failure = null;
+
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+      expect(_quiet(h, room.a, 'a'), isTrue);
+    });
+
+    test('an answer that went with the session keeps the room, and the next session asks again', () async {
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      await _failMixer(room.mixer);
+
+      // The new offer arrives and the answer is on its way when the socket drops.
+      final inFlight = Completer<void>();
+      h.signaling.gate = inFlight;
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      final answering = h.peerFactory.created.last;
+      await _loseSession(h);
+      h.signaling.failure = const WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 1006, null);
+      inFlight.complete();
+      h.signaling.gate = null;
+      await pumpEventQueue();
+      h.signaling.failure = null;
+
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining, reason: 'not a failure to join');
+      expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), isEmpty);
+      expect(h.notifications, isEmpty);
+      expect(_quiet(h, room.a, 'a'), isTrue);
+
+      // The session comes back, with the room still standing.
+      h.signaling.connected = true;
+      h.signaling.emitHandshake(_handshakeWithRoom());
+      await pumpEventQueue();
+
+      expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), hasLength(2));
+      expect(answering.closes, 1, reason: 'the connection made for the lost answer is let go of');
+      expect(deadline.isArmed, isTrue);
+
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      await _settle(h, () => h.bloc.state.conference.phase == ConferencePhase.active);
+      expect(h.bloc.state.conference.phase, ConferencePhase.active);
+      expect(h.bloc.state.conference.legs, {'a': 0, 'b': 1});
+    });
+
+    test('an answer overtaken by a new request does not put the host in the room', () async {
+      // The answer is acknowledged, but by then the next session has been
+      // asked and the server is moving the host onto another handle.
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      await _failMixer(room.mixer);
+      final inFlight = Completer<void>();
+      h.signaling.gate = inFlight;
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      h.signaling.gate = null;
+      await _loseSession(h);
+      h.signaling.connected = true;
+      h.signaling.emitHandshake(_handshakeWithRoom());
+      await pumpEventQueue();
+
+      inFlight.complete();
+      await pumpEventQueue();
+
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+      expect(deadline.isArmed, isTrue, reason: 'the offer of the new request is still awaited');
+      expect(_quiet(h, room.a, 'a'), isTrue);
+    });
+
+    test('a reset of the calls takes the wait with the room', () async {
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      await _failMixer(room.mixer);
+      expect(deadline.isArmed, isTrue);
+
+      // The registration is lost: every call is completed and the room dropped.
+      h.signaling.emit(UnregisteredEvent());
+      await _settle(h, () => !h.bloc.state.conference.isPresent);
+
+      expect(h.bloc.state.conference, const ConferenceState());
+      expect(deadline.isArmed, isFalse);
+      deadline.pass();
+      await pumpEventQueue();
+      expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), isEmpty, reason: 'nothing is overdue');
+    });
+
+    test('an offer that arrives twice replaces the connection instead of reusing it', () async {
+      // Two rejoins that both reached the server: it moves the host onto a
+      // new handle for each, and the second offer is from the second handle.
+      final h = _rejoinHarness();
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      await _failMixer(room.mixer);
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      await _settle(h, () => h.bloc.state.conference.phase == ConferencePhase.active);
+      final second = h.peerFactory.created.last;
+
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      await _settle(h, () => h.peerFactory.created.length == 3);
+
+      expect(h.peerFactory.created, hasLength(3));
+      expect(second.closes, 1);
+      expect(h.peerFactory.created.last.remoteDescriptions, hasLength(1));
+      expect(h.bloc.state.conference.phase, ConferencePhase.active);
+      expect(h.notifications, isEmpty);
+    });
+
+    test('an offer that never follows the rejoin gives the calls back', () async {
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      await _failMixer(room.mixer);
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+      expect(deadline.isArmed, isTrue);
+
+      deadline.pass();
+      await _settle(h, () => !h.bloc.state.conference.isPresent);
+
+      expect(h.bloc.state.conference, const ConferenceState());
+      expect(_restored(h, room.a, 'a'), isTrue);
+      expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), hasLength(1));
+      expect(h.notifications.single, isA<ConferenceEndedNotification>());
+    });
+
+    test('a rejoin the server never answered is given the deadline too', () async {
+      // Whether it was taken is unknown, and the session may be up: with no
+      // deadline nothing would end the wait.
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      h.signaling.failure = const WebtritSignalingTransactionTimeoutException(1, 'tx');
+
+      await _failMixer(room.mixer);
+      h.signaling.failure = null;
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+      expect(deadline.isArmed, isTrue);
+      deadline.pass();
+      await _settle(h, () => !h.bloc.state.conference.isPresent);
+
+      expect(h.bloc.state.conference, const ConferenceState());
+      expect(_restored(h, room.a, 'a'), isTrue);
+    });
+
+    test('with the session down the room waits for the handshake instead of a deadline', () async {
+      // The module itself would take the request and keep it for the next
+      // session - where it would go out next to the one the handshake sends.
+      // So a session that is down is not handed it at all.
+      final deadline = ManualOfferDeadline();
+      final h = _rejoinHarness(deadline: deadline);
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      h.signaling.connected = false;
+
+      await _failMixer(room.mixer);
+      await pumpEventQueue();
+
+      expect(deadline.isArmed, isFalse);
+      expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), isEmpty);
+      expect(h.bloc.state.conference.phase, ConferencePhase.rejoining, reason: 'nothing was asked, nothing is overdue');
+      expect(_quiet(h, room.a, 'a'), isTrue);
+    });
+
+    test('a server without the request ends the room as before', () async {
+      final h = _harness();
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+
+      await _failMixer(room.mixer);
+
+      expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), isEmpty);
+      expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), hasLength(1));
+      expect(h.bloc.state.conference, const ConferenceState());
+      expect(_restored(h, room.a, 'a'), isTrue);
+      expect(h.notifications.single, isA<ConferenceEndedNotification>());
+    });
+
+    test('a connection that never reached the mixer is not asked for again', () async {
+      final h = _rejoinHarness();
+      addTearDown(h.close);
+      final a = h.seedEstablishedCall('a', line: 0);
+      h.seedEstablishedCall('b', line: 1);
+      await _merge(h, ['a', 'b']);
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+
+      await _failMixer(h.peerFactory.created.single);
+
+      expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), isEmpty);
+      expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), hasLength(1));
+      expect(h.bloc.state.conference, const ConferenceState());
+      expect(_restored(h, a, 'a'), isTrue);
+    });
+
+    test('a second connection that never comes up ends the room', () async {
+      final h = _rejoinHarness();
+      addTearDown(h.close);
+      final room = await _roomUp(h);
+      await _failMixer(room.mixer);
+      await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
+      await _settle(h, () => h.bloc.state.conference.phase == ConferencePhase.active);
+
+      await _failMixer(h.peerFactory.created.last);
+
+      expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), hasLength(1));
+      expect(h.bloc.state.conference, const ConferenceState());
+      expect(_restored(h, room.a, 'a'), isTrue);
+    });
   });
 
   test('a room that never arrives gives the calls back on a deadline of our own', () async {
