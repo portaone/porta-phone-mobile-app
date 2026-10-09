@@ -99,6 +99,7 @@ class AppRouter extends RootStackRouter {
           children: [
             AutoRoute(page: LoginModeSelectScreenPageRoute.page),
             AutoRoute(page: LoginCoreUrlAssignScreenPageRoute.page),
+            AutoRoute(page: LoginDeviceLimitScreenPageRoute.page),
             AutoRoute(
               page: LoginSwitchScreenPageRoute.page,
               children: [

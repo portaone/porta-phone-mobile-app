@@ -36,6 +36,7 @@ class AnonymizingFormatter extends ColorFormatter {
       r'"balance":\{[^}]+\}': '[REDACTED_BALANCE]',
       r'"bundle_id":"[^"]+"': '[REDACTED_BUNDLEID]',
       r'"config_token":"[^"]+"': '[REDACTED_CONFIGTOKEN]',
+      r'"pending_login_token":"[^"]+"': '[REDACTED_PENDINGLOGINTOKEN]',
       r'"login":"[^"]+"': '[REDACTED_LOGIN]',
       r'"password":"[^"]+"': '[REDACTED_PASSWORD]',
       r'"otp_id":"[^"]+"': '[REDACTED_OTPID]',

@@ -2,12 +2,30 @@ import 'package:logging/logging.dart';
 
 import 'package:api/api.dart';
 
+import 'package:webtrit_phone/mappers/mappers.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
 import '../system_info/system_info.dart';
 
 final _logger = Logger('AuthRepository');
+
+/// A login was refused because the account is signed in on as many devices as
+/// it is allowed.
+///
+/// Thrown by every call of [AuthRepository] that ends in a session. With a
+/// [pendingLogin] the backend is holding the login until one of the account's
+/// devices is signed out ([AuthRepository.completeLogin]); without one the
+/// places are taken by other accounts and nothing here can be signed out.
+class LoginDeviceLimitReached implements Exception {
+  const LoginDeviceLimitReached({this.pendingLogin});
+
+  final PendingLogin? pendingLogin;
+
+  // The token of the waiting login is left out: it finishes a login.
+  @override
+  String toString() => 'LoginDeviceLimitReached(devices to pick from: ${pendingLogin?.sessions.length ?? 0})';
+}
 
 /// Abstract interface defining the contract for authentication-related operations.
 ///
@@ -59,6 +77,17 @@ abstract class AuthRepository {
     Map<String, dynamic>? extraPayload,
   });
 
+  /// Finishes a login that was refused because the account is signed in on as
+  /// many devices as it is allowed, by signing the session [revokeSessionId] out.
+  ///
+  /// [pendingLoginToken] is what that refusal carried; no credentials are sent.
+  Future<SessionToken> completeLogin({
+    required String coreUrl,
+    required String tenantId,
+    required String pendingLoginToken,
+    required String revokeSessionId,
+  });
+
   /// Executes an arbitrary HTTP request (e.g., a callback) after a successful login.
   ///
   /// This is typically used in embedded flows where the host application
@@ -74,7 +103,7 @@ abstract class AuthRepository {
 /// This approach is necessary for the login business case where the user is
 /// attempting to connect to a custom Core URL that has not yet been validated
 /// or stored in the application's persistent settings.
-class AuthRepositoryImpl implements AuthRepository {
+class AuthRepositoryImpl with ActiveSessionApiMapper implements AuthRepository {
   AuthRepositoryImpl({
     required this.apiClientFactory,
     required this.systemInfoRemoteDatasource,
@@ -104,13 +133,16 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     final client = apiClientFactory.createWebtritApiClient(coreUrl: Uri.parse(coreUrl), tenantId: tenantId);
 
-    return await client.createSession(
-      SessionLoginCredential(
-        bundleId: _appBundleId,
-        type: PlatformInfo.appType,
-        identifier: _appIdentifier,
-        login: userRef,
-        password: password,
+    return _namingDeviceLimit(
+      tenantId,
+      () => client.createSession(
+        SessionLoginCredential(
+          bundleId: _appBundleId,
+          type: PlatformInfo.appType,
+          identifier: _appIdentifier,
+          login: userRef,
+          password: password,
+        ),
       ),
     );
   }
@@ -142,7 +174,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     final client = apiClientFactory.createWebtritApiClient(coreUrl: Uri.parse(coreUrl), tenantId: tenantId);
 
-    return await client.verifySessionOtp(sessionOtpProvisional, code);
+    return _namingDeviceLimit(tenantId, () => client.verifySessionOtp(sessionOtpProvisional, code));
   }
 
   @override
@@ -154,16 +186,61 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     final client = apiClientFactory.createWebtritApiClient(coreUrl: Uri.parse(coreUrl), tenantId: tenantId);
 
-    return await client.createUser(
-      SessionUserCredential(
-        bundleId: _appBundleId,
-        type: PlatformInfo.appType,
-        identifier: _appIdentifier,
-        email: email,
+    return _namingDeviceLimit(
+      tenantId,
+      () => client.createUser(
+        SessionUserCredential(
+          bundleId: _appBundleId,
+          type: PlatformInfo.appType,
+          identifier: _appIdentifier,
+          email: email,
+        ),
+        extraPayload: extraPayload,
+        options: RequestOptions.withExtraRetries(),
       ),
-      extraPayload: extraPayload,
-      options: RequestOptions.withExtraRetries(),
     );
+  }
+
+  @override
+  Future<SessionToken> completeLogin({
+    required String coreUrl,
+    required String tenantId,
+    required String pendingLoginToken,
+    required String revokeSessionId,
+  }) async {
+    final client = apiClientFactory.createWebtritApiClient(coreUrl: Uri.parse(coreUrl), tenantId: tenantId);
+
+    return _namingDeviceLimit(
+      tenantId,
+      () => client.completeSession(pendingLoginToken: pendingLoginToken, revokeSessionId: revokeSessionId),
+    );
+  }
+
+  /// Runs a call that ends in a session and turns the backend's device limit
+  /// refusal into [LoginDeviceLimitReached].
+  ///
+  /// The refusal is read here because this is where both halves of a waiting
+  /// login are known: the sessions and the token it carries, and the tenant the
+  /// request was made in, where finishing it has to be made too.
+  Future<T> _namingDeviceLimit<T>(String tenantId, Future<T> Function() request) async {
+    try {
+      return await request();
+    } on DeviceLimitReachedException catch (e) {
+      final token = e.pendingLoginToken;
+      final sessions = e.sessions.map(activeSessionFromApi).toList();
+      _logger.warning('Login refused for the device limit: $e');
+      if (token != null && sessions.isEmpty) {
+        // The backend holds the login and named no session this could read, so
+        // there is nothing to show to pick from.
+        _logger.severe('The device limit refusal carries a token and no readable session');
+      }
+
+      throw LoginDeviceLimitReached(
+        pendingLogin: token == null || sessions.isEmpty
+            ? null
+            : PendingLogin(token: token, tenantId: tenantId, sessions: sessions),
+      );
+    }
   }
 
   @override

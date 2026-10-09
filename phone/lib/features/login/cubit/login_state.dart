@@ -30,6 +30,8 @@ class LoginState with _$LoginState {
     this.passwordSigninPasswordInput = const PasswordInput.pure(),
     this.signupEmailInput = const EmailInput.pure(),
     this.signupCodeInput = const CodeInput.pure(),
+    this.pendingLogin,
+    this.pendingLoginRevokingSessionId,
   });
 
   @override
@@ -102,6 +104,16 @@ class LoginState with _$LoginState {
 
   @override
   final CodeInput signupCodeInput;
+
+  /// The login the backend is holding back until one of the account's devices
+  /// is signed out. The device limit screen is shown for as long as it is set.
+  @override
+  final PendingLogin? pendingLogin;
+
+  /// The session being signed out to finish [pendingLogin], while that request
+  /// is out.
+  @override
+  final String? pendingLoginRevokingSessionId;
 
   bool get hasValidSession =>
       coreUrl != null && tenantId != null && token != null && userId != null && systemInfo != null;

@@ -164,6 +164,7 @@ const String callerIdScreenId = 'callerIdScreen';
 const String chatConversationScreenId = 'chatConversationScreen';
 const String contactScreenId = 'contactScreen';
 const String loginCoreUrlScreenId = 'loginCoreUrlScreen';
+const String loginDeviceLimitScreenId = 'loginDeviceLimitScreen';
 const String loginModeScreenId = 'loginModeScreen';
 const String loginOtpRequestScreenId = 'loginOtpRequestScreen';
 const String loginOtpVerifyScreenId = 'loginOtpVerifyScreen';

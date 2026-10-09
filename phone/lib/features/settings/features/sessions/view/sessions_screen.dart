@@ -9,7 +9,6 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../cubit/sessions_cubit.dart';
-import '../widgets/widgets.dart';
 
 class SessionsScreen extends StatelessWidget {
   const SessionsScreen({super.key, required this.dateFormat});

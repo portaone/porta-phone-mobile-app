@@ -886,6 +886,22 @@ class LoginCoreUrlAssignScreenPageRoute extends PageRouteInfo<void> {
 }
 
 /// generated route for
+/// [LoginDeviceLimitScreenPage]
+class LoginDeviceLimitScreenPageRoute extends PageRouteInfo<void> {
+  const LoginDeviceLimitScreenPageRoute({List<PageRouteInfo>? children})
+    : super(LoginDeviceLimitScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'LoginDeviceLimitScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return LoginDeviceLimitScreenPage();
+    },
+  );
+}
+
+/// generated route for
 /// [LoginModeSelectScreenPage]
 class LoginModeSelectScreenPageRoute extends PageRouteInfo<void> {
   const LoginModeSelectScreenPageRoute({List<PageRouteInfo>? children})

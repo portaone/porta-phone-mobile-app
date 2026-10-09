@@ -531,6 +531,16 @@ extension AppLocalizationsExtension on AppLocalizations {
         login_RequestFailureDeliveryChannelUnspecifiedPhoneError,
       'login_RequestFailureDeliveryChannelUnspecifiedEmailError' =>
         login_RequestFailureDeliveryChannelUnspecifiedEmailError,
+      'login_RequestFailureDeviceLimitReachedError' =>
+        login_RequestFailureDeviceLimitReachedError,
+      'login_RequestFailureDeviceLimitStillReachedError' =>
+        login_RequestFailureDeviceLimitStillReachedError,
+      'login_RequestFailureDeviceSwitchLimitReachedError' =>
+        login_RequestFailureDeviceSwitchLimitReachedError,
+      'login_RequestFailurePendingLoginNotFoundError' =>
+        login_RequestFailurePendingLoginNotFoundError,
+      'login_RequestFailurePendingLoginSessionNotFoundError' =>
+        login_RequestFailurePendingLoginSessionNotFoundError,
       'login_RequestFailureEmptyEmailError' =>
         login_RequestFailureEmptyEmailError,
       'login_RequestFailureIdentifierIsNotValid' =>
@@ -579,6 +589,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         login_TextFieldLabelText_signupCode,
       'login_TextFieldLabelText_signupEmail' =>
         login_TextFieldLabelText_signupEmail,
+      'login_Text_deviceLimitDescription' => login_Text_deviceLimitDescription,
+      'login_Text_deviceLimitTitle' => login_Text_deviceLimitTitle,
       'login_Text_otpSigninRequestPostDescription' =>
         login_Text_otpSigninRequestPostDescription,
       'login_Text_otpSigninRequestPreDescription' =>

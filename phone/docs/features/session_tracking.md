@@ -1,9 +1,10 @@
 # Session tracking
 
 The settings screen that lists the sessions the account is signed in with and
-lets the user sign the other ones out.
+lets the user sign the other ones out; and the screen shown at login when the
+account is signed in on as many devices as it is allowed.
 
-Last reviewed: 2026-08-13
+Last reviewed: 2026-10-10
 
 ## Where it lives
 
@@ -13,13 +14,14 @@ Last reviewed: 2026-08-13
       cubit on open and passes the `DateFormat` taken from `AppTime`.
     - `view/sessions_screen.dart` - app bar, pull-to-refresh list, placeholders
       (how every list refreshes: [`../data_refresh.md`](../data_refresh.md)).
-    - `widgets/session_tile.dart` - one session row.
 - `lib/features/settings/view/settings_router_page.dart` - owns the
   `SessionsCubit`, above both the settings screen and the sessions screen.
 - `lib/features/settings/widgets/sessions_list_tile.dart` - the settings row
   with the session-count badge.
 - `lib/repositories/sessions/sessions_repository.dart` - `SessionsRepository`
   and its API implementation.
+- `lib/widgets/session_tile.dart` - one session row, shared with the device
+  limit screen of the login.
 - `lib/models/active_session.dart` - `ActiveSession`, the domain model.
 - `lib/mappers/api/active_session_mapper.dart` - `api.UserSession` ->
   `ActiveSession`.
@@ -106,6 +108,45 @@ that cannot load.
   failure still shows exactly what survived; the snack bar reports that
   something failed.
 
+## Device limits at login
+
+A PortaPhone package can limit how many devices an account is signed in on and
+how many new devices it starts using within a period. The backend checks both
+after it has accepted the credentials, on every call that ends in a session.
+
+| Answer                                                                              | What the app does                                                                                                                                             |
+|-------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 409 `device_limit_reached`, with the account's sessions and a `pending_login_token` | The login waits: the device limit screen lists the devices; signing one out finishes the login with `POST /session/complete`, no password or code asked again |
+| the same without a token                                                            | Message: device limit reached, contact your administrator                                                                                                     |
+| 403 `device_switch_limit_reached`                                                   | Message: device switch limit reached, contact your administrator                                                                                              |
+| `/session/complete`: 409 again                                                      | The list is replaced by the one in the answer, with a message                                                                                                 |
+| `/session/complete`: 404 `session_not_found`                                        | That device leaves the list; the token is still good                                                                                                          |
+| `/session/complete`: 404 `pending_login_not_found`                                  | Back to where the login started, with a message                                                                                                               |
+
+- `packages/api` names the refusals (`DeviceLimitReachedException`,
+  `DeviceSwitchLimitReachedException`, `PendingLoginNotFoundException`,
+  `PendingLoginSessionNotFoundException`) and has `completeSession`.
+- `lib/repositories/auth/auth_repository.dart` turns the first into
+  `LoginDeviceLimitReached` carrying a `PendingLogin` (`lib/models/pending_login.dart`):
+  the token, the devices as `ActiveSession` and the tenant of the refused request.
+- `lib/features/login/cubit/login_cubit.dart` keeps the waiting login in
+  `LoginState.pendingLogin`. The screen is there for as long as it is set; the
+  app keeps no time of its own - the backend says when the wait is over.
+- `lib/features/login/view/login_device_limit_screen.dart` - the screen, the
+  last route of `LoginRouterPage`. It cannot be left while a device is being
+  signed out.
+
+A one-time code that led to a refusal was accepted and is spent, so the flow
+that verified it returns to where a code is requested. Auto-provision does not
+handle these answers yet.
+
+Known limit of the backend: with the account over its limit by two or more
+devices, signing one out is rolled back and the same list comes again, so the
+login cannot be finished from the app.
+
+The identifier that tells one device from another is described in
+[`../startup.md`](../startup.md) (`app-info`).
+
 ## Tests
 
 - `packages/api/test/api_test.dart` - the two endpoints,
@@ -115,10 +156,15 @@ that cannot load.
   it is the same string presence uses as the device name.
 - `test/features/settings/features/sessions/cubit/sessions_cubit_test.dart` -
   fetch, single revoke, revoke-all-others incl. partial failure.
-- `test/features/settings/features/sessions/widgets/session_tile_test.dart` -
+- `test/widgets/session_tile_test.dart` -
   row title per app type, current-session badge, revoke action.
 - `test/features/settings/widgets/sessions_list_tile_test.dart` - the settings
   row and its count badge.
 - `test/data/settings_mapper_test.dart` - the core-version gate behind
   `sessionsEnabled`.
 - `test/app/core_version_test.dart` - `supportsSessionTracking` boundaries.
+- `test/features/login/login_cubit_device_limit_test.dart`,
+  `test/features/login/login_device_limit_semantics_test.dart`,
+  `test/repository/auth_repository_device_limit_test.dart`,
+  `packages/api/test/api_client_device_limits_test.dart` - the device limits
+  at login.

@@ -116,6 +116,59 @@ final class LoginIncorrectCredentialsNotification extends MessageNotification {
   }
 }
 
+/// The account is signed in on as many devices as it is allowed and none of
+/// them is this account's to sign out.
+final class LoginDeviceLimitReachedNotification extends MessageNotification {
+  const LoginDeviceLimitReachedNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.login_RequestFailureDeviceLimitReachedError;
+  }
+}
+
+/// A device was signed out to make room and the account is over its limit
+/// still.
+final class LoginDeviceLimitStillReachedNotification extends MessageNotification {
+  const LoginDeviceLimitStillReachedNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.login_RequestFailureDeviceLimitStillReachedError;
+  }
+}
+
+/// The account has started using as many new devices as it is allowed within
+/// the period.
+final class LoginDeviceSwitchLimitReachedNotification extends MessageNotification {
+  const LoginDeviceSwitchLimitReachedNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.login_RequestFailureDeviceSwitchLimitReachedError;
+  }
+}
+
+/// The login left waiting ran out, or nothing is left to finish it with.
+final class LoginPendingLoginNotFoundNotification extends MessageNotification {
+  const LoginPendingLoginNotFoundNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.login_RequestFailurePendingLoginNotFoundError;
+  }
+}
+
+/// The device picked to be signed out is signed out already.
+final class LoginPendingLoginSessionNotFoundNotification extends MessageNotification {
+  const LoginPendingLoginSessionNotFoundNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.login_RequestFailurePendingLoginSessionNotFoundError;
+  }
+}
+
 /// The login failure the app has no particular wording for.
 ///
 /// It exists so that an attempt never ends in silence: a form that merely stops

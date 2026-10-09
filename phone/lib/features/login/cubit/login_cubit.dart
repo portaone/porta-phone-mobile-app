@@ -361,6 +361,7 @@ class LoginCubit extends Cubit<LoginState> {
       );
     } catch (e, s) {
       emit(state.copyWith(processing: false));
+      if (_isDeviceLimitRefusal(e)) loginOptSigninVerifyBack();
 
       handleError(e, s, 'LoginSignupVerifySubmitted');
     }
@@ -418,7 +419,9 @@ class LoginCubit extends Cubit<LoginState> {
     required String password,
     required String errorContext,
   }) async {
-    if (state.processing) return;
+    // A login already left waiting is answered on the device limit screen; a
+    // code still in front of the camera under it must not start another one.
+    if (state.processing || state.pendingLogin != null) return;
 
     emit(state.copyWith(processing: true));
 
@@ -511,7 +514,10 @@ class LoginCubit extends Cubit<LoginState> {
       _applyLoginResult(result, propagatedTenantId: tenantId);
     } catch (e, s) {
       handleError(e, s, 'LoginSignupVerifySubmitted');
-      emit(state.copyWith(processing: false, embeddedRequestError: e));
+      // The device limits are told to the user by the cubit itself - on the
+      // device limit screen or in a message - so the error dialog of the
+      // embedded page, which words a failed request, stays away.
+      emit(state.copyWith(processing: false, embeddedRequestError: _isDeviceLimitRefusal(e) ? null : e));
     }
   }
 
@@ -617,6 +623,7 @@ class LoginCubit extends Cubit<LoginState> {
         ),
       );
     } catch (e, s) {
+      if (_isDeviceLimitRefusal(e)) loginSignupVerifyBack();
       handleError(e, s, 'LoginSignupVerifySubmitted');
       emit(state.copyWith(processing: false));
     }
@@ -630,8 +637,145 @@ class LoginCubit extends Cubit<LoginState> {
     loginSignupRequestSubmitted();
   }
 
+  // LoginDeviceLimit
+
+  /// Signs the picked device out and finishes the login left waiting.
+  ///
+  /// The login is the one the backend accepted before refusing it for the
+  /// device limit, so nothing is asked of the user again.
+  Future<void> loginDeviceLimitSessionPicked(String sessionId) async {
+    final pendingLogin = state.pendingLogin;
+    if (state.processing || pendingLogin == null) return;
+
+    emit(state.copyWith(processing: true, pendingLoginRevokingSessionId: sessionId));
+
+    try {
+      final sessionToken = await authRepository.completeLogin(
+        coreUrl: state.coreUrl!,
+        tenantId: pendingLogin.tenantId,
+        pendingLoginToken: pendingLogin.token,
+        revokeSessionId: sessionId,
+      );
+
+      // An embedded page shown as the launch screen signs up before the system
+      // info is read; the refusal came out of that request, so the steps that
+      // follow it there are made here.
+      if (state.systemInfo == null) {
+        final systemInfo = await _loadAndValidateSystemInfo(state.coreUrl!, pendingLogin.tenantId);
+        if (systemInfo == null) {
+          // The backend and this build do not fit, and the user has been told:
+          // there is no session to enter, whatever the login came to.
+          _dropPendingLogin();
+          return;
+        }
+        emit(state.copyWith(systemInfo: systemInfo));
+      }
+      if (state.embeddedCallbackData case final callbackData?) {
+        await authRepository.executePostLoginHttpRequest(RawHttpRequest.fromJson(callbackData));
+      }
+
+      // does not set processing to false to hold processing widgets state during navigation
+      emit(
+        state.copyWith(
+          tenantId: sessionToken.tenantId ?? pendingLogin.tenantId,
+          token: sessionToken.token,
+          // Use an empty user ID as a fallback for outdated core versions that do not support this field.
+          userId: sessionToken.userId ?? '',
+        ),
+      );
+    } on PendingLoginSessionNotFoundException catch (e) {
+      _logger.warning('Known login error occurred: $e', e);
+      _onPendingLoginSessionGone(pendingLogin, sessionId);
+    } on PendingLoginNotFoundException catch (e) {
+      _logger.warning('Known login error occurred: $e', e);
+      _dropPendingLogin();
+      notificationsBloc.add(const NotificationsSubmitted(LoginPendingLoginNotFoundNotification()));
+    } catch (e, s) {
+      emit(state.copyWith(processing: false, pendingLoginRevokingSessionId: null));
+
+      handleError(e, s, 'LoginDeviceLimitSessionPicked');
+    }
+  }
+
+  /// Ignored while a device is being signed out: the answer to that request
+  /// belongs to the login being left, and the screen does not let go of it.
+  void loginDeviceLimitBack() {
+    if (state.processing) return;
+
+    _dropPendingLogin();
+  }
+
+  /// The device limit was met: either the login is left waiting for one of the
+  /// account's devices to be signed out, or the places are taken by other
+  /// accounts and there is nothing to pick here.
+  void _onDeviceLimitReached(LoginDeviceLimitReached error) {
+    final pendingLogin = error.pendingLogin;
+
+    if (pendingLogin == null) {
+      _dropPendingLogin();
+      notificationsBloc.add(const NotificationsSubmitted(LoginDeviceLimitReachedNotification()));
+      return;
+    }
+
+    // Refused again while already waiting: the device signed out was not
+    // enough, and the list on screen is replaced by the one that is true now.
+    final stillReached = state.pendingLogin != null;
+
+    emit(state.copyWith(processing: false, pendingLogin: pendingLogin, pendingLoginRevokingSessionId: null));
+
+    if (stillReached) {
+      notificationsBloc.add(const NotificationsSubmitted(LoginDeviceLimitStillReachedNotification()));
+    }
+  }
+
+  /// The session picked was signed out by somebody else in the meantime. The
+  /// login is still waiting, so the rest of the list stays to pick from.
+  void _onPendingLoginSessionGone(PendingLogin pendingLogin, String sessionId) {
+    final remaining = pendingLogin.withoutSession(sessionId);
+
+    if (remaining.sessions.isEmpty) {
+      // Nothing left to pick, and a place has just been freed: signing in
+      // again is the way through.
+      _dropPendingLogin();
+      notificationsBloc.add(const NotificationsSubmitted(LoginPendingLoginNotFoundNotification()));
+      return;
+    }
+
+    emit(state.copyWith(processing: false, pendingLogin: remaining, pendingLoginRevokingSessionId: null));
+    notificationsBloc.add(const NotificationsSubmitted(LoginPendingLoginSessionNotFoundNotification()));
+  }
+
+  /// Leaves the device limit behind and returns to where the login started.
+  void _dropPendingLogin() {
+    emit(state.copyWith(processing: false, pendingLogin: null, pendingLoginRevokingSessionId: null));
+  }
+
+  /// Whether the login was refused for a device limit.
+  ///
+  /// The limits are checked after the credentials, which is what the callers
+  /// read from it: a one-time code refused this way was accepted and is spent,
+  /// so the flow that verified it leaves the screen asking for it (a code
+  /// waiting on another tab is still good); and the user is told by the cubit
+  /// itself, on the device limit screen or in a message.
+  bool _isDeviceLimitRefusal(Object error) {
+    return error is LoginDeviceLimitReached || error is DeviceSwitchLimitReachedException;
+  }
+
   void handleError(Object error, StackTrace stackTrace, String context) {
+    if (error is LoginDeviceLimitReached) {
+      _logger.warning('Known login error occurred: $error', error);
+      _onDeviceLimitReached(error);
+      return;
+    }
+
     if (error is RequestFailure) {
+      if (error is DeviceSwitchLimitReachedException) {
+        _logger.warning('Known login error occurred: $error', error);
+        _dropPendingLogin();
+        notificationsBloc.add(const NotificationsSubmitted(LoginDeviceSwitchLimitReachedNotification()));
+        return;
+      }
+
       if (error is UserNotFoundException) {
         _logger.warning('Known login error occurred: $error', error);
         notificationsBloc.add(NotificationsSubmitted(const LoginUserNotFoundNotification()));
