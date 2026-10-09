@@ -884,9 +884,10 @@ void main() {
     // The legs are quiet from the acknowledgement. The server has a deadline
     // and announces it, but it announces it as an event, and a socket that
     // drops in between takes that word with it.
+    final deadline = ManualOfferDeadline();
     final h = CallBlocHarness(
       capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true),
-      conferenceAssemblyTimeout: const Duration(milliseconds: 20),
+      offerDeadline: deadline,
     );
     addTearDown(h.close);
     final a = h.seedEstablishedCall('a', line: 0);
@@ -894,9 +895,8 @@ void main() {
     await _merge(h, ['a', 'b']);
     expect(_quiet(h, a, 'a'), isTrue);
 
-    // This one is a real timer, so it takes real time: three times the
-    // deadline, then the queues.
-    await Future<void>.delayed(const Duration(milliseconds: 60));
+    expect(deadline.isArmed, isTrue);
+    deadline.pass();
     await _settle(h, () => !h.bloc.state.conference.isPresent);
 
     expect(h.bloc.state.conference, const ConferenceState());
@@ -990,9 +990,10 @@ void main() {
     // Answering is a media round trip and then a request. Held inside the
     // mutation queue it would block the very deadline that exists to end
     // this wait, and the legs would stay silent for as long as it took.
+    final deadline = ManualOfferDeadline();
     final h = CallBlocHarness(
       capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true),
-      conferenceAssemblyTimeout: const Duration(milliseconds: 20),
+      offerDeadline: deadline,
     );
     addTearDown(h.close);
     final a = h.seedEstablishedCall('a', line: 0);
@@ -1002,8 +1003,7 @@ void main() {
     h.signaling.gate = stalled;
 
     await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
-    // A real timer, so real time: three times the deadline, then the queues.
-    await Future<void>.delayed(const Duration(milliseconds: 60));
+    deadline.pass();
     await _settle(h, () => !h.bloc.state.conference.isPresent);
 
     expect(h.bloc.state.conference.isPresent, isFalse);
@@ -1021,12 +1021,12 @@ void main() {
     // an answer naming the old room looks like it could be about this one.
     // What tells them apart is which attempt asked for it.
     //
-    // The deadline is long enough here that the second room is still
-    // assembling when the first room's answer arrives; only the first one is
-    // waited out.
+    // The deadline is in the test's hands: it passes for the first room and
+    // never for the second, which a clock on a busy machine could not promise.
+    final deadline = ManualOfferDeadline();
     final h = CallBlocHarness(
       capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true),
-      conferenceAssemblyTimeout: const Duration(milliseconds: 100),
+      offerDeadline: deadline,
     );
     addTearDown(h.close);
     h.seedEstablishedCall('a', line: 0);
@@ -1035,7 +1035,7 @@ void main() {
     final stalled = Completer<void>();
     h.signaling.gate = stalled;
     await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
-    await Future<void>.delayed(const Duration(milliseconds: 250));
+    deadline.pass();
     await _settle(h, () => !h.bloc.state.conference.isPresent);
 
     // A second merge is under way when the first room's answer finally goes.

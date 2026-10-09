@@ -164,13 +164,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// The host's connection to the conference room's mixer; idle without a room.
   late final ConferencePeerConnection _conferencePeerConnection;
 
-  /// Runs while a merge waits for the room's offer; see [_armConferenceAssembly].
-  Timer? _conferenceAssemblyTimer;
-
-  /// Which room this client is on its way into, or holds. Bumped whenever
-  /// that changes, so that work started for an earlier one - answering the
-  /// mixer takes a media round trip - can tell it is no longer wanted.
-  int _conferenceAttempt = 0;
+  /// The wait for the mixer's offer after a merge: which attempt is current,
+  /// and the deadline; see [_armConferenceAssembly].
+  late final RoomOfferWait _offerWait;
 
   /// Keeps the platform's mute for every leg in step with the room's, and
   /// tells this client's own echoes from a person pressing mute.
@@ -220,11 +216,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     this.conferenceAssemblyTimeout = const Duration(seconds: 20),
     bool Function()? speakerOnMinimize,
     CallMediaManager? mediaManager,
+    Timer Function(Duration, void Function())? roomOfferDeadlineTimer,
   }) : _onMissedCall = onMissedCall,
        _connectivityService = connectivityService,
        _speakerOnMinimize = SpeakerOnMinimize(isEnabled: speakerOnMinimize ?? () => false),
        super(const CallState()) {
     _mediaManager = mediaManager ?? CallMediaManager(callkeep: callkeep);
+    _offerWait = RoomOfferWait(timeout: conferenceAssemblyTimeout, createTimer: roomOfferDeadlineTimer);
     _signalingModule = signalingModule;
     _callPeerConnectionManager = callPeerConnectionManager;
     _handshakeProcessor = HandshakeProcessor(queuedTerminationRequestsRepository: queuedTerminationRequestsRepository);
@@ -333,7 +331,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     _presenceInfoSyncTimer?.cancel();
 
-    _conferenceAssemblyTimer?.cancel();
+    _offerWait.dispose();
     _iceRestartDebounce.dispose();
 
     _slowlinkDebounce.dispose();
@@ -4771,7 +4769,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _logger.warning('__onMutationControlMerge: a room appeared while this merge was being acknowledged');
       return;
     }
-    _conferenceAttempt++;
+    _offerWait.begin();
     emit(
       state.copyWith(
         conference: ConferenceState(phase: ConferencePhase.assembling, legs: legs),
@@ -4885,7 +4883,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // hold the mutation queue: while it does, the deadline that gives the
     // calls back cannot run, and neither can the host's own End - the legs
     // would stay silent for as long as the answer takes.
-    unawaited(_answerRoom(e.room, e.jsep, _conferenceAttempt));
+    unawaited(_answerRoom(e.room, e.jsep, _offerWait.attempt));
   }
 
   /// Builds the connection to the mixer and sends the answer, off the queue.
@@ -4896,18 +4894,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   Future<void> _answerRoom(int room, JsepValue jsep, int attempt) async {
     try {
       final answer = await _conferencePeerConnection.answer(room: room, offer: jsep.toDescription());
-      if (attempt != _conferenceAttempt) return;
+      if (!_offerWait.isCurrent(attempt)) return;
       final sent = await _executeConferenceRequest(
         ConferenceAnswerRequest(transaction: WebtritSignalingClient.generateTransactionId(), jsep: answer.toMap()),
         source: '_answerRoom',
       );
-      if (attempt != _conferenceAttempt) return;
+      if (!_offerWait.isCurrent(attempt)) return;
       // An answer the session could not carry leaves the server waiting and
       // this client silent: it is a failure to join, not a room.
       add(sent ? _CallMutationEvent.conferenceAnswered(room) : const _CallMutationEvent.conferenceAnswerFailed());
     } catch (error, stackTrace) {
       callErrorReporter.handle(error, stackTrace, '_answerRoom error');
-      if (attempt == _conferenceAttempt) add(const _CallMutationEvent.conferenceAnswerFailed());
+      if (_offerWait.isCurrent(attempt)) add(const _CallMutationEvent.conferenceAnswerFailed());
     }
   }
 
@@ -4917,7 +4915,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _logger.warning('__onMutationConferenceAnswered: ${e.room} is not the room here');
       return;
     }
-    _conferenceAssemblyTimer?.cancel();
+    _offerWait.offerAnswered();
     emit(state.copyWith(conference: state.conference.copyWith(phase: ConferencePhase.active)));
   }
 
@@ -5028,13 +5026,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// but it announces it as an event, and events are not replayed - so a
   /// socket that drops in between takes that word with it and would leave
   /// both calls silent in both directions until it comes back.
-  void _armConferenceAssembly() {
-    _conferenceAssemblyTimer?.cancel();
-    _conferenceAssemblyTimer = Timer(conferenceAssemblyTimeout, () {
-      if (state.conference.phase != ConferencePhase.assembling || isClosed) return;
-      _logger.warning('the conference room never arrived, giving the calls back');
-      add(const _CallMutationEvent.conferenceLost());
-    });
+  void _armConferenceAssembly() => _offerWait.arm(_onRoomOfferOverdue);
+
+  void _onRoomOfferOverdue() {
+    if (state.conference.phase != ConferencePhase.assembling || isClosed) return;
+    _logger.warning('the conference room never arrived, giving the calls back');
+    add(const _CallMutationEvent.conferenceLost());
   }
 
   /// Ends the room on the server. Sent and not waited on: this client has
@@ -5311,8 +5308,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// call every former leg stays locally silent and is asked to hold instead.
   /// Returns the ids of the surviving legs.
   Future<List<String>> _leaveRoom(Emitter<CallState> emit, {required bool restoreLegs}) async {
-    _conferenceAssemblyTimer?.cancel();
-    _conferenceAttempt++;
+    _offerWait.end();
     _legMutes.forgetAll();
     final legIds = state.conference.legIds.toList();
     final focused = state.focusedCall?.callId;

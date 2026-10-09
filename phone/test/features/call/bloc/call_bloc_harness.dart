@@ -48,7 +48,7 @@ class CallBlocHarness {
     CallCapabilitiesConfig capabilities = const CallCapabilitiesConfig(),
     bool Function()? speakerOnMinimize,
     CallMediaManager Function(Callkeep callkeep)? mediaManager,
-    Duration conferenceAssemblyTimeout = const Duration(seconds: 20),
+    ManualOfferDeadline? offerDeadline,
     FakePeerConnectionFactory? peerConnectionFactory,
     ContactResolver? contactResolver,
   }) : peerFactory = peerConnectionFactory ?? FakePeerConnectionFactory() {
@@ -78,7 +78,7 @@ class CallBlocHarness {
       signalingModule: signaling,
       callPeerConnectionManager: peers,
       connectivityService: _FakeConnectivityService(),
-      conferenceAssemblyTimeout: conferenceAssemblyTimeout,
+      roomOfferDeadlineTimer: offerDeadline?.createTimer,
     );
   }
 
@@ -164,6 +164,44 @@ class CallBlocHarness {
         messenger.setMockMethodCallHandler(MethodChannel(channel), null);
       }
     });
+  }
+}
+
+/// The deadline for the room's offer in the test's hands: whether it runs is
+/// read, and it passes when the test says so. No real time is waited for, so
+/// a slow machine cannot let it pass early or late.
+class ManualOfferDeadline {
+  _ManualTimer? _timer;
+
+  /// The timer the bloc's wait is given instead of a clock's.
+  Timer createTimer(Duration duration, void Function() onOverdue) => _timer = _ManualTimer(onOverdue);
+
+  /// Whether a deadline is running now.
+  bool get isArmed => _timer?.isActive ?? false;
+
+  /// The deadline passes; nothing happens when none is running.
+  void pass() => _timer?.fire();
+}
+
+class _ManualTimer implements Timer {
+  _ManualTimer(this._onOverdue);
+
+  final void Function() _onOverdue;
+  bool _active = true;
+
+  @override
+  bool get isActive => _active;
+
+  @override
+  int get tick => 0;
+
+  @override
+  void cancel() => _active = false;
+
+  void fire() {
+    if (!_active) return;
+    _active = false;
+    _onOverdue();
   }
 }
 
