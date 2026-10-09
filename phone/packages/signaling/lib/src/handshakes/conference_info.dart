@@ -5,7 +5,7 @@ import '../events/conference/conference_participant.dart';
 /// The conference running on this signalling session, as the `state` handshake
 /// reports it. A conference outlives a signalling drop while the media
 /// server stays up, so a reconnecting client reconciles against this: it ends a
-/// room it cannot rejoin, forgets one the server no longer has, and adopts the
+/// room it holds no record of, forgets one the server no longer has, and adopts the
 /// server's participants when both sides have one.
 class ConferenceInfo extends Equatable {
   const ConferenceInfo({required this.room, this.participants = const []});

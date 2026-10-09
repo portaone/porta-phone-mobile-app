@@ -29,6 +29,7 @@ extension ConferenceRefusalReasonL10n on ConferenceRefusalReason {
       case ConferenceRefusalReason.roomCreateFailed:
       case ConferenceRefusalReason.attachFailed:
       case ConferenceRefusalReason.invalidMuted:
+      case ConferenceRefusalReason.conferenceNotEstablished:
       case ConferenceRefusalReason.lineInConference:
       case ConferenceRefusalReason.unknown:
         return context.l10n.conferenceRefusal_unavailable;

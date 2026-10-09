@@ -36,6 +36,7 @@ abstract class SessionRequest extends Request {
     ConferenceIceTrickleRequest.typeValue: ConferenceIceTrickleRequest.fromJson,
     ConferenceMuteRequest.typeValue: ConferenceMuteRequest.fromJson,
     ConferenceRemoveRequest.typeValue: ConferenceRemoveRequest.fromJson,
+    ConferenceRejoinRequest.typeValue: ConferenceRejoinRequest.fromJson,
     ConferenceHangupRequest.typeValue: ConferenceHangupRequest.fromJson,
   };
 }

@@ -10,6 +10,7 @@ void main() {
       'not_enough_lines': ConferenceRefusalReason.notEnoughLines,
       'line_without_active_call': ConferenceRefusalReason.lineWithoutActiveCall,
       'no_conference': ConferenceRefusalReason.noConference,
+      'conference_not_established': ConferenceRefusalReason.conferenceNotEstablished,
       'line_already_in_conference': ConferenceRefusalReason.lineAlreadyInConference,
       'line_not_in_conference': ConferenceRefusalReason.lineNotInConference,
       'line_not_ready': ConferenceRefusalReason.lineNotReady,
