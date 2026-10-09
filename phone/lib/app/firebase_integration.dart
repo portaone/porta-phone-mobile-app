@@ -27,7 +27,7 @@ abstract interface class FirebaseIntegration {
   AppAnalyticsRepository get analytics;
 }
 
-/// Firebase-free integration: no platform init, the local id provider, the local
+/// Firebase-free integration: no platform init, the device id provider, the local
 /// cache as the remote config source, and no-op analytics.
 class FirebaseIntegrationDisabled implements FirebaseIntegration {
   const FirebaseIntegrationDisabled();
@@ -36,7 +36,7 @@ class FirebaseIntegrationDisabled implements FirebaseIntegration {
   Future<void> initPlatform(StartupTrace startupTrace) async {}
 
   @override
-  AppIdProvider get appIdProvider => const SharedPreferencesAppIdProvider();
+  AppIdProvider get appIdProvider => DeviceAppIdProvider(fallback: SharedPreferencesAppIdProvider.new);
 
   @override
   Future<RemoteConfigService> remoteConfig(DefaultRemoteCacheConfigService cache) async => cache;

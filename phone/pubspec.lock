@@ -441,6 +441,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.33.0"
+  durable_device_id:
+    dependency: "direct main"
+    description:
+      name: durable_device_id
+      sha256: "982a4cbae8993e50f569dbbc481eb102b2b118cc6d5e96c462fffc87fd730e41"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   emoji_picker_flutter:
     dependency: "direct main"
     description:

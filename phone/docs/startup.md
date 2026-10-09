@@ -115,8 +115,11 @@ fetched. Closed.
    be awaited on the startup path. Largest single controllable number in the trace.
 
 2. **`app-info`.** Now the longest member of the wave when the keychain is not, 96 ms
-   median with spikes past 400. It resolves an installation identifier through Firebase;
-   worth checking what part of that is cache-able across launches.
+   median with spikes past 400. When measured it resolved an installation identifier through
+   Firebase. Since WT-2087 the identifier comes from the device (`durable_device_id`: a digest
+   of ANDROID_ID, a Keychain item on iOS), asked on every start; an install made by an earlier
+   version keeps the identifier it saved, and Firebase is asked only when the device has none
+   to give (`lib/common/app_id_provider.dart`). Not measured again since.
 
 3. **Something to show while the shell resolves.** The guard waits for cached system info
    even today. Any work that makes the first frame earlier is only worth doing together
