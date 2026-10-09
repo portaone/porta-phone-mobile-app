@@ -3,7 +3,7 @@
 Merging the calls a person already holds into one room where everybody hears
 everybody. The room is the server's - a Janus AudioBridge the backend builds
 and owns - and this client asks for it, joins it, and follows what it says.
-Last reviewed: 2026-09-28.
+Last reviewed: 2026-10-09.
 
 The wire format, every refusal reason and the obligations this client is held
 to are in
@@ -56,7 +56,7 @@ in it.
 | field | what it is |
 |---|---|
 | `room` | the number the server assigned, from its offer; `null` before it |
-| `phase` | `none` / `assembling` / `active` |
+| `phase` | `none` / `assembling` / `active` / `rejoining` |
 | `legs` | this client's own record: the calls it put in, by call id, with the line each is on |
 | `participants` | the server's list as last sent; the host is never in it |
 | `selfMuted` | whether the host's microphone is off towards the room |
@@ -326,7 +326,7 @@ client's own state - and all four combinations mean something:
 
 | the server | this client | what happens |
 |---|---|---|
-| a room | the same room | kept; the handshake's participant list is the membership, as an update would be |
+| a room | the same room | kept; the handshake's participant list is the membership, as an update would be. If this client was on its way back into it (`rejoining`), the server is asked for the room's offer again |
 | a room | nothing | ended on the server: nobody here is connected to its mixer |
 | a room | a different room | the server's is ended and this one is dropped, legs back to ordinary calls |
 | nothing | a room | dropped here, legs back to ordinary calls |
@@ -335,14 +335,90 @@ What "this client's room" means is the room id, and it is recorded **before**
 the offer is answered. The handshake handler runs outside every queue, so one
 landing mid-answer would otherwise find a client with no room and hang up the
 room it was in the middle of joining. A merge still assembling has no id yet,
-and the server sends one offer per room - there is nothing to come back to, so
-it is ended.
+and the server does not send that first offer again - there is nothing to come
+back to, so it is ended.
 
 The session snapshot the foreground-service hub replays carries the conference
 block too. Protocol events are never replayed, so a room built while the app
 isolate was detached would be invisible to whoever attached afterwards; the
 snapshot is how that subscriber learns of a room it is not connected to and
 must end.
+
+## A lost mixer connection
+
+A network outage on the host takes every peer connection's path with it. The
+calls come back with an ICE restart; the connection to the mixer cannot - the
+mixer made the offer and refuses one from the client. What the server has
+instead is `conference_rejoin` (Core 1.0.0): it moves the host onto a new
+handle in the same room and sends a new offer, and the legs go on being mixed
+the whole time.
+
+So when the mixer connection reaches `failed`:
+
+```
+phase: active -> rejoining      same room, legs, list and mute; nothing shown to the user
+close the dead connection       its candidates stop; mute and parking are kept
+-> conference_rejoin
+                                the offer gets the deadline a merge's offer has, from here
+<- ack
+<- conference_offer {room: the same}
+answer on a fresh connection
+-> conference_answer            phase: active
+```
+
+Three conditions, all read where the failure arrives
+(`__onMutationConferenceConnectionFailed`), or the room is given up as before:
+
+- **the core has the request** (`CallCapabilitiesConfig.isConferenceRejoinEnabled`,
+  from the core version). An older core does not refuse an unknown request, it
+  closes the socket with 4600; the handshake after it still reports the room,
+  so asking again on reconnect would never stop.
+- **the connection had reached the mixer.** One that fails without ever coming
+  up did not lose a path it had, and a new one would fail the same way for as
+  long as media cannot get through.
+- **the room is `active`.** A room still being built, or one already on its way
+  back, has no working connection to replace.
+
+One request per session, and only to a session that is up. The mixer
+connection can fail while the socket is still down, and the signaling module
+keeps a request it is handed then and sends it on reconnect - next to the one
+the handshake would send. The server moves the host onto a new handle for each,
+so the second makes the offer already on its way an offer from a handle that is
+gone. So a session that is down is not handed the request at all: the room
+stays `rejoining`, nothing is decided and no deadline runs, and the handshake
+that brings the session back either still reports the room, and asks, or does
+not, and the room is dropped like any other the server no longer has. A
+handshake on a session that has already been asked asks nothing.
+
+A rejoin belongs to the session it was asked of. When that session goes, the
+attempt is void: the wait for its offer ends there, deadline included, and
+whatever comes back from it later - an acknowledgement as much as a failure -
+is dropped, because its attempt is no longer the current one. The next
+handshake starts the way back anew. That covers a request or an offer lost with
+the socket, an answer to the new offer the session did not carry, and an answer
+the request queue reports as sent although it never left. Nothing about an old
+request is read off the connection as it is when the result is handled: by then
+it may be another session's. A merge is not the session's in this sense - its
+attempt and its deadline run on through a session loss.
+
+The deadline runs from the request, not from its acknowledgement: a server that
+is up and silent would otherwise keep the host out of the room for as long as
+the request is retried. It is also what ends a rejoin that could not be sent,
+or an answer that did not get through, on a session that stays up - nothing
+else would ask again. Only a refusal ends the room at once.
+
+Every offer is answered on a connection of its own, the same room's included,
+so an offer that does arrive twice replaces the connection instead of being
+renegotiated onto one made with another handle.
+
+A refusal ends the room, except `conference_not_established`: that one says an
+offer is already on its way, and it is waited for under the same deadline.
+
+What the wait for an offer needs to remember - which attempt is current,
+whether this session was asked, and the deadline - is kept by `RoomOfferWait`
+(`lib/features/call/conference/room_offer_wait.dart`), for the first offer after
+a merge as for the one after a rejoin. A merge's deadline runs on through a
+session loss; a rejoin's ends with the session.
 
 ## Teardown
 
@@ -351,7 +427,7 @@ must end.
 | the host ends it | drops the room locally first, then asks the server; every leg is hung up - a room is not unwound into separate calls |
 | `conference_terminated` | the calls still up become ordinary calls: all of them are active on the server, so one carries on and the rest go on hold |
 | `conference_failed` | the same, plus a notification naming the reason |
-| the mixer connection dies | the room cannot be asked for again - the server offers it once - so the calls are handed back the same way, and the room is ended on the server in case it still stands |
+| the mixer connection dies and there is no way back (see above), or the offer asked for never comes | the calls are handed back the same way, and the room is ended on the server in case it still stands |
 
 Every terminal event names the room it is about, and one naming a room this
 client is not in is somebody else's end: acting on it would drop a live room.

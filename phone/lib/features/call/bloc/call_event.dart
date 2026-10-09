@@ -1530,16 +1530,35 @@ sealed class _CallMutationEvent extends CallEvent {
       _CallMutationEventConferenceFailed;
   const factory _CallMutationEvent.conferenceTerminated({int? room}) = _CallMutationEventConferenceTerminated;
 
-  /// The connection to the mixer is gone, or the room never finished being
-  /// built; either way this client cannot be in it.
+  /// The room has to be given up: it never finished being built, its audio
+  /// could not be applied, or there is no way back into it.
   const factory _CallMutationEvent.conferenceLost() = _CallMutationEventConferenceLost;
+
+  /// The connection to the mixer failed. [hadConnected] says whether it had
+  /// ever carried the room.
+  const factory _CallMutationEvent.conferenceConnectionFailed({required bool hadConnected}) =
+      _CallMutationEventConferenceConnectionFailed;
+
+  /// The session is back while the host is still on his way into the room:
+  /// the server is asked for the room's offer again.
+  const factory _CallMutationEvent.conferenceRejoin() = _CallMutationEventConferenceRejoin;
+
+  /// What became of the rejoin sent for [attempt].
+  const factory _CallMutationEvent.conferenceRejoinReplied({
+    required int attempt,
+    required ConferenceRequestResult result,
+  }) = _CallMutationEventConferenceRejoinReplied;
 
   /// The mixer's offer was answered and the answer reached the server: this
   /// client is in [room].
-  const factory _CallMutationEvent.conferenceAnswered(int room) = _CallMutationEventConferenceAnswered;
+  const factory _CallMutationEvent.conferenceAnswered({required int room, required int attempt}) =
+      _CallMutationEventConferenceAnswered;
 
   /// The mixer's offer could not be answered, or the answer never left.
-  const factory _CallMutationEvent.conferenceAnswerFailed() = _CallMutationEventConferenceAnswerFailed;
+  /// [result] is what became of the answer's request; `null` when the answer
+  /// could not be made at all.
+  const factory _CallMutationEvent.conferenceAnswerFailed({required int attempt, ConferenceRequestResult? result}) =
+      _CallMutationEventConferenceAnswerFailed;
 }
 
 // ── perform variants ─────────────────────────────────────────────────────────
@@ -1962,15 +1981,39 @@ class _CallMutationEventConferenceLost extends _CallMutationEvent {
   List<Object?> get props => const [];
 }
 
-class _CallMutationEventConferenceAnswered extends _CallMutationEvent {
-  const _CallMutationEventConferenceAnswered(this.room);
-  final int room;
+class _CallMutationEventConferenceConnectionFailed extends _CallMutationEvent {
+  const _CallMutationEventConferenceConnectionFailed({required this.hadConnected});
+  final bool hadConnected;
   @override
-  List<Object?> get props => [room];
+  List<Object?> get props => [hadConnected];
+}
+
+class _CallMutationEventConferenceRejoin extends _CallMutationEvent {
+  const _CallMutationEventConferenceRejoin();
+  @override
+  List<Object?> get props => const [];
+}
+
+class _CallMutationEventConferenceRejoinReplied extends _CallMutationEvent {
+  const _CallMutationEventConferenceRejoinReplied({required this.attempt, required this.result});
+  final int attempt;
+  final ConferenceRequestResult result;
+  @override
+  List<Object?> get props => [attempt, result];
+}
+
+class _CallMutationEventConferenceAnswered extends _CallMutationEvent {
+  const _CallMutationEventConferenceAnswered({required this.room, required this.attempt});
+  final int room;
+  final int attempt;
+  @override
+  List<Object?> get props => [room, attempt];
 }
 
 class _CallMutationEventConferenceAnswerFailed extends _CallMutationEvent {
-  const _CallMutationEventConferenceAnswerFailed();
+  const _CallMutationEventConferenceAnswerFailed({required this.attempt, this.result});
+  final int attempt;
+  final ConferenceRequestResult? result;
   @override
-  List<Object?> get props => const [];
+  List<Object?> get props => [attempt, result];
 }

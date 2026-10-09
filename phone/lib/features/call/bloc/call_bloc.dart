@@ -117,9 +117,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// Decides whether leaving the call screen moves an audio call to the loudspeaker.
   final SpeakerOnMinimize _speakerOnMinimize;
 
-  /// How long a merge may wait for the room's offer before this client gives
-  /// the calls back; see [_armConferenceAssembly]. Longer than the server's
-  /// own deadline, so its word wins whenever the socket is alive.
+  /// How long a merge, or a rejoin the server took, may wait for the room's
+  /// offer before this client gives the calls back; see
+  /// [_armConferenceAssembly]. Longer than the server's own deadline for a
+  /// merge, so its word wins whenever the socket is alive.
   final Duration conferenceAssemblyTimeout;
 
   final VoidCallback? onCallEnded;
@@ -164,8 +165,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// The host's connection to the conference room's mixer; idle without a room.
   late final ConferencePeerConnection _conferencePeerConnection;
 
-  /// The wait for the mixer's offer after a merge: which attempt is current,
-  /// and the deadline; see [_armConferenceAssembly].
+  /// The wait for the mixer's offer - after a merge, and after a rejoin: which
+  /// attempt is current, whether this session was asked, and the deadline.
   late final RoomOfferWait _offerWait;
 
   /// Keeps the platform's mute for every leg in step with the room's, and
@@ -237,6 +238,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       },
       onConnectionLost: () {
         if (!isClosed) add(const _CallMutationEvent.conferenceLost());
+      },
+      onConnectionFailed: ({required hadConnected}) {
+        if (!isClosed) add(_CallMutationEvent.conferenceConnectionFailed(hadConnected: hadConnected));
       },
     );
 
@@ -783,6 +787,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     await _ringback.stopAll();
 
     if (state.conference.isPresent) {
+      // The wait goes with the room: left running, its deadline and an answer
+      // still in flight would speak for a room this client has forgotten.
+      _offerWait.end();
       await _conferencePeerConnection.teardown();
       emit(state.copyWith(conference: const ConferenceState()));
     }
@@ -881,6 +888,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> __onSignalingClientEventFailed(_SignalingClientEventFailed event, Emitter<CallState> emit) async {
+    // Ahead of anything awaited: the next session's handshake reads it.
+    _offerWait.sessionLost();
     if (emit.isDone) return;
     emit(
       state.copyWith(
@@ -896,6 +905,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _SignalingClientEventDisconnecting event,
     Emitter<CallState> emit,
   ) async {
+    // Ahead of anything awaited: the next session's handshake reads it.
+    _offerWait.sessionLost();
     emit(
       state.copyWith(
         callServiceState: state.callServiceState.copyWith(
@@ -910,6 +921,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _SignalingClientEventDisconnected event,
     Emitter<CallState> emit,
   ) async {
+    // Ahead of anything awaited: the next session's handshake reads it.
+    _offerWait.sessionLost();
     final code = SignalingDisconnectCode.values.byCode(event.code ?? -1);
 
     // Notification decisions are handled by SignalingReconnectController via its
@@ -2354,6 +2367,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventConferenceFailed() => __onMutationConferenceFailed(event, emit),
       _CallMutationEventConferenceTerminated() => __onMutationConferenceTerminated(event, emit),
       _CallMutationEventConferenceLost() => __onMutationConferenceLost(event, emit),
+      _CallMutationEventConferenceConnectionFailed() => __onMutationConferenceConnectionFailed(event, emit),
+      _CallMutationEventConferenceRejoin() => __onMutationConferenceRejoin(event, emit),
+      _CallMutationEventConferenceRejoinReplied() => __onMutationConferenceRejoinReplied(event, emit),
       _CallMutationEventConferenceAnswered() => __onMutationConferenceAnswered(event, emit),
       _CallMutationEventConferenceAnswerFailed() => __onMutationConferenceAnswerFailed(event, emit),
     };
@@ -4464,7 +4480,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
         case HangupStaleConferenceAction():
           // Never refused, a no-op without a room; the calls in it carry on.
-          _logger.info('_handleHandshakeReceived: hanging up conference room ${action.room} this client cannot rejoin');
+          _logger.info('_handleHandshakeReceived: hanging up conference room ${action.room} this client does not hold');
           unawaited(
             _signalingModule
                 .execute(ConferenceHangupRequest(transaction: WebtritSignalingClient.generateTransactionId()))
@@ -4480,10 +4496,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           add(const _CallMutationEvent.conferenceTerminated());
 
         case AdoptConferenceAction():
-          // The room stands and so does the connection to its mixer; only the
-          // membership is the server's to state, as an update states it.
+          // The room stands; only the membership is the server's to state, as
+          // an update states it. Whether the connection to its mixer stands
+          // too is that connection's to say - see [RejoinConferenceAction].
           _logger.info('_handleHandshakeReceived: keeping conference room ${action.room}');
           add(_CallMutationEvent.conferenceUpdated(room: action.room, participants: action.participants));
+
+        case RejoinConferenceAction():
+          _logger.info('_handleHandshakeReceived: still on the way back into conference room ${action.room}');
+          add(const _CallMutationEvent.conferenceRejoin());
       }
     }
   }
@@ -4895,22 +4916,27 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     try {
       final answer = await _conferencePeerConnection.answer(room: room, offer: jsep.toDescription());
       if (!_offerWait.isCurrent(attempt)) return;
-      final sent = await _executeConferenceRequest(
+      final result = await _sendConferenceRequest(
         ConferenceAnswerRequest(transaction: WebtritSignalingClient.generateTransactionId(), jsep: answer.toMap()),
         source: '_answerRoom',
       );
-      if (!_offerWait.isCurrent(attempt)) return;
-      // An answer the session could not carry leaves the server waiting and
-      // this client silent: it is a failure to join, not a room.
-      add(sent ? _CallMutationEvent.conferenceAnswered(room) : const _CallMutationEvent.conferenceAnswerFailed());
+      if (isClosed) return;
+      add(
+        result.outcome == ConferenceRequestOutcome.taken
+            ? _CallMutationEvent.conferenceAnswered(room: room, attempt: attempt)
+            : _CallMutationEvent.conferenceAnswerFailed(attempt: attempt, result: result),
+      );
     } catch (error, stackTrace) {
       callErrorReporter.handle(error, stackTrace, '_answerRoom error');
-      if (_offerWait.isCurrent(attempt)) add(const _CallMutationEvent.conferenceAnswerFailed());
+      if (!isClosed) add(_CallMutationEvent.conferenceAnswerFailed(attempt: attempt));
     }
   }
 
-  /// The answer reached the server: the host is in the room.
+  /// The answer reached the server: the host is in the room. An answer for
+  /// an attempt that is no longer the current one is nobody's: the room was
+  /// given up meanwhile, or the host is on his way in over another offer.
   Future<void> __onMutationConferenceAnswered(_CallMutationEventConferenceAnswered e, Emitter<CallState> emit) async {
+    if (!_offerWait.isCurrent(e.attempt)) return;
     if (!state.conference.concerns(e.room) || !state.conference.isPresent) {
       _logger.warning('__onMutationConferenceAnswered: ${e.room} is not the room here');
       return;
@@ -4921,11 +4947,25 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   /// Without a way into the room the host would hear nothing of it: give it
   /// up and bring the legs back.
+  ///
+  /// Not when the host is on his way back and the answer merely did not get
+  /// through: the room stands on the server. Either the session is going -
+  /// then its loss voids this attempt and the next one asks again - or it is
+  /// up, and the deadline that has run since the rejoin was asked ends the
+  /// wait. Which of the two it is cannot be read off the connection now: by
+  /// the time this is handled it may be another session's.
   Future<void> __onMutationConferenceAnswerFailed(
     _CallMutationEventConferenceAnswerFailed e,
     Emitter<CallState> emit,
   ) async {
-    if (!state.conference.isPresent) return;
+    if (!_offerWait.isCurrent(e.attempt) || !state.conference.isPresent) return;
+    final undelivered =
+        e.result?.outcome == ConferenceRequestOutcome.notSent ||
+        e.result?.outcome == ConferenceRequestOutcome.unanswered;
+    if (state.conference.phase == ConferencePhase.rejoining && undelivered) {
+      _logger.info('__onMutationConferenceAnswerFailed: the answer did not get through, the rejoin is not over');
+      return;
+    }
     _hangUpRoom('__onMutationConferenceAnswerFailed');
     await _leaveRoom(emit, restoreLegs: true);
     submitNotification(const ConferenceFailedNotification(reason: 'answer_failed'));
@@ -5007,10 +5047,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     if (restored.isNotEmpty) submitNotification(const ConferenceEndedNotification());
   }
 
-  /// The room is gone without the server saying so: its media connection
-  /// failed, or it never finished being built. The calls in it are still
-  /// calls, so they are handed back the way a termination hands them back,
-  /// and the room is ended on the server too in case it still stands.
+  /// The room is given up without the server saying it is over: it never
+  /// finished being built, its audio could not be applied, or there is no way
+  /// back into it. The calls in it are still calls, so they are handed back
+  /// the way a termination hands them back, and the room is ended on the
+  /// server too in case it still stands.
   Future<void> __onMutationConferenceLost(_CallMutationEventConferenceLost e, Emitter<CallState> emit) async {
     if (!state.conference.isPresent) return;
     _logger.warning('__onMutationConferenceLost: giving up conference room ${state.conference.room}');
@@ -5019,17 +5060,130 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     submitNotification(const ConferenceEndedNotification());
   }
 
-  /// Gives the merge a deadline of this client's own.
+  /// The connection to the mixer failed while the room stands on the server.
   ///
-  /// The legs go quiet at the acknowledgement and stay quiet until the room's
-  /// offer arrives. The server has a deadline of its own and announces it,
-  /// but it announces it as an event, and events are not replayed - so a
-  /// socket that drops in between takes that word with it and would leave
-  /// both calls silent in both directions until it comes back.
+  /// It cannot be restarted the way a call's is - the mixer made the offer and
+  /// refuses one from the client - but the server hands out a new offer for
+  /// the same room on request, and the legs go on being mixed meanwhile. So
+  /// the dead connection is closed and the room is kept: same legs, same
+  /// list, same mute, and nothing for the user to do again.
+  ///
+  /// Only a connection that had carried the room is replaced. One that never
+  /// came up did not lose a path it had, and asking for another would go
+  /// round for as long as media cannot get through; that room is given up,
+  /// as is any room on a server without the request.
+  Future<void> __onMutationConferenceConnectionFailed(
+    _CallMutationEventConferenceConnectionFailed e,
+    Emitter<CallState> emit,
+  ) async {
+    if (!state.conference.isPresent) return;
+    final canRejoin =
+        capabilities.isConferenceRejoinEnabled && e.hadConnected && state.conference.phase == ConferencePhase.active;
+    if (!canRejoin) {
+      _logger.warning(
+        '__onMutationConferenceConnectionFailed: no way back into room ${state.conference.room} '
+        '(rejoin=${capabilities.isConferenceRejoinEnabled}, hadConnected=${e.hadConnected}, '
+        'phase=${state.conference.phase})',
+      );
+      add(const _CallMutationEvent.conferenceLost());
+      return;
+    }
+    _logger.info('__onMutationConferenceConnectionFailed: rejoining conference room ${state.conference.room}');
+    // Whatever was in flight for the dead connection is not wanted any more.
+    _offerWait.beginRejoin();
+    emit(state.copyWith(conference: state.conference.copyWith(phase: ConferencePhase.rejoining)));
+    // Not waited on, like every other close of it: the connection serialises
+    // its own work, and the offer that follows is answered behind this.
+    unawaited(_conferencePeerConnection.release());
+    _askForRejoin();
+  }
+
+  /// The handshake found the room standing while the host is still on his way
+  /// back into it. A session that has already been asked is left to answer;
+  /// otherwise the request never left, or it - or the offer it was to bring -
+  /// went with the session before this one, and so did any answer still in
+  /// flight, which must not be taken for a failure to join.
+  Future<void> __onMutationConferenceRejoin(_CallMutationEventConferenceRejoin e, Emitter<CallState> emit) async {
+    if (state.conference.phase != ConferencePhase.rejoining || _offerWait.rejoinAsked) return;
+    _offerWait.beginRejoin();
+    // A connection opened for an offer of the session before is of no use
+    // either: the new offer comes from a new handle.
+    unawaited(_conferencePeerConnection.release());
+    _askForRejoin();
+  }
+
+  /// Asks the session for the room's offer again - once per session, and only
+  /// a session that is up.
+  ///
+  /// A session that is down is not handed the request at all: the signaling
+  /// module would keep it and send it on reconnect, next to the one the
+  /// handshake sends, and the server moves the host onto a new handle for
+  /// each. Nothing is decided then and no deadline runs; the handshake that
+  /// brings the session back says whether the room still stands, and asks.
+  void _askForRejoin() {
+    if (_offerWait.rejoinAsked) return;
+    if (!_signalingModule.isConnected) {
+      _logger.info('_askForRejoin: the session is down, the handshake will ask');
+      return;
+    }
+    _offerWait.markRejoinAsked();
+    // From the request, not from its acknowledgement: a server that is up and
+    // says nothing would otherwise keep the host waiting for as long as the
+    // request is retried before any deadline started.
+    _armConferenceAssembly();
+    unawaited(_requestRejoin(_offerWait.attempt));
+  }
+
+  /// Sends the rejoin, off the queue: the request is a round trip, and the
+  /// host's own End must not wait behind it. What became of it comes back as
+  /// an event, like the answer to the room's offer does.
+  Future<void> _requestRejoin(int attempt) async {
+    final result = await _sendConferenceRequest(
+      ConferenceRejoinRequest(transaction: WebtritSignalingClient.generateTransactionId()),
+      source: '_requestRejoin',
+    );
+    if (!isClosed) add(_CallMutationEvent.conferenceRejoinReplied(attempt: attempt, result: result));
+  }
+
+  /// What the session did with the rejoin.
+  ///
+  /// Only a refusal decides anything here. Refused because an offer is
+  /// already pending - the answer to having asked twice - it is waited for;
+  /// refused for any other reason, there is no room to come back to and it is
+  /// given up.
+  ///
+  /// Everything else leaves the wait as it is, under the deadline that has
+  /// run since the request: taken, the offer is on its way; unanswered, it
+  /// may have been taken all the same; not delivered, either the session is
+  /// going, and its loss voids this attempt, or it is up and the deadline
+  /// ends the wait. A reply of a session that is already gone never gets
+  /// here: its attempt is not the current one.
+  Future<void> __onMutationConferenceRejoinReplied(
+    _CallMutationEventConferenceRejoinReplied e,
+    Emitter<CallState> emit,
+  ) async {
+    if (!_offerWait.isCurrent(e.attempt) || state.conference.phase != ConferencePhase.rejoining) return;
+    if (e.result.outcome != ConferenceRequestOutcome.refused) return;
+    final offerPending =
+        ConferenceRefusalReason.fromReason(e.result.reason ?? '') == ConferenceRefusalReason.conferenceNotEstablished;
+    if (offerPending) return;
+    _offerWait.rejoinRefused();
+    add(const _CallMutationEvent.conferenceLost());
+  }
+
+  /// Gives the wait for the room's offer a deadline of this client's own.
+  ///
+  /// After a merge the legs go quiet at the acknowledgement and stay quiet
+  /// until the room's offer arrives. The server has a deadline of its own and
+  /// announces it, but it announces it as an event, and events are not
+  /// replayed - so a socket that drops in between takes that word with it and
+  /// would leave both calls silent in both directions until it comes back.
+  /// After a rejoin the server took, the host is out of the room until the
+  /// offer arrives, and the server has no deadline for that one at all.
   void _armConferenceAssembly() => _offerWait.arm(_onRoomOfferOverdue);
 
   void _onRoomOfferOverdue() {
-    if (state.conference.phase != ConferencePhase.assembling || isClosed) return;
+    if (!state.conference.awaitsOffer || isClosed) return;
     _logger.warning('the conference room never arrived, giving the calls back');
     add(const _CallMutationEvent.conferenceLost());
   }
@@ -5049,6 +5203,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// refusal is the server's answer and, when [notifyRefusal], the host's to
   /// see; a transport failure is a request that never got there.
   Future<bool> _executeConferenceRequest(Request request, {required String source, bool notifyRefusal = false}) async {
+    final result = await _sendConferenceRequest(request, source: source);
+    if (result.outcome == ConferenceRequestOutcome.refused && notifyRefusal) {
+      submitNotification(ConferenceRefusedNotification(result.reason ?? ''));
+    }
+    return result.outcome == ConferenceRequestOutcome.taken;
+  }
+
+  /// Sends a conference request and says what became of it.
+  Future<ConferenceRequestResult> _sendConferenceRequest(Request request, {required String source}) async {
     try {
       // A module with nowhere to send answers with nothing at all, and an
       // awaited null completes like an acknowledgement would. Quieting the
@@ -5057,23 +5220,27 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       final pending = _signalingModule.execute(request);
       if (pending == null) {
         _logger.warning('$source: not sent, the session is not connected');
-        return false;
+        return const ConferenceRequestResult.notSent();
       }
       await pending;
-      return true;
+      return const ConferenceRequestResult.taken();
     } on WebtritSignalingErrorException catch (e) {
       _logger.warning('$source: refused by the server: ${e.reason}');
-      if (notifyRefusal) submitNotification(ConferenceRefusedNotification(e.reason));
-      return false;
+      return ConferenceRequestResult.refused(e.reason);
     } on NotConnectedException {
       _logger.warning('$source: not connected');
-      return false;
+      return const ConferenceRequestResult.notSent();
+    } on WebtritSignalingTransactionTerminateByDisconnectException {
+      // The socket closed under the request: what an outage looks like, not
+      // an error to report.
+      _logger.warning('$source: the session went before an answer');
+      return const ConferenceRequestResult.notSent();
     } on WebtritSignalingTransactionTimeoutException {
       _logger.warning('$source: transaction timeout');
-      return false;
+      return const ConferenceRequestResult.unanswered();
     } catch (e, stackTrace) {
       callErrorReporter.handle(e, stackTrace, '$source error');
-      return false;
+      return const ConferenceRequestResult.notSent();
     }
   }
 

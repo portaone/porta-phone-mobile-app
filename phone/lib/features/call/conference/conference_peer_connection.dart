@@ -14,8 +14,15 @@ final _logger = Logger('ConferencePeerConnection');
 /// the end of gathering.
 typedef ConferenceCandidateSink = void Function(RTCIceCandidate? candidate);
 
-/// Told when the connection to the mixer is gone for good.
+/// Told when the room has to be given up: its audio could not be put where
+/// it must be.
 typedef ConferenceConnectionLost = void Function();
+
+/// Told when the connection to the mixer failed. [hadConnected] says whether
+/// it ever carried the room - a connection that did was working until its
+/// network path went, which a new one can replace; one that never came up
+/// says nothing of the kind.
+typedef ConferenceConnectionFailed = void Function({required bool hadConnected});
 
 /// The client's side of the conference room: one peer connection towards the
 /// mixer, carrying the host's microphone up and the mixed room down.
@@ -34,6 +41,7 @@ class ConferencePeerConnection {
     required UserMediaBuilder userMediaBuilder,
     required this.onLocalCandidate,
     required this.onConnectionLost,
+    required this.onConnectionFailed,
   }) : _factory = factory,
        _userMediaBuilder = userMediaBuilder;
 
@@ -41,9 +49,14 @@ class ConferencePeerConnection {
   final UserMediaBuilder _userMediaBuilder;
   final ConferenceCandidateSink onLocalCandidate;
 
-  /// The mixer connection failed. There is no way to ask for it again - the
-  /// server offers a room once - so the room is over for this client.
+  /// The room's audio could not be applied, so the room is over for this
+  /// client; see [apply].
   final ConferenceConnectionLost onConnectionLost;
+
+  /// The mixer connection failed. It cannot be restarted - the mixer made the
+  /// offer and refuses one from the client - so the owner either asks the
+  /// server for a new offer and calls [release], or gives the room up.
+  final ConferenceConnectionFailed onConnectionFailed;
 
   RTCPeerConnection? _peerConnection;
   MediaStream? _microphone;
@@ -57,6 +70,9 @@ class ConferencePeerConnection {
   final SerialQueue _operations = SerialQueue();
   int? _room;
   bool _remoteDescribed = false;
+
+  /// Whether the current connection has ever reached the mixer.
+  bool _hadConnected = false;
 
   /// What the room's audio is to be, from both of its reasons at once - the
   /// host's own mute and the room standing aside. Every apply reads it when it
@@ -105,17 +121,16 @@ class ConferencePeerConnection {
   /// Answers the mixer's [offer] for [room] and returns the local description
   /// to send back.
   ///
-  /// The same room on a usable connection is renegotiated in place; a
-  /// different room, or a connection that is closed or failed, gets a fresh
-  /// one - a spent connection would look connected and carry silence.
+  /// Every offer gets a connection of its own, the same room's included: the
+  /// mixer sends a second offer for a room only from a new handle of its own
+  /// - after a rejoin - and an offer from another handle cannot be
+  /// renegotiated onto the connection made with the one before. Such a
+  /// connection would look connected and carry silence.
   Future<RTCSessionDescription> answer({required int room, required RTCSessionDescription offer}) {
     return _operations.run(() async {
-      var peerConnection = _peerConnection;
-      if (peerConnection == null || _room != room || !_isUsable(peerConnection)) {
-        await _close();
-        peerConnection = await _open();
-        _room = room;
-      }
+      await _close();
+      final peerConnection = await _open();
+      _room = room;
       await peerConnection.setRemoteDescription(offer);
       _remoteDescribed = true;
       // Taken and cleared before the first await: the list is added to from
@@ -203,9 +218,13 @@ class ConferencePeerConnection {
   }
 
   /// The room could not be made to do what it must, so it is given up. Silent
-  /// if there is nothing left to give up - a teardown may already have run.
+  /// if there is nothing left to give up - a teardown may already have run -
+  /// and for a connection that has failed: nothing can be applied to that
+  /// one, its failure is reported by itself, and what is wanted is kept for
+  /// the connection that replaces it.
   void _giveUpUnappliedRoom() {
-    if (_peerConnection == null) return;
+    final peerConnection = _peerConnection;
+    if (peerConnection == null || !_isUsable(peerConnection)) return;
     _logger.warning('apply: the room audio cannot be applied, giving the room up');
     onConnectionLost();
   }
@@ -221,6 +240,17 @@ class ConferencePeerConnection {
     return _operations.run(_close);
   }
 
+  /// Closes a connection that is of no use any more and keeps the room: the
+  /// host's mute and the room's parking stay as they are, for the connection
+  /// the next offer is answered on. Candidates still waiting were the dead
+  /// connection's and go with it, and so does an apply still queued for it:
+  /// what it was to put in place is read again when the next one opens.
+  Future<void> release() {
+    _request++;
+    _pendingCandidates.clear();
+    return _operations.run(_close);
+  }
+
   /// Closes the connection and the microphone, keeping what belongs to the
   /// next connection: the self mute, and candidates that came ahead of the
   /// offer.
@@ -231,6 +261,7 @@ class ConferencePeerConnection {
     _microphone = null;
     _room = null;
     _remoteDescribed = false;
+    _hadConnected = false;
     if (peerConnection != null) {
       peerConnection.onIceCandidate = null;
       peerConnection.onIceGatheringState = null;
@@ -268,13 +299,10 @@ class ConferencePeerConnection {
         if (state != RTCIceGatheringState.RTCIceGatheringStateComplete) return;
         if (identical(_peerConnection, peerConnection)) onLocalCandidate(null);
       };
-      // Nobody re-offers a room, so a failed connection is not something to
-      // recover from here; the owner is told so it can give the room up and
-      // hand the calls back rather than leave the user in silence.
-      peerConnection.onConnectionState = (state) {
-        if (state != RTCPeerConnectionState.RTCPeerConnectionStateFailed) return;
-        if (identical(_peerConnection, peerConnection)) onConnectionLost();
-      };
+      // A failed connection is not something to recover from here: the owner
+      // is told, so it can ask the server for a new offer or hand the calls
+      // back rather than leave the user in silence.
+      peerConnection.onConnectionState = (state) => _onConnectionState(peerConnection, state);
       _peerConnection = peerConnection;
       await _applyAudioState();
       return peerConnection;
@@ -283,6 +311,12 @@ class ConferencePeerConnection {
       await _close();
       rethrow;
     }
+  }
+
+  void _onConnectionState(RTCPeerConnection peerConnection, RTCPeerConnectionState state) {
+    if (!identical(_peerConnection, peerConnection)) return;
+    if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) _hadConnected = true;
+    if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) onConnectionFailed(hadConnected: _hadConnected);
   }
 
   /// Puts the room's audio where the current state says it belongs: the

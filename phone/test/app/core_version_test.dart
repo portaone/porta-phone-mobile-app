@@ -48,6 +48,15 @@ void main() {
     expect(CoreInfo(version: Version(2, 0, 0)).supportsPeerMessage, false);
   });
 
+  test('supportsConferenceRejoin', () {
+    expect(CoreInfo(version: Version(0, 38, 3)).supportsConferenceRejoin, false);
+    expect(CoreInfo(version: Version(1, 0, 0, pre: 'alpha')).supportsConferenceRejoin, true);
+    expect(CoreInfo(version: Version(1, 0, 0, pre: 'rc.1')).supportsConferenceRejoin, true);
+    expect(CoreInfo(version: Version(1, 0, 0)).supportsConferenceRejoin, true);
+    expect(CoreInfo(version: Version(1, 2, 0)).supportsConferenceRejoin, true);
+    expect(CoreInfo(version: Version(2, 0, 0)).supportsConferenceRejoin, false);
+  });
+
   test('supportsSessionTracking', () {
     expect(CoreInfo(version: Version(0, 34, 0)).supportsSessionTracking, false);
     expect(CoreInfo(version: Version(0, 35, 0, pre: 'alpha')).supportsSessionTracking, true);

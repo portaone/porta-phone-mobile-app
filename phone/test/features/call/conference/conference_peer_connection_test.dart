@@ -26,6 +26,7 @@ void main() {
   late FakeUserMediaBuilder media;
   late List<RTCIceCandidate?> gathered;
   late int lost;
+  late List<bool> failures;
   late ConferencePeerConnection connection;
 
   setUp(() {
@@ -34,11 +35,13 @@ void main() {
     media = FakeUserMediaBuilder();
     gathered = [];
     lost = 0;
+    failures = [];
     connection = ConferencePeerConnection(
       factory: factory,
       userMediaBuilder: media,
       onLocalCandidate: gathered.add,
       onConnectionLost: () => lost++,
+      onConnectionFailed: ({required hadConnected}) => failures.add(hadConnected),
     );
   });
 
@@ -55,12 +58,15 @@ void main() {
     expect(connection.isUp, isTrue);
   });
 
-  test('a second offer for the same room renegotiates on the same connection', () async {
+  test('a second offer for the same room gets a connection of its own', () async {
+    // The mixer offers a room twice only from a new handle, after a rejoin:
+    // that offer cannot be renegotiated onto the connection made with the old one.
     await connection.answer(room: 1, offer: _offer);
     await connection.answer(room: 1, offer: _offer);
 
-    expect(factory.created, hasLength(1));
-    expect(factory.created.single.remoteDescriptions, hasLength(2));
+    expect(factory.created, hasLength(2));
+    expect(factory.created.first.closes, 1);
+    expect(factory.created.last.remoteDescriptions, hasLength(1));
   });
 
   test('an offer for another room replaces the connection', () async {
@@ -202,6 +208,7 @@ void main() {
       userMediaBuilder: media,
       onLocalCandidate: gathered.add,
       onConnectionLost: () => lost++,
+      onConnectionFailed: ({required hadConnected}) => failures.add(hadConnected),
     );
     await connection.answer(room: 1, offer: _offer);
     failing.created.single.failTransceivers = true;
@@ -210,6 +217,51 @@ void main() {
 
     expect(connection.isParked, isTrue);
     expect(lost, 1, reason: 'and the room is given up rather than left undescribable');
+  });
+
+  test('a park that cannot be applied to a failed connection does not give the room up', () async {
+    // The failure is reported by itself and the owner may replace the
+    // connection; the park is kept for the one that comes.
+    var lost = 0;
+    final failing = _FailingTransceiverFactory();
+    final connection = ConferencePeerConnection(
+      factory: failing,
+      userMediaBuilder: media,
+      onLocalCandidate: gathered.add,
+      onConnectionLost: () => lost++,
+      onConnectionFailed: ({required hadConnected}) => failures.add(hadConnected),
+    );
+    await connection.answer(room: 1, offer: _offer);
+    failing.created.single
+      ..failTransceivers = true
+      ..connectionState = RTCPeerConnectionState.RTCPeerConnectionStateFailed;
+
+    await expectLater(connection.apply(_parked), throwsA(isA<StateError>()));
+
+    expect(lost, 0);
+    expect(connection.isParked, isTrue);
+  });
+
+  test('an apply waiting behind a release is dropped with the dead connection', () async {
+    var lost = 0;
+    final failing = _FailingTransceiverFactory();
+    final connection = ConferencePeerConnection(
+      factory: failing,
+      userMediaBuilder: media,
+      onLocalCandidate: gathered.add,
+      onConnectionLost: () => lost++,
+      onConnectionFailed: ({required hadConnected}) => failures.add(hadConnected),
+    );
+    await connection.answer(room: 1, offer: _offer);
+    failing.created.single.failTransceivers = true;
+
+    // Asked for, and overtaken before it ran: the release speaks last.
+    final applying = connection.apply(_parked);
+    final releasing = connection.release();
+    await Future.wait([applying, releasing]);
+
+    expect(lost, 0, reason: 'nothing was tried on the connection being let go of');
+    expect(connection.isParked, isTrue, reason: 'the park is kept for the next connection');
   });
 
   test('a park whose first attempt fails is finished by the retry', () async {
@@ -223,6 +275,7 @@ void main() {
       userMediaBuilder: media,
       onLocalCandidate: gathered.add,
       onConnectionLost: () {},
+      onConnectionFailed: ({required hadConnected}) => failures.add(hadConnected),
     );
     await connection.answer(room: 1, offer: _offer);
     final peer = failing.created.single;
@@ -249,6 +302,7 @@ void main() {
       userMediaBuilder: media,
       onLocalCandidate: gathered.add,
       onConnectionLost: () => lost++,
+      onConnectionFailed: ({required hadConnected}) => failures.add(hadConnected),
     );
     await connection.answer(room: 1, offer: _offer);
     final peer = failing.created.single;
@@ -273,6 +327,7 @@ void main() {
       userMediaBuilder: media,
       onLocalCandidate: gathered.add,
       onConnectionLost: () {},
+      onConnectionFailed: ({required hadConnected}) => failures.add(hadConnected),
     );
     await connection.answer(room: 1, offer: _offer);
     final peer = failing.created.single;
@@ -334,6 +389,7 @@ void main() {
       userMediaBuilder: gated,
       onLocalCandidate: gathered.add,
       onConnectionLost: () {},
+      onConnectionFailed: ({required hadConnected}) => failures.add(hadConnected),
     );
 
     final answering = connection.answer(room: 1, offer: _offer);
@@ -355,16 +411,62 @@ void main() {
     final failed = first.onConnectionState!;
 
     failed(RTCPeerConnectionState.RTCPeerConnectionStateConnected);
-    expect(lost, 0);
+    expect(failures, isEmpty);
     first.connectionState = RTCPeerConnectionState.RTCPeerConnectionStateFailed;
     failed(RTCPeerConnectionState.RTCPeerConnectionStateFailed);
-    expect(lost, 1);
+    expect(failures, [true]);
     // A spent connection must not pass for a live one.
     expect(connection.isUp, isFalse);
+    expect(lost, 0, reason: 'a failed transport is the owner\'s to decide on, not a room given up');
 
     await connection.teardown();
     failed(RTCPeerConnectionState.RTCPeerConnectionStateFailed);
-    expect(lost, 1, reason: 'the room it belonged to is gone');
+    expect(failures, [true], reason: 'the room it belonged to is gone');
+  });
+
+  test('a connection that fails without ever coming up says so', () async {
+    await connection.answer(room: 1, offer: _offer);
+
+    factory.created.single.onConnectionState!(RTCPeerConnectionState.RTCPeerConnectionStateFailed);
+
+    expect(failures, [false]);
+  });
+
+  test('having connected is the connection\'s own, not the room\'s', () async {
+    await connection.answer(room: 1, offer: _offer);
+    factory.created.single.onConnectionState!(RTCPeerConnectionState.RTCPeerConnectionStateConnected);
+    await connection.release();
+    await connection.answer(room: 1, offer: _offer);
+
+    factory.created.last.onConnectionState!(RTCPeerConnectionState.RTCPeerConnectionStateFailed);
+
+    expect(failures, [false], reason: 'the second connection never reached the mixer');
+  });
+
+  test('a released connection is closed and the room\'s mute and parking are kept for the next one', () async {
+    await connection.answer(room: 1, offer: _offer);
+    await connection.apply(_parked);
+    final first = factory.created.single;
+
+    await connection.release();
+    expect(first.closes, 1);
+    expect(connection.isUp, isFalse);
+    expect(connection.isParked, isTrue);
+    expect(media.released, hasLength(1), reason: 'the dead connection gives its microphone back');
+
+    await connection.answer(room: 1, offer: _offer);
+    final second = factory.created.last;
+    expect(factory.created, hasLength(2), reason: 'the same room is answered on a fresh connection');
+    expect(second.fakeSenders.single.track, isNull, reason: 'the room comes back as silent as it was left');
+    expect(second.fakeTransceivers.single.receiver.track!.enabled, isFalse);
+  });
+
+  test('a candidate waiting when the connection is released does not reach the next one', () async {
+    await connection.addRemoteCandidate(_candidate);
+    await connection.release();
+    await connection.answer(room: 1, offer: _offer);
+
+    expect(factory.created.single.candidates, isEmpty);
   });
 
   test('a candidate from a connection that is gone is never passed on', () async {
@@ -389,6 +491,7 @@ void main() {
       userMediaBuilder: failing,
       onLocalCandidate: gathered.add,
       onConnectionLost: () {},
+      onConnectionFailed: ({required hadConnected}) => failures.add(hadConnected),
     );
 
     await expectLater(connection.answer(room: 1, offer: _offer), throwsA(isA<UserMediaError>()));

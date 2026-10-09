@@ -114,6 +114,88 @@ void main() {
     expect(h.callkeep.groups.last.callIds, ['a']);
   });
 
+  test('a room this client was on its way back into is asked for again', () async {
+    // The mixer connection died while the socket was down, so the request for
+    // a new offer had nowhere to go; the handshake is what sends it.
+    seedRoom();
+    // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+    h.bloc.emit(h.bloc.state.copyWith(conference: h.bloc.state.conference.copyWith(phase: ConferencePhase.rejoining)));
+
+    h.signaling.emitHandshake(
+      handshake(
+        lines: roomLines(),
+        conference: const ConferenceInfo(
+          room: 7,
+          participants: [
+            ConferenceParticipant(line: 0, callId: 'a'),
+            ConferenceParticipant(line: 1, callId: 'b'),
+          ],
+        ),
+      ),
+    );
+    await pumpEventQueue();
+
+    expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), hasLength(1));
+    expect(h.signaling.requests.whereType<ConferenceHangupRequest>(), isEmpty);
+    expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+    expect(h.bloc.state.conference.legs, {'a': 0, 'b': 1});
+  });
+
+  test('a session that has been asked is not asked twice, the next session is', () async {
+    seedRoom();
+    // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+    h.bloc.emit(h.bloc.state.copyWith(conference: h.bloc.state.conference.copyWith(phase: ConferencePhase.rejoining)));
+    final standing = handshake(
+      lines: roomLines(),
+      conference: const ConferenceInfo(
+        room: 7,
+        participants: [
+          ConferenceParticipant(line: 0, callId: 'a'),
+          ConferenceParticipant(line: 1, callId: 'b'),
+        ],
+      ),
+    );
+
+    h.signaling.emitHandshake(standing);
+    await pumpEventQueue();
+    h.signaling.emitHandshake(standing);
+    await pumpEventQueue();
+    expect(
+      h.signaling.requests.whereType<ConferenceRejoinRequest>(),
+      hasLength(1),
+      reason: 'asked twice, the server moves the host onto a second handle and the first offer is void',
+    );
+
+    // The session goes, and the request - or its offer - with it.
+    h.signaling.emitLifecycle(SignalingDisconnecting());
+    await pumpEventQueue();
+    h.signaling.emitHandshake(standing);
+    await pumpEventQueue();
+
+    expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), hasLength(2));
+    expect(h.bloc.state.conference.phase, ConferencePhase.rejoining);
+  });
+
+  test('a room this client is connected to is not asked for again', () async {
+    seedRoom();
+
+    h.signaling.emitHandshake(
+      handshake(
+        lines: roomLines(),
+        conference: const ConferenceInfo(
+          room: 7,
+          participants: [
+            ConferenceParticipant(line: 0, callId: 'a'),
+            ConferenceParticipant(line: 1, callId: 'b'),
+          ],
+        ),
+      ),
+    );
+    await pumpEventQueue();
+
+    expect(h.signaling.requests.whereType<ConferenceRejoinRequest>(), isEmpty);
+  });
+
   test('a room the server no longer has is dropped and its legs are calls again', () async {
     final peers = seedRoom();
 
