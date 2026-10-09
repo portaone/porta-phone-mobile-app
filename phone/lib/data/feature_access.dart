@@ -540,6 +540,10 @@ abstract final class CallMapper {
     // is whether to offer the control at all.
     final isConferenceEnabled = systemInfo?.adapter?.supportsConference ?? false;
 
+    // Version-gated, like peer_message: a core without the request closes the
+    // socket on it instead of refusing (see CoreInfo.supportsConferenceRejoin).
+    final isConferenceRejoinEnabled = systemInfo?.core.supportsConferenceRejoin ?? false;
+
     return CallConfig(
       capabilities: CallCapabilitiesConfig(
         isVideoCallEnabled: isVideoEnabled,
@@ -548,6 +552,7 @@ abstract final class CallMapper {
         callPullVideoStrategy: callPullVideoStrategy,
         isPeerMessageEnabled: isPeerMessageEnabled,
         isConferenceEnabled: isConferenceEnabled,
+        isConferenceRejoinEnabled: isConferenceRejoinEnabled,
       ),
       triggerConfig: CallTriggerConfig(
         smsFallback: SmsFallbackTriggerConfig(

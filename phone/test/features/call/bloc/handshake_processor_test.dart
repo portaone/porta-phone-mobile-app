@@ -775,6 +775,35 @@ void main() {
       );
     });
 
+    test('a room the client is on its way back into is asked for again', () async {
+      // The connection to the mixer was lost and the request that brings a new
+      // one never left, or its offer went with the socket.
+      final actions = processor.process(
+        lines: [],
+        guestLine: null,
+        activeCalls: const [],
+        conference: const ConferenceInfo(room: 4242),
+        localConference: const ConferenceState(room: 4242, phase: ConferencePhase.rejoining, legs: {'a': 0, 'b': 1}),
+      );
+
+      expect(actions, [
+        isA<AdoptConferenceAction>().having((a) => a.room, 'room', 4242),
+        isA<RejoinConferenceAction>().having((a) => a.room, 'room', 4242),
+      ]);
+    });
+
+    test('a room the client was on its way back into and the server lost is dropped', () async {
+      final actions = processor.process(
+        lines: [],
+        guestLine: null,
+        activeCalls: const [],
+        conference: null,
+        localConference: const ConferenceState(room: 4242, phase: ConferencePhase.rejoining, legs: {'a': 0}),
+      );
+
+      expect(actions.single, isA<ForgetConferenceAction>());
+    });
+
     test('a room the client holds and the server does not is dropped', () async {
       final actions = processor.process(
         lines: [],

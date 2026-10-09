@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pub_semver/pub_semver.dart';
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -29,6 +30,27 @@ void main() {
 
     test('defaults to off, so a config built without it hides the feature', () {
       expect(const CallCapabilitiesConfig().isConferenceEnabled, isFalse);
+    });
+
+    test('rejoin is on from the core that has the request', () {
+      final capabilities = _capabilitiesFor(
+        systemInfoWithSupported([kConferenceFeatureFlag], coreVersion: Version(1, 0, 0)),
+      );
+
+      expect(capabilities.isConferenceRejoinEnabled, isTrue);
+    });
+
+    test('rejoin is off on an older core, which closes the socket on the request', () {
+      final capabilities = _capabilitiesFor(
+        systemInfoWithSupported([kConferenceFeatureFlag], coreVersion: Version(0, 38, 3)),
+      );
+
+      expect(capabilities.isConferenceEnabled, isTrue);
+      expect(capabilities.isConferenceRejoinEnabled, isFalse);
+    });
+
+    test('rejoin is off before any system info has been fetched', () {
+      expect(_capabilitiesFor(null).isConferenceRejoinEnabled, isFalse);
     });
 
     test('does not disturb the other call capabilities', () {

@@ -51,4 +51,15 @@ class CoreInfo with EquatableMixin {
     // peer_message app-to-app side channel was added in 0.33.0
     return verifyVersionStr('>=0.33.0-alpha <2.0.0');
   }
+
+  bool get supportsConferenceRejoin {
+    // conference_rejoin was added in 1.0.0. The 0.38.x line has conferencing
+    // without it, and that is the only reason for this check.
+    //
+    // TODO(WT-2084): remove this check, and
+    // CallCapabilitiesConfig.isConferenceRejoinEnabled with it, once the oldest
+    // core the app accepts (WEBTRIT_APP_CORE_VERSION_CONSTRAINT) is 1.0.0 - or
+    // sooner, when no deployment is left on 0.38.x, the one line without it.
+    return verifyVersionStr('>=1.0.0-alpha <2.0.0');
+  }
 }

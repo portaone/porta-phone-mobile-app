@@ -337,11 +337,12 @@ in the app) and fall back to `conference_hangup`.
 | `participants` | participant[] | yes, may be empty | the legs in the room now |
 
 When: once every leg that survived wiring is ready and the app's join on the
-mixer has completed. Core sends one offer per room (`app_joined?` guard); a client
-should still tolerate a second offer for the same `room` by renegotiating on the
-same PeerConnection, and must treat an offer for a different `room` as a new room
-(close the old PeerConnection, build a new one). A reused, spent PeerConnection
-looks connected and carries silence.
+mixer has completed. Core sends one offer per room when it is built (`app_joined?`
+guard) and one more after each accepted `conference_rejoin` (4.8), from a new
+AudioBridge handle. So every offer, the same `room`'s included, is answered on a
+PeerConnection of its own: close the old one, build a new one. An offer from a new
+handle cannot be renegotiated onto the PeerConnection made with the old one, and a
+reused, spent PeerConnection looks connected and carries silence.
 
 Client obligation: build the conference PeerConnection and answer (4.3). From this
 event on, the room is "active": `conference_updated` starts to arrive, and
