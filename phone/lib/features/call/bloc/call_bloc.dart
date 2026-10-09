@@ -3272,8 +3272,24 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> __onMutationControlAnswer(_CallMutationEventControlAnswer e, Emitter<CallState> emit) async {
-    final error = await callkeep.answerCall(e.callId);
-    if (error != null) _logger.warning('__onMutationControlAnswer error: $error');
+    try {
+      final error = await callkeep.answerCall(e.callId);
+      if (error == null) return;
+      _logger.warning('__onMutationControlAnswer error: $error');
+    } catch (error, stackTrace) {
+      _logger.warning('__onMutationControlAnswer failed', error, stackTrace);
+    }
+    // The request failed - the platform refused it, or the request itself threw - so no answer is
+    // submitted any more: the call simply rings again. Left as submitted, every further press on
+    // Accept would be dropped as a double tap and the call could not be answered from the app at
+    // all. A call that has moved on meanwhile - the platform began the answer all the same, or the
+    // call is being ended - is left as it is.
+    emit(
+      state.copyWithMappedActiveCall(e.callId, (call) {
+        if (call.processingStatus != CallProcessingStatus.incomingSubmittedAnswer) return call;
+        return call.copyWith(processingStatus: call.incomingRingingStatus);
+      }),
+    );
   }
 
   Future<void> __onMutationControlEnd(_CallMutationEventControlEnd e, Emitter<CallState> emit) async {

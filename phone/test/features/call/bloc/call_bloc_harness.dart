@@ -446,6 +446,26 @@ class FakeCallkeep extends Fake implements Callkeep {
   /// Every incoming registration, with when the bloc said the server offered the call.
   final List<(String, DateTime?)> incomingReports = [];
 
+  /// What every answer request returns while set: the platform refusing to answer.
+  CallkeepCallRequestError? answerError;
+
+  /// What every answer request throws while set: the request itself failing.
+  Object? answerException;
+
+  /// While set, an answer request stays unanswered until the test completes this.
+  Completer<CallkeepCallRequestError?>? answerGate;
+
+  /// The calls the bloc asked the platform to answer, in order.
+  final List<String> answers = [];
+
+  @override
+  Future<CallkeepCallRequestError?> answerCall(String callId) async {
+    answers.add(callId);
+    if (answerException case final exception?) throw exception;
+    if (answerGate case final gate?) return gate.future;
+    return answerError;
+  }
+
   @override
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(
     String callId,
