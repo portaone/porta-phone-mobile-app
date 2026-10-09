@@ -67,11 +67,17 @@ body, and classification getters: `isClientError` (4xx), `isServerError` (5xx),
 | `VoicemailMessageGoneException` | `message_not_found` on the voicemail endpoints - the mailbox no longer has that message. By the code, not the status: these calls are optional, so a bare 404 means the route is absent |
 | `SystemNotificationGoneException` | `notification_not_found` on `deleteSystemNotification` and `markSystemNotificationAsSeen` - another device or the retention cleaner deleted it since the list was read |
 | `PasswordChangeRequiredException` | `password_change_required` |
+| `DeviceLimitReachedException` | 409 with `device_limit_reached` on the calls that end in a session (`createSession`, `verifySessionOtp`, `createSessionAutoProvision`, `createUser`, `completeSession`). Carries the account's `sessions` and the `pendingLoginToken`; with a token the login is finished by `completeSession`, without one nothing here can be revoked |
+| `DeviceSwitchLimitReachedException` | 403 with `device_switch_limit_reached` on the same calls |
+| `PendingLoginNotFoundException` | 404 with `pending_login_not_found` from `completeSession` - the token ran out or was used, the login starts over |
+| `PendingLoginSessionNotFoundException` | 404 with `session_not_found` from `completeSession` - the session picked to be revoked is already gone, the token is still good |
 
 An error body is read for what it can add and never for permission to fail:
 `details` arrives as one object from an adaptee and as a list from Core (one
 entry per field it refused), both read the same, and a body in any other shape
-leaves `error` null with the text kept in `rawBody`. A failure always surfaces
+leaves `error` null with the text kept in `rawBody`. A rule of an endpoint
+whose refusal hands something back reads it from `FailureContext.body`, the
+decoded JSON object, and reads it the same forgiving way. A failure always surfaces
 as `RequestFailure` carrying the status the backend sent.
 
 Failure log level: client errors (4xx) log as `warning`; `severe` is reserved

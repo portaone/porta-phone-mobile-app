@@ -72,7 +72,15 @@ class WebtritApiClient {
 
   // The one call made without a session, so a 401 on it is about the
   // credentials just sent rather than about a session that has gone.
-  static final _sessionCreateEndpoint = ResponseOptions(failures: [incorrectCredentialsOn401Rule]);
+  static final _sessionCreateEndpoint = ResponseOptions(failures: [incorrectCredentialsOn401Rule, ...deviceLimitRules]);
+
+  // The other calls that end in a session: the device limits of the account are
+  // checked wherever one is about to be created.
+  static final _loginEndpoint = ResponseOptions(failures: deviceLimitRules);
+
+  // Completing a login left waiting by the device limit: it can meet the limits
+  // again, and has two misses of its own.
+  static final _sessionCompleteEndpoint = ResponseOptions(failures: [...deviceLimitRules, ...pendingLoginRules]);
 
   // Two endpoints report a missing account as a bare 404 with no code to read,
   // and mean the account rather than the thing being fetched.
@@ -236,8 +244,10 @@ class WebtritApiClient {
           // treat as a transport error and pointlessly retry.
           ErrorResponse? error;
           String? rawErrorBody;
+          Map<String, dynamic>? errorBody;
           try {
             final responseDataJson = responseData.isEmpty ? {} : jsonDecode(responseData);
+            if (responseDataJson is Map<String, dynamic>) errorBody = responseDataJson;
             error = switch (responseDataJson) {
               Map(isEmpty: true) => null,
               {'errors': {'detail': _}} => null,
@@ -260,6 +270,7 @@ class WebtritApiClient {
             token: token,
             error: error,
             rawBody: rawErrorBody,
+            body: errorBody,
           );
 
           // For endpoints declared optional in the adapter contract, "not
@@ -424,6 +435,7 @@ class WebtritApiClient {
       null,
       requestPayload,
       requestOptions: options,
+      responseOptions: _loginEndpoint,
     );
 
     return SessionResult.fromJson(responseJson);
@@ -460,6 +472,7 @@ class WebtritApiClient {
       null,
       requestJson,
       requestOptions: options,
+      responseOptions: _loginEndpoint,
     );
     return SessionToken.fromJson(responseJson);
   }
@@ -494,6 +507,34 @@ class WebtritApiClient {
       null,
       requestJson,
       requestOptions: options,
+      responseOptions: _loginEndpoint,
+    );
+
+    return SessionToken.fromJson(responseJson);
+  }
+
+  /// Finishes a login that was refused with [DeviceLimitReachedException], by
+  /// revoking one of the sessions that refusal listed.
+  ///
+  /// Answers like a login. While the account is still over its limits it is
+  /// refused the same way again and the token stays good for another try;
+  /// [PendingLoginSessionNotFoundException] means only that the session picked
+  /// is already gone, and [PendingLoginNotFoundException] that the login has to
+  /// start over.
+  Future<SessionToken> completeSession({
+    required String pendingLoginToken,
+    required String revokeSessionId,
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    final requestJson = {'pending_login_token': pendingLoginToken, 'revoke_session_id': revokeSessionId};
+
+    final responseJson = await _httpClientExecutePost(
+      [..._apiBasePathSegmentsV1, 'session', 'complete'],
+      null,
+      null,
+      requestJson,
+      requestOptions: options,
+      responseOptions: _sessionCompleteEndpoint,
     );
 
     return SessionToken.fromJson(responseJson);
