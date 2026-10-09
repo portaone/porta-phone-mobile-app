@@ -93,6 +93,19 @@ void main() {
     });
   });
 
+  group('$ConferenceRejoinRequest', () {
+    const request = ConferenceRejoinRequest(transaction: 't8');
+
+    test('toJson has no line and no call_id', () {
+      expect(request.toJson(), {Request.typeKey: 'conference_rejoin', 'transaction': 't8'});
+      expect(SessionRequest.fromJson(request.toJson()), equals(request));
+    });
+
+    test('is decoded through the base request, as the Android service isolate does', () {
+      expect(Request.fromJson(request.toJson()), equals(request));
+    });
+  });
+
   group('$ConferenceHangupRequest', () {
     const request = ConferenceHangupRequest(transaction: 't9');
 

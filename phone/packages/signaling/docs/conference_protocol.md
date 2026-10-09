@@ -6,7 +6,8 @@ Core does on receipt, what it refuses with, in which order things arrive, and wh
 the client must do locally at each step. Enough to write a client against without
 reading Core.
 
-Last reviewed: 2026-09-11. Sources: `webtrit_core` origin/main 7db35cfb
+Last reviewed: 2026-10-09 (`conference_rejoin`, Core `porta-phone/backend` c001abe0);
+the rest 2026-09-11. Sources: `webtrit_core` origin/main 7db35cfb
 (`lib/webtrit_core_app/controller/conference.ex`, `signaling_handler.ex`,
 `janus_handler.ex`, `signaling_sender.ex`), `@webtrit/webtrit-signaling` 0.6.0, the
 Web Dialer implementation (Gerrit `porta-phone/web-app` 5946b5c). Where the
@@ -115,6 +116,7 @@ would still drop the connection, so this table must grow with Core.
 | `conference_ice_trickle` (req) | `ConferenceIceTrickleRequest({transaction, candidate})` | `requests/conference/conference_ice_trickle_request.dart` |
 | `conference_mute` | `ConferenceMuteRequest({transaction, line, muted})` | `requests/conference/conference_mute_request.dart` |
 | `conference_remove` | `ConferenceRemoveRequest({transaction, line})` | `requests/conference/conference_remove_request.dart` |
+| `conference_rejoin` | `ConferenceRejoinRequest({transaction})` | `requests/conference/conference_rejoin_request.dart` |
 | `conference_hangup` | `ConferenceHangupRequest({transaction})` | `requests/conference/conference_hangup_request.dart` |
 | `conference_offer` | `ConferenceOfferEvent({room, jsep, participants})` | `events/conference/conference_offer_event.dart` |
 | `conference_ice_trickle` (evt) | `ConferenceIceTrickleEvent({candidate})` | `events/conference/conference_ice_trickle_event.dart` |
@@ -296,6 +298,33 @@ them on join and does not hold them back.
 The app follows this with a hangup of every leg (product decision). A client that
 keeps the calls must restore audio on each and hold all but one; see section 9.
 
+### 4.8 `conference_rejoin` - come back to the running room on a new PeerConnection
+
+| field | type | required | meaning |
+|---|---|---|---|
+| `request` | `"conference_rejoin"` | yes | |
+| `transaction` | string | yes | |
+
+For a host whose conference PeerConnection died while the calls survived - a
+network outage the calls came back from with an ICE restart. That PeerConnection
+cannot be ICE-restarted: the mixer made its offer, so it refuses one from the
+client.
+
+Core (`Conference.rejoin/1`): attaches a new AudioBridge handle, detaches the old
+one - only the host leaves the mix, the legs keep mixing - and joins the new handle
+to the same room. The `ack` is followed by a `conference_offer` with the **same**
+`room`; answer it on a fresh PeerConnection (5.1). Refused with `no_conference`
+without a room and with `conference_not_established` while an offer is still
+pending: before the first `conference_offer`, or before the one answering an
+earlier `conference_rejoin`. A `conference_answer` for the offer the rejoin
+overtook is dropped by Core.
+
+**A Core older than 1.0.0 does not know this request, and does not refuse it: it
+closes the socket** with disconnect code 4600 (`requestUnknownError`). The room is
+still there on the next handshake, so a client that sends the request again on
+reconnect never stops. Gate it on the Core version (`CoreInfo.supportsConferenceRejoin`
+in the app) and fall back to `conference_hangup`.
+
 ## 5. Events
 
 ### 5.1 `conference_offer` - the mixer's offer; the room is established
@@ -434,9 +463,9 @@ PeerConnection does not survive an app restart. On every handshake:
 
 | server `conference` | client has a room | do |
 |---|---|---|
-| present | no | send `conference_hangup`: the room cannot be rejoined, and it would otherwise keep a participant that never comes back |
+| present | no | send `conference_hangup`: the client keeps no record of the room to come back to, and it would otherwise keep a participant that never comes back |
 | `null` | yes | forget the room locally; restore audio on recorded merged lines that are still established |
-| present | yes | adopt the server's `room` and `participants` as authoritative |
+| present | yes | adopt the server's `room` and `participants` as authoritative; when the conference PeerConnection is lost, send `conference_rejoin` (4.8) |
 | `null` | no | nothing |
 
 Observed on the test stand: after a page reload with calls already gone the
@@ -536,6 +565,25 @@ With only two lines and one dropped: `conference_terminated` instead of the offe
   client lost its PeerConnection (restart) -> conference_hangup, then restore/hold legs
 ```
 
+### 8.7.1 The conference PeerConnection lost, the calls alive
+
+```
+  network outage on the host; the socket drops, the PeerConnections lose their path
+  network back -> handshake state {conference: {room, participants}}
+  -> update (ICE restart) per line                  the calls recover
+  [conference PeerConnection reaches "failed"; close it, keep the room]
+  -> conference_rejoin
+  <- ack
+  <- conference_offer {room: <the same>, jsep, participants}
+  [new PeerConnection, setRemote, answer]
+  -> conference_answer {jsep}
+  <- ack
+  [PeerConnection connected: mix audible again; the legs were mixed throughout]
+```
+
+The PeerConnection may fail before the socket is back; the request then waits for
+the handshake, which still reports the room.
+
 ### 8.8 Janus lost
 
 ```
@@ -553,6 +601,8 @@ none --merge ack--> assembling --conference_offer--> active --conference_termina
                     |  conference_failed / conference_terminated -> none (undo muting)
                     +- conference_add ack: extra line recorded as muted
 active --conference_updated--> active (list replaced; vanished legs restored+held; new legs un-held)
+active --conference PeerConnection failed--> rejoining --conference_offer--> active
+                    |  conference_rejoin refused / no offer -> conference_hangup, none (restore)
 active --handshake conference:null--> none (restore)
 none --handshake conference:{...}--> send conference_hangup, stay none
 ```
@@ -563,10 +613,11 @@ Obligations, each one a defect the web implementation hit first:
 |---|---|
 | `ack` to `merge` / `conference_add` | mute mic and inbound audio on each named line's PeerConnection; record the line |
 | any time while merged | never close a merged line's PeerConnection (Janus sends BYE); never send `hold` for it; exclude it from "hold the others" when placing or answering a call |
-| `conference_offer` | fresh PeerConnection per `room`; clear `held` on listed calls and tell the OS; treat participants as the list |
+| `conference_offer` | fresh PeerConnection per `room`, and for the offer that follows `conference_rejoin` in the same room; clear `held` on listed calls and tell the OS; treat participants as the list |
 | `conference_updated` | replace the list; restore + hold every vanished call still up; clear `held` on new entries |
 | `conference_failed` | undo muting on all recorded lines; drop state |
 | `conference_terminated` | close the conference PeerConnection; restore audio on recorded lines still established; hold all but the focused one; skip if the client is about to hang them up |
+| conference PeerConnection failed, calls up | close it and stop trickling its candidates; `conference_rejoin` if Core has it, else `conference_hangup` and as terminated; keep the merged lines muted |
 | handshake `conference:null` with local room | as terminated |
 | handshake `conference:{...}` without local room | `conference_hangup` |
 | OS asks to hold a merged line (CallKit / Telecom) | refuse locally; the OS-level conference/grouping is the plugin's job |
@@ -588,7 +639,8 @@ on that line's PeerConnection.
 | `line_without_active_call` | `lineWithoutActiveCall` | `merge`, `conference_add` | no call on that line |
 | `room_create_failed: <text>` | `roomCreateFailed` | `merge` | AudioBridge `create` failed |
 | `attach_failed: <text>` | `attachFailed` | `merge`, `conference_add` | could not attach an AudioBridge handle, e.g. plugin not loaded |
-| `no_conference` | `noConference` | `conference_add`, `conference_mute` | nothing to act on |
+| `no_conference` | `noConference` | `conference_add`, `conference_mute`, `conference_rejoin` | nothing to act on |
+| `conference_not_established` | `conferenceNotEstablished` | `conference_rejoin` | an offer is still pending: the first one, or the one answering an earlier rejoin; wait for it |
 | `line_already_in_conference` | `lineAlreadyInConference` | `conference_add` | |
 | `line_not_in_conference` | `lineNotInConference` | `conference_mute` | |
 | `line_not_ready` | `lineNotReady` | `conference_mute` | participant still joining; retry after it appears in a list |
@@ -602,8 +654,9 @@ on that line's PeerConnection.
 ## 11. Ordering and timing guarantees
 
 - The `ack` / `error` for a request always precedes any event that request causes.
-- `conference_offer` arrives at most once per `room` in current Core
-  (`app_joined?`), after every surviving leg is wired, and never before the `ack`.
+- `conference_offer` arrives once per `room` when it is built (`app_joined?`),
+  after every surviving leg is wired, and never before the `ack`; and once more
+  after each accepted `conference_rejoin`, with the same `room`.
 - `conference_updated` never arrives before `conference_offer` for that room; while
   the room is assembling, list changes are folded into the offer.
 - Setup deadline: 10 s from the `ack` of `merge` to every leg being ready; on expiry
@@ -764,6 +817,8 @@ The same conference torn down by A instead:
 
 `test/src/requests/conference/conference_requests_test.dart`: `toJson` of every
 request against the wire JSON above and round trip through `SessionRequest.fromJson`;
+`conference_rejoin` through `Request.fromJson` too, the way the Android service
+isolate decodes it;
 the completed marker for a `null` candidate; `muted` sent explicitly both ways; wrong
 type refused.
 
