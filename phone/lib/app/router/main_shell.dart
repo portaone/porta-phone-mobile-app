@@ -20,6 +20,7 @@ import 'package:webtrit_phone/app/router/main_shell_services.dart';
 import 'package:webtrit_phone/app/router/startup_config_refresh.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
+import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/utils.dart';
@@ -103,6 +104,7 @@ class _MainShellState extends State<MainShell> {
           maximumCallGroups: 13,
           maximumCallsPerCallGroup: 13,
           supportedHandleTypes: const {CallkeepHandleType.number},
+          queueIncomingWhileRinging: EnvironmentConfig.IOS_QUEUE_INCOMING_WHILE_RINGING,
         ),
         android: CallkeepAndroidOptions(
           ringtoneSound: Assets.ringtones.incomingCall1,
