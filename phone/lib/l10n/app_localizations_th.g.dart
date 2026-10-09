@@ -1236,6 +1236,24 @@ class AppLocalizationsTh extends AppLocalizations {
       'บัญชีที่ใช้อีเมลนี้ไม่มีช่องทางติดต่อที่ตั้งค่าไว้สำหรับรับรหัสยืนยัน';
 
   @override
+  String get login_RequestFailureDeviceLimitReachedError => 'ถึงขีดจำกัดจำนวนอุปกรณ์แล้ว โปรดติดต่อผู้ดูแลระบบ';
+
+  @override
+  String get login_RequestFailureDeviceLimitStillReachedError =>
+      'ยังคงถึงขีดจำกัดจำนวนอุปกรณ์ โปรดออกจากระบบในอุปกรณ์อื่นอีกหนึ่งเครื่อง';
+
+  @override
+  String get login_RequestFailureDeviceSwitchLimitReachedError =>
+      'ถึงขีดจำกัดการเปลี่ยนอุปกรณ์แล้ว โปรดติดต่อผู้ดูแลระบบ';
+
+  @override
+  String get login_RequestFailurePendingLoginNotFoundError =>
+      'การลงชื่อเข้าใช้ไม่เสร็จสิ้นภายในเวลาที่กำหนด โปรดลงชื่อเข้าใช้อีกครั้ง';
+
+  @override
+  String get login_RequestFailurePendingLoginSessionNotFoundError => 'อุปกรณ์นั้นออกจากระบบไปแล้ว โปรดเลือกอุปกรณ์อื่น';
+
+  @override
   String get login_RequestFailureEmptyEmailError => 'ไม่สามารถส่งรหัสยืนยันได้';
 
   @override
@@ -1316,6 +1334,13 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get login_TextFieldLabelText_signupEmail => 'กรอกอีเมลของคุณ';
+
+  @override
+  String get login_Text_deviceLimitDescription =>
+      'บัญชีนี้ลงชื่อเข้าใช้ครบตามจำนวนอุปกรณ์ที่อนุญาตแล้ว โปรดออกจากระบบในอุปกรณ์เครื่องใดเครื่องหนึ่งเพื่อใช้งานต่อบนอุปกรณ์นี้';
+
+  @override
+  String get login_Text_deviceLimitTitle => 'ถึงขีดจำกัดจำนวนอุปกรณ์แล้ว';
 
   @override
   String get login_Text_otpSigninRequestPostDescription => '';

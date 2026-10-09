@@ -2242,6 +2242,36 @@ abstract class AppLocalizations {
   /// **'The account with this email address has no contact method configured to receive the verification code'**
   String get login_RequestFailureDeliveryChannelUnspecifiedEmailError;
 
+  /// Shown when a sign-in is refused because the device limit is reached and this account has no device of its own to sign out. Condition: the backend returns device_limit_reached without a pending_login_token.
+  ///
+  /// In en, this message translates to:
+  /// **'Device limit reached. Contact your administrator.'**
+  String get login_RequestFailureDeviceLimitReachedError;
+
+  /// Shown on the device limit screen when a device was signed out and the account is still over its limit. Condition: the backend returns device_limit_reached in response to POST /session/complete.
+  ///
+  /// In en, this message translates to:
+  /// **'The device limit is still reached. Sign out another device.'**
+  String get login_RequestFailureDeviceLimitStillReachedError;
+
+  /// Shown when a sign-in on a new device is refused because the account has started using too many new devices within the period. Condition: the backend returns device_switch_limit_reached.
+  ///
+  /// In en, this message translates to:
+  /// **'Device switch limit reached. Contact your administrator.'**
+  String get login_RequestFailureDeviceSwitchLimitReachedError;
+
+  /// Shown when the sign-in left waiting on the device limit screen can no longer be finished. Condition: the backend returns pending_login_not_found in response to POST /session/complete.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in was not finished in time. Sign in again.'**
+  String get login_RequestFailurePendingLoginNotFoundError;
+
+  /// Shown on the device limit screen when the device picked to be signed out is not signed in any more. Condition: the backend returns session_not_found in response to POST /session/complete.
+  ///
+  /// In en, this message translates to:
+  /// **'That device is already signed out. Choose another one.'**
+  String get login_RequestFailurePendingLoginSessionNotFoundError;
+
   /// Shown during login or signup when the user tries to request a verification code but has not entered an email address. Condition: email field is empty.
   ///
   /// In en, this message translates to:
@@ -2397,6 +2427,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter your email'**
   String get login_TextFieldLabelText_signupEmail;
+
+  /// Explains the list on the device limit screen, shown instead of signing in when the account is on as many devices as it is allowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is signed in on as many devices as it is allowed. Sign out one of them to continue on this device.'**
+  String get login_Text_deviceLimitDescription;
+
+  /// Title of the device limit screen, shown instead of signing in when the account is on as many devices as it is allowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Device limit reached'**
+  String get login_Text_deviceLimitTitle;
 
   /// No description provided for @login_Text_otpSigninRequestPostDescription.
   ///

@@ -1201,6 +1201,26 @@
   "@login_RequestFailureDeliveryChannelUnspecifiedEmailError": {
     "description": "Shown during OTP sign-in on deployments where users sign in with an email address, when the matched account has no configured delivery channel to receive the one-time verification code. Condition: the server rejects the OTP request because no delivery channel is set up for the account."
   },
+  "login_RequestFailureDeviceLimitReachedError": "Device limit reached. Contact your administrator.",
+  "@login_RequestFailureDeviceLimitReachedError": {
+    "description": "Shown when a sign-in is refused because the device limit is reached and this account has no device of its own to sign out. Condition: the backend returns device_limit_reached without a pending_login_token."
+  },
+  "login_RequestFailureDeviceLimitStillReachedError": "The device limit is still reached. Sign out another device.",
+  "@login_RequestFailureDeviceLimitStillReachedError": {
+    "description": "Shown on the device limit screen when a device was signed out and the account is still over its limit. Condition: the backend returns device_limit_reached in response to POST /session/complete."
+  },
+  "login_RequestFailureDeviceSwitchLimitReachedError": "Device switch limit reached. Contact your administrator.",
+  "@login_RequestFailureDeviceSwitchLimitReachedError": {
+    "description": "Shown when a sign-in on a new device is refused because the account has started using too many new devices within the period. Condition: the backend returns device_switch_limit_reached."
+  },
+  "login_RequestFailurePendingLoginNotFoundError": "The sign-in was not finished in time. Sign in again.",
+  "@login_RequestFailurePendingLoginNotFoundError": {
+    "description": "Shown when the sign-in left waiting on the device limit screen can no longer be finished. Condition: the backend returns pending_login_not_found in response to POST /session/complete."
+  },
+  "login_RequestFailurePendingLoginSessionNotFoundError": "That device is already signed out. Choose another one.",
+  "@login_RequestFailurePendingLoginSessionNotFoundError": {
+    "description": "Shown on the device limit screen when the device picked to be signed out is not signed in any more. Condition: the backend returns session_not_found in response to POST /session/complete."
+  },
   "login_RequestFailureEmptyEmailError": "Cannot send the verification code",
   "@login_RequestFailureEmptyEmailError": {
     "description": "Shown during login or signup when the user tries to request a verification code but has not entered an email address. Condition: email field is empty."
@@ -1283,6 +1303,14 @@
   "@login_TextFieldLabelText_signupCode": {},
   "login_TextFieldLabelText_signupEmail": "Enter your email",
   "@login_TextFieldLabelText_signupEmail": {},
+  "login_Text_deviceLimitDescription": "This account is signed in on as many devices as it is allowed. Sign out one of them to continue on this device.",
+  "@login_Text_deviceLimitDescription": {
+    "description": "Explains the list on the device limit screen, shown instead of signing in when the account is on as many devices as it is allowed."
+  },
+  "login_Text_deviceLimitTitle": "Device limit reached",
+  "@login_Text_deviceLimitTitle": {
+    "description": "Title of the device limit screen, shown instead of signing in when the account is on as many devices as it is allowed."
+  },
   "login_Text_otpSigninRequestPostDescription": "",
   "@login_Text_otpSigninRequestPostDescription": {},
   "login_Text_otpSigninRequestPreDescription": "",

@@ -1261,6 +1261,26 @@ class AppLocalizationsIt extends AppLocalizations {
       'L\'account con questo indirizzo email non ha alcun metodo di contatto configurato per ricevere il codice di verifica';
 
   @override
+  String get login_RequestFailureDeviceLimitReachedError =>
+      'Limite di dispositivi raggiunto. Contatta l\'amministratore.';
+
+  @override
+  String get login_RequestFailureDeviceLimitStillReachedError =>
+      'Il limite di dispositivi è ancora raggiunto. Disconnetti un altro dispositivo.';
+
+  @override
+  String get login_RequestFailureDeviceSwitchLimitReachedError =>
+      'Limite di cambi di dispositivo raggiunto. Contatta l\'amministratore.';
+
+  @override
+  String get login_RequestFailurePendingLoginNotFoundError =>
+      'L\'accesso non è stato completato in tempo. Accedi di nuovo.';
+
+  @override
+  String get login_RequestFailurePendingLoginSessionNotFoundError =>
+      'Quel dispositivo è già disconnesso. Scegline un altro.';
+
+  @override
   String get login_RequestFailureEmptyEmailError => 'Impossibile inviare il codice di verifica';
 
   @override
@@ -1342,6 +1362,13 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get login_TextFieldLabelText_signupEmail => 'Inserisci la tua mail';
+
+  @override
+  String get login_Text_deviceLimitDescription =>
+      'Questo account è già connesso sul numero massimo di dispositivi consentiti. Disconnetti uno di essi per continuare su questo dispositivo.';
+
+  @override
+  String get login_Text_deviceLimitTitle => 'Limite di dispositivi raggiunto';
 
   @override
   String get login_Text_otpSigninRequestPostDescription => '';

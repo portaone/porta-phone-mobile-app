@@ -49,6 +49,7 @@ export 'messaging/messaging.dart';
 export 'metrics/metrics.dart';
 export 'negotiation_settings.dart';
 export 'peer_connection_settings.dart';
+export 'pending_login.dart';
 export 'presence/presence.dart';
 export 'queued_termination_request.dart';
 export 'recent.dart';
