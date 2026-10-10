@@ -113,12 +113,9 @@ dependencies:
   pub_semver: ^2.2.0
   quiver: ^3.2.2
   rxdart: ^0.28.0
-  # The lossless numeric-coercion guard for ICE ufrags is merged upstream but is
-  # not in the latest pub.dev release (0.3.2) yet.
-  sdp_transform:
-    git:
-      url: https://github.com/flutter-webrtc/dart-sdp-transform.git
-      ref: master
+  # 0.4.0 is the first release with the lossless numeric-coercion guard for ICE
+  # ufrags; nothing older may be resolved.
+  sdp_transform: ^0.4.0
   share_plus: ^13.1.0
   shared_preferences: ^2.5.5
   stream_transform: ^2.1.1

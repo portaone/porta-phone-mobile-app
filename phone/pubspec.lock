@@ -1554,12 +1554,11 @@ packages:
   sdp_transform:
     dependency: "direct main"
     description:
-      path: "."
-      ref: master
-      resolved-ref: ec68b14bc2386e4e90220699998486c8257150db
-      url: "https://github.com/flutter-webrtc/dart-sdp-transform.git"
-    source: git
-    version: "0.3.2"
+      name: sdp_transform
+      sha256: "8bf8144bb612ff308896eb665a5045e2551038ebfbd3bc067969653dce7f1c90"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0"
   share_plus:
     dependency: "direct main"
     description:
