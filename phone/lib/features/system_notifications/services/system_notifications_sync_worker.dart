@@ -5,6 +5,8 @@ import 'package:webtrit_phone/repositories/system_notifications/system_notificat
 import 'package:webtrit_phone/repositories/system_notifications/system_notifications_remote_repository.dart';
 import 'package:webtrit_phone/services/services.dart';
 
+import 'system_notifications_reconciler.dart';
+
 final _logger = Logger('SystemNotificationsSyncWorker');
 
 /// Owns the system notifications worker and its polling registration.
@@ -23,7 +25,8 @@ final class SystemNotificationsSync extends PollingWorkerOwner<SystemNotificatio
 ///
 /// A cycle fetches either the initial history or every update since the last
 /// locally known one - never both, so the first cycle after a wipe stays one
-/// bounded request.
+/// bounded request. A cycle of updates ends by reconciling the top of the
+/// history, which is the only way a delete made elsewhere is noticed.
 class SystemNotificationsSyncWorker implements PollingWorker {
   SystemNotificationsSyncWorker(this.localRepo, this.remoteRepo, {this.pageSize = 50})
     : assert(pageSize > 0, 'pageSize must be greater than zero');
@@ -32,6 +35,8 @@ class SystemNotificationsSyncWorker implements PollingWorker {
   final SystemNotificationsRemoteRepository remoteRepo;
 
   final int pageSize;
+
+  late final _reconciler = SystemNotificationsReconciler(localRepo, remoteRepo);
 
   @override
   bool get isActive => !_disposed;
@@ -45,19 +50,42 @@ class SystemNotificationsSyncWorker implements PollingWorker {
   Future<void> refresh() async {
     _ensureActive();
 
-    // The store is the anchor, except when it has been emptied by deleting
-    // everything in it: that is not a first load, and treating it as one would
+    // The store is the anchor, except when it has been emptied - by deleting
+    // everything in it here, or by a reconciliation that found all of it
+    // deleted elsewhere. That is not a first load, and treating it as one would
     // read the older history back and push every unseen notification in it as
-    // news. The newest update this worker has stored stands in for it then.
-    final lastUpdate = await localRepo.getLastUpdate() ?? _lastStoredUpdate;
+    // news. The newest update this worker has seen stands in for it then:
+    // whether it stored that update itself or found it already in the store.
+    _rememberAnchor(await localRepo.getLastUpdate());
+    final lastUpdate = _lastStoredUpdate;
     _ensureActive();
 
     if (lastUpdate == null) {
       await _refreshInitialHistory();
     } else {
       await _refreshUpdatesSince(lastUpdate);
+      await _reconcileNewest();
     }
     _hasCompletedSync = true;
+  }
+
+  // Updates never report a delete, so every cycle also compares the store with
+  // the top of the history: what was deleted elsewhere leaves the list and the
+  // unseen count without the screen being opened. A first load needs none - it
+  // has just read that page.
+  //
+  // Best effort. The updates of this cycle are already stored, and a history
+  // request that fails must not hold the next ones back: failing the cycle
+  // would back the whole task off for minutes over a step that only tidies up.
+  // It is tried again with the next cycle.
+  Future<void> _reconcileNewest() async {
+    try {
+      await _reconciler.reconcileNewest(limit: pageSize, stillWanted: _ensureActive);
+    } catch (e, s) {
+      // A worker retired on the way is a refusal to go on, not a failed request.
+      if (_disposed) rethrow;
+      _logger.warning('Failed to reconcile the newest notifications', e, s);
+    }
   }
 
   Future<void> _refreshInitialHistory() async {
@@ -98,9 +126,12 @@ class SystemNotificationsSyncWorker implements PollingWorker {
 
   void _remember(List<SystemNotification> stored) {
     if (stored.isEmpty) return;
-    final newest = _newestUpdate(stored);
+    _rememberAnchor(_newestUpdate(stored));
+  }
+
+  void _rememberAnchor(DateTime? update) {
     final last = _lastStoredUpdate;
-    if (last == null || newest.isAfter(last)) _lastStoredUpdate = newest;
+    if (update != null && (last == null || update.isAfter(last))) _lastStoredUpdate = update;
   }
 
   DateTime _newestUpdate(List<SystemNotification> notifications) =>

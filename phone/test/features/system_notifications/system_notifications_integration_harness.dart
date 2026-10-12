@@ -41,6 +41,9 @@ class SystemNotificationsIntegrationHarness {
     when(() => localPush.displayPush(any())).thenAnswer((invocation) async {
       pushes.add(invocation.positionalArguments.single as AppLocalPush);
     });
+    when(() => localPush.dismissByContent(any(), any())).thenAnswer((invocation) async {
+      dismissed.add(invocation.positionalArguments.first as String);
+    });
     pushService = SystemNotificationsPushService(
       remotePush,
       localPush,
@@ -61,6 +64,9 @@ class SystemNotificationsIntegrationHarness {
   final connectivity = FakeConnectivityService(initialConnected: false);
   final requests = <http.Request>[];
   final pushes = <AppLocalPush>[];
+
+  /// Titles of the local pushes taken out of the shade.
+  final dismissed = <String>[];
   late final AppDatabase database;
   late final SystemNotificationsLocalRepositoryDriftImpl local;
   late final api.WebtritApiClient client;
@@ -104,6 +110,29 @@ class SystemNotificationsIntegrationHarness {
     200,
     headers: {'content-type': 'application/json'},
   );
+
+  /// A backend that answers the two endpoints the way a real one does:
+  /// [updates] to the updates endpoint, and to the history endpoint the newest
+  /// of [history] created before `created_before`, no more than `limit`.
+  Future<http.Response> Function(http.Request) serving({
+    required List<SystemNotification> updates,
+    required List<SystemNotification> history,
+  }) => (request) async {
+    if (request.url.path.endsWith('/updates')) return response(updates);
+
+    final before = request.url.queryParameters['created_before'];
+    final limit = int.parse(request.url.queryParameters['limit']!);
+    final page = history.where((n) => before == null || n.createdAt.isBefore(DateTime.parse(before))).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return response(page.take(limit).toList());
+  };
+
+  /// The request at [index] asked for the history page below [before].
+  void expectHistoryBelow(int index, DateTime before) {
+    final request = requests[index];
+    expect(request.url.path, '/api/v1/user/notifications');
+    expect(request.url.queryParameters, {'limit': '2', 'created_before': before.toUtc().toIso8601String()});
+  }
 
   void expectRequest(int index, {DateTime? since}) {
     final request = requests[index];

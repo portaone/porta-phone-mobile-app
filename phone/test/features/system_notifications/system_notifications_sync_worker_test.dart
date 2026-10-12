@@ -32,7 +32,10 @@ SystemNotification _notification(int id, int minute) => SystemNotification(
 );
 
 void main() {
-  setUpAll(() => registerFallbackValue(FakePollingRegistration()));
+  setUpAll(() {
+    registerFallbackValue(FakePollingRegistration());
+    registerFallbackValue(<int>{});
+  });
 
   late MockSystemNotificationsLocalRepository localRepository;
   late MockSystemNotificationsRemoteRepository remoteRepository;
@@ -48,6 +51,8 @@ void main() {
         initialData: any(named: 'initialData'),
       ),
     ).thenAnswer((_) async {});
+    // An empty store has nothing to reconcile, so no history page is asked for.
+    when(() => localRepository.getNotificationIds()).thenAnswer((_) async => []);
     worker = SystemNotificationsSyncWorker(localRepository, remoteRepository, pageSize: 2);
   });
 
@@ -127,6 +132,70 @@ void main() {
       // Updates are stored as received, and are news rather than history.
       verify(() => localRepository.upsertNotifications([update])).called(1);
       verifyNever(() => remoteRepository.getHistory(limit: any(named: 'limit')));
+    });
+
+    test('a cycle of updates ends by reconciling the top of the history', () async {
+      final lastUpdate = DateTime.utc(2026, 1, 1);
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => lastUpdate);
+      when(() => remoteRepository.getUpdates(since: lastUpdate, limit: 2)).thenAnswer((_) async => []);
+      when(() => localRepository.getNotificationIds()).thenAnswer((_) async => [1, 2]);
+      when(() => localRepository.getOldestUnseenCreatedAt()).thenAnswer((_) async => null);
+      when(() => remoteRepository.getHistory(limit: 2)).thenAnswer((_) async => [_notification(2, 2)]);
+      when(
+        () => localRepository.deleteMissingFromPage(
+          known: any(named: 'known'),
+          present: any(named: 'present'),
+        ),
+      ).thenAnswer((_) async {});
+
+      await worker.refresh();
+
+      // Updates first, so what arrived in this cycle is in the store before it
+      // is compared; then the page, and what it does not list goes.
+      verifyInOrder([
+        () => remoteRepository.getUpdates(since: lastUpdate, limit: 2),
+        () => remoteRepository.getHistory(limit: 2),
+        () => localRepository.deleteMissingFromPage(known: {1, 2}, present: {2}),
+      ]);
+    });
+
+    test('a failed reconciliation does not fail the cycle: the updates are already stored', () async {
+      final lastUpdate = DateTime.utc(2026, 1, 1);
+      final update = _notification(1, 1);
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => lastUpdate);
+      when(() => remoteRepository.getUpdates(since: lastUpdate, limit: 2)).thenAnswer((_) async => [update]);
+      when(() => localRepository.getNotificationIds()).thenAnswer((_) async => [1]);
+      when(() => localRepository.getOldestUnseenCreatedAt()).thenAnswer((_) async => null);
+      when(() => remoteRepository.getHistory(limit: 2)).thenThrow(Exception('history unavailable'));
+
+      await expectLater(worker.refresh(), completes);
+
+      verify(() => localRepository.upsertNotifications([update])).called(1);
+    });
+
+    test('an anchor found in the store is remembered, so an emptied store is not a first load', () async {
+      // This worker has stored nothing itself: the anchor was already there.
+      final lastUpdate = DateTime.utc(2026, 1, 1);
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => lastUpdate);
+      when(() => remoteRepository.getUpdates(since: lastUpdate, limit: 2)).thenAnswer((_) async => []);
+      await worker.refresh();
+
+      // Everything it held was found deleted elsewhere; the store has no anchor now.
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
+      await worker.refresh();
+
+      verify(() => remoteRepository.getUpdates(since: lastUpdate, limit: 2)).called(2);
+      verifyNever(() => remoteRepository.getHistory(limit: any(named: 'limit')));
+    });
+
+    test('a first load reads the history once and reconciles nothing', () async {
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
+      when(() => remoteRepository.getHistory(limit: 2)).thenAnswer((_) async => [_notification(1, 1)]);
+
+      await worker.refresh();
+
+      verify(() => remoteRepository.getHistory(limit: 2)).called(1);
+      verifyNever(() => localRepository.getNotificationIds());
     });
 
     test('advances the anchor page by page until a page is not full', () async {

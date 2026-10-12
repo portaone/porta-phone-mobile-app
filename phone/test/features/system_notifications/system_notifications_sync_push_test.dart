@@ -67,6 +67,8 @@ void main() {
             when(() => remote.getHistory(limit: 50)).thenAnswer((_) async => [news]);
           } else {
             when(() => remote.getUpdates(since: historical.updatedAt, limit: 50)).thenAnswer((_) async => [news]);
+            // The history the cycle reconciles against carries the news too.
+            when(() => remote.getHistory(limit: 50)).thenAnswer((_) async => [news, historical]);
           }
           await worker.refresh();
           await pumpEventQueue();
