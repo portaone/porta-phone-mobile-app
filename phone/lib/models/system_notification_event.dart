@@ -28,8 +28,19 @@ final class SystemNotificationUpdate extends SystemNotificationEvent with Equata
 }
 
 final class SystemNotificationRemove extends SystemNotificationEvent with EquatableMixin {
-  SystemNotificationRemove(this.id);
+  SystemNotificationRemove(this.id, {this.notification});
+
+  /// The id of the notification that was removed - always there.
+  ///
+  /// Kept apart from [notification] because that one may be missing: an id
+  /// the store did not hold, or no longer held, is still removed and still
+  /// reaches the listeners that only need the id (the list, the outbox).
   final int id;
+
+  /// What was removed, where the store still had it - a listener that must
+  /// find something by its text (a local push) has nothing else to go by once
+  /// the row is gone. Not part of equality: the event is about [id].
+  final SystemNotification? notification;
 
   @override
   List<Object?> get props => [id];
