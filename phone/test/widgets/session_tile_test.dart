@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:api/api.dart' show AppType;
 
-import 'package:webtrit_phone/features/settings/features/sessions/widgets/session_tile.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 

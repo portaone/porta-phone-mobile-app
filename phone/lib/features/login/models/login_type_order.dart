@@ -41,3 +41,27 @@ List<LoginType> sortLoginTypes(List<LoginType> types, {List<String> orderConfig 
   });
   return [for (final entry in indexed) entry.$2];
 }
+
+/// The sign-in options to offer, in the order to show them.
+///
+/// [supportedFeatures] is what the backend adapter advertises. Only the
+/// sign-ins the backend performs are read from it: the QR tab is not a backend
+/// capability - the scanned code carries plain credentials - so it is offered
+/// whenever password sign-in is and [qrEnabled] says so, and an adapter
+/// advertising it can neither bypass that gate nor duplicate the tab. A demo
+/// offers signing up only.
+List<LoginType> resolveLoginTypes(
+  List<String> supportedFeatures, {
+  required bool qrEnabled,
+  List<String> orderConfig = const [],
+  bool demo = false,
+}) {
+  const backendLoginTypes = [LoginType.otpSignin, LoginType.passwordSignin, LoginType.signup];
+  final types = backendLoginTypes.where((type) => supportedFeatures.contains(type.name)).toList();
+  if (qrEnabled && types.contains(LoginType.passwordSignin)) types.add(LoginType.qrSignin);
+
+  // The backend may list the options in an unstable order; see [sortLoginTypes].
+  final sorted = sortLoginTypes(types, orderConfig: orderConfig);
+  if (demo) sorted.removeWhere((type) => type != LoginType.signup);
+  return sorted;
+}

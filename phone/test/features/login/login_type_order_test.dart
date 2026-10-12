@@ -50,4 +50,41 @@ void main() {
       expect(sortLoginTypes(const []), isEmpty);
     });
   });
+
+  group('resolveLoginTypes', () {
+    const all = ['otpSignin', 'passwordSignin', 'signup'];
+
+    test('offers what the backend advertises, in the client order', () {
+      expect(resolveLoginTypes(const ['signup', 'otpSignin', 'passwordSignin', 'voicemail'], qrEnabled: false), [
+        LoginType.passwordSignin,
+        LoginType.otpSignin,
+        LoginType.signup,
+      ]);
+    });
+
+    test('adds the QR tab next to password sign-in when the app enables it', () {
+      expect(resolveLoginTypes(all, qrEnabled: true), contains(LoginType.qrSignin));
+      expect(resolveLoginTypes(all, qrEnabled: false), isNot(contains(LoginType.qrSignin)));
+    });
+
+    test('offers no QR tab without password sign-in, whatever the backend advertises', () {
+      expect(resolveLoginTypes(const ['otpSignin', 'qrSignin'], qrEnabled: true), [LoginType.otpSignin]);
+      expect(resolveLoginTypes(const ['passwordSignin', 'qrSignin'], qrEnabled: false), [LoginType.passwordSignin]);
+    });
+
+    test('shows the QR tab once when the backend advertises it too', () {
+      final types = resolveLoginTypes(const ['passwordSignin', 'qrSignin'], qrEnabled: true);
+
+      expect(types.where((type) => type == LoginType.qrSignin), hasLength(1));
+    });
+
+    test('honours the configured order', () {
+      expect(resolveLoginTypes(all, qrEnabled: false, orderConfig: const ['otpSignin']).first, LoginType.otpSignin);
+    });
+
+    test('a demo offers signing up only', () {
+      expect(resolveLoginTypes(all, qrEnabled: true, demo: true), [LoginType.signup]);
+      expect(resolveLoginTypes(const ['passwordSignin'], qrEnabled: true, demo: true), isEmpty);
+    });
+  });
 }

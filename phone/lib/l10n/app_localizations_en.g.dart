@@ -1252,6 +1252,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'The account with this email address has no contact method configured to receive the verification code';
 
   @override
+  String get login_RequestFailureDeviceLimitReachedError => 'Device limit reached. Contact your administrator.';
+
+  @override
+  String get login_RequestFailureDeviceLimitStillReachedError =>
+      'The device limit is still reached. Sign out another device.';
+
+  @override
+  String get login_RequestFailureDeviceSwitchLimitReachedError =>
+      'Device switch limit reached. Contact your administrator.';
+
+  @override
+  String get login_RequestFailurePendingLoginNotFoundError => 'The sign-in was not finished in time. Sign in again.';
+
+  @override
+  String get login_RequestFailurePendingLoginSessionNotFoundError =>
+      'That device is already signed out. Choose another one.';
+
+  @override
   String get login_RequestFailureEmptyEmailError => 'Cannot send the verification code';
 
   @override
@@ -1332,6 +1350,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get login_TextFieldLabelText_signupEmail => 'Enter your email';
+
+  @override
+  String get login_Text_deviceLimitDescription =>
+      'This account is signed in on as many devices as it is allowed. Sign out one of them to continue on this device.';
+
+  @override
+  String get login_Text_deviceLimitTitle => 'Device limit reached';
 
   @override
   String get login_Text_otpSigninRequestPostDescription => '';

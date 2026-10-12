@@ -59,21 +59,22 @@ void main() {
   test('maps delivery_channel_unspecified to a visible notification', () async {
     final cubit = buildCubit();
 
-    cubit.handleError(_requestFailure('delivery_channel_unspecified'), StackTrace.current, 'test');
+    // A one-time code typed on another tab says nothing about this request.
+    cubit.otpSigninUserRefInputChanged('380441234567');
+
+    cubit.handleError(_requestFailure('delivery_channel_unspecified'), StackTrace.current, LoginOperation.signup);
     await pumpEventQueue();
 
     final notification = notificationsBloc.state.lastNotification;
     expect(notification, isA<LoginDeliveryChannelUnspecifiedNotification>());
-    // The OTP user reference input is untouched, so the error cannot be
-    // attributed to the OTP sign-in form and the message stays generic.
+    // Not the request of a one-time code, so the message stays generic.
     expect((notification as LoginDeliveryChannelUnspecifiedNotification).identifiers, isEmpty);
   });
 
-  test('delivery_channel_unspecified carries the advertised identifiers when the OTP form was used', () async {
+  test('delivery_channel_unspecified carries the advertised identifiers when a one-time code was asked for', () async {
     final cubit = buildCubit();
-    cubit.otpSigninUserRefInputChanged('380441234567');
 
-    cubit.handleError(_requestFailure('delivery_channel_unspecified'), StackTrace.current, 'test');
+    cubit.handleError(_requestFailure('delivery_channel_unspecified'), StackTrace.current, LoginOperation.otpRequest);
     await pumpEventQueue();
 
     final notification = notificationsBloc.state.lastNotification;
@@ -84,7 +85,7 @@ void main() {
   test('maps empty_email to a visible notification', () async {
     final cubit = buildCubit();
 
-    cubit.handleError(_requestFailure('empty_email'), StackTrace.current, 'test');
+    cubit.handleError(_requestFailure('empty_email'), StackTrace.current, LoginOperation.passwordSignin);
     await pumpEventQueue();
 
     expect(notificationsBloc.state.lastNotification, isA<LoginEmptyEmailNotification>());
@@ -93,7 +94,11 @@ void main() {
   test('maps addon_required to a visible notification', () async {
     final cubit = buildCubit();
 
-    cubit.handleError(_requestFailure('addon_required', statusCode: 403), StackTrace.current, 'test');
+    cubit.handleError(
+      _requestFailure('addon_required', statusCode: 403),
+      StackTrace.current,
+      LoginOperation.passwordSignin,
+    );
     await pumpEventQueue();
 
     expect(notificationsBloc.state.lastNotification, isA<LoginAddonRequiredNotification>());
@@ -110,7 +115,7 @@ void main() {
         error: const ErrorResponse(message: 'User authentication error'),
       ),
       StackTrace.current,
-      'test',
+      LoginOperation.passwordSignin,
     );
     await pumpEventQueue();
 
@@ -120,7 +125,11 @@ void main() {
   test('a failure with no wording of its own still reaches the user', () async {
     final cubit = buildCubit();
 
-    cubit.handleError(_requestFailure('something_the_app_never_heard_of'), StackTrace.current, 'test');
+    cubit.handleError(
+      _requestFailure('something_the_app_never_heard_of'),
+      StackTrace.current,
+      LoginOperation.passwordSignin,
+    );
     await pumpEventQueue();
 
     expect(notificationsBloc.state.lastNotification, isA<LoginUnexpectedErrorNotification>());
@@ -129,7 +138,7 @@ void main() {
   test('a transport failure reaches the user as well', () async {
     final cubit = buildCubit();
 
-    cubit.handleError(const SocketException('no route to host'), StackTrace.current, 'test');
+    cubit.handleError(const SocketException('no route to host'), StackTrace.current, LoginOperation.passwordSignin);
     await pumpEventQueue();
 
     expect(notificationsBloc.state.lastNotification, isA<LoginUnexpectedErrorNotification>());

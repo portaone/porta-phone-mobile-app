@@ -1,7 +1,9 @@
 export 'code_input.dart';
 export 'email_input.dart';
 export 'notifications.dart';
+export 'login_error_notification.dart';
 export 'login_mode.dart';
+export 'login_operation.dart';
 export 'login_type.dart';
 export 'login_type_order.dart';
 export 'otp_signin_identifier.dart';

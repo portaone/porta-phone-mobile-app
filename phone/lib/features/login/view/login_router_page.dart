@@ -15,7 +15,12 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 bool whenLoginRouterPageChange(LoginState previous, LoginState current) {
   return (previous.mode != current.mode) ||
       (previous.coreUrl != current.coreUrl || previous.supportedLoginTypes != current.supportedLoginTypes) ||
-      previous.embedded != current.embedded;
+      previous.embedded != current.embedded ||
+      whenLoginDeviceLimitScreenPageActive(previous) != whenLoginDeviceLimitScreenPageActive(current);
+}
+
+bool whenLoginDeviceLimitScreenPageActive(LoginState state) {
+  return state.pendingLogin != null;
 }
 
 bool whenLoginEmbeddedScreenPageActive(LoginState state) {
@@ -70,6 +75,10 @@ class LoginRouterPage extends StatelessWidget {
                   isLogoVisible: false,
                   isAppBarVisible: false,
                 ),
+
+              // The account is on as many devices as it is allowed: whichever sign-in led here, the
+              // login waits on top of it until one of them is signed out.
+              if (whenLoginDeviceLimitScreenPageActive(state)) const LoginDeviceLimitScreenPageRoute(),
             ];
           },
           onPopRoute: (route, results) {
@@ -82,6 +91,9 @@ class LoginRouterPage extends StatelessWidget {
                 break;
               case LoginSwitchScreenPageRoute.name:
                 _onSwitchBack(context);
+                break;
+              case LoginDeviceLimitScreenPageRoute.name:
+                _onDeviceLimitBack(context);
                 break;
             }
           },
@@ -117,6 +129,10 @@ class LoginRouterPage extends StatelessWidget {
 
   void _onSwitchBack(BuildContext context) {
     context.read<LoginCubit>().loginSwitchBack();
+  }
+
+  void _onDeviceLimitBack(BuildContext context) {
+    context.read<LoginCubit>().loginDeviceLimitBack();
   }
 }
 

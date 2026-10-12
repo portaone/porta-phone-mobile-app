@@ -1274,6 +1274,23 @@ class AppLocalizationsUk extends AppLocalizations {
       'Обліковий запис із цією адресою електронної пошти не має налаштованого способу зв\'язку для отримання коду підтвердження';
 
   @override
+  String get login_RequestFailureDeviceLimitReachedError => 'Досягнуто ліміту пристроїв. Зверніться до адміністратора.';
+
+  @override
+  String get login_RequestFailureDeviceLimitStillReachedError =>
+      'Ліміт пристроїв усе ще досягнуто. Вийдіть ще з одного пристрою.';
+
+  @override
+  String get login_RequestFailureDeviceSwitchLimitReachedError =>
+      'Досягнуто ліміту зміни пристроїв. Зверніться до адміністратора.';
+
+  @override
+  String get login_RequestFailurePendingLoginNotFoundError => 'Вхід не було завершено вчасно. Увійдіть ще раз.';
+
+  @override
+  String get login_RequestFailurePendingLoginSessionNotFoundError => 'З цього пристрою вже вийшли. Оберіть інший.';
+
+  @override
   String get login_RequestFailureEmptyEmailError => 'Не вдалося відправити код підтвердження';
 
   @override
@@ -1355,6 +1372,13 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get login_TextFieldLabelText_signupEmail => 'Введіть свою електронну пошту';
+
+  @override
+  String get login_Text_deviceLimitDescription =>
+      'У цей обліковий запис уже ввійшли з максимально дозволеної кількості пристроїв. Вийдіть з одного з них, щоб продовжити на цьому пристрої.';
+
+  @override
+  String get login_Text_deviceLimitTitle => 'Досягнуто ліміту пристроїв';
 
   @override
   String get login_Text_otpSigninRequestPostDescription => '';
