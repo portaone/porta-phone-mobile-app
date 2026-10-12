@@ -64,16 +64,8 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         borderRadius: _cardRadius,
-        color: seen ? colorScheme.surfaceBright : colorScheme.primaryContainer,
+        color: seen ? _readSurface(colorScheme) : colorScheme.primaryContainer,
         border: Border(left: BorderSide(color: wasSeen ? colorScheme.primary : colorScheme.tertiary, width: 4)),
-        boxShadow: [
-          BoxShadow(
-            color: (seen ? colorScheme.primary : colorScheme.tertiary).withAlpha(50),
-            blurRadius: 16,
-            spreadRadius: 4,
-            offset: const Offset(4, 4),
-          ),
-        ],
       ),
       child: Column(
         children: [
@@ -250,7 +242,7 @@ class _SwipeToDelete extends StatelessWidget {
         // list a person is tidying up.
         background: DecoratedBox(
           decoration: BoxDecoration(
-            color: Color.alphaBlend(colorScheme.errorContainer.withValues(alpha: 0.45), colorScheme.surfaceBright),
+            color: Color.alphaBlend(colorScheme.errorContainer.withValues(alpha: 0.45), _readSurface(colorScheme)),
             borderRadius: _cardRadius,
           ),
           child: Padding(
@@ -267,6 +259,16 @@ class _SwipeToDelete extends StatelessWidget {
     );
   }
 }
+
+/// A read card, a shade lighter than the screen behind it.
+///
+/// In the stock dark theme the screen behind the list is as light as
+/// `surfaceBright`, the lightest surface role, so a card in any surface role
+/// melts into it or reads as a hole. A little of `onSurface` laid over
+/// `surfaceBright` lifts it instead, stays neutral, and follows the brand's
+/// scheme.
+Color _readSurface(ColorScheme colorScheme) =>
+    Color.alphaBlend(colorScheme.onSurface.withValues(alpha: 0.06), colorScheme.surfaceBright);
 
 /// The kind of a notification at a glance, taken from the scheme so a brand
 /// that recolours the app recolours these with it.
