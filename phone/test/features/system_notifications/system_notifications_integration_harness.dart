@@ -23,13 +23,20 @@ import '../../mocks/fake_connectivity_service.dart';
 /// Real API mapping, polling owner, file-backed SQLite and push policy.
 /// Only HTTP, connectivity eligibility and the native push boundary are faked.
 class SystemNotificationsIntegrationHarness {
-  SystemNotificationsIntegrationHarness._(this.directory, {required bool producePush}) {
+  SystemNotificationsIntegrationHarness._(this.directory, {required bool producePush, this.journal}) {
     database = AppDatabase(NativeDatabase(File('${directory.path}/notifications.sqlite')));
     local = SystemNotificationsLocalRepositoryDriftImpl(database);
     client = api.WebtritApiClient.inner(Uri.parse('https://refresh.test'), '', httpClient: MockClient(_respond));
     client.sessionRejections.listen((rejection) => fail('Unexpected session rejection: $rejection'));
     final remote = SystemNotificationsRemoteRepositoryApiImpl(client, 'integration-token');
-    worker = SystemNotificationsSyncWorker(local, remote, pageSize: 2);
+    worker = SystemNotificationsSyncWorker(
+      local,
+      remote,
+      pageSize: 2,
+      journal: journal,
+      deletedRetention: () => deletedRetention,
+      now: () => now,
+    );
     polling = PollingService(connectivityService: connectivity, options: const PollingOptions(jitterRatio: 0));
     owner = SystemNotificationsSync(worker: worker, pollingService: polling, interval: const Duration(hours: 1));
     registerFallbackValue(AppLocalPush(0, '', ''));
@@ -53,14 +60,26 @@ class SystemNotificationsIntegrationHarness {
     )..init();
   }
 
-  static Future<SystemNotificationsIntegrationHarness> create({bool producePush = true}) async {
+  /// With a [journal] the worker records its syncs and can find its store
+  /// stale; without one, as most scenarios run, it never does.
+  static Future<SystemNotificationsIntegrationHarness> create({
+    bool producePush = true,
+    SystemNotificationsSyncJournal? journal,
+  }) async {
     final directory = await Directory.systemTemp.createTemp('system-notifications-sync-');
-    final harness = SystemNotificationsIntegrationHarness._(directory, producePush: producePush);
+    final harness = SystemNotificationsIntegrationHarness._(directory, producePush: producePush, journal: journal);
     addTearDown(harness.dispose);
     return harness;
   }
 
   final Directory directory;
+  final SystemNotificationsSyncJournal? journal;
+
+  /// For how long the backend of the scenario reports a deleted notification.
+  Duration? deletedRetention = const Duration(days: 180);
+
+  /// The clock of the worker.
+  DateTime now = DateTime.utc(2026, 10, 12);
   final connectivity = FakeConnectivityService(initialConnected: false);
   final requests = <http.Request>[];
   final pushes = <AppLocalPush>[];
@@ -168,3 +187,14 @@ class SystemNotificationsIntegrationHarness {
 class _LocalPush extends Mock implements LocalPushRepository {}
 
 class _RemotePush extends Mock implements RemotePushRepository {}
+
+/// A record of the last sync kept in memory.
+class MemorySyncJournal implements SystemNotificationsSyncJournal {
+  MemorySyncJournal([this.lastSyncedAt]);
+
+  @override
+  DateTime? lastSyncedAt;
+
+  @override
+  Future<void> markSynced(DateTime at) async => lastSyncedAt = at;
+}

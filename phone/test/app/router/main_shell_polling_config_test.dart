@@ -26,6 +26,8 @@ class _UserRepository extends Mock implements UserRepository {}
 
 class _SystemInfoRepository extends Mock implements SystemInfoRepository {}
 
+class _AppPreferences extends Mock implements AppPreferences {}
+
 class _CallerIdSettingsRepository extends Fake implements CallerIdSettingsRepository {}
 
 class _FavoritesRepository extends Fake implements FavoritesRepository {}
@@ -429,6 +431,9 @@ Future<(FakeConnectivityService, PollingService)> _pumpShell(
   when(() => userRepository.getRemoteInfo()).thenAnswer((_) async => _userInfo);
   when(() => userRepository.storeInfo(any())).thenAnswer((_) async {});
   when(() => systemInfoRepository.isActive).thenReturn(false);
+  // The notifications sync asks it, every cycle, for how long the core reports deletes.
+  final systemInfo = createMockSystemInfo();
+  when(() => systemInfoRepository.getLocalSystemInfo()).thenReturn(systemInfo);
   late PollingService polling;
 
   await tester.pumpWidget(
@@ -438,6 +443,8 @@ Future<(FakeConnectivityService, PollingService)> _pumpShell(
         Provider<ConnectivityService>.value(value: connectivity),
         Provider<UserRepository>.value(value: userRepository),
         Provider<SystemInfoRepository>.value(value: systemInfoRepository),
+        // Where the notifications sync keeps the record of its last sync.
+        Provider<AppPreferences>.value(value: _AppPreferences()),
         Provider<CallerIdSettingsRepository>.value(value: _CallerIdSettingsRepository()),
         Provider<FavoritesRepository>.value(value: _FavoritesRepository()),
         Provider<SipSubscriptionsRepository>.value(value: _SipSubscriptionsRepository()),

@@ -42,11 +42,16 @@ mixin SystemInfoJsonMapper {
     return CoreInfo(
       version: Version.parse(map['version']),
       iceServersConfigured: map['ice_servers_configured'] == true,
+      notificationDeletedRetentionDays: map['notification_deleted_retention_days'] as int?,
     );
   }
 
   Map<String, dynamic> coreInfoToMap(CoreInfo coreInfo) {
-    return {'version': coreInfo.version.toString(), 'ice_servers_configured': coreInfo.iceServersConfigured};
+    return {
+      'version': coreInfo.version.toString(),
+      'ice_servers_configured': coreInfo.iceServersConfigured,
+      'notification_deleted_retention_days': coreInfo.notificationDeletedRetentionDays,
+    };
   }
 
   PostgresInfo postgresInfoFromMap(Map<String, dynamic> map) {
