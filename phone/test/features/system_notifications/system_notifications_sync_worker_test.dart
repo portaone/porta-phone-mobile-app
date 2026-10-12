@@ -154,6 +154,23 @@ void main() {
       verifyNoMoreInteractions(remoteRepository);
     });
 
+    test('a delete that was read moves the anchor though the store does not hold it', () async {
+      final stored = DateTime.utc(2026, 1, 1);
+      final deletedAt = DateTime.utc(2026, 1, 2);
+      final deleted = _notification(1, 1).copyWith(updatedAt: deletedAt, deletedAt: deletedAt);
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => stored);
+      when(() => remoteRepository.getUpdates(since: stored, limit: 2)).thenAnswer((_) async => [deleted]);
+      when(() => remoteRepository.getUpdates(since: deletedAt, limit: 2)).thenAnswer((_) async => []);
+
+      await worker.refresh();
+      await worker.refresh();
+
+      // The store still answers with its own, older anchor; the delete is not fetched again.
+      verify(() => remoteRepository.getUpdates(since: stored, limit: 2)).called(1);
+      verify(() => remoteRepository.getUpdates(since: deletedAt, limit: 2)).called(1);
+      verify(() => localRepository.upsertNotifications([deleted])).called(1);
+    });
+
     test('a full page that cannot advance the anchor ends the cycle', () async {
       // The endpoint pages by timestamp. A full page of records sharing one
       // timestamp would otherwise be requested and stored forever, hanging the

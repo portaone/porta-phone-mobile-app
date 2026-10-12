@@ -11,6 +11,7 @@ class SystemNotification extends Equatable {
     required this.seen,
     required this.createdAt,
     required this.updatedAt,
+    this.deletedAt,
   });
 
   final int id;
@@ -21,12 +22,21 @@ class SystemNotification extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// When the backend deleted it; null for a notification that exists.
+  ///
+  /// Only the updates of a sync carry a deleted notification. It is how a
+  /// delete made on another device, or by the backend's retention, is heard of
+  /// - and it is never stored: the store drops what arrives deleted.
+  final DateTime? deletedAt;
+
+  bool get isDeleted => deletedAt != null;
+
   @override
-  List<Object?> get props => [id, title, content, type, seen, createdAt, updatedAt];
+  List<Object?> get props => [id, title, content, type, seen, createdAt, updatedAt, deletedAt];
 
   @override
   String toString() {
-    return 'SystemNotification(id: $id, title: $title, content: $content, type: $type, seen: $seen, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'SystemNotification(id: $id, title: $title, content: $content, type: $type, seen: $seen, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
   }
 
   SystemNotification copyWith({
@@ -37,6 +47,7 @@ class SystemNotification extends Equatable {
     bool? seen,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? deletedAt,
   }) {
     return SystemNotification(
       id: id ?? this.id,
@@ -46,6 +57,7 @@ class SystemNotification extends Equatable {
       seen: seen ?? this.seen,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 }
