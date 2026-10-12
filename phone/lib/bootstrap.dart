@@ -401,7 +401,7 @@ class FirebaseIntegrationEnabled implements FirebaseIntegration {
   }
 
   @override
-  AppIdProvider get appIdProvider => FirebaseAppIdProvider();
+  AppIdProvider get appIdProvider => DeviceAppIdProvider(fallback: FirebaseAppIdProvider.new);
 
   @override
   Future<RemoteConfigService> remoteConfig(DefaultRemoteCacheConfigService cache) async {

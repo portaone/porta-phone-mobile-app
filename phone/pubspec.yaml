@@ -131,6 +131,7 @@ dependencies:
     path: ./packages/data/app_database
   device_auto_rotate:
     path: ./packages/device_auto_rotate
+  durable_device_id: ^0.1.0
   pjsua_companion:
     path: ./packages/pjsua_companion
   ssl_certificates:
