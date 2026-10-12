@@ -55,10 +55,11 @@ final class SystemNotificationsOutbox extends PollingWorkerOwner<SystemNotificat
 
 /// Sends the locally queued system notification actions to the backend.
 ///
-/// Marking a notification as seen is written to the outbox rather than sent
-/// from the screen, so the tap survives being offline and being killed. One
-/// [refresh] is one attempt at every pending entry; [PollingService] owns
-/// scheduling, connectivity, single-flight, and the delay between attempts.
+/// Marking a notification as seen, and deleting one, is written to the outbox
+/// rather than sent from the screen, so the action survives being offline and
+/// being killed. One [refresh] is one attempt at every pending entry;
+/// [PollingService] owns scheduling, connectivity, single-flight, and the
+/// delay between attempts.
 class SystemNotificationsOutboxWorker implements PollingWorker {
   SystemNotificationsOutboxWorker(this.localRepo, this.remoteRepo) {
     // The queue is reconciled against what the backend confirms, so the
@@ -86,17 +87,27 @@ class SystemNotificationsOutboxWorker implements PollingWorker {
   Future<void> refresh() async {
     _ensureActive();
 
+    Object? firstError;
+    StackTrace? firstStackTrace;
+
+    // Deletes first: a receipt for a notification that is about to go is a
+    // request for nothing, and the delete takes the receipt with it.
+    try {
+      await _sendDeletes();
+    } catch (e, s) {
+      _logger.warning('Sending queued deletes failed', e, s);
+      firstError = e;
+      firstStackTrace = s;
+    }
+    _ensureActive();
+
     final pending = await localRepo.getOutboxNotifications(
       actionType: SnOutboxActionType.seen,
       states: const [SnOutboxState.pending],
     );
     _ensureActive();
 
-    if (pending.isEmpty) return;
-    _logger.fine('Pending seen entries: ${pending.length}');
-
-    Object? firstError;
-    StackTrace? firstStackTrace;
+    if (pending.isNotEmpty) _logger.fine('Pending seen entries: ${pending.length}');
 
     for (final entry in pending) {
       _ensureActive();
@@ -116,6 +127,11 @@ class SystemNotificationsOutboxWorker implements PollingWorker {
       }
 
       _ensureActive();
+      // Deleted while the receipt was out: its outbox row went with it, and
+      // writing it back would point at a row that is no longer there - the
+      // foreign key refuses that and the whole cycle would fail on it.
+      if (await localRepo.getNotificationById(entry.notificationId) == null) continue;
+      _ensureActive();
       await localRepo.upsertOutboxNotification(entry.toSent());
       _logger.fine('Seen notification sent: ${entry.notificationId}');
     }
@@ -123,6 +139,28 @@ class SystemNotificationsOutboxWorker implements PollingWorker {
     if (firstError != null) {
       Error.throwWithStackTrace(firstError, firstStackTrace!);
     }
+  }
+
+  /// Sends every queued delete in one request and, once the backend has
+  /// answered, drops the notifications for good.
+  ///
+  /// Every id sent is gone from the backend after the answer - deleted now, or
+  /// already gone - so all of them go, not only those it reports. A failure
+  /// leaves the queue as it was for the next cycle; the notifications stay
+  /// hidden meanwhile.
+  Future<void> _sendDeletes() async {
+    final queued = await localRepo.getOutboxNotifications(
+      actionType: SnOutboxActionType.delete,
+      states: const [SnOutboxState.pending],
+    );
+    _ensureActive();
+    if (queued.isEmpty) return;
+
+    final ids = queued.map((entry) => entry.notificationId).toList();
+    _logger.fine('Queued deletes: ${ids.length}');
+    await remoteRepo.deleteNotifications(ids);
+    _ensureActive();
+    await localRepo.deleteNotifications(ids);
   }
 
   /// Drops an entry the backend has confirmed.

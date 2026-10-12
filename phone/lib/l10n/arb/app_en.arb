@@ -2960,6 +2960,27 @@
   "@system_notifications_screen_list_empty": {},
   "system_notifications_screen_title": "Notifications",
   "@system_notifications_screen_title": {},
+  "system_notifications_Dialog_deleteAllContent": "They will be deleted from your account, not only from this device. This cannot be undone.",
+  "@system_notifications_Dialog_deleteAllContent": {
+    "description": "Body of the question asked before every notification stored on the device is deleted; says they go from the account, not just the device."
+  },
+  "system_notifications_Dialog_deleteAllTitle": "{count, plural, one{Delete {count} notification?} other{Delete {count} notifications?}}",
+  "@system_notifications_Dialog_deleteAllTitle": {
+    "description": "Title of the question asked before deleting every notification stored on the device; carries how many.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "system_notifications_SemanticsAction_delete": "Delete",
+  "@system_notifications_SemanticsAction_delete": {
+    "description": "Screen reader action on a notification row that deletes it, the same as swiping it away."
+  },
+  "system_notifications_SemanticsLabel_deleteAll": "Delete all notifications",
+  "@system_notifications_SemanticsLabel_deleteAll": {
+    "description": "Name of the header button that deletes every notification stored on the device."
+  },
   "themeMode_dark": "Dark",
   "@themeMode_dark": {},
   "themeMode_light": "Light",

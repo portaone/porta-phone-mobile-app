@@ -84,4 +84,49 @@ void main() {
       );
     }
   }
+
+  test('a store emptied by deleting is not a first load: nothing is read back, nothing is pushed', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    final local = SystemNotificationsLocalRepositoryDriftImpl(database);
+    final remote = _Remote();
+    final localPush = _LocalPush();
+    final remotePush = _RemotePush();
+    when(() => localPush.systemNotificationsActions).thenAnswer((_) => const Stream.empty());
+    when(() => remotePush.systemNotificationsOpenedPushs).thenAnswer((_) => const Stream.empty());
+    when(() => remotePush.systemNotificationsForegroundPushs).thenAnswer((_) => const Stream.empty());
+    when(() => localPush.displayPush(any())).thenAnswer((_) async {});
+    when(() => localPush.dismissByContent(any(), any())).thenAnswer((_) async {});
+    final pushes = SystemNotificationsPushService(
+      remotePush,
+      localPush,
+      local,
+      openNotifications: () {},
+      producePush: true,
+    )..init();
+    addTearDown(pushes.dispose);
+    final worker = SystemNotificationsSyncWorker(local, remote);
+    addTearDown(worker.dispose);
+
+    final stored = _notification(3);
+    when(() => remote.getHistory(limit: 50)).thenAnswer((_) async => [stored]);
+    await worker.refresh();
+
+    // Everything on the device is deleted. The backend still has older,
+    // unseen history, which a first load would read back and push.
+    await local.deleteNotifications([stored.id]);
+    await pumpEventQueue();
+    when(() => remote.getHistory(limit: 50)).thenAnswer((_) async => [_notification(1), _notification(2)]);
+    when(() => remote.getUpdates(since: stored.updatedAt, limit: 50)).thenAnswer((_) async => []);
+
+    await worker.refresh();
+    await pumpEventQueue();
+
+    verify(() => remote.getHistory(limit: 50)).called(1);
+    verify(() => remote.getUpdates(since: stored.updatedAt, limit: 50)).called(1);
+    expect(await local.getNotifications(), isEmpty);
+    verifyNever(() => localPush.displayPush(any()));
+    // And the deleted notification's own push left the shade.
+    verify(() => localPush.dismissByContent(stored.title, stored.content)).called(1);
+  });
 }

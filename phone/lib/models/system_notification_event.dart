@@ -7,7 +7,7 @@ sealed class SystemNotificationEvent {
   const SystemNotificationEvent();
 
   factory SystemNotificationEvent.update(SystemNotification n) => SystemNotificationUpdate(n);
-  factory SystemNotificationEvent.remove(int id) => SystemNotificationRemove(id);
+  factory SystemNotificationEvent.remove(SystemNotification n) => SystemNotificationRemove(n);
   factory SystemNotificationEvent.outboxUpdate(SystemNotificationOutboxEntry e) => SystemNotificationOutboxUpdate(e);
   factory SystemNotificationEvent.outboxRemove(int id, SnOutboxActionType actionType) =>
       SystemNotificationOutboxRemove(id, actionType);
@@ -28,8 +28,14 @@ final class SystemNotificationUpdate extends SystemNotificationEvent with Equata
 }
 
 final class SystemNotificationRemove extends SystemNotificationEvent with EquatableMixin {
-  SystemNotificationRemove(this.id);
-  final int id;
+  SystemNotificationRemove(this.notification);
+
+  /// What was removed, read before the row went - a listener that must find
+  /// something by its text (a local push) has nothing else to go by once the
+  /// row is gone.
+  final SystemNotification notification;
+
+  int get id => notification.id;
 
   @override
   List<Object?> get props => [id];

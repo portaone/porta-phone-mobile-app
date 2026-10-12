@@ -3267,6 +3267,22 @@ class AppLocalizationsTh extends AppLocalizations {
   String get system_notifications_screen_title => 'การแจ้งเตือน';
 
   @override
+  String get system_notifications_Dialog_deleteAllContent =>
+      'การแจ้งเตือนจะถูกลบออกจากบัญชีของคุณ ไม่ใช่แค่จากอุปกรณ์นี้ การดำเนินการนี้ไม่สามารถยกเลิกได้';
+
+  @override
+  String system_notifications_Dialog_deleteAllTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: 'ลบการแจ้งเตือน $count รายการใช่หรือไม่');
+    return '$_temp0';
+  }
+
+  @override
+  String get system_notifications_SemanticsAction_delete => 'ลบ';
+
+  @override
+  String get system_notifications_SemanticsLabel_deleteAll => 'ลบการแจ้งเตือนทั้งหมด';
+
+  @override
   String get themeMode_dark => 'มืด';
 
   @override

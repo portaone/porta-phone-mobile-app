@@ -98,6 +98,10 @@ class WebtritApiClient {
   // ABSENCE of a code, "is this queue yours" reads a code that is present.
   static final _callQueuesEndpoint = ResponseOptions(optionalEndpoint: true, failures: [callQueueNotFoundRule]);
 
+  // A notification acted on by id - deleted or marked seen: another device or
+  // the retention cleaner may have removed it since the list was read.
+  static final _systemNotificationEndpoint = ResponseOptions(failures: [systemNotificationGoneRule]);
+
   static final _voicemailEndpointBytes = ResponseOptions(
     responseType: ResponseType.bytes,
     optionalEndpoint: true,
@@ -370,6 +374,7 @@ class WebtritApiClient {
     List<String> pathSegments,
     Map<String, String>? headers,
     String? token, {
+    Object? requestDataJson,
     Map<String, String>? queryParameters,
     RequestOptions requestOptions = const RequestOptions(),
     ResponseOptions responseOptions = const ResponseOptions(),
@@ -378,7 +383,7 @@ class WebtritApiClient {
       'delete',
       pathSegments,
       token,
-      null,
+      requestDataJson,
       headers: headers,
       queryParameters: queryParameters,
       requestOptions: requestOptions,
@@ -1065,7 +1070,47 @@ class WebtritApiClient {
       token,
       requestJson,
       requestOptions: options,
+      responseOptions: _systemNotificationEndpoint,
     );
+  }
+
+  Future<void> deleteSystemNotification(
+    String token,
+    int notificationId, {
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    await _httpClientExecuteDelete(
+      [..._apiBasePathSegmentsV1, 'user', 'notifications', notificationId.toString()],
+      null,
+      token,
+      requestOptions: options,
+      responseOptions: _systemNotificationEndpoint,
+    );
+  }
+
+  /// Deletes the notifications with [notificationIds] in one request.
+  ///
+  /// Ids the backend does not have, or that belong to someone else, are skipped
+  /// rather than refused, so only [SystemNotificationsDeleteResponse.deletedIds]
+  /// says what is gone.
+  ///
+  /// Optional: a Core older than the bulk route answers it with a bare 404,
+  /// which arrives as [EndpointNotSupportedException].
+  Future<SystemNotificationsDeleteResponse> deleteSystemNotifications(
+    String token,
+    List<int> notificationIds, {
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    final responseJson = await _httpClientExecuteDelete(
+      [..._apiBasePathSegmentsV1, 'user', 'notifications'],
+      null,
+      token,
+      requestDataJson: {'ids': notificationIds},
+      requestOptions: options,
+      responseOptions: _optionalEndpoint,
+    );
+
+    return SystemNotificationsDeleteResponse.fromJson(responseJson as Map<String, dynamic>);
   }
 
   Future<CdrHistoryResponse> getCdrHistory(
