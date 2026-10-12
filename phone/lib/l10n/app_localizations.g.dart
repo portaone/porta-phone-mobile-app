@@ -6007,6 +6007,30 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get system_notifications_screen_title;
 
+  /// Body of the question asked before every notification stored on the device is deleted; says they go from the account, not just the device.
+  ///
+  /// In en, this message translates to:
+  /// **'They will be deleted from your account, not only from this device. This cannot be undone.'**
+  String get system_notifications_Dialog_deleteAllContent;
+
+  /// Title of the question asked before deleting every notification stored on the device; carries how many.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Delete {count} notification?} other{Delete {count} notifications?}}'**
+  String system_notifications_Dialog_deleteAllTitle(int count);
+
+  /// Screen reader action on a notification row that deletes it, the same as swiping it away.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get system_notifications_SemanticsAction_delete;
+
+  /// Name of the header button that deletes every notification stored on the device.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all notifications'**
+  String get system_notifications_SemanticsLabel_deleteAll;
+
   /// No description provided for @themeMode_dark.
   ///
   /// In en, this message translates to:

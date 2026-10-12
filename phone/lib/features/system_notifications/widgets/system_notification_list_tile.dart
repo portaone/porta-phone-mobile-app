@@ -1,16 +1,28 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/semantics.dart';
 
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/system_notification.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 class SystemNotificationListTile extends StatefulWidget {
-  const SystemNotificationListTile(this.notification, {this.seenPending = false, this.onSeen, super.key});
+  const SystemNotificationListTile(
+    this.notification, {
+    this.seenPending = false,
+    this.onSeen,
+    this.onDelete,
+    super.key,
+  });
 
   final SystemNotification notification;
   final bool seenPending;
   final VoidCallback? onSeen;
+
+  /// Deletes the notification and answers whether it is gone. A swipe waits
+  /// for the answer, so a refused delete springs back instead of leaving.
+  final Future<bool> Function()? onDelete;
 
   @override
   State<SystemNotificationListTile> createState() => _SystemNotificationListTileState();
@@ -46,6 +58,37 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
     final colorScheme = theme.colorScheme;
     final style = TextStyle(color: colorScheme.onSurface, fontSize: 14);
 
+    final card = AnimatedContainer(
+      duration: const Duration(seconds: 5),
+      curve: Curves.easeOut,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        borderRadius: _cardRadius,
+        color: seen ? colorScheme.surfaceBright : colorScheme.primaryContainer,
+        border: Border(left: BorderSide(color: wasSeen ? colorScheme.primary : colorScheme.tertiary, width: 4)),
+        boxShadow: [
+          BoxShadow(
+            color: (seen ? colorScheme.primary : colorScheme.tertiary).withAlpha(50),
+            blurRadius: 16,
+            spreadRadius: 4,
+            offset: const Offset(4, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          content(style, theme),
+          LinkPreviewBuilder(
+            text: widget.notification.content,
+            builder: (context, preview, url) =>
+                LinkPreviewReveal(preview: preview, card: (preview) => linkPreview(preview, url, colorScheme, style)),
+          ),
+        ],
+      ),
+    );
+
+    final onDelete = widget.onDelete;
+
     return SlideTransition(
       position: Tween<Offset>(begin: const Offset(0.05, -0.05), end: Offset.zero).animate(animation),
       child: FadeTransition(
@@ -53,36 +96,14 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
         child: Column(
           children: [
             const SizedBox(height: 8),
-            AnimatedContainer(
-              duration: const Duration(seconds: 5),
-              curve: Curves.easeOut,
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: seen ? colorScheme.surfaceBright : colorScheme.primaryContainer,
-                border: Border(left: BorderSide(color: wasSeen ? colorScheme.primary : colorScheme.tertiary, width: 4)),
-                boxShadow: [
-                  BoxShadow(
-                    color: (seen ? colorScheme.primary : colorScheme.tertiary).withAlpha(50),
-                    blurRadius: 16,
-                    spreadRadius: 4,
-                    offset: const Offset(4, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  content(style, theme),
-                  LinkPreviewBuilder(
-                    text: widget.notification.content,
-                    builder: (context, preview, url) => LinkPreviewReveal(
-                      preview: preview,
-                      card: (preview) => linkPreview(preview, url, colorScheme, style),
-                    ),
-                  ),
-                ],
-              ),
+            // The margin sits outside the swipe so the area behind the card is
+            // exactly the card: the delete background takes its shape, and the
+            // date below stays where it is while the card moves.
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: onDelete == null
+                  ? card
+                  : _SwipeToDelete(id: widget.notification.id, onDelete: onDelete, child: card),
             ),
             Padding(padding: const EdgeInsets.symmetric(horizontal: 24), child: time(style)),
           ],
@@ -121,7 +142,7 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
                 SystemNotificationType.system => Icons.settings_outlined,
               },
               size: 20,
-              color: style.color,
+              color: _typeColor(widget.notification.type, colorScheme),
             ),
           ],
         ),
@@ -197,3 +218,61 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
     );
   }
 }
+
+final _cardRadius = BorderRadius.circular(8);
+
+/// Swiping a notification card away deletes it.
+///
+/// The swipe waits for [onDelete]: a delete that did not happen springs the
+/// card back. What the card uncovers has its shape and is not clipped, so the
+/// card leaves past the screen edge. A swipe is out of reach of a screen
+/// reader, so the same delete is offered as an action of the card.
+class _SwipeToDelete extends StatelessWidget {
+  const _SwipeToDelete({required this.id, required this.onDelete, required this.child});
+
+  final int id;
+  final Future<bool> Function() onDelete;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Semantics(
+      customSemanticsActions: {
+        CustomSemanticsAction(label: context.l10n.system_notifications_SemanticsAction_delete): onDelete,
+      },
+      child: Dismissible(
+        key: ValueKey(id),
+        direction: DismissDirection.endToStart,
+        // The error container is laid over the card's own surface rather than
+        // shown as it is: on its own it is a saturated red that shouts in a
+        // list a person is tidying up.
+        background: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Color.alphaBlend(colorScheme.errorContainer.withValues(alpha: 0.45), colorScheme.surfaceBright),
+            borderRadius: _cardRadius,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 24),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Icon(Icons.delete_outline, color: colorScheme.onSurface),
+            ),
+          ),
+        ),
+        confirmDismiss: (_) => onDelete(),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// The kind of a notification at a glance, taken from the scheme so a brand
+/// that recolours the app recolours these with it.
+Color _typeColor(SystemNotificationType type, ColorScheme colorScheme) => switch (type) {
+  SystemNotificationType.announcement => colorScheme.primary,
+  SystemNotificationType.promotion => colorScheme.tertiary,
+  SystemNotificationType.security => colorScheme.error,
+  SystemNotificationType.system => colorScheme.secondary,
+};

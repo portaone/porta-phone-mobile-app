@@ -61,6 +61,7 @@ class _SystemNotificationsScreenState extends State<SystemNotificationsScreen> {
         // Themes that configure no bar color keep a translucent bar instead of
         // the opaque framework default.
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.transparent,
+        actions: const [SystemNotificationsDeleteAllAction()],
       ),
       body: BlocBuilder<SystemNotificationsScreenCubit, SystemNotificationScreenState>(
         builder: (context, state) {
@@ -97,6 +98,7 @@ class _SystemNotificationsScreenState extends State<SystemNotificationsScreen> {
                     notifiaction,
                     seenPending: pendingSeen,
                     onSeen: () => markAsSeen(notifiaction),
+                    onDelete: () => cubit.deleteNotification(notifiaction),
                   ),
                 );
               },

@@ -3323,6 +3323,27 @@ class AppLocalizationsIt extends AppLocalizations {
   String get system_notifications_screen_title => 'Notifiche';
 
   @override
+  String get system_notifications_Dialog_deleteAllContent =>
+      'Verranno eliminate dal tuo account, non solo da questo dispositivo. L\'operazione non può essere annullata.';
+
+  @override
+  String system_notifications_Dialog_deleteAllTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Eliminare $count notifiche?',
+      one: 'Eliminare $count notifica?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get system_notifications_SemanticsAction_delete => 'Elimina';
+
+  @override
+  String get system_notifications_SemanticsLabel_deleteAll => 'Elimina tutte le notifiche';
+
+  @override
   String get themeMode_dark => 'Scuro';
 
   @override
