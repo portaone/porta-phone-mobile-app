@@ -1079,10 +1079,21 @@ class WebtritApiClient {
     return SystemNotificationResponce.fromJson(responseJson as Map<String, dynamic>);
   }
 
+  /// The notifications changed after [since], oldest change first.
+  ///
+  /// With [includeDeleted] the deleted ones are asked for as well and come with
+  /// `deletedAt` set: that is the only way a delete made on another device, or
+  /// by the backend's retention, is heard of. A backend that predates the
+  /// parameter refuses the request as invalid, so the caller has to be ready to
+  /// ask again without it.
+  ///
+  /// A page can be longer than [limit]: the backend does not split
+  /// notifications changed at the same instant between two pages.
   Future<SystemNotificationResponce> getSystemNotificationsUpdates(
     String token, {
     required DateTime since,
     int? limit,
+    bool includeDeleted = false,
     String? locale,
     RequestOptions options = const RequestOptions(),
   }) async {
@@ -1091,7 +1102,11 @@ class WebtritApiClient {
       locale != null ? {'Accept-Language': locale} : null,
       token,
       requestOptions: options,
-      queryParameters: {'updated_after': since.toUtc().toIso8601String(), if (limit != null) 'limit': limit.toString()},
+      queryParameters: {
+        'updated_after': since.toUtc().toIso8601String(),
+        if (limit != null) 'limit': limit.toString(),
+        if (includeDeleted) 'include_deleted': 'true',
+      },
     );
     print('Response JSON: $responseJson');
 
