@@ -19,7 +19,11 @@ UserSession _$UserSessionFromJson(Map<String, dynamic> json) => UserSession(
   location: json['location'] as String?,
   lastActivityIp: json['last_activity_ip'] as String?,
   lastActivityLocation: json['last_activity_location'] as String?,
-  appType: $enumDecodeNullable(_$AppTypeEnumMap, json['app_type']),
+  appType: $enumDecodeNullable(
+    _$AppTypeEnumMap,
+    json['app_type'],
+    unknownValue: JsonKey.nullForUndefinedEnumValue,
+  ),
   appIdentifier: json['app_identifier'] as String?,
   appBundleId: json['app_bundle_id'] as String?,
   createdAt: json['created_at'] == null

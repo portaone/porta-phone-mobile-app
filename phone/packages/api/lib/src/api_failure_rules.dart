@@ -10,6 +10,7 @@ class FailureContext {
     this.token,
     this.error,
     this.rawBody,
+    this.body,
   });
 
   final Uri url;
@@ -18,6 +19,13 @@ class FailureContext {
   final String? token;
   final ErrorResponse? error;
   final String? rawBody;
+
+  /// The body as it was sent, when it is a JSON object.
+  ///
+  /// [error] keeps the fields every failure has. A refusal that hands something
+  /// back with it - a list to choose from, a token to go on with - has it here,
+  /// for the rule of the endpoint that knows what it is.
+  final Map<String, dynamic>? body;
 
   /// The backend's own error code, absent when the body carried none.
   String? get code => error?.code;
@@ -281,3 +289,78 @@ final List<FailureRule> voicemailForwardRules = [
     ),
   ),
 ];
+
+/// The two refusals of a login that come from the device limits of the account.
+///
+/// Declared by the calls that create a session, because only those can meet
+/// them: the limits are checked once the credentials are accepted, and nowhere
+/// else. The first carries what the user needs to go on - the sessions of the
+/// account and the token of the login left waiting - so it is read here, by the
+/// rule that knows the shape, and not by the transport.
+final List<FailureRule> deviceLimitRules = [
+  FailureRule(
+    status: 409,
+    code: 'device_limit_reached',
+    build: (f) => DeviceLimitReachedException(
+      url: f.url,
+      requestId: f.requestId,
+      statusCode: f.statusCode,
+      error: f.error,
+      sessions: _sessionsOf(f.body),
+      pendingLoginToken: _pendingLoginTokenOf(f.body),
+    ),
+  ),
+  FailureRule(
+    status: 403,
+    code: 'device_switch_limit_reached',
+    build: (f) =>
+        DeviceSwitchLimitReachedException(url: f.url, requestId: f.requestId, statusCode: f.statusCode, error: f.error),
+  ),
+];
+
+/// The two ways completing a waiting login can miss.
+///
+/// Declared on that one call. `session_not_found` in particular is a word other
+/// endpoints use about the session that carried the request; here it is about
+/// the session picked to be revoked, and the login is still waiting.
+final List<FailureRule> pendingLoginRules = [
+  FailureRule(
+    status: 404,
+    code: 'pending_login_not_found',
+    build: (f) =>
+        PendingLoginNotFoundException(url: f.url, requestId: f.requestId, statusCode: f.statusCode, error: f.error),
+  ),
+  FailureRule(
+    status: 404,
+    code: 'session_not_found',
+    build: (f) => PendingLoginSessionNotFoundException(
+      url: f.url,
+      requestId: f.requestId,
+      statusCode: f.statusCode,
+      error: f.error,
+    ),
+  ),
+];
+
+// Read for what it can add: a session this cannot decode is left out rather
+// than taking the refusal, and the sessions it could decode, with it.
+List<UserSession> _sessionsOf(Map<String, dynamic>? body) {
+  final sessions = body?['sessions'];
+  if (sessions is! List) return const [];
+
+  final decoded = <UserSession>[];
+  for (final session in sessions) {
+    if (session is! Map<String, dynamic>) continue;
+    try {
+      decoded.add(UserSession.fromJson(session));
+    } catch (_) {
+      continue;
+    }
+  }
+  return decoded;
+}
+
+String? _pendingLoginTokenOf(Map<String, dynamic>? body) {
+  final token = body?['pending_login_token'];
+  return token is String && token.isNotEmpty ? token : null;
+}

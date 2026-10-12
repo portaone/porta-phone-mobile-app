@@ -1,4 +1,5 @@
 import 'models/error.dart';
+import 'models/user_session.dart';
 
 class RequestFailure implements Exception {
   RequestFailure({required this.url, this.statusCode, required this.requestId, this.token, this.error, this.rawBody});
@@ -263,4 +264,89 @@ class VoicemailForwardLimitReachedException extends RequestFailure {
 
   @override
   String toString() => 'VoicemailForwardLimitReachedException(requestId: $requestId, url: $url)';
+}
+
+/// A login was refused because the account, or the customer it belongs to,
+/// already has as many signed-in devices as its package allows.
+///
+/// Unlike the other refusals of a login this one can be answered: it carries
+/// the account's own [sessions] and a [pendingLoginToken], and revoking one of
+/// them with [WebtritApiClient.completeSession] finishes the login without the
+/// password or the OTP being asked for again - an OTP is already spent by then.
+///
+/// Without a token there is nothing the user can do from here: the devices
+/// filling the limit belong to other accounts of the same customer.
+class DeviceLimitReachedException extends RequestFailure {
+  DeviceLimitReachedException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.error,
+    this.sessions = const [],
+    this.pendingLoginToken,
+  });
+
+  /// The account's active sessions, one of which may be revoked. Empty when
+  /// the limit is taken by other accounts.
+  final List<UserSession> sessions;
+
+  /// Completes the login together with the id of the session to revoke. Valid
+  /// for a few minutes, and for another try while the limit is still reached.
+  final String? pendingLoginToken;
+
+  /// Whether revoking one of [sessions] can finish this login.
+  bool get canBeCompleted => pendingLoginToken != null;
+
+  // The token is left out on purpose: it finishes a login.
+  @override
+  String toString() =>
+      'DeviceLimitReachedException(statusCode: $statusCode, requestId: $requestId, '
+      'sessions: ${sessions.length}, canBeCompleted: $canBeCompleted)';
+}
+
+/// A login from a device the account has not used before was refused because
+/// the account has started using as many new devices as its package allows
+/// within the period.
+///
+/// Nothing on this side helps: signing another device out frees a place, not a
+/// switch. The period runs out by itself, or the administrator raises the limit.
+class DeviceSwitchLimitReachedException extends RequestFailure {
+  DeviceSwitchLimitReachedException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.error,
+  });
+
+  @override
+  String toString() => 'DeviceSwitchLimitReachedException(statusCode: $statusCode, requestId: $requestId, url: $url)';
+}
+
+/// The login being completed is no longer waiting: its token ran out or was
+/// already used.
+///
+/// The way on is to sign in again from the start.
+class PendingLoginNotFoundException extends RequestFailure {
+  PendingLoginNotFoundException({required super.url, required super.requestId, required super.statusCode, super.error});
+
+  @override
+  String toString() => 'PendingLoginNotFoundException(statusCode: $statusCode, requestId: $requestId, url: $url)';
+}
+
+/// The session picked to make room for a login is not there to revoke any
+/// more: it was signed out in the meantime.
+///
+/// The pending login is untouched by this, so another session can be picked
+/// with the same token.
+class PendingLoginSessionNotFoundException extends RequestFailure {
+  PendingLoginSessionNotFoundException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.error,
+  });
+
+  @override
+  String toString() =>
+      'PendingLoginSessionNotFoundException(statusCode: $statusCode, requestId: $requestId, url: $url)';
 }

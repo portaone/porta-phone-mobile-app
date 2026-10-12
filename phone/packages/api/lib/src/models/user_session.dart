@@ -58,7 +58,11 @@ class UserSession with _$UserSession {
   @override
   final String? lastActivityLocation;
 
+  /// Null for a type this build does not know: the session is still one of
+  /// the user's, and a list that lost it would hide a device that can be
+  /// signed out.
   @override
+  @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final AppType? appType;
 
   @override
