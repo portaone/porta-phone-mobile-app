@@ -3332,6 +3332,29 @@ class AppLocalizationsUk extends AppLocalizations {
   String get system_notifications_screen_title => 'Сповіщення';
 
   @override
+  String get system_notifications_Dialog_deleteAllContent =>
+      'Їх буде видалено з вашого акаунта, а не лише з цього пристрою. Цю дію не можна скасувати.';
+
+  @override
+  String system_notifications_Dialog_deleteAllTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Видалити $count сповіщення?',
+      many: 'Видалити $count сповіщень?',
+      few: 'Видалити $count сповіщення?',
+      one: 'Видалити $count сповіщення?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get system_notifications_SemanticsAction_delete => 'Видалити';
+
+  @override
+  String get system_notifications_SemanticsLabel_deleteAll => 'Видалити всі сповіщення';
+
+  @override
   String get themeMode_dark => 'Темний';
 
   @override

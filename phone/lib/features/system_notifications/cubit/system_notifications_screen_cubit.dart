@@ -41,6 +41,37 @@ class SystemNotificationsScreenCubit extends Cubit<SystemNotificationScreenState
     _outbox.requestFlush();
   }
 
+  /// Deletes one notification. It leaves the list at once, so the swipe that
+  /// asked for it can always finish.
+  Future<bool> deleteNotification(SystemNotification notification) async {
+    await deleteNotifications([notification.id]);
+    return true;
+  }
+
+  /// The ids "delete all" is over: every notification stored on this device,
+  /// including history read on an earlier visit and no longer on screen.
+  ///
+  /// Only what the device holds. Older notifications the backend still has are
+  /// not counted and not deleted. They come back, silently, the next time the
+  /// app starts with an empty store and reads the history again - not by
+  /// scrolling, since an emptied list has nothing to scroll.
+  Future<List<int>> storedNotificationIds() => _systemNotificationsLocalRepository.getNotificationIds();
+
+  /// Deletes the notifications with [ids] the way a seen receipt is sent.
+  ///
+  /// Queued first, so the delete survives being offline and the app being
+  /// killed, and the notifications leave the list and the unseen count at
+  /// once; asking for the flush only saves it from waiting out the interval.
+  /// A delete the backend refuses is retried by the outbox, and the
+  /// notifications stay hidden meanwhile - there is nothing to tell the
+  /// person, as there is nothing for a receipt.
+  Future<void> deleteNotifications(List<int> ids) async {
+    if (ids.isEmpty) return;
+
+    await _systemNotificationsLocalRepository.queueDeletes(ids);
+    _outbox.requestFlush();
+  }
+
   Future<void> fetchHistory() async {
     if (state.fetchingHistory || state.historyEndReached) return;
 
