@@ -36,10 +36,11 @@ class SystemNotificationBackgroundWorker {
 
       List<SystemNotification> notifications = switch (lastUpdate) {
         null => await _remoteRepo.getHistory(),
-        DateTime() => await _remoteRepo.getUpdates(since: lastUpdate),
+        DateTime() => await _updatesSince(lastUpdate),
       };
 
       _logger.info('Fetched ${notifications.length} new notifications');
+      await _dismissPushesOfDeleted(notifications);
       await _localRepo.upsertNotifications(notifications);
 
       // With no anchor the fetch was the history, not news: a store that was
@@ -48,7 +49,7 @@ class SystemNotificationBackgroundWorker {
       // the foreground does not do either.
       if (lastUpdate == null) return true;
 
-      final unseenNotifications = notifications.where((n) => n.seen == false).toList();
+      final unseenNotifications = notifications.where((n) => n.seen == false && !n.isDeleted).toList();
       await Future.forEach(unseenNotifications, (n) => _displayPush(n));
 
       return true;
@@ -57,6 +58,41 @@ class SystemNotificationBackgroundWorker {
       return false;
     }
   }
+
+  // Every update since the anchor, not one page of them.
+  //
+  // The updates carry the notifications deleted since as well, oldest change
+  // first, and a deleted one is dropped rather than stored - so it does not
+  // move the anchor the next run starts from. One page alone could then be the
+  // same deletes run after run, never reaching the news behind them.
+  Future<List<SystemNotification>> _updatesSince(DateTime lastUpdate) async {
+    final updates = <SystemNotification>[];
+    var since = lastUpdate;
+
+    while (true) {
+      final page = await _remoteRepo.getUpdates(since: since, limit: _pageSize);
+      updates.addAll(page);
+      if (page.length < _pageSize) break;
+
+      final newest = page.map((n) => n.updatedAt).reduce((a, b) => a.isAfter(b) ? a : b);
+      if (!newest.isAfter(since)) break;
+      since = newest;
+    }
+    return updates;
+  }
+
+  // In the app the push service takes a deleted notification's push out of the
+  // shade when the store announces the removal. Nothing listens here, and by
+  // the time the app starts the row is gone - so it is done by hand, from the
+  // stored row: what arrives deleted no longer carries the text the push shows.
+  Future<void> _dismissPushesOfDeleted(List<SystemNotification> notifications) async {
+    for (final deleted in notifications.where((n) => n.isDeleted)) {
+      final stored = await _localRepo.getNotificationById(deleted.id);
+      if (stored != null) await _pushRepo.dismissByContent(stored.title, stored.content);
+    }
+  }
+
+  static const _pageSize = 50;
 
   Future<void> _displayPush(SystemNotification notification) async {
     final push = AppLocalPush(

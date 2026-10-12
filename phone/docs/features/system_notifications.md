@@ -174,10 +174,33 @@ seen receipt for a notification the backend no longer has counts as sent, and
 the outbox does not write a sent row back for a notification deleted while its
 receipt was out. A deleted notification's local push is taken out of the shade.
 
-Not yet handled: a notification deleted on another device, or by the
-backend's retention cleaner, is never reported by `getUpdates` - the backend
-deletes the row outright - so this device keeps it until the cache is
-reconciled against history pages (WT-2078, follow-up).
+## Deleted elsewhere
+
+A notification deleted on another device, or by the backend's retention, leaves
+this one too - by the same road a `seen` flag changed elsewhere arrives, the
+updates of a sync cycle. The backend deletes softly, as it does chat messages:
+the row stays for a while as a marker, without its text, and `getUpdates` lists
+it with `deleted_at` set when asked to (`include_deleted=true`).
+
+```
+another device deletes a notification
+  -> the next sync cycle: GET /user/notifications/updates?...&include_deleted=true
+  -> the page carries it with deleted_at
+  -> SystemNotificationsLocalRepository.upsertNotifications drops it:
+     the row, what the outbox holds for it, its local push
+  -> the card leaves the list and the unseen badge
+```
+
+Nothing deleted is ever stored, and there is no second request: the delete
+costs what any other update costs, at any depth of the history. The Workmanager
+task applies it the same way.
+
+| | |
+|---|---|
+| The anchor | a deleted notification is read but not stored, so the store's newest `updated_at` does not reach it. The sync worker resumes from the newer of that and the newest update it has read; the Workmanager task, which has no memory between runs, drains every page each run instead of taking one |
+| A backend that cannot report deletes | one from before the parameter refuses it as an unknown field (422, `include_deleted`). The remote repository repeats the request without it and stops sending it for as long as the session lives; deletes made elsewhere are then not heard of, as before |
+| Many deleted at once | a bulk delete stamps one moment on every row, and the anchor moves by that moment. The backend therefore never splits notifications changed at the same instant between pages - a page can be longer than the limit asked for - so none is left behind the anchor |
+| Away for very long | the backend keeps a marker for 180 days. A device that has not synced for longer does not hear of that delete and keeps the card. A session does not live that long: signing in again starts from an empty store |
 
 ## Two properties of the sync cycle
 
@@ -213,7 +236,7 @@ genuine notification on a new account would be silently swallowed.
 | `lib/repositories/system_notifications/` | local (Drift) and remote (API) repositories |
 
 Tests: `test/features/system_notifications/` - a worker suite per direction, a
-push suite, and seven component scenarios shared between the host and Patrol
+push suite, a suite for the Workmanager task, and ten component scenarios shared between the host and Patrol
 (`patrol_test/system_notifications_sync_test.dart`) over a real Drift store. The
 registrations themselves are asserted in
 `test/app/router/main_shell_polling_config_test.dart`.
