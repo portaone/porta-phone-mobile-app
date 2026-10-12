@@ -1021,12 +1021,15 @@ void main() {
     // an answer naming the old room looks like it could be about this one.
     // What tells them apart is which attempt asked for it.
     //
-    // The deadline is long enough here that the second room is still
-    // assembling when the first room's answer arrives; only the first one is
-    // waited out.
+    // The deadline is a real timer and the same one for both rooms: the first
+    // room is waited out, and the second must still be assembling when the
+    // first room's answer arrives. So the deadline is long, and what follows
+    // the second merge waits for that answer alone and not for a number of
+    // turns - or on a busy machine the second room runs into its own deadline
+    // and the test fails for a room the answer never touched.
     final h = CallBlocHarness(
       capabilities: const CallCapabilitiesConfig(isConferenceEnabled: true),
-      conferenceAssemblyTimeout: const Duration(milliseconds: 100),
+      conferenceAssemblyTimeout: const Duration(milliseconds: 500),
     );
     addTearDown(h.close);
     h.seedEstablishedCall('a', line: 0);
@@ -1035,8 +1038,9 @@ void main() {
     final stalled = Completer<void>();
     h.signaling.gate = stalled;
     await _offerRoom(h, 7, [_participant('a', 0), _participant('b', 1)]);
-    await Future<void>.delayed(const Duration(milliseconds: 250));
+    await Future<void>.delayed(const Duration(milliseconds: 600));
     await _settle(h, () => !h.bloc.state.conference.isPresent);
+    final held = h.signaling.requests.length;
 
     // A second merge is under way when the first room's answer finally goes.
     h.signaling.gate = null;
@@ -1045,7 +1049,8 @@ void main() {
     expect(h.bloc.state.conference.room, isNull, reason: 'the offer for this one has not arrived');
 
     stalled.complete();
-    await _settle(h, () => false);
+    await _settle(h, () => h.signaling.answered.length >= held);
+    await pumpEventQueue();
 
     expect(h.bloc.state.conference.phase, ConferencePhase.assembling, reason: 'room 7 is not this room');
   });

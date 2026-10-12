@@ -177,6 +177,10 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   /// Every request the bloc executed, in order.
   final List<Request> requests = [];
 
+  /// The requests that have been answered - with an ack or with [failure] - in the order they
+  /// were. A request held by [gate] is in [requests] and not here until the gate releases it.
+  final List<Request> answered = [];
+
   /// Thrown by [execute] instead of an ack while set.
   Object? failure;
 
@@ -207,6 +211,7 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   Future<void> _execute(Request request) async {
     requests.add(request);
     await gate?.future;
+    answered.add(request);
     final error = failure;
     if (error != null) throw error;
   }
