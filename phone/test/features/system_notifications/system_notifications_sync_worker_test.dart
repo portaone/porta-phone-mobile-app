@@ -15,6 +15,16 @@ class MockSystemNotificationsRemoteRepository extends Mock implements SystemNoti
 
 class MockSystemNotificationsSyncWorker extends Mock implements SystemNotificationsSyncWorker {}
 
+class _Journal implements SystemNotificationsSyncJournal {
+  _Journal([this.lastSyncedAt]);
+
+  @override
+  DateTime? lastSyncedAt;
+
+  @override
+  Future<void> markSynced(DateTime at) async => lastSyncedAt = at;
+}
+
 class MockPollingTaskHandle extends Mock implements PollingTaskHandle {}
 
 class MockPollingService extends Mock implements PollingService {}
@@ -322,6 +332,230 @@ void main() {
       await worker.dispose();
 
       expect(worker.isActive, isFalse);
+    });
+  });
+
+  // The backend reports a deleted notification for a limited time. A store not
+  // brought up to date for longer may hold some deleted since, with nothing
+  // left to read about them - so it is read afresh instead of updated.
+  group('a store that may be stale', () {
+    final now = DateTime.utc(2026, 10, 12, 12);
+    final anchor = DateTime.utc(2026, 1, 1);
+    const retention = Duration(days: 180);
+    late _Journal journal;
+    Duration? reported;
+
+    SystemNotificationsSyncWorker build() => SystemNotificationsSyncWorker(
+      localRepository,
+      remoteRepository,
+      pageSize: 2,
+      journal: journal,
+      deletedRetention: () => reported,
+      now: () => now,
+    );
+
+    setUp(() {
+      reported = retention;
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => anchor);
+      when(() => localRepository.getNotificationIds()).thenAnswer((_) async => []);
+      when(() => localRepository.deleteNotifications(any())).thenAnswer((_) async {});
+      when(() => localRepository.getOutboxNotifications(states: any(named: 'states'))).thenAnswer((_) async => []);
+      when(() => remoteRepository.getUpdates(since: any(named: 'since'), limit: 2)).thenAnswer((_) async => []);
+      when(() => remoteRepository.getHistory(limit: 2)).thenAnswer((_) async => []);
+    });
+
+    test('synced within the time deletes are reported for: updates, as ever', () async {
+      journal = _Journal(now.subtract(const Duration(days: 30)));
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+
+      verify(() => remoteRepository.getUpdates(since: anchor, limit: 2)).called(1);
+      verifyNever(() => remoteRepository.getHistory(limit: any(named: 'limit')));
+      expect(journal.lastSyncedAt, now);
+    });
+
+    test('away for longer: the first page is read again and the rest is dropped, quietly', () async {
+      journal = _Journal(now.subtract(const Duration(days: 181)));
+      final still = _notification(5, 5);
+      final fresh = _notification(6, 6);
+      // 1 was deleted while the device was away; 2 has a seen receipt yet to send.
+      when(() => localRepository.getNotificationIds()).thenAnswer((_) async => [1, 2, 5]);
+      when(() => localRepository.getOutboxNotifications(states: any(named: 'states'))).thenAnswer(
+        (_) async => [const SystemNotificationOutboxEntry(notificationId: 2, actionType: SnOutboxActionType.seen)],
+      );
+      when(() => remoteRepository.getHistory(limit: 2)).thenAnswer((_) async => [fresh, still]);
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+
+      verifyInOrder([
+        () => remoteRepository.getHistory(limit: 2),
+        // Not 5, which the page still lists, nor 2, which the outbox is not done with.
+        () => localRepository.deleteNotifications([1]),
+        () => localRepository.upsertNotifications([still, fresh], initialData: true),
+      ]);
+      verifyNever(
+        () => remoteRepository.getUpdates(
+          since: any(named: 'since'),
+          limit: any(named: 'limit'),
+        ),
+      );
+      expect(journal.lastSyncedAt, now);
+    });
+
+    test('the cycle after a reload reads updates again: it happens once, not every cycle', () async {
+      journal = _Journal(now.subtract(const Duration(days: 400)));
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+      await worker.refresh();
+
+      verify(() => remoteRepository.getHistory(limit: 2)).called(1);
+      verify(() => remoteRepository.getUpdates(since: anchor, limit: 2)).called(1);
+    });
+
+    test('a backend that reports deletes for a day does not make every cycle a reload', () async {
+      // The allowance for clocks that disagree is a day - which here is all there is.
+      reported = const Duration(days: 1);
+      journal = _Journal(now.subtract(const Duration(seconds: 10)));
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+
+      verify(() => remoteRepository.getUpdates(since: anchor, limit: 2)).called(1);
+      verifyNever(() => remoteRepository.getHistory(limit: any(named: 'limit')));
+    });
+
+    test('the allowance for clocks is a day off half a year, and a tenth off a short time', () async {
+      Future<bool> reloads(Duration retention, Duration away) async {
+        reported = retention;
+        journal = _Journal(now.subtract(away));
+        var historyReads = 0;
+        when(() => remoteRepository.getHistory(limit: 2)).thenAnswer((_) async {
+          historyReads++;
+          return [];
+        });
+        final worker = build();
+        await worker.refresh();
+        await worker.dispose();
+        return historyReads == 1;
+      }
+
+      expect(await reloads(retention, const Duration(days: 178)), isFalse);
+      expect(await reloads(retention, const Duration(days: 179, hours: 1)), isTrue);
+      // Ten days: nine and over is stale, under nine is not.
+      expect(await reloads(const Duration(days: 10), const Duration(days: 8, hours: 23)), isFalse);
+      expect(await reloads(const Duration(days: 10), const Duration(days: 9, hours: 1)), isTrue);
+    });
+
+    test('a record from the future counts as none, and is replaced by the present', () async {
+      // Written while the phone's clock ran a year ahead; the clock has been put right since.
+      journal = _Journal(now.add(const Duration(days: 365)));
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+      await worker.refresh();
+
+      verify(() => remoteRepository.getHistory(limit: 2)).called(1);
+      expect(journal.lastSyncedAt, now);
+    });
+
+    test('a record a moment ahead is a clock that disagrees, not one from the future', () async {
+      journal = _Journal(now.add(const Duration(minutes: 5)));
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+
+      verifyNever(() => remoteRepository.getHistory(limit: any(named: 'limit')));
+    });
+
+    test('deletes reported without limit: no absence is too long', () async {
+      // Zero is the backend set up to remove nothing by age - every delete is still there to read.
+      reported = Duration.zero;
+      journal = _Journal(now.subtract(const Duration(days: 3000)));
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+
+      verify(() => remoteRepository.getUpdates(since: anchor, limit: 2)).called(1);
+      verifyNever(() => remoteRepository.getHistory(limit: any(named: 'limit')));
+      expect(journal.lastSyncedAt, now);
+    });
+
+    test('deletes reported without limit: a store with no record is still read afresh, once', () async {
+      // What was deleted elsewhere before the app could hear of deletes is in it all the same.
+      reported = Duration.zero;
+      journal = _Journal();
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+      await worker.refresh();
+
+      verify(() => remoteRepository.getHistory(limit: 2)).called(1);
+      verify(() => remoteRepository.getUpdates(since: anchor, limit: 2)).called(1);
+    });
+
+    test('no record of a sync at all counts as stale, once', () async {
+      // A store filled before the app kept the record, or against a backend that
+      // could not report deletes: what was deleted elsewhere until now is still in it.
+      journal = _Journal();
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+
+      verify(() => remoteRepository.getHistory(limit: 2)).called(1);
+      expect(journal.lastSyncedAt, now);
+    });
+
+    test('a backend that reports no deletes is never a reason to reload, and leaves no record', () async {
+      reported = null;
+      journal = _Journal();
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+
+      verify(() => remoteRepository.getUpdates(since: anchor, limit: 2)).called(1);
+      verifyNever(() => remoteRepository.getHistory(limit: any(named: 'limit')));
+      // So that the first cycle after it is upgraded finds none, and reloads then.
+      expect(journal.lastSyncedAt, isNull);
+    });
+
+    test('a reload that cannot read the history leaves the store and the record as they were', () async {
+      final before = now.subtract(const Duration(days: 181));
+      journal = _Journal(before);
+      when(() => localRepository.getNotificationIds()).thenAnswer((_) async => [1]);
+      when(() => remoteRepository.getHistory(limit: 2)).thenThrow(Exception('offline'));
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await expectLater(worker.refresh(), throwsException);
+
+      verifyNever(() => localRepository.deleteNotifications(any()));
+      expect(journal.lastSyncedAt, before);
+    });
+
+    test('an empty store is a first load whatever the record says', () async {
+      journal = _Journal(now.subtract(const Duration(days: 400)));
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => null);
+      final worker = build();
+      addTearDown(worker.dispose);
+
+      await worker.refresh();
+
+      verify(() => remoteRepository.getHistory(limit: 2)).called(1);
+      verifyNever(() => localRepository.deleteNotifications(any()));
+      expect(journal.lastSyncedAt, now);
     });
   });
 
