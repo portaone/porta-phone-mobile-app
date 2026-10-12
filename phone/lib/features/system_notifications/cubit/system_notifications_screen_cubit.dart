@@ -10,6 +10,7 @@ import 'package:webtrit_phone/models/system_notification_outbox_entry.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 import '../services/system_notifications_outbox_worker.dart';
+import '../services/system_notifications_reconciler.dart';
 
 part 'system_notifications_screen_state.dart';
 
@@ -29,6 +30,10 @@ class SystemNotificationsScreenCubit extends Cubit<SystemNotificationScreenState
   final SystemNotificationsOutbox _outbox;
   final int pageSize;
   late final StreamSubscription _eventsSub;
+  late final _reconciler = SystemNotificationsReconciler(
+    _systemNotificationsLocalRepository,
+    _systemNotificationsRemoteRepository,
+  );
 
   Future<void> markAsSeen(SystemNotification notification) async {
     final seenOutboxEntry = SystemNotificationOutboxEntry(
@@ -79,6 +84,7 @@ class SystemNotificationsScreenCubit extends Cubit<SystemNotificationScreenState
     try {
       final oldestDate = state.notifications.last.createdAt;
       var history = await _systemNotificationsLocalRepository.getNotifications(from: oldestDate, limit: pageSize);
+      final shownFromStore = history.isNotEmpty;
       if (history.isEmpty) {
         history = await _systemNotificationsRemoteRepository.getHistory(since: oldestDate, limit: pageSize);
         await _systemNotificationsLocalRepository.upsertNotifications(history, silent: true);
@@ -89,10 +95,33 @@ class SystemNotificationsScreenCubit extends Cubit<SystemNotificationScreenState
         final notifications = state.notifications.mergeWithHistory(history).toList();
         emit(state.copyWith(notifications: notifications, fetchingHistory: false, historyEndReached: false));
       }
+      // A page shown from the store may hold what was deleted elsewhere since
+      // it was stored. It is shown at once all the same, and compared with the
+      // backend behind the person's back; what is gone leaves the list through
+      // the remove event. A page just read from the backend needs none of it.
+      if (shownFromStore) unawaited(_reconcileShown(before: oldestDate, downTo: history.last.createdAt));
     } catch (e) {
       _logger.severe('Failed to load notifications', e);
       emit(state.copyWith(fetchingHistory: false));
     }
+  }
+
+  Future<void> _reconcileShown({required DateTime before, required DateTime downTo}) async {
+    try {
+      await _reconciler.reconcileBelow(before: before, downTo: downTo, limit: pageSize, stillWanted: _stillOpen);
+    } catch (e, s) {
+      // Offline, the backend refusing, or the screen closed on the way: the
+      // page stays as the store has it. It is compared again the next time the
+      // screen scrolls this far.
+      _logger.warning('Failed to reconcile the shown notifications', e, s);
+    }
+  }
+
+  // The comparison outlives the screen that asked for it - a sign-out may
+  // have wiped the store by the time the page arrives - so it stops rather
+  // than judge another session's store by this one's snapshot.
+  void _stillOpen() {
+    if (isClosed) throw StateError('The notifications screen was closed.');
   }
 
   Future<void> init() async {

@@ -4,7 +4,7 @@ Announcements the operator sends to the app: a list, an unread badge, and a
 local push when one arrives. This page is about how that data moves - what
 keeps it up to date, and what happens the moment the user touches it.
 
-Last reviewed: 2026-10-09.
+Last reviewed: 2026-10-12.
 
 The scheduler these workers run on is documented in
 [`../polling.md`](../polling.md); the worker/owner pattern itself in
@@ -17,7 +17,7 @@ The feature has two halves, and they are separate polling tasks on purpose:
 
 | Direction | Worker | Owner | One cycle |
 |---|---|---|---|
-| server -> device | `SystemNotificationsSyncWorker` | `SystemNotificationsSync` | fetch the initial history, or every update since the local anchor |
+| server -> device | `SystemNotificationsSyncWorker` | `SystemNotificationsSync` | fetch the initial history, or every update since the local anchor and then the top of the history, to drop what was deleted elsewhere |
 | device -> server | `SystemNotificationsOutboxWorker` | `SystemNotificationsOutbox` | send every queued delete, then every queued read receipt |
 
 Both live in `lib/features/system_notifications/services/`, both are registered
@@ -174,18 +174,93 @@ seen receipt for a notification the backend no longer has counts as sent, and
 the outbox does not write a sent row back for a notification deleted while its
 receipt was out. A deleted notification's local push is taken out of the shade.
 
-Not yet handled: a notification deleted on another device, or by the
-backend's retention cleaner, is never reported by `getUpdates` - the backend
-deletes the row outright - so this device keeps it until the cache is
-reconciled against history pages (WT-2078, follow-up).
+## Deleted elsewhere
+
+A notification deleted on another device, or by the backend's retention
+cleaner, is reported nowhere: the backend deletes the row outright, and
+`getUpdates` lists only rows that exist. The store learns of it by reading a
+page of the history again and comparing (`SystemNotificationsReconciler`):
+whatever the store holds inside the window of that page, and the page does not
+list, is gone, and is dropped the way any delete is - with its outbox entries,
+its local push and a remove event for the list.
+
+| Stretch | When | How far down |
+|---|---|---|
+| the top of the history | at the end of every sync cycle of updates | the newest page, and on below it while an unseen notification is stored further down - the unseen badge is counted from the whole store |
+| what the screen has just shown from the store | after it is shown | to the oldest row shown, which may lie below the next backend page: the store is not always contiguous |
+
+Both are best effort. A history request that fails is logged and tried again
+with the next cycle or the next scroll; in the sync it does not fail the cycle,
+whose updates are already stored. A pass reads at most five pages
+(`SystemNotificationsReconciler.maxPages`), so a row stored far down the
+history cannot turn it into a crawl.
+
+One pass, step by step (`SystemNotificationsReconciler`):
+
+```
+1. snapshot  = ids the store holds now, without those whose delete is queued
+               (an empty snapshot ends it here: nothing to compare)
+2. upper     = none for the top of the history, or the moment the stretch
+               starts below
+3. page      = GET /user/notifications?created_before=<upper>&limit=<limit>
+4. lower     = created_at of the oldest notification in the page,
+               or none when the page is shorter than <limit>
+5. gone      = snapshot ids created strictly after lower and strictly
+               before upper that the page does not list
+6. delete gone from the store, with their outbox entries; announce each
+7. deep enough - the page was short, or lower is older than the depth asked
+               for - then stop; else upper = lower and back to 3
+```
+
+With a limit of 3, a store holding 10, 9, 8, 7, 6 (by creation time, newest
+first) and a backend that has lost 9:
+
+| Request | Page | Window | Dropped |
+|---|---|---|---|
+| newest | 10, 8, 7 (full) | newer than 7 | 9 |
+
+Had the backend lost 7 instead, the newest page would be 10, 9, 8, vouching
+only for what is newer than 8: 7 is outside it. If 7 is unseen, the same pass
+reads on - the page below 8 is 6, short, and 7 goes. If it is seen, it stays
+until the screen shows it and compares that stretch.
+
+A short page is taken for the end of the history. That rests on the backend
+returning as many notifications as were asked for whenever it has them, which
+Core does - it applies the limit it is given and has no ceiling of its own. A
+backend that capped the page would make every page look like the last, and
+everything below it would be dropped; `system_notifications_reconciler_test.dart`
+pins the assumption.
+
+Two limits keep the comparison honest (`SystemNotificationsDao.deleteMissingFromPage`):
+
+- **The window.** A page is cut by a limit, so it vouches only for what is
+  newer than its oldest notification - not for that instant itself, where
+  another notification may not have fitted - and, for an older page, older
+  than the moment it was asked below. A page shorter than its limit reached
+  the end of the history and speaks for everything older too.
+- **The snapshot.** Only what the store held before the page was asked for is
+  judged. A notification that arrives while the request is out is not in the
+  page either, and is left alone. One whose delete is queued is not in the
+  snapshot: the outbox settles it.
+
+A first load reconciles nothing - it has just read that page - and the
+Workmanager task never does: a delete made elsewhere is noticed only while the
+app is open. What the phone has never read from the backend is not compared.
+
+A reconciliation can empty the store - everything it held was deleted on
+another device. That is not a first load either: the sync worker remembers the
+anchor it found in the store, not only the updates it stored itself, and goes
+on reading updates from there.
 
 ## Two properties of the sync cycle
 
 Both follow from the shape of the endpoints rather than from the pattern.
 
 **One branch per cycle.** With no local anchor the cycle fetches the initial
-history; with one, it drains updates since that anchor. Never both, so a first
-load after a wipe stays one bounded request.
+history; with one, it drains updates since that anchor and then reconciles
+the top of the history (see "Deleted elsewhere"). Never the
+initial history and the updates both, so a first load after a wipe stays one
+bounded request.
 
 **The anchor advances by timestamp.** `getUpdates` pages by `since`, not by page
 number. The anchor therefore moves to the newest record of each full page, and a
@@ -205,6 +280,7 @@ genuine notification on a new account would be silently swallowed.
 |---|---|
 | `lib/features/system_notifications/services/system_notifications_sync_worker.dart` | sync worker + owner |
 | `lib/features/system_notifications/services/system_notifications_outbox_worker.dart` | outbox worker + owner |
+| `lib/features/system_notifications/services/system_notifications_reconciler.dart` | drops what a history page shows to be deleted elsewhere |
 | `lib/features/system_notifications/services/system_notifications_push_service.dart` | local push from a stored notification |
 | `lib/features/system_notifications/services/system_notifications_background_worker.dart` | Workmanager sync outside the app |
 | `lib/features/system_notifications/widgets/system_notifications_shell.dart` | starts the push service and the background task |
@@ -213,7 +289,7 @@ genuine notification on a new account would be silently swallowed.
 | `lib/repositories/system_notifications/` | local (Drift) and remote (API) repositories |
 
 Tests: `test/features/system_notifications/` - a worker suite per direction, a
-push suite, and seven component scenarios shared between the host and Patrol
+push suite, and ten component scenarios shared between the host and Patrol
 (`patrol_test/system_notifications_sync_test.dart`) over a real Drift store. The
 registrations themselves are asserted in
 `test/app/router/main_shell_polling_config_test.dart`.
