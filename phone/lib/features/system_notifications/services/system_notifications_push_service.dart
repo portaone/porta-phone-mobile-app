@@ -51,6 +51,10 @@ class SystemNotificationsPushService {
         if (event.initialData == false && notification.seen == false && producePush) {
           _displayPush(notification.id, notification.title, notification.content);
         }
+      case SystemNotificationRemove(:final notification?):
+        // A deleted notification must not stay in the shade; found by its text,
+        // as for a seen one, which is why the event carries it.
+        localPushRepository.dismissByContent(notification.title, notification.content);
       case SystemNotificationOutboxUpdate _:
         final entry = event.entry;
         if (entry.actionType == SnOutboxActionType.seen) {

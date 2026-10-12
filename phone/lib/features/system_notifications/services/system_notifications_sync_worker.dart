@@ -45,7 +45,11 @@ class SystemNotificationsSyncWorker implements PollingWorker {
   Future<void> refresh() async {
     _ensureActive();
 
-    final lastUpdate = await localRepo.getLastUpdate();
+    // The store is the anchor, except when it has been emptied by deleting
+    // everything in it: that is not a first load, and treating it as one would
+    // read the older history back and push every unseen notification in it as
+    // news. The newest update this worker has stored stands in for it then.
+    final lastUpdate = await localRepo.getLastUpdate() ?? _lastStoredUpdate;
     _ensureActive();
 
     if (lastUpdate == null) {
@@ -66,6 +70,7 @@ class SystemNotificationsSyncWorker implements PollingWorker {
     // while the first history load (including retries) stays silent.
     await localRepo.upsertNotifications(notifications.reversed.toList(), initialData: !_hasCompletedSync);
     _ensureActive();
+    _remember(notifications);
   }
 
   Future<void> _refreshUpdatesSince(DateTime lastUpdate) async {
@@ -77,6 +82,7 @@ class SystemNotificationsSyncWorker implements PollingWorker {
       _logger.fine('Updates fetched since $since: ${updates.length}');
       await localRepo.upsertNotifications(updates);
       _ensureActive();
+      _remember(updates);
 
       if (updates.length < pageSize) break;
 
@@ -88,6 +94,13 @@ class SystemNotificationsSyncWorker implements PollingWorker {
       if (!newest.isAfter(since)) break;
       since = newest;
     }
+  }
+
+  void _remember(List<SystemNotification> stored) {
+    if (stored.isEmpty) return;
+    final newest = _newestUpdate(stored);
+    final last = _lastStoredUpdate;
+    if (last == null || newest.isAfter(last)) _lastStoredUpdate = newest;
   }
 
   DateTime _newestUpdate(List<SystemNotification> notifications) =>
@@ -102,6 +115,7 @@ class SystemNotificationsSyncWorker implements PollingWorker {
   }
 
   bool _hasCompletedSync = false;
+  DateTime? _lastStoredUpdate;
   bool _disposed = false;
 
   @override
