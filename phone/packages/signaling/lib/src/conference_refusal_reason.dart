@@ -14,6 +14,7 @@ enum ConferenceRefusalReason {
   notEnoughLines('not_enough_lines'),
   lineWithoutActiveCall('line_without_active_call'),
   noConference('no_conference'),
+  conferenceNotEstablished('conference_not_established'),
   lineAlreadyInConference('line_already_in_conference'),
   lineNotInConference('line_not_in_conference'),
   lineNotReady('line_not_ready'),

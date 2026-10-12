@@ -122,11 +122,12 @@ final class EndLocalCallAction extends HandshakeAction {
 }
 
 /// Send a [ConferenceHangupRequest]: the server reports a conference room on
-/// this session that the client cannot rejoin.
+/// this session that the client holds no record of.
 ///
 /// The room lives on the media server and outlives a signaling drop, but the
-/// client's own connection to it does not survive an app restart, and a room
-/// is never rejoined - the server offers it once. Left standing it would keep
+/// client's own connection to it does not survive an app restart, and neither
+/// does what it knew of the room - which calls it merged, and how each was
+/// silenced - so there is nothing here to come back with. Left standing it would keep
 /// its participants in the mix with nobody hosting them, and refuse every
 /// later merge as `conference_already_active` for the rest of the session.
 /// Hanging the room up leaves the calls in it untouched; they are restored
@@ -165,6 +166,21 @@ final class AdoptConferenceAction extends HandshakeAction {
   final List<ConferenceParticipant> participants;
 }
 
+/// Ask the server for the room's offer again: the room stands on both sides,
+/// but the client's connection to its mixer was lost and the request that
+/// brings a new one could not be sent, or its offer was lost with the socket.
+///
+/// Emitted after [AdoptConferenceAction] for the same room, and only while the
+/// client's own record says it is on its way back in
+/// ([ConferencePhase.rejoining]). A connection that fails after the handshake
+/// is not this action's business: its failure asks by itself, the session
+/// being up by then.
+final class RejoinConferenceAction extends HandshakeAction {
+  const RejoinConferenceAction({required this.room});
+
+  final int room;
+}
+
 /// Processes a [StateHandshake] and returns the list of [HandshakeAction]s the
 /// BLoC should execute.
 ///
@@ -199,9 +215,11 @@ final class AdoptConferenceAction extends HandshakeAction {
 /// of everything else, from the room the server reports ([conference]) and the
 /// one the client holds ([localConference]):
 /// - the same room on both sides -> [AdoptConferenceAction]: the room survived
-///   the drop, only its membership is the server's to state;
-/// - a room only the server has -> [HangupStaleConferenceAction]: it cannot be
-///   rejoined, and left standing it refuses every later merge;
+///   the drop, only its membership is the server's to state; followed by
+///   [RejoinConferenceAction] when the client was on its way back into it;
+/// - a room only the server has -> [HangupStaleConferenceAction]: the client
+///   has nothing to come back with, and left standing it refuses every later
+///   merge;
 /// - a room only the client has -> [ForgetConferenceAction]: it is over, and
 ///   its legs are calls again;
 /// - different rooms on the two sides -> both, in that order.
@@ -458,7 +476,10 @@ class HandshakeProcessor {
   List<HandshakeAction> _conferenceActions(ConferenceInfo? conference, ConferenceState localConference) {
     if (conference != null && conference.room == localConference.room) {
       _logger.info('process: conference room ${conference.room} stands on both sides, keeping it');
-      return [AdoptConferenceAction(room: conference.room, participants: conference.participants)];
+      return [
+        AdoptConferenceAction(room: conference.room, participants: conference.participants),
+        if (localConference.phase == ConferencePhase.rejoining) RejoinConferenceAction(room: conference.room),
+      ];
     }
     if (conference != null) {
       _logger.info('process: conference room ${conference.room} is only on the server, hanging it up');
