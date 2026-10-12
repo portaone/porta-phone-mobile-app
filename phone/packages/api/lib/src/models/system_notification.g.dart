@@ -18,6 +18,9 @@ SystemNotification _$SystemNotificationFromJson(Map<String, dynamic> json) =>
       readAt: json['read_at'] == null
           ? null
           : DateTime.parse(json['read_at'] as String),
+      deletedAt: json['deleted_at'] == null
+          ? null
+          : DateTime.parse(json['deleted_at'] as String),
     );
 
 Map<String, dynamic> _$SystemNotificationToJson(SystemNotification instance) =>
@@ -30,6 +33,7 @@ Map<String, dynamic> _$SystemNotificationToJson(SystemNotification instance) =>
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
       'read_at': instance.readAt?.toIso8601String(),
+      'deleted_at': instance.deletedAt?.toIso8601String(),
     };
 
 const _$SystemNotificationTypeEnumMap = {

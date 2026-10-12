@@ -18,6 +18,7 @@ class SystemNotification with _$SystemNotification {
     required this.createdAt,
     required this.updatedAt,
     this.readAt,
+    this.deletedAt,
   });
 
   @override
@@ -43,6 +44,11 @@ class SystemNotification with _$SystemNotification {
 
   @override
   final DateTime? readAt;
+
+  /// Set on a notification the backend has deleted. Only the updates feed
+  /// returns one, and only when asked to; its title and content are blank.
+  @override
+  final DateTime? deletedAt;
 
   factory SystemNotification.fromJson(Map<String, Object?> json) => _$SystemNotificationFromJson(json);
 
