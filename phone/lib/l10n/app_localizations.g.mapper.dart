@@ -1536,6 +1536,12 @@ extension AppLocalizationsExtension on AppLocalizations {
       'system_notifications_screen_list_empty' =>
         system_notifications_screen_list_empty,
       'system_notifications_screen_title' => system_notifications_screen_title,
+      'system_notifications_Dialog_deleteAllContent' =>
+        system_notifications_Dialog_deleteAllContent,
+      'system_notifications_SemanticsAction_delete' =>
+        system_notifications_SemanticsAction_delete,
+      'system_notifications_SemanticsLabel_deleteAll' =>
+        system_notifications_SemanticsLabel_deleteAll,
       'themeMode_dark' => themeMode_dark,
       'themeMode_light' => themeMode_light,
       'themeMode_system' => themeMode_system,
@@ -2286,6 +2292,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final int? errorCode] => socketError_defaultDescription(errorCode),
         _ => throw ArgumentError(
           'socketError_defaultDescription requires 1 arguments',
+        ),
+      },
+      'system_notifications_Dialog_deleteAllTitle' => switch (args) {
+        [final int count] => system_notifications_Dialog_deleteAllTitle(count),
+        _ => throw ArgumentError(
+          'system_notifications_Dialog_deleteAllTitle requires 1 arguments',
         ),
       },
       'user_agreement_checkbox_text' => switch (args) {

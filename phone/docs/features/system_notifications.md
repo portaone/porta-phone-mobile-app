@@ -4,7 +4,7 @@ Announcements the operator sends to the app: a list, an unread badge, and a
 local push when one arrives. This page is about how that data moves - what
 keeps it up to date, and what happens the moment the user touches it.
 
-Last reviewed: 2026-09-11.
+Last reviewed: 2026-10-09.
 
 The scheduler these workers run on is documented in
 [`../polling.md`](../polling.md); the worker/owner pattern itself in
@@ -18,7 +18,7 @@ The feature has two halves, and they are separate polling tasks on purpose:
 | Direction | Worker | Owner | One cycle |
 |---|---|---|---|
 | server -> device | `SystemNotificationsSyncWorker` | `SystemNotificationsSync` | fetch the initial history, or every update since the local anchor |
-| device -> server | `SystemNotificationsOutboxWorker` | `SystemNotificationsOutbox` | send every queued read receipt |
+| device -> server | `SystemNotificationsOutboxWorker` | `SystemNotificationsOutbox` | send every queued delete, then every queued read receipt |
 
 Both live in `lib/features/system_notifications/services/`, both are registered
 in `lib/app/router/main_shell_services.dart` behind the same gate
@@ -123,10 +123,61 @@ scheduler, which does both.
 
 The queue is emptied by success instead. A row is deleted when the sync worker
 brings its notification back with `seen` set - including when another device
-sent the receipt. The cost is that a genuinely impossible send (a notification
-the backend has deleted, say) is retried forever at the backoff ceiling; new
-receipts are unaffected, because a cycle attempts every entry before it reports
-the failure.
+sent the receipt. A receipt for a notification the backend has deleted counts as
+sent (404 `notification_not_found`). The cost is that any other impossible send
+is retried forever at the backoff ceiling; new receipts are unaffected, because
+a cycle attempts every entry before it reports the failure.
+
+## Deleting
+
+A card is swiped away, or offered `Delete` as a screen reader action; the
+header deletes everything at once after a question that carries the count.
+Deleting goes the way reading does - through the outbox - with no undo:
+
+```
+user swipes a card (or confirms delete all)
+  -> SystemNotificationsScreenCubit.deleteNotifications()
+     1. writes a `delete` outbox row per stored id (pending)   <- durable, offline-safe
+     2. SystemNotificationsOutbox.requestFlush()
+  -> the cards leave the list and the unseen badge at once
+  -> the outbox cycle sends every queued delete in one request
+  -> the backend answers, and the rows go for good
+```
+
+The row stays in the store until the backend has answered, hidden: the outbox
+row references it (`ON DELETE CASCADE`), so deleting it first would take the
+queued delete with it. The list, the ids for delete all and the unseen count all
+skip a row with a pending `delete` (`SystemNotificationsDao`), and a sync that
+brings such a row back before the delete is confirmed stores it without an
+event - it is not news, and the screen does not show it again.
+
+| | |
+|---|---|
+| Request | `DELETE /user/notifications` `{"ids": [...]}` for every queued delete; a Core older than the bulk route (WT-1872) answers a bare 404, and the remote repository deletes one id at a time |
+| Already gone on the backend | skipped there; every id sent goes on the device once the backend answers |
+| Offline or refused | the delete waits in the outbox and is retried as a receipt is, the cards stay hidden; nothing is said, as nothing is said for a receipt |
+
+"All" means every notification stored on this device
+(`SystemNotificationsLocalRepository.getNotificationIds`), not the backend's
+whole history: older notifications stay there. An emptied list has nothing
+to scroll, and the sync worker keeps its own anchor so an emptied store is not
+taken for a first load (which would read the history back at once and push
+its unseen notifications as news); they come back, silently, the next time
+the app starts with an empty store. The Workmanager task pushes nothing from
+a load without an anchor for the same reason.
+
+Deleting a row also deletes what the outbox holds for it, in the same
+transaction (`SystemNotificationsDao.deleteNotifications`, which returns what it
+removed so the events name exactly that). A cycle sends the deletes before the
+receipts, so a receipt for a notification that is going is not sent at all; a
+seen receipt for a notification the backend no longer has counts as sent, and
+the outbox does not write a sent row back for a notification deleted while its
+receipt was out. A deleted notification's local push is taken out of the shade.
+
+Not yet handled: a notification deleted on another device, or by the
+backend's retention cleaner, is never reported by `getUpdates` - the backend
+deletes the row outright - so this device keeps it until the cache is
+reconciled against history pages (WT-2078, follow-up).
 
 ## Two properties of the sync cycle
 
@@ -157,7 +208,8 @@ genuine notification on a new account would be silently swallowed.
 | `lib/features/system_notifications/services/system_notifications_push_service.dart` | local push from a stored notification |
 | `lib/features/system_notifications/services/system_notifications_background_worker.dart` | Workmanager sync outside the app |
 | `lib/features/system_notifications/widgets/system_notifications_shell.dart` | starts the push service and the background task |
-| `lib/features/system_notifications/cubit/` | screen and badge cubits |
+| `lib/features/system_notifications/cubit/` | screen and badge cubits; the screen cubit also deletes |
+| `lib/features/system_notifications/widgets/system_notifications_delete_all_action.dart` | the header's delete-all action |
 | `lib/repositories/system_notifications/` | local (Drift) and remote (API) repositories |
 
 Tests: `test/features/system_notifications/` - a worker suite per direction, a
