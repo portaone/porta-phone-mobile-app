@@ -1,4 +1,5 @@
-import 'package:api/api.dart' show EndpointNotSupportedException, SystemNotificationGoneException, WebtritApiClient;
+import 'package:api/api.dart'
+    show EndpointNotSupportedException, RequestFailure, SystemNotificationGoneException, WebtritApiClient;
 
 import 'package:webtrit_phone/mappers/api/system_notification_mapper.dart';
 import 'package:webtrit_phone/models/system_notification.dart';
@@ -9,9 +10,13 @@ abstract class SystemNotificationsRemoteRepository {
   /// [limit] - Optional parameter to limit the number of notifications returned. Defaults to `20`.
   Future<List<SystemNotification>> getHistory({DateTime? since, int limit = 20});
 
-  /// Fetches the updates of system notifications.
-  /// [since] - Optional parameter to filter notifications created `after` this date.
+  /// Fetches the notifications changed after [since], oldest change first.
   /// [limit] - Optional parameter to limit the number of notifications returned. Defaults to `20`.
+  ///
+  /// Those deleted since come too, with `deletedAt` set, when the backend can
+  /// report them; one that cannot simply never lists a deleted notification.
+  /// The page can be longer than [limit]: notifications changed at the same
+  /// instant are never split between two pages.
   Future<List<SystemNotification>> getUpdates({required DateTime since, int limit = 20});
 
   /// Marks a system notification as seen.
@@ -49,9 +54,32 @@ class SystemNotificationsRemoteRepositoryApiImpl
 
   @override
   Future<List<SystemNotification>> getUpdates({required DateTime since, int limit = 20}) async {
-    final response = await _webtritApiClient.getSystemNotificationsUpdates(_token, since: since, limit: limit);
-    return response.items.map(systemNotificationFromApi).toList();
+    try {
+      final response = await _webtritApiClient.getSystemNotificationsUpdates(
+        _token,
+        since: since,
+        limit: limit,
+        includeDeleted: _reportsDeleted,
+      );
+      return response.items.map(systemNotificationFromApi).toList();
+    } on RequestFailure catch (e) {
+      if (!_reportsDeleted || !_refusesIncludeDeleted(e)) rethrow;
+
+      // A backend from before deleted notifications were reported refuses the
+      // parameter it does not know. Ask the old way, and keep doing so for as
+      // long as this repository lives - a new session asks again.
+      _reportsDeleted = false;
+      return getUpdates(since: since, limit: limit);
+    }
   }
+
+  static const _unprocessable = 422;
+  static const _includeDeletedParameter = 'include_deleted';
+
+  bool _reportsDeleted = true;
+
+  bool _refusesIncludeDeleted(RequestFailure failure) =>
+      failure.statusCode == _unprocessable && failure.error?.details?.path == _includeDeletedParameter;
 
   @override
   Future<void> markSystemNotificationAsSeen(int notificationId) async {

@@ -23,7 +23,9 @@ final class SystemNotificationsSync extends PollingWorkerOwner<SystemNotificatio
 ///
 /// A cycle fetches either the initial history or every update since the last
 /// locally known one - never both, so the first cycle after a wipe stays one
-/// bounded request.
+/// bounded request. The updates carry the notifications deleted since as well,
+/// and the store drops those: that is how a delete made on another device
+/// reaches this one.
 class SystemNotificationsSyncWorker implements PollingWorker {
   SystemNotificationsSyncWorker(this.localRepo, this.remoteRepo, {this.pageSize = 50})
     : assert(pageSize > 0, 'pageSize must be greater than zero');
@@ -45,11 +47,17 @@ class SystemNotificationsSyncWorker implements PollingWorker {
   Future<void> refresh() async {
     _ensureActive();
 
-    // The store is the anchor, except when it has been emptied by deleting
-    // everything in it: that is not a first load, and treating it as one would
-    // read the older history back and push every unseen notification in it as
-    // news. The newest update this worker has stored stands in for it then.
-    final lastUpdate = await localRepo.getLastUpdate() ?? _lastStoredUpdate;
+    // The store is the anchor, with two exceptions the newest update this
+    // worker has read stands in for.
+    //
+    // A store emptied by deleting everything in it - here or on another device
+    // - is not a first load: treating it as one would read the older history
+    // back and push every unseen notification in it as news.
+    //
+    // And a deleted notification moves the anchor without being stored. Read
+    // from the store alone, the same deletes would be fetched again in every
+    // cycle until something newer is stored.
+    final lastUpdate = _newer(await localRepo.getLastUpdate(), _lastReadUpdate);
     _ensureActive();
 
     if (lastUpdate == null) {
@@ -96,11 +104,15 @@ class SystemNotificationsSyncWorker implements PollingWorker {
     }
   }
 
-  void _remember(List<SystemNotification> stored) {
-    if (stored.isEmpty) return;
-    final newest = _newestUpdate(stored);
-    final last = _lastStoredUpdate;
-    if (last == null || newest.isAfter(last)) _lastStoredUpdate = newest;
+  void _remember(List<SystemNotification> read) {
+    if (read.isEmpty) return;
+    _lastReadUpdate = _newer(_lastReadUpdate, _newestUpdate(read));
+  }
+
+  DateTime? _newer(DateTime? a, DateTime? b) {
+    if (a == null) return b;
+    if (b == null) return a;
+    return a.isAfter(b) ? a : b;
   }
 
   DateTime _newestUpdate(List<SystemNotification> notifications) =>
@@ -115,7 +127,7 @@ class SystemNotificationsSyncWorker implements PollingWorker {
   }
 
   bool _hasCompletedSync = false;
-  DateTime? _lastStoredUpdate;
+  DateTime? _lastReadUpdate;
   bool _disposed = false;
 
   @override

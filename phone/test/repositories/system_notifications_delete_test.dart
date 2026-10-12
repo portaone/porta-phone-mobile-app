@@ -47,6 +47,33 @@ void main() {
       expect(left.map((n) => n.id), [2]);
     });
 
+    test('a notification that arrives deleted is removed, not stored', () async {
+      final events = <SystemNotificationEvent>[];
+      final subscription = local.eventBus.listen(events.add);
+      addTearDown(subscription.cancel);
+      await local.upsertOutboxNotification(
+        const SystemNotificationOutboxEntry(notificationId: 2, actionType: SnOutboxActionType.seen),
+      );
+      events.clear();
+
+      final deletedAt = DateTime.utc(2026, 9, 20);
+      final arrived = [
+        notification(2).copyWith(title: '-', content: '-', updatedAt: deletedAt, deletedAt: deletedAt),
+        notification(4),
+        // Deleted before this device ever stored it: nothing to remove, nothing to tell.
+        notification(9).copyWith(updatedAt: deletedAt, deletedAt: deletedAt),
+      ];
+      await local.upsertNotifications(arrived);
+      await pumpEventQueue();
+
+      expect((await local.getNotifications()).map((n) => n.id), [4, 3, 1]);
+      expect(await local.getOutboxNotifications(), isEmpty);
+      expect(events.whereType<SystemNotificationRemove>().map((e) => e.id), [2]);
+      expect(events.whereType<SystemNotificationUpdate>().map((e) => e.notification.id), [4]);
+      // The anchor a sync resumes from is what is stored, so the delete does not move it.
+      expect(await local.getLastUpdate(), DateTime.utc(2026, 9, 4).toLocal());
+    });
+
     test('takes the outbox entries of deleted notifications with them', () async {
       await local.upsertOutboxNotification(
         const SystemNotificationOutboxEntry(notificationId: 1, actionType: SnOutboxActionType.seen),
