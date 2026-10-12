@@ -201,6 +201,22 @@ final FailureRule callQueueNotFoundRule = FailureRule(
   ),
 );
 
+/// A notification the backend no longer has.
+///
+/// Declared by the calls that act on one notification by id, by the code:
+/// another device or the retention cleaner may have deleted it since the list
+/// was read.
+final FailureRule systemNotificationGoneRule = FailureRule(
+  code: 'notification_not_found',
+  build: (f) => SystemNotificationGoneException(
+    url: f.url,
+    requestId: f.requestId,
+    statusCode: f.statusCode,
+    token: f.token,
+    error: f.error,
+  ),
+);
+
 /// Creating a session was refused because the credentials are wrong.
 ///
 /// Declared on that endpoint rather than globally: everywhere else a 401 is

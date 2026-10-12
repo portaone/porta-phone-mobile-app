@@ -390,4 +390,190 @@ case _:
 
 }
 
+
+/// @nodoc
+mixin _$SystemNotificationsDeleteResponse {
+
+ List<int> get deletedIds;
+/// Create a copy of SystemNotificationsDeleteResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SystemNotificationsDeleteResponseCopyWith<SystemNotificationsDeleteResponse> get copyWith => _$SystemNotificationsDeleteResponseCopyWithImpl<SystemNotificationsDeleteResponse>(this as SystemNotificationsDeleteResponse, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotificationsDeleteResponse&&const DeepCollectionEquality().equals(other.deletedIds, deletedIds));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(deletedIds));
+
+@override
+String toString() {
+  return 'SystemNotificationsDeleteResponse(deletedIds: $deletedIds)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SystemNotificationsDeleteResponseCopyWith<$Res>  {
+  factory $SystemNotificationsDeleteResponseCopyWith(SystemNotificationsDeleteResponse value, $Res Function(SystemNotificationsDeleteResponse) _then) = _$SystemNotificationsDeleteResponseCopyWithImpl;
+@useResult
+$Res call({
+ List<int> deletedIds
+});
+
+
+
+
+}
+/// @nodoc
+class _$SystemNotificationsDeleteResponseCopyWithImpl<$Res>
+    implements $SystemNotificationsDeleteResponseCopyWith<$Res> {
+  _$SystemNotificationsDeleteResponseCopyWithImpl(this._self, this._then);
+
+  final SystemNotificationsDeleteResponse _self;
+  final $Res Function(SystemNotificationsDeleteResponse) _then;
+
+/// Create a copy of SystemNotificationsDeleteResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? deletedIds = null,}) {
+  return _then(SystemNotificationsDeleteResponse(
+deletedIds: null == deletedIds ? _self.deletedIds : deletedIds // ignore: cast_nullable_to_non_nullable
+as List<int>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SystemNotificationsDeleteResponse].
+extension SystemNotificationsDeleteResponsePatterns on SystemNotificationsDeleteResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(){
+final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>() {final _that = this;
+switch (_that) {
+case _:
+  return null;
+
+}
+}
+
+}
+
 // dart format on

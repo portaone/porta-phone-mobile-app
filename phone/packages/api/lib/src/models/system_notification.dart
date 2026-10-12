@@ -61,3 +61,17 @@ class SystemNotificationResponce with _$SystemNotificationResponce {
 
   Map<String, Object?> toJson() => _$SystemNotificationResponceToJson(this);
 }
+
+@freezed
+@JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
+class SystemNotificationsDeleteResponse with _$SystemNotificationsDeleteResponse {
+  const SystemNotificationsDeleteResponse({required this.deletedIds});
+
+  @override
+  final List<int> deletedIds;
+
+  factory SystemNotificationsDeleteResponse.fromJson(Map<String, Object?> json) =>
+      _$SystemNotificationsDeleteResponseFromJson(json);
+
+  Map<String, Object?> toJson() => _$SystemNotificationsDeleteResponseToJson(this);
+}

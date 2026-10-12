@@ -65,6 +65,7 @@ body, and classification getters: `isClientError` (4xx), `isServerError` (5xx),
 | `ServerFailureException` | any 5xx no earlier rule claimed - the backend blamed itself, so nothing follows about what the request did |
 | `VoicemailNotConfiguredException` | `voicemail_not_configured` |
 | `VoicemailMessageGoneException` | `message_not_found` on the voicemail endpoints - the mailbox no longer has that message. By the code, not the status: these calls are optional, so a bare 404 means the route is absent |
+| `SystemNotificationGoneException` | `notification_not_found` on `deleteSystemNotification` and `markSystemNotificationAsSeen` - another device or the retention cleaner deleted it since the list was read |
 | `PasswordChangeRequiredException` | `password_change_required` |
 
 An error body is read for what it can add and never for permission to fail:

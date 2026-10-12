@@ -76,6 +76,21 @@ class VoicemailMessageGoneException extends RequestFailure {
   }) : super();
 }
 
+/// The backend no longer has the notification this was about.
+///
+/// Deleted from another device, or removed by the retention cleaner, after the
+/// list was read. Named because it says the row is gone rather than that the
+/// request was wrong: whoever asked can drop it locally instead of retrying.
+class SystemNotificationGoneException extends RequestFailure {
+  SystemNotificationGoneException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.token,
+    super.error,
+  }) : super();
+}
+
 /// The user is not an agent of the call queue this was about.
 ///
 /// The queue was taken away from them, or the list on screen is older than the

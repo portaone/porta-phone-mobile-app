@@ -50,3 +50,15 @@ SystemNotificationResponce _$SystemNotificationResponceFromJson(
 Map<String, dynamic> _$SystemNotificationResponceToJson(
   SystemNotificationResponce instance,
 ) => <String, dynamic>{'items': instance.items.map((e) => e.toJson()).toList()};
+
+SystemNotificationsDeleteResponse _$SystemNotificationsDeleteResponseFromJson(
+  Map<String, dynamic> json,
+) => SystemNotificationsDeleteResponse(
+  deletedIds: (json['deleted_ids'] as List<dynamic>)
+      .map((e) => (e as num).toInt())
+      .toList(),
+);
+
+Map<String, dynamic> _$SystemNotificationsDeleteResponseToJson(
+  SystemNotificationsDeleteResponse instance,
+) => <String, dynamic>{'deleted_ids': instance.deletedIds};
