@@ -15,6 +15,9 @@ abstract class SystemNotificationsLocalRepository {
 
   Future<List<SystemNotification>> getNotifications({DateTime? from, DateTime? to, int limit = 50});
 
+  /// The ids of every stored notification, not only of those on screen.
+  Future<List<int>> getNotificationIds();
+
   Future<SystemNotification?> getNotificationById(int id);
 
   Future<DateTime?> getLastUpdate();
@@ -27,7 +30,18 @@ abstract class SystemNotificationsLocalRepository {
     bool initialData = false,
   });
 
+  /// Queues the delete of the stored notifications among [ids] in the outbox.
+  ///
+  /// They leave the list and the unseen count at once, but stay stored until
+  /// the backend confirms: the outbox row references its notification. A sync
+  /// that brings one of them back meanwhile is stored silently.
+  Future<void> queueDeletes(List<int> ids);
+
   Future<void> deleteNotification(int id);
+
+  /// Deletes the notifications with [ids] and whatever is queued for them in
+  /// the outbox: what follows a confirmed delete.
+  Future<void> deleteNotifications(List<int> ids);
 
   Future<List<SystemNotificationOutboxEntry>> getOutboxNotifications({
     SnOutboxActionType? actionType,
@@ -63,6 +77,9 @@ class SystemNotificationsLocalRepositoryDriftImpl
   }
 
   @override
+  Future<List<int>> getNotificationIds() => _dao.getNotificationIds();
+
+  @override
   Future<SystemNotification?> getNotificationById(int id) async {
     final data = await _dao.getNotificationById(id);
     return data != null ? systemNotificationFromDrift(data) : null;
@@ -87,14 +104,44 @@ class SystemNotificationsLocalRepositoryDriftImpl
     final data = notifications.map(systemNotificationToDrift).toList();
     await _dao.upsertNotifications(data);
     if (silent == false) {
-      notifications.forEach((n) => _addEvent(SystemNotificationUpdate(n, initialData: initialData)));
+      // One the user has deleted is not news, even when a sync brings it back
+      // before the backend has confirmed the delete.
+      final deleting = await _dao.getPendingDeleteIds(notifications.map((n) => n.id));
+      notifications
+          .where((n) => !deleting.contains(n.id))
+          .forEach((n) => _addEvent(SystemNotificationUpdate(n, initialData: initialData)));
     }
   }
 
   @override
-  Future<void> deleteNotification(int id) async {
-    await _dao.deleteNotification(id);
-    _addEvent(SystemNotificationRemove(id));
+  Future<void> queueDeletes(List<int> ids) async {
+    if (ids.isEmpty) return;
+
+    final queued = await _dao.queueDeletes(ids);
+    for (final data in queued) {
+      final entry = SystemNotificationOutboxEntry(notificationId: data.id, actionType: SnOutboxActionType.delete);
+      _addEvent(SystemNotificationOutboxUpdate(entry));
+      _addEvent(SystemNotificationRemove(systemNotificationFromDrift(data)));
+    }
+  }
+
+  @override
+  Future<void> deleteNotification(int id) => deleteNotifications([id]);
+
+  @override
+  Future<void> deleteNotifications(List<int> ids) async {
+    if (ids.isEmpty) return;
+
+    final deleted = await _dao.deleteNotifications(ids);
+
+    for (final entry in deleted.outbox) {
+      _addEvent(SystemNotificationOutboxRemove(entry.notificationId, actionTypefromDrift(entry.actionType)));
+    }
+    // Only what the store held: an id it did not hold was on no screen and in
+    // no shade, so there is nothing to tell.
+    for (final data in deleted.notifications) {
+      _addEvent(SystemNotificationRemove(systemNotificationFromDrift(data)));
+    }
   }
 
   @override

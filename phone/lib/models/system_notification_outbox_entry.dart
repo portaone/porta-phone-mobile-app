@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum SnOutboxActionType { seen }
+enum SnOutboxActionType { seen, delete }
 
 enum SnOutboxState { pending, sent, failed }
 
