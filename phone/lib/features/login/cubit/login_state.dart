@@ -122,9 +122,6 @@ class LoginState with _$LoginState {
   @override
   final Map<String, dynamic>? pendingLoginCallbackData;
 
-  bool get hasValidSession =>
-      coreUrl != null && tenantId != null && token != null && userId != null && systemInfo != null;
-
   /// OTP login identifiers supported by the backend adapter.
   ///
   /// Derived from `system-info` (`adapter.custom.otp_login_identifiers`).

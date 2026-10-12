@@ -4,10 +4,8 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:http/http.dart' as http;
-import 'package:linkify/linkify.dart';
 import 'package:logging/logging.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:api/api.dart';
 
@@ -76,37 +74,27 @@ class LoginCubit extends Cubit<LoginState> {
 
   bool get isCredentialsRequestUrlEnabled => credentialsRequestUrl != null;
 
-  @override
-  void onChange(Change<LoginState> change) {
-    if (change.nextState.hasValidSession) {
-      _saveSession(change.nextState);
-    }
-
-    super.onChange(change);
-  }
-
-  /// Finalizes the authentication flow by delegating session and system information
-  /// to the [onLoginSuccess] callback.
+  /// Finishes a login the backend answered with a session: the one place every
+  /// sign-in ends in, called once for the token it was given.
   ///
-  /// This method extracts verified credentials and system configuration from the
-  /// current [state] and passes them to the parent orchestrator. This ensures
-  /// atomic persistence and state synchronization across the application's
-  /// core repositories before transitioning to the authenticated lifecycle.
-  void _saveSession(LoginState state) {
+  /// The session and the system information go to [onLoginSuccess] together,
+  /// so the parent persists them atomically before the authenticated lifecycle
+  /// starts. `processing` is left set, to hold the widgets as they are while
+  /// the app navigates away.
+  ///
+  /// The tenant of the answer is the truth for a finished session; a backend
+  /// that names none leaves the login in [requestTenantId], the tenant the
+  /// request was made in.
+  void _finishLogin(SessionToken sessionToken, {required String? requestTenantId}) {
     final systemInfo = state.systemInfo!;
-    final coreUrl = state.coreUrl!;
-    final tenantId = state.tenantId!;
-    final token = state.token!;
-    final userId = state.userId!;
+    final tenantId = sessionToken.tenantId ?? requestTenantId ?? defaultTenantId;
+    // Use an empty user ID as a fallback for outdated core versions that do not support this field.
+    final userId = sessionToken.userId ?? '';
 
-    onLoginSuccess(Session(coreUrl: coreUrl, tenantId: tenantId, token: token, userId: userId), systemInfo);
-  }
+    emit(state.copyWith(tenantId: tenantId, token: sessionToken.token, userId: userId));
 
-  void launchLinkableElement(LinkableElement link) async {
-    final url = Uri.parse(link.url);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    }
+    final session = Session(coreUrl: state.coreUrl!, tenantId: tenantId, token: sessionToken.token, userId: userId);
+    onLoginSuccess(session, systemInfo);
   }
 
   Future<void> _processSystemInfo(
@@ -124,23 +112,12 @@ class LoginCubit extends Cubit<LoginState> {
         return;
       }
 
-      final supportedFeatures = systemInfo.adapter?.supported ?? [];
-      // Only these types are accepted from the backend; qrSignin is client-side
-      // (added below), so an adapter advertising it must not bypass the config
-      // gate or duplicate the tab.
-      const backendLoginTypes = [LoginType.otpSignin, LoginType.passwordSignin, LoginType.signup];
-      final parsedLoginTypes = backendLoginTypes.where((type) => supportedFeatures.contains(type.name)).toList();
-      // The QR tab is not a backend capability: the scanned code carries plain
-      // credentials, so it is offered whenever password sign-in is available
-      // and the app config enables it.
-      if (qrSigninConfig.enabled && parsedLoginTypes.contains(LoginType.passwordSignin)) {
-        parsedLoginTypes.add(LoginType.qrSignin);
-      }
-      // Backend may list the options in an unstable order; impose a deterministic
-      // client-side order (driven by app config) so the login tabs do not jump
-      // around between requests.
-      final supportedLoginTypes = sortLoginTypes(parsedLoginTypes, orderConfig: signinOrder);
-      if (demo) supportedLoginTypes.removeWhere((loginType) => loginType != LoginType.signup);
+      final supportedLoginTypes = resolveLoginTypes(
+        systemInfo.adapter?.supported ?? const [],
+        qrEnabled: qrSigninConfig.enabled,
+        orderConfig: signinOrder,
+        demo: demo,
+      );
 
       if (supportedLoginTypes.isEmpty) {
         notificationsBloc.add(const NotificationsSubmitted(SupportedLoginTypeMissedErrorNotification()));
@@ -161,7 +138,7 @@ class LoginCubit extends Cubit<LoginState> {
       if (onError != null) {
         onError(e, s);
       } else {
-        handleError(e, s, 'LoginOtpSigninRequestSubmitted');
+        handleError(e, s, LoginOperation.systemInfo);
       }
       emit(state.copyWith(processing: false));
     }
@@ -244,7 +221,7 @@ class LoginCubit extends Cubit<LoginState> {
           _logger.warning('Core URL assign failed: $error');
           emit(state.copyWith(coreUrlAssignError: error));
         } else {
-          handleError(error, stackTrace, 'LoginCoreUrlAssignSubmitted');
+          handleError(error, stackTrace, LoginOperation.coreUrlAssign);
         }
       },
     );
@@ -326,7 +303,7 @@ class LoginCubit extends Cubit<LoginState> {
     } catch (e, s) {
       emit(state.copyWith(processing: false));
 
-      handleError(e, s, 'LoginOtpSigninRequestSubmitted');
+      handleError(e, s, LoginOperation.otpRequest);
     }
   }
 
@@ -350,20 +327,12 @@ class LoginCubit extends Cubit<LoginState> {
         code: state.otpSigninCodeInput.value,
       );
 
-      // does not set processing to false to hold processing widgets state during navigation
-      emit(
-        state.copyWith(
-          tenantId: sessionToken.tenantId ?? state.tenantId!,
-          token: sessionToken.token,
-          // Use an empty user ID as a fallback for outdated core versions that do not support this field.
-          userId: sessionToken.userId ?? '',
-        ),
-      );
+      _finishLogin(sessionToken, requestTenantId: state.tenantId);
     } catch (e, s) {
       emit(state.copyWith(processing: false));
       if (_isDeviceLimitRefusal(e)) loginOptSigninVerifyBack();
 
-      handleError(e, s, 'LoginSignupVerifySubmitted');
+      handleError(e, s, LoginOperation.otpVerify);
     }
   }
 
@@ -397,7 +366,7 @@ class LoginCubit extends Cubit<LoginState> {
     await _submitPasswordLogin(
       userRef: state.passwordSigninUserRefInput.value,
       password: state.passwordSigninPasswordInput.value,
-      errorContext: 'LoginPasswordSigninSubmitted',
+      operation: LoginOperation.passwordSignin,
     );
   }
 
@@ -409,7 +378,7 @@ class LoginCubit extends Cubit<LoginState> {
   /// credentials come from the scanner instead of the input fields. Completes
   /// when the attempt is over so the caller can resume scanning on failure.
   Future<void> loginQrSigninSubmitted({required String userRef, required String password}) {
-    return _submitPasswordLogin(userRef: userRef, password: password, errorContext: 'LoginQrSigninSubmitted');
+    return _submitPasswordLogin(userRef: userRef, password: password, operation: LoginOperation.qrSignin);
   }
 
   /// Shared session-creation path of the password-based sign-ins (manual entry
@@ -417,7 +386,7 @@ class LoginCubit extends Cubit<LoginState> {
   Future<void> _submitPasswordLogin({
     required String userRef,
     required String password,
-    required String errorContext,
+    required LoginOperation operation,
   }) async {
     // A login already left waiting is answered on the device limit screen; a
     // code still in front of the camera under it must not start another one.
@@ -433,24 +402,12 @@ class LoginCubit extends Cubit<LoginState> {
         password: password,
       );
 
-      // does not set processing to false to hold processing widgets state during navigation
-      loginSigninSubmitted(sessionToken);
+      _finishLogin(sessionToken, requestTenantId: state.tenantId);
     } catch (e, s) {
       emit(state.copyWith(processing: false));
 
-      handleError(e, s, errorContext);
+      handleError(e, s, operation);
     }
-  }
-
-  void loginSigninSubmitted(SessionToken token) async {
-    emit(
-      state.copyWith(
-        tenantId: token.tenantId ?? state.tenantId ?? defaultTenantId,
-        token: token.token,
-        // Use an empty user ID as a fallback for outdated core versions that do not support this field.
-        userId: token.userId ?? '',
-      ),
-    );
   }
 
   void loginPasswordSigninBack() async {
@@ -499,8 +456,13 @@ class LoginCubit extends Cubit<LoginState> {
       final result = await authRepository.signup(coreUrl: state.coreUrl!, tenantId: tenantId, extraPayload: extras);
 
       if (state.systemInfo == null) {
-        emit(state.copyWith(processing: true));
         final systemInfo = await _loadAndValidateSystemInfo(state.coreUrl!, tenantId);
+        if (systemInfo == null) {
+          // The backend and this build do not fit, and the user has been told:
+          // there is no session to enter, whatever the request came to.
+          emit(state.copyWith(processing: false));
+          return;
+        }
         emit(state.copyWith(systemInfo: systemInfo, processing: false));
       }
 
@@ -513,7 +475,7 @@ class LoginCubit extends Cubit<LoginState> {
       // Applies login result and ensures tenant consistency.
       _applyLoginResult(result, propagatedTenantId: tenantId);
     } catch (e, s) {
-      handleError(e, s, 'LoginSignupVerifySubmitted');
+      handleError(e, s, LoginOperation.signup);
       // The device limits are told to the user by the cubit itself - on the
       // device limit screen or in a message - so the error dialog of the
       // embedded page, which words a failed request, stays away.
@@ -558,7 +520,7 @@ class LoginCubit extends Cubit<LoginState> {
 
       _applyLoginResult(result, propagatedTenantId: state.tenantId);
     } catch (e, s) {
-      handleError(e, s, 'LoginSignupVerifySubmitted');
+      handleError(e, s, LoginOperation.signup);
       emit(state.copyWith(processing: false));
     }
   }
@@ -585,17 +547,7 @@ class LoginCubit extends Cubit<LoginState> {
         ),
       );
     } else if (result is SessionToken) {
-      // Maintain processing state during navigation
-      emit(
-        state.copyWith(
-          // For a successful session, the tenant from the result is the ultimate source of truth.
-          // It takes precedence because this token signifies the final authenticated state,
-          // and no higher-level entity links the requests.
-          tenantId: result.tenantId ?? propagatedTenantId ?? defaultTenantId,
-          token: result.token,
-          userId: result.userId ?? '', // Fallback for outdated core versions
-        ),
-      );
+      _finishLogin(result, requestTenantId: propagatedTenantId);
     } else {
       throw UnimplementedError('Unexpected login result type');
     }
@@ -622,18 +574,10 @@ class LoginCubit extends Cubit<LoginState> {
         code: state.signupCodeInput.value,
       );
 
-      // does not set processing to false to hold processing widgets state during navigation
-      emit(
-        state.copyWith(
-          tenantId: sessionToken.tenantId ?? state.tenantId!,
-          token: sessionToken.token,
-          // Use an empty user ID as a fallback for outdated core versions that do not support this field.
-          userId: sessionToken.userId ?? '',
-        ),
-      );
+      _finishLogin(sessionToken, requestTenantId: state.tenantId);
     } catch (e, s) {
       if (_isDeviceLimitRefusal(e)) loginSignupVerifyBack();
-      handleError(e, s, 'LoginSignupVerifySubmitted');
+      handleError(e, s, LoginOperation.signupVerify);
       emit(state.copyWith(processing: false));
     }
   }
@@ -686,15 +630,7 @@ class LoginCubit extends Cubit<LoginState> {
 
       if (postRequest != null) await authRepository.executePostLoginHttpRequest(postRequest);
 
-      // does not set processing to false to hold processing widgets state during navigation
-      emit(
-        state.copyWith(
-          tenantId: sessionToken.tenantId ?? pendingLogin.tenantId,
-          token: sessionToken.token,
-          // Use an empty user ID as a fallback for outdated core versions that do not support this field.
-          userId: sessionToken.userId ?? '',
-        ),
-      );
+      _finishLogin(sessionToken, requestTenantId: pendingLogin.tenantId);
     } on PendingLoginSessionNotFoundException catch (e) {
       _logger.warning('Known login error occurred: $e', e);
       _onPendingLoginSessionGone(pendingLogin, sessionId);
@@ -705,7 +641,7 @@ class LoginCubit extends Cubit<LoginState> {
     } catch (e, s) {
       emit(state.copyWith(processing: false, pendingLoginRevokingSessionId: null));
 
-      handleError(e, s, 'LoginDeviceLimitSessionPicked');
+      handleError(e, s, LoginOperation.deviceLimitSessionPicked);
     }
   }
 
@@ -788,65 +724,34 @@ class LoginCubit extends Cubit<LoginState> {
     return error is LoginDeviceLimitReached || error is DeviceSwitchLimitReachedException;
   }
 
-  void handleError(Object error, StackTrace stackTrace, String context) {
+  /// Tells the user what a failed request of the login came to.
+  ///
+  /// A device limit changes where the login stands and is followed here; a
+  /// refusal with wording of its own is told with it; anything else is
+  /// unexpected and is both reported and shown.
+  void handleError(Object error, StackTrace stackTrace, LoginOperation operation) {
     if (error is LoginDeviceLimitReached) {
       _logger.warning('Known login error occurred: $error', error);
       _onDeviceLimitReached(error);
       return;
     }
 
+    if (error is DeviceSwitchLimitReachedException) {
+      _logger.warning('Known login error occurred: $error', error);
+      _dropPendingLogin();
+      notificationsBloc.add(const NotificationsSubmitted(LoginDeviceSwitchLimitReachedNotification()));
+      return;
+    }
+
     if (error is RequestFailure) {
-      if (error is DeviceSwitchLimitReachedException) {
-        _logger.warning('Known login error occurred: $error', error);
-        _dropPendingLogin();
-        notificationsBloc.add(const NotificationsSubmitted(LoginDeviceSwitchLimitReachedNotification()));
-        return;
-      }
-
-      if (error is UserNotFoundException) {
-        _logger.warning('Known login error occurred: $error', error);
-        notificationsBloc.add(NotificationsSubmitted(const LoginUserNotFoundNotification()));
-        return;
-      }
-
-      final code = error.error?.code;
-      final readableNotification = switch (code) {
-        'otp_not_found' => const LoginOtpNotFoundNotification(),
-        'incorrect_otp_code' => const LoginIncorrectOtpCodeNotification(),
-        'otp_expired' => const LoginOtpExpiredNotification(),
-        'otp_verification_attempts_exceeded' => const LoginOtpVerificationAttemptsExceededNotification(),
-        'otp_already_verified' => const LoginOtpAlreadyVerifiedNotification(),
-        'phone_not_found' => const LoginPhoneNotFoundNotification(),
-        'incorrect_credentials' => const LoginIncorrectCredentialsNotification(),
-        'user_not_found' => const LoginUserNotFoundNotification(),
-        'unconfigured_bundle_id' => const LoginUnconfiguredBundleIdNotification(),
-        'addon_required' => const LoginAddonRequiredNotification(),
-        'validation_error' => const LoginValidationErrorNotification(),
-        'parameters_apply_issue' => const LoginParametersApplyIssueNotification(),
-        'empty_email' => const LoginEmptyEmailNotification(),
-        // The identifier-specific wording only makes sense for the OTP sign-in
-        // form; a non-empty user reference input is the evidence the error came
-        // from there (the code is declared on otp-create only, but signup
-        // passes adapter 422 bodies through verbatim).
-        'delivery_channel_unspecified' => LoginDeliveryChannelUnspecifiedNotification(
-          state.otpSigninUserRefInput.value.isNotEmpty ? state.otpSigninIdentifiers : const [],
-        ),
-        _ => null,
-      };
-      if (readableNotification != null) {
-        _logger.warning('Known login error occurred: ${error.error}', error);
-        notificationsBloc.add(NotificationsSubmitted(readableNotification));
-        return;
-      }
-
-      // Read after the codes so a backend that does name the refusal keeps its
-      // own wording; this one covers the adapters that answer a wrong login or
-      // password with a bare 401 and no code at all. A mistyped password is the
-      // person's own doing, so it is worth telling them and not worth a
-      // Crashlytics record.
-      if (error is IncorrectCredentialsException) {
-        _logger.warning('Known login error occurred: $error', error);
-        notificationsBloc.add(NotificationsSubmitted(const LoginIncorrectCredentialsNotification()));
+      final notification = loginErrorNotification(
+        error,
+        operation: operation,
+        otpSigninIdentifiers: state.otpSigninIdentifiers,
+      );
+      if (notification != null) {
+        _logger.warning('Known login error occurred: ${error.error ?? error}', error);
+        notificationsBloc.add(NotificationsSubmitted(notification));
         return;
       }
     }
@@ -855,7 +760,7 @@ class LoginCubit extends Cubit<LoginState> {
     // reaches the user, because a sign-in that fails in silence sends them
     // retyping credentials that were never the problem.
     _logger.severe('Unexpected error during login process', error, stackTrace);
-    CrashlyticsUtils.recordError(error, stack: stackTrace, reason: context);
+    CrashlyticsUtils.recordError(error, stack: stackTrace, reason: operation.reportReason);
     notificationsBloc.add(NotificationsSubmitted(LoginUnexpectedErrorNotification(error)));
   }
 }

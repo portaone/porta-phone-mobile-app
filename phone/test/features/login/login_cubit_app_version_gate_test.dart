@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:pub_semver/pub_semver.dart';
 
+import 'package:api/api.dart' show SessionToken;
+
 import 'package:webtrit_phone/app/notifications/notifications.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/login/login.dart';
@@ -27,6 +29,10 @@ void main() {
   late _MockAuthRepository authRepository;
   late NotificationsBloc notificationsBloc;
   late List<Session> loginSuccesses;
+
+  setUpAll(() {
+    registerFallbackValue(const RawHttpRequest(method: 'GET', url: 'https://example.com'));
+  });
 
   setUp(() {
     authRepository = _MockAuthRepository();
@@ -102,6 +108,33 @@ void main() {
 
     expect(notificationsBloc.state.lastNotification, isNot(isA<AppVersionUnsupportedErrorNotification>()));
     expect(cubit.state.systemInfo, isNotNull);
+
+    await cubit.close();
+  });
+
+  test('an embedded launch page signs nobody in when the app is too old for the backend', () async {
+    // The page signs up before the system info is read, so the gate is met
+    // with a token already in hand - and still lets nothing through.
+    when(
+      () => authRepository.signup(
+        coreUrl: any(named: 'coreUrl'),
+        tenantId: any(named: 'tenantId'),
+        extraPayload: any(named: 'extraPayload'),
+      ),
+    ).thenAnswer((_) async => const SessionToken(token: 'token-1', userId: 'user-1'));
+    when(() => authRepository.getSystemInfo(any(), any()))
+        .thenAnswer((_) async => _systemInfo(minSupportedAppVersion: Version(2, 0, 0)));
+
+    final cubit = buildCubit('1.15.3');
+    cubit.emit(const LoginState(coreUrl: 'https://demo.example.com'));
+    await cubit.loginCustomSignupRequest(null, {'method': 'POST', 'url': 'https://example.com/hook'});
+    await pumpEventQueue();
+
+    expect(notificationsBloc.state.lastNotification, isA<AppVersionUnsupportedErrorNotification>());
+    expect(loginSuccesses, isEmpty);
+    expect(cubit.state.token, isNull);
+    expect(cubit.state.processing, isFalse);
+    verifyNever(() => authRepository.executePostLoginHttpRequest(any()));
 
     await cubit.close();
   });

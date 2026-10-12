@@ -124,7 +124,7 @@ void main() {
 
   Future<LoginCubit> cubitWithPendingLogin({List<String> sessions = const ['session-1', 'session-2']}) async {
     final cubit = buildCubit();
-    cubit.handleError(_deviceLimitReached(sessions: sessions), StackTrace.current, 'test');
+    cubit.handleError(_deviceLimitReached(sessions: sessions), StackTrace.current, LoginOperation.passwordSignin);
     await pumpEventQueue();
     return cubit;
   }
@@ -252,7 +252,7 @@ void main() {
     test('is not reported as an unexpected error', () async {
       final cubit = buildCubit();
 
-      cubit.handleError(_deviceLimitReached(), StackTrace.current, 'test');
+      cubit.handleError(_deviceLimitReached(), StackTrace.current, LoginOperation.passwordSignin);
       await pumpEventQueue();
 
       expect(lastNotification(), isNot(isA<LoginUnexpectedErrorNotification>()));
@@ -261,7 +261,7 @@ void main() {
     test('with nothing of this account to sign out says so and leaves nothing waiting', () async {
       final cubit = buildCubit();
 
-      cubit.handleError(const LoginDeviceLimitReached(), StackTrace.current, 'test');
+      cubit.handleError(const LoginDeviceLimitReached(), StackTrace.current, LoginOperation.passwordSignin);
       await pumpEventQueue();
 
       expect(cubit.state.pendingLogin, isNull);
@@ -365,7 +365,11 @@ void main() {
 
     test('finishes it in the tenant the login waits in, not the one in the state', () async {
       final cubit = buildCubit();
-      cubit.handleError(_deviceLimitReached(tenantId: 'embedded-tenant'), StackTrace.current, 'test');
+      cubit.handleError(
+        _deviceLimitReached(tenantId: 'embedded-tenant'),
+        StackTrace.current,
+        LoginOperation.passwordSignin,
+      );
       whenCompleting().thenAnswer((_) async => const SessionToken(token: 'token-1'));
 
       await cubit.loginDeviceLimitSessionPicked('session-1');
@@ -567,7 +571,7 @@ void main() {
     Future<LoginCubit> cubitWaitingWithoutSystemInfo({Map<String, dynamic>? callbackData}) async {
       final cubit = buildCubit();
       cubit.emit(const LoginState(coreUrl: _coreUrl));
-      cubit.handleError(_deviceLimitReached(), StackTrace.current, 'test');
+      cubit.handleError(_deviceLimitReached(), StackTrace.current, LoginOperation.passwordSignin);
       cubit.emit(cubit.state.copyWith(pendingLoginCallbackData: callbackData));
       await pumpEventQueue();
       whenCompleting().thenAnswer((_) async => const SessionToken(token: 'token-1', userId: 'user-1'));
@@ -733,6 +737,26 @@ void main() {
       final requests = verify(() => authRepository.executePostLoginHttpRequest(captureAny())).captured;
       expect((requests.single as RawHttpRequest).url, hook['url']);
     });
+  });
+
+  test('a finished login is handed over once, whatever the screen does next', () async {
+    final cubit = buildCubit();
+    when(
+      () => authRepository.login(
+        coreUrl: any(named: 'coreUrl'),
+        tenantId: any(named: 'tenantId'),
+        userRef: any(named: 'userRef'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer((_) async => const SessionToken(token: 'token-1', userId: 'user-1'));
+
+    cubit.passwordSigninUserRefInputChanged('alice');
+    cubit.passwordSigninPasswordInputChanged('password');
+    cubit.loginPasswordSigninSubmitted();
+    await pumpEventQueue();
+    cubit.passwordSigninPasswordInputObscureTextToggled();
+
+    expect(loggedIn, [const Session(coreUrl: _coreUrl, tenantId: _tenantId, token: 'token-1', userId: 'user-1')]);
   });
 
   test('the token of a waiting login is not printed with the state', () async {
