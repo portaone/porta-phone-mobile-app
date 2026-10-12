@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mocktail/mocktail.dart';
 
+import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/features/contact/contact.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
@@ -42,6 +43,27 @@ void main() {
       await openPhoneMenu(tester);
 
       expect(find.text('Send sms message'), findsNothing);
+    });
+
+    testWidgets('opens the conversation from the number Core gives the account', (tester) async {
+      // The card used to send from the numbers of the user record, which
+      // PortaSwitch gives without a plus; the conversation knows the account's
+      // numbers from Core, always with one, so nothing matched and the message
+      // was dropped (WT-2094).
+      harness.withUserSmsNumbers(['+16042000001']);
+
+      await harness.pump(
+        tester,
+        contact: buildContact(number: '16042000002', label: 'sms'),
+      );
+      await openPhoneMenu(tester);
+      await tester.tap(find.text('Send sms message'));
+      await tester.pumpAndSettle();
+
+      final route =
+          verify(() => harness.router.navigate(captureAny())).captured.single as SmsConversationScreenPageRoute;
+      expect(route.args?.firstNumber, '+16042000001');
+      expect(route.args?.secondNumber, '+16042000002');
     });
   });
 

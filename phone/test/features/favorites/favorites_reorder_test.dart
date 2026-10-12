@@ -17,6 +17,7 @@ import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 
@@ -27,6 +28,8 @@ class _MockFavoritesBloc extends MockBloc<FavoritesEvent, FavoritesState> implem
 class _MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCubit {}
 
 class _MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {}
+
+class _MockSmsRepository extends Mock implements SmsRepository {}
 
 class _MockCallRoutingCubit extends MockCubit<CallRoutingState?> implements CallRoutingCubit {}
 
@@ -43,6 +46,7 @@ void main() {
   late _MockFavoritesBloc favoritesBloc;
   late _MockUserInfoCubit userInfoCubit;
   late _MockCallBloc callBloc;
+  late _MockSmsRepository smsRepository;
   late _MockCallRoutingCubit callRoutingCubit;
   late _MockSessionStatusCubit sessionStatusCubit;
   late _MockMicrophoneStatusBloc microphoneStatusBloc;
@@ -74,12 +78,14 @@ void main() {
     favoritesBloc = _MockFavoritesBloc();
     userInfoCubit = _MockUserInfoCubit();
     callBloc = _MockCallBloc();
+    smsRepository = _MockSmsRepository();
     callRoutingCubit = _MockCallRoutingCubit();
     sessionStatusCubit = _MockSessionStatusCubit();
     microphoneStatusBloc = _MockMicrophoneStatusBloc();
 
     when(() => userInfoCubit.state).thenReturn(const UserInfoState());
     when(() => callBloc.state).thenReturn(const CallState());
+    when(() => smsRepository.watchUserSmsNumbers()).thenAnswer((_) => Stream.value(const []));
     when(() => callRoutingCubit.state).thenReturn(null);
     when(() => sessionStatusCubit.state).thenReturn(const SessionStatusState());
     when(() => microphoneStatusBloc.state).thenReturn(const MicrophoneStatusState());
@@ -119,12 +125,15 @@ void main() {
                   BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
                   BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
                 ],
-                child: const FavoritesScreen(
-                  transferEnabled: false,
-                  videoEnabled: false,
-                  chatsEnabled: false,
-                  smssEnabled: false,
-                  cdrsEnabled: false,
+                child: RepositoryProvider<SmsRepository>.value(
+                  value: smsRepository,
+                  child: const FavoritesScreen(
+                    transferEnabled: false,
+                    videoEnabled: false,
+                    chatsEnabled: false,
+                    smssEnabled: false,
+                    cdrsEnabled: false,
+                  ),
                 ),
               ),
             ),
