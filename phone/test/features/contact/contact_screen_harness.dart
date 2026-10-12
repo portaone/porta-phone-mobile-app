@@ -1,26 +1,35 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/features/contact/contact.dart';
-import 'package:webtrit_phone/features/user_info/user_info.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/utils/utils.dart';
 
 class MockContactBloc extends MockBloc<ContactEvent, ContactState> implements ContactBloc {}
 
-class MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCubit {}
+class MockSmsRepository extends Mock implements SmsRepository {}
 
 class MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {}
 
 class MockCallRoutingCubit extends MockCubit<CallRoutingState?> implements CallRoutingCubit {}
+
+class MockStackRouter extends Mock implements StackRouter {}
+
+/// The user's own SMS numbers reach the card through a watcher that keeps the
+/// first repository it is given for the life of the test file, so every
+/// harness of a file shares this one and stubs it anew.
+final _smsRepository = MockSmsRepository();
 
 /// Builds a contact the way the screen receives it from the backend.
 ///
@@ -55,15 +64,17 @@ Contact buildContact({
 /// whether the options section exists at all.
 class ContactScreenHarness {
   ContactScreenHarness() {
-    when(() => userInfoCubit.state).thenReturn(const UserInfoState());
+    registerFallbackValue(SmsConversationScreenPageRoute(firstNumber: '', secondNumber: ''));
+    withUserSmsNumbers(const []);
     when(() => callBloc.state).thenReturn(const CallState());
     when(() => callRoutingCubit.state).thenReturn(null);
+    when(() => router.navigate(any())).thenAnswer((_) async {});
   }
 
   final contactBloc = MockContactBloc();
-  final userInfoCubit = MockUserInfoCubit();
   final callBloc = MockCallBloc();
   final callRoutingCubit = MockCallRoutingCubit();
+  final router = MockStackRouter();
 
   /// Puts a call on the line with a blind transfer already started, which is
   /// what turns the call buttons of a row into the transfer shortcut.
@@ -86,13 +97,10 @@ class ContactScreenHarness {
     when(() => callBloc.state).thenReturn(CallState(activeCalls: [call]));
   }
 
-  /// Numbers the account itself can send an SMS from.
+  /// Numbers the account itself can send an SMS from, as Core gives them over
+  /// the messaging socket.
   void withUserSmsNumbers(List<String> numbers) {
-    when(() => userInfoCubit.state).thenReturn(
-      UserInfoState(
-        userInfo: UserInfo(numbers: Numbers(sms: numbers)),
-      ),
-    );
+    when(() => _smsRepository.watchUserSmsNumbers()).thenAnswer((_) => Stream.value(numbers));
   }
 
   Future<void> pump(
@@ -107,36 +115,42 @@ class ContactScreenHarness {
     whenListen(contactBloc, const Stream<ContactState>.empty(), initialState: ContactState(contact: contact));
 
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: appLocalizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: MultiBlocProvider(
-          providers: [
-            BlocProvider<ContactBloc>.value(value: contactBloc),
-            BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
-            BlocProvider<CallBloc>.value(value: callBloc),
-            BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
-          ],
-          child: CallControllerScope(
-            controller: CallController(callBloc: callBloc),
-            child: DestinationPicking(
-              purpose: pickPurpose,
-              child: PresenceViewParams(
-                hybridPresenceSupport: presenceViaSip || dialogsViaSip,
-                blfViaSipSupport: dialogsViaSip,
-                presenceViaSipSupport: presenceViaSip,
-                child: ContactScreen(
-                  enableAppBarChat: true,
-                  enableTileFavorite: true,
-                  enableTileVoiceCall: true,
-                  enableTileVideoCall: true,
-                  enableTileSms: enableTileSms,
-                  enableTileChat: true,
-                  enableTileTransfer: enableTileTransfer,
-                  enableTileCallLog: true,
-                  enableTileEmail: enableTileEmail,
-                  useCdrsForHistory: false,
+      StackRouterScope(
+        controller: router,
+        stateHash: 0,
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider<ContactBloc>.value(value: contactBloc),
+              BlocProvider<CallBloc>.value(value: callBloc),
+              BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
+            ],
+            child: CallControllerScope(
+              controller: CallController(callBloc: callBloc),
+              child: DestinationPicking(
+                purpose: pickPurpose,
+                child: PresenceViewParams(
+                  hybridPresenceSupport: presenceViaSip || dialogsViaSip,
+                  blfViaSipSupport: dialogsViaSip,
+                  presenceViaSipSupport: presenceViaSip,
+                  child: RepositoryProvider<SmsRepository>.value(
+                    value: _smsRepository,
+                    child: ContactScreen(
+                      enableAppBarChat: true,
+                      enableTileFavorite: true,
+                      enableTileVoiceCall: true,
+                      enableTileVideoCall: true,
+                      enableTileSms: enableTileSms,
+                      enableTileChat: true,
+                      enableTileTransfer: enableTileTransfer,
+                      enableTileCallLog: true,
+                      enableTileEmail: enableTileEmail,
+                      useCdrsForHistory: false,
+                    ),
+                  ),
                 ),
               ),
             ),
