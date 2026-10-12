@@ -200,7 +200,7 @@ task applies it the same way.
 | The anchor | a deleted notification is read but not stored, so the store's newest `updated_at` does not reach it. The sync worker resumes from the newer of that and the newest update it has read; the Workmanager task, which has no memory between runs, drains every page each run instead of taking one |
 | A backend that cannot report deletes | one from before the parameter refuses it as an unknown field (422, `include_deleted`). The remote repository repeats the request without it and stops sending it for as long as the session lives; deletes made elsewhere are then not heard of, as before |
 | Many deleted at once | a bulk delete stamps one moment on every row, and the anchor moves by that moment. The backend therefore never splits notifications changed at the same instant between pages - a page can be longer than the limit asked for - so none is left behind the anchor |
-| Away for very long | the backend keeps a marker for 180 days. A device that has not synced for longer does not hear of that delete and keeps the card. A session does not live that long: signing in again starts from an empty store |
+| Away for too long | the backend reports a deleted notification for as long as its administrator keeps notifications (`NOTIFICATION_RETENTION` days), and names that in the system info as `core.notification_deleted_retention_days`; `0`, the default, is without limit. The sync records when it last brought the store up to date (`SystemNotificationsSyncJournal`). A store older than that time may hold notifications deleted since with nothing left to read about them, so the cycle reads the first page of the history again and drops the rest - quietly, as a first load, keeping the rows the outbox has yet to send something for. With no limit a store is never too old. No record at all counts as stale once, whatever the limit: that is a store filled before the app could hear of deletes |
 
 ## Two properties of the sync cycle
 
@@ -208,7 +208,8 @@ Both follow from the shape of the endpoints rather than from the pattern.
 
 **One branch per cycle.** With no local anchor the cycle fetches the initial
 history; with one, it drains updates since that anchor. Never both, so a first
-load after a wipe stays one bounded request.
+load after a wipe stays one bounded request. A store that may be stale (see
+"Deleted elsewhere") is a third branch: the first page again, in place of updates.
 
 **The anchor advances by timestamp.** `getUpdates` pages by `since`, not by page
 number. The anchor therefore moves to the newest record of each full page, and a
@@ -233,10 +234,10 @@ genuine notification on a new account would be silently swallowed.
 | `lib/features/system_notifications/widgets/system_notifications_shell.dart` | starts the push service and the background task |
 | `lib/features/system_notifications/cubit/` | screen and badge cubits; the screen cubit also deletes |
 | `lib/features/system_notifications/widgets/system_notifications_delete_all_action.dart` | the header's delete-all action |
-| `lib/repositories/system_notifications/` | local (Drift) and remote (API) repositories |
+| `lib/repositories/system_notifications/` | local (Drift) and remote (API) repositories; the record of the last sync |
 
 Tests: `test/features/system_notifications/` - a worker suite per direction, a
-push suite, a suite for the Workmanager task, and ten component scenarios shared between the host and Patrol
+push suite, a suite for the Workmanager task, and eleven component scenarios shared between the host and Patrol
 (`patrol_test/system_notifications_sync_test.dart`) over a real Drift store. The
 registrations themselves are asserted in
 `test/app/router/main_shell_polling_config_test.dart`.

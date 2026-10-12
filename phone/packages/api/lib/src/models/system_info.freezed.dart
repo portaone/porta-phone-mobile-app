@@ -207,7 +207,7 @@ case _:
 /// @nodoc
 mixin _$CoreInfo {
 
- Version get version; bool? get iceServersConfigured;
+ Version get version; bool? get iceServersConfigured; int? get notificationDeletedRetentionDays;
 /// Create a copy of CoreInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -218,16 +218,16 @@ $CoreInfoCopyWith<CoreInfo> get copyWith => _$CoreInfoCopyWithImpl<CoreInfo>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoreInfo&&(identical(other.version, version) || other.version == version)&&(identical(other.iceServersConfigured, iceServersConfigured) || other.iceServersConfigured == iceServersConfigured));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoreInfo&&(identical(other.version, version) || other.version == version)&&(identical(other.iceServersConfigured, iceServersConfigured) || other.iceServersConfigured == iceServersConfigured)&&(identical(other.notificationDeletedRetentionDays, notificationDeletedRetentionDays) || other.notificationDeletedRetentionDays == notificationDeletedRetentionDays));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,version,iceServersConfigured);
+int get hashCode => Object.hash(runtimeType,version,iceServersConfigured,notificationDeletedRetentionDays);
 
 @override
 String toString() {
-  return 'CoreInfo(version: $version, iceServersConfigured: $iceServersConfigured)';
+  return 'CoreInfo(version: $version, iceServersConfigured: $iceServersConfigured, notificationDeletedRetentionDays: $notificationDeletedRetentionDays)';
 }
 
 
@@ -238,7 +238,7 @@ abstract mixin class $CoreInfoCopyWith<$Res>  {
   factory $CoreInfoCopyWith(CoreInfo value, $Res Function(CoreInfo) _then) = _$CoreInfoCopyWithImpl;
 @useResult
 $Res call({
-@VersionConverter() Version version, bool? iceServersConfigured
+@VersionConverter() Version version, bool? iceServersConfigured, int? notificationDeletedRetentionDays
 });
 
 
@@ -255,11 +255,12 @@ class _$CoreInfoCopyWithImpl<$Res>
 
 /// Create a copy of CoreInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? version = null,Object? iceServersConfigured = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? version = null,Object? iceServersConfigured = freezed,Object? notificationDeletedRetentionDays = freezed,}) {
   return _then(CoreInfo(
 version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as Version,iceServersConfigured: freezed == iceServersConfigured ? _self.iceServersConfigured : iceServersConfigured // ignore: cast_nullable_to_non_nullable
-as bool?,
+as bool?,notificationDeletedRetentionDays: freezed == notificationDeletedRetentionDays ? _self.notificationDeletedRetentionDays : notificationDeletedRetentionDays // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
