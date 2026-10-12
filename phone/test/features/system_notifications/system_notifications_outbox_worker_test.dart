@@ -64,6 +64,8 @@ void main() {
     when(() => localRepository.upsertOutboxNotification(any())).thenAnswer((_) async {});
     when(() => localRepository.deleteOutboxNotification(any(), any())).thenAnswer((_) async {});
     when(() => remoteRepository.markSystemNotificationAsSeen(any())).thenAnswer((_) async {});
+    when(() => localRepository.getNotificationById(any()))
+        .thenAnswer((invocation) async => _notification(invocation.positionalArguments.single as int, seen: false));
     worker = SystemNotificationsOutboxWorker(localRepository, remoteRepository);
   });
 
@@ -72,13 +74,22 @@ void main() {
     await events.close();
   });
 
-  void stubPending(List<SystemNotificationOutboxEntry> entries) {
+  void stubPending(
+    List<SystemNotificationOutboxEntry> entries, {
+    List<SystemNotificationOutboxEntry> deletes = const [],
+  }) {
     when(
       () => localRepository.getOutboxNotifications(
-        actionType: any(named: 'actionType'),
+        actionType: SnOutboxActionType.seen,
         states: any(named: 'states'),
       ),
     ).thenAnswer((_) async => entries);
+    when(
+      () => localRepository.getOutboxNotifications(
+        actionType: SnOutboxActionType.delete,
+        states: any(named: 'states'),
+      ),
+    ).thenAnswer((_) async => deletes);
   }
 
   group('SystemNotificationsOutboxWorker.refresh', () {
@@ -108,6 +119,51 @@ void main() {
         () => remoteRepository.markSystemNotificationAsSeen(2),
         () => localRepository.upsertOutboxNotification(_entry(2).toSent()),
       ]);
+    });
+
+    test('sends every queued delete in one request, then drops the notifications', () async {
+      final deletes = [
+        SystemNotificationOutboxEntry(notificationId: 5, actionType: SnOutboxActionType.delete),
+        SystemNotificationOutboxEntry(notificationId: 6, actionType: SnOutboxActionType.delete),
+      ];
+      stubPending([], deletes: deletes);
+      when(() => remoteRepository.deleteNotifications([5, 6])).thenAnswer((_) async => [5]);
+      when(() => localRepository.deleteNotifications(any())).thenAnswer((_) async {});
+
+      await worker.refresh();
+
+      // 6 is not in deleted_ids - the backend no longer had it - and goes too.
+      verifyInOrder([
+        () => remoteRepository.deleteNotifications([5, 6]),
+        () => localRepository.deleteNotifications([5, 6]),
+      ]);
+    });
+
+    test('a refused delete keeps the queue, and the receipts still go', () async {
+      final error = Exception('delete refused');
+      stubPending(
+        [_entry(1)],
+        deletes: [SystemNotificationOutboxEntry(notificationId: 5, actionType: SnOutboxActionType.delete)],
+      );
+      when(() => remoteRepository.deleteNotifications(any())).thenThrow(error);
+
+      await expectLater(worker.refresh(), throwsA(same(error)));
+
+      verifyNever(() => localRepository.deleteNotifications(any()));
+      verify(() => remoteRepository.markSystemNotificationAsSeen(1)).called(1);
+    });
+
+    test('a notification deleted while its receipt was out is not written back', () async {
+      // The delete took the outbox row with it; writing a sent row back would
+      // point at a notification that is gone, which the foreign key refuses.
+      stubPending([_entry(1), _entry(2)]);
+      when(() => localRepository.getNotificationById(1)).thenAnswer((_) async => null);
+
+      await worker.refresh();
+
+      verify(() => remoteRepository.markSystemNotificationAsSeen(1)).called(1);
+      verifyNever(() => localRepository.upsertOutboxNotification(_entry(1).toSent()));
+      verify(() => localRepository.upsertOutboxNotification(_entry(2).toSent())).called(1);
     });
 
     test('a failing entry does not stop the rest of the queue', () async {

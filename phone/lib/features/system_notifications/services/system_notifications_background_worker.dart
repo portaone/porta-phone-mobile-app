@@ -42,6 +42,12 @@ class SystemNotificationBackgroundWorker {
       _logger.info('Fetched ${notifications.length} new notifications');
       await _localRepo.upsertNotifications(notifications);
 
+      // With no anchor the fetch was the history, not news: a store that was
+      // never filled, or one emptied by deleting everything in it. Pushing its
+      // unseen notifications would raise alerts for old ones, which the app in
+      // the foreground does not do either.
+      if (lastUpdate == null) return true;
+
       final unseenNotifications = notifications.where((n) => n.seen == false).toList();
       await Future.forEach(unseenNotifications, (n) => _displayPush(n));
 
