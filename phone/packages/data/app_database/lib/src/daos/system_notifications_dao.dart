@@ -89,6 +89,34 @@ class SystemNotificationsDao extends DatabaseAccessor<AppDatabase> with _$System
         : null;
   }
 
+  /// When the oldest notification that [unseenCount] counts was created, or
+  /// null when it counts none.
+  Future<DateTime?> getOldestUnseenCreatedAt() async {
+    final pendingDelete = alias(systemNotificationsOutboxTable, 'pending_delete');
+    final oldest = systemNotificationsTable.createdAtRemoteUsec.min();
+    final query =
+        selectOnly(systemNotificationsTable).join([
+            leftOuterJoin(
+              systemNotificationsOutboxTable,
+              systemNotificationsOutboxTable.notificationId.equalsExp(systemNotificationsTable.id) &
+                  systemNotificationsOutboxTable.actionType.equals(SnOutboxDataActionType.seen.name),
+            ),
+            leftOuterJoin(
+              pendingDelete,
+              pendingDelete.notificationId.equalsExp(systemNotificationsTable.id) &
+                  pendingDelete.actionType.equals(SnOutboxDataActionType.delete.name),
+            ),
+          ])
+          ..addColumns([oldest])
+          ..where(
+            systemNotificationsTable.seen.equals(false) &
+                systemNotificationsOutboxTable.notificationId.isNull() &
+                pendingDelete.notificationId.isNull(),
+          );
+    final usec = await query.map((row) => row.read(oldest)).getSingle();
+    return usec == null ? null : DateTime.fromMicrosecondsSinceEpoch(usec);
+  }
+
   Stream<int> unseenCount() {
     // Joined rather than a subquery so the watch follows the outbox table too.
     final pendingDelete = alias(systemNotificationsOutboxTable, 'pending_delete');
@@ -138,6 +166,51 @@ class SystemNotificationsDao extends DatabaseAccessor<AppDatabase> with _$System
       await (delete(systemNotificationsTable)..where((tbl) => tbl.id.isIn(ids))).go();
       return (notifications: notifications, outbox: outbox);
     });
+  }
+
+  /// Deletes the stored notifications a history page of the backend shows to
+  /// be gone: those among [known] created inside the page's window that the
+  /// page does not list ([present]). Returns what was deleted, like
+  /// [deleteNotifications].
+  ///
+  /// The window is open on both sides - strictly after [createdAfter] and
+  /// strictly before [createdBefore], either of which may be absent - because
+  /// the page is cut by a limit: other notifications created at the very
+  /// instant of its oldest one may not have fitted, and absence from the page
+  /// says nothing about them. [known] is what the store held BEFORE the page
+  /// was asked for, so a notification that arrived while the request was out,
+  /// and is therefore not in the page either, is left alone.
+  ///
+  /// Nothing gone is the ordinary outcome, and it writes nothing.
+  Future<({List<SystemNotificationData> notifications, List<SystemNotificationOutboxEntryData> outbox})>
+  deleteMissingFromPage({
+    required Set<int> known,
+    required Set<int> present,
+    DateTime? createdAfter,
+    DateTime? createdBefore,
+  }) async {
+    final unlisted = await _unlistedInWindow(present, createdAfter: createdAfter, createdBefore: createdBefore);
+    // Narrowed here rather than in the query: the snapshot may be the whole
+    // store, and one bound variable per id has a ceiling.
+    final gone = unlisted.where(known.contains).toList();
+    if (gone.isEmpty) return (notifications: <SystemNotificationData>[], outbox: <SystemNotificationOutboxEntryData>[]);
+
+    return deleteNotifications(gone);
+  }
+
+  Future<List<int>> _unlistedInWindow(Set<int> present, {DateTime? createdAfter, DateTime? createdBefore}) {
+    final query = selectOnly(systemNotificationsTable)
+      ..addColumns([systemNotificationsTable.id])
+      ..where(systemNotificationsTable.id.isNotIn(present));
+    if (createdAfter != null) {
+      query.where(systemNotificationsTable.createdAtRemoteUsec.isBiggerThanValue(createdAfter.microsecondsSinceEpoch));
+    }
+    if (createdBefore != null) {
+      query.where(
+        systemNotificationsTable.createdAtRemoteUsec.isSmallerThanValue(createdBefore.microsecondsSinceEpoch),
+      );
+    }
+    return query.map((row) => row.read(systemNotificationsTable.id)!).get();
   }
 
   //

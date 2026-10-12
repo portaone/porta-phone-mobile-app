@@ -24,6 +24,10 @@ abstract class SystemNotificationsLocalRepository {
 
   Stream<int> unseenCount();
 
+  /// When the oldest notification the unseen count counts was created, or null
+  /// when it counts none.
+  Future<DateTime?> getOldestUnseenCreatedAt();
+
   Future<void> upsertNotifications(
     List<SystemNotification> notifications, {
     bool silent = false,
@@ -42,6 +46,18 @@ abstract class SystemNotificationsLocalRepository {
   /// Deletes the notifications with [ids] and whatever is queued for them in
   /// the outbox: what follows a confirmed delete.
   Future<void> deleteNotifications(List<int> ids);
+
+  /// Deletes the stored notifications a history page of the backend shows to
+  /// be gone: those among [known] - what was stored before the page was asked
+  /// for - created strictly after [createdAfter] and strictly before
+  /// [createdBefore] that the page does not list ([present]). Announced the
+  /// way [deleteNotifications] announces.
+  Future<void> deleteMissingFromPage({
+    required Set<int> known,
+    required Set<int> present,
+    DateTime? createdAfter,
+    DateTime? createdBefore,
+  });
 
   Future<List<SystemNotificationOutboxEntry>> getOutboxNotifications({
     SnOutboxActionType? actionType,
@@ -96,6 +112,9 @@ class SystemNotificationsLocalRepositoryDriftImpl
   }
 
   @override
+  Future<DateTime?> getOldestUnseenCreatedAt() => _dao.getOldestUnseenCreatedAt();
+
+  @override
   Future<void> upsertNotifications(
     List<SystemNotification> notifications, {
     bool silent = false,
@@ -132,8 +151,31 @@ class SystemNotificationsLocalRepositoryDriftImpl
   Future<void> deleteNotifications(List<int> ids) async {
     if (ids.isEmpty) return;
 
-    final deleted = await _dao.deleteNotifications(ids);
+    _announceDeleted(await _dao.deleteNotifications(ids));
+  }
 
+  @override
+  Future<void> deleteMissingFromPage({
+    required Set<int> known,
+    required Set<int> present,
+    DateTime? createdAfter,
+    DateTime? createdBefore,
+  }) async {
+    if (known.isEmpty) return;
+
+    _announceDeleted(
+      await _dao.deleteMissingFromPage(
+        known: known,
+        present: present,
+        createdAfter: createdAfter,
+        createdBefore: createdBefore,
+      ),
+    );
+  }
+
+  void _announceDeleted(
+    ({List<SystemNotificationData> notifications, List<SystemNotificationOutboxEntryData> outbox}) deleted,
+  ) {
     for (final entry in deleted.outbox) {
       _addEvent(SystemNotificationOutboxRemove(entry.notificationId, actionTypefromDrift(entry.actionType)));
     }
