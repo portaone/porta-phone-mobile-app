@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 
 import 'system_notifications_table.dart';
 
-enum SnOutboxDataActionType { seen }
+enum SnOutboxDataActionType { seen, delete }
 
 enum SnOutboxDataState { pending, sent, failed }
 
