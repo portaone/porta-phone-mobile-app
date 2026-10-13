@@ -124,5 +124,58 @@ void main() {
 
       expect(ArbMergeUtil.mergeArb(local, downloaded)['@@locale'], 'uk');
     });
+
+    // The failure this rule exists for. The catalog follows master; release
+    // 1.17.0 reads forwardFailed as a getter, and the catalog's text made
+    // `gen-l10n` generate a method taking `name` instead.
+    test('keeps the checkout text when the service adds a placeholder', () {
+      final local = <String, dynamic>{
+        'voicemail_Snackbar_forwardFailed': 'Could not forward',
+        '@voicemail_Snackbar_forwardFailed': {'description': 'Shown when forwarding failed.'},
+      };
+      final downloaded = <String, dynamic>{
+        'voicemail_Snackbar_forwardFailed': "Couldn't forward to {name}",
+        '@voicemail_Snackbar_forwardFailed': {'description': 'Shown when forwarding failed.'},
+      };
+      final kept = <String>[];
+
+      final result = ArbMergeUtil.mergeArb(local, downloaded, onKept: kept.add);
+
+      expect(result['voicemail_Snackbar_forwardFailed'], 'Could not forward');
+      expect(kept, ['voicemail_Snackbar_forwardFailed']);
+    });
+
+    test('keeps the checkout text when the service drops or renames a placeholder', () {
+      final local = <String, dynamic>{'dropped': 'Hello {name}', 'renamed': 'Hello {name}'};
+      final downloaded = <String, dynamic>{'dropped': 'Hello', 'renamed': 'Hello {user}'};
+      final kept = <String>[];
+
+      final result = ArbMergeUtil.mergeArb(local, downloaded, onKept: kept.add);
+
+      expect(result, local);
+      expect(kept, ['dropped', 'renamed']);
+    });
+
+    test('takes the text when only the wording and the placeholder position change', () {
+      final local = <String, dynamic>{'forwarded': 'Forwarded to {name}'};
+      final downloaded = <String, dynamic>{'forwarded': '{name} received a copy'};
+      final kept = <String>[];
+
+      final result = ArbMergeUtil.mergeArb(local, downloaded, onKept: kept.add);
+
+      expect(result['forwarded'], '{name} received a copy');
+      expect(kept, isEmpty);
+    });
+
+    test('keeps the checkout text when the service sends one that does not parse', () {
+      final local = <String, dynamic>{'greeting': 'Hello {name}'};
+      final downloaded = <String, dynamic>{'greeting': 'Hello {name'};
+      final kept = <String>[];
+
+      final result = ArbMergeUtil.mergeArb(local, downloaded, onKept: kept.add);
+
+      expect(result['greeting'], 'Hello {name}');
+      expect(kept, ['greeting']);
+    });
   });
 }

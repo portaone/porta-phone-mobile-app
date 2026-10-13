@@ -114,7 +114,11 @@ class TranslationProcessor {
 
     try {
       final local = jsonDecode(await outFile.readAsString()) as Map<String, dynamic>;
-      final merged = ArbMergeUtil.mergeArb(local, downloaded);
+      final merged = ArbMergeUtil.mergeArb(
+        local,
+        downloaded,
+        onKept: (key) => logger.warn('  Kept the checkout text of $key: its placeholders differ or do not parse'),
+      );
       await outFile.writeAsString(const JsonEncoder.withIndent('  ').convert(merged));
       logger.success('  Merged: ${outFile.path}');
     } on FormatException {
