@@ -188,15 +188,26 @@ class MainShellServices extends StatelessWidget {
       CdrsHistoryWalk(context.read<CdrsLocalRepository>(), context.read<CdrsRemoteRepository>());
 
   SystemNotificationsSync _createSystemNotificationsSync(BuildContext context) {
+    final systemInfoRepository = context.read<SystemInfoRepository>();
     final worker = SystemNotificationsSyncWorker(
       context.read<SystemNotificationsLocalRepository>(),
       context.read<SystemNotificationsRemoteRepository>(),
+      journal: SystemNotificationsSyncJournalPrefsImpl(context.read<AppPreferences>()),
+      deletedRetention: () => _deletedNotificationRetention(systemInfoRepository),
     );
     return SystemNotificationsSync(
       worker: worker,
       pollingService: context.read<PollingService>(),
       interval: Duration(seconds: EnvironmentConfig.SYSTEM_NOTIFICATIONS_POLLING_INTERVAL_SECONDS),
     );
+  }
+
+  // For how long the core reports a deleted notification, or null for a core
+  // that reports none. Zero days is its way of saying "without limit".
+  Duration? _deletedNotificationRetention(SystemInfoRepository systemInfoRepository) {
+    final core = systemInfoRepository.getLocalSystemInfo().core;
+    final days = core.supportsDeletedNotificationUpdates ? core.notificationDeletedRetentionDays : null;
+    return days == null ? null : Duration(days: days);
   }
 
   SystemNotificationsOutbox _createSystemNotificationsOutbox(BuildContext context) {
