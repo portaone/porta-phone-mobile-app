@@ -49,14 +49,20 @@ class _UserSmsNumbersBuilderState extends State<UserSmsNumbersBuilder> {
 }
 
 /// Subject with broadcast auto-closable [stream] of user sms numbers with its last [value]
-/// used to avoid invoking multiple streams and futures on same screen
+/// used to avoid invoking multiple streams and futures on same screen.
+///
+/// One subject is shared per [SmsRepository]: a new repository - a new main
+/// shell after signing in again - gets a subject of its own instead of the one
+/// still reading the repository that came first.
 class NumbersWatchSubject {
   NumbersWatchSubject._(this._repository) {
     _controller = StreamController<List<String>>.broadcast(onListen: _onListen, onCancel: _onCancel);
   }
 
   factory NumbersWatchSubject(SmsRepository repository) {
-    return _instance ??= NumbersWatchSubject._(repository);
+    final instance = _instance;
+    if (instance != null && identical(instance._repository, repository)) return instance;
+    return _instance = NumbersWatchSubject._(repository);
   }
 
   static NumbersWatchSubject? _instance;
