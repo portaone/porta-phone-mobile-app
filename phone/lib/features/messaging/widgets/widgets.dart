@@ -10,4 +10,5 @@ export 'messaging_state_wrapper.dart';
 export 'group_avatar.dart';
 export 'messaging_popup_menu_item.dart';
 export 'notification_mute_sheet.dart';
+export 'sms_sender_number_sheet.dart';
 export 'notification_mute_tile.dart';
