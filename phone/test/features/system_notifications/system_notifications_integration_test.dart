@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:api/api.dart' as api;
 
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/services/services.dart';
 
 import 'system_notifications_integration_harness.dart';
@@ -49,6 +50,101 @@ void systemNotificationsIntegrationTests(void Function(String, Future<void> Func
       });
     }
   }
+
+  register('notifications: deleted on another device leaves this one, and its push with it', () async {
+    final harness = await SystemNotificationsIntegrationHarness.create();
+    final kept = SystemNotificationsIntegrationHarness.notification(1);
+    final gone = SystemNotificationsIntegrationHarness.notification(2);
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([gone, kept]);
+    await harness.owner.runNow();
+    await pumpEventQueue();
+    // A seen receipt was still waiting to be sent for it.
+    await harness.local.upsertOutboxNotification(
+      SystemNotificationOutboxEntry(notificationId: gone.id, actionType: SnOutboxActionType.seen),
+    );
+    await pumpEventQueue();
+    harness.dismissed.clear(); // marking it seen took its push out once already
+
+    final deletedAt = DateTime.utc(2026, 9, 20);
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([
+      SystemNotificationsIntegrationHarness.deleted(gone, deletedAt),
+    ]);
+    await harness.owner.runNow();
+    await pumpEventQueue();
+
+    harness.expectRequest(1, since: gone.updatedAt);
+    expect((await harness.local.getNotifications()).map((n) => n.id), [kept.id]);
+    expect(await harness.local.getOutboxNotifications(), isEmpty);
+    expect(harness.dismissed, [gone.title]);
+    expect(harness.pushes, isEmpty);
+
+    // The delete was read, so the next cycle asks from after it rather than
+    // fetching it again - though nothing stored carries that moment.
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([]);
+    await harness.owner.runNow();
+    harness.expectRequest(2, since: deletedAt);
+  });
+
+  register('notifications: everything deleted on another device is not a first load', () async {
+    final harness = await SystemNotificationsIntegrationHarness.create();
+    final only = SystemNotificationsIntegrationHarness.notification(3);
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([only]);
+    await harness.owner.runNow();
+    await pumpEventQueue();
+
+    final deletedAt = DateTime.utc(2026, 9, 20);
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([
+      SystemNotificationsIntegrationHarness.deleted(only, deletedAt),
+    ]);
+    await harness.owner.runNow();
+    await pumpEventQueue();
+    expect(await harness.local.getNotifications(), isEmpty);
+
+    // The store is empty, but the older history is not read back as news.
+    final older = SystemNotificationsIntegrationHarness.notification(1);
+    harness.respond = (request) async => SystemNotificationsIntegrationHarness.response(
+      SystemNotificationsIntegrationHarness.isUpdates(request) ? [] : [older],
+    );
+    await harness.owner.runNow();
+    await pumpEventQueue();
+
+    harness.expectRequest(2, since: deletedAt);
+    expect(await harness.local.getNotifications(), isEmpty);
+    expect(harness.pushes, isEmpty);
+  });
+
+  register('notifications: a backend from before deletes were reported is not asked for them', () async {
+    final harness = await SystemNotificationsIntegrationHarness.create(reportsDeleted: false);
+    final historical = SystemNotificationsIntegrationHarness.notification(1);
+    final news = SystemNotificationsIntegrationHarness.notification(2);
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([historical]);
+    await harness.owner.runNow();
+    await pumpEventQueue();
+
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([news]);
+    await harness.owner.runNow();
+    await pumpEventQueue();
+
+    harness.expectRequest(1, since: historical.updatedAt, includeDeleted: false);
+    expect(await harness.local.getNotificationById(news.id), news);
+    expect(harness.owner.state.phase, PollingTaskPhase.succeeded);
+  });
+
+  register('notifications: a backend upgraded while the session lives is asked for deletes from then on', () async {
+    final harness = await SystemNotificationsIntegrationHarness.create(reportsDeleted: false);
+    final stored = SystemNotificationsIntegrationHarness.notification(1);
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([stored]);
+    await harness.owner.runNow();
+    await pumpEventQueue();
+
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([]);
+    await harness.owner.runNow();
+    harness.expectRequest(1, since: stored.updatedAt, includeDeleted: false);
+
+    harness.reportsDeleted = true;
+    await harness.owner.runNow();
+    harness.expectRequest(2, since: stored.updatedAt);
+  });
 
   register('notifications: failed initialization retries silently before delivering news', () async {
     final harness = await SystemNotificationsIntegrationHarness.create();

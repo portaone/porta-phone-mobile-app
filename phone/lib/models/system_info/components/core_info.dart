@@ -62,4 +62,10 @@ class CoreInfo with EquatableMixin {
     // sooner, when no deployment is left on 0.38.x, the one line without it.
     return verifyVersionStr('>=1.0.0-alpha <2.0.0');
   }
+
+  bool get supportsDeletedNotificationUpdates {
+    // Deleted notifications in the notification updates (`include_deleted`)
+    // were added in 1.2.0. An older core refuses the parameter.
+    return verifyVersionStr('>=1.2.0-alpha <2.0.0');
+  }
 }
