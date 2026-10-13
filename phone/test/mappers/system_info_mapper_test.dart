@@ -93,4 +93,30 @@ void main() {
       expect(mapper.systemInfoFromMap(map).bundleVersion, isNull);
     });
   });
+
+  // For how long the core reports a deleted notification. Absent from a core
+  // that reports none - and from a cache written before the app read it, which
+  // must not be taken for "zero days".
+  group('CoreInfo notificationDeletedRetentionDays', () {
+    api.SystemInfo fromCore(int? days) => api.SystemInfo(
+      core: api.CoreInfo(version: Version(1, 0, 0), notificationDeletedRetentionDays: days),
+      postgres: api.PostgresInfo(version: '15.0'),
+    );
+
+    test('comes from the API as the core sent it, absent included', () {
+      expect(mapper.systemInfoFromApi(fromCore(180)).core.notificationDeletedRetentionDays, 180);
+      expect(mapper.systemInfoFromApi(fromCore(null)).core.notificationDeletedRetentionDays, isNull);
+    });
+
+    test('survives the cache', () {
+      final map = mapper.systemInfoToMap(mapper.systemInfoFromApi(fromCore(180)));
+      expect(mapper.systemInfoFromMap(map).core.notificationDeletedRetentionDays, 180);
+    });
+
+    test('a cache written before the app read it means the core reports none', () {
+      final map = mapper.systemInfoToMap(domainInfo());
+      (map['core'] as Map<String, dynamic>).remove('notification_deleted_retention_days');
+      expect(mapper.systemInfoFromMap(map).core.notificationDeletedRetentionDays, isNull);
+    });
+  });
 }

@@ -752,8 +752,17 @@ void workManagerDispatcher() {
       final token = storage.readToken();
       if (coreUrl == null || tenantId == null || token == null) return true;
 
+      // This isolate loads no system info of its own: the one the app stored
+      // last says what the core can do.
+      final appPreferences = await AppPreferencesImpl.init();
+      final core = SystemInfoLocalRepositoryPrefsImpl(appPreferences).getSystemInfo()?.core;
+
       final api = WebtritApiClient(Uri.parse(coreUrl), tenantId);
-      final remoteRepo = SystemNotificationsRemoteRepositoryApiImpl(api, token);
+      final remoteRepo = SystemNotificationsRemoteRepositoryApiImpl(
+        api,
+        token,
+        includeDeleted: () => core?.supportsDeletedNotificationUpdates ?? false,
+      );
 
       final appPath = await AppPath.init();
       final localPushRepo = LocalPushRepositoryFLNImpl();

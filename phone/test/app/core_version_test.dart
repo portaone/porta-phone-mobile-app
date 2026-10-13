@@ -28,8 +28,11 @@ void main() {
   });
 
   test('toString', () {
-    expect(CoreInfo(version: Version(0, 1, 0)).toString(), equals('CoreInfo(0.1.0, false)'));
-    expect(CoreInfo(version: Version(0, 1, 0), iceServersConfigured: true).toString(), equals('CoreInfo(0.1.0, true)'));
+    expect(CoreInfo(version: Version(0, 1, 0)).toString(), equals('CoreInfo(0.1.0, false, null)'));
+    expect(
+      CoreInfo(version: Version(0, 1, 0), iceServersConfigured: true).toString(),
+      equals('CoreInfo(0.1.0, true, null)'),
+    );
   });
 
   test('iceServersConfigured participates in equality', () {
@@ -63,5 +66,13 @@ void main() {
     expect(CoreInfo(version: Version(0, 35, 0)).supportsSessionTracking, true);
     expect(CoreInfo(version: Version(0, 36, 2)).supportsSessionTracking, true);
     expect(CoreInfo(version: Version(2, 0, 0)).supportsSessionTracking, false);
+  });
+
+  test('supportsDeletedNotificationUpdates', () {
+    expect(CoreInfo(version: Version(1, 1, 0)).supportsDeletedNotificationUpdates, false);
+    expect(CoreInfo(version: Version(1, 2, 0, pre: 'alpha')).supportsDeletedNotificationUpdates, true);
+    expect(CoreInfo(version: Version(1, 2, 0)).supportsDeletedNotificationUpdates, true);
+    expect(CoreInfo(version: Version(1, 3, 1)).supportsDeletedNotificationUpdates, true);
+    expect(CoreInfo(version: Version(2, 0, 0)).supportsDeletedNotificationUpdates, false);
   });
 }

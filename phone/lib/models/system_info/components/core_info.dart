@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 class CoreInfo with EquatableMixin {
-  CoreInfo({required this.version, this.iceServersConfigured = false});
+  CoreInfo({required this.version, this.iceServersConfigured = false, this.notificationDeletedRetentionDays});
 
   final Version version;
 
@@ -10,8 +10,14 @@ class CoreInfo with EquatableMixin {
   /// then loads from the core instead of falling back to a public STUN server.
   final bool iceServersConfigured;
 
+  /// For how many days the core reports a deleted notification in the
+  /// notification updates: 0 for without limit, null for a core that reports
+  /// none. A stored copy of the notifications older than that may hold some
+  /// deleted since.
+  final int? notificationDeletedRetentionDays;
+
   @override
-  List<Object?> get props => [version, iceServersConfigured];
+  List<Object?> get props => [version, iceServersConfigured, notificationDeletedRetentionDays];
 
   @override
   bool get stringify => true;
@@ -61,5 +67,11 @@ class CoreInfo with EquatableMixin {
     // core the app accepts (WEBTRIT_APP_CORE_VERSION_CONSTRAINT) is 1.0.0 - or
     // sooner, when no deployment is left on 0.38.x, the one line without it.
     return verifyVersionStr('>=1.0.0-alpha <2.0.0');
+  }
+
+  bool get supportsDeletedNotificationUpdates {
+    // Deleted notifications in the notification updates (`include_deleted`)
+    // were added in 1.2.0. An older core refuses the parameter.
+    return verifyVersionStr('>=1.2.0-alpha <2.0.0');
   }
 }

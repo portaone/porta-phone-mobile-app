@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/system_notifications/system_notifications_local_repository.dart';
 import 'package:webtrit_phone/repositories/system_notifications/system_notifications_remote_repository.dart';
+import 'package:webtrit_phone/repositories/system_notifications/system_notifications_sync_journal.dart';
 import 'package:webtrit_phone/services/services.dart';
 
 final _logger = Logger('SystemNotificationsSyncWorker');
@@ -23,15 +24,37 @@ final class SystemNotificationsSync extends PollingWorkerOwner<SystemNotificatio
 ///
 /// A cycle fetches either the initial history or every update since the last
 /// locally known one - never both, so the first cycle after a wipe stays one
-/// bounded request.
+/// bounded request. The updates carry the notifications deleted since as well,
+/// and the store drops those: that is how a delete made on another device
+/// reaches this one. A store not brought up to date for longer than the
+/// backend reports deletes is read afresh instead.
 class SystemNotificationsSyncWorker implements PollingWorker {
-  SystemNotificationsSyncWorker(this.localRepo, this.remoteRepo, {this.pageSize = 50})
-    : assert(pageSize > 0, 'pageSize must be greater than zero');
+  SystemNotificationsSyncWorker(
+    this.localRepo,
+    this.remoteRepo, {
+    this.pageSize = 50,
+    this.journal,
+    this.deletedRetention,
+    DateTime Function()? now,
+  }) : assert(pageSize > 0, 'pageSize must be greater than zero'),
+       _now = now ?? DateTime.now;
 
   final SystemNotificationsLocalRepository localRepo;
   final SystemNotificationsRemoteRepository remoteRepo;
 
   final int pageSize;
+
+  /// When the store was last brought up to date; without one the store is
+  /// never taken for stale.
+  final SystemNotificationsSyncJournal? journal;
+
+  /// For how long the backend reports a deleted notification: [Duration.zero]
+  /// for without limit, null while it reports none at all. Asked every cycle,
+  /// since the backend may be upgraded, or set up differently, under a running
+  /// app.
+  final Duration? Function()? deletedRetention;
+
+  final DateTime Function() _now;
 
   @override
   bool get isActive => !_disposed;
@@ -45,19 +68,102 @@ class SystemNotificationsSyncWorker implements PollingWorker {
   Future<void> refresh() async {
     _ensureActive();
 
-    // The store is the anchor, except when it has been emptied by deleting
-    // everything in it: that is not a first load, and treating it as one would
-    // read the older history back and push every unseen notification in it as
-    // news. The newest update this worker has stored stands in for it then.
-    final lastUpdate = await localRepo.getLastUpdate() ?? _lastStoredUpdate;
+    // The store is the anchor, with two exceptions the newest update this
+    // worker has read stands in for.
+    //
+    // A store emptied by deleting everything in it - here or on another device
+    // - is not a first load: treating it as one would read the older history
+    // back and push every unseen notification in it as news.
+    //
+    // And a deleted notification moves the anchor without being stored. Read
+    // from the store alone, the same deletes would be fetched again in every
+    // cycle until something newer is stored.
+    final lastUpdate = _newer(await localRepo.getLastUpdate(), _lastReadUpdate);
     _ensureActive();
+
+    final retention = deletedRetention?.call();
 
     if (lastUpdate == null) {
       await _refreshInitialHistory();
+    } else if (_storeMayBeStale(retention)) {
+      await _reloadStore();
     } else {
       await _refreshUpdatesSince(lastUpdate);
     }
     _hasCompletedSync = true;
+
+    // Only against a backend that reports deletes: the record says "every
+    // delete up to here has been heard of", which one that reports none cannot
+    // back. Left unset there, the first cycle after it is upgraded finds no
+    // record and reads the store afresh - once.
+    if (retention != null) await journal?.markSynced(_now());
+  }
+
+  // The backend reports a deleted notification for [retention] and then
+  // forgets it - unless it keeps them without limit, as one set up to remove
+  // nothing by age does. A store last brought up to date longer ago than that may hold
+  // notifications deleted in between, with nothing left to read about them.
+  //
+  // No record at all is the same case: a store filled before this device kept
+  // one, by a version of the app or against a backend that could not hear of
+  // deletes - whatever was deleted elsewhere until now is still in it.
+  //
+  // Something is taken off for clocks that disagree: a day, but never more
+  // than a tenth of the time itself. Taken whole from a backend that reports
+  // deletes for a day or less, it would leave nothing, and every cycle would
+  // find its own store stale.
+  bool _storeMayBeStale(Duration? retention) {
+    final journal = this.journal;
+    if (journal == null || retention == null) return false;
+
+    final lastSyncedAt = journal.lastSyncedAt;
+    if (lastSyncedAt == null) return true;
+
+    // Reported without limit: however long ago the last sync was, every
+    // delete made since is still there to be read.
+    if (retention == Duration.zero) return false;
+
+    final tenth = retention ~/ 10;
+    final margin = tenth < _clockMargin ? tenth : _clockMargin;
+    final sinceSynced = _now().difference(lastSyncedAt);
+
+    // A record from the future was written while the clock ran ahead and has
+    // been put right since. It says nothing of how long ago that was, and left
+    // alone it would keep the store from ever looking stale until the clock
+    // caught up with it - so it counts as no record.
+    if (sinceSynced < -margin) return true;
+
+    return sinceSynced > retention - margin;
+  }
+
+  static const _clockMargin = Duration(days: 1);
+
+  // Reads the first page of the history again and drops everything else: the
+  // store as a first load would leave it. Quietly - none of it is news, and
+  // what the page still lists is not taken off the screen and put back.
+  //
+  // The page is fetched before anything is dropped, so a failure leaves the
+  // store as it was. A row the outbox has yet to send something for stays too:
+  // dropping it would drop the seen receipt or the delete queued with it.
+  Future<void> _reloadStore() async {
+    _logger.info('The stored notifications may be stale; reading them afresh');
+
+    final history = await remoteRepo.getHistory(limit: pageSize);
+    _ensureActive();
+
+    final pending = await localRepo.getOutboxNotifications(states: const [SnOutboxState.pending, SnOutboxState.failed]);
+    final kept = {...history.map((n) => n.id), ...pending.map((entry) => entry.notificationId)};
+    final stale = (await localRepo.getNotificationIds()).where((id) => !kept.contains(id)).toList();
+    _ensureActive();
+    await localRepo.deleteNotifications(stale);
+    _ensureActive();
+
+    await localRepo.upsertNotifications(history.reversed.toList(), initialData: true);
+    _ensureActive();
+    // The anchor starts over from what is stored now: an update read before
+    // belongs to the copy that was just let go.
+    _lastReadUpdate = null;
+    _remember(history);
   }
 
   Future<void> _refreshInitialHistory() async {
@@ -96,11 +202,15 @@ class SystemNotificationsSyncWorker implements PollingWorker {
     }
   }
 
-  void _remember(List<SystemNotification> stored) {
-    if (stored.isEmpty) return;
-    final newest = _newestUpdate(stored);
-    final last = _lastStoredUpdate;
-    if (last == null || newest.isAfter(last)) _lastStoredUpdate = newest;
+  void _remember(List<SystemNotification> read) {
+    if (read.isEmpty) return;
+    _lastReadUpdate = _newer(_lastReadUpdate, _newestUpdate(read));
+  }
+
+  DateTime? _newer(DateTime? a, DateTime? b) {
+    if (a == null) return b;
+    if (b == null) return a;
+    return a.isAfter(b) ? a : b;
   }
 
   DateTime _newestUpdate(List<SystemNotification> notifications) =>
@@ -115,7 +225,7 @@ class SystemNotificationsSyncWorker implements PollingWorker {
   }
 
   bool _hasCompletedSync = false;
-  DateTime? _lastStoredUpdate;
+  DateTime? _lastReadUpdate;
   bool _disposed = false;
 
   @override

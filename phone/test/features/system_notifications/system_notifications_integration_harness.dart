@@ -23,13 +23,29 @@ import '../../mocks/fake_connectivity_service.dart';
 /// Real API mapping, polling owner, file-backed SQLite and push policy.
 /// Only HTTP, connectivity eligibility and the native push boundary are faked.
 class SystemNotificationsIntegrationHarness {
-  SystemNotificationsIntegrationHarness._(this.directory, {required bool producePush}) {
+  SystemNotificationsIntegrationHarness._(
+    this.directory, {
+    required bool producePush,
+    required this.reportsDeleted,
+    this.journal,
+  }) {
     database = AppDatabase(NativeDatabase(File('${directory.path}/notifications.sqlite')));
     local = SystemNotificationsLocalRepositoryDriftImpl(database);
     client = api.WebtritApiClient.inner(Uri.parse('https://refresh.test'), '', httpClient: MockClient(_respond));
     client.sessionRejections.listen((rejection) => fail('Unexpected session rejection: $rejection'));
-    final remote = SystemNotificationsRemoteRepositoryApiImpl(client, 'integration-token');
-    worker = SystemNotificationsSyncWorker(local, remote, pageSize: 2);
+    final remote = SystemNotificationsRemoteRepositoryApiImpl(
+      client,
+      'integration-token',
+      includeDeleted: () => reportsDeleted,
+    );
+    worker = SystemNotificationsSyncWorker(
+      local,
+      remote,
+      pageSize: 2,
+      journal: journal,
+      deletedRetention: () => deletedRetention,
+      now: () => now,
+    );
     polling = PollingService(connectivityService: connectivity, options: const PollingOptions(jitterRatio: 0));
     owner = SystemNotificationsSync(worker: worker, pollingService: polling, interval: const Duration(hours: 1));
     registerFallbackValue(AppLocalPush(0, '', ''));
@@ -41,6 +57,9 @@ class SystemNotificationsIntegrationHarness {
     when(() => localPush.displayPush(any())).thenAnswer((invocation) async {
       pushes.add(invocation.positionalArguments.single as AppLocalPush);
     });
+    when(() => localPush.dismissByContent(any(), any())).thenAnswer((invocation) async {
+      dismissed.add(invocation.positionalArguments.first as String);
+    });
     pushService = SystemNotificationsPushService(
       remotePush,
       localPush,
@@ -50,17 +69,42 @@ class SystemNotificationsIntegrationHarness {
     )..init();
   }
 
-  static Future<SystemNotificationsIntegrationHarness> create({bool producePush = true}) async {
+  /// With a [journal] the worker records its syncs and can find its store
+  /// stale; without one, as most scenarios run, it never does.
+  static Future<SystemNotificationsIntegrationHarness> create({
+    bool producePush = true,
+    bool reportsDeleted = true,
+    SystemNotificationsSyncJournal? journal,
+  }) async {
     final directory = await Directory.systemTemp.createTemp('system-notifications-sync-');
-    final harness = SystemNotificationsIntegrationHarness._(directory, producePush: producePush);
+    final harness = SystemNotificationsIntegrationHarness._(
+      directory,
+      producePush: producePush,
+      reportsDeleted: reportsDeleted,
+      journal: journal,
+    );
     addTearDown(harness.dispose);
     return harness;
   }
 
   final Directory directory;
+
+  /// Whether the backend is one that reports deleted notifications: the answer
+  /// the remote repository is given before each request.
+  bool reportsDeleted;
+  final SystemNotificationsSyncJournal? journal;
+
+  /// For how long the backend of the scenario reports a deleted notification.
+  Duration? deletedRetention = const Duration(days: 180);
+
+  /// The clock of the worker.
+  DateTime now = DateTime.utc(2026, 10, 12);
   final connectivity = FakeConnectivityService(initialConnected: false);
   final requests = <http.Request>[];
   final pushes = <AppLocalPush>[];
+
+  /// Titles of the local pushes taken out of the shade.
+  final dismissed = <String>[];
   late final AppDatabase database;
   late final SystemNotificationsLocalRepositoryDriftImpl local;
   late final api.WebtritApiClient client;
@@ -97,6 +141,7 @@ class SystemNotificationsIntegrationHarness {
               'type': n.type.name,
               'created_at': n.createdAt.toUtc().toIso8601String(),
               'updated_at': n.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': n.deletedAt?.toUtc().toIso8601String(),
             },
           )
           .toList(),
@@ -105,7 +150,24 @@ class SystemNotificationsIntegrationHarness {
     headers: {'content-type': 'application/json'},
   );
 
-  void expectRequest(int index, {DateTime? since}) {
+  /// [n] as the backend reports it once it is deleted, at [at]: without its
+  /// text, and changed at that moment.
+  static SystemNotification deleted(SystemNotification n, DateTime at) => SystemNotification(
+    id: n.id,
+    title: '-',
+    content: '-',
+    seen: n.seen,
+    type: n.type,
+    createdAt: n.createdAt,
+    updatedAt: at.toLocal(),
+    deletedAt: at.toLocal(),
+  );
+
+  static bool isUpdates(http.Request request) => request.url.path.endsWith('/updates');
+
+  /// [includeDeleted] false is the request made to a backend from before
+  /// deleted notifications were reported.
+  void expectRequest(int index, {DateTime? since, bool includeDeleted = true}) {
     final request = requests[index];
     expect(request.method.toUpperCase(), 'GET');
     expect(request.headers['authorization'], 'Bearer integration-token');
@@ -113,6 +175,7 @@ class SystemNotificationsIntegrationHarness {
     expect(request.url.queryParameters, {
       'limit': '2',
       if (since != null) 'updated_after': since.toUtc().toIso8601String(),
+      if (since != null && includeDeleted) 'include_deleted': 'true',
     });
   }
 
@@ -130,3 +193,14 @@ class SystemNotificationsIntegrationHarness {
 class _LocalPush extends Mock implements LocalPushRepository {}
 
 class _RemotePush extends Mock implements RemotePushRepository {}
+
+/// A record of the last sync kept in memory.
+class MemorySyncJournal implements SystemNotificationsSyncJournal {
+  MemorySyncJournal([this.lastSyncedAt]);
+
+  @override
+  DateTime? lastSyncedAt;
+
+  @override
+  Future<void> markSynced(DateTime at) async => lastSyncedAt = at;
+}

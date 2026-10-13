@@ -174,10 +174,33 @@ seen receipt for a notification the backend no longer has counts as sent, and
 the outbox does not write a sent row back for a notification deleted while its
 receipt was out. A deleted notification's local push is taken out of the shade.
 
-Not yet handled: a notification deleted on another device, or by the
-backend's retention cleaner, is never reported by `getUpdates` - the backend
-deletes the row outright - so this device keeps it until the cache is
-reconciled against history pages (WT-2078, follow-up).
+## Deleted elsewhere
+
+A notification deleted on another device, or by the backend's retention, leaves
+this one too - by the same road a `seen` flag changed elsewhere arrives, the
+updates of a sync cycle. The backend deletes softly, as it does chat messages:
+the row stays for a while as a marker, without its text, and `getUpdates` lists
+it with `deleted_at` set when asked to (`include_deleted=true`).
+
+```
+another device deletes a notification
+  -> the next sync cycle: GET /user/notifications/updates?...&include_deleted=true
+  -> the page carries it with deleted_at
+  -> SystemNotificationsLocalRepository.upsertNotifications drops it:
+     the row, what the outbox holds for it, its local push
+  -> the card leaves the list and the unseen badge
+```
+
+Nothing deleted is ever stored, and there is no second request: the delete
+costs what any other update costs, at any depth of the history. The Workmanager
+task applies it the same way.
+
+| | |
+|---|---|
+| The anchor | a deleted notification is read but not stored, so the store's newest `updated_at` does not reach it. The sync worker resumes from the newer of that and the newest update it has read; the Workmanager task, which has no memory between runs, drains every page each run instead of taking one |
+| A backend that cannot report deletes | one older than 1.2.0 refuses the parameter as an unknown field (422, `include_deleted`), so it is not sent: `CoreInfo.supportsDeletedNotificationUpdates` reads the core version from the system info, and the remote repository asks for the answer before every request, so a core upgraded while a session lives is asked for deletes from the next cycle on - the Workmanager task answers from the system info the app stored last. Deletes made elsewhere are then not heard of, as before, and the store is not read afresh by age |
+| Many deleted at once | a bulk delete stamps one moment on every row, and the anchor moves by that moment. The backend therefore never splits notifications changed at the same instant between pages - a page can be longer than the limit asked for - so none is left behind the anchor |
+| Away for too long | the backend reports a deleted notification for as long as its administrator keeps notifications (`NOTIFICATION_RETENTION` days), and names that in the system info as `core.notification_deleted_retention_days`; `0`, the default, is without limit. The sync records when it last brought the store up to date (`SystemNotificationsSyncJournal`). A store older than that time may hold notifications deleted since with nothing left to read about them, so the cycle reads the first page of the history again and drops the rest - quietly, as a first load, keeping the rows the outbox has yet to send something for. Such a row stays even when the backend no longer has it: its receipt is then answered "not found", which counts as sent, and nothing drops the row afterwards - it remains until deleted on this device. With no limit a store is never too old. No record at all counts as stale once, whatever the limit: that is a store filled before the app could hear of deletes |
 
 ## Two properties of the sync cycle
 
@@ -185,7 +208,8 @@ Both follow from the shape of the endpoints rather than from the pattern.
 
 **One branch per cycle.** With no local anchor the cycle fetches the initial
 history; with one, it drains updates since that anchor. Never both, so a first
-load after a wipe stays one bounded request.
+load after a wipe stays one bounded request. A store that may be stale (see
+"Deleted elsewhere") is a third branch: the first page again, in place of updates.
 
 **The anchor advances by timestamp.** `getUpdates` pages by `since`, not by page
 number. The anchor therefore moves to the newest record of each full page, and a
@@ -210,10 +234,10 @@ genuine notification on a new account would be silently swallowed.
 | `lib/features/system_notifications/widgets/system_notifications_shell.dart` | starts the push service and the background task |
 | `lib/features/system_notifications/cubit/` | screen and badge cubits; the screen cubit also deletes |
 | `lib/features/system_notifications/widgets/system_notifications_delete_all_action.dart` | the header's delete-all action |
-| `lib/repositories/system_notifications/` | local (Drift) and remote (API) repositories |
+| `lib/repositories/system_notifications/` | local (Drift) and remote (API) repositories; the record of the last sync |
 
 Tests: `test/features/system_notifications/` - a worker suite per direction, a
-push suite, and seven component scenarios shared between the host and Patrol
+push suite, a suite for the Workmanager task, and eleven component scenarios shared between the host and Patrol
 (`patrol_test/system_notifications_sync_test.dart`) over a real Drift store. The
 registrations themselves are asserted in
 `test/app/router/main_shell_polling_config_test.dart`.
