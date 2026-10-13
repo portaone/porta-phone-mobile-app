@@ -5,6 +5,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/features/contact/contact.dart';
+import 'package:webtrit_phone/features/messaging/widgets/sms_sender_number_sheet.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
@@ -64,6 +65,48 @@ void main() {
           verify(() => harness.router.navigate(captureAny())).captured.single as SmsConversationScreenPageRoute;
       expect(route.args?.firstNumber, '+16042000001');
       expect(route.args?.secondNumber, '+16042000002');
+    });
+
+    testWidgets('asks which number to send from when the account has several', (tester) async {
+      // New chat asks the same; picking one quietly would send from a number
+      // the user did not choose.
+      harness.withUserSmsNumbers(['+16042000001', '+16042000003']);
+
+      await harness.pump(
+        tester,
+        contact: buildContact(number: '16042000002', label: 'sms'),
+      );
+      await openPhoneMenu(tester);
+      await tester.tap(find.text('Send sms message'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SmsSenderNumberSheet), findsOneWidget);
+      verifyNever(() => harness.router.navigate(any()));
+
+      await tester.tap(find.text('+16042000003'));
+      await tester.pumpAndSettle();
+
+      final route =
+          verify(() => harness.router.navigate(captureAny())).captured.single as SmsConversationScreenPageRoute;
+      expect(route.args?.firstNumber, '+16042000003');
+      expect(route.args?.secondNumber, '+16042000002');
+    });
+
+    testWidgets('opens nothing when the choice of number is dismissed', (tester) async {
+      harness.withUserSmsNumbers(['+16042000001', '+16042000003']);
+
+      await harness.pump(
+        tester,
+        contact: buildContact(number: '16042000002', label: 'sms'),
+      );
+      await openPhoneMenu(tester);
+      await tester.tap(find.text('Send sms message'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SmsSenderNumberSheet), findsNothing);
+      verifyNever(() => harness.router.navigate(any()));
     });
   });
 

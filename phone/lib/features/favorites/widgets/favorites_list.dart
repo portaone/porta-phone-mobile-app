@@ -8,6 +8,7 @@ import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dart';
 import 'package:webtrit_phone/features/messaging/extensions/contact.dart';
+import 'package:webtrit_phone/features/messaging/widgets/sms_sender_number_sheet.dart';
 import 'package:webtrit_phone/features/messaging/widgets/user_sms_numbers_builder.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -91,13 +92,18 @@ class _FavoritesListState extends State<FavoritesList> {
     context.router.navigate(route);
   }
 
-  void sendSms({
+  Future<void> sendSms({
     required List<String> userSmsNumbers,
     required String contactPhoneNumber,
     required String? contactSourceId,
-  }) {
+  }) async {
+    final firstNumber = userSmsNumbers.length == 1
+        ? userSmsNumbers.first
+        : await SmsSenderNumberSheet.show(context, numbers: userSmsNumbers);
+    if (firstNumber == null || !mounted) return;
+
     final route = SmsConversationScreenPageRoute(
-      firstNumber: userSmsNumbers.first,
+      firstNumber: firstNumber,
       secondNumber: contactPhoneNumber.e164Phone ?? contactPhoneNumber,
       recipientId: contactSourceId!,
     );
