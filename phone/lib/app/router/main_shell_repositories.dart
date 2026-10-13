@@ -256,6 +256,11 @@ class MainShellRepositories extends StatelessWidget {
           create: (context) => SystemNotificationsRemoteRepositoryApiImpl(
             context.read<WebtritApiClient>(),
             context.read<AppBloc>().state.session.token!,
+            includeDeleted: context
+                .read<SystemInfoRepository>()
+                .getLocalSystemInfo()
+                .core
+                .supportsDeletedNotificationUpdates,
           ),
         ),
         RepositoryProvider<LinesStateRepository>(create: (context) => LinesStateRepositoryInMemoryImpl()),

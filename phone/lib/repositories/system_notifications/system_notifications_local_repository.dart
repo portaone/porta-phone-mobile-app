@@ -24,6 +24,10 @@ abstract class SystemNotificationsLocalRepository {
 
   Stream<int> unseenCount();
 
+  /// Stores what a sync brought.
+  ///
+  /// A notification that arrives deleted is not stored: it is removed, with
+  /// whatever is queued for it in the outbox, like any confirmed delete.
   Future<void> upsertNotifications(
     List<SystemNotification> notifications, {
     bool silent = false,
@@ -101,13 +105,16 @@ class SystemNotificationsLocalRepositoryDriftImpl
     bool silent = false,
     bool initialData = false,
   }) async {
-    final data = notifications.map(systemNotificationToDrift).toList();
-    await _dao.upsertNotifications(data);
+    // Deleted on another device or by the backend's retention: the row goes.
+    await deleteNotifications(notifications.where((n) => n.isDeleted).map((n) => n.id).toList());
+
+    final stored = notifications.where((n) => !n.isDeleted).toList();
+    await _dao.upsertNotifications(stored.map(systemNotificationToDrift).toList());
     if (silent == false) {
       // One the user has deleted is not news, even when a sync brings it back
       // before the backend has confirmed the delete.
-      final deleting = await _dao.getPendingDeleteIds(notifications.map((n) => n.id));
-      notifications
+      final deleting = await _dao.getPendingDeleteIds(stored.map((n) => n.id));
+      stored
           .where((n) => !deleting.contains(n.id))
           .forEach((n) => _addEvent(SystemNotificationUpdate(n, initialData: initialData)));
     }

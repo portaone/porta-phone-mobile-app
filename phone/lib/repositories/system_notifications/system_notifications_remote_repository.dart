@@ -9,9 +9,13 @@ abstract class SystemNotificationsRemoteRepository {
   /// [limit] - Optional parameter to limit the number of notifications returned. Defaults to `20`.
   Future<List<SystemNotification>> getHistory({DateTime? since, int limit = 20});
 
-  /// Fetches the updates of system notifications.
-  /// [since] - Optional parameter to filter notifications created `after` this date.
+  /// Fetches the notifications changed after [since], oldest change first.
   /// [limit] - Optional parameter to limit the number of notifications returned. Defaults to `20`.
+  ///
+  /// Those deleted since come too, with `deletedAt` set, when the backend can
+  /// report them; one that cannot simply never lists a deleted notification.
+  /// The page can be longer than [limit]: notifications changed at the same
+  /// instant are never split between two pages.
   Future<List<SystemNotification>> getUpdates({required DateTime since, int limit = 20});
 
   /// Marks a system notification as seen.
@@ -36,10 +40,16 @@ abstract class SystemNotificationsRemoteRepository {
 class SystemNotificationsRemoteRepositoryApiImpl
     with SystemNotificationApiMapper
     implements SystemNotificationsRemoteRepository {
-  SystemNotificationsRemoteRepositoryApiImpl(this._webtritApiClient, this._token);
+  SystemNotificationsRemoteRepositoryApiImpl(this._webtritApiClient, this._token, {bool includeDeleted = false})
+    : _includeDeleted = includeDeleted;
 
   final WebtritApiClient _webtritApiClient;
   final String _token;
+
+  /// Whether the backend reports deleted notifications in the updates
+  /// (`CoreInfo.supportsDeletedNotificationUpdates`). One that does not refuses
+  /// the parameter, so it is asked without it.
+  final bool _includeDeleted;
 
   @override
   Future<List<SystemNotification>> getHistory({DateTime? since, int limit = 20}) async {
@@ -49,7 +59,12 @@ class SystemNotificationsRemoteRepositoryApiImpl
 
   @override
   Future<List<SystemNotification>> getUpdates({required DateTime since, int limit = 20}) async {
-    final response = await _webtritApiClient.getSystemNotificationsUpdates(_token, since: since, limit: limit);
+    final response = await _webtritApiClient.getSystemNotificationsUpdates(
+      _token,
+      since: since,
+      limit: limit,
+      includeDeleted: _includeDeleted,
+    );
     return response.items.map(systemNotificationFromApi).toList();
   }
 
