@@ -57,7 +57,11 @@ class SystemInfo with _$SystemInfo {
 @freezed
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class CoreInfo with _$CoreInfo {
-  const CoreInfo({@VersionConverter() required this.version, this.iceServersConfigured});
+  const CoreInfo({
+    @VersionConverter() required this.version,
+    this.iceServersConfigured,
+    this.notificationDeletedRetentionDays,
+  });
 
   @override
   @VersionConverter()
@@ -68,6 +72,15 @@ class CoreInfo with _$CoreInfo {
   /// `null` = the core does not report the capability, i.e. it has none.
   @override
   final bool? iceServersConfigured;
+
+  /// For how many days the core reports a deleted notification in the
+  /// notification updates (JSON key `notification_deleted_retention_days`):
+  /// the deployment's notification retention, `0` = without limit. A copy of
+  /// the notifications not brought up to date for longer may hold some that
+  /// were deleted since. `null` = the core does not report deleted
+  /// notifications at all.
+  @override
+  final int? notificationDeletedRetentionDays;
 
   factory CoreInfo.fromJson(Map<String, Object?> json) => _$CoreInfoFromJson(json);
 

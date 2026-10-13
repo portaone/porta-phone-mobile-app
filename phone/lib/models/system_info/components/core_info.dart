@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 class CoreInfo with EquatableMixin {
-  CoreInfo({required this.version, this.iceServersConfigured = false});
+  CoreInfo({required this.version, this.iceServersConfigured = false, this.notificationDeletedRetentionDays});
 
   final Version version;
 
@@ -10,8 +10,14 @@ class CoreInfo with EquatableMixin {
   /// then loads from the core instead of falling back to a public STUN server.
   final bool iceServersConfigured;
 
+  /// For how many days the core reports a deleted notification in the
+  /// notification updates: 0 for without limit, null for a core that reports
+  /// none. A stored copy of the notifications older than that may hold some
+  /// deleted since.
+  final int? notificationDeletedRetentionDays;
+
   @override
-  List<Object?> get props => [version, iceServersConfigured];
+  List<Object?> get props => [version, iceServersConfigured, notificationDeletedRetentionDays];
 
   @override
   bool get stringify => true;

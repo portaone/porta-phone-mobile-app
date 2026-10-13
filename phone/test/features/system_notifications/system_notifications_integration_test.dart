@@ -130,6 +130,47 @@ void systemNotificationsIntegrationTests(void Function(String, Future<void> Func
     expect(harness.owner.state.phase, PollingTaskPhase.succeeded);
   });
 
+  register('notifications: a store left for longer than deletes are reported is read afresh, once', () async {
+    final journal = MemorySyncJournal();
+    final harness = await SystemNotificationsIntegrationHarness.create(journal: journal);
+    final gone = SystemNotificationsIntegrationHarness.notification(1);
+    final waiting = SystemNotificationsIntegrationHarness.notification(2);
+    final still = SystemNotificationsIntegrationHarness.notification(3);
+    harness.respond = (_) async => SystemNotificationsIntegrationHarness.response([still, waiting, gone]);
+    await harness.owner.runNow();
+    await pumpEventQueue();
+    // Marked seen offline: the receipt has not reached the backend yet.
+    await harness.local.upsertOutboxNotification(
+      SystemNotificationOutboxEntry(notificationId: waiting.id, actionType: SnOutboxActionType.seen),
+    );
+    await pumpEventQueue();
+    harness.dismissed.clear();
+    final requestsBefore = harness.requests.length;
+
+    // Half a year and a week in a drawer. Meanwhile 1 was deleted elsewhere and
+    // its marker purged, and 5 was created: the first page is now 5 and 3.
+    harness.now = harness.now.add(const Duration(days: 187));
+    final fresh = SystemNotificationsIntegrationHarness.notification(5);
+    harness.respond = (request) async => SystemNotificationsIntegrationHarness.response(
+      SystemNotificationsIntegrationHarness.isUpdates(request) ? [] : [fresh, still],
+    );
+    await harness.owner.runNow();
+    await pumpEventQueue();
+
+    harness.expectRequest(requestsBefore); // the history, not the updates
+    expect((await harness.local.getNotifications()).map((n) => n.id), [fresh.id, still.id, waiting.id]);
+    expect((await harness.local.getOutboxNotifications()).single.notificationId, waiting.id);
+    // Nothing of it is news, and only what went was taken out of the shade.
+    expect(harness.pushes, isEmpty);
+    expect(harness.dismissed, [gone.title]);
+    expect(journal.lastSyncedAt, harness.now);
+
+    // The next cycle is an ordinary one.
+    await harness.owner.runNow();
+    harness.expectRequest(requestsBefore + 1, since: fresh.updatedAt);
+    expect(harness.requests, hasLength(requestsBefore + 2));
+  });
+
   register('notifications: failed initialization retries silently before delivering news', () async {
     final harness = await SystemNotificationsIntegrationHarness.create();
     harness.respond = (_) async => http.Response('unavailable', 503);
