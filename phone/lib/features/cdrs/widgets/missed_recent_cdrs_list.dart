@@ -89,13 +89,18 @@ class _MissedRecentCdrsListState extends State<MissedRecentCdrsList> {
     context.router.navigate(route);
   }
 
-  void sendSms({
+  Future<void> sendSms({
     required List<String> userSmsNumbers,
     required String contactPhoneNumber,
     required String? contactSourceId,
-  }) {
+  }) async {
+    final firstNumber = userSmsNumbers.length == 1
+        ? userSmsNumbers.first
+        : await SmsSenderNumberSheet.show(context, numbers: userSmsNumbers);
+    if (firstNumber == null || !mounted) return;
+
     final route = SmsConversationScreenPageRoute(
-      firstNumber: userSmsNumbers.first,
+      firstNumber: firstNumber,
       secondNumber: contactPhoneNumber.e164Phone ?? contactPhoneNumber,
       recipientId: contactSourceId!,
     );

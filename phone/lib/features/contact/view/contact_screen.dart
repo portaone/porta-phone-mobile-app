@@ -9,6 +9,7 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dart';
+import 'package:webtrit_phone/features/messaging/widgets/sms_sender_number_sheet.dart';
 import 'package:webtrit_phone/features/messaging/widgets/user_sms_numbers_builder.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -285,11 +286,16 @@ class _ContactScreenState extends State<ContactScreen> {
     _callController.createCall(destination: phone.number, displayName: contact.maybeName, fromNumber: fromNumber);
   }
 
-  void _onSendSmsPressed(ContactPhone phone, String? contactSourceId, List<String> userSmsNumbers) {
+  Future<void> _onSendSmsPressed(ContactPhone phone, String? contactSourceId, List<String> userSmsNumbers) async {
     if (userSmsNumbers.isEmpty) return;
 
+    final firstNumber = userSmsNumbers.length == 1
+        ? userSmsNumbers.first
+        : await SmsSenderNumberSheet.show(context, numbers: userSmsNumbers);
+    if (firstNumber == null || !mounted) return;
+
     final route = SmsConversationScreenPageRoute(
-      firstNumber: userSmsNumbers.first,
+      firstNumber: firstNumber,
       secondNumber: phone.number.e164Phone ?? phone.number,
       recipientId: contactSourceId,
     );
