@@ -10,9 +10,9 @@ import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dar
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/features/recents/view/recents_screen_style.dart';
 import 'package:webtrit_phone/features/recents/view/recents_screen_styles.dart';
-import 'package:webtrit_phone/features/user_info/cubit/user_info_cubit.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/utils/string_phone_utils.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../../call/call.dart';
@@ -98,14 +98,19 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
     context.router.navigate(route);
   }
 
-  void sendSms({
+  Future<void> sendSms({
     required List<String> userSmsNumbers,
     required String contactPhoneNumber,
     required String? contactSourceId,
-  }) {
+  }) async {
+    final firstNumber = userSmsNumbers.length == 1
+        ? userSmsNumbers.first
+        : await SmsSenderNumberSheet.show(context, numbers: userSmsNumbers);
+    if (firstNumber == null || !mounted) return;
+
     final route = SmsConversationScreenPageRoute(
-      firstNumber: userSmsNumbers.first,
-      secondNumber: contactPhoneNumber,
+      firstNumber: firstNumber,
+      secondNumber: contactPhoneNumber.e164Phone ?? contactPhoneNumber,
       recipientId: contactSourceId!,
     );
     context.router.navigate(route);
@@ -187,102 +192,98 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                 child: NoDataPlaceholder(content: Text(context.l10n.recents_BodyCenter_empty(filterL10n))),
               );
             } else {
-              return BlocBuilder<UserInfoCubit, UserInfoState>(
-                builder: (context, userInfoState) {
-                  final userSmsNumbers = userInfoState.userInfo?.numbers.sms ?? [];
+              return BlocBuilder<CallBloc, CallState>(
+                buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
+                builder: (context, callState) {
+                  final hasActiveCall = callState.activeCalls.isNotEmpty;
 
-                  return BlocBuilder<CallBloc, CallState>(
-                    buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
-                    builder: (context, callState) {
-                      final hasActiveCall = callState.activeCalls.isNotEmpty;
+                  return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
+                    builder: (context, callRoutingState) {
+                      return ListView.builder(
+                        padding: EdgeInsets.only(top: topPadding),
+                        itemCount: recentsFiltered.length,
+                        itemBuilder: (context, index) {
+                          final recent = recentsFiltered[index];
+                          final callLogEntry = recent.callLogEntry;
+                          final contact = recent.contact;
+                          final contactSourceId = contact?.sourceId;
+                          final contactSmsNumbers = contact?.smsNumbers ?? [];
+                          final canSendSms = contactSmsNumbers.contains(callLogEntry.number);
+                          // A call-history row knows a number, and knows
+                          // the person behind it only when the address
+                          // book does.
+                          final pick = context.pickOfferFor(
+                            DestinationCandidate(number: callLogEntry.number, contact: contact),
+                          );
 
-                      return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
-                        builder: (context, callRoutingState) {
-                          return ListView.builder(
-                            padding: EdgeInsets.only(top: topPadding),
-                            itemCount: recentsFiltered.length,
-                            itemBuilder: (context, index) {
-                              final recent = recentsFiltered[index];
-                              final callLogEntry = recent.callLogEntry;
-                              final contact = recent.contact;
-                              final contactSourceId = contact?.sourceId;
-                              final contactSmsNumbers = contact?.smsNumbers ?? [];
-                              final canSendSms = contactSmsNumbers.contains(callLogEntry.number);
-                              // A call-history row knows a number, and knows
-                              // the person behind it only when the address
-                              // book does.
-                              final pick = context.pickOfferFor(
-                                DestinationCandidate(number: callLogEntry.number, contact: contact),
-                              );
-
-                              return SizedBox(
-                                key: ValueKey(recent),
-                                child: RecentTile(
-                                  recent: recent,
-                                  videoEnabled: widget.videoEnabled,
-                                  callNumbers: callRoutingState?.allNumbers ?? [],
-                                  dateFormat: context.read<RecentsBloc>().dateFormat,
-                                  pick: pick,
-                                  onTap: pick != null ? pick.onPressed : () => _toggleExpanded(callLogEntry.id),
-                                  expanded: pick == null && _expandedRecentId == callLogEntry.id,
-                                  onDialPressed: pick != null
-                                      ? null
-                                      : () {
-                                          _callController.createCall(
-                                            destination: callLogEntry.number,
-                                            displayName: contact?.maybeName,
-                                            video: callLogEntry.video && widget.videoEnabled,
-                                          );
-                                        },
-                                  onAudioCallPressed: (callLogEntry.video && widget.videoEnabled)
-                                      ? () => _callController.createCall(
+                          return SizedBox(
+                            key: ValueKey(recent),
+                            child: UserSmsNumbersBuilder(
+                              builder: (context, userSmsNumbers, {required loading}) => RecentTile(
+                                recent: recent,
+                                videoEnabled: widget.videoEnabled,
+                                callNumbers: callRoutingState?.allNumbers ?? [],
+                                dateFormat: context.read<RecentsBloc>().dateFormat,
+                                pick: pick,
+                                onTap: pick != null ? pick.onPressed : () => _toggleExpanded(callLogEntry.id),
+                                expanded: pick == null && _expandedRecentId == callLogEntry.id,
+                                onDialPressed: pick != null
+                                    ? null
+                                    : () {
+                                        _callController.createCall(
                                           destination: callLogEntry.number,
                                           displayName: contact?.maybeName,
-                                          video: false,
-                                        )
-                                      : null,
-                                  onVideoCallPressed: (!callLogEntry.video && widget.videoEnabled)
-                                      ? () => _callController.createCall(
-                                          destination: callLogEntry.number,
-                                          displayName: contact?.maybeName,
-                                          video: true,
-                                        )
-                                      : null,
-                                  onTransferPressed: widget.transferEnabled && hasActiveCall
-                                      ? () {
-                                          submitTransfer(destination: callLogEntry.number);
-                                        }
-                                      : null,
-                                  onChatPressed: widget.chatsEnabled && (contact?.canMessage == true)
-                                      ? () {
-                                          openChat(contactSourceId!);
-                                        }
-                                      : null,
-                                  onSendSmsPressed: widget.smssEnabled && userSmsNumbers.isNotEmpty && canSendSms
-                                      ? () {
-                                          sendSms(
-                                            userSmsNumbers: userSmsNumbers,
-                                            contactPhoneNumber: callLogEntry.number,
-                                            contactSourceId: contactSourceId,
-                                          );
-                                        }
-                                      : null,
-                                  onViewContactPressed: contact != null
-                                      ? () {
-                                          openContact(contactId: contact.id);
-                                        }
-                                      : null,
-                                  onCallLogPressed: () => openCallLog(number: callLogEntry.number),
-                                  onDelete: () => delete(recent: recent),
-                                  onCallFrom: (fromNumber) => _callController.createCall(
-                                    destination: callLogEntry.number,
-                                    displayName: contact?.maybeName,
-                                    fromNumber: fromNumber,
-                                    video: false,
-                                  ),
+                                          video: callLogEntry.video && widget.videoEnabled,
+                                        );
+                                      },
+                                onAudioCallPressed: (callLogEntry.video && widget.videoEnabled)
+                                    ? () => _callController.createCall(
+                                        destination: callLogEntry.number,
+                                        displayName: contact?.maybeName,
+                                        video: false,
+                                      )
+                                    : null,
+                                onVideoCallPressed: (!callLogEntry.video && widget.videoEnabled)
+                                    ? () => _callController.createCall(
+                                        destination: callLogEntry.number,
+                                        displayName: contact?.maybeName,
+                                        video: true,
+                                      )
+                                    : null,
+                                onTransferPressed: widget.transferEnabled && hasActiveCall
+                                    ? () {
+                                        submitTransfer(destination: callLogEntry.number);
+                                      }
+                                    : null,
+                                onChatPressed: widget.chatsEnabled && (contact?.canMessage == true)
+                                    ? () {
+                                        openChat(contactSourceId!);
+                                      }
+                                    : null,
+                                onSendSmsPressed: widget.smssEnabled && userSmsNumbers.isNotEmpty && canSendSms
+                                    ? () {
+                                        sendSms(
+                                          userSmsNumbers: userSmsNumbers,
+                                          contactPhoneNumber: callLogEntry.number,
+                                          contactSourceId: contactSourceId,
+                                        );
+                                      }
+                                    : null,
+                                onViewContactPressed: contact != null
+                                    ? () {
+                                        openContact(contactId: contact.id);
+                                      }
+                                    : null,
+                                onCallLogPressed: () => openCallLog(number: callLogEntry.number),
+                                onDelete: () => delete(recent: recent),
+                                onCallFrom: (fromNumber) => _callController.createCall(
+                                  destination: callLogEntry.number,
+                                  displayName: contact?.maybeName,
+                                  fromNumber: fromNumber,
+                                  video: false,
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                           );
                         },
                       );

@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/features/messaging/widgets/sms_sender_number_sheet.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
@@ -22,27 +22,9 @@ class _SmsConversationBuilderViewState extends State<SmsConversationBuilderView>
   late final builderCubit = context.read<SmsConversationBuilderCubit>();
 
   Future<void> onMultipleUserNumbers(List<String> userNumbers) async {
-    final result = await context.showModalBottomSheet(
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
-        child: Column(
-          children: [
-            ListTile(
-              title: Text(
-                context.l10n.messaging_ConversationsScreen_selectNumberSheet_title,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            ...userNumbers.map((number) {
-              return ListTile(title: Text(number), onTap: () => Navigator.of(context).pop(number));
-            }),
-          ],
-        ),
-      ),
-    );
+    final result = await SmsSenderNumberSheet.show(context, numbers: userNumbers);
 
-    result is String ? builderCubit.onConfirmUserNumber(result) : builderCubit.onBackToCommon();
+    result != null ? builderCubit.onConfirmUserNumber(result) : builderCubit.onBackToCommon();
   }
 
   Future<void> onEmptyUserNumbers() async {

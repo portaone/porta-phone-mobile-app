@@ -37,6 +37,8 @@ class MockCallRoutingCubit extends MockCubit<CallRoutingState?> implements CallR
 
 class MockContactsRepository extends Mock implements ContactsRepository {}
 
+class MockSmsRepository extends Mock implements SmsRepository {}
+
 CdrRecord record(String id, {CdrStatus status = CdrStatus.accepted}) => CdrRecord(
   callId: id,
   direction: CallDirection.incoming,
@@ -60,6 +62,7 @@ void main() {
   late MockCallBloc callBloc;
   late MockCallRoutingCubit callRoutingCubit;
   late MockContactsRepository contactsRepository;
+  late MockSmsRepository smsRepository;
   late CallController callController;
 
   setUp(() {
@@ -71,6 +74,7 @@ void main() {
     callBloc = MockCallBloc();
     callRoutingCubit = MockCallRoutingCubit();
     contactsRepository = MockContactsRepository();
+    smsRepository = MockSmsRepository();
     callController = CallController(callBloc: callBloc);
     when(() => fullCubit.refresh()).thenAnswer((_) async {});
     when(() => missedCubit.refresh()).thenAnswer((_) async {});
@@ -86,6 +90,7 @@ void main() {
     whenListen(callBloc, const Stream<CallState>.empty(), initialState: const CallState());
     whenListen(callRoutingCubit, const Stream<CallRoutingState?>.empty(), initialState: null);
     when(() => contactsRepository.watchContactByPhoneNumber(any())).thenAnswer((_) => Stream.value(null));
+    when(() => smsRepository.watchUserSmsNumbers()).thenAnswer((_) => Stream.value(const []));
   });
 
   Widget app() {
@@ -99,8 +104,11 @@ void main() {
         locale: const Locale('en'),
         localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: RepositoryProvider<ContactsRepository>.value(
-          value: contactsRepository,
+        home: MultiRepositoryProvider(
+          providers: [
+            RepositoryProvider<ContactsRepository>.value(value: contactsRepository),
+            RepositoryProvider<SmsRepository>.value(value: smsRepository),
+          ],
           child: MultiBlocProvider(
             providers: [
               BlocProvider<FullRecentCdrsCubit>.value(value: fullCubit),
