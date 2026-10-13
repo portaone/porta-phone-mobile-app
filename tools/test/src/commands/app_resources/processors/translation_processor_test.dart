@@ -80,6 +80,33 @@ void main() {
     expect(result['newLocalOnlyKey'], 'Not uploaded yet');
   });
 
+  test('keeps the checkout text of a message the service gives another placeholder, and says so', () async {
+    // The service follows master; a release checkout reads this message as a
+    // getter, and taking the text would make it a method that takes `name`.
+    final localArbFile = File(resolvePath('lib/l10n/arb/app_en.arb'))
+      ..createSync(recursive: true)
+      ..writeAsStringSync(jsonEncode({
+        '@@locale': 'en',
+        'voicemail_Snackbar_forwardFailed': 'Could not forward',
+        'foo': 'Foo',
+      }));
+
+    when(() => httpClient.getTranslationFiles('app-id')).thenAnswer(
+      (_) async => archiveWithFile('en.arb', {
+        '@@locale': 'en',
+        'voicemail_Snackbar_forwardFailed': "Couldn't forward to {name}",
+        'foo': 'Foo Updated',
+      }),
+    );
+
+    await processor.process(applicationId: 'app-id', chosen: const ['en'], resolvePath: resolvePath);
+
+    final result = jsonDecode(localArbFile.readAsStringSync()) as Map<String, dynamic>;
+    expect(result['voicemail_Snackbar_forwardFailed'], 'Could not forward');
+    expect(result['foo'], 'Foo Updated');
+    verify(() => logger.warn(any(that: contains('voicemail_Snackbar_forwardFailed')))).called(1);
+  });
+
   test('writes the downloaded content as-is when no local file exists yet', () async {
     when(() => httpClient.getTranslationFiles('app-id')).thenAnswer(
       (_) async => archiveWithFile('en.arb', {'@@locale': 'en', 'foo': 'Foo'}),
