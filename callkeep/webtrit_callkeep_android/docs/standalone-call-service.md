@@ -112,9 +112,17 @@ overwrite each other; `shownNotification` records which is up, so a refresh neve
 ringing call's Answer and Decline with the ongoing variant. When the call the ongoing
 notification stands for ends, a surviving answered call takes it over (`survivingAnchor`).
 
-**Foreground service type.** Ringing uses `phoneCall` only: since Android 14 the microphone type
-cannot be taken from the background. An answered call re-promotes with `phoneCall|microphone`,
-and falls back to `phoneCall` if that is refused.
+**Foreground service type.** An incoming call rings with `phoneCall` only: since Android 14 the
+microphone type cannot be taken from the background, and a push-delivered call arrives there. An
+outgoing call is set up with `phoneCall|microphone` at once (`setupForegroundServiceType`): the
+user places it from the app, which is visible then, and the type would be refused at the answer
+if the user left the app while the call rang - the other side would hear silence for the whole
+call. An answered or established call re-promotes with `phoneCall|microphone`. Every promotion
+that asks for the microphone falls back to `phoneCall` if the system refuses it
+(`startForegroundServiceOrFallback`) - unless the service already holds the microphone type: a
+second call that starts to ring beside a dialing or answered one keeps it, and a refused
+re-promotion at the answer leaves the service as it was and only posts the notification, which
+`onDestroy` then removes as well.
 
 ---
 
