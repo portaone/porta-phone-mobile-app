@@ -59,21 +59,42 @@ class ActiveCallService : Service() {
         // after a process kill. Fall back to the phone-call type (not while-in-use restricted)
         // so the promotion, and the empty-metadata guard below, run instead of crash-looping
         // the restart.
+        //
+        // The service promotes itself again whenever its notification changes - the outgoing call
+        // is answered, a second call rings - and by then the app may be in the background. Such a
+        // repeated promotion never takes away a microphone type the service already holds (it is
+        // started while the user dials, with the app in front): the type is added to the request,
+        // and if the system refuses it, the service stays in the foreground as it was and only its
+        // notification is updated. Dropping the type would silence the app's recording for the
+        // rest of the call, and the system would not grant it again until the app is visible.
+        val heldMicrophone =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                foregroundServiceType and ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            } else {
+                0
+            }
+        val requested = getForegroundServiceTypes(callsMetadata)?.let { it or heldMicrophone }
         try {
             startForegroundServiceCompat(
                 this,
                 ActiveCallNotificationBuilder.NOTIFICATION_ID,
                 notification,
-                getForegroundServiceTypes(callsMetadata),
+                requested,
             )
         } catch (e: SecurityException) {
-            Log.w(TAG, "onStartCommand: typed promotion rejected, falling back to phone-call type", e)
-            startForegroundServiceCompat(
-                this,
-                ActiveCallNotificationBuilder.NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL,
-            )
+            if (heldMicrophone != 0) {
+                Log.w(TAG, "onStartCommand: type $requested rejected, keeping the microphone type already held", e)
+                getSystemService(android.app.NotificationManager::class.java)
+                    ?.notify(ActiveCallNotificationBuilder.NOTIFICATION_ID, notification)
+            } else {
+                Log.w(TAG, "onStartCommand: typed promotion rejected, falling back to phone-call type", e)
+                startForegroundServiceCompat(
+                    this,
+                    ActiveCallNotificationBuilder.NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL,
+                )
+            }
         }
 
         if (callsMetadata.isEmpty()) {

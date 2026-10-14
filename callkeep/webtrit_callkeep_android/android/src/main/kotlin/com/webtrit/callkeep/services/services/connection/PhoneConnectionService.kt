@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.telecom.Connection
 import android.telecom.ConnectionRequest
 import android.telecom.ConnectionService
@@ -194,6 +196,21 @@ class PhoneConnectionService : ConnectionService() {
             ConnectionLifecycleAction.ConnectionCreated,
             metadata,
         )
+
+        // Telecom receives the connection only when this method returns. A task posted to this
+        // thread's queue runs after the framework has handed the returned connection over, so it
+        // is the first moment the call exists in Telecom with this connection attached - the
+        // public counterpart of ConnectionService.onCreateConnectionComplete, which the SDK hides.
+        // The connection may be gone by then without leaving the dialing state: a teardown
+        // destroys connections and drops them from the registry without changing their state.
+        // Only the connection still registered for this call is told it was taken.
+        Handler(Looper.getMainLooper()).post {
+            if (connectionManager.getConnection(metadata.callId) === connection) {
+                connection.onAcceptedByTelecom()
+            } else {
+                Log.i(TAG, "onCreateOutgoingConnection: ${metadata.callId} no longer registered when Telecom took it")
+            }
+        }
 
         return connection
     }
@@ -498,10 +515,11 @@ class PhoneConnectionService : ConnectionService() {
 
             // Re-deliver the call-setup event so a freshly attached delegate adopts/shows the call.
             when {
-                connection.hasAnswered ->
+                connection.hasAnswered -> {
                     performEventHandle(CallLifecycleEvent.AnswerCall, CallMetadata(callId = connection.callId))
+                }
 
-                connection.state == Connection.STATE_RINGING ->
+                connection.state == Connection.STATE_RINGING -> {
                     // A still-ringing incoming call whose owning Flutter delegate is freshly attached
                     // (push->foreground isolate handoff or hot restart). The delegate that originally
                     // received IncomingConnectionReported is gone, so the new one has no record of this call.
@@ -509,6 +527,7 @@ class PhoneConnectionService : ConnectionService() {
                     // processes signaling events (handshake/hangup). Without this the call lives only
                     // as a native connection and an incoming hangup is dropped (no matching ActiveCall).
                     performEventHandle(CallLifecycleEvent.ReplayIncomingCall, connection.currentMetadata)
+                }
             }
         }
     }
@@ -807,8 +826,7 @@ class PhoneConnectionService : ConnectionService() {
                         Log.w(TAG, "startIncomingCall: addNewIncomingCall failed for callId=${metadata.callId}, re-registering PhoneAccount and retrying once", it)
                         TelephonyUtils(context).registerPhoneAccount()
                         TelephonyUtils(context).addNewIncomingCall(metadata)
-                    }
-                    .onSuccess { onSuccess() }
+                    }.onSuccess { onSuccess() }
                     .onFailure { e ->
                         Log.e(TAG, "startIncomingCall: addNewIncomingCall failed after re-register for callId=${metadata.callId}", e)
                         connectionManager.removePending(metadata.callId)
