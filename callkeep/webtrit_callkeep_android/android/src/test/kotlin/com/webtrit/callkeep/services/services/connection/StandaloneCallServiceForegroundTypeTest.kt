@@ -1,5 +1,7 @@
 package com.webtrit.callkeep.services.services.connection
 
+import android.app.Notification
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -15,6 +17,8 @@ import com.webtrit.callkeep.services.services.active_call.ShadowMicrophoneRefusi
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,12 +31,14 @@ import org.robolectric.annotation.Config
  * The foreground service types of the call backend used where the system has no Telecom.
  *
  * This service holds the call itself, so its foreground type decides whether the app keeps the
- * microphone in the background. It is promoted in two phases. While a call rings or is being
- * set up the app may be in the background (an incoming call arrives by push), and since
- * Android 14 the microphone type cannot be granted to a service started there: the phase runs
- * with the phone-call type only. Once the call is answered or established it is re-promoted with
- * the microphone type added; if the system still refuses it, the call carries on with the
- * phone-call type instead of crashing the service.
+ * microphone in the background. An incoming call may ring while the app is in the background
+ * (it arrives by push), and since Android 14 the microphone type cannot be granted to a service
+ * started there: it rings with the phone-call type only. An outgoing call is placed from the app,
+ * which is visible then, so it takes the microphone type at setup. Once a call is answered or
+ * established it runs with the microphone type; whenever the system refuses that type, the call
+ * carries on with the phone-call type instead of crashing the service. A type the service already
+ * holds is never taken away: neither by a second call that starts to ring, nor by a refused
+ * repeat request at the answer.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE], shadows = [ShadowMicrophoneRefusingService::class])
@@ -61,11 +67,14 @@ class StandaloneCallServiceForegroundTypeTest {
         CallkeepCore.instance.clear()
     }
 
-    private fun send(action: StandaloneServiceAction) {
+    private fun send(
+        action: StandaloneServiceAction,
+        metadata: CallMetadata = call,
+    ) {
         service.onStartCommand(
             Intent(service, StandaloneCallService::class.java).apply {
                 this.action = action.action
-                putExtras(call.toBundle())
+                putExtras(metadata.toBundle())
             },
             0,
             1,
@@ -80,10 +89,20 @@ class StandaloneCallServiceForegroundTypeTest {
     }
 
     @Test
-    fun `outgoing call being set up runs with the phone call type only`() {
+    fun `outgoing call being set up takes the microphone type at once`() {
+        send(StandaloneServiceAction.OutgoingCall)
+
+        assertEquals(phoneCallAndMicrophone, service.foregroundServiceType)
+    }
+
+    @Test
+    fun `refused microphone type at outgoing setup keeps the call on the phone call type`() {
+        ShadowMicrophoneRefusingService.refuseMicrophone = true
+
         send(StandaloneServiceAction.OutgoingCall)
 
         assertEquals(phoneCall, service.foregroundServiceType)
+        assertFalse("service must keep running", shadowOf(service).isStoppedBySelf)
     }
 
     @Test
@@ -103,15 +122,70 @@ class StandaloneCallServiceForegroundTypeTest {
     }
 
     @Test
-    fun `refused microphone type on an established call keeps the call on the phone call type`() {
+    fun `refused microphone type on an answered call keeps the call on the phone call type`() {
+        send(StandaloneServiceAction.IncomingCall)
+        ShadowMicrophoneRefusingService.refuseMicrophone = true
+
+        send(StandaloneServiceAction.AnswerCall)
+
+        assertEquals(phoneCall, service.foregroundServiceType)
+        assertFalse("service must keep running", shadowOf(service).isStoppedBySelf)
+    }
+
+    @Test
+    fun `refused repeat at the answer keeps the microphone type taken at dial-out`() {
         send(StandaloneServiceAction.OutgoingCall)
         ShadowMicrophoneRefusingService.refuseMicrophone = true
 
         send(StandaloneServiceAction.EstablishCall)
 
-        assertEquals(phoneCall, service.foregroundServiceType)
+        assertEquals(phoneCallAndMicrophone, service.foregroundServiceType)
+        assertFalse("service must keep running", shadowOf(service).isStoppedBySelf)
+        assertNotNull("the ongoing call is still shown", shownNotification(StandaloneCallService.NOTIFICATION_ID))
+    }
+
+    @Test
+    fun `call notification left beside the placeholder goes with the service`() {
+        send(StandaloneServiceAction.OutgoingCall)
+        ShadowMicrophoneRefusingService.refuseMicrophone = true
+        send(StandaloneServiceAction.EstablishCall)
+
+        service.onDestroy()
+
+        assertNull(shownNotification(StandaloneCallService.NOTIFICATION_ID))
+    }
+
+    @Test
+    fun `call ringing while another is dialing keeps the microphone type`() {
+        send(StandaloneServiceAction.OutgoingCall)
+
+        send(StandaloneServiceAction.IncomingCall, CallMetadata(callId = "second", displayName = "Second"))
+
+        assertEquals(phoneCallAndMicrophone, service.foregroundServiceType)
+    }
+
+    @Test
+    fun `call ringing during an answered call keeps the microphone type`() {
+        send(StandaloneServiceAction.IncomingCall)
+        send(StandaloneServiceAction.AnswerCall)
+
+        send(StandaloneServiceAction.IncomingCall, CallMetadata(callId = "second", displayName = "Second"))
+
+        assertEquals(phoneCallAndMicrophone, service.foregroundServiceType)
+    }
+
+    @Test
+    fun `refused microphone type for a second ringing call keeps the call in progress on it`() {
+        send(StandaloneServiceAction.OutgoingCall)
+        ShadowMicrophoneRefusingService.refuseMicrophone = true
+
+        send(StandaloneServiceAction.IncomingCall, CallMetadata(callId = "second", displayName = "Second"))
+
+        assertEquals(phoneCallAndMicrophone, service.foregroundServiceType)
         assertFalse("service must keep running", shadowOf(service).isStoppedBySelf)
     }
+
+    private fun shownNotification(id: Int): Notification? = shadowOf(app.getSystemService(NotificationManager::class.java)).getNotification(id)
 
     private fun clearStandalone() {
         StandaloneCallService.connections.clear()
