@@ -773,7 +773,10 @@ class PhoneConnection internal constructor(
         // reaches the main Flutter engine only after the background isolate confirms its
         // signaling WebSocket is closed. Triggering release from both places would race and
         // risk pendingReleaseCallback being null when the isolate acks.
-        notificationManager.showActiveCallNotification(callId, metadata)
+        notificationManager.showActiveCallNotification(
+            callId,
+            metadata.copy(connectionState = CallConnectionState.ACTIVE),
+        )
 
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1) {
             val update = metadata.copy(hasMute = isMute)
@@ -851,6 +854,18 @@ class PhoneConnection internal constructor(
      */
     internal fun onAcceptedByTelecom() {
         logger.i("Accepted by Telecom, callId: $callId state: ${Connection.stateToString(state)}")
+        // The user placed this call from the app a moment ago and may leave the app while it
+        // rings. The call service needs the microphone foreground type to keep recording while
+        // the app is in the background, and since Android 14 that type is granted only to a
+        // service started while the app is visible. Waiting for the answer is too late: the app
+        // may be in the background by then, and on Android 17 it can no longer bring itself to
+        // the front when the other side answers. Started now, the service keeps the type for the
+        // whole call; the answer only switches its notification from "outgoing" to "active".
+        if (state != STATE_DIALING) return
+        notificationManager.showActiveCallNotification(
+            callId,
+            metadata.copy(connectionState = CallConnectionState.DIALING),
+        )
     }
 
     /**
