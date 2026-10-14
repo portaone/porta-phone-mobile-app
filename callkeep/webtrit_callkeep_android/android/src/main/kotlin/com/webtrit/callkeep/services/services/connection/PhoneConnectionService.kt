@@ -6,6 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.telecom.Connection
 import android.telecom.ConnectionRequest
 import android.telecom.ConnectionService
@@ -244,6 +246,21 @@ class PhoneConnectionService : ConnectionService() {
             ConnectionLifecycleAction.ConnectionCreated,
             metadata,
         )
+
+        // Telecom receives the connection only when this method returns. A task posted to this
+        // thread's queue runs after the framework has handed the returned connection over, so it
+        // is the first moment the call exists in Telecom with this connection attached - the
+        // public counterpart of ConnectionService.onCreateConnectionComplete, which the SDK hides.
+        // The connection may be gone by then without leaving the dialing state: a teardown
+        // destroys connections and drops them from the registry without changing their state.
+        // Only the connection still registered for this call is told it was taken.
+        Handler(Looper.getMainLooper()).post {
+            if (connectionManager.getConnection(metadata.callId) === connection) {
+                connection.onAcceptedByTelecom()
+            } else {
+                Log.i(TAG, "onCreateOutgoingConnection: ${metadata.callId} no longer registered when Telecom took it")
+            }
+        }
 
         return connection
     }

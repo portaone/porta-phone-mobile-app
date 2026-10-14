@@ -154,6 +154,16 @@ service only ever sees the copy serialized into each start intent.
 - Started (and re-started on every change) by `NotificationManager.upsertActiveCallsService()`
   whenever a call is added, removed or reordered: the service receives the full call list in
   the `metadata` intent extra and re-posts the notification.
+- **When a call is added.** An outgoing call is added as soon as Telecom has taken its
+  connection (`PhoneConnection.onAcceptedByTelecom`, posted from `onCreateOutgoingConnection`),
+  with `connectionState = DIALING` - before the other side answers, while the user who placed
+  the call can still be looking at the app. That is what lets the service get the `microphone`
+  type: since Android 14 it is granted only to a service started while the app is visible, and
+  waiting for the answer is too late when the user leaves the app during ringing (on Android 17
+  the app can no longer bring itself to the front at the answer either). The answer
+  (`onActiveConnection`) re-adds the call with `connectionState = ACTIVE`, which only switches
+  the notification title. An incoming call is added only when it is answered: it may ring while
+  the app is in the background, where the type would be refused anyway.
 - Stopped by `NotificationManager` (`context.stopService`) when the call list becomes empty,
   or by `NotificationManager.tearDown()`. The service stops itself only in the empty-restart
   guard (see below); on every other path it is stopped from outside.
@@ -161,9 +171,13 @@ service only ever sees the copy serialized into each start intent.
   always; `microphone` whenever the permission is granted (deliberately not conditioned on
   audio state - some OEM builds block microphone access with the screen off if the type is
   missing); `camera` when a video call is present and the permission is granted. On
-  Android 14+ a background promotion (the sticky restart) rejects the `microphone` type with
-  `SecurityException`; the service falls back to the plain `phoneCall` type so the restart
-  does not crash-loop.
+  Android 14+ a background promotion (the sticky restart, or a start that still comes while
+  the app is not visible) rejects the `microphone` type with `SecurityException`; the service
+  falls back to the plain `phoneCall` type (`startForegroundServiceOrFallback`) so it does not
+  crash-loop. A later start never takes away a `microphone` type the service already holds (an
+  outgoing call takes it while dialing, before the app may leave the screen): it is kept in the
+  requested set, and if that start is refused the service stays as it was and only the
+  notification is updated.
 - After posting the notification it broadcasts `IC_ACTIVE_CALL_VISIBLE` so
   `IncomingCallService` can give up its now-redundant notification (see above).
 - Returns `START_STICKY` for starts carrying calls (if the process is killed mid-call, the

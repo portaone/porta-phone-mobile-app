@@ -186,6 +186,67 @@ fun Context.startForegroundServiceCompat(
     }
 }
 
+/**
+ * Promotes [service] to the foreground with [foregroundServiceType] and, if the system refuses
+ * that type, with [fallbackForegroundServiceType] instead.
+ *
+ * Some foreground service types are "while-in-use" since Android 14 - the microphone type among
+ * them: the system grants such a type only to a service started while the app is visible to the
+ * user, and throws SecurityException otherwise. A call service must not crash on that refusal;
+ * it keeps running with a type the system does not restrict and only loses what the refused type
+ * gave it (for the microphone type: recording while the app is in the background).
+ *
+ * A call service promotes itself again whenever its notification changes - a second call rings,
+ * the call is answered - and by then the app may be in the background. Such a repeated promotion
+ * never takes away a microphone type the service already holds: it is added to the requested
+ * type, and if the system refuses the promotion, the service stays in the foreground as it was
+ * and only its notification is updated. Dropping the type there would silence the app's
+ * recording for the rest of the call, and the system would not grant it again until the app is
+ * visible.
+ *
+ * @return true when the requested type was granted, false when the service kept its earlier
+ *   type or fell back to [fallbackForegroundServiceType].
+ */
+fun Context.startForegroundServiceOrFallback(
+    service: android.app.Service,
+    notificationId: Int,
+    notification: Notification,
+    foregroundServiceType: Int?,
+    fallbackForegroundServiceType: Int?,
+): Boolean {
+    val heldMicrophone = heldMicrophoneType(service)
+    val requested = foregroundServiceType?.let { it or heldMicrophone }
+    return try {
+        startForegroundServiceCompat(service, notificationId, notification, requested)
+        true
+    } catch (e: SecurityException) {
+        if (heldMicrophone != 0) {
+            Log.w(
+                service.javaClass.simpleName,
+                "startForeground: type $requested rejected, keeping the microphone type already held and updating the notification only",
+                e,
+            )
+            service.getSystemService(android.app.NotificationManager::class.java)?.notify(notificationId, notification)
+        } else {
+            Log.w(
+                service.javaClass.simpleName,
+                "startForeground: type $requested rejected, falling back to type $fallbackForegroundServiceType",
+                e,
+            )
+            startForegroundServiceCompat(service, notificationId, notification, fallbackForegroundServiceType)
+        }
+        false
+    }
+}
+
+/** The microphone type when [service] already runs in the foreground with it, else 0. */
+private fun heldMicrophoneType(service: android.app.Service): Int =
+    if (SDK_INT >= Build.VERSION_CODES.R) {
+        service.foregroundServiceType and android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+    } else {
+        0
+    }
+
 suspend fun PDelegateBackgroundRegisterFlutterApi.syncPushIsolate(
     context: Context,
     callData: PCallkeepIncomingCallData?,
