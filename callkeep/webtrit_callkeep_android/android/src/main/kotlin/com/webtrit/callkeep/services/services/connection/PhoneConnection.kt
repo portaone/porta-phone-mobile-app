@@ -844,6 +844,16 @@ class PhoneConnection internal constructor(
     }
 
     /**
+     * Called once Telecom has taken this outgoing connection, that is after
+     * [PhoneConnectionService.onCreateOutgoingConnection] returned it and the framework handed it
+     * over: from here the call exists in Telecom with this connection attached. The connection
+     * reached DIALING earlier, inside the factory, before Telecom had it.
+     */
+    internal fun onAcceptedByTelecom() {
+        logger.i("Accepted by Telecom, callId: $callId state: ${Connection.stateToString(state)}")
+    }
+
+    /**
      * Logic triggered when the local side starts dialing.
      */
     private fun onDialing() {
