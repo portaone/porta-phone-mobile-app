@@ -105,7 +105,8 @@ for a call that is already taken while the app finishes starting.
 Builds the single persistent notification for calls in progress. There is always **one**
 notification (`NOTIFICATION_ID = 1`) summarizing every active call, not one entry per call.
 
-- **Title**: singular or plural depending on the number of calls.
+- **Title**: "Outgoing call" for a single call whose metadata says `DIALING` (an outgoing call
+  the other side has not answered yet); otherwise "Active call", or "Active calls" for several.
 - **Text**: the caller names of all active calls, joined.
 - **Action**: one Hang up button. Its `PendingIntent` targets `ActiveCallService` with the
   `Decline` action and carries the **first** call's bundle in the extras. If that call is in a
