@@ -11,7 +11,7 @@ import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.PermissionsHelper
 import com.webtrit.callkeep.common.parcelableArrayList
-import com.webtrit.callkeep.common.startForegroundServiceCompat
+import com.webtrit.callkeep.common.startForegroundServiceOrFallback
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.NotificationAction
 import com.webtrit.callkeep.notifications.ActiveCallNotificationBuilder
@@ -59,22 +59,13 @@ class ActiveCallService : Service() {
         // after a process kill. Fall back to the phone-call type (not while-in-use restricted)
         // so the promotion, and the empty-metadata guard below, run instead of crash-looping
         // the restart.
-        try {
-            startForegroundServiceCompat(
-                this,
-                ActiveCallNotificationBuilder.NOTIFICATION_ID,
-                notification,
-                getForegroundServiceTypes(callsMetadata),
-            )
-        } catch (e: SecurityException) {
-            Log.w(TAG, "onStartCommand: typed promotion rejected, falling back to phone-call type", e)
-            startForegroundServiceCompat(
-                this,
-                ActiveCallNotificationBuilder.NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL,
-            )
-        }
+        startForegroundServiceOrFallback(
+            this,
+            ActiveCallNotificationBuilder.NOTIFICATION_ID,
+            notification,
+            getForegroundServiceTypes(callsMetadata),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL,
+        )
 
         if (callsMetadata.isEmpty()) {
             // Empty metadata means a START_STICKY restart delivered a null intent after the

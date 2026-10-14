@@ -8,6 +8,7 @@ import com.webtrit.callkeep.R
 import com.webtrit.callkeep.common.ContextHolder.context
 import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.managers.NotificationChannelManager.ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID
+import com.webtrit.callkeep.models.CallConnectionState
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.NotificationAction
 import com.webtrit.callkeep.services.services.active_call.ActiveCallService
@@ -20,12 +21,7 @@ class ActiveCallNotificationBuilder : NotificationBuilder() {
     }
 
     override fun build(): Notification {
-        val title =
-            if (callsMetaData.size > 1) {
-                context.getString(R.string.push_notification_active_calls_channel_title)
-            } else {
-                context.getString(R.string.push_notification_active_call_channel_title)
-            }
+        val title = context.getString(titleResource(callsMetaData))
 
         val text = callsMetaData.joinToString { it.name ?: context.getString(R.string.unknown_caller) }
 
@@ -73,6 +69,26 @@ class ActiveCallNotificationBuilder : NotificationBuilder() {
     }
 
     companion object {
+        /**
+         * The title for the calls the notification shows. A single outgoing call that the other
+         * side has not answered yet - its metadata says DIALING - is shown as an outgoing call
+         * rather than as an active one; several calls are always "active calls".
+         */
+        internal fun titleResource(callsMetaData: List<CallMetadata>): Int =
+            when {
+                callsMetaData.size > 1 -> {
+                    R.string.push_notification_active_calls_channel_title
+                }
+
+                callsMetaData.singleOrNull()?.connectionState == CallConnectionState.DIALING -> {
+                    R.string.push_notification_outgoing_call_title
+                }
+
+                else -> {
+                    R.string.push_notification_active_call_channel_title
+                }
+            }
+
         const val TAG = "ACTIVE_CALL_NOTIFICATION"
         const val NOTIFICATION_ID = 1
         const val NOTIFICATION_GROUP_KEY = "com.webtrit.callkeep.ACTIVE_CALL"
