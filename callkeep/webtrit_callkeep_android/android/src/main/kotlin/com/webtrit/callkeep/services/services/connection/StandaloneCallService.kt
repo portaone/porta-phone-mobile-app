@@ -18,6 +18,7 @@ import com.webtrit.callkeep.common.CallDataConst
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.startForegroundServiceCompat
+import com.webtrit.callkeep.common.startForegroundServiceOrFallback
 import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.models.AudioDevice
 import com.webtrit.callkeep.models.AudioDeviceType
@@ -133,6 +134,14 @@ class StandaloneCallService : Service() {
                 null
             }
 
+    /**
+     * The foreground service type this service starts a call-setup action with - an incoming
+     * call that begins to ring, or an outgoing call that begins to dial. The service promotes
+     * itself before it even parses the action (see onStartCommand), so the type is chosen from
+     * the action alone. Every setup action uses the ringing-phase type for now.
+     */
+    private fun setupForegroundServiceType(action: StandaloneServiceAction): Int? = ringingForegroundServiceType
+
     override fun onCreate() {
         super.onCreate()
         ContextHolder.init(applicationContext)
@@ -183,7 +192,7 @@ class StandaloneCallService : Service() {
         // startService() and must NOT call startForeground() here — doing so from a
         // non-foreground-service start crashes the process on some OEM devices.
         if (action?.isCallSetup == true) {
-            promoteToForeground()
+            promoteToForeground(setupForegroundServiceType(action))
         }
 
         // Parse the intent into a typed command once. Lifecycle commands carry no metadata, so
@@ -352,7 +361,7 @@ class StandaloneCallService : Service() {
      * state with it. Degrade instead: log and stop the service (stopping before the 5-second
      * window expires also avoids ForegroundServiceDidNotStartInTimeException).
      */
-    private fun promoteToForeground() {
+    private fun promoteToForeground(foregroundServiceType: Int?) {
         if (isForeground) return
         val placeholder =
             NotificationChannelManager
@@ -362,7 +371,7 @@ class StandaloneCallService : Service() {
                 .setOngoing(true)
                 .build()
         try {
-            startForegroundServiceCompat(this, PLACEHOLDER_NOTIFICATION_ID, placeholder, ringingForegroundServiceType)
+            startForegroundServiceCompat(this, PLACEHOLDER_NOTIFICATION_ID, placeholder, foregroundServiceType)
         } catch (e: SecurityException) {
             Log.e(TAG, "promoteToForeground: startForeground rejected, stopping service to avoid a crash loop", e)
             stopSelf()
@@ -373,7 +382,7 @@ class StandaloneCallService : Service() {
 
     private fun handleIncomingCall(metadata: CallMetadata) {
         Log.i(TAG, "handleIncomingCall: callId=${metadata.callId}")
-        promoteToForeground()
+        promoteToForeground(setupForegroundServiceType(StandaloneServiceAction.IncomingCall))
         connections[metadata.callId] = CallConnection(metadata, CallConnectionState.RINGING)
         ringingIncomingCallIds.add(metadata.callId)
         if (answeredCallIds.isNotEmpty()) {
@@ -438,17 +447,18 @@ class StandaloneCallService : Service() {
         // Android 14+. If a race still leaves the app ineligible (SecurityException), fall back
         // to the phone-call type: the call proceeds, the microphone works while the app is in
         // the foreground, only background microphone access is lost.
-        try {
-            startForegroundServiceCompat(this, NOTIFICATION_ID, notification, activeCallForegroundServiceType)
-        } catch (e: SecurityException) {
-            Log.w(TAG, "showActiveCallNotification: microphone type rejected, falling back to phone-call type", e)
-            startForegroundServiceCompat(this, NOTIFICATION_ID, notification, ringingForegroundServiceType)
-        }
+        startForegroundServiceOrFallback(
+            this,
+            NOTIFICATION_ID,
+            notification,
+            activeCallForegroundServiceType,
+            ringingForegroundServiceType,
+        )
     }
 
     private fun handleOutgoingCall(metadata: CallMetadata) {
         Log.i(TAG, "handleOutgoingCall: callId=${metadata.callId}")
-        promoteToForeground()
+        promoteToForeground(setupForegroundServiceType(StandaloneServiceAction.OutgoingCall))
         connections[metadata.callId] = CallConnection(metadata, CallConnectionState.DIALING)
         // Notify the main process that the outgoing call is in progress, mirroring the
         // OngoingCall broadcast that PhoneConnectionService fires after onCreateOutgoingConnection.

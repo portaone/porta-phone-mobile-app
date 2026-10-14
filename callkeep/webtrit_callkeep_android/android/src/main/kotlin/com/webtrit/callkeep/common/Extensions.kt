@@ -186,6 +186,38 @@ fun Context.startForegroundServiceCompat(
     }
 }
 
+/**
+ * Promotes [service] to the foreground with [foregroundServiceType] and, if the system refuses
+ * that type, with [fallbackForegroundServiceType] instead.
+ *
+ * Some foreground service types are "while-in-use" since Android 14 - the microphone type among
+ * them: the system grants such a type only to a service started while the app is visible to the
+ * user, and throws SecurityException otherwise. A call service must not crash on that refusal;
+ * it keeps running with a type the system does not restrict and only loses what the refused type
+ * gave it (for the microphone type: recording while the app is in the background).
+ *
+ * @return true when [foregroundServiceType] was granted, false when the fallback was used.
+ */
+fun Context.startForegroundServiceOrFallback(
+    service: android.app.Service,
+    notificationId: Int,
+    notification: Notification,
+    foregroundServiceType: Int?,
+    fallbackForegroundServiceType: Int?,
+): Boolean =
+    try {
+        startForegroundServiceCompat(service, notificationId, notification, foregroundServiceType)
+        true
+    } catch (e: SecurityException) {
+        Log.w(
+            service.javaClass.simpleName,
+            "startForeground: type $foregroundServiceType rejected, falling back to type $fallbackForegroundServiceType",
+            e,
+        )
+        startForegroundServiceCompat(service, notificationId, notification, fallbackForegroundServiceType)
+        false
+    }
+
 suspend fun PDelegateBackgroundRegisterFlutterApi.syncPushIsolate(
     context: Context,
     callData: PCallkeepIncomingCallData?,
