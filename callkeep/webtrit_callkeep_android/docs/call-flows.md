@@ -169,6 +169,9 @@ Triggered when the user initiates a call from the app UI.
 4.  Telecom --> PhoneConnectionService.onCreateOutgoingConnection()
         |   PhoneConnection created (STATE_DIALING)
         |   broadcast: OngoingCall
+        |   posted: PhoneConnection.onAcceptedByTelecom() once Telecom has the connection
+        |     -> ActiveCallService started as "Outgoing call" (phoneCall|microphone),
+        |        while the app is still visible
         v
 5.  ForegroundService receives OngoingCall broadcast
         |   CallkeepCore.promote(callId, meta, STATE_DIALING)
@@ -185,6 +188,7 @@ Triggered when the user initiates a call from the app UI.
         |   CallkeepCore.startEstablishCall(callId)
         v
 9.  PhoneConnectionService: PhoneConnection.setActive() -> STATE_ACTIVE
+        |   ActiveCallService notification switched to "Active call"
         |   broadcast: ConnectionStateChanged (connectionState = ACTIVE)
         |   broadcast: AnswerCall
         v

@@ -3,6 +3,7 @@ package com.webtrit.callkeep.services.services.active_call
 import android.Manifest
 import android.app.Application
 import android.app.Notification
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -10,7 +11,9 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.Bundle
 import androidx.test.core.app.ApplicationProvider
+import com.webtrit.callkeep.models.CallConnectionState
 import com.webtrit.callkeep.models.CallMetadata
+import com.webtrit.callkeep.notifications.ActiveCallNotificationBuilder
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -35,7 +38,8 @@ import org.robolectric.shadows.ShadowService
  * Some vendor builds (Samsung One UI) also cut the microphone off when the screen goes dark if
  * the type is missing, so the type is requested whenever the RECORD_AUDIO permission is held -
  * not only when an audio device is known. A refusal must not crash the service: it falls back to
- * the phone-call type, which is not restricted.
+ * the phone-call type, which is not restricted - unless the service already holds the microphone
+ * type from an earlier start, which a refused repeat must not take away.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE], shadows = [ShadowMicrophoneRefusingService::class])
@@ -53,8 +57,14 @@ class ActiveCallServiceForegroundTypeTest {
         ShadowMicrophoneRefusingService.refuseMicrophone = false
     }
 
-    private fun startWith(vararg calls: CallMetadata): ActiveCallService {
-        val service = Robolectric.buildService(ActiveCallService::class.java).create().get()
+    private fun startWith(vararg calls: CallMetadata): ActiveCallService =
+        Robolectric
+            .buildService(ActiveCallService::class.java)
+            .create()
+            .get()
+            .also { it.startAgain(*calls) }
+
+    private fun ActiveCallService.startAgain(vararg calls: CallMetadata) {
         val intent =
             Intent(context, ActiveCallService::class.java).apply {
                 putParcelableArrayListExtra(
@@ -62,8 +72,7 @@ class ActiveCallServiceForegroundTypeTest {
                     ArrayList<Bundle>(calls.map { it.toBundle() }),
                 )
             }
-        service.onStartCommand(intent, 0, 1)
-        return service
+        onStartCommand(intent, 0, 1)
     }
 
     private fun Service.foregroundType(): Int = foregroundServiceType
@@ -145,6 +154,29 @@ class ActiveCallServiceForegroundTypeTest {
         assertEquals(ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL, service.foregroundType())
         assertFalse("service must keep running", shadowOf(service).isStoppedBySelf)
         assertFalse("foreground must stay", shadowOf(service).isForegroundStopped)
+    }
+
+    @Test
+    fun `refused repeat start keeps the microphone type the service already holds`() {
+        application.grantPermissions(Manifest.permission.RECORD_AUDIO)
+        val service = startWith(CallMetadata(callId = "a", connectionState = CallConnectionState.DIALING))
+        ShadowMicrophoneRefusingService.refuseMicrophone = true
+
+        service.startAgain(CallMetadata(callId = "a", connectionState = CallConnectionState.ACTIVE))
+
+        assertEquals(
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE,
+            service.foregroundType(),
+        )
+        assertFalse("service must keep running", shadowOf(service).isStoppedBySelf)
+        val shown =
+            shadowOf(context.getSystemService(NotificationManager::class.java))
+                .getNotification(ActiveCallNotificationBuilder.NOTIFICATION_ID)
+        assertEquals(
+            "the notification still follows the call",
+            "Active call",
+            shown.extras.getCharSequence(Notification.EXTRA_TITLE).toString(),
+        )
     }
 }
 

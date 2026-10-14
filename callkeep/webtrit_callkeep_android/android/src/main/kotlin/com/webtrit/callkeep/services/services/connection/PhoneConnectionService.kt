@@ -251,7 +251,16 @@ class PhoneConnectionService : ConnectionService() {
         // thread's queue runs after the framework has handed the returned connection over, so it
         // is the first moment the call exists in Telecom with this connection attached - the
         // public counterpart of ConnectionService.onCreateConnectionComplete, which the SDK hides.
-        Handler(Looper.getMainLooper()).post { connection.onAcceptedByTelecom() }
+        // The connection may be gone by then without leaving the dialing state: a teardown
+        // destroys connections and drops them from the registry without changing their state.
+        // Only the connection still registered for this call is told it was taken.
+        Handler(Looper.getMainLooper()).post {
+            if (connectionManager.getConnection(metadata.callId) === connection) {
+                connection.onAcceptedByTelecom()
+            } else {
+                Log.i(TAG, "onCreateOutgoingConnection: ${metadata.callId} no longer registered when Telecom took it")
+            }
+        }
 
         return connection
     }
