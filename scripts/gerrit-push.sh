@@ -134,10 +134,11 @@ echo "Push: HEAD:refs/for/$target$opts"
 [[ "$dry_run" -eq 1 ]] && exit 0
 
 # A topic branch has no push destination, so lefthook would pick the files of the
-# push itself and can pick the wrong ones. Hand it the files the commits change.
+# push itself and can pick the wrong ones. Hand it the files the commits change,
+# NUL-separated: with one path per line it reads only the first.
 log=$(mktemp -t gerrit-push-gate.XXXXXX)
 echo "Gate: lefthook run pre-push on the files of $base..HEAD (log: $log)"
-git diff --name-only "$base...HEAD" |
+git diff -z --name-only "$base...HEAD" |
   env -u GIT_DIR lefthook run pre-push --files-from-stdin --no-tty >"$log" 2>&1
 gate=${PIPESTATUS[1]}
 sed 's/\x1b\[[0-9;]*m//g' "$log" | sed -n '/summary:/,$p'
