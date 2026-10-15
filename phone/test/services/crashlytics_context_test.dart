@@ -170,7 +170,6 @@ void main() {
 
       context = AppStartupCrashlyticsContext(
         metadataProvider: metadataProvider,
-        callkeepVersion: '1.3.0',
         incomingCallTypeRepository: incomingCallTypeRepository,
         encodingPresetRepository: encodingPresetRepository,
         encodingSettingsRepository: encodingSettingsRepository,
@@ -200,13 +199,12 @@ void main() {
           .thenAnswer((invocation) => invocation.namedArguments[#defaultValue] as PeerConnectionSettings);
     });
 
-    test('seeds the metadata labels with the callkeep version and drops the session-scoped ones', () {
+    test('seeds the metadata labels and drops the session-scoped ones', () {
       context.logStartup(defaultPeerConnectionSettings: PeerConnectionSettings.blank());
 
       final labels = writer.batches.first;
       expect(labels['app'], 'PortaPhone');
       expect(labels['appVersion'], '1.16.0+6');
-      expect(labels['callkeepVersion'], '1.3.0');
       expect(labels, isNot(contains('authorization')));
       expect(labels, isNot(contains('tenantId')));
       expect(labels, isNot(contains('coreUrl')));

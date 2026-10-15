@@ -20,7 +20,6 @@ import 'network_crashlytics_context.dart';
 class AppStartupCrashlyticsContext extends CrashlyticsAppContext {
   AppStartupCrashlyticsContext({
     required this.metadataProvider,
-    required this.callkeepVersion,
     required this.incomingCallTypeRepository,
     required this.encodingPresetRepository,
     required this.encodingSettingsRepository,
@@ -33,7 +32,6 @@ class AppStartupCrashlyticsContext extends CrashlyticsAppContext {
        _networkContext = NetworkCrashlyticsContext(crashKeysWriter: crashKeysWriter);
 
   final AppMetadataProvider metadataProvider;
-  final String callkeepVersion;
   final IncomingCallTypeRepository incomingCallTypeRepository;
   final EncodingPresetRepository encodingPresetRepository;
   final EncodingSettingsRepository encodingSettingsRepository;
@@ -51,8 +49,8 @@ class AppStartupCrashlyticsContext extends CrashlyticsAppContext {
   FeatureOverrides? _lastLoggedOverrides;
 
   /// Seeds the startup context: the app/device metadata labels (the real
-  /// app_version - the store build version is 0.0.0 outside release builds),
-  /// the callkeep version, and the user settings that shape call behavior.
+  /// app_version - the store build version is 0.0.0 outside release builds)
+  /// and the user settings that shape call behavior.
   /// The session-scoped labels (authorization/tenantId/coreUrl) are dropped:
   /// AppBloc owns those keys and keeps them truthful across login/logout.
   void logStartup({required PeerConnectionSettings defaultPeerConnectionSettings}) {
@@ -61,7 +59,7 @@ class AppStartupCrashlyticsContext extends CrashlyticsAppContext {
       ..remove('tenantId')
       ..remove('coreUrl');
 
-    setKeys({...labels, 'callkeepVersion': callkeepVersion, ...CrashlyticsUtils.isolateInfoKeys()});
+    setKeys({...labels, ...CrashlyticsUtils.isolateInfoKeys()});
     logUserSettings(defaultPeerConnectionSettings: defaultPeerConnectionSettings);
   }
 

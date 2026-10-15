@@ -145,7 +145,6 @@ class _AppState extends State<App> {
 
     _crashlyticsAppContext = AppStartupCrashlyticsContext(
       metadataProvider: context.read<AppMetadataProvider>(),
-      callkeepVersion: context.read<AppInfo>().callkeepVersion,
       incomingCallTypeRepository: context.read<IncomingCallTypeRepository>(),
       encodingPresetRepository: context.read<EncodingPresetRepository>(),
       encodingSettingsRepository: context.read<EncodingSettingsRepository>(),

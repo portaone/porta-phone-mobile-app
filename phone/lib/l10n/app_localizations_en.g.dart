@@ -2533,10 +2533,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_AboutText_BundleVersion => 'Bundle version';
 
   @override
-  String get settings_AboutText_CallkeepVersion => 'CallKeep version';
-
-  @override
-  String get settings_AboutText_CoreVersion => 'Cloud Backend version';
+  String get settings_AboutText_CoreVersion => 'Core version';
 
   @override
   String get settings_AboutText_CoreVersionUndefined => '?.?.?';
