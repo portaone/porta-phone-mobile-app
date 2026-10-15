@@ -144,7 +144,7 @@ dependencies:
     path: ./packages/theme_schema
   webtrit_callkeep:
     # master tracks the working copy of callkeep in this repository for co-development.
-    # Release branches use the same path; callkeep is not tagged (see docs/release_versioning.md).
+    # Release branches use the same path; callkeep is not tagged (see docs/reference/callkeep_dependency.md).
     # On master this is always a path (no check enforces it).
     path: ../callkeep/webtrit_callkeep
   phone_number:

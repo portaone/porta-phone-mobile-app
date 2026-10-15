@@ -7,15 +7,15 @@ Last reviewed: 2026-08-11
 It includes melos script usage, optional feature selection, signed release builds and store uploads
 via fastlane, Flutter SDK version management, and tips for local development.
 
-For all available melos scripts, see [Melos Commands](make_file.md).
-How `webtrit_callkeep` is declared on master and on release branches: [Release Versioning](release_versioning.md).
+For all available melos scripts, see [Melos Commands](../reference/make_file.md).
+How `webtrit_callkeep` is declared on master and on release branches: [The callkeep dependency](../reference/callkeep_dependency.md).
 For how a fix reaches a version that is already cut, see [Patching a Released Version](hotfix_builds.md).
 For picking the cheapest check that proves a change compiles - and the flags a build fails without -
 see [Verifying a Change Compiles](build_verification.md).
 
 ---
 
-## Optional Android Features  [Optional features](optional_features.md)
+## Optional Android Features  [Optional features](../reference/optional_features.md)
 
 The project has no build flavors. Two Android features are still decided at build time, because a
 brand that does not use them must not ship their permission or their manifest components:
@@ -34,7 +34,7 @@ Deep links: enabled, SMS call trigger: disabled
 
 ## Build Commands
 
-The `melos run build:*` and `start:*` scripts are listed in [Melos Commands](make_file.md). They
+The `melos run build:*` and `start:*` scripts are listed in [Melos Commands](../reference/make_file.md). They
 produce **unsigned / debug-signed** artifacts for local use; for signed release artifacts and store
 uploads, use the fastlane scripts below.
 

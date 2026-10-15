@@ -14,7 +14,7 @@ The implementation runs across **two OS processes**:
 | `main`           | `ForegroundService`      | Flutter engine host, Pigeon host API, Telecom bridge        |
 | `:callkeep_core` | `PhoneConnectionService` | Android `ConnectionService`, owns `PhoneConnection` objects |
 
-Full architecture documentation lives in [`docs/`](docs/):
+Full architecture documentation lives in [`docs/`](docs):
 
 | Document                                                             | What it covers                                        |
 |----------------------------------------------------------------------|-------------------------------------------------------|
@@ -34,7 +34,7 @@ decision and terminal outcomes.
 ## Integration tests
 
 The public API is covered by integration tests located in
-[`../webtrit_callkeep/example/integration_test/`](../webtrit_callkeep/example/integration_test/).
+[`../webtrit_callkeep/example/integration_test/`](../webtrit_callkeep/example/integration_test).
 
 | Test file                                  | What it covers                                                                                 |
 | ------------------------------------------ | ---------------------------------------------------------------------------------------------- |

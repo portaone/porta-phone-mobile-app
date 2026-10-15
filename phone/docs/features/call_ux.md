@@ -105,7 +105,7 @@ focus to follow - see
 The screen turns only during a call (the app is portrait-locked elsewhere).
 This screen is the reference implementation of the adaptive-layout playbook -
 the generalized approach for giving any screen a second arrangement lives in
-[`../adaptive_layout.md`](../adaptive_layout.md).
+[`../architecture/adaptive_layout.md`](../architecture/adaptive_layout.md).
 Landscape is a real arrangement, not the shrunk portrait column it used to be:
 the caller info (avatar beside the left-ranged name/timer, or the roster with
 several calls) takes the left, the control grid stands beside it, and the

@@ -104,7 +104,7 @@ them reaches the PBX, and the adapter re-reads the customer's whole hunt group
 list on each. The interval is
 `WEBTRIT_APP_CALL_QUEUES_REPOSITORY_POLLING_INTERVAL_SECONDS`, ten seconds by
 default, the slow end of what the backend contract allows. Backgrounding the
-app stops the timers by itself; see [polling](../polling.md).
+app stops the timers by itself; see [polling](../architecture/polling.md).
 
 A read that started before a write is dropped when it returns: it carries the
 state from before the change, and applying it would flip the agent's switch

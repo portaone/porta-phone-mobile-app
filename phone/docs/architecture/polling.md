@@ -445,14 +445,14 @@ automatic attempt after backend recovery: up to the current capped delay,
 plus jitter, unless a manual refresh, reconnect or foreground resume triggers
 work sooner. A base interval above the cap still takes precedence.
 
-The [configuration tests](../test/environment_config_test.dart) cover value
+The [configuration tests](../../test/environment_config_test.dart) cover value
 resolution and validation. The
-[shell tests](../test/app/router/main_shell_polling_config_test.dart) exercise
+[shell tests](../../test/app/router/main_shell_polling_config_test.dart) exercise
 actual service creation, default/overridden caps, creation-time snapshotting
 and recovery. The
-[scheduler tests](../test/services/polling_service_test.dart) verify exact
+[scheduler tests](../../test/services/polling_service_test.dart) verify exact
 failure/recovery deadlines with zero jitter, while the
-[backoff tests](../test/utils/backoff_retries_test.dart) cover the base floor
+[backoff tests](../../test/utils/backoff_retries_test.dart) cover the base floor
 and explicit cap overrides.
 
 ## Connectivity and application lifecycle
@@ -502,7 +502,7 @@ repository error returned while the network is unavailable.
 
 The table lists `PollingOptions` constructor defaults. The shell explicitly
 overrides `maxBackoff`, `leadingRefreshMinAgeCap`, `reachabilityTtl` and `jitterRatio`
-with application configuration (see `environment.md`); direct service construction
+with application configuration (see [environment.md](../reference/environment.md)); direct service construction
 retains the constructor defaults.
 
 Tests normally inject zero jitter and a deterministic backoff policy. Production
@@ -558,7 +558,7 @@ non-positive runtime override falls back to its compile-time default.
 it hides a failure as success, replaces the original error, or leaves a joined
 refresh future incomplete. Every other registration above conforms; the
 per-repository guards are listed in
-[integration_test_coverage.md](integration_test_coverage.md).
+[integration_test_coverage.md](../reference/integration_test_coverage.md).
 
 | Listener | Status | Current behavior |
 |---|---|---|
@@ -663,8 +663,8 @@ network recovery, using a 3-second test freshness cap. Service tests in
 data, self-filtering, manual refresh, aged resume, offline failure, and network
 recovery (also using a 3-second test freshness cap). The CDR pagination test verifies the initial polling registration and
 a three-page finite sync cycle against the local Core and SIP adapter.
-See [`integration_test_commands.md`](integration_test_commands.md) for setup and
-commands, and [`integration_test_coverage.md`](integration_test_coverage.md) for
+See [`integration_test_commands.md`](../guides/integration_test_commands.md) for setup and
+commands, and [`integration_test_coverage.md`](../reference/integration_test_coverage.md) for
 the scenario index.
 
 ## Feature integrations
@@ -705,7 +705,7 @@ a second download.
 
 Unregistering during a cycle keeps task state terminal (`stopped`), but joined
 manual callers still receive the real cycle outcome. The tests in
-[`external_contacts_sync_worker_test.dart`](../test/features/contacts/external_contacts_sync_worker_test.dart)
+[`external_contacts_sync_worker_test.dart`](../../test/features/contacts/external_contacts_sync_worker_test.dart)
 cover these disposal races, immediate write failures without local retries,
 automatic backoff, recovery, and the unchanged-data shortcut. They use controlled
 repositories and time, not a native storage failure or a live backend.
@@ -791,7 +791,7 @@ replay, the persist-before-publish order and a failed write.
 ### System notifications
 
 The sync and the outbox (read receipts) tasks are described in
-[`features/system_notifications.md`](features/system_notifications.md).
+[`features/system_notifications.md`](../features/system_notifications.md).
 
 ## Non-goals
 

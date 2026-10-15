@@ -85,7 +85,7 @@ void main() {
 
     // The ink well is what answers the press. The merged semantics node
     // inherits the whole subtree's rectangle and would measure large even if
-    // the pressable area shrank (Trap 1 of docs/accessibility.md), and the
+    // the pressable area shrank (Trap 1 of docs/guides/accessibility.md), and the
     // Tab widget reports its own preferred height, which is neither.
     final press = tester.getSize(find.descendant(of: find.byType(ExtTabBar), matching: find.byType(InkWell)).first);
     expect(press.height, greaterThanOrEqualTo(kMinInteractiveDimension));

@@ -36,7 +36,7 @@ flow against the screen.
    documented reason it needs none (the control already exposes a proper visible
    or framework-provided label, see the Material note in Traps).
 2. **Every control automation has to reach has an identifier** declared in
-   [`lib/app/keys.dart`](../lib/app/keys.dart) as a `const String ...Id`, never a
+   [`lib/app/keys.dart`](../../lib/app/keys.dart) as a `const String ...Id`, never a
    literal in the widget. Add a `Key` built from that constant only when the
    control also needs a widget-test anchor; screen anchors and controls that no
    widget test looks up live in the identifier-only groups of that file.
@@ -51,7 +51,7 @@ flow against the screen.
    `label` and `identifier` to the matcher explicitly: they are optional
    arguments, so an omitted one is not checked at all and the test pins nothing
    about it. Both helpers live in
-   [`test/helpers/semantics.dart`](../test/helpers/semantics.dart).
+   [`test/helpers/semantics.dart`](../../test/helpers/semantics.dart).
 5. **After renaming anything in `keys.dart`**, grep `patrol_test/` and
    `integration_test/`. `patrol_test/**` is excluded from analysis
    (`analysis_options.yaml`), so a stale constant keeps `flutter analyze` and the
@@ -488,7 +488,7 @@ with no trace.
   screen reader and of the UI test runner. On the account screen that is a
   deliberate choice, taken when the refresh button was removed; the sessions
   screen and the contacts tabs have been that way for longer. Which screen
-  refreshes how is in [`data_refresh.md`](data_refresh.md).
+  refreshes how is in [`data_refresh.md`](../architecture/data_refresh.md).
 - Everything above was verified on Android, with TalkBack and with Android UI
   automation. VoiceOver has not been run over these screens yet, so iOS-specific
   wording (a tooltip is appended to the label there) rests on the framework

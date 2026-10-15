@@ -2,7 +2,7 @@
 
 > Plugin internals: layers, hub, isolates, modes, event model.
 > For app-level integration see [
-`docs/signaling_architecture_target.md`](../../docs/signaling_architecture_target.md).
+`docs/architecture/signaling_architecture_target.md`](../../docs/architecture/signaling_architecture_target.md).
 
 ---
 

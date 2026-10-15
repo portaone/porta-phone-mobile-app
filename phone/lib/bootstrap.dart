@@ -63,7 +63,7 @@ Future<AppDependencies> bootstrap({
 }) async {
   // Everything long-lived is handed to the builder where it is created: `share`
   // for what the screens read, `keep` for what only has to keep running. See
-  // AppDependenciesBuilder and `docs/dependency_ownership.md`.
+  // AppDependenciesBuilder and `docs/architecture/dependency_ownership.md`.
   final deps = AppDependenciesBuilder();
   final trace = startupTrace ?? StartupTrace.disabled();
 

@@ -9,7 +9,7 @@ import 'package:material_ui/material_ui.dart';
 ///
 /// It carries no name of its own: a chooser announces the value it happens to
 /// show, so the form wraps it in a `SemanticAction` that says what the value is
-/// for. See docs/accessibility.md.
+/// for. See docs/guides/accessibility.md.
 ///
 /// The chosen number is spoken by this widget rather than left to the field
 /// inside it. On the web the framework drops the field from the tree whenever

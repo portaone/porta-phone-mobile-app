@@ -1,4 +1,4 @@
-# Pinning the Callkeep Version
+# The callkeep dependency
 
 `webtrit_callkeep` is always declared as `path: ../callkeep/webtrit_callkeep`, never as a git ref,
 on `master` and on every `release/*` branch alike. callkeep lives in `callkeep/` of this repository

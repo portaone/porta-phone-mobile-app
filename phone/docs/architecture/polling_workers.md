@@ -400,11 +400,11 @@ subclass with an empty body, and a gated `Provider` at the composition root.
 What the migration removed is the rest: a `while` loop with its own
 `Connectivity()` check, its own delay, and a `catch` that logged every failure and
 carried on, which is why the feature never backed off and never paused in the
-background. See [the feature page](features/system_notifications.md#two-properties-of-the-sync-cycle) for the cycle itself.
+background. See [the feature page](../features/system_notifications.md#two-properties-of-the-sync-cycle) for the cycle itself.
 
 ### System notifications outbox
 
-Feature page: [`features/system_notifications.md`](features/system_notifications.md).
+Feature page: [`features/system_notifications.md`](../features/system_notifications.md).
 
 The one migrated feature whose cycle sends rather than fetches, and the clearest use
 of a domain capability: `requestFlush()` is called the moment a read receipt is

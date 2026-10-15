@@ -2,7 +2,7 @@
 
 How to add a landscape arrangement to a screen, distilled from the first
 screen that got one - the active call screen (see
-[`features/call_ux.md`](features/call_ux.md), section "Landscape", for the
+[`features/call_ux.md`](../features/call_ux.md), section "Landscape", for the
 reference implementation). Follow this playbook for the next screens instead
 of inventing the shape again.
 
@@ -106,7 +106,7 @@ Hard-won on the call screen; treat them as defaults, not suggestions.
   ones: zone order, controls that exist only there, activation through
   semantics (`tapViaSemantics`), `expectTapTargetSemantics` and
   `meetsGuideline(labeledTapTargetGuideline)` per
-  [`accessibility.md`](accessibility.md).
+  [`accessibility.md`](../guides/accessibility.md).
 - **Degenerate surfaces are test cases**: a split-screen-narrow window, a
   doubled font scale, the fold threshold. Assert no overflow and the tap
   floors.

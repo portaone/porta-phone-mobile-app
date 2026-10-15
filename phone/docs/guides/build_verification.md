@@ -91,7 +91,7 @@ defines="$(printf '%s' 'WEBTRIT_APP_LINK_DOMAIN=app.webtrit.com' | base64 | tr -
 cat ../build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
 ```
 
-Background: [optional_features.md](optional_features.md).
+Background: [optional_features.md](../reference/optional_features.md).
 
 ## Web builds
 

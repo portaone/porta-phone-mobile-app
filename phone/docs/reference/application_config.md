@@ -434,7 +434,7 @@ verifying that connection entirely - **hostname included**, so any certificate f
 accepted. It exists for a deployment whose TURN certificate libwebrtc will not accept and whose
 calls cannot wait for that to be fixed properly; call audio and video stay protected by DTLS-SRTP
 either way. Why the library refuses such a certificate at all, and what the anchors are, is in
-[ice_servers.md](ice_servers.md).
+[ice_servers.md](../architecture/ice_servers.md).
 
 ### Call Pull Video Strategy
 
@@ -477,7 +477,7 @@ omitted or the value is invalid, it defaults to `softMute`.
 **Runtime override.** The strategy can also be set via the Firebase Remote Config
 key `feature_call_pull_video_strategy`, which takes precedence over the configurator
 default (resolution order: Remote Config override > configurator default >
-`softMute`). On web the realtime Remote Config stream is skipped (see `web.md`), so a
+`softMute`). On web the realtime Remote Config stream is skipped (see [web.md](../guides/web.md)), so a
 change there applies on the next startup rather than live.
 
 ## Settings Configuration

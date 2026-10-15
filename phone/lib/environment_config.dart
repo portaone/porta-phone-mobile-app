@@ -148,7 +148,7 @@ class EnvironmentConfig {
   // Severity of libwebrtc's own log, bridged into the application log.
   // 'none', 'error', 'warning', 'info' (default) or 'verbose'. A threshold, not a selection.
   // 'info' is the first level that carries ICE and TURN, which is the whole reason this is on:
-  // at 'warning' libwebrtc says nothing about either. Measured cost - see docs/ice_servers.md.
+  // at 'warning' libwebrtc says nothing about either. Measured cost - see docs/architecture/ice_servers.md.
   static const WEBRTC_NATIVE_LOG_SEVERITY__NAME = 'WEBTRIT_APP_WEBRTC_NATIVE_LOG_SEVERITY';
   static String get WEBRTC_NATIVE_LOG_SEVERITY => _env.string(
     WEBRTC_NATIVE_LOG_SEVERITY__NAME,
