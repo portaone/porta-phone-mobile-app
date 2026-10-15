@@ -280,7 +280,7 @@ no longer in it - so the mailbox says it through the app's notifications channel
 the trash is offered. That one is a confirmation, not a refusal, so it leaves on
 its own after three seconds like a deleted recent or favorite (`persist` false;
 a bar with an action would otherwise wait to be answered, see
-`docs/accessibility.md`). The list only asks.
+`docs/guides/accessibility.md`). The list only asks.
 
 The line between the last two is the point. A refusal that names the message
 tells us something about the state and the list can be put right. A server that
@@ -380,7 +380,7 @@ which is a poor name but a true one.
 
 Forwarding has no picker of its own. The person is sent to the address book -
 the app's own, with its presence, its sources and its favourites - through the
-destination-picking mechanism: [`../destination_picking.md`](../destination_picking.md).
+destination-picking mechanism: [`../architecture/destination_picking.md`](../architecture/destination_picking.md).
 
 ```
 menu -> Forward
@@ -467,7 +467,6 @@ sits on is of no use there.
 | `test/features/voicemail/bloc/voicemail_cubit_test.dart` | selection, keeping, the trash, forwarder names, the caller lookup, which refusal re-reads the list, and the read of the trash kept apart from the mailbox's - over a real session cubit |
 | `test/features/voicemail/cubits/voicemail_session_cubit_test.dart` | the count, the mailbox followed only while a screen shows it, forwarder names, a backend with no voicemail noticed late, a read asked for and how it can end, a forward marked while out, kept when refused, sent one at a time, dropped with its message |
 | `test/features/voicemail/bloc/voicemail_forwarder_names_test.dart` | the forwarder line over a real address book: a name, no name, an extension, nobody |
-| `test/features/voicemail/extensions/request_failure_test.dart` | which refusals mean the message is gone, and which only look like it |
 | `test/features/voicemail/voicemail_filter_test.dart` | which filters a deployment offers, what each one shows, and what New keeps for having been heard by listening: one message and the next, not one marked from the menu or listened to under another filter, gone with the filter, a refresh or when let go of |
 | `test/features/voicemail/view/voicemail_screen_playback_stop_test.dart` | when the player is stopped - its message deleted or no longer listed - and not when playing a new message under New marks it heard; when New is told to let go: in the background or behind another section, unless a message is left part-way; and that the player goes with the rows |
 | `test/features/voicemail/voicemail_tile_test.dart` | what one row offers, including the actions a capability removes |

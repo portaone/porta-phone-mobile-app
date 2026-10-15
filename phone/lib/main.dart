@@ -165,7 +165,7 @@ class _RootAppState extends State<RootApp> {
     // Providers that only hand out an instance built by the composition root
     // never dispose it: those live as long as the process and are released by
     // the startup teardown. A provider disposes what its own `create` built -
-    // see `docs/dependency_ownership.md`.
+    // see `docs/architecture/dependency_ownership.md`.
     return MultiProvider(
       providers: [
         // Everything the started application shares: one entry per dependency,

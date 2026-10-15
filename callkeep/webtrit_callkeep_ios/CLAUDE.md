@@ -8,7 +8,7 @@ See **[AGENTS.md](AGENTS.md)** for commands, architecture detail, Pigeon workflo
 
 `webtrit_callkeep_ios` is the **iOS platform implementation** of the callkeep plugin. It contains two layers:
 
-- **Dart layer** (`lib/src/`) — `WebtritCallkeepIOS` registers itself as the platform instance and proxies calls via Pigeon.
+- **Dart layer** (`lib/src/`) — `WebtritCallkeep` registers itself as the platform instance and proxies calls via Pigeon.
 - **Objective-C layer** (`ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/`) — CallKit + PushKit integration, in
   `WebtritCallkeepPlugin.m` with `Converters.m` and the Pigeon-generated `Generated.m`.
 
@@ -18,7 +18,7 @@ See **[AGENTS.md](AGENTS.md)** for commands, architecture detail, Pigeon workflo
 # From this directory
 flutter pub get
 flutter analyze lib test
-dart format --line-length 80 --set-exit-if-changed lib test
+dart format --line-length 120 --set-exit-if-changed $(git ls-files 'lib/*.dart' 'test/*.dart' ':!:*.pigeon.dart')
 
 # Pigeon regeneration (after editing pigeons/callkeep.messages.dart)
 ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave

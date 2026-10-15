@@ -9,7 +9,7 @@ import 'package:material_ui/material_ui.dart';
 /// out as part of that node's name ("3, Chats"). The host names the count
 /// instead, as the state of the thing the badge decorates: `ExtTab(value: ...)`
 /// for a tab, `Semantics(value: ...)` otherwise, or its own label when the
-/// control names itself. See docs/accessibility.md, "Counting things".
+/// control names itself. See docs/guides/accessibility.md, "Counting things".
 ///
 /// It also draws whatever count it is handed, including none: a badge is
 /// visible exactly when its host decides there is something to show, and the

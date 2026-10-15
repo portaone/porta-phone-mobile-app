@@ -13,7 +13,7 @@ import 'call_active_scaffold_harness.dart';
 /// What the landscape arrangement offers to assistive technology: the controls
 /// that exist only there - the isolated hangup and the hide-keypad under it -
 /// must announce themselves and activate through semantics, not just under a
-/// pointer (docs/accessibility.md).
+/// pointer (docs/guides/accessibility.md).
 void main() {
   late MockCallBloc callBloc;
 

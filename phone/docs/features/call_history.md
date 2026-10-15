@@ -6,7 +6,7 @@ piece of the history path is responsible for.
 Last reviewed: 2026-09-22.
 
 The screens and their refresh behaviour are in
-[`../data_refresh.md`](../data_refresh.md); this doc is about where the records
+[`../architecture/data_refresh.md`](../architecture/data_refresh.md); this doc is about where the records
 come from.
 
 ## The contract
@@ -37,7 +37,7 @@ Two consequences the app is built around:
 successive bounded ranges going back in time, widening as they go: at the
 shipped widths a whole year is seven slices. How that sequence is built, who
 moves the cursor and what to look for in a log is one page of its own,
-[`../history_paging.md`](../history_paging.md); what follows here is only what a
+[`../architecture/history_paging.md`](../architecture/history_paging.md); what follows here is only what a
 deployment chooses.
 
 | Knob | Default | What it sets |
@@ -63,7 +63,7 @@ same way.
 | A list that opens short | `CdrsListCubit.init`, `resolveInitialLoad` | the same walk, without waiting to be scrolled - a list shorter than the screen has no scroll extent, so its pagination listener never fires and the user has no way to ask for more |
 
 How a slice is paged through, when the walk stops inside one and where it picks
-up again is [`../history_paging.md`](../history_paging.md). What matters here is
+up again is [`../architecture/history_paging.md`](../architecture/history_paging.md). What matters here is
 what the list counts: records it GAINED, not records the page held, so a record
 already on screen cannot stop the walk a row short of a scrollable list.
 

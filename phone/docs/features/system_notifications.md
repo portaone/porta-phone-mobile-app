@@ -7,8 +7,8 @@ keeps it up to date, and what happens the moment the user touches it.
 Last reviewed: 2026-10-09.
 
 The scheduler these workers run on is documented in
-[`../polling.md`](../polling.md); the worker/owner pattern itself in
-[`../polling_workers.md`](../polling_workers.md). This page covers only what is
+[`../architecture/polling.md`](../architecture/polling.md); the worker/owner pattern itself in
+[`../architecture/polling_workers.md`](../architecture/polling_workers.md). This page covers only what is
 specific to the feature.
 
 ## The two directions

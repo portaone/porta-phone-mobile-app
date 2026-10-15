@@ -1,7 +1,7 @@
 # signaling_service
 
 The public-facing package of the `signaling_service` federated plugin. Add this package
-to your app — it aggregates the iOS and Android implementations automatically.
+to your app - it aggregates the iOS, Android and web implementations automatically.
 
 For the full plugin overview, setup guide, and API reference see the
 [root README](../README.md).
@@ -13,12 +13,9 @@ For the full plugin overview, setup guide, and API reference see the
 ```text
 signaling_service/
 ├── lib/src/
-│   └── signaling_service.dart          # WebtritSignalingService — start, events, execute, dispose
-├── lib/
-│   └── signaling_service.dart  # Barrel export
-└── example/                            # Runnable demo app
-    ├── lib/main.dart
-    └── android/
+│   └── signaling_service.dart          # WebtritSignalingService — connect, events, execute, dispose
+└── lib/
+    └── signaling_service.dart  # Barrel export
 ```
 
 ---
@@ -27,7 +24,8 @@ signaling_service/
 
 ```yaml
 dependencies:
-  signaling_service: ^<version>
+  signaling_service:
+    path: ./packages/signaling_service/signaling_service
 ```
 
 No additional configuration is needed — the correct platform implementation is selected
@@ -40,17 +38,17 @@ automatically via federated plugin endorsement.
 ### Lifecycle
 
 ```dart
-final service = WebtritSignalingService();
+// Once per isolate, before the first instance.
+await WebtritSignalingService.setModuleFactory(createSignalingModule);
 
-// Persistent mode (default) — service runs until dispose() is called.
-await service.start(config);
+// Persistent mode (default) - Android foreground service, runs until stopped.
+final service = WebtritSignalingService(config: config);
 
-// Push-initiated mode — service stops when the Activity is closed.
-await service.start(config, mode: SignalingServiceMode.pushBound);
+// Push-bound mode - the socket lives in this isolate, no service.
+final service = WebtritSignalingService(config: config, mode: SignalingServiceMode.pushBound);
 
-// Attach to an already-running service hub (e.g. Activity opens after a push).
-await service.attach();
-
+service.connect(); // idempotent
+await service.disconnect();
 await service.dispose();
 ```
 
@@ -69,7 +67,7 @@ service.events.listen((event) {
 });
 ```
 
-Subscribe before calling `start()` or `attach()` — the platform implementation replays the
+Subscribe before calling `connect()` - the platform implementation replays the
 current session buffer to each new subscriber, so late subscribers still receive the full
 current state.
 
@@ -83,26 +81,14 @@ await service.execute(HangupRequest(
 ));
 ```
 
-`execute` throws `StateError` when the service is not connected.
+`execute` queues the request while the service is not connected and sends it on `SignalingConnected`.
 
 ### `SignalingServiceMode`
 
 | Value | Behaviour |
 | --- | --- |
-| `persistent` | Service runs indefinitely; survives app close; restarted on boot (default) |
-| `pushBound` | Service stops when the Activity is removed (`onTaskRemoved`); suited for push-initiated calls |
-
----
-
-## Example app
-
-[`example/`](example/) is a minimal Flutter app that demonstrates connecting to a WebTrit Core
-server and logging all `SignalingModuleEvent`s in real time.
-
-```bash
-cd example
-flutter run -d <device-id>
-```
+| `persistent` | Android only: the socket lives in a foreground service; survives app close; restarted after a kill by `START_STICKY` and `SignalingRestartWorker` (default) |
+| `pushBound` | The socket lives in the calling isolate, no service; what the app passes unless the user opts into socket mode |
 
 ---
 
@@ -113,3 +99,4 @@ flutter run -d <device-id>
 | [`signaling_service_platform_interface`](../signaling_service_platform_interface/README.md) | Shared interface and models |
 | [`signaling_service_android`](../signaling_service_android/README.md) | Android implementation |
 | [`signaling_service_ios`](../signaling_service_ios/README.md) | iOS implementation |
+| `signaling_service_web` | Web implementation |

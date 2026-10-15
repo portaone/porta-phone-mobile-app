@@ -7,17 +7,18 @@ All Claude/AI agents working in this repo must follow these rules.
 
 ## Commands
 
-### Install dependencies (all packages)
+### Install dependencies (run inside a package directory)
 
 ```bash
-flutter pub global activate very_good_cli
-very_good packages get --recursive
+flutter pub get
 ```
 
-### Format (run inside a package directory)
+### Format (run inside a package directory, after `flutter pub get`)
+
+`git ls-files` lists tracked files only, so a new file is checked once it is `git add`ed.
 
 ```bash
-dart format --line-length 120 --set-exit-if-changed lib
+dart format --line-length 120 --set-exit-if-changed $(git ls-files 'lib/*.dart' 'test/*.dart' ':!:*.pigeon.dart')
 ```
 
 ### Analyze
@@ -26,10 +27,10 @@ dart format --line-length 120 --set-exit-if-changed lib
 flutter analyze
 ```
 
-### Test
+### Test (in a package with `test/`; `webtrit_callkeep_platform_interface` has none)
 
 ```bash
-very_good test -j 4 --optimization --coverage --test-randomize-ordering-seed random
+flutter test
 ```
 
 ### Run a single test file
@@ -46,7 +47,7 @@ Run from `webtrit_callkeep_android/` or `webtrit_callkeep_ios/` after modifying 
 ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
 ```
 
-Generated files (`*.pigeon.dart`, Kotlin/Swift output) must be committed together with the input change.
+Generated files (`*.pigeon.dart`, Kotlin/Objective-C output) must be committed together with the input change.
 
 ---
 
@@ -61,7 +62,7 @@ Generated files (`*.pigeon.dart`, Kotlin/Swift output) must be committed togethe
   3. Third-party `package:` imports
   4. Relative imports
 - **Generated files**: never manually edit `*.g.dart`, `*.pigeon.dart`, `*.freezed.dart`. Regenerate via Pigeon or build_runner.
-- **Linter**: `very_good_analysis` is active in all packages — fix warnings before committing.
+- **Linter**: `flutter_lints` (`lints/recommended` in the platform interface) plus `prefer_single_quotes` — fix warnings before committing.
 
 ---
 
@@ -73,7 +74,7 @@ This is a Flutter **federated plugin** (mono-repo):
 webtrit_callkeep/                    # Aggregator — no logic, delegates to platform packages
 webtrit_callkeep_platform_interface/ # Shared abstract API, models, delegates
 webtrit_callkeep_android/            # Android impl (Flutter Dart + Kotlin)
-webtrit_callkeep_ios/                # iOS impl (Flutter Dart + Swift)
+webtrit_callkeep_ios/                # iOS impl (Flutter Dart + Objective-C)
 webtrit_callkeep_linux|macos|web|windows/  # Stubs (no-op implementations)
 ```
 
@@ -90,7 +91,7 @@ Callkeep (singleton, webtrit_callkeep)
 WebtritCallkeepPlatform (platform_interface)
     │
     ├── WebtritCallkeepAndroid  →  Pigeon  →  Kotlin services
-    └── WebtritCallkeepIOS      →  Pigeon  →  Objective-C/CallKit
+    └── WebtritCallkeep (iOS)   →  Pigeon  →  Objective-C/CallKit
 ```
 
 **Flutter to Platform**: `reportNewIncomingCall`, `startCall`, `answerCall`, `endCall`, `setHeld`, `setMuted`,
@@ -112,16 +113,13 @@ Nothing in this surface names one, and nothing should.
 the Android side has no source for either event, so they are absent from the Android pigeon surface.
 
 `perform*` methods return `Future<bool>` — return `true` on success, `false` on failure.
-Returning `false` causes the native side to abort the operation.
+On iOS `false` fails the CallKit action; Android ignores the result.
 
 ### Background isolates (Android only)
 
-Two mutually exclusive modes:
-
-| Mode              | Service               | Use case                                                     |
-|-------------------|-----------------------|--------------------------------------------------------------|
-| Push notification | `IncomingCallService` | App uses FCM; one-shot isolate per push                      |
-| Signaling         | `SignalingService`    | Persistent connection; isolate lives with foreground service |
+| Mode              | Service               | Use case                                                              |
+|-------------------|-----------------------|-----------------------------------------------------------------------|
+| Push notification | `IncomingCallService` | App uses FCM; one-shot isolate per push when no app delegate is ready |
 
 Background isolate entry points **must** be annotated `@pragma('vm:entry-point')`.
 

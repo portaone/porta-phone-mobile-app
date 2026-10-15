@@ -82,11 +82,11 @@ encoded as a string extra.
 | `HungUpCall`             | Call `PhoneConnection.onDisconnect()`                                                |
 | `EstablishCall`          | Set connection to STATE_ACTIVE                                                       |
 | `UpdateCall`             | Update `PhoneConnection` metadata                                                    |
-| `MuteCall`               | `PhoneConnection.changeMuteState()`                                                  |
-| `HoldCall`               | `PhoneConnection.onHold()` / `onUnhold()`                                            |
-| `SpeakerCall`            | Route audio to speaker                                                               |
-| `SetAudioDevice`         | Select audio device                                                                  |
-| `SendDtmf`               | Send DTMF tone                                                                       |
+| `Muting`                 | `PhoneConnection.changeMuteState()`                                                  |
+| `Holding`                | `PhoneConnection.onHold()` / `onUnhold()`                                            |
+| `Speaker`                | Route audio to speaker                                                               |
+| `AudioDeviceSet`         | Select audio device                                                                  |
+| `SendDTMF`               | Send DTMF tone                                                                       |
 | `SetCallGroup`           | `handleCallGroup()`: declare the listed calls to be the one group                    |
 | `UnsetCallGroup`         | `handleCallGroup()`: take the listed calls out of the group                          |
 

@@ -1,31 +1,28 @@
 # signaling_service
 
-A Flutter plugin that runs the WebSocket signaling connection in a dedicated Android foreground
-service so it survives app backgrounding, process death, and device reboot. The main isolate
-receives a live event stream and can send requests without opening a second WebSocket connection.
+A Flutter plugin that owns the WebSocket signaling connection. In `persistent` mode (Android
+only, the API default) it runs the connection in a dedicated Android foreground service so it
+survives app backgrounding and process death; the main isolate receives a live event stream and
+can send requests without opening a second WebSocket connection. In `pushBound` mode (what the
+app passes unless the user opts into socket mode) the connection runs in the calling isolate.
 
-**Android** runs `WebtritSignalingClient` inside `SignalingForegroundService`. Events are
-forwarded to the main isolate through `IsolateNameServer` (pure Dart ports — no extra socket).
-The service is restarted on boot by `SignalingBootReceiver`.
-
-**iOS** runs `WebtritSignalingClient` directly in the main isolate via `SignalingModule`.
-There are no persistent background services on iOS.
-
-Both platforms expose the same Dart API: start the service, subscribe to events, send requests,
-and dispose — without writing platform-specific code in your app.
+All platforms expose the same Dart API. How it works inside - the Android hub and isolates,
+the two modes compared, the session buffer, the background call handler - is in
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
 ## Package structure
 
-This is a federated plugin. Each package has its own README.
+This is a federated plugin. Each package except `signaling_service_web` has its own README.
 
 | Package | Description |
 | --- | --- |
 | [`signaling_service`](signaling_service/README.md) | Public API — aggregates the platform implementations |
 | [`signaling_service_platform_interface`](signaling_service_platform_interface/README.md) | Shared Dart interface and models |
-| [`signaling_service_android`](signaling_service_android/README.md) | Android implementation (foreground service + IsolateNameServer hub) |
+| [`signaling_service_android`](signaling_service_android/README.md) | Android implementation (direct socket for `pushBound`, foreground service + IsolateNameServer hub for `persistent`) |
 | [`signaling_service_ios`](signaling_service_ios/README.md) | iOS implementation (direct main-isolate `SignalingModule`) |
+| `signaling_service_web` | Web implementation (the same as iOS) |
 
 ---
 
@@ -33,8 +30,8 @@ This is a federated plugin. Each package has its own README.
 
 | Platform | Minimum version |
 | --- | --- |
-| Android | API 26 (Android 8.0) |
-| iOS | iOS 12 |
+| Android | API 24 (Android 7.0) |
+| iOS | none declared (Dart only); the app targets iOS 15.0 |
 
 ---
 
@@ -42,306 +39,22 @@ This is a federated plugin. Each package has its own README.
 
 ```yaml
 dependencies:
-  signaling_service: ^<version>
+  signaling_service:
+    path: ./packages/signaling_service/signaling_service
 ```
 
----
+Required `AndroidManifest.xml` permissions (declared by the plugin, merged automatically):
 
-## Architecture (Android)
-
-The connection always runs in the **service isolate** inside `SignalingForegroundService`.
-The main isolate (and any push isolate) connects to the hub via `IsolateNameServer` — no
-second WebSocket is ever opened.
-
-```
-+-----------------------------------------------------------------------------+
-|  Android OS process                                                         |
-|                                                                             |
-|  +------------------------------+     +----------------------------------+  |
-|  |  Main isolate                |     |  Service isolate                 |  |
-|  |  (Activity / Flutter UI)     |     |  (SignalingForegroundService)    |  |
-|  |                              |     |                                  |  |
-|  |  WebtritSignalingServiceAndroid     |  SignalingForegroundIsolateManager  |
-|  |  +- SignalingHubModule       |     |  +- SignalingModule              |  |
-|  |       +- events stream  <---------IsolateNameServer- WebtritSigClient |  |
-|  |                              |     |                   WebSocket      |  |
-|  |  start() / attach()  ------->|---->|                     |            |  |
-|  |  execute()           ------->|---->|                  server          |  |
-|  +------------------------------+     +----------------------------------+  |
-|                                                                             |
-|  +------------------------------+                                           |
-|  |  Push isolate (optional)     |                                           |
-|  |  +- SignalingHubModule  <---------IsolateNameServer (same port)          |
-|  |     start(pushBound)  ------>|----> starts service if not running        |
-|  +------------------------------+                                           |
-+-----------------------------------------------------------------------------+
+```xml
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+<uses-permission android:name="android.permission.WAKE_LOCK" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 ```
 
----
-
-## Service modes
-
-The two modes share **the same foreground service and hub architecture**. The only difference
-is **how long the service lives** and **who starts it**.
-
-### Mode comparison
-
-```
-                    +---------------------+------------------------------+
-                    |   persistent        |   pushBound                  |
-+-------------------+---------------------+------------------------------+
-| Who starts        | app (main isolate)  | push isolate (FCM callback)  |
-| service           | via start()         | via start(..., pushBound)    |
-+-------------------+---------------------+------------------------------+
-| App close         | service keeps       | onTaskRemoved stops service  |
-| (swipe away)      | running             | automatically                |
-+-------------------+---------------------+------------------------------+
-| Device reboot     | SignalingBootRecv   | -- (service was already dead)|
-|                   | restarts service    |                              |
-+-------------------+---------------------+------------------------------+
-| Incoming call     | WebSocket always    | server sends FCM push when   |
-| delivery          | open -> direct event| socket is gone               |
-+-------------------+---------------------+------------------------------+
-| onStartCommand    | START_STICKY        | START_NOT_STICKY             |
-+-------------------+---------------------+------------------------------+
-| Foreground        | always visible      | visible only during call     |
-| notification      |                     |                              |
-+-------------------+---------------------+------------------------------+
-```
-
----
-
-### `persistent` mode — full lifecycle
-
-```
- App launch
-    |
-    v
- start(config)                            +---------------------------------+
-    |  Pigeon -> startService(persistent) |  SignalingForegroundService     |
-    +------------------------------------>|  SignalingModule.connect()       |
-                                          |  WebSocket -----------> server  |
- App goes to background                   |                                 |
-    |                                     |  service keeps running  <-------+
-    v                                     |  (START_STICKY)
- service keeps running                    |
-                                          |
- Device reboots                           |
-    |                                     |
-    v                                     |
- SignalingBootReceiver fires              |
-    +- startService(persistent) --------->|  service restarts, reconnects
-                                          |
- Activity opens again                     |
-    |                                     |
-    v                                     |
- attach()  ---- polls IsolateNameServer --+--> hub port found
-    |                                     |        |
-    +- SignalingHubModule subscribes <--------------+
-         session buffer replayed to events stream
-         UI immediately in sync                    |
-                                                   |
- Activity closes (swipe away)                      |
-    |                                              |
-    +- service keeps running  <--------------------+
-         incoming calls still dispatched to app callback
-
- dispose() called
-    +- modules disposed, event controller closed
-       (Kotlin manages service stop)
-```
-
----
-
-### `pushBound` mode — full lifecycle
-
-```
- App is closed (no service running)
-    |
-    v
- FCM push arrives
-    |
-    v
- Push isolate wakes up
-    |
-    v
- start(config, mode: pushBound)           +---------------------------------+
-    |  Pigeon -> startService(pushBound)  |  SignalingForegroundService     |
-    +------------------------------------>|  SignalingModule.connect()       |
-                                          |  WebSocket -----------> server  |
-                                          |                                 |
-                                          |  IncomingCallEvent arrives      |
-                                          |  -> _dispatchIncomingCall()     |
-                                          |  -> app callback (callkeep)     |
-                                          |  -> system call UI shown        |
-                                          |  (START_NOT_STICKY)             |
- User opens app (Activity creates)        |                                 |
-    |                                     |                                 |
-    v                                     |                                 |
- attach()  ---- polls IsolateNameServer --+--> hub port found               |
-    |                                     |        |                        |
-    +- SignalingHubModule subscribes <-----------+-+                        |
-         session buffer replayed                 |                          |
-         (Connecting -> Connected -> Handshake -> call event)               |
-         UI immediately in sync                                             |
-                                                                            |
- User closes app (swipes away)                                              |
-    |                                                                       |
-    v                                                                       |
- onTaskRemoved fires                                                        |
-    +- service.stopSelf() -----------------------------------------------+-+
-         WebSocket closed, notification dismissed
-         server sees disconnect -> sends FCM push for next call
-```
-
----
-
-## How Activity attaches to the service
-
-`attach()` is the mechanism by which any isolate (main or push) connects to the already-running
-hub. It does **not** start a new service and does **not** open a new WebSocket.
-
-```
- WebtritSignalingServiceAndroid.attach()
-    |
-    |  polls IsolateNameServer every 100 ms
-    |  waiting for hub SendPort to appear
-    |
-    v  port found (hub is ready)
- SignalingHubClient.tryConnect(subscriberId)
-    |
-    +- step 1: ackFuture = client.awaitAck()   <- register Completer FIRST
-    |                                             (before ack can arrive)
-    +- step 2: SignalingHubModule wraps client <- its constructor calls
-    |                                             client.start(): {cmd:'sub'}
-    |                                             hub receives 'sub'
-    |                                             hub sends: sub-ack
-    |                                             hub sends: the session replay
-    |          the manager listens to module.events right away
-    +- step 3: await ackFuture                 <- now wait; ack arrives
-                    |                             because start() already fired
-                    v
-             the hub's replay arrives on the listener already in place
-                    |  (SignalingConnecting ... SignalingConnected ... HandshakeReceived,
-                    |   the handshake rendered from the hub's session snapshot)
-                    |
-                    +- all future events forwarded from hub in real time
-                       (the module keeps no buffer; a later listener sees only
-                        what follows)
-
- Note: awaitAck() MUST be called before start().
-       Awaiting the future before start() always times out --
-       start() is what sends 'sub', which triggers the ack.
-```
-
----
-
-## Callkeep integration
-
-The signaling service is callkeep-agnostic — it delivers raw `SignalingModuleEvent`s and does
-not know about native call UI. The app bridges the two by registering a top-level Dart callback
-via `setIncomingCallHandler(callback)`. The callback receives `IncomingCallEvent` and is
-responsible for triggering the system call notification via callkeep.
-
-### persistent mode — incoming call while app is closed
-
-```
-  Server                Service isolate               App callback         Callkeep
-  ------                ---------------               ------------         --------
-  IncomingCallEvent
-  (via WebSocket)
-       |
-       v
-  SignalingModule
-  onEvent callback
-       |
-       v
-  SignalingForegroundIsolateManager
-  _dispatchIncomingCall()
-       |
-       +- PluginUtilities.getCallbackFromHandle(incomingCallHandlerHandle)
-       |
-       v
-  onSignalingBackgroundIncomingCall(event)          <- @pragma('vm:entry-point')
-  [runs in service isolate]
-       |
-       v
-  callkeep.reportNewIncomingCall(                   <- system call UI
-    callId, handle, displayName, hasVideo)               |
-                                                         v
-                                                    system notification
-                                                    ringtone + lock screen
-                                                    user taps Answer
-                                                         |
-                                                         v
-                                                    Activity creates
-                                                    main isolate: attach()
-                                                    CallBloc receives events
-```
-
-### pushBound mode — incoming call via FCM push
-
-```
-  Server                FCM                Push isolate              Callkeep
-  ------                ---                ------------              --------
-  sees WebSocket         FCM push
-  disconnected           arrives
-  sends push               |
-                           v
-                      push isolate wakes
-                      start(config, pushBound)
-                           |
-                           v
-                      SignalingForegroundService starts
-                      WebSocket reconnects -> server
-                           |
-                      IncomingCallEvent arrives
-                           |
-                           v
-                      _dispatchIncomingCall()
-                           |
-                           v
-                      onSignalingBackgroundIncomingCall(event)
-                           |
-                           +------------------------------> callkeep.reportNewIncomingCall()
-                                                                    |
-                                                                    v
-                                                               system notification
-                                                               user taps Answer
-                                                                    |
-                                                                    v
-                                                               Activity creates
-                                                               attach()  <-- main isolate
-                                                               CallBloc receives the
-                                                               session as it stands: a
-                                                               handshake with the live calls
-```
-
-### Callback registration
-
-```dart
-// top-level function, annotated to survive tree-shaking
-@pragma('vm:entry-point')
-Future<void> onSignalingBackgroundIncomingCall(IncomingCallEvent event) async {
-  await callkeep.reportNewIncomingCall(
-    event.callId,
-    CallkeepHandle.number(event.caller),
-    displayName: event.callerDisplayName,
-    hasVideo: JsepValue.fromOptional(event.jsep)?.hasVideo ?? false,
-  );
-}
-
-// register once per session, before start()
-if (Platform.isAndroid) {
-  await service.setIncomingCallHandler(onSignalingBackgroundIncomingCall);
-}
-```
-
-Key constraints:
-
-- Must be a **top-level** function with `@pragma('vm:entry-point')` — class methods will not work.
-- The plugin resolves the raw handle internally via `PluginUtilities.getCallbackHandle` and persists it to `SharedPreferences`; the background isolate reads it at each sync.
-- On iOS `setIncomingCallHandler` is a no-op — callkeep integration uses PushKit directly.
+Your app manifest needs `INTERNET`. On API 34+ a `phoneCall` service also needs
+`MANAGE_OWN_CALLS` (or the dialer role), which the plugin does not declare; the app gets it from
+`webtrit_callkeep_android`.
 
 ---
 
@@ -350,14 +63,22 @@ Key constraints:
 ### Persistent mode (default)
 
 ```dart
-final service = WebtritSignalingService();
-
-// Register background incoming-call handler (Android only, before start).
+// Register the module factory (every platform) and the call-event handler
+// (Android only) before the first instance.
+await WebtritSignalingService.setModuleFactory(createSignalingModule);
 if (Platform.isAndroid) {
-  await service.setIncomingCallHandler(onSignalingBackgroundIncomingCall);
+  await WebtritSignalingService.setCallEventHandler(onSignalingBackgroundCallEvent);
 }
 
-// Subscribe before start() -- session buffer replays to late subscribers.
+final service = WebtritSignalingService(
+  config: SignalingServiceConfig(
+    coreUrl: 'wss://demo.webtrit.com',
+    tenantId: 'default',
+    token: '<auth-token>',
+  ),
+);
+
+// Subscribe before connect() -- session buffer replays to late subscribers.
 service.events.listen((event) {
   switch (event) {
     case SignalingConnected():
@@ -373,21 +94,15 @@ service.events.listen((event) {
   }
 });
 
-await service.start(SignalingServiceConfig(
-  coreUrl: 'wss://demo.webtrit.com',
-  tenantId: 'default',
-  token: '<auth-token>',
-));
+service.connect();
 ```
 
 ### Push-initiated mode
 
 ```dart
-// In the push isolate / background entry point:
-await service.start(config, mode: SignalingServiceMode.pushBound);
-
-// In the main Activity, when the user opens the app:
-await service.attach(); // connects to the already-running hub
+// In the push isolate and in the main Activity alike - each opens its own socket:
+final service = WebtritSignalingService(config: config, mode: SignalingServiceMode.pushBound);
+service.connect();
 ```
 
 ### Switch mode at runtime
@@ -412,7 +127,9 @@ await service.execute(HangupRequest(
 ### Stop the service
 
 ```dart
+await service.disconnect();
 await service.dispose();
+await WebtritSignalingService.stopService(); // on logout: stops the Android service, clears its credentials
 ```
 
 ---
@@ -423,20 +140,25 @@ await service.dispose();
 
 | Method / property | Description |
 | --- | --- |
+| `WebtritSignalingService({config, mode, startPendingTimeout})` | `mode` defaults to `SignalingServiceMode.persistent`; `startPendingTimeout` (30 s) retries `connect()` when no terminal event follows a start |
 | `events` | Broadcast `Stream<SignalingModuleEvent>` |
-| `start(config, {mode})` | Starts the platform service; `mode` defaults to `SignalingServiceMode.persistent` |
-| `attach()` | Connects to an already-running hub without starting a new service |
-| `execute(request)` | Sends a `Request` via the active connection; throws `StateError` when not connected |
+| `connect()` / `disconnect()` | Starts the platform in the instance's mode (idempotent) / closes the connection |
+| `execute(request)` | Sends a `Request` while connected; queues it while disconnected and flushes the queue on `SignalingConnected` |
+| `cancelRequestsByCallId(callId)` | Drop the queued requests of a call that is being torn down, and refuse new ones for it |
+| `clearTerminatingMark(callId)` | Lift that refusal, so requests for the call id are queued again |
+| `setModuleFactory(factory)` | Static. Registers the `SignalingModuleFactory`; required on every platform before `connect()` |
 | `updateMode(mode)` | Static. Switches the lifecycle mode of the platform and of every live instance, so a later `connect()` keeps the new mode |
-| `setIncomingCallHandler(callback)` | Registers app-side background incoming-call callback (Android only; no-op on iOS) |
-| `dispose()` | Stops the service and releases all resources |
+| `setCallEventHandler(callback)` | Static. Registers the app-side background call-event callback (Android only; no-op on iOS and web) |
+| `stopService()` / `restoreService()` / `simulateKill()` | Static. Stop the Android service and clear its credentials / bring the persistent service back after an OS kill / stop it without a graceful disconnect (dev tools) |
+| `setHandoffCallback(callback)` | Static. Push-isolate handoff for `pushBound`; the app does not register it |
+| `dispose()` | Cancels the events subscription, fails queued requests and releases platform resources |
 
 ### `SignalingServiceMode`
 
 | Value | Behaviour |
 | --- | --- |
-| `persistent` | Service runs indefinitely; survives app close; restarted on boot |
-| `pushBound` | Service stops when the Activity is removed (`onTaskRemoved`); suited for push-initiated calls |
+| `persistent` | Android only: the socket lives in a foreground service; survives app close; restarted after a kill (default) |
+| `pushBound` | The socket lives in the calling isolate, no service; what the app passes unless the user opts into socket mode |
 
 ### `SignalingServiceConfig`
 
@@ -461,79 +183,29 @@ await service.dispose();
 
 ---
 
-## Android background service
-
-The Android implementation runs `WebtritSignalingClient` inside `SignalingForegroundService`
-(`foregroundServiceType="remoteMessaging"`), which holds a `WAKE_LOCK` and survives app
-backgrounding. Events are bridged to the main isolate via `IsolateNameServer` — no second
-WebSocket is opened. The service is automatically restarted after device reboot or app reinstall
-via `SignalingBootReceiver` (`BOOT_COMPLETED`, `LOCKED_BOOT_COMPLETED`, `MY_PACKAGE_REPLACED`).
-
-Required `AndroidManifest.xml` permissions (declared by the plugin, merged automatically):
-
-```xml
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
-<uses-permission android:name="android.permission.WAKE_LOCK" />
-<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-```
-
-Your app manifest only needs `INTERNET`.
-
----
-
-## Session buffer and late subscribers
-
-`SignalingModule` (service isolate) and the Android plugin (main isolate) maintain an internal
-session buffer — the lifecycle events since the last `SignalingConnecting` and the current
-handshake. Any new subscriber receives this buffer synchronously on `.listen()`, making it safe
-to subscribe after `start()` or `attach()` has already returned. The buffer is cleared on each
-reconnect so stale events from a previous session are never replayed. `SignalingHubModule` has
-none: `HubConnectionManager` listens to it before the hub's ack, and the hub's replay is
-delivered once.
-
-Across the isolate boundary the hub replays state rather than events: a `SessionSnapshot` keeps
-the session's handshake current with the registration events and every call's events on its
-line, and a subscriber that attaches late receives the lifecycle events with a handshake
-rendered from it - a ringing call as a line whose log carries the offer, an answered call with
-its accepted event, an ended call gone. Protocol events are never replayed to a late subscriber.
-
----
-
 ## Integration tests
 
 Located in
-[`signaling_service_android/test/integration/`](signaling_service_android/test/integration/).
+[`signaling_service_android/test/integration/`](signaling_service_android/test/integration).
 
 | Test file | What it covers |
 | --- | --- |
 | `hub_client_integration_test.dart` | Hub registration, subscribe/ack, event broadcast, session buffer replay, execute routing |
 | `bloc_flow_integration_test.dart` | Positive API flows, BLoC consumer patterns, `SignalingForegroundIsolateManager` lifecycle |
 | `stress_integration_test.dart` | Event throughput (200 events, 5 clients), concurrent clients, rapid lifecycle cycles |
-| `attach_pattern_integration_test.dart` | `attach()` pattern: session buffer replay, live events, execute routing, push+main coexistence, `pushBound`/`persistent` lifecycle cycles |
+| `hub_connection_adoption_test.dart` | Events held until the hub's ack and forwarded once; teardown and a superseded attempt while waiting for it |
+| `hub_connection_manager_integration_test.dart` | `HubConnectionManager`: connecting to a hub that runs or starts later, forwarding events, teardown, reconnect |
+| `attach_pattern_integration_test.dart` | Hub attach pattern: session buffer replay, live events, execute routing, push+main coexistence, `pushBound`/`persistent` lifecycle cycles |
 
-Run on a connected device:
+They run on the host with the rest of `test/`, no device needed:
 
 ```bash
 cd signaling_service_android
-flutter test integration_test/<test_file>.dart --device-id <device-id>
-```
-
----
-
-## Example app
-
-[`signaling_service/example/`](signaling_service/example/) demonstrates
-start/stop, connection status, handshake info, and a live event log.
-
-```bash
-cd signaling_service/example
-flutter run -d <device-id>
+flutter test test/integration/<test_file>.dart
 ```
 
 ---
 
 ## License
 
-[MIT](LICENSE)
+[MIT](../../LICENSE)

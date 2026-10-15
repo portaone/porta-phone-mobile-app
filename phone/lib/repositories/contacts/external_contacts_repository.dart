@@ -7,7 +7,7 @@ import 'package:webtrit_phone/models/models.dart';
 ///
 /// Deliberately fetch-only: `ExternalContactsSyncWorker` is registered once
 /// with the polling service, and manual calls use its owner's runner capability,
-/// so the app has no competing download path (see `docs/polling.md`).
+/// so the app has no competing download path (see `docs/architecture/polling.md`).
 ///
 /// An abstract contract on purpose: the backend serves the list through two
 /// API generations - the full-list v1 and the paginated v2 - and each is an

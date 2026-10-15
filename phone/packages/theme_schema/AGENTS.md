@@ -62,7 +62,7 @@ A brand-new **root** type takes two more lines - see [Recipes](#recipes).
 
 Nothing above needs you to remember what the schema can and cannot describe: the shapes that
 break it are listed under [Rules for extending the contract](#rules-for-extending-the-contract),
-and `dart test` names the rule you broke and what to write instead. Worked examples are in
+and `flutter test` names the rule you broke and what to write instead. Worked examples are in
 [Recipes](#recipes).
 
 ## Constraints
@@ -76,10 +76,9 @@ and `dart test` names the rule you broke and what to write instead. Worked examp
 
 Every root type publishes the JSON Schema (draft 2020-12) of its JSON. It is not a by-product:
 it is what a configurator generates a form from, and what validates a theme document before the
-app is asked to parse it. Two guarantees hold and are tested:
+app is asked to parse it. It is meant to give two guarantees; only the second is tested:
 
-- **complete** - every JSON key the generated `toJson` writes appears in the schema (610 keys
-  across 132 types);
+- **complete** - every JSON key the generated `toJson` writes appears in the schema;
 - **true of the app's own documents** - `test/theme/shipped_theme_validates_test.dart` in the
   parent project runs a real JSON Schema validator over every file in `assets/themes/`, and they
   pass with no errors.
@@ -119,9 +118,9 @@ print(const JsonEncoder.withIndent('  ').convert(ThemeSettings.jsonSchema));
 | `build.yaml` | declares and applies the builder. It does **not** enable the schema option |
 
 json_serializable writes a `_$<Type>JsonSchema` constant for a class whose annotation carries
-`createJsonSchema: true` - the three roots and the 16 union variants, the only ones whose
+`createJsonSchema: true` - the three roots and the 17 union variants, the only ones whose
 constant anything reads. Asked for in `build.yaml` instead, it writes one for all 135 annotated
-classes, of which 116 are private to their library and read by nothing.
+classes, of which 115 are private to their library and read by nothing.
 
 That constant is **private to its library**, so a `jsonSchema` member in the class is the only
 way anything outside the file can reach it. A root's wraps the constant in the three assemblies,
@@ -233,7 +232,7 @@ than by what the JSON carries. That is the reason for the rule against adding on
 
 ```bash
 dart run build_runner build     # regenerates the three tables and the schema constants
-dart test                        # the contract rules and the published schema
+flutter test                     # the contract rules and the published schema
 ```
 
 | Test | What it catches |
@@ -253,8 +252,8 @@ wrongly fails there rather than passing quietly.
 dart pub get
 dart run build_runner build --delete-conflicting-outputs
 dart run build_runner watch --delete-conflicting-outputs
-dart test
-dart test test/app_config_main_parsing_test.dart
+flutter test
+flutter test test/app_config_main_parsing_test.dart
 ```
 
 ## Code Style

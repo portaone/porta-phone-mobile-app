@@ -10,7 +10,7 @@ CallKit + PushKit).
 ```text
 webtrit_callkeep_ios/
 ├── lib/src/
-│   ├── webtrit_callkeep_ios.dart       # WebtritCallkeepIOS — platform impl
+│   ├── webtrit_callkeep_ios.dart       # WebtritCallkeep — platform impl
 │   └── common/
 │       ├── callkeep.pigeon.dart        # Pigeon-generated Dart bindings (DO NOT EDIT)
 │       └── converters.dart             # Extension methods: Pigeon ↔ platform_interface types

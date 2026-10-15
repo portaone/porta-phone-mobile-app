@@ -2,7 +2,7 @@
 
 Android platform implementation. Two layers: Dart (Flutter side) and Kotlin (native side).
 
-> Detailed per-component architecture documentation lives in **[docs/](docs/)**.
+> Detailed per-component architecture documentation lives in **[docs/](docs)**.
 > Start with **[docs/architecture.md](docs/architecture.md)**.
 > Before modifying any Kotlin component, read the corresponding doc in `docs/`.
 
@@ -24,7 +24,7 @@ webtrit_callkeep_android/
     ├── services/                        # Android services (see below)
     ├── models/                          # Kotlin data models
     ├── managers/                        # Audio, notification channel management
-    └── api/                             # Pigeon-generated Kotlin APIs (DO NOT EDIT)
+    └── Generated.kt                     # Pigeon-generated Kotlin APIs (DO NOT EDIT)
 ```
 
 ---
@@ -53,8 +53,7 @@ through `CallkeepCore.instance`, not `connectionManager` directly.**
 - State reads: `CallkeepCore.instance.getAll()`, `.exists()`, `.getState()`, etc. -- backed by
   `MainProcessConnectionTracker`.
 - Commands: `CallkeepCore.instance.startAnswerCall()`, `.tearDownService()`,
-  `.sendTearDownConnections()`, etc. -- dispatched via explicit `startService` intents or app-scoped
-  broadcasts.
+  `.sendTearDownConnections()`, etc. -- dispatched via explicit `startService` intents.
 
 **Never touch connection state via `connectionManager.*` from the main process.**
 `PhoneConnectionService` runs in the `:callkeep_core` OS process -- the connections held by
@@ -71,22 +70,26 @@ All cross-process communication uses app-scoped broadcasts (`sendBroadcast` with
 explicit `startService` intents. Events are grouped by broadcaster:
 
 **CallLifecycleEvent** (`:callkeep_core` -> Main):
-`AnswerCall`, `DeclineCall`, `HungUp`, `OngoingCall`, `DidPushIncomingCall`, `OutgoingFailure`,
-`IncomingFailure`, `ConnectionNotFound`
+`AnswerCall`, `DeclineCall`, `HungUp`, `OngoingCall`, `IncomingConnectionReported`, `ConnectionStateChanged`,
+`ReplayIncomingCall`, `OutgoingFailure`, `IncomingFailure`, `ConnectionNotFound`
 
 **CallMediaEvent** (`:callkeep_core` -> Main):
 `AudioMuting`, `AudioDeviceSet`, `AudioDevicesUpdate`, `SentDTMF`, `ConnectionHolding`
 
-**CallCommandEvent** (Main -> `:callkeep_core`, with one ack going the other way):
+**Commands** (Main -> call backend) are explicit `startService` intents, not broadcasts:
+`CallServiceRouter` sends a `ServiceAction` to `PhoneConnectionService` on the Telecom path, or a
+`StandaloneServiceAction` to `StandaloneCallService` without Telecom. The only `CallCommandEvent`
+sent is the `TearDownComplete` ack; every other row is a `ServiceAction` / `StandaloneServiceAction`
+command:
 
-| Event                 | Direction                | Payload  | Purpose                                                                                                                                                  |
+| Command / ack         | Direction                | Payload  | Purpose                                                                                                                                                  |
 |-----------------------|--------------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `TearDownConnections` | Main -> `:callkeep_core` | --       | Trigger `hungUp()` + `cleanConnections()` on all PhoneConnections                                                                                        |
-| `TearDownComplete`    | `:callkeep_core` -> Main | --       | Ack that tearDown completed                                                                                                                              |
-| `ReserveAnswer`       | Main -> `:callkeep_core` | `callId` | Deferred answer reservation cross-process                                                                                                                |
-| `CancelIncomingCall`  | Main -> `:callkeep_core` | `callId` | Withdraw an incoming call rejected before the app presented it; a later Telecom creation or answer of it is refused                                      |
-| `CleanConnections`    | Main -> `:callkeep_core` | --       | Clear all connections without `hungUp()`                                                                                                                 |
-| `ReplayAudioState`    | Main -> `:callkeep_core` | --       | Ask all PhoneConnections to re-emit audio device + mute state; used by `ForegroundService.onDelegateSet()` to restore Flutter audio UI after hot restart |
+| `TearDownConnections` | Main -> backend          | --       | Trigger `hungUp()` + `cleanConnections()` on all PhoneConnections                                                                                        |
+| `TearDownComplete`    | backend -> Main          | --       | Ack that tearDown completed                                                                                                                              |
+| `ReserveAnswer`       | Main -> backend          | `callId` | Deferred answer reservation, made before the connection exists                                                                                           |
+| `CancelIncomingCall`  | Main -> backend          | `callId` | Withdraw an incoming call rejected before the app presented it; a later Telecom creation or answer of it is refused                                      |
+| `CleanConnections`    | Main -> backend          | --       | Clear all connections without `hungUp()`                                                                                                                 |
+| `ReplayAudioState`    | Main -> backend          | --       | Ask all PhoneConnections to re-emit audio device + mute state; used by `ForegroundService.onDelegateSet()` to restore Flutter audio UI after hot restart |
 
 ---
 
@@ -96,8 +99,9 @@ explicit `startService` intents. Events are grouped by broadcaster:
 |--------------------------|------------------|---------------------------------------------------------|
 | `PhoneConnectionService` | `:callkeep_core` | Telecom integration; creates/destroys `PhoneConnection` |
 | `ForegroundService`      | main             | Active call; Pigeon host; mute/hold/speaker/DTMF        |
-| `IncomingCallService`    | main             | One-shot push-notification-triggered call handling      |
+| `IncomingCallService`    | main             | Ringing call on the Telecom path; one-shot push isolate |
 | `ActiveCallService`      | main             | Notification for multiple simultaneous calls            |
+| `StandaloneCallService`  | main             | Calls without Telecom (unsupported device or API < 26)  |
 
 ---
 
@@ -110,11 +114,11 @@ explicit `startService` intents. Events are grouped by broadcaster:
    ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
    ```
 
-3. Commit both the input file and all generated output (`callkeep.pigeon.dart`, Kotlin files under
-   `android/`).
+3. Commit both the input file and all generated output (`callkeep.pigeon.dart`,
+   `android/src/main/kotlin/com/webtrit/callkeep/Generated.kt`).
 
-**Never manually edit** `lib/src/common/callkeep.pigeon.dart` or Kotlin files under
-`android/src/main/kotlin/…/api/`.
+**Never manually edit** `lib/src/common/callkeep.pigeon.dart` or
+`android/src/main/kotlin/com/webtrit/callkeep/Generated.kt`.
 
 When adding a converter for a new Pigeon type, add an extension in `lib/src/common/converters.dart`.
 
@@ -145,7 +149,7 @@ isolate uses `CallkeepBackgroundServiceDelegate` (`performAnswerCall`, `performE
 - Configured via `initializeSmsReception(messagePrefix:, regexPattern:)`.
 - A matched message is registered through `CallkeepCore.registerIncomingCall`, the same operation
   as push and signaling, so it joins a report of the same call and gets its outcome.
-- Full regex spec: `docs/sms_trigger_regex_requirements.md` at repo root.
+- Full regex spec: `../docs/sms_trigger_regex_requirements.md` (in `callkeep/docs/`).
 
 ---
 

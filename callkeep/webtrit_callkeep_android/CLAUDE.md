@@ -24,7 +24,7 @@ contains two layers:
 # From this directory
 flutter pub get
 flutter analyze lib test
-dart format --line-length 80 --set-exit-if-changed lib test
+dart format --line-length 120 --set-exit-if-changed $(git ls-files 'lib/*.dart' 'test/*.dart' ':!:*.pigeon.dart')
 
 # Pigeon regeneration (after editing pigeons/callkeep.messages.dart)
 ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave

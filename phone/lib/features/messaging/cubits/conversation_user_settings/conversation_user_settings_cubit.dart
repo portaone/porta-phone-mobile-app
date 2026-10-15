@@ -33,7 +33,7 @@ final _logger = Logger('ConversationUserSettingsCubit');
 /// cubit's subscription.
 ///
 /// The timer does no work of its own - no request, no write - which is what
-/// keeps it out of the polling rules in docs/polling_workers.md: those govern
+/// keeps it out of the polling rules in docs/architecture/polling_workers.md: those govern
 /// refresh cycles, and this is a clock.
 class ConversationUserSettingsCubit extends Cubit<ConversationUserSettingsState> with WidgetsBindingObserver {
   ConversationUserSettingsCubit({required this.chatsRepository, required this.smsRepository})

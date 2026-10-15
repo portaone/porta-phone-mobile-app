@@ -28,7 +28,6 @@ No code generation, no build_runner, no state management.
 ```bash
 dart analyze
 dart format --line-length 120 lib/
-dart test
 ```
 
 ## Code Style
@@ -37,5 +36,5 @@ dart test
 
 ## Dependencies
 
-- `http: ^1.5.0` — `Client`, `IOClient`, `BrowserClient`
+- `http: ^1.6.0` — `Client`, `IOClient`, `BrowserClient`
 - `ssl_certificates` (local `../ssl_certificates`) — `TrustedCertificates`, `initializeSecurityContext`

@@ -19,6 +19,7 @@ WebtritApiClient(Uri baseUrl, String tenantId, {
   Duration? connectionTimeout,
   TrustedCertificates certs,
   bool isDebug = false,
+  String? userAgent,
 })
 ```
 
@@ -44,9 +45,13 @@ Never edit `.freezed.dart` / `.g.dart` — re-run `build_runner`.
 | `User*` | Authenticated user data and contacts |
 | `App*` | App-level status, contacts, push tokens |
 | `System*` | Health, system info, notifications |
-| `Cdr` | Call detail records |
+| `Cdr*` | Call detail records |
 | `Voicemail*` / `UserVoicemail*` | Voicemail resources |
 | `CallerIdSettings` | Caller-ID preferences |
+| `CallQueue*` | Call queues |
+| `Favorite*` / `SipSubscription*` | Server-side favorites and SIP subscriptions, with batch sync |
+| `IceServer*` | STUN/TURN servers |
+| `SelfConfigResponse`, `ExternalPageAccessToken` | Self-config and embedded-page access |
 | `Demo*` | Demo/CTA endpoints |
 
 ## Exceptions
@@ -66,6 +71,8 @@ body, and classification getters: `isClientError` (4xx), `isServerError` (5xx),
 | `VoicemailNotConfiguredException` | `voicemail_not_configured` |
 | `VoicemailMessageGoneException` | `message_not_found` on the voicemail endpoints - the mailbox no longer has that message. By the code, not the status: these calls are optional, so a bare 404 means the route is absent |
 | `SystemNotificationGoneException` | `notification_not_found` on `deleteSystemNotification` and `markSystemNotificationAsSeen` - another device or the retention cleaner deleted it since the list was read |
+| `CallQueueNotFoundException` | `call_queue_not_found` on the call queue endpoints |
+| `VoicemailForwardRecipientNotFoundException` / `VoicemailForwardAttachmentTooLargeException` / `VoicemailForwardLimitReachedException` | `recipient_not_found` / `attachment_too_large` / `recipient_forward_limit_reached`, on forwarding a voicemail only |
 | `PasswordChangeRequiredException` | `password_change_required` |
 | `DeviceLimitReachedException` | 409 with `device_limit_reached` on the calls that end in a session (`createSession`, `verifySessionOtp`, `createSessionAutoProvision`, `createUser`, `completeSession`). Carries the account's `sessions` and the `pendingLoginToken`; with a token the login is finished by `completeSession`, without one nothing here can be revoked |
 | `DeviceSwitchLimitReachedException` | 403 with `device_switch_limit_reached` on the same calls |
@@ -91,9 +98,9 @@ Depends on `../_http_client` (path dep) for `createHttpClient()` and `TrustedCer
 ## Commands
 
 ```bash
-dart test
-dart test test/api_test.dart
-dart test --name "buildTenantUrl"
+flutter test
+flutter test test/api_test.dart
+flutter test --name "buildTenantUrl"
 dart run build_runner build --delete-conflicting-outputs
 dart run build_runner watch --delete-conflicting-outputs
 ```

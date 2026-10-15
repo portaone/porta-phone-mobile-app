@@ -91,7 +91,7 @@ class AppDependenciesBuilder {
   /// with `context.read<T>()`.
   ///
   /// The tree receives it by value, so no provider can close it: the app owns
-  /// it for as long as it runs (see `docs/dependency_ownership.md`).
+  /// it for as long as it runs (see `docs/architecture/dependency_ownership.md`).
   T share<T>(T instance) {
     _ensureCollecting();
     if (!_sharedTypes.add(T)) {

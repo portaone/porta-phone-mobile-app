@@ -1,7 +1,7 @@
 # Call - UX / product
 
 The product-level view of the calling experience: what the user can do, the
-screen states, the widgets that back them, and the in-progress redesign. The
+screen states and the widgets that back them. The
 implementation deep-dive lives in [`call_arch.md`](call_arch.md).
 
 Last reviewed: 2026-09-28
@@ -60,6 +60,9 @@ Multiple calls (list-based):
 - Answer is one intent (`CallControlEvent.answerFocused`): it holds the
   answered calls when possible, ends the non-holdable ones (e.g. an outgoing
   call still ringing), and leaves another ringing incoming call ringing.
+- Hold pauses the focused call; Resume brings it back as the only live call,
+  holding the others first. There is no swap button: switching lines is focusing
+  the other row and pressing Resume.
 
 ### Focused call
 
@@ -102,7 +105,7 @@ focus to follow - see
 The screen turns only during a call (the app is portrait-locked elsewhere).
 This screen is the reference implementation of the adaptive-layout playbook -
 the generalized approach for giving any screen a second arrangement lives in
-[`../adaptive_layout.md`](../adaptive_layout.md).
+[`../architecture/adaptive_layout.md`](../architecture/adaptive_layout.md).
 Landscape is a real arrangement, not the shrunk portrait column it used to be:
 the caller info (avatar beside the left-ranged name/timer, or the roster with
 several calls) takes the left, the control grid stands beside it, and the
@@ -114,46 +117,7 @@ in the info zone next to the caller, the closing button stands under the
 hangup, and turning the phone keeps an open keypad open - but focusing another
 call closes it, because a DTMF session belongs to the call it was opened for.
 
-## Redesign / in progress - list-based call flow
-
-The multi-call UI is being reworked into a single, consistent model:
-
-- The screen is always a **list of calls** - 1 call is a list of 1, N calls a
-  list of N. No separate "incoming" vs "active" screen.
-- Each row shows name + a status badge (RINGING / ON CALL / ON HOLD) + timer.
-  When more than one call exists, a header reads "N calls - tap to choose".
-- **Focus, then act**: tap a row to focus it; one bottom action area acts on the
-  focused call only, with an "Acting on: <name>" hint that spells the side effect
-  ("<other> will be put on hold"). At most two action buttons for a ringing
-  focus (Decline / Answer); the in-call control grid for an active/held focus.
-- This removes the combined-icon row, which was hard to read at the worst moment
-  (resolves the "unclear second-incoming buttons" reports, WT-1071 / WT-1462).
-
-Rollout is incremental (foundations first, then UI), each step behind tests:
-
-| Stage                | Scope                                                                                                                                                                                                                                        | Status            |
-|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
-| Focus state          | `selectedCallId` + `focusedCall` + `callSelected` event (invisible groundwork)                                                                                                                                                               | Merged (PR #1376) |
-| Action intents       | Combined actions (hold&accept / hangup&accept / swap) move into bloc intents                                                                                                                                                                 | Merged (PR #1378) |
-| Call list            | Selectable list of calls + status badges + header; auto-focus rules; info + action area bind to the focused call                                                                                                                             | Merged (PR #1379) |
-| Focused actions      | "Acting on" hint + two-button ringing focus (single answerFocused intent); combined-icon buttons removed                                                                                                                                     | Merged (PR #1380) |
-| Cleanup / edges      | Dead-code and obsolete l10n removal; scaffold-level widget tests for single/multi/3-call states                                                                                                                                              | Merged (PR #1381) |
-| Toolbar status       | Signaling/connectivity status, media failures and stream quality move to the AppBar status line (global, worst across calls); the central info block keeps only name/description/duration                                                    | Merged (PR #1385) |
-| Visual alignment     | Status dots on rows, short Incoming/Outgoing trailing labels, central info block single-call only, acting-on hint as a translucent pill with highlighted names                                                                               | Merged (PR #1386) |
-| Hold/Resume on focus | The hold slot always acts on the focused call (pause/play glyph); Resume holds the other live calls first; the swap button is gone - switching lines = focus a row + Resume                                                                  | Merged (PR #1387) |
-| Row overlay polish   | Call rows use light overlay tints of the on-screen text color: focused = brighter + light border (design polarity), bigger radius and padding                                                                                                | Merged (PR #1388) |
-| Video line badge     | A camera glyph next to the trailing label marks video lines in the call list                                                                                                                                                                 | Merged (PR #1389) |
-| Themed color roles   | Call-list rows/dots and the acting-on hint take colors from the theme pipeline: CallPageListConfig/CallPageHintConfig in theme_schema -> assets/themes JSONs -> CallListStyle/FocusedActionHintStyle; no fixed colors in widgets | In review         |
-| Landscape            | Three-zone landscape arrangement (info / grid / isolated hangup), the shared info-block and action-area widgets both orientations place, keypad unlocked in landscape with the digits beside the caller, Answer greyed out instead of vanishing during the interaction debounce | In review (PRs #1822, #1821) |
-
-The redesign lands on the `refactor/call` integration branch - every stage is a
-PR into that branch, and once the whole flow is tested there a single PR merges
-it into `develop`. `develop` therefore stays shippable throughout; no feature
-flag is involved.
-
 ## Keeping this doc current
 
-Update this file in the same PR that changes the call UI - especially the
-"Call states" and "Redesign / in progress" sections, and bump `Last reviewed`.
-When a redesign stage lands, move it to the shipped behavior above and update its
-status here.
+Update this file in the same change that changes the call UI - especially the
+"Call states" section - and bump `Last reviewed`.

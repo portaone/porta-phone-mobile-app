@@ -14,4 +14,4 @@ Each platform package has its own AGENTS.md with package-specific guidance:
 
 ## Contributing
 
-Branch naming, commit message format, git hooks setup, and PR conventions are documented in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+Commit message format and Gerrit review are in the root **[AGENTS.md](../AGENTS.md)**; the callkeep hooks are in **[CONTRIBUTING.md](CONTRIBUTING.md)**.

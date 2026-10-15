@@ -22,7 +22,7 @@ This package defines the **shared contract** between the aggregator and all plat
 | `lib/src/delegate/callkeep_push_registry_delegate.dart` | `PushRegistryDelegate` — iOS PushKit token/call events |
 | `lib/src/models/` | All shared data classes and enums |
 | `lib/src/consts/` | Call path keys/values, call data constants |
-| `lib/src/helpers/` | `AndroidPendingCallHandler` and other utilities |
+| `lib/src/helpers/` | `PendingCall` (`android_pending_call_handler.dart`) |
 
 ---
 
@@ -61,7 +61,7 @@ Key models:
 | `CallkeepOptions` | Top-level config; contains `CallkeepIOSOptions` and `CallkeepAndroidOptions` |
 | `CallkeepIncomingCallMetadata` | Metadata passed to background isolate callbacks |
 | `CallkeepIncomingCallWhileRinging` | Android: a second incoming call while one rings waits in callkeep's queue (`queue`, default) or is refused and declined (`reject`); set in `CallkeepAndroidOptions` |
-| `CallkeepServiceStatus` | Combines `CallkeepLifecycleEvent` + optional `CallkeepSignalingStatus` |
+| `CallkeepServiceStatus` | Wraps a `CallkeepLifecycleEvent` |
 | `CallkeepConnection` | Snapshot of a tracked connection's state |
 | `CallkeepEndCallReason` | Enum for why a call ended (remoteEnded, failed, unanswered, etc.) |
 | `CallkeepAudioDevice` | Represents an audio output device with type, id, name |

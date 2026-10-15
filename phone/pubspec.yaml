@@ -143,9 +143,9 @@ dependencies:
   theme_schema:
     path: ./packages/theme_schema
   webtrit_callkeep:
-    # develop tracks the local working copy of callkeep for co-development.
-    # On release branches this is pinned to a callkeep tag (see docs/release_versioning.md).
-    # Never back-merge a git ref onto develop - keep this a path here (enforced by callkeep-path-guard).
+    # master tracks the working copy of callkeep in this repository for co-development.
+    # Release branches use the same path; callkeep is not tagged (see docs/reference/callkeep_dependency.md).
+    # On master this is always a path (no check enforces it).
     path: ../callkeep/webtrit_callkeep
   phone_number:
     path: ./packages/phone_number

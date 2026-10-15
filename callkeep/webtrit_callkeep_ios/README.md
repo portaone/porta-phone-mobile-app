@@ -41,7 +41,7 @@ simulators. Test on a physical device.
 ```text
 webtrit_callkeep_ios/
 ├── lib/src/
-│   ├── webtrit_callkeep_ios.dart     # WebtritCallkeepIOS — registers as platform instance
+│   ├── webtrit_callkeep_ios.dart     # WebtritCallkeep — registers as platform instance
 │   └── common/
 │       ├── callkeep.pigeon.dart      # Pigeon-generated Dart bindings (DO NOT EDIT)
 │       └── converters.dart           # Pigeon <-> platform_interface type conversions
@@ -170,7 +170,7 @@ Never manually edit `lib/src/common/callkeep.pigeon.dart` or the Pigeon-generate
 ```bash
 flutter pub get
 flutter analyze lib test
-dart format --line-length 80 --set-exit-if-changed lib test
+dart format --line-length 120 --set-exit-if-changed $(git ls-files 'lib/*.dart' 'test/*.dart' ':!:*.pigeon.dart')
 ```
 
 ---

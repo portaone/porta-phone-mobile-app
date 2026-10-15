@@ -11,15 +11,15 @@ Run all commands from `packages/data/app_database/`:
 dart run build_runner build          # generate Drift code after editing tables/DAOs
 dart run build_runner watch          # watch mode
 dart run bin/create_new_schema_dump_and_test_migration.dart  # after adding/modifying a table
-dart test
-dart test test/migrations_test.dart
-dart test test/contacts_dao_test.dart
+flutter test
+flutter test test/migrations_test.dart
+flutter test test/contacts_dao_test.dart
 ```
 
 ## Architecture
 
-- `lib/src/tables/` — 34 Drift table definitions
-- `lib/src/daos/` — 18 DAOs
+- `lib/src/tables/` — 36 Drift table definitions
+- `lib/src/daos/` — 16 DAOs
 - `lib/src/migrations/` — one file per schema version (`migration_v2.dart` … `migration_vN.dart`)
 - `lib/src/migrations/generated/` — generated schema helpers (do not edit)
 - `lib/src/drift_schemas/` — JSON schema snapshots (do not edit)
@@ -49,7 +49,8 @@ then reshapes it again. It cost 74 red migration tests once; every migration
 here now pins its version.
 
 These tests are **not in the pre-push gate** — `phone-test` runs `flutter test`
-in `phone/` and stops there. Run `dart test` in this package by hand after any
+in `phone/` and stops there; Jenkins runs them on patchsets that touch `TEST_PATHS` in
+`.jenkins/gerrit_check_phone.groovy`. Run `flutter test` in this package by hand after any
 schema change.
 
 ### Table Conventions
@@ -94,17 +95,19 @@ for the rare case where local priority is intentional.
 |---------------|--------------------------------------------------------------------------------|--------------------------------------------------------|
 | Contacts      | contacts, contact_phones, contact_emails                                       | ContactsDao, ContactPhonesDao, ContactEmailsDao        |
 | Call history  | call_logs                                                                      | CallLogsDao, RecentsDao                                |
-| Chats         | chats, chat_members, chat_messages, chat outbox (3), cursors (2)               | ChatsDao                                               |
-| SMS           | sms_conversations, sms_messages, sms outbox (3), cursors (2)                  | SmsDao                                                 |
-| Voicemail     | voicemail                                                                      | VoicemailDao                                           |
-| Notifications | active_message_notifications, system_notifications, outbox                    | ActiveMessageNotificationsDao, SystemNotificationsDao  |
+| Chats         | chats, chat_members, chat_messages, chat_user_settings, chat outbox (4), cursors (2) | ChatsDao                                               |
+| SMS           | sms_conversations, sms_conversation_user_settings, sms_messages, user_sms_numbers, sms outbox (3), cursors (2) | SmsDao                                                 |
+| Voicemail     | voicemails                                                                     | VoicemailDao                                           |
+| Notifications | active_messaging_notifications, system_notifications, system_notifications_outbox | ActiveMessageNotificationsDao, SystemNotificationsDao  |
 | Presence      | presence_info                                                                  | PresenceInfoDao                                        |
-| Favorites     | favorites                                                                      | FavoritesDao                                           |
-| CDR           | cdr, cdr_sync_cursors (one row per watermark kind)                             | CdrsDao                                                |
+| Favorites     | favorites, favorites_outbox, favorites_v2                                      | FavoritesDao, FavoritesV2Dao                           |
+| CDR           | cdrs, cdr_sync_cursors (one row per watermark kind)                             | CdrsDao                                                |
+| SIP subscriptions | sip_subscriptions, sip_subscriptions_outbox                                | SipSubscriptionsDao                                    |
+| Dialog info   | dialog_info                                                                    | DialogInfoDao                                          |
 
 ### Outbox Pattern
 
-Offline-support writes use dedicated outbox tables (e.g. `chat_outbox_message`,
+Offline-support writes use dedicated outbox tables (e.g. `chat_outbox_messages`,
 `sms_outbox_messages`). Edits, deletes, and read receipts each have their own outbox table,
 synced asynchronously.
 

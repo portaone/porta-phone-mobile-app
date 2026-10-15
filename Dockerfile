@@ -72,8 +72,7 @@ CMD rc=0; for d in webtrit_callkeep*; do \
       (cd "$d" && flutter test --no-pub --concurrency=$(nproc) --reporter=failures-only) || rc=1; \
     done; exit $rc
 
-# Robolectric JVM tests of callkeep/webtrit_callkeep_android, as
-# callkeep/.github/workflows/android-unit-tests.yml runs them. The module compiles against
+# Robolectric JVM tests of callkeep/webtrit_callkeep_android. The module compiles against
 # the Flutter engine jar: Flutter's Android artifacts, JDK 17 (test toolchain), JDK 21
 # (Gradle daemon JVM) and the Android SDK.
 FROM flutter AS callkeep-android-test

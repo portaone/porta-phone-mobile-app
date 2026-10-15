@@ -1,0 +1,203 @@
+# Build & Development Process Overview
+
+How to build, run, sign, and ship the WebTrit Phone project.
+
+Last reviewed: 2026-08-11
+
+It includes melos script usage, optional feature selection, signed release builds and store uploads
+via fastlane, Flutter SDK version management, and tips for local development.
+
+For all available melos scripts, see [Melos Commands](../reference/make_file.md).
+How `webtrit_callkeep` is declared on master and on release branches: [The callkeep dependency](../reference/callkeep_dependency.md).
+For how a fix reaches a version that is already cut, see [Patching a Released Version](hotfix_builds.md).
+For picking the cheapest check that proves a change compiles - and the flags a build fails without -
+see [Verifying a Change Compiles](build_verification.md).
+
+---
+
+## Optional Android Features  [Optional features](../reference/optional_features.md)
+
+The project has no build flavors. Two Android features are still decided at build time, because a
+brand that does not use them must not ship their permission or their manifest components:
+
+* `WEBTRIT_APP_LINK_DOMAIN` - non-empty merges the deep-link intent filter into the manifest
+* `WEBTRIT_CALL_TRIGGER_MECHANISM_SMS` - `"true"` merges in `RECEIVE_SMS` and the SMS receiver
+
+Both are read from `dart_define.json`, the same file the app itself reads, so no build command has
+to carry a feature name. Every build prints what it resolved:
+
+```
+Deep links: enabled, SMS call trigger: disabled
+```
+
+---
+
+## Build Commands
+
+The `melos run build:*` and `start:*` scripts are listed in [Melos Commands](../reference/make_file.md). They
+produce **unsigned / debug-signed** artifacts for local use; for signed release artifacts and store
+uploads, use the fastlane scripts below.
+
+---
+
+## Signed Builds & Store Uploads (fastlane)
+
+Signing and store submission live in two Fastfiles - `ios/fastlane/Fastfile` and
+`android/fastlane/Fastfile` - wrapped by melos scripts so they are invoked the same way from a
+laptop and from CI.
+
+| Command                             | Description                                          |
+|-------------------------------------|------------------------------------------------------|
+| `melos run fastlane:install`        | Install fastlane if missing (brew on macOS, gem else) |
+| `melos run fastlane:ios:build`      | Build and sign the iOS ipa                           |
+| `melos run fastlane:ios:upload`     | Upload the ipa to TestFlight                         |
+| `melos run fastlane:android:build`  | Build the signed Android app bundle                  |
+| `melos run fastlane:android:upload` | Upload the aab to Google Play                        |
+
+Every build/upload script runs `fastlane:install` first, so a fresh machine provisions itself.
+All inputs come from the environment, prefixed per platform (`IOS_` / `ANDROID_`) so the two
+platforms can define same-named values side by side without collisions.
+
+### iOS
+
+`melos run fastlane:ios:build` creates a throwaway keychain, imports the certificate and
+provisioning profile, stamps the version into `Runner.xcodeproj`, disables automatic signing,
+builds via `build_app`, then deletes the keychain.
+
+| Variable                                    | Purpose                                            |
+|---------------------------------------------|----------------------------------------------------|
+| `IOS_CERTIFICATE_PATH`                      | Signing certificate to import                      |
+| `IOS_PROVISIONING_PROFILE_PATH`             | Provisioning profile to install and apply          |
+| `IOS_CODE_SIGNING_IDENTITY`                 | Identity for signing and `signingCertificate`      |
+| `IOS_TEAM_ID`                               | Development team / export team                     |
+| `IOS_BUILD_NAME`                             | Marketing version (`CFBundleShortVersionString`)   |
+| `IOS_BUILD_NUMBER`                          | Build number (`CFBundleVersion`)                   |
+| `IOS_BUILD_FILE_NAME`                       | Output ipa name, also the upload input             |
+| `IOS_BUILD_SDK`                             | Optional `sdk` override for `build_app`            |
+| `IOS_APP_STORE_CONNECT_API_KEY_ID`          | App Store Connect API key id (upload)              |
+| `IOS_APP_STORE_CONNECT_API_KEY_ISSUER_ID`   | App Store Connect issuer id (upload)               |
+| `IOS_APP_STORE_CONNECT_API_KEY_P8_PATH`     | Path to the `.p8` private key (upload)             |
+
+The upload lane authenticates with an App Store Connect API key - no Apple ID password or 2FA
+session - and skips waiting for build processing.
+
+> The `.p8` path variable is deliberately prefixed. Unprefixed, pilot would pick
+> `APP_STORE_CONNECT_API_KEY_PATH` up as its own `api_key_path` option, which expects a **JSON**
+> key file, and fail while parsing the PEM.
+
+### Android
+
+`melos run fastlane:android:build` drives the flutter tool
+(`flutter build appbundle --dart-define-from-file=dart_define.json --no-tree-shake-icons`) so
+dart-defines, optional features, and version stamping behave exactly as in the `build:*` scripts.
+
+| Variable                              | Default                | Purpose                                |
+|---------------------------------------|------------------------|----------------------------------------|
+| `ANDROID_BUILD_TARGET`                | `appbundle`            | `appbundle` or `apk`                   |
+| `ANDROID_BUILD_NAME`                  | -                      | Marketing version                      |
+| `ANDROID_BUILD_NUMBER`                | -                      | Version code                           |
+| `ANDROID_AAB_PATH`                    | -                      | Bundle to upload                       |
+| `ANDROID_PLAY_STORE_JSON_KEY_PATH`    | -                      | Play service account JSON              |
+| `ANDROID_PLAY_STORE_PACKAGE_NAME`     | -                      | Application id to publish under        |
+| `ANDROID_PLAY_STORE_TRACK`            | `internal`             | Play track                             |
+| `ANDROID_PLAY_STORE_RELEASE_STATUS`   | `draft`                | Play release status                    |
+
+Release signing needs no fastlane input: `android/app/build.gradle` builds the release
+`signingConfig` from `upload-keystore-metadata.json` in the keystore directory pointed at by the
+`WEBTRIT_ANDROID_RELEASE_UPLOAD_KEYSTORE_PATH` dart-define. Watch the build log for
+`Release signing NOT configured` if that path is wrong.
+
+The upload lane pushes the bundle only - metadata, images, screenshots, and changelogs are skipped.
+
+### Examples
+
+```bash
+# Keep the values in the gitignored .env and export them all at once
+source .env
+melos run fastlane:ios:build
+
+# Or pass them inline
+IOS_TEAM_ID=ABCDE12345 \
+IOS_CERTIFICATE_PATH=certs/dist.p12 \
+IOS_PROVISIONING_PROFILE_PATH=certs/app.mobileprovision \
+IOS_CODE_SIGNING_IDENTITY="Apple Distribution" \
+IOS_BUILD_NAME=1.2.3 IOS_BUILD_NUMBER=42 IOS_BUILD_FILE_NAME=build.ipa \
+  melos run fastlane:ios:build
+
+ANDROID_BUILD_NAME=1.2.3 ANDROID_BUILD_NUMBER=42 \
+  melos run fastlane:android:build
+```
+
+The lanes can also be invoked directly from the platform directory - `cd ios && fastlane ios build`
+- which is what the melos scripts do. Both platform directories carry a `Gemfile`, so prefer
+`bundle exec fastlane ...` when running by hand to pin the fastlane version.
+
+---
+
+## Development Workflow Notes
+
+### Options:
+
+* **Terminal (recommended)**:
+
+  Use melos scripts from the project root:
+
+  ```bash
+  melos run start:android
+  melos run start:ios
+  ```
+
+* **IDE Configuration**:
+
+  In IntelliJ IDEA or Android Studio, sync run configurations via `melos run ide:sync`,
+  then use the generated run configurations from `.idea/runConfigurations/`.
+
+### Tip:
+
+* Run `melos run ide:sync` after updating run configurations in `tool/run/`
+
+> Melos scripts work best for **CI/CD and structured builds**. For day-to-day IDE development,
+> use the synced run configurations or pass flags manually.
+
+---
+
+## Flutter Version Configuration
+
+The Flutter SDK version used for building the project is pinned in `.fvmrc`, read by
+[`fvm`](https://fvm.app) locally and by the `porta-phone-mobile-app-cicd` build, and in the root
+`Dockerfile` (`FLUTTER_VERSION` and `FLUTTER_SHA256`), which the Jenkins checks build. Older
+release branches may still carry the earlier `.github/flutter_version.yaml` instead; that build
+falls back to it there.
+
+### Format
+
+```json
+{
+  "flutter": "3.47.1"
+}
+```
+
+### Purpose
+
+By declaring the Flutter version here:
+
+- One file drives both local development (`fvm flutter ...`) and the `porta-phone-mobile-app-cicd`
+  build; the Jenkins checks take the version from the root `Dockerfile` instead
+- Builds remain reproducible and predictable
+
+Install the pinned SDK once per machine with `fvm install`. The downloaded `.fvm/` cache is
+gitignored.
+
+> The channel is implied by the pinned version (we ship exact `stable` releases). The CI defaults
+> the channel to `stable`.
+
+### When to update
+
+Update `.fvmrc` when:
+
+- You upgrade the Flutter SDK in local development
+- You have tested that the project works with the new version
+- You want to ensure CI uses the updated version
+
+Keep the root `Dockerfile` and the version noted in `AGENTS.md` in sync, and always validate builds locally before changing
+this file.

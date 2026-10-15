@@ -40,9 +40,9 @@ class AppInfo implements Disposable {
 
   /// Reads the webtrit_callkeep version from the bundled pubspec.yaml.
   ///
-  /// On release branches the dependency is pinned to a git ref (the published
-  /// callkeep tag), which is returned as-is. On develop it is a local path
-  /// dependency with no ref, so [_localCallkeepVersion] is returned.
+  /// A git ref in the webtrit_callkeep block is returned as-is. Builds of this
+  /// repository declare callkeep as a local path with no ref, so they report
+  /// [_localCallkeepVersion].
   static Future<String> getCallkeepVersion() async {
     try {
       final pubspecString = await services.rootBundle.loadString(Assets.pubspec);

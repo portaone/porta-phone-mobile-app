@@ -1,7 +1,6 @@
 {
   "ignores": [
     "**/.claude/**",
-    "**/example/ios/**",
-    ".github/ISSUE_TEMPLATE/**"
+    "**/example/ios/**"
   ]
 }
