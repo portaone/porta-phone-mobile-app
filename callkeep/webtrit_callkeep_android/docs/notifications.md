@@ -188,6 +188,70 @@ Handles ringtone, ringback and call-waiting tone playback, plus device-capabilit
 
 ---
 
+## Call alert and screen wake
+
+The call alert opens the app through the full-screen intent of the incoming-call notification.
+The system decides whether to send that intent, and these facts decide what callkeep can do
+around it. The rule about a new notification id is in the standalone section above; the flags
+and the wake lock the Activity gets once it is open are in [plugin.md](plugin.md),
+Lock-Screen Flags.
+
+- **No full-screen intent on an awake, unlocked screen.** The system shows the notification as
+  a heads-up instead. If you wake the screen before posting the notification, the system sees
+  an awake device and the app does not open. Wake only after the intent has opened the
+  Activity (`LockScreenPresence.onActivityIntent`). `IncomingCallService` follows the same
+  rule: it acquires its screen wake lock (`acquireScreenWakeLockIfNeeded`) only when
+  `isFullScreenIntentAvailable()` is false, where the notification itself is the call UI.
+- **Window flags do not replace opening the Activity.** Show-when-locked and turn-screen-on
+  on the window of an app that is already on top do not bring the call up by themselves: on
+  Android 7 they lit the screen only with the keyguard already showing, on Android 13 not even
+  then. The alert has to open the Activity.
+- **Dozing is asleep.** A device can report its wakefulness as `Dozing` rather than `Asleep`.
+  A check for "the screen is off" has to mean "not awake"; callkeep reads
+  `PowerManager.isInteractive`, which is false for both.
+
+### Bringing the app up from `:callkeep_core`
+
+`PhoneConnection.establish()` calls `context.startActivity(Platform.getLaunchActivity(context))`
+when an outgoing call is answered, from the `:callkeep_core` process. On Android 17 Telecom
+binds the connection service without the right to start an activity from the background, and
+the system logs `Background activity launch blocked!` for this start. The app still came to
+the front in most runs, because the window manager moved its existing task forward right
+after; in some runs it stayed in the background. Do not rely on this start to show the call
+screen on Android 17. To watch it: `adb logcat -s ActivityTaskManager WindowManagerShell`
+while the call is answered.
+
+### Seeing it in the device log
+
+`adb logcat -b events -b system -b main` shows what the system did without a debugger:
+
+| Line                                                                  | Meaning                                                             |
+|-----------------------------------------------------------------------|---------------------------------------------------------------------|
+| `notification_enqueue: [uid,pid,pkg,id,tag,user,Notification(...),N]` | last field: 0 - a new notification, 1 - an update                   |
+| `notification_canceled`                                               | notification removed, also when a foreground service changes its id |
+| `sysui_fullscreen_notification`                                       | SystemUI sent the full-screen intent                                |
+| `sysui_heads_up_status`, `sysui_heads_up_escalation`                  | shown as a heads-up; a heads-up escalated to full screen            |
+| `START u0 {... cmp=.../.MainActivity (has extras)}`, `am_new_intent`  | the Activity was started; a running one got a new intent            |
+| `PowerManagerService: Waking up from ... (uid ...)`                   | who woke the device: the app, SystemUI or the system                |
+
+Screen and keyguard state: `adb shell dumpsys power | grep mWakefulness`; on Android 7
+`dumpsys window policy` (`showing=`, `occluded=`), on Android 8+ `dumpsys window`
+(`isKeyguardShowing=`, `mKeyguardOccluded=`); the focused window is `mCurrentFocus`.
+
+The API 24 emulator image has no lock screen by default, and its `locksettings` has no shell
+command yet. To turn the lock screen on, then reboot (`value=1` turns it off again):
+
+```sh
+adb root
+adb shell sqlite3 /data/system/locksettings.db \
+  "update locksettings set value=0 where name='lockscreen.disabled'"
+```
+
+Not checked: vendor SystemUI builds, Android 8-12 and 14+, and a Telecom device whose screen
+timed out before the keyguard came up.
+
+---
+
 ## Related Components
 
 - [background-services.md](background-services.md) - services that host these notifications

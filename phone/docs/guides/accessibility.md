@@ -153,8 +153,9 @@ the change itself has to be heard, announce it - `_announcePicked` in
 - **Ask whether the platform takes announcements** -
   `MediaQuery.supportsAnnounceOf(context)` - before
   `SemanticsService.sendAnnouncement(View.of(context), text, Directionality.of(context))`.
-  Android has deprecated announcement events; where support is not reported the
-  announcement is not sent, and what is left is the state read on focus.
+  Android has deprecated announcement events, and the engine of the pinned Flutter
+  reports no support on Android at all, so there the announcement is never sent and
+  what is left is the state read on focus (trap 13).
 - **Give it its own string**, in words that stand alone - "2 messages selected",
   "Nothing selected" - because it is heard without the control it is about. A
   suffix written to follow a control's name (`common_SemanticsValue_selectedCount`)
@@ -471,6 +472,23 @@ test.
     `Semantics(container: true)` on the touch target itself (see
     `MessageBubble`), so node and target are one rectangle, and check it with
     a long press at the node's centre rather than by invoking the action.
+13. **`MediaQuery.supportsAnnounceOf` is always false on Android.** The engine's
+    `io.flutter.view.AccessibilityBridge` sets `NO_ANNOUNCE` in its constructor
+    with no condition on the Android version (Flutter 3.47.1), so an
+    announcement guarded by the check - `_announcePicked` in
+    `voicemail_body.dart` - is never sent on Android, while without the check
+    TalkBack 17.1 on Android 15 did read it. A widget test cannot see this: it
+    sets `MediaQueryData(supportsAnnounce: ...)` by hand
+    (`voicemail_selection_test.dart`), so only a device shows the platform's
+    real value. Decide per platform rather than trusting the flag, and
+    re-check the bridge after a Flutter upgrade (`javap -c -p` on
+    `AccessibilityBridge` from the engine's `flutter.jar`).
+14. **One length, three names.** A player that labels the elapsed and total
+    captions, the slider (`semanticFormatterCallback`) and the row around them
+    reads the same duration up to three times. Decide which node says what:
+    in the voicemail player the drawn captions are excluded, the slider says
+    the position against the total (`AudioSlider`), and the message's row says
+    its length (`AudioView`).
 
 ## Third-party widgets
 

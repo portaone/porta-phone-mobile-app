@@ -13,10 +13,10 @@ has its own `README.md` saying what belongs there; this page lists everything at
 ## Reading paths
 
 **Building and shipping**
-[guides/build.md](guides/build.md) -> [guides/build_verification.md](guides/build_verification.md) -> [reference/make_file.md](reference/make_file.md)
+[guides/fresh_checkout.md](guides/fresh_checkout.md) -> [guides/build.md](guides/build.md) -> [guides/build_verification.md](guides/build_verification.md) -> [reference/make_file.md](reference/make_file.md)
 
-**Patching a released version**
-[guides/hotfix_builds.md](guides/hotfix_builds.md)
+**Releasing**
+[guides/release.md](guides/release.md) -> [guides/hotfix_builds.md](guides/hotfix_builds.md)
 
 **Drawing or touching a screen**
 [guides/accessibility.md](guides/accessibility.md) -> [architecture/adaptive_layout.md](architecture/adaptive_layout.md) -> [guides/localization.md](guides/localization.md)
@@ -40,15 +40,19 @@ has its own `README.md` saying what belongs there; this page lists everything at
 | Page | What it holds |
 | --- | --- |
 | [adaptive_layout.md](architecture/adaptive_layout.md) | Giving a screen a second arrangement (landscape) |
+| [bloc_async_state.md](architecture/bloc_async_state.md) | Loading several things at once in a Cubit or Bloc: stale `state` after `await`, emit after `close()` |
+| [core_error_codes.md](architecture/core_error_codes.md) | How Core translates adapter refusals, and which codes the app turns into a logout |
 | [data_refresh.md](architecture/data_refresh.md) | How a user asks a list to fetch again, screen by screen |
 | [dependency_ownership.md](architecture/dependency_ownership.md) | Which objects the startup path creates, which the widget tree creates, and who releases them |
 | [destination_picking.md](architecture/destination_picking.md) | How a feature sends the user to the lists to pick a person |
+| [feature_gates.md](architecture/feature_gates.md) | A feature behind a backend capability and a per-user answer at once |
 | [fonts.md](architecture/fonts.md) | How the app gets the typeface a theme names |
 | [history_paging.md](architecture/history_paging.md) | Paging a history by date: reaching records an endpoint does not volunteer |
 | [ice_servers.md](architecture/ice_servers.md) | Where the STUN/TURN servers come from, how they are cached and renewed |
 | [incoming_call_scenarios.md](architecture/incoming_call_scenarios.md) | How an incoming call is delivered and handled per app state and mode |
 | [polling.md](architecture/polling.md) | PollingService: periodic, lifecycle and manual refreshes without overlap |
 | [polling_workers.md](architecture/polling_workers.md) | The polling worker pattern: one sync cycle apart from its scheduling |
+| [session_remount.md](architecture/session_remount.md) | Replacing `MainShell` for the same sign-in: calls, teardown order, dropped notifications |
 | [signaling_architecture_target.md](architecture/signaling_architecture_target.md) | The three layers of the signaling stack |
 | [startup.md](architecture/startup.md) | Where cold start time goes, measured |
 | [startup_performance.md](architecture/startup_performance.md) | How the Dart startup path is recorded and read |
@@ -63,9 +67,14 @@ has its own `README.md` saying what belongs there; this page lists everything at
 | [build_verification.md](guides/build_verification.md) | Which check to run for a change, what it costs, the flags a build needs |
 | [certificates.md](guides/certificates.md) | Trusted SSL certificates bundled with a brand |
 | [development.md](guides/development.md) | Git hooks and the development setup |
+| [format_and_codegen.md](guides/format_and_codegen.md) | Formatter and generator traps: pinned SDK, directory formatting, stray `build_runner` outputs |
+| [fresh_checkout.md](guides/fresh_checkout.md) | What a new clone or worktree lacks for building, linting and formatting |
 | [hotfix_builds.md](guides/hotfix_builds.md) | Patching a released version |
 | [integration_test_commands.md](guides/integration_test_commands.md) | Running the host integration suites and the Patrol scenarios |
 | [localization.md](guides/localization.md) | ARB files, keys, translations and the configurator catalog |
+| [material_ui.md](guides/material_ui.md) | Two copies of Material in the pinned SDK: delegates, the legacy bridge, test traps |
+| [refactor_equivalence.md](guides/refactor_equivalence.md) | Showing a refactoring changed no behaviour: old and new code on random inputs |
+| [release.md](guides/release.md) | Cutting a version: bumps on master, the release branch and the annotated tag |
 | [web.md](guides/web.md) | Flutter web support (experimental) |
 
 ## reference/
@@ -83,6 +92,7 @@ has its own `README.md` saying what belongs there; this page lists everything at
 | [make_file.md](reference/make_file.md) | Melos scripts |
 | [optional_features.md](reference/optional_features.md) | Features chosen at build time by permission or capability |
 | [page_configuration.md](reference/page_configuration.md) | Page-level appearance configuration read from JSON |
+| [platform_versions.md](reference/platform_versions.md) | Minimum Android, iOS and Dart versions the app and callkeep declare, and what holds each |
 | [qr_signin.md](reference/qr_signin.md) | QR code sign-in on the login screen |
 | [widgets_configuration.md](reference/widgets_configuration.md) | UI component configuration |
 

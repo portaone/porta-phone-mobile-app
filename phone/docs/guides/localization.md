@@ -40,6 +40,7 @@ consequences:
 4. [AI Translation Prompt](#ai-translation-prompt)
 5. [Adding a New Locale](#adding-a-new-locale)
 6. [Intentionally Empty Keys](#intentionally-empty-keys)
+7. [Traps](#traps)
 
 ## Adding or Changing a Key
 
@@ -169,3 +170,19 @@ pre/post-description variants) are empty in **all** locales, including English: 
 white-label placeholders filled per application through configurator overrides. They are
 allow-listed in `tool/check_l10n.dart` (`intentionallyEmptyKeys`); update that list only when a
 key is deliberately designed to work this way.
+
+## Traps
+
+**`=1` and `one` in the same plural.** What you do: write both an exact `=1{...}` form and a
+`one{...}` form, expecting `=1` to take the number 1 and `one` the rest. What happens: only one
+of them is generated. Why: `flutter gen-l10n` maps `=1` and `one` to the same `one:` argument
+of `Intl.plural`; the form written first is kept and the later one is dropped with an "ICU
+Syntax Warning: ... overridden by a later plural part". Instead: use one of the two, not both.
+
+**A `one` form without the number.** What you do: write `one{Message selected}` the way English
+reads it. What happens: in Ukrainian it is also used for 21, 31, 101 and so on, so the user
+hears "message selected" for 21 messages. Why: the CLDR `one` category in uk is every number
+ending in 1 except 11, and `Intl.plural` gives an exact 1 and the rest of the category the same
+`one` text. Instead: put `{count}` in the `one` form and give `few` and `many` as well, as
+`voicemail_SemanticsAnnouncement_selectedCount` in `app_uk.arb` does. `tool/check_l10n.dart`
+does not catch either trap: it lets branch sets differ between locales.

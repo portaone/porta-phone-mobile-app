@@ -209,9 +209,12 @@ must preserve them (most are pinned by `MainProcessConnectionTrackerTest`):
 
 **Serialization (current reality).** Every write path funnels to the main thread:
 
-- Pigeon host APIs declare no `TaskQueue`, so all handlers (`ForegroundService` delegate,
-  `ConnectionsApi`, `DiagnosticsApi`, `BackgroundPushNotificationIsolateBootstrapApi`,
-  `ExternalEngineCallApi`) run on the main looper;
+- Pigeon host API handlers (`ForegroundService` delegate, `ConnectionsApi`, `DiagnosticsApi`,
+  `BackgroundPushNotificationIsolateBootstrapApi`, `ExternalEngineCallApi`) run on the main
+  looper. The one exception is `PHostBackgroundPushNotificationIsolateApi.reportEndCall`, served
+  on a background task queue: it records the end with `markTerminated` on the tracker's
+  concurrent map from that thread and posts the rest to the main looper (see
+  [pigeon-apis.md](pigeon-apis.md));
 - broadcast receivers run on the main looper;
 - `StandaloneCallService` (main process) delivers its events through
   `CallkeepCore.notifyConnectionEvent`, a synchronous in-process call into the same main-thread

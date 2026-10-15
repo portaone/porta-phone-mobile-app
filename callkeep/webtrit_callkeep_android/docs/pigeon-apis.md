@@ -172,6 +172,51 @@ iOS-only: Android has no source for either, so they are absent from this API.
 
 ---
 
+## Host calls wait for the main looper
+
+A Pigeon host call from Dart, from the main isolate or the push isolate, is posted to the main
+looper twice before its handler body runs:
+
+1. A channel set up without a `TaskQueue` has its messages delivered on the platform thread,
+   which the embedding does by posting to the main looper.
+2. For an `@async` host method Pigeon 29 generates `CoroutineScope(Dispatchers.Main).launch`
+   in `Generated.kt`, a second post.
+
+On a cold start the main thread is busy with the app's own start for seconds (the app logs it
+as `startup_complete total_ms=...`), and every host call queues behind it. The Dart code of an
+isolate runs on the same thread too (Flutter merges the UI and platform threads on Android), so
+a message into the session waits for it as well. Neither can be switched off.
+
+The trap: a push session reports `reportEndCall` for a call the caller already hung up, the
+report reaches the core only after the start is over, and Telecom keeps ringing all that time.
+
+What callkeep does about it:
+
+- `PHostBackgroundPushNotificationIsolateApi.reportEndCall` is declared with
+  `@TaskQueue(type: TaskQueueType.serialBackgroundThread)` in `pigeons/callkeep.messages.dart`.
+  Pigeon then sets the channel up on `binaryMessenger.makeBackgroundTaskQueue()` and launches
+  the handler on `Dispatchers.Unconfined`, so it runs on a background thread.
+- A handler on a background thread must not touch main-confined state:
+  `IncomingRegistrations` checks `Looper.myLooper()` and throws off the platform thread.
+  `InProcessCallkeepCore.reportCallEnded` therefore records the terminal facts on the calling
+  thread (the tracker is a concurrent map) and posts to the main looper only what lives there:
+  `markTerminated` rejects a waiting registration there, and `runOnMain` runs the
+  pending-release check. See [callkeep-core.md](callkeep-core.md).
+
+When you add a host method that must not wait for the start:
+
+- Give it `@TaskQueue(type: TaskQueueType.serialBackgroundThread)`, regenerate, and keep the
+  handler off main-confined state; post the part that needs the main looper.
+- Do not wait for the main looper from the background handler with `runBlocking`: suspend
+  instead (`CompletableDeferred`), or the Pigeon thread is held for the whole start.
+- Do not raise timeouts such as `IncomingCallService.SESSION_FINISH_TIMEOUT_MS` or the
+  registration deadline to cover the delay: they only hide the queue.
+
+On the Dart side, do not `await` a platform call inside a sequential Bloc event handler: the
+next event waits for the main looper together with it.
+
+---
+
 ## Data Types (Pigeon-generated)
 
 | Type                       | Description                                                         |
