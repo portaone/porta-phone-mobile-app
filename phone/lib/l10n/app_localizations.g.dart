@@ -4606,7 +4606,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_AboutText_CoreVersion.
   ///
   /// In en, this message translates to:
-  /// **'Cloud Backend version'**
+  /// **'Core version'**
   String get settings_AboutText_CoreVersion;
 
   /// No description provided for @settings_AboutText_CoreVersionUndefined.

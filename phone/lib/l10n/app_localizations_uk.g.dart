@@ -2568,7 +2568,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_AboutText_BundleVersion => 'Версія бандла';
 
   @override
-  String get settings_AboutText_CoreVersion => 'Версія Cloud Backend';
+  String get settings_AboutText_CoreVersion => 'Версія Core';
 
   @override
   String get settings_AboutText_CoreVersionUndefined => '?.?.?';
