@@ -761,7 +761,7 @@ void workManagerDispatcher() {
       final remoteRepo = SystemNotificationsRemoteRepositoryApiImpl(
         api,
         token,
-        includeDeleted: () => core?.supportsDeletedNotificationUpdates ?? false,
+        includeDeleted: () => core?.notificationDeletedRetentionDays != null,
       );
 
       final appPath = await AppPath.init();
