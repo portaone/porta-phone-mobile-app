@@ -18,12 +18,11 @@ dart pub global activate --source=path <path_to_package>
 
 ## The backend a build talks to
 
-The address of the configurator backend is a constant in this repository, so the
-**revision checked out is the choice** - `WEBTRIT_CONFIGURATOR_API_URL` changes
-only the address. `main` faces the Cloud Run backend; `legacy/firebase-backend` is frozen at the last commit
-that faced the Firebase one, for configurators deployed before the move. Details,
-and why pointing an address elsewhere is not the same thing:
-[`docs/architecture/backend-address.md`](docs/architecture/backend-address.md).
+The address of the configurator backend is a constant, `configuratorProdApiUrl` in
+`lib/src/constants.dart`. `WEBTRIT_CONFIGURATOR_API_URL` changes only the address, for
+another deployment of the same backend (a debug instance, a local stack).
+`configurator-resources` asks `/build/applications/:id/bundle` for the build's description,
+then downloads the files it names, the translations and the fonts.
 
 ---
 
@@ -61,7 +60,6 @@ the routes through them - running the CLI, a build talking to the wrong
 backend, a splash screen that came out wrong.
 
 - [The commands](docs/reference/commands.md) - every command and its options
-- [The backend a build talks to](docs/architecture/backend-address.md) - and why the revision decides it
 - [Splash and launch icons](docs/reference/splash-assets.md) - what is downloaded and what is generated
 - [Running it](docs/guides/running-it.md) - from a checkout, and the checks a change runs
 

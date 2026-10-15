@@ -24,9 +24,9 @@ later commands read.
 | `--keystores-path` | no | The project's keystore folder. Without it the SSL certificates and signing keystore are skipped |
 | `--cache-session-data-path` | no | Where the session data is cached between processes |
 
-Which backend it asks is not an option: it is the revision of this repository
-the build checked out
-([backend-address.md](../architecture/backend-address.md)).
+Which backend it asks is not an option: the address is the constant
+`configuratorProdApiUrl` in `lib/src/constants.dart`, and only
+`WEBTRIT_CONFIGURATOR_API_URL` overrides it.
 
 ## `configurator-generate`
 
