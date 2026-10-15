@@ -14,8 +14,7 @@ What a build runs, and in what order, is [the commands](../reference/commands.md
 Lefthook from the repository root, and in Gerrit the Jenkins job
 `gerrit_check_tools`, which votes on every patchset and runs `dart test` only
 when the patchset touches `tools/`, `analysis/`, `phone/packages/theme_schema/`,
-the root `Dockerfile` or `.dockerignore`, or the job's own Groovy file. The
-`.github/` workflows here run nowhere.
+the root `Dockerfile` or `.dockerignore`, or the job's own Groovy file.
 
 ```sh
 dart format --output=none --set-exit-if-changed <staged files>   # lefthook, on commit

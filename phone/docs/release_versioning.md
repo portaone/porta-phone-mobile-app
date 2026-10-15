@@ -5,7 +5,5 @@ on `master` and on every `release/*` branch alike. callkeep lives in `callkeep/`
 and is not tagged, so a phone commit carries the callkeep it builds with and the build fetches
 nothing separately.
 
-Nothing enforces it: no Jenkins job checks the dependency, and the `callkeep-path-guard` and
-`callkeep-pin-guard` workflows under `.github/` do not run - GitHub is only a read-only mirror of
-Gerrit. Check by hand with `grep -A4 '^  webtrit_callkeep:' pubspec.yaml`: it must show `path:`
+Nothing enforces it: no Jenkins job checks the dependency. Check by hand with `grep -A4 '^  webtrit_callkeep:' pubspec.yaml`: it must show `path:`
 and no `git:`.

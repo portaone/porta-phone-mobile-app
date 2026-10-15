@@ -41,9 +41,8 @@ Step 4 is the one that is easy to skip and the one that everything downstream ne
 
 ## The tag nobody creates
 
-Nothing creates it. No Jenkins job tags a commit, and the `auto-tag-version` workflow under
-`.github/` does not run - GitHub is only a read-only mirror of Gerrit. A patch therefore never
-produces a tag on its own.
+Nothing creates it: no Jenkins job tags a commit. A patch therefore never produces a tag on its
+own.
 
 The configurator offers phone refs from tags and nothing else, and both the build (including the
 one testers are given) and the scan that pins a phone version point at a ref from that list. A
