@@ -9,21 +9,21 @@ PushKit to deliver native call UI and background VoIP push handling.
 
 | App state           | Incoming call UI                                              |
 |---------------------|---------------------------------------------------------------|
-| Foreground          | Flutter-based incoming call screen                            |
+| Foreground          | System CallKit UI (every call is reported to CallKit)         |
 | Background / locked | System CallKit UI                                             |
 | Terminated          | PushKit wakes the app; CallKit UI shown after app initializes |
 
 PushKit delivers a VoIP push before the user interacts with anything, giving the app time to
 establish signaling and media before CallKit presents the call.
 
-There are no persistent background services on iOS — all background work goes through
+There are no persistent background services on iOS - all background work goes through
 CallKit / PushKit.
 
 ---
 
 ## iOS Simulator
 
-CallKit and PushKit are only available on real devices — this plugin will not work on iOS
+CallKit and PushKit are only available on real devices - this plugin will not work on iOS
 simulators. Test on a physical device.
 
 - Incoming calls: the simulator never receives a PushKit VoIP token and cannot receive VoIP
@@ -40,20 +40,22 @@ simulators. Test on a physical device.
 
 ```text
 webtrit_callkeep_ios/
-├── lib/src/
-│   ├── webtrit_callkeep_ios.dart     # WebtritCallkeep — registers as platform instance
-│   └── common/
-│       ├── callkeep.pigeon.dart      # Pigeon-generated Dart bindings (DO NOT EDIT)
-│       └── converters.dart           # Pigeon <-> platform_interface type conversions
-├── pigeons/
-│   └── callkeep.messages.dart        # Pigeon input — edit this, then regenerate
-└── ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/
-    ├── WebtritCallkeepPlugin.m        # CallKit + PushKit integration
-    ├── Converters.m                   # CallKit <-> Pigeon types, provider configuration
-    ├── CallWaitingTonePlayer.m        # synthesized call-waiting beep
-    ├── NSUUID+v5.m                    # name-based UUID from a callId
-    ├── Generated.m                    # Pigeon-generated (DO NOT EDIT)
-    └── include/webtrit_callkeep_ios/  # public headers, incl. Generated.h (DO NOT EDIT)
+|-- lib/src/
+|   |-- webtrit_callkeep_ios.dart        # WebtritCallkeep - registers as platform instance
+|   `-- common/
+|       |-- call_group_assignment.dart   # the group record (see Call groups)
+|       |-- call_group_coordinator.dart  # requests against the record, in order
+|       |-- callkeep.pigeon.dart         # Pigeon-generated Dart bindings (DO NOT EDIT)
+|       `-- converters.dart              # Pigeon <-> platform_interface type conversions
+|-- pigeons/
+|   `-- callkeep.messages.dart           # Pigeon input - edit this, then regenerate
+`-- ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/
+    |-- WebtritCallkeepPlugin.m          # CallKit + PushKit integration
+    |-- Converters.m                     # CallKit <-> Pigeon types, provider configuration
+    |-- CallWaitingTonePlayer.m          # synthesized call-waiting beep
+    |-- NSUUID+v5.m                      # name-based UUID from a callId
+    |-- Generated.m                      # Pigeon-generated (DO NOT EDIT)
+    `-- include/webtrit_callkeep_ios/    # public headers, incl. Generated.h (DO NOT EDIT)
 ```
 
 ---
@@ -63,10 +65,12 @@ webtrit_callkeep_ios/
 | Delegate               | Registration                              | Purpose                                       |
 |------------------------|-------------------------------------------|-----------------------------------------------|
 | `CallkeepDelegate`     | `Callkeep().setDelegate(...)`             | Call lifecycle events                         |
-| `PushRegistryDelegate` | `Callkeep().setPushRegistryDelegate(...)` | PushKit VoIP token and incoming push payloads |
+| `PushRegistryDelegate` | `Callkeep().setPushRegistryDelegate(...)` | PushKit VoIP token updates                    |
 
-`PushRegistryDelegate` must be set before the app enters the background if VoIP pushes are
-expected. Failing to do so causes missed pushes.
+`PushRegistryDelegate` receives only the VoIP token: `didUpdatePushTokenForPushTypeVoIP`, with
+`null` when iOS invalidates it. An incoming VoIP push never reaches it: the plugin reports the
+call to CallKit natively from the payload (`callId`, `handleType`, `handleValue`, `displayName`,
+`hasVideo`), and Dart learns of the call from `CallkeepDelegate.didPresentIncomingCall`.
 
 ---
 
@@ -177,7 +181,7 @@ dart format --line-length 120 --set-exit-if-changed $(git ls-files 'lib/*.dart' 
 
 ## Key invariants
 
-- No persistent background services — all background handling goes through CallKit/PushKit.
+- No persistent background services - all background handling goes through CallKit/PushKit.
 - `PushRegistryDelegate` is separate from `CallkeepDelegate`.
 - Never block the main thread in CallKit delegate callbacks.
 - Minimum deployment target: iOS 13.0 (`webtrit_callkeep_ios.podspec`, `Package.swift`).

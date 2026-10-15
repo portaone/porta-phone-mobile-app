@@ -232,17 +232,9 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 // The isolate callback:
 @pragma('vm:entry-point')
-Future<void> onPushNotificationCallback(
-  CallkeepPushNotificationSyncStatus status,
-  CallkeepIncomingCallMetadata? metadata,
-) async {
-  await initializeDependencies();
-  switch (status) {
-    case CallkeepPushNotificationSyncStatus.synchronizeCallStatus:
-      await backgroundCallManager.onStart();
-    case CallkeepPushNotificationSyncStatus.releaseResources:
-      await backgroundCallManager.close();
-  }
+Future<void> onPushNotificationCallback(CallkeepIncomingCallMetadata? metadata) async {
+  // Runs in the push isolate: bring up what the call needs (signaling, the call's state)
+  // and report the outcome through BackgroundPushNotificationService.
 }
 ```
 
@@ -263,10 +255,11 @@ with `WebtritCallkeep.attachToEngine`. See
 Android only. Allows triggering an incoming call from a specially formatted SMS — useful when push
 delivery is unreliable.
 
-**Required permissions**: `RECEIVE_SMS`, `BROADCAST_SMS`
+**Declared by the app, not the plugin**: `RECEIVE_SMS` and the `IncomingCallSmsTriggerReceiver`
+receiver, guarded by `android:permission="android.permission.BROADCAST_SMS"` (the phone app keeps
+them in `android/app/optional-manifests/sms-receiver/`).
 
-The SMS must start with the prefix `<#> WEBTRIT:` (hard-coded security filter, do not change).
-The rest of the message is parsed by a caller-supplied ICU-compatible regex that captures 4 groups
+The app chooses the prefix; the receiver ignores a message that does not contain it. The rest of the message is parsed by a caller-supplied ICU-compatible regex that captures 4 groups
 in order: `callId`, `handle`, `displayName`, `hasVideo`.
 
 ```dart
@@ -291,9 +284,8 @@ Full regex specification: [`docs/sms_trigger_regex_requirements.md`](docs/sms_tr
 <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
-<!-- Optional: SMS fallback -->
+<!-- Optional: SMS fallback, with the receiver described above -->
 <uses-permission android:name="android.permission.RECEIVE_SMS" />
-<uses-permission android:name="android.permission.BROADCAST_SMS" />
 ```
 
 ### iOS (`Info.plist` / Xcode capabilities)

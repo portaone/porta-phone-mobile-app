@@ -1,18 +1,23 @@
-# 📄 Requirements for SMS Regex Pattern (Flutter ↔ Android)
+# SMS trigger regex requirements (Android)
 
 > This document describes how to define a regular expression that extracts call metadata from incoming SMS. The regex
 > must match the structure of the SMS content to correctly trigger a call via `PhoneConnectionService` on Android. This
 > configuration is expected to be provided by the client Flutter app and stored on the Android side.
 
+The message prefix and the regex are both the app's configuration, not the plugin's: the app passes them to
+`AndroidCallkeepUtils.smsReceptionConfig.configureReceivedSms(prefix:, regexPattern:)`, and callkeep stores them in
+`StorageDelegate`. A message is considered only when its body contains that prefix. The phone app reads its prefix
+from `WEBTRIT_CALL_TRIGGER_MECHANISM_SMS_PREFIX` (default `<#> PORTAPHONE:`). The examples below use `<#> CALLHOME:`.
+
 ---
 
-## 🔧 Regex Pattern Requirements
+## Regex Pattern Requirements
 
-### ✅ General Rules
+### General Rules
 
 1. **Must be a valid ICU-compatible regular expression**
 
-    * Used internally by Android — ensure all syntax follows ICU rules.
+    * Used internally by Android - ensure all syntax follows ICU rules.
     * Common pitfalls:
 
         * Escape braces: use `\{` and `\}` instead of `{` and `}`
@@ -22,7 +27,7 @@
 2. **The regex must contain exactly 4 capturing groups** (no more, no less):
 
    | # | Group         | Description                      | Type           |
-            | - | ------------- | -------------------------------- | -------------- |
+   | - | ------------- | -------------------------------- | -------------- |
    | 1 | `callId`      | Unique call identifier           | string         |
    | 2 | `handle`      | Phone number or user ID          | string         |
    | 3 | `displayName` | User name or label (URL-encoded) | string         |
@@ -40,20 +45,20 @@
 
 ---
 
-## 🧪 Example Regex Patterns
+## Example Regex Patterns
 
 ### JSON-based SMS payload
 
 **Example ADB input:**
 
 ```bash
-adb emu sms send 5554 '<#> CALLHOME: {"type":"incoming","handle":"380979826361","callID":"122","displayName":"John Doe","hasVideo":true} Do not share.'
+adb emu sms send 5554 '<#> CALLHOME: {"type":"incoming","callID":"122","handle":"380979826361","displayName":"John Doe","hasVideo":true} Do not share.'
 ```
 
 **Regex:**
 
 ```regex
-\{"type":"incoming","handle":"([^"]+)","callID":"([^"]+)","displayName":"([^"]+)","hasVideo":(true|false)\}
+\{"type":"incoming","callID":"([^"]+)","handle":"([^"]+)","displayName":"([^"]+)","hasVideo":(true|false)\}
 ```
 
 ### Deep link URL payload
@@ -72,17 +77,17 @@ https:\/\/app\.webtrit\.com\/call\?callId=([^&]*)&handle=([^&]*)&displayName=([^
 
 ---
 
-## 🚫 Invalid Patterns (examples)
+## Invalid Patterns (examples)
 
 | Pattern           | Problem                               |
 |-------------------|---------------------------------------|
-| `{.*}`            | Unescaped braces – ICU error          |
-| `"hasVideo":(.*)` | Greedy capture – invalid or too broad |
-| Only one group    | Required 4 fields – parsing fails     |
+| `{.*}`            | Unescaped braces - ICU error          |
+| `"hasVideo":(.*)` | Greedy capture - invalid or too broad |
+| Only one group    | Required 4 fields - parsing fails     |
 
 ---
 
-## 🛠 Developer Notes
+## Developer Notes
 
 * Use tools like [regex101.com](https://regex101.com/?flavor=icu) with **ICU flavor** to validate patterns.
 * After matching, Flutter must store the regex via platform channel or Pigeon API, and Android retrieves it from
@@ -91,7 +96,7 @@ https:\/\/app\.webtrit\.com\/call\?callId=([^&]*)&handle=([^&]*)&displayName=([^
 
 ---
 
-## ✅ Example Kotlin Destructuring Code
+## Example Kotlin Destructuring Code
 
 ```kotlin
 val (callId, handle, displayNameEncoded, hasVideoStr) = match.destructured
@@ -101,7 +106,7 @@ val hasVideo = hasVideoStr == "true"
 
 ---
 
-## 📌 Summary
+## Summary
 
 To ensure consistent and reliable behavior across white-label implementations:
 
