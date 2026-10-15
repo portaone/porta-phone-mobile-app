@@ -12,14 +12,13 @@ lib/src/
 ├── callkeep_connections.dart      # CallkeepConnections singleton — connection state (Android only)
 ├── webtrit_callkeep_permissions.dart  # Permission helpers
 ├── webtrit_callkeep_sound.dart    # Sound playback helpers
-├── webtrit_callkeep_logs.dart     # Logs delegate helpers
 └── android/
     ├── services/
-    │   ├── android_callkeep_services.dart          # AndroidCallkeepServices — static service registry
+    │   ├── android_calkeep_services.dart           # AndroidCallkeepServices — static service registry
     │   ├── background_push_notification_bootstrap_service.dart
     │   └── background_push_notification_service.dart
     └── utils/
-        ├── android_callkeep_utils.dart        # AndroidCallkeepUtils — permissions, diagnostics, SMS, activity
+        ├── android_callkeep_utils.dart        # AndroidCallkeepUtils — diagnostics, SMS, activity
         ├── activity_control.dart
         ├── callkeep_diagnostics.dart
         └── sms_bootstrap_reception_config.dart
@@ -50,14 +49,13 @@ Entry point for Android background modes. Always use these static singletons:
 ### `AndroidCallkeepUtils` (static, Android only)
 
 - `activityControl` — lock screen overlay, wake screen, send to background
-- `permissions` — request/check `CallkeepPermission` entries
 - `diagnostics` — get diagnostic report map
 - `smsReceptionConfig` — initialize SMS-triggered call reception
 
 ### `CallkeepConnections` (singleton, Android only)
 
 - `getConnection(callId)` / `getConnections()` / `cleanConnections()`
-- All methods are no-ops on non-Android platforms (return `null` / empty list)
+- All methods are no-ops on platforms other than Android and web (return `null` / empty list)
 
 ---
 

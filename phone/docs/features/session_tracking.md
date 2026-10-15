@@ -16,7 +16,7 @@ Last reviewed: 2026-10-10
       (how every list refreshes: [`../data_refresh.md`](../data_refresh.md)).
 - `lib/features/settings/view/settings_router_page.dart` - owns the
   `SessionsCubit`, above both the settings screen and the sessions screen.
-- `lib/features/settings/widgets/sessions_list_tile.dart` - the settings row
+- `lib/features/settings/view/settings_screen.dart` - the settings row
   with the session-count badge.
 - `lib/repositories/sessions/sessions_repository.dart` - `SessionsRepository`
   and its API implementation.
@@ -158,8 +158,6 @@ The identifier that tells one device from another is described in
   fetch, single revoke, revoke-all-others incl. partial failure.
 - `test/widgets/session_tile_test.dart` -
   row title per app type, current-session badge, revoke action.
-- `test/features/settings/widgets/sessions_list_tile_test.dart` - the settings
-  row and its count badge.
 - `test/data/settings_mapper_test.dart` - the core-version gate behind
   `sessionsEnabled`.
 - `test/app/core_version_test.dart` - `supportsSessionTracking` boundaries.

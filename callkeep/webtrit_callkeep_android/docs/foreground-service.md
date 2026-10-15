@@ -90,7 +90,7 @@
 | `setHeld(callId, held)`          | `CallkeepCore.startHoldingCall()`; answers `callIsGrouped` without forwarding when `CallkeepCore.isGrouped()` says the call is in a group                                                |
 | `setSpeaker(callId, on)`         | `CallkeepCore.startSpeaker()`                                                                                                                                                            |
 | `setAudioDevice(callId, device)` | `CallkeepCore.setAudioDevice()`                                                                                                                                                          |
-| `sendDTMF(callId, digit)`        | `CallkeepCore.startSendDtmf()`                                                                                                                                                           |
+| `sendDTMF(callId, digit)`        | `CallkeepCore.startSendDtmfCall()`                                                                                                                                                       |
 | `setCallGroup(groupId, callIds)` | `CallkeepCore.startSetCallGroup()`; its `CallGroupOutcome` becomes the answer: `maximumCallGroupsReached` when another group is live, `callGroupingNotSupported` when no backend took it |
 | `unsetCallGroup(callIds)`        | `CallkeepCore.startUnsetCallGroup()`; the core releases the calls from the group on success                                                                                              |
 
@@ -137,12 +137,12 @@ confirmation, answer and replay for that never-presented UUID.
 | `AnswerCall`                 | `handleCSReportAnswerCall()`             | Core already tracked the answer; call `performAnswerCall()` on Dart delegate                                                                                                                                                         |
 | `DeclineCall`                | `handleCSReportDeclineCall()`            | For confirmed calls: `markTerminated()`, call `performEndCall()`; on the lock screen sends the app back only if no other call is live                                                                                                |
 | `HungUp`                     | `handleCSReportDeclineCall()`            | Same as DeclineCall                                                                                                                                                                                                                  |
-| `ConnectionNotFound`         | `handleCSConnectionNotFound()`           | Synthesize HungUp — `performEndCall()`                                                                                                                                                                                               |
-| `AudioMuting`                | Inline                                   | Call `performMuteCall()` on Dart delegate                                                                                                                                                                                            |
-| `AudioDeviceSet`             | Inline                                   | Call `performSetAudioDevice()`                                                                                                                                                                                                       |
-| `AudioDevicesUpdate`         | Inline                                   | Call `performUpdateAudioDevices()`                                                                                                                                                                                                   |
-| `ConnectionHolding`          | Inline                                   | Call `performHoldCall()`                                                                                                                                                                                                             |
-| `SentDTMF`                   | Inline                                   | Call `performSendDTMF()`                                                                                                                                                                                                             |
+| `ConnectionNotFound`         | `handleCSReportDeclineCall()`            | Synthesize HungUp — `performEndCall()`                                                                                                                                                                                               |
+| `AudioMuting`                | `handleCSReportAudioMuting()`            | Call `performSetMuted()` on Dart delegate                                                                                                                                                                                            |
+| `AudioDeviceSet`             | `handleCSReportAudioDeviceSet()`         | Call `performAudioDeviceSet()`                                                                                                                                                                                                       |
+| `AudioDevicesUpdate`         | `handleCsReportAudioDevicesUpdate()`     | Call `performAudioDevicesUpdate()`                                                                                                                                                                                                   |
+| `ConnectionHolding`          | `handleCSReportConnectionHolding()`      | Call `performSetHeld()`                                                                                                                                                                                                              |
+| `SentDTMF`                   | `handleCSReportSentDTMF()`               | Call `performSendDTMF()`                                                                                                                                                                                                             |
 
 `IncomingFailure` is handled entirely by the core. The bridge does not inspect registration
 waiters or change call state for this event. Incoming duplicate adoption also belongs to the
@@ -151,11 +151,11 @@ core: the bridge only sends the Flutter answer notification when `registerIncomi
 
 **Per-call dynamic receivers** (registered ad-hoc via `CallkeepCore.registerConnectionEvents()`):
 
-| Event              | Handler                           | Main Action                         |
-|--------------------|-----------------------------------|-------------------------------------|
-| `OngoingCall`      | `handleCSReportOngoingCall()`     | Promote outgoing call, notify Dart  |
-| `OutgoingFailure`  | `handleCSReportOutgoingFailure()` | `markTerminated()`, notify Dart     |
-| `TearDownComplete` | Inline lambda                     | Completes the `tearDown()` deferred |
+| Event              | Handler                           | Main Action                                                          |
+|--------------------|-----------------------------------|----------------------------------------------------------------------|
+| `OngoingCall`      | Inline lambda                     | Promote outgoing call, notify Dart                                   |
+| `OutgoingFailure`  | Inline lambda                     | `removePending()`, record the failure, fail the `startCall` request  |
+| `TearDownComplete` | Inline lambda                     | Completes the `tearDown()` deferred                                  |
 
 ### Sending the app back after a call on the lock screen
 
@@ -174,12 +174,12 @@ Huawei MAO-LX9N) and in every signaling mode.
 ## Duplicate-Notification Guards
 
 To prevent sending the same event to Dart twice (e.g., from both the direct tearDown path and a
-stale broadcast), `MainProcessConnectionTracker` maintains guard sets used by the core and
-foreground bridge before dispatching:
+stale broadcast), `MainProcessConnectionTracker` maintains guards used by the core and
+foreground bridge before dispatching, as flags on each call's record:
 
-- `directNotifiedCallIds` -- core suppresses a terminal acknowledgement after a registration
+- `directNotified` -- core suppresses a terminal acknowledgement after a registration
   was rejected or failed, and after teardown already notified Flutter for a confirmed call.
-- `endCallDispatchedCallIds` — suppress second `performEndCall()` for the same call.
+- `endCallDispatched` — suppress second `performEndCall()` for the same call.
 
 ## Related Components
 

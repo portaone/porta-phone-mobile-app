@@ -15,7 +15,7 @@ See **[AGENTS.md](AGENTS.md)** for commands, code style, and architecture detail
 | `Callkeep` | `Callkeep()` | Core call operations + status stream |
 | `CallkeepConnections` | `CallkeepConnections()` | Connection state queries (Android only) |
 | `AndroidCallkeepServices` | static | Bootstrap Android background services |
-| `AndroidCallkeepUtils` | static | Permissions, diagnostics, SMS config, activity control |
+| `AndroidCallkeepUtils` | static | Diagnostics, SMS config, activity control |
 
 All singletons delegate to `WebtritCallkeepPlatform.instance` — never call platform package APIs directly from app code.
 
@@ -25,7 +25,7 @@ All singletons delegate to `WebtritCallkeepPlatform.instance` — never call pla
 # From this directory
 flutter pub get
 flutter analyze lib test
-dart format --line-length 80 --set-exit-if-changed lib test
+dart format --line-length 120 --set-exit-if-changed lib test
 flutter test
 ```
 

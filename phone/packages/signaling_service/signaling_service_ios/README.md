@@ -12,7 +12,7 @@ The WebSocket always runs directly in the calling isolate.
 `WebtritSignalingServiceIos` is a thin subclass of `WebtritSignalingServiceDirect`
 (from `signaling_service_platform_interface`). All connection logic lives there:
 `start()` creates a `SignalingModule`, opens the WebSocket, and replays buffered events
-to new subscribers. `attach()` is a no-op -- there is no background service to attach to.
+to new subscribers.
 
 Background call handling on iOS goes through CallKit / PushKit via `webtrit_callkeep`,
 not through a persistent signaling service.

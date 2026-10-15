@@ -1,6 +1,6 @@
 # The backend a build talks to
 
-This tool decides it, and nothing that calls the tool can override it. The
+This tool decides it; a caller can change only the address (below). The
 address is a constant here:
 
 ```dart

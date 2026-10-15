@@ -1,13 +1,16 @@
 # signaling_service_android
 
 Android implementation of `signaling_service`.
-Runs the WebSocket connection inside an Android foreground service so it survives
+In `persistent` mode (the API default; the app passes it only when the user opts into socket
+mode) it runs the WebSocket connection inside an Android foreground service so it survives
 when the app is backgrounded or killed, and bridges it back to the main isolate
-via `IsolateNameServer` (pure Dart ports — no extra WebSocket).
+via `IsolateNameServer` (pure Dart ports - no extra WebSocket). In `pushBound` mode (what the
+app passes otherwise) it delegates to `WebtritSignalingServiceAndroidDirect`, with the socket in
+the calling isolate and no service.
 
 The package depends on `signaling` directly (for `Request`, `Event`,
 `StateHandshake`, and hub codec). The app provides a `SignalingModuleFactory`
-via `setModuleFactory()` — the background isolate calls it to create a `SignalingModule`.
+via `setModuleFactory()` - the background isolate (or, in `pushBound`, the direct service) calls it to create a `SignalingModule`.
 
 ## Architecture
 
@@ -19,11 +22,11 @@ WebtritSignalingServiceAndroid        signalingServiceCallbackDispatcher()
   │  Pigeon (MethodChannel)          onSignalingServiceSync(status)
   ├──► PSignalingServiceHostApi ──►    └─ SignalingForegroundIsolateManager
   │    startService / stopService          ├─ SignalingModule (via factory)
-  │    saveIncomingCallHandler             ├─ SignalingHub     (IsolateNameServer)
-  │    saveModuleFactory                   └─ _dispatchIncomingCall()
-  │                                               └─ app callback (IncomingCallEvent)
+  │    saveCallEventHandler                ├─ SignalingHub     (IsolateNameServer)
+  │    saveModuleFactory                   └─ _dispatchCallEvent()
+  │                                               └─ app callback (IncomingCallEvent, HangupEvent)
   │  IsolateNameServer (SendPort)
-  └──► SignalingHubClient
+  └──► HubConnectionManager ──► SignalingHubClient
          └─ SignalingHubModule
               └─ events (Stream<SignalingModuleEvent>)
 ```
@@ -36,28 +39,29 @@ Registered via `registerWith()` as `SignalingServicePlatform.instance`.
 
 | Method | Behaviour |
 |--------|-----------|
-| `setModuleFactory(factory)` | Resolves the raw handle via `PluginUtilities.getCallbackHandle(factory)`, persists it via `PSignalingServiceHostApi.saveModuleFactory` → `StorageDelegate` → `SharedPreferences`. The background isolate reads `PSignalingServiceStatus.moduleFactoryHandle` at each sync and resolves the factory via `PluginUtilities.getCallbackFromHandle`. |
-| `start(config, {mode})` | Obtains Dart callback handles, calls `initializeServiceCallback` + `startService(mode)` via Pigeon, removes any stale `kSignalingHubPortName` entry from `IsolateNameServer`, then polls until the hub port appears. The effective mode is taken from `_currentMode` (last explicit mode), not the parameter, so reconnect calls never revert a user-selected `updateMode` change. |
-| `attach()` | Connects to an already-running hub without starting a new service; polls `IsolateNameServer` the same way as `start()`. |
-| `execute(request)` | Delegates to the hub module. Throws `StateError` when not connected. |
-| `updateMode(mode)` | Saves new mode to `_currentMode`, calls `_startHubMode(config, mode)`. Both modes use the hub/foreground service — only the Kotlin-side lifecycle flag changes (whether `onTaskRemoved` stops the service). The WebSocket connection is preserved across the mode switch. |
-| `setIncomingCallHandler(callback)` | Resolves the raw handle via `PluginUtilities.getCallbackHandle(callback)`, persists it via `PSignalingServiceHostApi.saveIncomingCallHandler` → `StorageDelegate` → `SharedPreferences`. Logs a warning if the handle cannot be resolved (function not top-level or missing `@pragma`). The background isolate reads the handle from `PSignalingServiceStatus.incomingCallHandlerHandle` at each sync. |
-| `dispose()` | Cancels hub-init loop, disposes both modules, resets `_currentMode`. Does **not** close `_eventsController` — closing it would silently terminate active subscribers (e.g. `CallBloc`) via `onDone`; leaving it open preserves subscriptions across `dispose`/`start` cycles. Does **not** call `stopService()` — the Android service lifecycle is managed by Kotlin. |
+| `setModuleFactory(factory)` | Stores the factory in the direct service for `pushBound`, then resolves the raw handle via `PluginUtilities.getCallbackHandle(factory)`, persists it via `PSignalingServiceHostApi.saveModuleFactory` -> `StorageDelegate` -> `SharedPreferences`. The background isolate reads `PSignalingServiceStatus.moduleFactoryHandle` at each sync and resolves the factory via `PluginUtilities.getCallbackFromHandle`. |
+| `start(config, {mode})` | `pushBound`: starts the direct service and forwards its events. `persistent`: obtains the dispatcher callback handle, calls `initializeServiceCallback`, `saveConnectionConfig`, `saveTrustedCertificates` and `startService()` via Pigeon, then `HubConnectionManager.begin()` polls until the hub port appears. The mode a reconnect uses is kept by `WebtritSignalingService` (`updateMode` switches its live instances), so reconnect calls never revert a user-selected `updateMode` change. |
+| `execute(request)` | `pushBound`: delegates to the direct service. `persistent`: delegates to the hub module. Throws `NotConnectedException` when not connected. |
+| `updateMode(mode)` | Saves new mode to `_currentMode`, clears the session buffer, tears down the transport of the old mode (to `pushBound`: the hub and the foreground service; to `persistent`: the direct service) and starts the new one, so one account never holds two sockets. |
+| `setCallEventHandler(callback)` | Resolves the raw handle via `PluginUtilities.getCallbackHandle(callback)`, persists it via `PSignalingServiceHostApi.saveCallEventHandler` -> `StorageDelegate` -> `SharedPreferences`. Logs a warning if the handle cannot be resolved (function not top-level or missing `@pragma`). The background isolate reads the handle from `PSignalingServiceStatus.callEventHandlerHandle` at each sync. |
+| `dispose()` | Tears down the hub manager, disposes the direct service, resets `_currentMode`. Does **not** close `_eventsController` - closing it would silently terminate active subscribers (e.g. `CallBloc`) via `onDone`; leaving it open preserves subscriptions across `dispose`/`start` cycles. Does **not** call `stopService()` - the Android service lifecycle is managed by Kotlin. |
 
-Hub init (`_hubInitLoop`) polls indefinitely with a 100 ms retry delay until the hub port appears in `IsolateNameServer` or `dispose()` cancels the loop.
+Hub init (`HubConnectionManager._initLoop`) polls with a 100 ms retry delay until the hub port appears in `IsolateNameServer` or `tearDown()` cancels the loop. If no port appears for `noPortTimeout` (15 s), or a found port misses its 500 ms ack `stalePortThreshold` (3) times in a row (the port is then removed), it emits `SignalingConnectionFailed` and calls `onServiceDead`, which restarts the service in `persistent` mode.
 
 ### `SignalingHub`
 
 Runs in the background isolate. Wraps `SignalingModule` (created by the app factory)
 and forwards events to all subscriber `SendPort`s via `IsolateNameServer`.
 
-Hub wire protocol (Map messages, subscriber → hub):
+Hub wire protocol (List messages with the tag at index 0, subscriber -> hub; `lib/src/fgs/hub/signaling_hub_command.dart`):
 
 | Command | Fields | Description |
 |---------|--------|-------------|
 | `sub`   | `id`, `port` | Subscribe; hub replies with sub-ack, then the session's lifecycle events and a handshake rendered from its `SessionSnapshot` |
 | `unsub` | `id` | Unsubscribe |
-| `exec`  | `id`, `corr`, `req` | Execute request; hub replies with `[_kExecuteResult, corr, error?]` |
+| `exec`  | `id`, `corr`, `req` | Execute request; hub replies with `encodeExecuteResult(corr, error)` |
+| `connect` / `disconnect` | `id` | Ask the hub's module to connect / disconnect |
+| `ping` | `id` | Liveness check; hub replies with a pong |
 
 The hub keeps a `SignalingEventBuffer`: lifecycle events in order and a `SessionSnapshot` (`signaling_service_platform_interface`) - the handshake kept current by the registration and call events, guest line included - rendered again for a late subscriber; cleared on `SignalingConnecting`. Protocol events are never replayed across the boundary.
 
@@ -92,7 +96,7 @@ what sends the `sub` command that triggers the ack.
 `SignalingModule` implementation backed by a `SignalingHubClient`.
 Used by the main isolate when the hub is already running in the foreground service.
 
-- `connect()` / `disconnect()` are **no-ops** — the hub owns the connection lifecycle.
+- `connect()` / `disconnect()` send the `connect` / `disconnect` command to the hub (`sendConnect()` / `sendDisconnect()`).
 - Keeps no buffer: `HubConnectionManager` listens to `events` before awaiting the hub's ack, so the replay that follows the ack is not missed. A later listener sees only what follows.
 - `isConnected` tracks `SignalingConnected` / `SignalingDisconnected` / `SignalingConnectionFailed`.
 
@@ -117,19 +121,19 @@ Owns `SignalingModule` (created via `moduleFactory`) + `SignalingHub` inside the
 final factory = PluginUtilities.getCallbackFromHandle(
   CallbackHandle.fromRawHandle(moduleFactoryHandle),
 ) as SignalingModuleFactory;
-_module = factory(config);
+_signalingModule = factory(config);
 ```
 
-**Incoming call dispatch** (`_dispatchIncomingCall`):
+**Call event dispatch** (`_dispatchCallEvent`):
 
-When a `SignalingProtocolEvent` carrying an `IncomingCallEvent` arrives and
-`incomingCallHandlerHandle != 0`, the manager:
+When a `SignalingProtocolEvent` carrying an `IncomingCallEvent` or a `HangupEvent` arrives and
+`callEventHandlerHandle != 0`, the manager:
 
 1. Resolves the registered Dart callback via `PluginUtilities.getCallbackFromHandle`.
 2. Invokes it with `Function.apply(callback, [event])` — works for both sync and async callbacks.
 3. Async errors are caught and logged; sync throws are caught and logged.
 
-If `incomingCallHandlerHandle == 0` (no handler registered), a warning is logged and the
+If `callEventHandlerHandle == 0` (no handler registered), a warning is logged and the
 event is silently forwarded only to hub subscribers (main isolate, if connected).
 
 ## Pigeon API (`pigeons/signaling.messages.dart`)
@@ -140,12 +144,15 @@ Events never cross via Pigeon — only lifecycle control does.
 PSignalingServiceHostApi (Dart → Kotlin)
   initializeServiceCallback(callbackDispatcher, onSync)
   saveConnectionConfig(coreUrl, tenantId, token)
+  saveTrustedCertificates(certificatesJson?)
+  saveCallEventHandler(callbackHandle)      <- persists raw call-event handler handle
   saveModuleFactory(callbackHandle)         ← persists raw SignalingModuleFactory handle
-  saveIncomingCallHandler(callbackHandle)   ← persists raw incoming call handler handle
   configureService(notificationTitle, notificationDescription)
-  startService(mode: PSignalingServiceMode)
+  startService()
   stopService()
   notifyIsolateReady()                      ← called by background isolate after setUp; Kotlin responds with synchronizeIsolate()
+  connect()                                 <- restoreService(): brings the persistent service back
+  simulateKill()
 
 PSignalingServiceFlutterApi (Kotlin → Dart)
   onSynchronize(PSignalingServiceStatus)
@@ -155,12 +162,9 @@ PSignalingServiceStatus
   coreUrl: String
   tenantId: String
   token: String
+  trustedCertificatesJson: String?
+  callEventHandlerHandle: int           <- 0 = no handler registered
   moduleFactoryHandle: int              ← 0 = factory not registered
-  incomingCallHandlerHandle: int        ← 0 = no handler registered
-
-PSignalingServiceMode (enum)
-  persistent  — index 0; service survives app close and device reboot
-  pushBound   — index 1; service stops on onTaskRemoved
 ```
 
 `Messages.g.kt` / `messages.g.dart` are generated by Pigeon — **do not edit manually**.
@@ -174,26 +178,38 @@ dart run pigeon --input pigeons/signaling.messages.dart
 
 | File | Responsibility |
 |------|---------------|
-| `WebtritSignalingServicePlugin.kt` | `FlutterPlugin` entry point; hosts `PSignalingServiceHostApi`; creates/destroys `SignalingForegroundService`; saves callback handles and mode via `StorageDelegate` |
-| `SignalingForegroundService.kt` | Android `Service`; starts/stops foreground notification (`remoteMessaging` type); creates `FlutterEngineHelper`; delivers `PSignalingServiceStatus` (including `moduleFactoryHandle` and `incomingCallHandlerHandle`) to the background isolate via `synchronizeIsolate()` which retries with linear backoff on failure; stops on `onTaskRemoved` when mode is `pushBound` |
-| `FlutterEngineHelper.kt` | Spawns a background `FlutterEngine` (auto-registers all plugins), runs `signalingServiceCallbackDispatcher`, fires `onSynchronize` to the background isolate |
-| `SignalingBootReceiver.kt` | `BroadcastReceiver` for `BOOT_COMPLETED` / `LOCKED_BOOT_COMPLETED` / `MY_PACKAGE_REPLACED` — restarts service after reboot |
-| `StorageDelegate.kt` | Persists `callbackDispatcherHandle`, `onSyncHandler`, connection params, service mode, `moduleFactoryHandle`, and incoming call handler handle to `SharedPreferences` |
+| `WebtritSignalingServicePlugin.kt` | `FlutterPlugin` entry point; hosts `PSignalingServiceHostApi`; starts/stops `SignalingForegroundService`; saves callback handles, credentials and certificates via `StorageDelegate` |
+| `SignalingForegroundService.kt` | Android `Service`; starts/stops foreground notification (`phoneCall` type); creates `FlutterEngineHelper`; delivers `PSignalingServiceStatus` (including `moduleFactoryHandle` and `callEventHandlerHandle`) to the background isolate via `synchronizeIsolate()` which retries with linear backoff on failure; returns `START_STICKY`; on `onTaskRemoved` enqueues `SignalingRestartWorker`; `onFgsEngineReady` / `onFgsEngineDestroyed` hooks let the app register other plugins' APIs on the background engine |
+| `FlutterEngineHelper.kt` | Spawns a background `FlutterEngine` (`automaticallyRegisterPlugins=false`), runs `signalingServiceCallbackDispatcher`, fires `onSynchronize` to the background isolate |
+| `SignalingRestartWorker.kt` | WorkManager worker that restarts the service after it died or the task was removed |
+| `StorageDelegate.kt` | Persists `callbackDispatcherHandle`, `onSyncHandler`, connection params, trusted certificates, `moduleFactoryHandle`, and call-event handler handle to `SharedPreferences` |
 
 ## AndroidManifest permissions
 
 ```
 FOREGROUND_SERVICE
-FOREGROUND_SERVICE_REMOTE_MESSAGING   ← required for remoteMessaging service type (Android 14+)
+FOREGROUND_SERVICE_PHONE_CALL         <- required for phoneCall service type (Android 14+)
 WAKE_LOCK
-RECEIVE_BOOT_COMPLETED
 POST_NOTIFICATIONS
 ```
 
-`foregroundServiceType="remoteMessaging"` — correct type for persistent WebSocket connections
-(replaces `dataSync` which is deprecated for WebSocket use on `targetSdk >= 35` / Android 16+).
+`foregroundServiceType="phoneCall"` - the service exists to deliver VoIP calls. A start from the
+background is restricted for apps targeting API 31+ unless an exemption applies (a high-priority
+FCM message, a notification interaction, ...), and for apps targeting API 35+ Android 15 forbids
+starting it from `BOOT_COMPLETED`. A refused start (`ForegroundServiceStartNotAllowedException`) is handled where
+it happens:
 
-`minSdkVersion 26` — required by `startForegroundService` API.
+- in `startForeground()` inside `onCreate`: the service stops itself and `onDestroy` enqueues
+  `SignalingRestartWorker` to retry in 15 s;
+- in `startForegroundService()` inside `SignalingRestartWorker`: the worker returns
+  `Result.retry()`, exponential backoff from 15 s;
+- in the Pigeon `connect()` (`restoreService()`): `SignalingRestartWorker` is enqueued in 15 s;
+- in the Pigeon `startService()`: not caught, so it reaches the Dart caller - `connect()` logs it
+  and clears its pending start, `updateMode()` rethrows it, the restart after the hub dies logs it.
+
+There is no boot receiver.
+
+`minSdkVersion 24`, `compileSdkVersion 36` (`android/build.gradle`).
 
 ## Session buffer
 
@@ -203,21 +219,20 @@ For the buffer contract and which event types are buffered see
 subscriber restores calls the way it does after a reconnect instead of re-living the session's
 events; the app's handshake plan carries the caller's last media state with a restored call.
 
-Raw `SignalingHubClient.events` does **not** replay — always wrap it in
-`SignalingHubModule` or attach a listener before calling `start()`.
+Raw `SignalingHubClient.events` does **not** replay, and `SignalingHubModule` keeps no buffer
+either: attach the listener before the hub's ack is awaited, as `HubConnectionManager` does.
 
 ## Commands
 
 ```bash
-dart pub get
-dart analyze
-dart test                                                                              # unit tests only
-cd ../signaling_service/example && flutter test integration_test --device-id <device-id>  # integration tests on device
+flutter pub get
+flutter analyze
+flutter test                                                                           # test/, including test/integration/ (runs on the host)
 dart run pigeon --input pigeons/signaling.messages.dart     # regenerate Pigeon bindings
 ```
 
 ## Code Style
 
-- Line width: 120 characters; single quotes; `lints/recommended.yaml`.
+- Line width: 120 characters; single quotes; `flutter_lints/flutter.yaml`.
 - No `freezed`; no `build_runner`.
 - Kotlin: standard Android style, JVM target 17.

@@ -101,8 +101,8 @@ Pigeon generates type-safe Kotlin/Dart bindings from a single source file.
 ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
 ```
 
-- **Never manually edit** `lib/src/common/callkeep.pigeon.dart` or the Kotlin files under
-  `android/src/main/kotlin/.../api/`.
+- **Never manually edit** `lib/src/common/callkeep.pigeon.dart` or
+  `android/src/main/kotlin/com/webtrit/callkeep/Generated.kt`.
 - Commit both the input file and all generated outputs together.
 
 ---
@@ -113,7 +113,7 @@ Pigeon generates type-safe Kotlin/Dart bindings from a single source file.
 # From this directory
 flutter pub get
 flutter analyze lib test
-dart format --line-length 120 --set-exit-if-changed lib test
+dart format --line-length 120 --set-exit-if-changed $(git ls-files 'lib/*.dart' 'test/*.dart' ':!:*.pigeon.dart')
 ```
 
 ---

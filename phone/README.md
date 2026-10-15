@@ -6,7 +6,7 @@ WebTrit Phone is a feature-rich application designed for seamless communication.
 
 Use the following setup to ensure compatibility with this branch:
 
-- **Flutter**: 3.32.4 (stable channel)
+- **Flutter**: 3.47.1 (stable channel)
 - **Android SDK**: 35.0.1
 
 Please align your local environment with these versions for consistent behavior across development and testing workflows.
@@ -71,7 +71,7 @@ Integration tests are located in the `patrol_test` folder.
 
 ## Contributing
 
-We welcome contributions from the community! Please follow our contribution guidelines when submitting pull requests.
+We welcome contributions from the community! Please follow our contribution guidelines when submitting changes for review.
 
 ## License
 

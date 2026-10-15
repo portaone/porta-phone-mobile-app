@@ -5,12 +5,13 @@
 ## Gotchas
 
 - **The repository root is here**, not in `phone/`. Anything that resolves paths
-  from the git root - hooks, lefthook, the scripts under `tool/` - is configured
+  from the git root - hooks, lefthook, the scripts under `scripts/` - is configured
   at this level, and a copy inside a package is read by nothing.
 - **Each package still owns its own rules.** `phone/CLAUDE.md`,
   `callkeep/CLAUDE.md` and `tools/CLAUDE.md` load when you work in those
   directories; nothing here replaces them.
-- **`callkeep/` and `analysis/` are mirrored to GitHub**, so their `.github/`
-  workflows stay where they are - a workflow only runs from the root of the
-  repository it is mirrored into.
-- **Commits**: create new commits; a published one is never amended.
+- **GitHub is a read-only mirror of Gerrit**, so the `.github/` workflows left
+  in the packages run nowhere. Checks for a change are the Jenkins jobs in
+  `.jenkins/`, which vote Verified on every patchset.
+- **Commits**: a correction is `git commit --amend`, a new patchset of the same
+  change; a merged one is never amended.

@@ -89,9 +89,9 @@ Settings are merged at runtime: **User < Team < Local** (local overrides team, t
 
 ### Team Settings (`.claude/settings.json`)
 
-The team settings file defines shared `deny` rules that prevent Claude Code from accessing sensitive files:
+The team settings file (`.claude/settings.json` at the repository root) defines shared `deny` rules that prevent Claude Code from accessing sensitive files:
 
-- **Keystores** — `.jks`, `.keystore`, `.p12` files and `webtrit_phone_keystores/` directory
+- **Keystores** — `.jks`, `.keystore`, `.p12` files
 - **Signing keys** — `.pem`, `.key`, `.p8` files
 - **Environment files** — `.env*` files
 

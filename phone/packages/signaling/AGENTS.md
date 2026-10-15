@@ -113,35 +113,30 @@ WebtritSignalingClient.defaultExecuteTransactionTimeoutDuration  // 10 s
 - `fake_async` for deterministic keepalive/timeout tests.
 - `FakeWebtritSignalingClient` in `test/src/factories/` for higher-level tests.
 
-### Live tests (`test/live_call_test.dart`, tag `live`)
+### Live tests (`test/live_signaling_test.dart`, tag `live`)
 
-Two-client strategy — `clientA` (caller) and `clientB` (callee) connect to a real server.
-Callee answers programmatically via `AcceptRequest` (no auto-answer on the test server).
+One client connects to a real server: handshake, disconnect, and network loss simulated through
+`TcpProxy` (`_tcp_proxy`). The groups skip themselves when the credentials are not set.
 
 Key patterns:
 
-- Pre-register all `awaitEvent<T>()` futures **before** sending any request to avoid missing events on a broadcast stream.
-- Fetch fresh session tokens in each `setUp` — WebTrit tokens are invalidated when the WebSocket session closes.
+- Fetch the session token once in `setUpAll`, over REST with `dart:io` `HttpClient`, so the package stays free of `api`.
 - Use `force=false` in `connect()` — `tearDown` disconnects cleanly so no stale sessions exist.
-- `_LiveClient.awaitEvent<T>` wraps the broadcast stream with a `Completer`; fails immediately on `CallErrorEvent / LineErrorEvent / SessionErrorEvent`.
-- Cleanup after tests where server behaviour is non-deterministic (multi-endpoint SIP accounts) uses `try/catch` around `HangupRequest` instead of awaiting `HangupEvent`.
 
 ## Commands
 
 ```bash
-dart test
-dart test test/signaling_test.dart
-dart test --name "buildTenantUrl"
+flutter test
+flutter test test/signaling_test.dart
+flutter test --name "buildTenantUrl"
 dart analyze
 dart format .
 
 # Live integration tests (requires real server credentials)
 WEBTRIT_APP_TEST_CUSTOM_CORE_URL=<host> \
-WEBTRIT_APP_TEST_EMAIL_CREDENTIAL=<caller> \
-WEBTRIT_APP_TEST_EMAIL_VERIFY_CREDENTIAL=<caller-password> \
-WEBTRIT_APP_TEST_CALLEE_CREDENTIAL=<callee> \
-WEBTRIT_APP_TEST_CALLEE_VERIFY_CREDENTIAL=<callee-password> \
-dart test test/live_call_test.dart --tags live --reporter expanded
+WEBTRIT_APP_TEST_EMAIL_CREDENTIAL=<login> \
+WEBTRIT_APP_TEST_EMAIL_VERIFY_CREDENTIAL=<password> \
+flutter test test/live_signaling_test.dart --tags live --reporter expanded
 ```
 
 Connection endpoint: `wss://<host>/signaling/v1?token=<token>[&force=<true|false>]`

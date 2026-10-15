@@ -347,8 +347,8 @@ lightweight reconnect timer. Reconnects after `SignalingConnectionFailed` and un
 
 ```
 bootstrap.dart
-  └── WebtritSignalingService().setModuleFactory(createSignalingModule)
-  └── WebtritSignalingService().setIncomingCallHandler(onSignalingBackgroundIncomingCall)
+  └── WebtritSignalingService.setModuleFactory(createSignalingModule)
+  └── WebtritSignalingService.setCallEventHandler(onSignalingBackgroundCallEvent)   // Android only
 
 MainShellState.initState()
   └── SignalingServiceFactory.create(config, mode)   // lib/utils/signaling_service_factory.dart

@@ -21,7 +21,7 @@ later commands read.
 | --- | --- | --- |
 | `--applicationId` | yes | The configurator application id |
 | `--token` | yes | A signed-in token, or a `build` CLI token (`wtc_...`) minted on the configurator's CLI tokens screen by whoever will hold it |
-| `--keystores-path` | yes | The project's keystore folder |
+| `--keystores-path` | no | The project's keystore folder. Without it the SSL certificates and signing keystore are skipped |
 | `--cache-session-data-path` | no | Where the session data is cached between processes |
 
 Which backend it asks is not an option: it is the revision of this repository
@@ -49,7 +49,7 @@ Runs the platform-specific setup a build needs before it can be built.
 | Option | Required | What it is |
 | --- | --- | --- |
 | `--platform` | no | `ios` or `android`. May be given more than once; nothing else is allowed |
-| `--keystore-path` | yes | The application keystore directory, absolute or relative to the phone project. Given explicitly rather than taken from the cache, which may name a path from another operating system |
+| `--keystore-path` | no | The application keystore directory, absolute or relative to the phone project. Given explicitly rather than taken from the cache, which may name a path from another operating system. Without it the command skips flutterfire re-configuration |
 | `--cache-session-data-path` | no | The `cache_session_data.json` that `configurator-resources` produced. Defaults to that name in the working directory |
 
 ## `configurator-translations-fetch`
@@ -63,4 +63,6 @@ Writes the translation catalogue into the phone repository's ARB files.
 
 ## `update`
 
-Updates the CLI itself.
+Asks pub.dev for a newer version of the CLI and would install it. This package is not published
+there, so the lookup fails: the command logs the error and exits with 70. The same lookup after
+every other command fails silently.

@@ -583,9 +583,8 @@ the cache, and stores a changed one through
 which awaits the cache write before publishing. An unchanged snapshot completes
 without a write or duplicate update. `getAndListen()` exposes cached data and
 persisted updates; refresh failures reach polling through the worker's returned
-future without being added to the data stream. The repository's own `refresh()`
-is no longer registered anywhere and is kept only until the follow-up change
-removes it. The
+future without being added to the data stream. The repository has no `refresh()`
+of its own. The
 [worker tests](../test/features/user_info/user_info_sync_worker_test.dart) cover
 both failure sources, stream preservation, persistence ordering, and automatic
 backoff recovery with the worker registered in a real `PollingService` over the
@@ -977,12 +976,14 @@ right after the row is written, so the ordinary case is sent promptly and the in
 only has to catch what an earlier session left behind - which is why it is 300 seconds
 rather than the sync's 10.
 
-A flush runs the cycle whether or not the task is backing off, which is deliberate: a
-receipt the user has just produced should not wait out a backoff window that an
-unrelated entry caused. It is therefore asked for on the task's trailing-edge debounce
-(one second) rather than immediately, so reading through a screenful of notifications
-is one cycle instead of one request per tap - which is what would otherwise arrive at a
-backend that is already refusing them.
+A flush is dropped while the task is backing off (`state.phase == PollingTaskPhase.failed`):
+every cycle attempts the whole queue, so once sends are failing a flush per tap would be
+a request per tap per queued entry at a backend that is already refusing them. The
+receipt is on disk either way, and the retry the task has already scheduled sends it.
+Otherwise a flush is asked for on the task's trailing-edge debounce (one second) rather
+than immediately, so reading through a screenful of notifications is one cycle instead of
+one request per tap. Being offline is not the backing-off case: the task waits for
+connectivity and the queue leaves on the refresh that reconnecting runs.
 
 A failed send leaves its entry exactly as it was, and nothing counts attempts. The
 old worker abandoned an entry after five, which a one-second loop spent in about six

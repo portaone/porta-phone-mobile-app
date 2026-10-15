@@ -30,7 +30,6 @@ Defined in `AndroidManifest.xml`:
 - `VIBRATE`, `WAKE_LOCK`
 - `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_PHONE_CALL`
 - `FOREGROUND_SERVICE_MICROPHONE`, `FOREGROUND_SERVICE_CAMERA`
-- `RECEIVE_BOOT_COMPLETED`
 - `POST_NOTIFICATIONS`
 
 **Used features:**
@@ -48,7 +47,7 @@ Defined in `AndroidManifest.xml`:
 This is the main plugin class that registers and initializes:
 
 - Pigeon APIs (Permissions, Sound, Connections)
-- Background signaling and push notification services
+- The background push notification service
 - The lock-screen check on an Activity opened by the incoming-call alert (`LockScreenPresence`)
 - Communication bridges between services and Flutter via binary messengers
 
@@ -58,14 +57,6 @@ isolate registration. It observes no Activity lifecycle.
 ---
 
 ## Background Isolate APIs
-
-### `BackgroundSignalingIsolateBootstrapApi`
-
-Handles background signaling service initialization and control:
-
-- Registers callback dispatchers
-- Configures foreground notification title and description
-- Starts/stops the `SignalingService`
 
 ### `BackgroundPushNotificationIsolateBootstrapApi`
 
@@ -77,14 +68,6 @@ Handles:
 ---
 
 ## Android Services
-
-### `SignalingService`
-
-Foreground service responsible for signaling and lifecycle awareness:
-
-- Maintains a persistent notification
-- Starts the Flutter engine in background mode
-- Handles call commands: start, stop, answer, decline, update lifecycle
 
 ### `IncomingCallService`
 
@@ -116,7 +99,7 @@ Implements Android’s `ConnectionService`:
 - Manages the creation of incoming/outgoing connections
 - Routes connection states to Android Telecom
 - Coordinates sensor and wake lock handling
-- Notifies Flutter about call changes via `CommunicateServiceDispatcher`
+- Notifies Flutter about call changes via `ConnectionServicePerformBroadcaster`
 
 ---
 
@@ -129,7 +112,7 @@ A subclass of Android's `Connection`:
 - Represents an individual call
 - Handles answer, reject, disconnect, mute, hold, and speaker changes
 - Manages DTMF, video state, and audio route
-- Communicates call state updates via `CommunicateServiceDispatcher`
+- Communicates call state updates via `ConnectionServicePerformBroadcaster`
 
 ### `ConnectionTimeout`
 
@@ -147,12 +130,7 @@ Handles connection state updates such as:
 - Mute, Hold, DTMF
 - Speaker toggle and update call metadata
 
-### `IncomingCallEventDispatcher`
-
-Decides which service (foreground or background) should handle incoming call events based on
-`SignalingService` status.
-
-### `CommunicateServiceDispatcher`
+### `ConnectionServicePerformBroadcaster`
 
 Generic broadcast dispatcher used by `PhoneConnectionService` and `PhoneConnection` to notify
 registered services (e.g., `ForegroundService`, `IncomingCallService`) about:
@@ -169,9 +147,10 @@ registered services (e.g., `ForegroundService`, `IncomingCallService`) about:
 Handled by custom builders:
 
 - `IncomingCallNotificationBuilder`
-- `ForegroundCallNotificationBuilder`
+- `StandaloneIncomingCallNotificationBuilder`
 - `ActiveCallNotificationBuilder`
-- `MissedCallNotificationBuilder`
+- `StandaloneActiveCallNotificationBuilder`
+- `QueuedCallNotificationBuilder`
 
 Also includes `NotificationChannelManager` to register system channels.
 

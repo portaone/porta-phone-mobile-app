@@ -7,14 +7,7 @@ and signing of WebTrit mobile applications.
 
 ## Getting Started
 
-Activate the CLI globally via **pub.dev**:
-
-```sh
-dart pub global activate webtrit_phone_tools
-
-```
-
-Or install it locally from the source:
+Install it locally from the source (it is not published to pub.dev):
 
 ```sh
 dart pub global activate --source=path <path_to_package>
@@ -26,8 +19,8 @@ dart pub global activate --source=path <path_to_package>
 ## The backend a build talks to
 
 The address of the configurator backend is a constant in this repository, so the
-**revision checked out is the choice** - no caller can override it. `main` faces
-the Cloud Run backend; `legacy/firebase-backend` is frozen at the last commit
+**revision checked out is the choice** - `WEBTRIT_CONFIGURATOR_API_URL` changes
+only the address. `main` faces the Cloud Run backend; `legacy/firebase-backend` is frozen at the last commit
 that faced the Firebase one, for configurators deployed before the move. Details,
 and why pointing an address elsewhere is not the same thing:
 [`docs/architecture/backend-address.md`](docs/architecture/backend-address.md).
@@ -51,7 +44,7 @@ Core commands for fetching assets, translations, and themes.
 
 ```sh
 # Fetch resources (assets, translations, themes)
-$ webtrit_phone_tools resources-get --applicationId=<id> --token=<jwt> --keystores-path=<path>
+$ webtrit_phone_tools configurator-resources --applicationId=<id> --token=<jwt> --keystores-path=<path>
 
 # Generate local configuration files
 $ webtrit_phone_tools configurator-generate
@@ -70,7 +63,7 @@ backend, a splash screen that came out wrong.
 - [The commands](docs/reference/commands.md) - every command and its options
 - [The backend a build talks to](docs/architecture/backend-address.md) - and why the revision decides it
 - [Splash and launch icons](docs/reference/splash-assets.md) - what is downloaded and what is generated
-- [Running it](docs/guides/running-it.md) - from a checkout, and the checks a pull request runs
+- [Running it](docs/guides/running-it.md) - from a checkout, and the checks a change runs
 
 The coding standards - imports, barrel files, error handling, the orchestrator
-pattern, the git flow - are in `AGENTS.md`.
+pattern - are in `AGENTS.md`.

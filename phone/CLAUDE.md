@@ -21,11 +21,11 @@
 ## Gotchas
 
 - **l10n keys**: `<Bloc>_<Widget><Fields>[_<variant>]` — e.g. `lobby_AppBarTitle`, `login_Button_getPasswordBySMS`.
-- **l10n workflow**: translations live in git (no TMS). New/changed keys get uk/it/th translations in the SAME PR, then BOTH `melos run l10n:generate` AND `dart run build_runner build` (the l10n mapper is git-tracked; gen-l10n alone silently breaks `parseL10n`), then `melos run l10n:check`. See `docs/localization.md`.
+- **l10n workflow**: the ARB files here own the keys and the text compiled into the app; the configurator catalog owns what customers receive, so fixing an existing string here does not reach them. New/changed keys get uk/it/th translations in the SAME change, then BOTH `melos run l10n:generate` AND `dart run build_runner build` (the l10n mapper is git-tracked; gen-l10n alone silently breaks `parseL10n`), then `melos run l10n:check`. See `docs/localization.md`.
 - **initState / dispose**: `super.initState()` first; `super.dispose()` last; dispose in reverse creation order.
 - **withValues**: `withValues(alpha: 0.x)` — not deprecated `withOpacity()`.
 - **Card not Container**: elevation/shadow → `Card`, not `Container + BoxShadow`.
-- **Schema migration**: `dart run bin/create_new_schema_dump_and_test_migration.dart` after any Drift table change.
+- **Schema migration**: `dart run bin/create_new_schema_dump_and_test_migration.dart`, from `packages/data/app_database`, after any Drift table change.
 - **Theming steps**: DTO → codegen → JSON assets → bridge → extension (all 5 steps when adding a theme property).
 - **Theme schema root**: a new ROOT DTO in `theme_schema` also needs a `jsonSchema` static in the class plus an entry in `bin/print_json_schema.dart` — the generated constant is private to its library, so without the static the schema is unreachable. A root with a union or an enum below it wraps that constant in `assembleUnions`/`assembleEnums` and is `static final`; see the package AGENTS.md. Nested types need nothing (they land in the root's `$defs`).
 - **Theme contract rules**: the schema is generated from fields on the source class, so five DTO shapes break it — a non-empty collection default (crashes generation for the whole library), a new `JsonConverter`, a freezed union, state on a freezed impl instead of the class, and `createJsonSchema` without a `jsonSchema` member. `packages/theme_schema/test/contract_rules_test.dart` fails by name with what to do instead; the rules table is in that package's AGENTS.md.

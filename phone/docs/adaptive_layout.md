@@ -36,7 +36,7 @@ after. A screen without an unlock never sees landscape, so adding an
 arrangement starts with deciding - and wiring - where its flow unlocks
 rotation, the way the call shell does.
 
-## Delivery shape: two stacked PRs
+## Delivery shape: two stacked changes
 
 The call screen shipped as a stack, and the split is what made both halves
 reviewable. Repeat it:
@@ -44,15 +44,15 @@ reviewable. Repeat it:
 1. **Preparation, behavior-preserving.** Extract the screen's building
    blocks into standalone widgets, bundle the constructor traffic into one
    params object, move the screen body into `<screen>_portrait.dart`. The
-   screen renders exactly as before - the PR is judged on that claim, so
+   screen renders exactly as before - the change is judged on that claim, so
    keep any legacy landscape fallback alive in this half.
 2. **The arrangement, almost purely additive.** A new
    `<screen>_landscape.dart`, the `OrientationLayoutSelector` swap, the
    landscape test suites, the feature-doc update. Reviewers read one new
    file and a two-line selector.
 
-Base the second PR's branch on the first and retarget it to the default
-branch after the first merges.
+Commit the second on top of the first: Gerrit keeps the two as one relation
+chain, and the second is submitted after the first.
 
 ## Structure rules
 

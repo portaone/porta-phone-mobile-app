@@ -1,8 +1,8 @@
 # App update / version compatibility
 
 How the app detects that it is incompatible with the backend, and how it
-prompts the user to update when a newer build is published: the core-version
-compatibility dialog and the Play Core in-app update flow.
+prompts the user to update when a newer build is published: the version gate
+screens and the Play Core in-app update flow.
 
 Last reviewed: 2026-10-05
 
@@ -13,14 +13,23 @@ Last reviewed: 2026-10-05
 - `lib/app/router/app_update_check.dart` - `AppUpdateCheck`: mounted by
   `MainShell`, decides when `AppUpdateService.check()` runs and whether an
   update may take the screen.
-- `lib/features/main/` - the core-compatibility check and dialog:
-    - `bloc/main_bloc.dart` - `MainBloc`: core-version verification + store lookup.
-    - `bloc/main_state.dart` - `CoreVersionState` (`Unknown` / `Compatible` /
-      `Incompatible` with optional `updateStoreUrl`).
-    - `view/main_screen.dart` - `BlocListener` that shows the dialog.
-    - `widgets/compatibility_issue_dialog.dart` - the dialog itself.
+- `lib/models/system_info/app_compatibility.dart` - `AppCompatibilityResolver`
+  (default: `DefaultAppCompatibilityResolver`) and its result, the sealed
+  `AppCompatibility` (`AppCompatible` / `CoreVersionUnsupported` /
+  `AppVersionTooOld`).
+- `lib/blocs/app/app_bloc.dart` - `AppBloc`: keeps `state.appCompatibility`,
+  resolved from the cached system info at start and from every
+  `SystemInfoRepository.infoStream` value.
+- `lib/app/router/app_router.dart` - `onMainShellRouteGuardNavigation` sends an
+  incompatible session to a gate screen; the gate screens' own guards keep it
+  there while the state holds.
+- `lib/features/version_gate/` - the gate screens:
+    - `view/update_required_screen.dart` - `UpdateRequiredScreenPage` (app too old).
+    - `view/compatibility_issue_screen.dart` - `CompatibilityIssueScreenPage`
+      (core version unsupported).
 - `packages/store_info_extractor/` - workspace package that fetches the latest
-  published app version from the platform store (its only consumer is `MainBloc`).
+  published app version from the platform store (its consumers are the two
+  gate screens).
 
 ## Soft update prompt (Android) - Play Core in-app updates
 
@@ -69,36 +78,58 @@ Google Play services (some white-label fleets), and on sideloaded/debug builds
 
 Note on version semantics: builds get their `versionName`/`versionCode` from
 `--build-name`/`--build-number` at build time (per client); the repo's
-`app_version` field never reaches the binary. Publishing any higher version
+`app_version` field does not set them (the app reads it from the bundled
+`pubspec.yaml` as `AppInfo.version`). Publishing any higher version
 code triggers the prompt.
 
 Verification: the real flow cannot be exercised locally - it requires a build
 installed from Google Play (internal testing track with a lower version code
 on the device).
 
-## Compatibility dialog (core version)
+## Version gate (app and core version)
 
-When the backend (core) version falls outside the app's supported constraint,
-a non-dismissible `AlertDialog` appears ("Compatibility issue") with:
+When the backend's system info says the app may not run against it, the main
+shell is replaced by a full-screen, non-dismissible gate (the back button does
+not leave it), with:
 
-- **Update** - shown only when the store has a newer app version than the one
-  installed; opens the store page via `url_launcher` (external browser/store).
-- **Logout** - always shown; logs the user out.
+- **Update required** (`AppVersionTooOld`) - the backend declares an optional
+  `min_supported_app_version` (semver) in `GET /api/v1/system-info` (`null` =
+  not enforced) above the app's internal `app_version`. A `0.0.0` build is
+  never blocked. **Update** is shown whenever the store lookup resolves, with no
+  version comparison: the store lists the per-client build version, which is
+  not comparable with `app_version`.
+- **Compatibility issue** (`CoreVersionUnsupported`) - the core version is
+  outside `EnvironmentConfig.CORE_VERSION_CONSTRAINT`. **Update** is shown only
+  when the store version is newer than the app's `app_version`.
+
+**Logout** is always shown and logs the user out. When both apply, the too-old
+app wins.
 
 ```
-SystemInfoRepository.infoStream (backend system info)
-  -> MainBloc._onSystemInfoArrived
-       core version vs EnvironmentConfig.CORE_VERSION_CONSTRAINT
-         |- supported   -> Compatible (nothing shown)
-         '- unsupported -> StoreInfoExtractor.getStoreInfo(packageName)
-                             |- store version > installed -> Incompatible(updateStoreUrl)
-                             '- else / lookup error       -> Incompatible(no url)
-  -> MainScreen BlocListener -> CompatibilityIssueDialog.show(...)
-       Update -> MainBlocAppUpdatePressed -> launchUrl(storeUrl, externalApplication)
+SystemInfoRepository (cached value at start, then infoStream)
+  -> AppBloc -> AppCompatibilityResolver.resolve(systemInfo, AppInfo.version, CORE_VERSION_CONSTRAINT)
+       |- min_supported_app_version above app_version -> AppVersionTooOld
+       |- core version outside the constraint         -> CoreVersionUnsupported
+       '- else                                        -> AppCompatible
+  -> state.appCompatibility
+  -> AppRouter.onMainShellRouteGuardNavigation
+       |- AppVersionTooOld       -> replaceAll([UpdateRequiredScreenPageRoute])
+       |- CoreVersionUnsupported -> replaceAll([CompatibilityIssueScreenPageRoute])
+       '- AppCompatible          -> agreements, permissions, main shell
+  gate screen: Update -> StoreInfoExtractor.getStoreInfo(packageName)
+                         -> launchUrl(viewUrl, externalApplication)
 ```
 
-The store lookup runs **only** when the core is already incompatible - it
-answers "can an app update fix this?", not "is there an update".
+The main shell is what connects the signaling socket, so behind a gate it stays
+unconnected. A gate screen sends the user back to the main shell once the state
+no longer holds (the server lowered the minimum, the core is back in range) or
+the user logged out. At login, `LoginCubit` and `AutoprovisionCubit` run the
+same resolver on the fetched system info; an incompatible result shows an error
+(a notification in `LoginCubit`, an error state in `AutoprovisionCubit`) and no
+session is created.
+
+The store lookup runs **only** when a gate screen opens - it answers "can an
+app update fix this?", not "is there an update".
 
 ### store_info_extractor package
 
@@ -112,25 +143,17 @@ answers "can an app update fix this?", not "is there an update".
 
 Known limitations: the Android HTML scraping is fragile and is now redundant
 for the soft-update use case (Play Core covers it); it remains only as the
-Update-button source inside the compatibility dialog. Debug/sideloaded builds
-carry version `0.0.0`, so any store version compares as newer there.
+Update-button source of the two gate screens.
 
 ## Redesign / in progress
 
 | Mechanism                   | Trigger                                                              | UX                                                             | Status                      |
 |-----------------------------|----------------------------------------------------------------------|----------------------------------------------------------------|-----------------------------|
 | Soft update prompt (above)  | newer build published in Google Play                                 | native Play Core prompt, app keeps working                     | shipped                     |
-| Core compatibility (above)  | core version outside the app's constraint                            | blocking dialog, Update button when the store is newer         | shipped                     |
-| Backend-driven force update | backend declares `min_supported_app_version` above the app's version | non-dismissible update prompt + signaling socket not connected | backend done, app side TODO |
+| Core compatibility (above)  | core version outside the app's constraint                            | full-screen gate, Update button when the store is newer        | shipped                     |
+| Backend-driven force update | backend declares `min_supported_app_version` above the app's version | full-screen gate + signaling socket not connected              | shipped                     |
 | iOS soft update             | newer version in the App Store                                       | custom prompt -> App Store (no native API on iOS)              | future                      |
 
-- **Backend-driven force update**: the backend already exposes an optional
-  `min_supported_app_version` (semver) in `GET /api/v1/system-info` (`null` =
-  not enforced). The app side still needs to read the field, compare against
-  its own version, and on failure show a non-dismissible update prompt and
-  skip connecting the signaling socket. Open question for white-label builds:
-  which version to compare - the per-client `versionName` differs from the
-  canonical phone release line.
 - **iOS soft update (future)**: plug into the same `AppUpdateCheck` seam (a
   single `check()` per session); extract an interface from `AppUpdateService`
   with platform implementations. iOS has no native update UI, so its
@@ -138,7 +161,6 @@ carry version `0.0.0`, so any store version compares as newer there.
   `BuildContext` - emit an event/notification instead) and needs a version
   source: the kept `AppleAppStoreClient`, or Firebase Remote Config if a
   priority-like signal is wanted.
-- **Scraper cleanup**: `GooglePlayStoreClient` (and the `updateStoreUrl`
-  branch in `MainBloc` on Android) becomes removable once the force-update
-  flow above defines the compatibility dialog's fate. It also contains a stray
-  debug `print` to drop with it.
+- **Scraper cleanup**: `GooglePlayStoreClient` is still the Update-button
+  source of both gate screens on Android, so it stays until they have another
+  one. It also contains a stray debug `print` to drop with it.

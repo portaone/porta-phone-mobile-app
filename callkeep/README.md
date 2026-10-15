@@ -36,8 +36,8 @@ This is a federated plugin. Each package has its own README and `docs/` director
 
 | Platform | Minimum version |
 | --- | --- |
-| Android | API 26 (Android 8.0) |
-| iOS | iOS 11 |
+| Android | API 24 (Android 7.0) |
+| iOS | iOS 13 |
 
 > **Note:** CallKit and PushKit are only available on real devices — this plugin will not work
 > on iOS simulators. See [iOS Simulator](webtrit_callkeep_ios/README.md#ios-simulator).
@@ -48,7 +48,8 @@ This is a federated plugin. Each package has its own README and `docs/` director
 
 ```yaml
 dependencies:
-  webtrit_callkeep: ^<version>
+  webtrit_callkeep:
+    path: ../callkeep/webtrit_callkeep
 ```
 
 ---
@@ -277,8 +278,8 @@ The rest of the message is parsed by a caller-supplied ICU-compatible regex that
 in order: `callId`, `handle`, `displayName`, `hasVideo`.
 
 ```dart
-await callkeep.initializeSmsReception(
-  messagePrefix: '<#> WEBTRIT:',
+await AndroidCallkeepUtils.smsReceptionConfig.configureReceivedSms(
+  prefix: '<#> WEBTRIT:',
   regexPattern: r'your-regex-here',
 );
 ```
@@ -344,8 +345,8 @@ and full foreground/background workflows.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for branch naming, commit message format, and PR
-conventions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for commit message format, git hooks, and Gerrit
+review.
 
 ## License
 

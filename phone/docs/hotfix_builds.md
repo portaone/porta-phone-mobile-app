@@ -4,8 +4,7 @@ How a fix reaches a version that is already cut, without becoming a new version.
 
 Last reviewed: 2026-09-06
 
-For how a release pins its `webtrit_callkeep` version, see
-[Release Versioning](release_versioning.md). For the build itself see [Build](build.md).
+For the build itself see [Build](build.md).
 
 ---
 
@@ -28,10 +27,10 @@ registry tell the two builds apart by the build number.
 
 On `release/X.Y.Z`:
 
-1. Cherry-pick the fix from `develop`. Take the commit that is already merged there - a patch is
+1. Cherry-pick the fix from `master`. Take the commit that is already merged there - a patch is
    never the first place a fix lands, because then it would be missing from the next release.
 2. Raise `app_version` to `X.Y.Z+N`.
-3. Open a pull request against `release/X.Y.Z` and merge it.
+3. Push the change for review to `release/X.Y.Z` and submit it.
 4. **Tag the merged commit `X.Y.Z+N` by hand**, annotated, and push the tag.
 
 Step 4 is the one that is easy to skip and the one that everything downstream needs. See below.
@@ -40,17 +39,9 @@ Step 4 is the one that is easy to skip and the one that everything downstream ne
 
 ## The tag nobody creates
 
-Nothing creates it. `auto-tag-version` runs on pushes to `main`, reads `app_version`, and drops
-the build number before looking:
-
-```sh
-VERSION_FIELD=$(awk '/^app_version:/{print $2; exit}' pubspec.yaml)
-VERSION="${VERSION_FIELD%%+*}"
-```
-
-Its own comment says what follows from that: pushes "where the tag already exists, e.g. a hotfix
-X.Y.Z+N reusing the same base" are no-ops. A patch therefore never produces a tag on its own, and
-a merge into a release branch does not run the workflow at all.
+Nothing creates it. No Jenkins job tags a commit, and the `auto-tag-version` workflow under
+`.github/` does not run - GitHub is only a read-only mirror of Gerrit. A patch therefore never
+produces a tag on its own.
 
 ## The reach of an untagged patch
 

@@ -25,9 +25,8 @@ certificates (e.g. self-signed CAs). No external runtime dependencies — pure D
 ## Known Issues
 
 - `securety_context.dart` has an intentional misspelling ("securety" not "security"). Do not
-  rename it without also updating the barrel export `lib/ssl_certificates.dart` and all package
-  dependents (`_http_client`, `_web_socket_channel`).
-- `README.md` documents `BridgeX509Certificate`; the actual class is `TrustCertificate`. README is outdated.
+  rename it without also updating the barrel export `lib/ssl_certificates.dart`, the only file
+  that references it; dependents import the barrel.
 
 ## Commands
 

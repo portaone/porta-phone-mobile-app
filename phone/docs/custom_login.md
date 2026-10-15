@@ -206,5 +206,5 @@ following steps:
 
 For detailed instructions on configuring the `WebView` component and integrating custom HTML files
 into your project,
-please refer to the **[Features](feature_configuration.md)** documentation.
+please refer to the **[Features](application_config.md)** documentation.
 

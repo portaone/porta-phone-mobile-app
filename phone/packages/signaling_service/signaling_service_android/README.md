@@ -13,14 +13,15 @@ the mode passed to `start()` / `updateMode()`.
 
 The WebSocket runs inside an Android **Foreground Service** in a dedicated background isolate.
 The main isolate never opens its own WebSocket -- it connects to the FGS via `IsolateNameServer`
-(hub pattern). The service survives app closure and restarts after device reboot via
-`SignalingBootReceiver`.
+(hub pattern). The service survives app closure and is restarted after a kill by
+`START_STICKY` and `SignalingRestartWorker`; there is no boot receiver.
 
 ### pushBound
 
 No FGS. The orchestrator delegates entirely to `WebtritSignalingServiceAndroidDirect`. The
-WebSocket runs directly in the calling isolate, identical to iOS. The service dies when the
-user swipes the app away; the next session is started by an FCM push notification.
+WebSocket runs directly in the calling isolate, identical to iOS, and closes with that isolate
+(for example when the user swipes the app away); the next session is started by an FCM push
+notification.
 
 ---
 
@@ -30,7 +31,7 @@ The background isolate owns a `SignalingHub` -- a `ReceivePort` registered in
 `IsolateNameServer`. The main isolate connects to it as a subscriber and receives encoded
 events over `SendPort`. No second WebSocket is ever opened.
 
-The `HubConnectionManager` in the main isolate manages the attach/detach cycle and calls
+The `HubConnectionManager` in the main isolate manages the connect/tear-down cycle and calls
 `onServiceDead` when the hub port disappears (e.g. OS killed the FGS). The orchestrator
 uses this to trigger a restart unless the service was intentionally stopped.
 
@@ -41,7 +42,8 @@ uses this to trigger a restart unless the service was intentionally stopped.
 Implemented in `WebtritSignalingServiceAndroidDirect`. When an FCM push arrives, a short-lived
 push isolate opens a direct WebSocket. Once the user opens the app and the Activity connects,
 it signals the push isolate via `IsolateNameServer` (`kPushHandoffPortName`). The push isolate
-terminates early instead of waiting for the FCM 20-second timeout.
+terminates early instead of waiting for the FCM 20-second timeout. The handoff is armed only in
+an isolate that called `setHandoffCallback`, and the app does not call it, so this path is not in use.
 
 ---
 
@@ -62,7 +64,6 @@ terminates early instead of waiting for the FCM 20-second timeout.
 lib/src/
   plugin.dart              - orchestrator (WebtritSignalingServiceAndroid)
   messages.g.dart          - Pigeon generated
-  mode_mapping.dart        - mode enum conversion
   constants.dart           - shared port names
   fgs/                     - persistent mode (Foreground Service)
     hub_connection_manager.dart

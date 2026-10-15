@@ -8,7 +8,7 @@ It includes melos script usage, optional feature selection, signed release build
 via fastlane, Flutter SDK version management, and tips for local development.
 
 For all available melos scripts, see [Melos Commands](make_file.md).
-For how a release pins its `webtrit_callkeep` version, see [Release Versioning](release_versioning.md).
+How `webtrit_callkeep` is declared on master and on release branches: [Release Versioning](release_versioning.md).
 For how a fix reaches a version that is already cut, see [Patching a Released Version](hotfix_builds.md).
 For picking the cheapest check that proves a change compiles - and the flags a build fails without -
 see [Verifying a Change Compiles](build_verification.md).
@@ -214,8 +214,9 @@ melos run start:ios
 
 ## Flutter Version Configuration
 
-The Flutter SDK version used for building the project is pinned in `.fvmrc` — the single source of
-truth, read by [`fvm`](https://fvm.app) locally and by the `webtrit_phone_builder` CI.
+The Flutter SDK version used for building the project is pinned in `.fvmrc`, read by
+[`fvm`](https://fvm.app) locally and by the `porta-phone-mobile-app-cicd` build, and in the root
+`Dockerfile` (`FLUTTER_VERSION` and `FLUTTER_SHA256`), which the Jenkins checks build.
 
 ### Format
 
@@ -229,8 +230,8 @@ truth, read by [`fvm`](https://fvm.app) locally and by the `webtrit_phone_builde
 
 By declaring the Flutter version here:
 
-- One file drives both local development (`fvm flutter ...`) and CI — no drift between them
-- You avoid hardcoding versions in CI workflows
+- One file drives both local development (`fvm flutter ...`) and the `porta-phone-mobile-app-cicd`
+  build; the Jenkins checks take the version from the root `Dockerfile` instead
 - Builds remain reproducible and predictable
 
 Install the pinned SDK once per machine with `fvm install`. The downloaded `.fvm/` cache is
@@ -247,9 +248,9 @@ Update `.fvmrc` when:
 - You have tested that the project works with the new version
 - You want to ensure CI uses the updated version
 
-Keep the version noted in `AGENTS.md` in sync, and always validate builds locally before changing
+Keep the root `Dockerfile` and the version noted in `AGENTS.md` in sync, and always validate builds locally before changing
 this file.
 
 > **Legacy note:** `.github/flutter_version.yaml` was the previous source. It was removed once
-> `.fvmrc` became the single source and `webtrit_phone_builder` was updated to read it. Older
-> release branches may still carry the yaml; the builder falls back to it there.
+> the `porta-phone-mobile-app-cicd` build was updated to read `.fvmrc`. Older release branches
+> may still carry the yaml; that build falls back to it there.

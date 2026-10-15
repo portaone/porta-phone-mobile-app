@@ -143,17 +143,14 @@ Rollout is incremental (foundations first, then UI), each step behind tests:
 | Hold/Resume on focus | The hold slot always acts on the focused call (pause/play glyph); Resume holds the other live calls first; the swap button is gone - switching lines = focus a row + Resume                                                                  | Merged (PR #1387) |
 | Row overlay polish   | Call rows use light overlay tints of the on-screen text color: focused = brighter + light border (design polarity), bigger radius and padding                                                                                                | Merged (PR #1388) |
 | Video line badge     | A camera glyph next to the trailing label marks video lines in the call list                                                                                                                                                                 | Merged (PR #1389) |
-| Themed color roles   | Call-list rows/dots and the acting-on hint take colors from the theme pipeline: CallPageListConfig/CallPageHintConfig in theme_schema -> assets/themes JSONs -> CallListStyle/FocusedActionHintStyle; no fixed colors in widgets | In review         |
-| Landscape            | Three-zone landscape arrangement (info / grid / isolated hangup), the shared info-block and action-area widgets both orientations place, keypad unlocked in landscape with the digits beside the caller, Answer greyed out instead of vanishing during the interaction debounce | In review (PRs #1822, #1821) |
+| Themed color roles   | Call-list rows/dots and the acting-on hint take colors from the theme pipeline: CallPageListConfig/CallPageHintConfig in theme_schema -> assets/themes JSONs -> CallListStyle/FocusedActionHintStyle; no fixed colors in widgets | Merged            |
+| Landscape            | Three-zone landscape arrangement (info / grid / isolated hangup), the shared info-block and action-area widgets both orientations place, keypad unlocked in landscape with the digits beside the caller, Answer greyed out instead of vanishing during the interaction debounce | Merged (PRs #1822, #1821) |
 
-The redesign lands on the `refactor/call` integration branch - every stage is a
-PR into that branch, and once the whole flow is tested there a single PR merges
-it into `develop`. `develop` therefore stays shippable throughout; no feature
-flag is involved.
+Every stage lands on `master` as its own change; no feature flag is involved.
 
 ## Keeping this doc current
 
-Update this file in the same PR that changes the call UI - especially the
+Update this file in the same change that changes the call UI - especially the
 "Call states" and "Redesign / in progress" sections, and bump `Last reviewed`.
 When a redesign stage lands, move it to the shipped behavior above and update its
 status here.

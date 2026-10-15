@@ -124,7 +124,6 @@ Implemented by: `BackgroundPushNotificationIsolateBootstrapApi`
 | Method                                       | Description                                                                                                                                      |
 |----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | `initializePushNotificationCallback(handle)` | Store Dart isolate entry-point                                                                                                                   |
-| `configureSignalingService(config)`          | Persist service config                                                                                                                           |
 | `reportNewIncomingCall(callId, meta)`        | Register a push-triggered call through the same core operation as the signaling report; `IncomingCallService` starts from the Telecom connection |
 
 ---
@@ -177,11 +176,9 @@ iOS-only: Android has no source for either, so they are absent from this API.
 
 | Type                       | Description                                                         |
 |----------------------------|---------------------------------------------------------------------|
-| `PCallMetadata`            | Call details: display name, handle, video, audio device flags       |
-| `PCallHandle`              | Phone number or SIP URI                                             |
+| `PHandle`                  | Call handle: generic, phone number or email                         |
 | `PAudioDevice`             | Audio device descriptor (earpiece, speaker, Bluetooth, etc.)        |
 | `PCallkeepConnectionState` | Telecom state enum: RINGING, DIALING, ACTIVE, HOLDING, DISCONNECTED |
-| `PFailureMetaData`         | Structured failure info (reason, code)                              |
 
 ---
 

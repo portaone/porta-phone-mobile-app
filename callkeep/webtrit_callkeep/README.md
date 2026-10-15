@@ -15,7 +15,6 @@ webtrit_callkeep/
 ├── lib/src/
 │   ├── callkeep.dart                          # Callkeep — setUp, tearDown, call control
 │   ├── callkeep_connections.dart              # Android-only connection state queries
-│   ├── webtrit_callkeep_logs.dart             # Log delegate wiring
 │   ├── webtrit_callkeep_permissions.dart      # Permission helpers
 │   ├── webtrit_callkeep_sound.dart            # Ringback sound control
 │   └── android/                              # Android-specific services
@@ -33,7 +32,8 @@ webtrit_callkeep/
 
 ```yaml
 dependencies:
-  webtrit_callkeep: ^<version>
+  webtrit_callkeep:
+    path: ../callkeep/webtrit_callkeep
 ```
 
 No additional configuration is needed — the correct platform implementation is selected

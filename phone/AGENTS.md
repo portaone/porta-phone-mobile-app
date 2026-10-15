@@ -5,7 +5,7 @@ Flutter 3.47.1 (stable), Android SDK 35.0.1.
 
 ## Toolchain
 
-- Flutter version is pinned **only** in `.fvmrc` — single source of truth, read by `fvm` locally and by the `webtrit_phone_builder` CI. When you bump it, update the version mentioned above in the same commit. (Older release branches may still carry the legacy `.github/flutter_version.yaml`; the builder falls back to it there.)
+- Flutter version is pinned in `.fvmrc`, read by `fvm` locally and by the `porta-phone-mobile-app-cicd` build, and in the root `Dockerfile` (`FLUTTER_VERSION` and the archive's `FLUTTER_SHA256`), which the Jenkins checks build. When you bump it, update both and the version mentioned above in the same commit. (Older release branches may still carry the legacy `.github/flutter_version.yaml`; the builder falls back to it there.)
 - Use `fvm flutter ...` / `fvm dart ...` so the pinned SDK is used; a bare `flutter` from `PATH` may be a different version. The `.fvm/` SDK cache is gitignored — run `fvm install` once per machine.
 
 ## Build & Test
@@ -15,8 +15,8 @@ melos bootstrap                                               # install all deps
 melos run analyze                                             # lint all packages
 melos run test                                                # test all packages
 flutter test                                                  # unit/widget (app root)
-dart run build_runner build --delete-conflicting-outputs      # codegen
-dart run bin/create_new_schema_dump_and_test_migration.dart   # after Drift table changes
+dart run build_runner build --workspace                       # codegen, every workspace member
+(cd packages/data/app_database && dart run bin/create_new_schema_dump_and_test_migration.dart)  # after Drift table changes
 ```
 
 Every build needs `--dart-define-from-file=dart_define.json` **and** `--no-tree-shake-icons`
@@ -78,7 +78,9 @@ Full guide, wrapper choice and the traps: [`docs/accessibility.md`](docs/accessi
 - A pre-push gate (`tool/scripts/semantics-gate.sh`) fails the push when a diff adds a raw
   `GestureDetector`/`InkWell`/`InkResponse`/`IconButton` in a file whose added lines wire no
   semantics at all. A control that genuinely needs none takes a trailing
-  `// semantics-exempt: <reason>` - an opt-out is a review item, not a loophole.
+  `// semantics-exempt: <reason>` - an opt-out is a review item, not a loophole. The script looks
+  for a merge-base with `origin/develop`, which a Gerrit clone does not have, so today it prints
+  "skipping" and checks nothing.
 - After renaming anything in `keys.dart`, grep `patrol_test/` and `integration_test/`:
   `patrol_test/**` is excluded from analysis, so `analyze` stays green and the E2E run breaks.
 
@@ -91,7 +93,7 @@ packages/   → shared libs (must NOT import from lib/)
   data/app_database/         Drift DB + DAOs
   api/               REST client
   signaling/         WebSocket signaling
-  webtrit_callkeep/          native call UI (external repo)
+../callkeep/webtrit_callkeep/ native call UI (callkeep/ of this repository, a path dependency)
 ```
 
 - State: `@freezed` for state; `sealed class + Equatable` for events (never `freezed` on events).
@@ -124,4 +126,4 @@ packages/   → shared libs (must NOT import from lib/)
 - `docs/features/features.md` indexes the feature docs; the `docs/` root holds cross-cutting / component and app-level docs.
 - Per feature `<name>` (kebab-case): a small one is a single `docs/features/<name>.md`. Split a grown one into `<name>_ux.md` (product/UX: what the user does, screen states, key widgets, in-progress redesign) + `<name>_arch.md` (code/architecture: bloc, events, state machine, flows, isolates, key patterns), and drop the plain `<name>.md` — `features.md` is the index, keep no redundant per-feature index.
 - Cross-cutting components shared by several features live at the `docs/` root (e.g. `signaling_architecture_target.md`), not under features/; feature docs link to them rather than repeat them. Scenario docs (flows + diagrams) keep a descriptive name and live by scope — cross-component ones at the root (e.g. `incoming_call_scenarios.md`).
-- Each doc: start with a one-line summary + a `Last reviewed:` date; describe current behavior first and put unfinished work under a marked "Redesign / in progress" section; link code by relative path (`lib/features/<name>/...`) and sibling docs relatively; update the doc in the same PR that changes the feature. Plain ASCII (repo convention).
+- Each doc: start with a one-line summary + a `Last reviewed:` date; describe current behavior first and put unfinished work under a marked "Redesign / in progress" section; link code by relative path (`lib/features/<name>/...`) and sibling docs relatively; update the doc in the same change that changes the feature. Plain ASCII (repo convention).

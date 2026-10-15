@@ -38,10 +38,8 @@ Used for **event notifications** that the receiver handles asynchronously.
 
 - Sender calls `context.sendBroadcast(intent.setPackage(packageName))`.
 - Receiver registers with `registerReceiverCompat`.
-- Events flow in **both directions**:
-  - `:callkeep_core` → main: call lifecycle events (`AnswerCall`, `HungUp`, `IncomingConnectionReported`,
-      media events, etc.)
-  - main → `:callkeep_core`: ack events (`TearDownComplete`)
+- Events flow one way, `:callkeep_core` -> main: call lifecycle events (`AnswerCall`, `HungUp`,
+  `IncomingConnectionReported`, media events, etc.) and the `TearDownComplete` ack.
 
 See [ipc-broadcasting.md](ipc-broadcasting.md) for the full event catalogue.
 
@@ -52,8 +50,8 @@ is not yet registered).
 
 - main → `:callkeep_core` commands: `TearDownConnections`, `ReserveAnswer`, `CancelIncomingCall`,
   `CleanConnections`, `ReplayAudioState`, `ReplayConnectionStates`, and per-call commands
-  (`AnswerCall`, `DeclineCall`, `HungUpCall`, `EstablishCall`, `UpdateCall`, `MuteCall`,
-  `HoldCall`, `SpeakerCall`, `SetAudioDevice`, `SendDtmf`).
+  (`AnswerCall`, `DeclineCall`, `HungUpCall`, `EstablishCall`, `UpdateCall`, `Muting`,
+  `Holding`, `Speaker`, `AudioDeviceSet`, `SendDTMF`).
 
 `PhoneConnectionService.onStartCommand()` routes each intent by `ServiceAction` enum.
 
@@ -88,7 +86,7 @@ Because the two processes have independent JVM heaps, call state must be explici
 - `:callkeep_core` maintains `ConnectionManager` (
   see [connection-manager.md](connection-manager.md))
   — the authoritative registry of live `PhoneConnection` objects.
-- On app hot-restart, `ForegroundService.replayConnectionStates()` sends `ReplayAudioState` and
+- On app hot-restart, `ForegroundService.onDelegateSet()` sends `ReplayAudioState` and
   `ReplayConnectionStates` commands so `:callkeep_core` re-fires its current state to a freshly
   attached Flutter engine.
 

@@ -1,9 +1,7 @@
 # Flutter web support
 
 Status: experimental / in progress. All web-specific code is gated on `kIsWeb`;
-native (Android/iOS) behavior is unchanged. The web work lands on the
-`feat/web-support` integration branch via a stacked series of PRs (foundation,
-signaling, permissions, bundle_id, call/callkeep), which then merges to `develop`.
+native (Android/iOS) behavior is unchanged.
 
 ## Run / build
 

@@ -16,17 +16,14 @@ dart run bin/webtrit_phone_tools.dart --help  # Run CLI locally
 
 ---
 
-## 1. Critical: Clean Code & Git Flow
+## 1. Critical: Clean Code
 
 - **No Cyrillic** — strictly prohibited everywhere: source files, comments, strings, logs,
   identifiers, JSON/YAML keys, and commit messages. English only.
 - **Self-documenting code** — code must be clean and self-explanatory. Do not write comments to
   describe logic or use them as visual separators. Use DartDoc strictly for public APIs.
 - **No conversational filler** — output only commit-ready code without unnecessary explanations.
-- **Branch naming** — `feature/*`, `refactor/*`, `fix/*`, `chore/*`, `build/*`, `style/*`,
-  `docs/*`, or `release/*`.
-- **Commit messages** — Conventional Commits format:
-  `feat(keystore): add verify command`, `fix: resolve crash on missing config`.
+- **Commits** - commit form, review and hooks: see the root `AGENTS.md`.
 
 ---
 
@@ -85,23 +82,14 @@ import '../models/models.dart';
   - `logger.err()` — error messages visible to the user
   - `logger.detail()` — verbose/debug output
   - `logger.progress()` — spinner for long-running operations (always call `.complete()` or `.fail()`)
-- **Exit codes:** commands must return `ExitCode.success.code` (0) or `ExitCode.software.code` (1)
-  from `run()`. Never call `exit()` directly from within a command.
+- **Exit codes:** commands must return `ExitCode.success.code` (0) or an error code such as
+  `ExitCode.usage.code` (64), `ExitCode.data.code` (65) or `ExitCode.software.code` (70) from
+  `run()`. Never call `exit()` directly from within a command.
 - **Exceptions:** catch specific exception types, not bare `catch (e)`. Always log before rethrowing.
 
 ---
 
-## 6. Git Flow & Conventional Commits
-
-- **Branch prefixes:** `feature/`, `refactor/`, `fix/`, `chore/`, `build/`, `style/`, `docs/`,
-  `release/`.
-- **Commit types:** `feat`, `fix`, `chore`, `refactor`, `test`, `docs`, `style`, `ci`, `perf`,
-  `build`, `revert`.
-- **Example:** `feat(keystore): add init command`.
-
----
-
-## 7. CLI Command Rules
+## 6. CLI Command Rules
 
 ### 7.1 Structure
 
@@ -126,10 +114,11 @@ import '../models/models.dart';
 
 ### 7.4 Dependency Injection in Commands
 
-- Commands receive all external dependencies (`Logger`, `ConfiguratorBackandDatasource`,
-  `HttpClient`) via their constructor.
+- Commands receive all external dependencies (`Logger`, `HttpClient`, `PubUpdater`, runners such
+  as `FlutterRunner`) via their constructor.
 - Store as `final` private fields (e.g., `final Logger _logger`).
-- The `CommandRunner` constructs and injects all dependencies.
+- `WebtritPhoneToolsCommandRunner` constructs and injects `Logger`, `HttpClient` and `PubUpdater`;
+  a runner is an optional argument the command defaults itself when it is not passed.
 
 ### 7.5 Command Naming
 
@@ -139,9 +128,11 @@ import '../models/models.dart';
 ### 7.6 Testing
 
 - Every command has a corresponding test file in `test/src/commands/`.
-- Tests use `mocktail` to mock `Logger`, `PubUpdater`, datasource, and other injected dependencies.
-- Test end-to-end: construct `WebtritPhoneToolsCommandRunner` with mocked deps, invoke
-  `run(['command', '--flag', 'value'])`, and assert on exit code and logger interactions.
+- Tests use `mocktail` to mock `Logger`, `PubUpdater`, `HttpClient`, and other injected dependencies.
+- Test end-to-end: register the command on a bare `CommandRunner<int>('test', 'test')` with mocked
+  constructor arguments, invoke `run(['command', '--flag', 'value'])`, and assert on exit code and
+  logger interactions. Only `command_runner_test.dart` and `update_command_test.dart` construct
+  `WebtritPhoneToolsCommandRunner` itself.
 - Use `setUp`/`tearDown` for lifecycle management.
 
 ### 7.7 Simple vs Orchestrated Commands
@@ -155,7 +146,7 @@ import '../models/models.dart';
 
 ---
 
-## 8. Orchestrator Pattern (Complex Commands)
+## 7. Orchestrator Pattern (Complex Commands)
 
 ### 8.1 Layer Responsibilities
 
@@ -165,7 +156,7 @@ import '../models/models.dart';
 | **Context**      | `<Name>Context`                   | Immutable validated state; passed between all layers                          |
 | **Service**      | `<Name>Fetcher` / `<Name>Service` | Fetches remote data (API calls); pure I/O, no business logic                  |
 | **Processor**    | `<Name>Processor`                 | Transforms/writes data (file I/O, JSON manipulation, asset downloads)         |
-| **Runner**       | `<Name>Runner`                    | Executes external processes (`flutter`, `dart`, `keytool`, `git`)     |
+| **Runner**       | `<Name>Runner`                    | Executes external processes (`flutter`, `dart`, `fluttergen`, `flutterfire`) |
 | **Factory/Util** | `<Name>Factory` / `<Name>Util`    | Pure stateless helpers; no side effects                                       |
 
 ### 8.2 Layer Rules
@@ -175,7 +166,7 @@ import '../models/models.dart';
   a `Processor` or `Service` when applicable.
 - **Services are pure fetchers** — no file I/O or process spawning; only remote API calls.
 - **Processors own file I/O** — all file reading/writing lives in `Processor` classes only.
-- **Runners own process spawning** — all `Process.start()` / `Process.runSync()` calls live in
+- **Runners own process spawning** — all `Process.start()` / `Process.run()` calls live in
   `Runner` classes only.
 
 ### 8.3 Directory Structure
@@ -196,9 +187,6 @@ lib/src/commands/<feature_name>/
 ├── runners/                         # optional — only if external processes are needed
 │   ├── runners.dart
 │   └── <name>_runner.dart
-├── interceptors/                    # optional — only if Dio interceptors are needed
-│   ├── interceptors.dart
-│   └── <name>_interceptor.dart
 └── utils/                           # optional — only if feature-specific helpers are needed
     ├── utils.dart
     └── <name>_util.dart
@@ -206,22 +194,24 @@ lib/src/commands/<feature_name>/
 
 ### 8.4 External Process Execution
 
-- Use `Process.start()` for long-running processes that stream output (e.g., `flutter build`).
-- Use `Process.runSync()` for short blocking operations (e.g., `keytool -list`).
+- Use `Process.start()` for long-running processes that stream output (e.g., `flutterfire configure`).
+- Use `Process.run()` for short operations awaited to completion (e.g., `flutter gen-l10n`).
 - Always check exit code and log errors before propagating failures.
 - Never hardcode absolute binary paths; rely on the system `PATH`.
 
 ### 8.5 HTTP & Retry
 
-- All HTTP interactions with the WebTrit Configurator backend use `ConfiguratorBackandDatasource`
-  wrapped with Dio.
-- Retry logic (exponential backoff, max 3 retries) for 5xx errors and connection timeouts must be
-  implemented as a Dio `Interceptor` subclass inside `interceptors/`.
+- Every configurator call a command makes goes through the CLI's own `HttpClient`
+  (`lib/src/utils/http_client.dart`, built on `package:http`): `getBuildBundle`, `getTranslationFiles`,
+  `getCatalogTranslationFiles`. `ConfiguratorClient` (`lib/src/configurator/`) is covered by tests but
+  no command uses it. `FontAssetProcessor` downloads fonts with its own `http.Client` and retry.
+- `HttpClient` retries 5xx responses and `http.ClientException` up to 3 times, after 5, 15 and 30
+  seconds plus jitter.
 - Fast-fail (do not retry) on 4xx client errors, especially 401 Unauthorized.
 
 ---
 
-## 9. Extension Methods
+## 8. Extension Methods
 
 - Extension classes live in `lib/src/extension/`.
 - Each file contains exactly one extension, named `<type>_extension.dart`.
@@ -230,7 +220,7 @@ lib/src/commands/<feature_name>/
 
 ---
 
-## 10. Tech Stack
+## 9. Tech Stack
 
 | Dependency          | Version     | Purpose                                  |
 |---------------------|-------------|------------------------------------------|
@@ -238,10 +228,10 @@ lib/src/commands/<feature_name>/
 | `cli_completion`    | ^0.5.1      | Shell completion support                 |
 | `mason_logger`      | ^0.3.3      | Terminal output with colors/spinners     |
 | `path`              | ^1.9.1      | Cross-platform path handling             |
-| `pub_updater`       | ^0.5.0      | Check for pub.dev updates                |
-| `http`              | ^1.6.0      | Simple GET requests                      |
+| `pub_updater`       | ^0.5.0      | `update`: asks pub.dev, where this package is not published |
+| `http`              | ^1.6.0      | All HTTP (`HttpClient`, fonts)           |
 | `archive`           | ^4.0.7      | ZIP/archive handling                     |
 | `yaml`              | ^3.1.3      | YAML parsing                             |
-| `data` (local)      | path: …     | Configurator API datasource (Dio-based)  |
+| `theme_schema` (local) | path: ../phone/packages/theme_schema | Declared; nothing under `lib/` imports it |
 | `test`              | ^1.25.15    | Unit/integration tests                   |
 | `mocktail`          | ^1.0.4      | Mocking in tests                         |

@@ -6,7 +6,7 @@
 
 ## CallMetadata
 
-**File**: `kotlin/com/webtrit/callkeep/models/CallMetadata.kt`
+**File**: `kotlin/com/webtrit/callkeep/models/CallMetaData.kt`
 
 The central data class describing a single call. Passed across process boundaries as a `Bundle`
 (not as a `Parcelable` — see constraint below).
@@ -17,14 +17,14 @@ The central data class describing a single call. Passed across process boundarie
 |--------------------|---------------------|--------------------------------------------------|
 | `callId`           | `String`            | Unique call identifier                           |
 | `displayName`      | `String?`           | Human-readable caller name                       |
-| `handle`           | `CallHandle`        | Phone number or SIP URI                          |
-| `hasVideo`         | `Boolean`           | Whether video is enabled                         |
+| `handle`           | `CallHandle?`       | Phone number or SIP URI                          |
+| `hasVideo`         | `Boolean?`          | Whether video is enabled                         |
 | `audioDevice`      | `AudioDevice?`      | Currently selected audio device                  |
 | `audioDevices`     | `List<AudioDevice>` | Available audio devices                          |
-| `proximityEnabled` | `Boolean`           | Whether proximity sensor should be active        |
-| `hasMute`          | `Boolean`           | Whether mute capability is available             |
-| `hasHold`          | `Boolean`           | Whether hold capability is available             |
-| `speakerOnVideo`   | `Boolean`           | Auto-route audio to speaker when video is active |
+| `proximityEnabled` | `Boolean?`          | Whether proximity sensor should be active        |
+| `hasMute`          | `Boolean?`          | Whether mute capability is available             |
+| `hasHold`          | `Boolean?`          | Whether hold capability is available             |
+| `speakerOnVideo`   | `Boolean?`          | Auto-route audio to speaker when video is active |
 | `ringtonePath`     | `String?`           | Custom ringtone file path (asset cache)          |
 
 `connectionState: CallConnectionState?` is the transient payload on
@@ -61,10 +61,9 @@ Wraps a phone number or SIP URI string passed to Android Telecom.
 
 ### Fields
 
-| Field   | Type             | Description                                                 |
-|---------|------------------|-------------------------------------------------------------|
-| `value` | `String`         | Raw handle string (e.g., `+15551234567` or `sip:user@host`) |
-| `type`  | `CallHandleType` | `PHONE_NUMBER` or `SIP`                                     |
+| Field    | Type     | Description                                                 |
+|----------|----------|-------------------------------------------------------------|
+| `number` | `String` | Raw handle string (e.g., `+15551234567` or `sip:user@host`) |
 
 ---
 
@@ -76,24 +75,11 @@ Represents an audio output endpoint.
 
 ### Fields
 
-| Field  | Type              | Description                                                           |
-|--------|-------------------|-----------------------------------------------------------------------|
-| `name` | `String`          | Display name                                                          |
-| `type` | `AudioDeviceType` | `EARPIECE`, `SPEAKER`, `BLUETOOTH`, `WIRED_HEADSET`, `UNKNOWN`        |
-| `id`   | `String?`         | Device identifier (API 34+, corresponds to `CallEndpoint.endpointId`) |
-
----
-
-## SignalingStatus
-
-**File**: `kotlin/com/webtrit/callkeep/models/SignalingStatus.kt`
-
-Tracks the signaling layer connection state.
-
-| Value          | Meaning                                    |
-|----------------|--------------------------------------------|
-| `CONNECTED`    | Signaling layer is connected to the server |
-| `DISCONNECTED` | Signaling layer is not connected           |
+| Field  | Type              | Description                                                                 |
+|--------|-------------------|-----------------------------------------------------------------------------|
+| `name` | `String?`         | Display name                                                                |
+| `type` | `AudioDeviceType` | `EARPIECE`, `SPEAKER`, `BLUETOOTH`, `WIRED_HEADSET`, `STREAMING`, `UNKNOWN` |
+| `id`   | `String?`         | Device identifier (API 34+, corresponds to `CallEndpoint.identifier`)       |
 
 ---
 
@@ -106,17 +92,22 @@ Used to route `PendingIntent` callbacks from notification buttons.
 
 ---
 
-## FailedCallInfo / FailureMetaData
+## FailedCallInfo / FailureMetadata
 
 **Files**: `models/FailedCallInfo.kt`, `models/FailureMetaData.kt`
 
 Carry structured error information when a call fails to connect.
 
+`FailedCallInfo`, a failed outgoing call kept by `ForegroundService`:
+
 | Field    | Description                                                           |
 |----------|-----------------------------------------------------------------------|
 | `callId` | Call that failed                                                      |
-| `reason` | `FailureReason` enum (e.g., `REMOTE_REJECT`, `ERROR`, `UNREGISTERED`) |
-| `code`   | Optional numeric error code                                           |
+| `reason` | Optional failure description (`String?`)                              |
+| `source` | `OutgoingFailureSource` (`DISPATCH_ERROR`, `CS_CALLBACK`, `TIMEOUT`)  |
+
+`FailureMetadata`, the payload of the `OutgoingFailure` / `IncomingFailure` broadcasts, carries
+`callMetadata`, `message` and `outgoingFailureType` instead.
 
 ---
 
@@ -124,7 +115,7 @@ Carry structured error information when a call fails to connect.
 
 **File**: `kotlin/com/webtrit/callkeep/models/Converters.kt`
 
-Extension functions and utilities for converting between Pigeon-generated types (`PCallMetadata`,
+Extension functions and utilities for converting between Pigeon-generated types (`PHandle`,
 `PAudioDevice`, etc.) and internal model types (`CallMetadata`, `AudioDevice`, etc.).
 
 These are the only place where Pigeon types are translated to internal types. All business logic

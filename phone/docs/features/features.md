@@ -8,7 +8,7 @@ under "Documentation".
 
 | Feature                            | Docs                                            | Status                                           |
 |------------------------------------|-------------------------------------------------|--------------------------------------------------|
-| App update / version compatibility | [Overview](app-update.md)                       | Active - force-update (app side) and iOS pending |
+| App update / version compatibility | [Overview](app-update.md)                       | Active - iOS soft update pending                 |
 | Call                               | [UX](call_ux.md) / [Architecture](call_arch.md) | Active - UI redesign in progress                 |
 | Call history                       | [Overview](call_history.md)                     | Active - reached by walking back in date slices  |
 | Call center                        | [Overview](call_center.md)                      | Active - queues behind a capability and an agent check |

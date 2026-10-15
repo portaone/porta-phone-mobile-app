@@ -6,7 +6,7 @@ See **[AGENTS.md](AGENTS.md)** for API contract details, model conventions, and 
 
 ## Role of this package
 
-`webtrit_callkeep_platform_interface` defines the **shared abstract contract** that all platform implementations must satisfy. It is pure Dart — no Flutter engine dependency, no platform-specific code.
+`webtrit_callkeep_platform_interface` defines the **shared abstract contract** that all platform implementations must satisfy. Its `lib/` is pure Dart — no Flutter import, no platform-specific code. The pubspec depends on the Flutter SDK.
 
 ## Commands
 

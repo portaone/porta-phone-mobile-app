@@ -14,13 +14,16 @@ graph LR
     Umbrella -->|delegates to| PI["signaling_service\n_platform_interface\n(SignalingServicePlatform)"]
     PI -->|implemented by| Android["signaling_service_android"]
     PI -->|implemented by| IOS["signaling_service_ios"]
-    App -->|provides SignalingModuleFactory| Android & IOS
-    App -->|owns| SM["SignalingModule\n(WebtritSignalingClient)"]
+    PI -->|implemented by| WEB["signaling_service_web"]
+    App -->|registers SignalingModuleFactory| Android & IOS & WEB
+    PI -->|owns| SM["SignalingModuleImpl\n(WebtritSignalingClient)"]
 ```
 
-The platform packages (`android`, `ios`) do **not** depend on `signaling` directly.
-The app provides a `SignalingModuleFactory` callback via `setModuleFactory()` — the plugin
-calls it to create a `SignalingModule` instance and manages its lifecycle.
+All three platform packages list `signaling` in `pubspec.yaml`, but only the `lib/` of
+`android` imports it.
+The app registers a `SignalingModuleFactory` callback (`createSignalingModule` from the platform
+interface) via `setModuleFactory()` - the plugin calls it to create a `SignalingModule` instance
+and manages its lifecycle.
 
 ---
 
@@ -37,7 +40,7 @@ graph TD
     end
 
     subgraph "Layer 2 — SignalingModule"
-        SM["SignalingModule\n(app-provided via SignalingModuleFactory)\n· owns client lifecycle\n· session replay buffer\n· emits typed events\n· recommends reconnect delay"]
+        SM["SignalingModule\n(created via SignalingModuleFactory)\n· owns client lifecycle\n· session replay buffer\n· emits typed events\n· recommends reconnect delay"]
     end
 
     subgraph "Layer 1 — Protocol"
@@ -52,7 +55,7 @@ graph TD
 | Layer                                  | Knows                                                      | Does NOT know                                     |
 |----------------------------------------|------------------------------------------------------------|---------------------------------------------------|
 | `WebtritSignalingClient`               | Raw WebSocket, JSON protocol, transactions                 | App lifecycle, reconnect logic                    |
-| `SignalingModule` (app-owned) | Disconnect codes, reconnect delay hints, session buffering | Network state, active calls, whether to reconnect |
+| `SignalingModule` (`SignalingModuleImpl`) | Disconnect codes, reconnect delay hints, session buffering | Network state, active calls, whether to reconnect |
 | Consumer (CallBloc / IsolateManager)   | App lifecycle, network, active calls                       | WebSocket internals                               |
 
 ---
@@ -67,19 +70,19 @@ graph TD
         ios_sm -->|WebSocket| ios_srv["WebTrit Core"]
     end
 
-    subgraph Android["Android — foreground service + hub"]
+    subgraph Android["Android persistent - foreground service + hub"]
         direction TB
         and_cb["CallBloc\n(main isolate)"] -->|events via hub| and_hm["SignalingHubModule"]
-        and_push["Push isolate"] -->|events via hub| and_hm2["SignalingHubModule"]
-        and_hm & and_hm2 -->|" IsolateNameServer\nSendPort "| and_hub["SignalingHub\n(background isolate)"]
+        and_hm -->|" IsolateNameServer\nSendPort "| and_hub["SignalingHub\n(background isolate)"]
         and_hub -->|owns| and_sm["SignalingModule\n(created by app factory)"]
         and_sm -->|WebSocket| and_srv["WebTrit Core"]
         and_hub -->|foreground| and_svc["SignalingForegroundService"]
     end
 ```
 
-On iOS the socket lives in the main isolate and is recreated each time the app foregrounds.
-On Android the socket lives in a background isolate inside a foreground service — it survives
+On iOS and web, and on Android in `pushBound` mode (what the app passes unless the user opts into
+socket mode), the socket lives in the isolate that connects.
+On Android in `persistent` mode the socket lives in a background isolate inside a foreground service - it survives
 app backgrounding and dispatches incoming calls when the app is closed.
 
 ---
@@ -89,8 +92,8 @@ app backgrounding and dispatches incoming calls when the app is closed.
 ```mermaid
 graph TD
     subgraph "Kotlin"
-        FS["SignalingForegroundService\n(remoteMessaging)"]
-        BR["SignalingBootReceiver\n(BOOT_COMPLETED)"]
+        FS["SignalingForegroundService\n(phoneCall)"]
+        RW["SignalingRestartWorker\n(WorkManager)"]
         FEH["FlutterEngineHelper"]
     end
 
@@ -113,29 +116,31 @@ graph TD
         PHM["SignalingHubModule"]
     end
 
-    BR -->|starts| FS
+    RW -->|restarts| FS
     FS -->|spawns| FEH --> EP --> SFIM2
     SFIM2 --> HUB & SM2
     HUB <-->|" SendPort "| HC --> HM --> BLOC
     HUB <-->|" SendPort "| PHC --> PHM
     ANDROID -->|Pigeon| FS
-    ANDROID --> HC
+    ANDROID -->|HubConnectionManager| HC
 ```
 
 ### Hub wire protocol (pure Dart ports — no platform channels)
 
 | Direction    | Message                   | Description                                                 |
 |--------------|---------------------------|-------------------------------------------------------------|
-| Client → Hub | `{ sub, id, replyPort }`  | Subscribe; hub replies with ack, then the session's lifecycle events and a handshake rendered from its session snapshot |
-| Client → Hub | `{ unsub, id }`           | Unsubscribe                                                 |
-| Client → Hub | `{ exec, id, corr, req }` | Execute request; hub replies `[result, corr, error?]`       |
+| Client -> Hub | `[sub, id, replyPort]`    | Subscribe; hub replies with ack, then the session's lifecycle events and a handshake rendered from its session snapshot |
+| Client -> Hub | `[unsub, id]`             | Unsubscribe                                                 |
+| Client -> Hub | `[exec, id, corr, req]`   | Execute request; hub replies `[execute_result, corr, error?]` |
+| Client -> Hub | `[connect, id]` / `[disconnect, id]` | Ask the hub's module to connect / disconnect     |
+| Client -> Hub | `[ping, id]`              | Liveness check; hub replies with a pong                     |
 | Hub → Client | `SignalingModuleEvent`    | Forwarded to every subscriber in real time                  |
 
-### `attach()` sequence — why `awaitAck` comes before `start()`
+### Hub subscribe sequence (`HubConnectionManager`) - why `awaitAck` comes before `start()`
 
 ```
 awaitAck()   ← registers the internal Completer FIRST (before ack can arrive)
-start()      ← sends {sub} to hub → hub sends sub-ack + lifecycle replay with the current handshake
+start()      ← sends ['sub', id, replyPort] to hub → hub sends sub-ack + lifecycle replay with the current handshake
 await ack    ← now safe to wait; ack arrives because start() already fired
 ```
 
@@ -151,20 +156,20 @@ stateDiagram-v2
     Stopped --> Persistent: start(mode: persistent)
     Stopped --> PushBound: start(mode: pushBound)
     Persistent --> Persistent: app close\n(service keeps running)
-    Persistent --> Persistent: reboot\n(BootReceiver restarts)
-    Persistent --> Stopped: dispose()
-    PushBound --> Stopped: app swiped away\n(onTaskRemoved → stopSelf)
-    PushBound --> PushBound: Activity opens\nattach() — no new WebSocket
+    Persistent --> Persistent: killed\n(START_STICKY / SignalingRestartWorker restart)
+    Persistent --> Stopped: stopService()
+    PushBound --> Stopped: isolate gone\n(no service)
+    PushBound --> PushBound: Activity opens\nconnect() - its own WebSocket
     PushBound --> Stopped: dispose()
 ```
 
 |                     | `persistent`                                       | `pushBound`                                  |
 |---------------------|----------------------------------------------------|----------------------------------------------|
-| Survives app close  | Yes                                                | No — `onTaskRemoved` stops service           |
-| Survives reboot     | Yes — `SignalingBootReceiver`                      | No                                           |
+| Survives app close  | Yes                                                | No - there is no service                     |
+| Restart after a kill | `START_STICKY` and `SignalingRestartWorker`; no boot receiver | No                              |
 | Incoming calls      | WebSocket always live → direct `IncomingCallEvent` | Server sends FCM push (no active socket)     |
-| When Activity opens | `attach()` — connects to running hub               | `attach()` — connects to hub started by push |
-| `onStartCommand`    | `START_STICKY`                                     | `START_NOT_STICKY`                           |
+| When Activity opens | `connect()` - `HubConnectionManager` connects to running hub | `connect()` - opens its own WebSocket |
+| `onStartCommand`    | `START_STICKY`                                     | not used                                     |
 
 ---
 
@@ -198,7 +203,7 @@ graph LR
 later it gets the full session history via the buffer:
 
 ```
-MainShellState.initState()
+_MainShellState.initState()   (lib/app/router/main_shell.dart)
   └─ SignalingModule.connect()
 
   buffered:  Connecting → Connected → HandshakeReceived(lines)
@@ -211,7 +216,7 @@ CallBloc constructed later:
        └─ [live]   future events...
 ```
 
-`connect()` clears the buffer — each reconnect starts fresh.
+`SignalingConnecting` clears the buffer - each reconnect starts fresh.
 `SignalingHubModule` keeps no buffer of its own: `HubConnectionManager` listens to it before the
 hub's ack, and the hub's replay, which follows the ack at once, is delivered once.
 
@@ -219,7 +224,7 @@ The buffer replays state, not history: a `SessionSnapshot` (in `signaling_servic
 keeps the handshake the session opened with current with the registration events and every call's
 events on its line (numbered or guest; a hangup frees the line at its position), and `snapshot`
 renders the handshake the server would send now. A subscriber that attaches late - a new isolate
-attaching to the hub, or a consumer subscribing to the plugin after it attached - takes the path it
+subscribing to the hub, or a consumer subscribing to the plugin after it connected - takes the path it
 takes after a reconnect, where the server itself describes calls that are already up. Protocol
 events are never replayed; what they changed is in the snapshot. Because every boundary keeps the
 same buffer, a call that ended between one boundary's replay and the next is gone at both.
@@ -232,29 +237,30 @@ same buffer, a call that ended between one boundary's replay and the next is gon
 sequenceDiagram
     participant WS as WebSocket
     participant SM as SignalingModule
-    participant CB as CallBloc
+    participant RC as SignalingReconnectController
     WS ->> SM: onDisconnect(code, reason)
     SM ->> SM: interpret code → recommendedReconnectDelay
-    SM ->> CB: SignalingDisconnected(recommendedReconnectDelay)
-    Note over CB: Timer(delay, () {<br/> if (isClosed) return<br/> if (!appActive) return<br/> if (!networkActive) return<br/> service.connect()<br/>})
+    SM ->> RC: SignalingDisconnected(recommendedReconnectDelay)
+    Note over RC: Timer(delay, () {<br/> if (disposed) return<br/> if (!appActive && !hasActiveCalls) return<br/> if (!networkActive) return<br/> if (isConnected) return<br/> module.connect()<br/>})
 ```
 
 `SignalingModule` owns **protocol knowledge** (what the code means).
-`CallBloc` owns **app context** (whether reconnect makes sense right now).
+`SignalingReconnectController` (`lib/features/call/services/signaling_reconnect_controller.dart`,
+created by `CallBloc`) owns **app context** (whether reconnect makes sense right now).
 
 ---
 
 ## Background incoming call handler (Android)
 
-When the app is closed and the service runs in `persistent` mode, incoming calls arrive in
+When the app is closed and the service runs in `persistent` mode, call events arrive in
 the background isolate. The plugin dispatches them via a registered Dart callback:
 
 ```
-SignalingForegroundIsolateManager receives IncomingCallEvent
-  └─ _dispatchIncomingCall(event)
-       └─ PluginUtilities.getCallbackFromHandle(incomingCallHandlerHandle)
-            └─ onSignalingBackgroundIncomingCall(event)   ← app-side
-                 └─ callkeep.reportNewIncomingCall(...)
+SignalingForegroundIsolateManager receives IncomingCallEvent / HangupEvent
+  └─ _dispatchCallEvent(event)
+       └─ PluginUtilities.getCallbackFromHandle(callEventHandlerHandle)
+            └─ onSignalingBackgroundCallEvent(event)   ← app-side
+                 └─ callkeep.reportNewIncomingCall(...) / release the call
 ```
 
 The callback must be a **top-level function** annotated `@pragma('vm:entry-point')`.
@@ -266,8 +272,8 @@ the main isolate does not need to be alive.
 
 ## Module factory pattern
 
-The platform packages do not depend on `signaling` directly.
-Instead, the app provides a `SignalingModuleFactory` callback at startup:
+The plugin creates its `SignalingModule` through a `SignalingModuleFactory` callback the app
+registers at startup:
 
 ```dart
 typedef SignalingModuleFactory = SignalingModule Function(SignalingServiceConfig config);
@@ -276,7 +282,8 @@ typedef SignalingModuleFactory = SignalingModule Function(SignalingServiceConfig
 ### App-side setup (bootstrap.dart)
 
 ```dart
-// Top-level factory — @pragma required so PluginUtilities can serialize it across isolates
+// Top-level factory in signaling_service_platform_interface/lib/src/signaling_module_impl.dart
+// - @pragma required so PluginUtilities can serialize it across isolates
 @pragma('vm:entry-point')
 SignalingModule createSignalingModule(SignalingServiceConfig config) {
   return SignalingModuleImpl(
@@ -287,9 +294,9 @@ SignalingModule createSignalingModule(SignalingServiceConfig config) {
   );
 }
 
-// Called once at bootstrap, before start()
-await WebtritSignalingService().setModuleFactory(createSignalingModule);
-await WebtritSignalingService().setIncomingCallHandler(onSignalingBackgroundIncomingCall);
+// Called once at bootstrap, before the first instance; the handler on Android only
+await WebtritSignalingService.setModuleFactory(createSignalingModule);
+await WebtritSignalingService.setCallEventHandler(onSignalingBackgroundCallEvent);
 ```
 
 ### How the factory reaches the background isolate (Android)
@@ -298,7 +305,7 @@ await WebtritSignalingService().setIncomingCallHandler(onSignalingBackgroundInco
 setModuleFactory(factory)
   └─ PluginUtilities.getCallbackHandle(factory) → raw int handle
        └─ PSignalingServiceHostApi.saveModuleFactory(handle)
-            └─ Kotlin: StorageDelegate.setModuleFactoryHandle(handle)
+            └─ Kotlin: StorageDelegate.saveModuleFactoryHandle(handle)
                  └─ SharedPreferences
 
 onSignalingServiceSync(status)   ← background isolate
@@ -307,7 +314,7 @@ onSignalingServiceSync(status)   ← background isolate
             └─ factory(config)   ← creates SignalingModule
 ```
 
-On iOS the factory is stored in memory and called directly in `start()` — no isolate boundary to cross.
+On iOS, web and Android `pushBound` the factory is stored in memory and called directly in `start()` - no isolate boundary to cross.
 
 ---
 
@@ -316,9 +323,9 @@ On iOS the factory is stored in memory and called directly in `start()` — no i
 | Question                                         | Decision                    | Why                                                                                                                      |
 |--------------------------------------------------|-----------------------------|--------------------------------------------------------------------------------------------------------------------------|
 | `connect()` — Future or fire-and-forget?         | Fire-and-forget             | Result arrives via stream; two channels for the same fact are redundant                                                  |
-| Where does protocol knowledge live?              | App's `SignalingModule`     | Disconnect codes and delays are protocol detail, not app logic                                                           |
+| Where does protocol knowledge live?              | `SignalingModule`           | Disconnect codes and delays are protocol detail, not app logic                                                           |
 | Where does reconnect decision live?              | Consumer                    | Only the consumer knows app state, network, and active calls                                                             |
 | Session buffer — `rxdart` or manual?             | Manual `List`               | `ReplaySubject` has no `clear()` in v0.28; manual list gives full control                                                |
 | `dispose()` closes the events stream?            | No                          | Closing would silently terminate active BLoC subscribers via `onDone`; stream stays open across `dispose`/`start` cycles |
 | iOS background service?                          | No — main isolate only      | iOS suspends background processes; no equivalent of Android foreground service                                           |
-| Plugin depends on `signaling` directly?  | No — factory callback       | Keeps plugin packages dependency-free from signaling impl; app owns `SignalingModule`                                    |
+| Plugin depends on `signaling` directly?  | Yes; module via factory callback | The factory lets the Android service isolate create the module from a serialized callback handle                   |

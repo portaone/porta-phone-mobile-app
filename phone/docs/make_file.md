@@ -74,7 +74,7 @@ FLUTTER_FLAGS="--build-name=1.2.3 --build-number=42" melos run build:apk
 | `melos run fmt`       | Format all Dart code (modifies files)                    |
 | `melos run fmt:check` | Check formatting without changes (exit 1 if unformatted) |
 | `melos run analyze`   | Run `dart analyze` across the workspace                  |
-| `melos run check`     | `fmt:check` + `analyze`                                  |
+| `melos run check`     | `fmt:check` + `analyze` + `l10n:check`                   |
 
 ---
 

@@ -7,31 +7,25 @@ dart pub global activate --source=path .
 webtrit_phone_tools --help
 ```
 
-Published as a pub.dev package, so a machine that only consumes it takes it
-from there instead:
-
-```sh
-dart pub global activate webtrit_phone_tools
-```
-
 What a build runs, and in what order, is [the commands](../reference/commands.md).
 
-## The checks a pull request runs
+## The checks a change runs
 
-`.github/workflows/webtrit_phone_tools.yaml`, on any change under `bin/`,
-`lib/`, `test/` or `pubspec.yaml`:
+Lefthook from the repository root, and in Gerrit the Jenkins job
+`gerrit_check_tools`, which votes on every patchset and runs `dart test` only
+when the patchset touches `tools/`, `analysis/`, `phone/packages/theme_schema/`,
+the root `Dockerfile` or `.dockerignore`, or the job's own Groovy file. The
+`.github/` workflows here run nowhere.
 
 ```sh
-dart pub get
-dart format --line-length 120 --set-exit-if-changed bin lib test
-dart analyze --fatal-warnings
-dart test
+dart format --output=none --set-exit-if-changed <staged files>   # lefthook, on commit
+dart analyze                                                     # lefthook, on push
+dart test                                                        # lefthook on push, and Jenkins
 ```
 
-Two more jobs run beside them: a spell check, and `verify-version`, which runs
-the version test with `--run-skipped` so the number the CLI reports and the one
-in `pubspec.yaml` cannot drift apart.
+No hook or job runs a spell check or the `version-verify` test
+(`test/ensure_build_test.dart`), which is skipped unless `--run-skipped` is given.
 
-One path dependency survives resolution: `theme_schema`, which the
-theme step reads to decide light and dark. It lives in the phone repository, so
-CI checks that out beside this one.
+Two path dependencies, both in this repository: `theme_schema`
+(`../phone/packages/theme_schema`), declared but imported by nothing under
+`lib/`, and the lint rules, `webtrit_analysis` (`../analysis`).

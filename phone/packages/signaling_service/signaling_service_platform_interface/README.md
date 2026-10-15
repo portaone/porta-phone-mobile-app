@@ -4,7 +4,7 @@ Shared foundation for the `signaling_service` federated plugin.
 
 Defines the abstract API contract, the shared event model, the connection config DTO, and
 `WebtritSignalingServiceDirect` -- a concrete base for platforms where the WebSocket runs
-directly in the calling isolate (iOS and Android pushBound mode).
+directly in the calling isolate (iOS, web and Android pushBound mode).
 
 ---
 
@@ -21,7 +21,7 @@ need to override them.
 ### `WebtritSignalingServiceDirect`
 
 Concrete subclass of `SignalingServicePlatform` for direct WebSocket mode (no FGS, no
-background isolate). Used as-is on iOS; subclassed on Android as
+background isolate). Used on iOS and web with only plugin registration added; subclassed on Android as
 `WebtritSignalingServiceAndroidDirect` to add the push-isolate handoff hook.
 
 Exposes two protected hooks for subclasses:
@@ -44,10 +44,10 @@ Exposes two protected hooks for subclasses:
 
 | Value        | Behaviour                                                                      |
 |--------------|--------------------------------------------------------------------------------|
-| `persistent` | Android FGS survives app closure and device reboot (default)                   |
+| `persistent` | Android FGS survives app closure (default)                                     |
 | `pushBound`  | Direct WebSocket in the calling isolate; lifecycle tied to the calling context |
 
-On iOS the mode parameter is ignored -- the connection always runs in the main isolate.
+On iOS and web the mode parameter is ignored -- the connection always runs in the main isolate.
 
 ### `SignalingModuleEvent` (sealed)
 
@@ -77,6 +77,7 @@ lib/src/
   signaling_service_direct.dart     - WebtritSignalingServiceDirect concrete base
   signaling_module_impl.dart        - default SignalingModule implementation
   signaling_event_buffer.dart       - replay buffer for late subscribers
+  session_snapshot.dart             - session state rendered as a handshake for late subscribers
   signaling_request_queue.dart      - request serialization during reconnect
   models/
     signaling_module.dart           - SignalingModule abstract interface
@@ -95,3 +96,4 @@ lib/src/
 | [`signaling_service`](../signaling_service/README.md)                 | Public API aggregator  |
 | [`signaling_service_android`](../signaling_service_android/README.md) | Android implementation |
 | [`signaling_service_ios`](../signaling_service_ios/README.md)         | iOS implementation     |
+| `signaling_service_web`                                               | Web implementation     |

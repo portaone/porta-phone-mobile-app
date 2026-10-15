@@ -153,11 +153,13 @@ for offline, and a later successful sync still populates the list normally.
 
 ## Voicemail
 
-`lib/features/settings/features/voicemail/view/voicemail_screen.dart`
+`lib/features/voicemail/view/voicemail_screen.dart`
 
-No manual refresh either. The list is fetched once when the screen opens and
-then follows the repository stream; the state already carries a "refreshing"
-flag that draws a thin progress bar, but nothing in the UI triggers a refetch.
+Pulling the list down runs `VoicemailCubit.refresh()`
+(`lib/features/voicemail/widgets/voicemail_body.dart`): the stored mailbox for
+three of the filters, a fresh read of the trash for the fourth. While it runs,
+the `VoicemailView.isRefreshing` getter (`isLoading` with a non-empty visible
+list) draws a thin progress bar; on an empty list it stays false.
 
 ## Not on this page
 

@@ -32,7 +32,7 @@ A multi-stage `Dockerfile` is provided that compiles `pjsua` from source with fu
 (FFmpeg + SDL) and bundles it together with the Dart server:
 
 ```bash
-# Build the image from the repo root
+# Build the image from phone/
 docker build -t pjsua-companion packages/pjsua_companion/
 
 # Run — exposes the server on port 7788
@@ -46,7 +46,7 @@ The image uses `SDL_VIDEODRIVER=offscreen` so video rendering works without a di
 
 ## Starting the server
 
-From the repo root:
+From `phone/`:
 
 ```bash
 dart run packages/pjsua_companion/bin/server.dart [port]
