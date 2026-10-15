@@ -129,10 +129,11 @@ gate.
 its `glob` matches. A topic branch has no push destination, so `lefthook run pre-push` picks the
 files itself, and with a stale or missing branch to compare against it scopes the gate wrongly -
 on a branch cut from a release branch it has finished in under a second with a green summary.
-Hand it the files of the commits instead; `scripts/gerrit-push.sh` does this:
+Hand it the files of the commits instead, NUL-separated - with one path per line it reads only
+the first; `scripts/gerrit-push.sh` does this:
 
 ```sh
-git diff --name-only origin/master...HEAD | env -u GIT_DIR lefthook run pre-push --files-from-stdin
+git diff -z --name-only origin/master...HEAD | env -u GIT_DIR lefthook run pre-push --files-from-stdin
 ```
 
 **Two commands pass without checking anything:**
