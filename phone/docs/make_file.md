@@ -112,6 +112,11 @@ FLUTTER_FLAGS="--build-name=1.2.3 --build-number=42" melos run build:apk
 | `melos run icons:generate`  | Generate launcher icons              |
 | `melos run splash:generate` | Generate native splash screen        |
 | `melos run assets:generate` | `icons:generate` + `splash:generate` |
+| `melos run package:rename` | Apply the package and app name from `tool/configs/package_rename_config.yaml` |
+
+`melos run configurator:generate` writes the three `tool/configs/*.yaml` files these commands read
+(icons, splash, package name) for the brand it fetches, so an edit to them by hand is overwritten
+by the next run.
 
 ---
 
