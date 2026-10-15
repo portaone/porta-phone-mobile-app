@@ -160,6 +160,9 @@ Pulling the list down runs `VoicemailCubit.refresh()`
 three of the filters, a fresh read of the trash for the fourth. While it runs,
 the `VoicemailView.isRefreshing` getter (`isLoading` with a non-empty visible
 list) draws a thin progress bar; on an empty list it stays false.
+For the three mailbox filters the repository shares one fetch between its callers, so a
+pull while a poll is running joins that fetch instead of starting a second one
+([polling.md](polling.md)).
 
 ## Not on this page
 

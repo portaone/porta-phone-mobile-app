@@ -554,155 +554,29 @@ non-positive runtime override falls back to its compile-time default.
 
 ### Refresh contract migration audit
 
-This table tracks the current contract status of the registrations above.
-The initial audit used `master` commit `0aee08a3c`; entries include subsequent
-migrations, reviewed on 2026-09-10.
 "Needs migration" means at least one path violates the completion contract:
 it hides a failure as success, replaces the original error, or leaves a joined
-refresh future incomplete. Recheck these paths when migrating each listener.
+refresh future incomplete. Every other registration above conforms; the
+per-repository guards are listed in
+[integration_test_coverage.md](integration_test_coverage.md).
 
 | Listener | Status | Current behavior |
 |---|---|---|
-| `UserInfoSyncWorker` | Conforms | Fetches, compares, and stores through `UserRepository.storeInfo()`, which persists before publishing; failures propagate with their original stack |
-| `SystemInfoRepository` | Conforms | Awaits persistence before publishing; rethrows remote and cache-write failures |
-| `ExternalContactsSyncWorker` | Conforms | Writes once per cycle and rethrows failures; polling owns the next attempt |
-| `CdrsSyncWorker` | Conforms | Awaits the full sync cycle and rethrows |
-| `SystemNotificationsSyncWorker` | Conforms | Awaits history or the drained updates and rethrows; keeps no cross-cycle state |
-| `SystemNotificationsOutboxWorker` | Conforms | Attempts every queued entry, then rethrows the first failure with its original stack |
-| `VoicemailRepository` | Conforms | Shares one fetch future; preserves original failures even when cache fallback fails |
 | `CallerIdSettingsRepository` | Needs migration | `sync()` logs and swallows failures |
-| `FavoritesRepository` | Conforms | Refresh rethrows sync failures; persisted local edits retain best-effort sync |
-| `SipSubscriptionsRepository` | Conforms | Refresh rethrows sync failures; persisted local edits retain best-effort sync |
 | `IceServersRepository` | Needs migration | A failed remote fetch returns the fallback normally |
 
-For User info the polling listener is
-[`UserInfoSyncWorker`](../lib/features/user_info/services/user_info_sync_worker.dart),
-owned by `UserInfoSync`. One cycle fetches the remote snapshot, compares it with
-the cache, and stores a changed one through
-[`UserRepository.storeInfo()`](../lib/repositories/user_info/user_repository.dart),
-which awaits the cache write before publishing. An unchanged snapshot completes
-without a write or duplicate update. `getAndListen()` exposes cached data and
-persisted updates; refresh failures reach polling through the worker's returned
-future without being added to the data stream. The repository has no `refresh()`
-of its own. The
-[worker tests](../test/features/user_info/user_info_sync_worker_test.dart) cover
-both failure sources, stream preservation, persistence ordering, and automatic
-backoff recovery with the worker registered in a real `PollingService` over the
-real repository.
-The [host integration tests](../test/repository/user_repository_integration_test.dart)
-extend this through the real API client, datasources and mappers with controlled
-HTTP and an in-memory preferences backend. The
-[Patrol guard](../patrol_test/user_repository_refresh_test.dart) additionally
-checks backoff recovery and session-rejection routing with native preferences;
-see [coverage](integration_test_coverage.md#background-polling---user-repository-refresh)
-and [run commands](integration_test_commands.md#run-the-user-repository-refresh-guards).
+How some of the conforming registrations meet the contract, since it is not visible from
+the table above:
 
-In [System Info](../lib/repositories/system_info/system_info_repository.dart),
-`refresh()` awaits both the remote fetch and cache write, then publishes the
-persisted snapshot on `infoStream`. Write failures retain their original error
-and stack, with no data-stream update. `preload()` and network-backed
-`getSystemInfo()` calls share this persistence contract; cache-only reads and
-cache-first hits still need no remote work. The
-[integration tests](../test/repository/system_info_repository_integration_test.dart)
-cover these entrypoints, cache/stream ordering, failures and retry recovery.
-
-The [login owner](../lib/blocs/app/app_bloc.dart) awaits `preload()` and explicitly
-handles a failed prefill as non-fatal to the already valid session. The
-main-shell route guard still verifies cache readiness before constructing its
-providers. This caller-side fallback does not hide a polling refresh failure.
-
-System Info's default 300-second interval backs off to 600 and then 900 seconds
-with the application's default cap. Repository tests use shorter intervals to
-verify failure accounting and recovery. The
-[Patrol guard](../patrol_test/system_info_repository_refresh_test.dart) verifies
-the failed-write and recovery path with native preferences and controlled HTTP.
-
-In [Voicemail](../lib/repositories/voicemail/voicemail_repository.dart), `refresh()`
-and direct `fetchVoicemails()` calls share one future covering the list request,
-detail requests and required SQLite writes. Mutations waiting for that fetch
-observe the same outcome. Every caller receives the original error and stack,
-including on 401 and when re-emitting cached data also fails. Persisted rows
-remain available to the UI; this fallback never turns a failed cycle into success.
-Writes remain per item, not an all-or-nothing batch transaction.
-
-The constructor retains its eager fetch and handles its detached observation;
-joining polling/UI callers still receive the failed future. A rejected session
-never needs handling here: the session's API client, built by the
-[shell](../lib/app/router/main_shell.dart), reports it to the shell, which ends
-the session, before the failure reaches the repository. Polling does not perform
-logout or classify HTTP errors.
-
-An unconfigured mailbox or unsupported endpoint fails the attempted cycle and
-sets `isActive` to false. Callers joining that still-running fetch receive its
-failure; later direct calls need no work, and polling unregisters the inactive
-listener. Like System Info, voicemail's default 300-second interval backs off
-to 600 and then 900 seconds with the application's default cap. Repository tests
-use shorter intervals to prove accounting and recovery.
-
-The [unit contract tests](../test/repository/voicemail_refresh_contract_test.dart)
-cover shared completion, mutation waiters, eager-fetch failures, inactivity and
-20/40/10-second retry recovery. The
-[host integration suite](../test/repository/voicemail_repository_integration_test.dart)
-uses the real API mapping and SQLite. The
-[Patrol guards](../patrol_test/voicemail_repository_refresh_test.dart) check shared
-503/401 failures and delayed-write recovery on-device with an isolated database.
-See [coverage](integration_test_coverage.md#background-polling---voicemail-refresh)
-and [commands](integration_test_commands.md#run-the-voicemail-refresh-guards).
-
-In [Favorites](../lib/repositories/favorites/favorites_repository.dart),
-`refresh()` awaits the outbox read, remote pull or batch sync, and required local
-writes. It logs and rethrows the original error and stack. An error while
-recording a failed outbox attempt is logged separately and never replaces the
-sync failure. The ETag advances only after local persistence succeeds; a `304`
-or disabled remote sync completes normally without replacing local rows.
-
-Local add, remove and reorder operations still persist the edit and its outbox
-entry first. These writes must succeed. Their subsequent opportunistic sync
-checks connectivity and treats refresh failures as non-fatal to the saved edit.
-Polling calls the strict `refresh()` directly and owns its connectivity gate
-and automatic retry delay. This change does not alter the existing outbox
-attempt limit or make local writes and outbox acknowledgement atomic.
-
-The [Favorites contract tests](../test/repository/favorites_repository_test.dart)
-cover original errors, secondary bookkeeping failures, persistence and ETag
-ordering, local-edit behavior, and automatic 20/40/10-second backoff recovery.
-The [host integration tests](../test/repository/favorites_repository_integration_test.dart)
-exercise the real API client, mapping and SQLite with controlled HTTP, including
-401/429/503 failures, durable outbox retries, recovery, and `304` responses.
-The [Patrol guards](../patrol_test/favorites_repository_refresh_test.dart) reuse
-that harness with isolated file-backed SQLite on the device to verify automatic
-pull backoff and saved-edit/outbox recovery. See
-[coverage](integration_test_coverage.md#background-polling---favorites-refresh)
-and [commands](integration_test_commands.md#run-the-favorites-refresh-guards).
-
-In [SIP subscriptions](../lib/repositories/sip_subscriptions/sip_subscriptions_repository.dart),
-`refresh()` has the same strict boundary as Favorites: it awaits the outbox read,
-remote pull or batch sync, and local persistence, then rethrows the original
-failure and stack. Secondary outbox bookkeeping failures are logged separately.
-Only completed persistence advances the ETag; `304` and disabled remote sync
-are successful no-work outcomes.
-
-Local upsert and remove still persist the edit and outbox first, then await
-best-effort sync with a connectivity preflight. A sync failure does not fail
-the saved edit; a local mutation or initial outbox write failure still does.
-Removal retains its contact-user-ID lookup before deleting the local row.
-Polling invokes strict refresh without a repository connectivity gate. The
-existing attempt limit, direct post-edit sync path and non-atomic outbox
-acknowledgement are unchanged; this is not a worker or concurrency migration.
-
-The [contract tests](../test/repository/sip_subscriptions_repository_test.dart)
-cover original failures, bookkeeping, ETag/write ordering, local edits and
-automatic 20/40/10-second backoff recovery. The
-[host integration tests](../test/repository/sip_subscriptions_repository_integration_test.dart)
-exercise real API mapping and SQLite with 401/429/503 responses, `304`, invalid
-payloads, and durable upsert/delete retries including the resolved contact ID.
-The [Patrol guards](../patrol_test/sip_subscriptions_repository_refresh_test.dart)
-reuse the harness with an isolated database file for pull backoff and saved-edit
-recovery. See [coverage](integration_test_coverage.md#background-polling---sip-subscriptions-refresh)
-and [commands](integration_test_commands.md#run-the-sip-subscriptions-refresh-guards).
-Like Favorites, the default 300-second interval backs off to 600 and then 900
-seconds with the application's default cap. These repository tests use shorter
-intervals; application configuration is covered separately by the shell tests.
+- Voicemail: `refresh()` and direct `fetchVoicemails()` calls share one future covering the
+  list request, detail requests and the SQLite writes, so a manual refresh joins a poll that
+  is already running instead of starting a second one. Every caller receives the original
+  error. An unconfigured mailbox or unsupported endpoint fails the cycle and sets `isActive`
+  to false, and polling unregisters the listener.
+- Favorites and SIP subscriptions: a local add, remove or reorder persists the edit and its
+  outbox entry first and syncs best-effort; `refresh()` is the strict path that awaits the
+  outbox read, the remote pull or batch sync and the local writes, and rethrows the original
+  failure.
 
 Repository migrations should be separate review units. They may need feature
 error-stream preservation, session handling, or domain-specific fallback
@@ -916,89 +790,8 @@ replay, the persist-before-publish order and a failed write.
 
 ### System notifications
 
-The feature's own page, covering both directions and the on-demand path end to end,
-is [`features/system_notifications.md`](features/system_notifications.md).
-
-`SystemNotificationsSyncWorker` implements the cycle and `SystemNotificationsSync`
-is the standard owner with no extra capability: the feature has no pull-to-refresh
-and no domain trigger, so scheduling is the only thing that runs it. A cycle takes
-one branch - the initial history when the local store has no anchor, otherwise
-every update since that anchor - and never both, so a first load stays one bounded
-request.
-
-Disposal rejects later refreshes and checks the worker's lifetime after every
-await. An HTTP response arriving after disposal cannot start a store write,
-and completing an already-started write cannot fetch another page. An I/O
-operation already in progress is not cancelled; the retired cycle reports
-`StateError` instead of success.
-
-Two properties of the endpoint shape the cycle. It pages by timestamp rather than
-by page number, so the anchor is advanced from the newest record of each full page,
-and a full page that cannot advance it ends the cycle instead of being fetched
-forever. The local anchor selects history versus updates; it does not say
-whether an empty first sync has already succeeded. The worker remembers a
-successful cycle for its own lifetime, including an empty history response.
-Only history loaded before that first success is stored as `initialData`,
-suppressing local pushes for the initial bulk and its retries. Notifications
-arriving after a successful empty load are news and may produce a local push.
-A new worker starts with no completed cycle, matching the previous loop's
-per-worker initialization policy; this marker is not persisted across sessions.
-
-The registration lives in `main_shell_services.dart` behind the feature gate, so a
-deployment without system notifications registers nothing. `SystemNotificationsShell`
-keeps the push service and the background task. Tests:
-`test/features/system_notifications/system_notifications_sync_worker_test.dart`
-covers the cycle, the paging, disposal races and the failure contract;
-`test/features/system_notifications/system_notifications_sync_push_test.dart`
-uses an in-memory Drift store and the real push service to verify that history
-is silent and later notifications can produce pushes, including after an empty
-first sync;
-`test/features/system_notifications/system_notifications_integration_test.dart`
-and `patrol_test/system_notifications_sync_test.dart` share seven regression
-scenarios with real API mapping, owner teardown, file-backed SQLite and push
-policy, including late responses after database cleanup. See the
-[native run instructions](integration_test_commands.md#run-system-notification-sync-regressions);
-`test/app/router/main_shell_polling_config_test.dart` asserts the registration at
-the configured interval and that a core without the feature registers nothing.
-
-### System notifications outbox
-
-The write half of the same feature, and the one place in polling where the work is
-queued rather than fetched. Marking a notification as read writes an outbox row and
-returns, so the tap survives being offline and being killed; `SystemNotificationsOutboxWorker`
-is what sends the queue. One cycle attempts every pending entry once. A failing entry
-does not stop the others - the cycle walks the whole queue and then rethrows the first
-failure with its original stack trace, so one poisoned entry cannot hold up the rest
-while polling still backs off on a real error.
-
-`SystemNotificationsOutbox.requestFlush()` is called by `SystemNotificationsScreenCubit`
-right after the row is written, so the ordinary case is sent promptly and the interval
-only has to catch what an earlier session left behind - which is why it is 300 seconds
-rather than the sync's 10.
-
-A flush is dropped while the task is backing off (`state.phase == PollingTaskPhase.failed`):
-every cycle attempts the whole queue, so once sends are failing a flush per tap would be
-a request per tap per queued entry at a backend that is already refusing them. The
-receipt is on disk either way, and the retry the task has already scheduled sends it.
-Otherwise a flush is asked for on the task's trailing-edge debounce (one second) rather
-than immediately, so reading through a screenful of notifications is one cycle instead of
-one request per tap. Being offline is not the backing-off case: the task waits for
-connectivity and the queue leaves on the refresh that reconnecting runs.
-
-A failed send leaves its entry exactly as it was, and nothing counts attempts. The
-old worker abandoned an entry after five, which a one-second loop spent in about six
-seconds - but a count is the wrong unit here whatever the loop does, because anything
-may trigger a cycle: scrolling a list of unread notifications asks for a flush per
-tap, and those flushes would spend the attempts of an unrelated entry that is failing.
-Retry pacing and giving up belong to `PollingService`, which is the point of the
-migration, so a receipt is retried for as long as polling retries it. The queue is
-emptied by success instead: an entry is dropped when the sync worker brings its
-notification back with `seen` set, including when another device sent it.
-`SnOutboxState.failed` is no longer written by the app. Tests:
-`test/features/system_notifications/system_notifications_outbox_worker_test.dart`
-covers the drain, the partial failure, twenty failed cycles leaving an entry intact,
-the confirmations and disposal at every boundary; `test/app/router/main_shell_polling_config_test.dart` asserts the
-registration runs on its own interval rather than the sync's.
+The sync and the outbox (read receipts) tasks are described in
+[`features/system_notifications.md`](features/system_notifications.md).
 
 ## Non-goals
 

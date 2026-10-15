@@ -249,14 +249,6 @@ Future<void> onPushNotificationCallback(
 Inside the isolate, use `CallkeepBackgroundServiceDelegate` to receive answer/end events and
 `BackgroundPushNotificationService` to report call outcomes back to the platform.
 
-Earlier versions also included a persistent signaling isolate — a long-lived foreground service
-that kept a Flutter isolate running with an open WebSocket connection to the signaling server. It
-was removed because Android increasingly restricts persistent background services (battery
-optimization, Doze mode, vendor-specific kill policies), making reliable long-running isolates
-impractical. Signaling is also application-level responsibility: the plugin is concerned with
-presenting calls to the OS, not maintaining a connection. FCM high-priority push is the
-recommended and sufficient mechanism to wake the device for an incoming call.
-
 ### Hosting on your own Flutter engine
 
 If your app runs its own long-lived or headless Flutter engine (for example a foreground service
@@ -327,26 +319,19 @@ flutter test integration_test/<test_file>.dart
 
 ---
 
-## Example app
-
-[`webtrit_phone`](https://github.com/WebTrit/webtrit_phone) is a reference Flutter VoIP app that
-demonstrates real-world usage of this plugin including signaling, media, background call handling,
-and full foreground/background workflows.
-
----
-
 ## Resources
 
 - [CallKit documentation (Apple)](https://developer.apple.com/documentation/callkit)
 - [ConnectionService API (Android)](https://developer.android.com/reference/android/telecom/ConnectionService)
 - [Android architecture docs](webtrit_callkeep_android/docs/architecture.md)
+- The app that uses this plugin: [`phone/`](../phone/) in this repository
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for commit message format, git hooks, and Gerrit
-review.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the git hooks, and
+[docs/release_process.md](docs/release_process.md) for how the plugin's version is bumped.
 
 ## License
 

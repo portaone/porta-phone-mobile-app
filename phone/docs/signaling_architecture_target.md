@@ -433,22 +433,6 @@ isolate when it detects a duplicate session. This produces
 
 ---
 
-## What was deleted
-
-| What | Where |
-|---|---|
-| `SignalingModuleDelegate` | `signaling_module.dart` |
-| `performConnect(emit, isCancelled)` | `signaling_module.dart` |
-| `performDisconnect(emit, isCancelled)` | `signaling_module.dart` |
-| `handleDisconnected(code, reason, emit, isCancelled)` | `signaling_module.dart` |
-| `SignalingManager` | `lib/common/signaling_manager.dart` |
-| `export 'signaling_manager.dart'` | `lib/common/common.dart` |
-| `coreUrl`, `tenantId`, `token`, `trustedCertificates` fields | `CallBloc` |
-| `_scheduleReconnect(Duration, {bool force})` inline method | `CallBloc` — extracted to `SignalingReconnectController` |
-| `_signalingClientReconnectTimer` field | `CallBloc` — moved to `SignalingReconnectController` |
-
----
-
 ## Decisions
 
 | Question | Decision |

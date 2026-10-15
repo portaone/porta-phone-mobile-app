@@ -10,6 +10,15 @@ Android-only — iOS and other platforms always return `true` (safe default).
 
 Error handling contract: any exception or unsupported platform returns `true` (never locks into portrait silently).
 
+Why only Android: there `SystemChrome.setPreferredOrientations` can override the system rotation
+lock, so the app checks the setting before forcing landscape.
+
+| Platform    | Returns                         | Why                                                                                      |
+|-------------|---------------------------------|------------------------------------------------------------------------------------------|
+| Android     | `Settings.System.ACCELEROMETER_ROTATION` (`false` if locked) | the app's orientation request would bypass the lock          |
+| iOS         | always `true`                   | iOS enforces the orientation lock itself and ignores a landscape request while it is on |
+| Others      | always `true`                   | fallback for web, desktop and tests                                                      |
+
 ## Architecture
 
 ```

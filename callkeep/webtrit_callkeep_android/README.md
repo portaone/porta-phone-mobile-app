@@ -14,11 +14,6 @@ The implementation runs across **two OS processes**:
 | `main`           | `ForegroundService`      | Flutter engine host, Pigeon host API, Telecom bridge        |
 | `:callkeep_core` | `PhoneConnectionService` | Android `ConnectionService`, owns `PhoneConnection` objects |
 
-IPC between processes uses app-scoped broadcasts and explicit `startService` intents.
-All main-process code that reads call state or sends Telecom commands goes through
-`CallkeepCore.instance` — never through `ConnectionManager.instance` directly
-(it is an empty object in the main JVM heap).
-
 Full architecture documentation lives in [`docs/`](docs/):
 
 | Document                                                             | What it covers                                        |
@@ -33,31 +28,6 @@ Full architecture documentation lives in [`docs/`](docs/):
 
 Diagrams: [docs/incoming-call-handling.md](docs/incoming-call-handling.md) — background-handling
 decision and terminal outcomes.
-
----
-
-## Background modes
-
-### Push notification isolate (one-shot)
-
-Triggered by an FCM message. A short-lived Flutter isolate handles the incoming call, then exits.
-
-- Entry point: `AndroidCallkeepServices.backgroundPushNotificationBootstrapService`
-- Callback:
-  `Future<void> onCallback(CallkeepPushNotificationSyncStatus, CallkeepIncomingCallMetadata?)`
-- Service: `IncomingCallService`
-
-The background isolate entry-point function must be annotated `@pragma('vm:entry-point')`.
-
----
-
-## SMS-triggered calls
-
-Android only. Requires `RECEIVE_SMS` + `BROADCAST_SMS` permissions.
-
-- Message prefix: `<#> WEBTRIT:` (hard-coded security filter, do not change).
-- Regex pattern (4 capture groups): `callId`, `handle`, `displayName`, `hasVideo`.
-- Configured via `initializeSmsReception(messagePrefix:, regexPattern:)`.
 
 ---
 
@@ -79,9 +49,10 @@ The public API is covered by integration tests located in
 | `callkeep_reportendcall_reasons_test.dart` | All `CallkeepEndCallReason` values via `reportEndCall`                                         |
 | `callkeep_delivery_mode_test.dart`         | `getCallDeliveryMode` query (Android only) and the no-op behaviour on non-Android              |
 | `callkeep_stress_test.dart`                | Concurrent duplicate reports, rapid tearDown, spam scenarios                                   |
+| `a5_concurrent_calls_probe_test.dart`      | Whether the device holds a second call once the first is active, and groups two answered calls |
 
-`all_tests.dart` is an aggregator entry point that runs every suite above in a single driver
-invocation (used for web `flutter drive` and full-suite device runs).
+`all_tests.dart` is an aggregator entry point that runs every suite above except the a5 probe in a
+single driver invocation (used for web `flutter drive` and full-suite device runs).
 
 Run on a connected device or emulator from the example app directory:
 
@@ -89,45 +60,6 @@ Run on a connected device or emulator from the example app directory:
 cd ../webtrit_callkeep/example
 flutter test integration_test/<test_file>.dart
 ```
-
----
-
-## Code generation
-
-Pigeon generates type-safe Kotlin/Dart bindings from a single source file.
-
-```bash
-# From this directory
-../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
-```
-
-- **Never manually edit** `lib/src/common/callkeep.pigeon.dart` or
-  `android/src/main/kotlin/com/webtrit/callkeep/Generated.kt`.
-- Commit both the input file and all generated outputs together.
-
----
-
-## Build & lint
-
-```bash
-# From this directory
-flutter pub get
-flutter analyze lib test
-dart format --line-length 120 --set-exit-if-changed $(git ls-files 'lib/*.dart' 'test/*.dart' ':!:*.pigeon.dart')
-```
-
----
-
-## Key invariants
-
-- Classes annotated `@Keep` in Kotlin must not be renamed or removed (ProGuard/R8 rules reference
-  them).
-- `CallMetadata` must NOT implement `Parcelable` — `system_server` would fail to deserialize it.
-  Use `toBundle()` / `fromBundle()` instead.
-- Never call `ConnectionManager.instance.*` from the main process.
-  Use `CallkeepCore.instance`.
-- All Pigeon host API implementations run on the platform thread — do not block.
-- Never import Kotlin-layer constants or classes into the Dart layer directly; go through Pigeon.
 
 ---
 

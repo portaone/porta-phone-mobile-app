@@ -30,42 +30,13 @@ to carry a feature name. Every build prints what it resolved:
 Deep links: enabled, SMS call trigger: disabled
 ```
 
-> Only Android has manifest-level optional features; iOS declares its capabilities in the Xcode
-> project.
-
 ---
 
 ## Build Commands
 
-Use melos scripts to build. Extra Flutter flags are passed via the `FLUTTER_FLAGS` environment
-variable.
-
-| Command                      | Description                             |
-|------------------------------|-----------------------------------------|
-| `melos run build:apk`        | Build Android APK                       |
-| `melos run build:appbundle`  | Build Android App Bundle                |
-| `melos run build:ios`        | Build iOS app                           |
-| `melos run build:ios:config` | Configure Xcode project only (no build) |
-
-### Examples
-
-```bash
-# Debug build (default)
-melos run build:apk
-
-# Release build
-FLUTTER_FLAGS="--release" melos run build:apk
-FLUTTER_FLAGS="--release" melos run build:appbundle
-FLUTTER_FLAGS="--release --no-codesign" melos run build:ios
-
-# Custom version
-FLUTTER_FLAGS="--build-name=1.2.3 --build-number=42 --release" melos run build:apk
-```
-
-All build commands read configuration from `dart_define.json` automatically.
-
-The `build:*` scripts produce **unsigned / debug-signed** artifacts for local use. For signed
-release artifacts and store uploads, use the fastlane scripts below.
+The `melos run build:*` and `start:*` scripts are listed in [Melos Commands](make_file.md). They
+produce **unsigned / debug-signed** artifacts for local use; for signed release artifacts and store
+uploads, use the fastlane scripts below.
 
 ---
 
@@ -163,28 +134,6 @@ The lanes can also be invoked directly from the platform directory - `cd ios && 
 
 ---
 
-## Run Commands
-
-| Command                   | Description                            |
-|---------------------------|----------------------------------------|
-| `melos run start:android` | Run on Android with `dart_define.json` |
-| `melos run start:ios`     | Run on iOS device/simulator            |
-
-### Examples
-
-```bash
-# Run on Android
-melos run start:android
-
-# Run on specific Android device
-FLUTTER_FLAGS="-d emulator-5554" melos run start:android
-
-# Run on iOS
-melos run start:ios
-```
-
----
-
 ## Development Workflow Notes
 
 ### Options:
@@ -194,7 +143,7 @@ melos run start:ios
   Use melos scripts from the project root:
 
   ```bash
-  melos run start
+  melos run start:android
   melos run start:ios
   ```
 
@@ -216,7 +165,9 @@ melos run start:ios
 
 The Flutter SDK version used for building the project is pinned in `.fvmrc`, read by
 [`fvm`](https://fvm.app) locally and by the `porta-phone-mobile-app-cicd` build, and in the root
-`Dockerfile` (`FLUTTER_VERSION` and `FLUTTER_SHA256`), which the Jenkins checks build.
+`Dockerfile` (`FLUTTER_VERSION` and `FLUTTER_SHA256`), which the Jenkins checks build. Older
+release branches may still carry the earlier `.github/flutter_version.yaml` instead; that build
+falls back to it there.
 
 ### Format
 
@@ -250,7 +201,3 @@ Update `.fvmrc` when:
 
 Keep the root `Dockerfile` and the version noted in `AGENTS.md` in sync, and always validate builds locally before changing
 this file.
-
-> **Legacy note:** `.github/flutter_version.yaml` was the previous source. It was removed once
-> the `porta-phone-mobile-app-cicd` build was updated to read `.fvmrc`. Older release branches
-> may still carry the yaml; that build falls back to it there.

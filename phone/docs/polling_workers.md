@@ -400,7 +400,7 @@ subclass with an empty body, and a gated `Provider` at the composition root.
 What the migration removed is the rest: a `while` loop with its own
 `Connectivity()` check, its own delay, and a `catch` that logged every failure and
 carried on, which is why the feature never backed off and never paused in the
-background. See [polling.md](polling.md#system-notifications) for the cycle itself.
+background. See [the feature page](features/system_notifications.md#two-properties-of-the-sync-cycle) for the cycle itself.
 
 ### System notifications outbox
 
@@ -411,8 +411,7 @@ of a domain capability: `requestFlush()` is called the moment a read receipt is
 queued, so the interval is a safety net rather than the delivery mechanism. It is the
 same shape as `requestPostCallRefresh()`, and worth copying whenever a feature writes
 through an outbox table - the queue is what makes the action survive being offline,
-and the owner is what makes it leave promptly. See
-[polling.md](polling.md#system-notifications-outbox).
+and the owner is what makes it leave promptly.
 
 ## Non-goals
 

@@ -66,13 +66,16 @@ on the Huawei, which is more than that device's entire `bootstrap`. It is awaite
 
 **The root wave is bounded by its longest member, and there are two candidates.** Reading
 the keychain is 342 ms; `app-info` is 96 ms with spikes past 400. Removing one leaves the
-other, which is exactly what happened when the keychain read was taken out of the wave:
-`bootstrap` moved from 439 to 426.
+other: taking the keychain read out of the wave moved `bootstrap` only from 439 to 426 ms.
+
+**The keychain costs its start-up, not its records.** Reading four records costs 344 ms and
+reading the whole keychain 329 ms: what is paid is bringing the keystore up. The platform
+calls of the startup path run one after another on one thread, so starting the read earlier
+or reading records lazily does not shorten startup.
 
 **The first frame is not the first useful screen.** The route guard for the main shell
-waits for the cached system info and, if the session is read lazily, for the session too.
-Making the first frame arrive earlier without giving that window something to show only
-replaces the system splash with the app's own empty background.
+waits for the cached system info. Making the first frame arrive earlier without giving that
+window something to show only replaces the system splash with the app's own empty background.
 
 If that wait cannot end - no cached system info and a core that will not answer - the
 guard ends the session (`AppLogoutReason.coreUnreachable`) rather than routing to login.
@@ -81,31 +84,6 @@ so the two guards swap routes indefinitely and neither screen is built. Ending t
 session is also the only way out for the user, because the login screen is where a
 different core is entered. Local data is cleared; the remote session is left alone,
 since the core never answered and may well still hold a valid one.
-
-## What was tried
-
-Three changes were measured against this baseline. None of them moved startup.
-
-`#1726` started the keychain read earlier so it would overlap with the rest of the wave.
-On the Huawei: `bootstrap` 265.6 against 265.4 ms. The mechanism worked - the wait before
-the first reader was 0.1 ms - but the read overlapped with nothing, because the startup
-path is platform-channel calls serialised on one thread. The read simply took over the
-waiting that `app-info` had been paying. Closed.
-
-`#1727` moved the cached system info and the last push token out of the keychain into app
-preferences, where they belong; they are not secrets. Merged, on its own merits, without a
-startup claim.
-
-`#1728` made every read lazy and asynchronous: a record is fetched the first time somebody
-asks for it and remembered. Three arrangements were measured. Reading the session after
-the wave cost 77 ms (`bootstrap` 509). Reading it inside the wave brought it back to par
-(439 against 439). Taking it off the startup path entirely, with the app drawing before
-the session is known and the guard waiting for it, gave `bootstrap` 426 and cold start
-2329 against 2363 - about 30 ms, none of it visible, since the guard still waits.
-
-The reason none of this pays: reading four records costs 344 ms and reading the entire
-keychain costs 329. The price is bringing the keystore up, not the number of records
-fetched. Closed.
 
 ## Candidates, in the order the numbers justify
 

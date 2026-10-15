@@ -24,7 +24,9 @@ dart test                                                        # lefthook on p
 ```
 
 No hook or job runs a spell check or the `version-verify` test
-(`test/ensure_build_test.dart`), which is skipped unless `--run-skipped` is given.
+(`test/ensure_build_test.dart`), which is skipped unless `--run-skipped` is given. Nor
+`dart run tool/docs_gate.dart`, which checks that every link in these docs resolves and every
+page is reachable from `README.md`; run it by hand after editing them.
 
 Two path dependencies, both in this repository: `theme_schema`
 (`../phone/packages/theme_schema`), declared but imported by nothing under

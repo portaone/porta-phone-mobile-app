@@ -23,51 +23,14 @@ Two consumers read these files:
 
 ### How these files reach a customer
 
-Since the global translation catalog landed in the configurator backend, this repository is no
-longer read when a bundle is composed. `composeArb` builds each bundle from the catalog plus the
-application's own overrides; the `ref` parameter it still accepts is deliberately ignored and
-logs a warning. The ARB files reach the catalog through one command, run by hand in the backend
-repository:
+Customer bundles are composed from the configurator's catalog, not from this repository. The ARB
+files reach the catalog only through a sync run by hand in the configurator backend. Two
+consequences:
 
-```sh
-npm run translations:sync                 # plan and apply
-npm run translations:sync -- --dry-run    # plan only, write nothing
-npm run translations:sync -- --verify     # apply, then prove the round trip
-```
-
-It reads the ARB files from disk: by default those of the phone the configurator client resolved
-(the `webtrit_phone` entry of `configurator/.dart_tool/package_config.json`, written by
-`flutter pub get`), or the directory given with `--arb-dir <path>`. `TRANSLATIONS_LOCALES`
-(default `en,uk,it,th`) picks the locales; it is a code default in the backend's
-`src/config/environment.ts`, and nothing runs the sync on a schedule or from CI.
-
-Who owns what:
-
-| | Source of truth |
-|---|---|
-| Keys and their gen-l10n metadata | the ARB files here |
-| Values, i.e. the translated text | the catalog |
-| Per-application wording | configurator overrides |
-
-Two consequences are worth knowing before editing an ARB file:
-
-- **Changing an existing translation here does not change what customers receive.** Sync only
-  inserts values the catalog has never seen - it never updates or deletes one, so text reviewed
-  in the catalog survives any number of runs. Fix an existing string in the catalog. Fixing it
-  here as well keeps the two in step for the next fresh import, but only the catalog copy ships.
-- **New keys do flow through**, on the next sync run against a phone checkout that carries them. On the
-  very first run into an empty catalog every value arrives `approved`, because those strings had
-  already shipped; after that a value coming from code is `approved` only for `en`, which a
-  developer wrote deliberately, and arrives `needs_review` in every other locale. A locale whose
-  ARB file lacks the key contributes no row at all - an untranslated value is an absent row, not
-  an empty one.
-
-Keys follow the code: a key the ARB files carry is `active`, one they stop carrying is `retired`,
-one created in the catalog before the code knows it is `pending`. Nothing is deleted.
-
-One timing trap: the configurator client takes the phone from `master` of this repository, at the
-commit its local `pubspec.lock` records (moved by `flutter pub upgrade`). Merging a translation here does not put it in front of
-anyone until that client resolves a commit that carries it and somebody runs the sync.
+- **Changing an existing translation here does not change what customers receive.** The sync only
+  inserts values the catalog has never seen; fix an existing string in the catalog.
+- **New keys do flow through**, after the next manual sync against a phone checkout that carries
+  them.
 
 ## Table of Contents
 
@@ -167,8 +130,8 @@ The catalog export is behind this checkout: for en it carries 965 keys where app
 has 1097, so adopting it would delete 135 of them.
 ```
 
-The fix is to run `npm run translations:sync` in the configurator backend against a phone
-checkout that carries these keys - not to force the files across. It refuses an export missing a
+The fix is to run the catalog sync in the configurator backend against a phone checkout that
+carries these keys - not to force the files across. It refuses an export missing a
 locale this checkout has, for the same reason.
 
 A file whose content matches the catalog is left byte-for-byte alone, so a pull that changes
@@ -193,12 +156,9 @@ Always run `melos run l10n:check` afterwards.
 
 1. Create `lib/l10n/arb/app_<locale>.arb` (ARB filename spelling: underscore for region
    subtags, e.g. `app_pt_BR.arb`) and translate all keys from `app_en.arb`.
-2. Add the locale to `TRANSLATIONS_LOCALES` in the configurator backend
-   (`src/config/environment.ts`) so the sync imports it and bundles include it. That is a code
-   change in that repository, not a deployment setting. The sync's read is all-or-nothing
-   (every configured locale or none), so a locale listed there whose ARB file is not yet in the
-   phone checkout it reads breaks the read for every locale - land the file first, then add
-   the locale, then sync.
+2. Once the file is in the phone checkout the sync reads, add the locale to the configurator
+   backend's sync locale list; a listed locale without its ARB file breaks the sync for every
+   locale.
 3. Regenerate (`melos run l10n:generate` + `dart run build_runner build`) and run
    `melos run l10n:check`.
 

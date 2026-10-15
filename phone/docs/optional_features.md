@@ -73,9 +73,6 @@ melos run start:android
 The same holds for IDE run configurations (`melos run ide:sync`) and for a hand-typed
 `flutter build` - the features follow `dart_define.json`.
 
-> Only Android has manifest-level optional features. iOS declares its capabilities in the Xcode
-> project and needs nothing here.
-
 ---
 
 ## Verifying

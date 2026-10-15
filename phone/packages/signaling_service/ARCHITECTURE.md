@@ -125,6 +125,10 @@ graph TD
     ANDROID -->|HubConnectionManager| HC
 ```
 
+The plugin lets a push isolate attach the same way, but the app's push isolate does not: on a
+`persistent` device it calls `restoreService()` and returns
+(`lib/features/call/services/background_isolate_callbacks.dart`).
+
 ### Hub wire protocol (pure Dart ports — no platform channels)
 
 | Direction    | Message                   | Description                                                 |
@@ -144,6 +148,9 @@ start()      ← sends ['sub', id, replyPort] to hub → hub sends sub-ack + lif
 await ack    ← now safe to wait; ack arrives because start() already fired
 ```
 
+`HubConnectionManager` first polls `IsolateNameServer` every 100 ms until the hub's port appears;
+after 15 s without one (`noPortTimeout`), or after 3 missed acks of 500 ms in a row, it emits
+`SignalingConnectionFailed` and calls `onServiceDead`.
 Awaiting the future before `start()` always times out — `start()` is what triggers the ack.
 
 ---
@@ -165,11 +172,28 @@ stateDiagram-v2
 
 |                     | `persistent`                                       | `pushBound`                                  |
 |---------------------|----------------------------------------------------|----------------------------------------------|
+| Who starts it       | the app, through `connect()` in the main isolate   | nothing - each isolate opens its own socket  |
 | Survives app close  | Yes                                                | No - there is no service                     |
 | Restart after a kill | `START_STICKY` and `SignalingRestartWorker`; no boot receiver | No                              |
 | Incoming calls      | WebSocket always live → direct `IncomingCallEvent` | Server sends FCM push (no active socket)     |
 | When Activity opens | `connect()` - `HubConnectionManager` connects to running hub | `connect()` - opens its own WebSocket |
 | `onStartCommand`    | `START_STICKY`                                     | not used                                     |
+| Foreground notification | always visible                                 | none                                         |
+
+In `pushBound` mode the push isolate and the Activity each create their own instance and connect
+directly (`WebtritSignalingServiceAndroidDirect`); each socket closes with its isolate, and the
+server then sends an FCM push for the next call.
+
+The `persistent` service is `foregroundServiceType="phoneCall"` and holds a `WAKE_LOCK`. A start
+from the background is restricted for apps targeting API 31+ unless an exemption applies, and
+for apps targeting API 35+ Android 15 forbids starting a `phoneCall` service from
+`BOOT_COMPLETED`. A refused start
+(`ForegroundServiceStartNotAllowedException`) is handled where it happens: in `startForeground()`
+the service stops itself and `onDestroy` enqueues `SignalingRestartWorker` in 15 s; in the worker's
+own start the worker returns `Result.retry()` (exponential backoff from 15 s); in
+`restoreService()` the worker is enqueued in 15 s; in the Pigeon `startService()` the error reaches
+the Dart caller: `connect()` logs it and clears its pending start, `updateMode()` rethrows it,
+the restart after the hub dies logs it.
 
 ---
 
@@ -267,6 +291,10 @@ The callback must be a **top-level function** annotated `@pragma('vm:entry-point
 The plugin resolves the raw handle internally via `PluginUtilities.getCallbackHandle(callback)`
 and persists it to `SharedPreferences`; the background isolate reads it at each sync —
 the main isolate does not need to be alive.
+
+In `pushBound` mode the handler is not involved: the push isolate opens its own socket and the
+app's push code reports the call to callkeep (`lib/features/call/services/background_isolate_callbacks.dart`).
+On iOS and web `setCallEventHandler` is a no-op; iOS reports incoming calls through PushKit.
 
 ---
 
