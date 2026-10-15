@@ -68,11 +68,16 @@ void main() {
     expect(CoreInfo(version: Version(2, 0, 0)).supportsSessionTracking, false);
   });
 
-  test('supportsDeletedNotificationUpdates', () {
+  test('supportsDeletedNotificationUpdates follows the retention field, not the version', () {
     expect(CoreInfo(version: Version(1, 1, 0)).supportsDeletedNotificationUpdates, false);
-    expect(CoreInfo(version: Version(1, 2, 0, pre: 'alpha')).supportsDeletedNotificationUpdates, true);
-    expect(CoreInfo(version: Version(1, 2, 0)).supportsDeletedNotificationUpdates, true);
-    expect(CoreInfo(version: Version(1, 3, 1)).supportsDeletedNotificationUpdates, true);
-    expect(CoreInfo(version: Version(2, 0, 0)).supportsDeletedNotificationUpdates, false);
+    expect(CoreInfo(version: Version(1, 2, 0)).supportsDeletedNotificationUpdates, false);
+    expect(
+      CoreInfo(version: Version(1, 0, 0), notificationDeletedRetentionDays: 0).supportsDeletedNotificationUpdates,
+      true,
+    );
+    expect(
+      CoreInfo(version: Version(1, 1, 0), notificationDeletedRetentionDays: 180).supportsDeletedNotificationUpdates,
+      true,
+    );
   });
 }

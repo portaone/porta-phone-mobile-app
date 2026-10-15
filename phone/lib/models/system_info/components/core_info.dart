@@ -71,7 +71,11 @@ class CoreInfo with EquatableMixin {
 
   bool get supportsDeletedNotificationUpdates {
     // Deleted notifications in the notification updates (`include_deleted`)
-    // were added in 1.2.0. An older core refuses the parameter.
-    return verifyVersionStr('>=1.2.0-alpha <2.0.0');
+    // came together with notification_deleted_retention_days in the system
+    // info, which such a core always reports (0 when no retention is set). An
+    // older core reports neither and refuses the parameter as an unknown field.
+    // The field is checked instead of the version: the change reached cores
+    // released under a version some builds without it also carry.
+    return notificationDeletedRetentionDays != null;
   }
 }

@@ -205,8 +205,7 @@ class MainShellServices extends StatelessWidget {
   // For how long the core reports a deleted notification, or null for a core
   // that reports none. Zero days is its way of saying "without limit".
   Duration? _deletedNotificationRetention(SystemInfoRepository systemInfoRepository) {
-    final core = systemInfoRepository.getLocalSystemInfo().core;
-    final days = core.supportsDeletedNotificationUpdates ? core.notificationDeletedRetentionDays : null;
+    final days = systemInfoRepository.getLocalSystemInfo().core.notificationDeletedRetentionDays;
     return days == null ? null : Duration(days: days);
   }
 
