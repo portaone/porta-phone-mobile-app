@@ -15,9 +15,7 @@ class AppInfo implements Disposable {
     final id = await appIdProvider.getId();
 
     final appVersion = await getAppVersion();
-    final callkeepVersion = await getCallkeepVersion();
-
-    return AppInfo._(appIdProvider, id, appVersion, callkeepVersion);
+    return AppInfo._(appIdProvider, id, appVersion);
   }
 
   /// Parses the custom `app_version` field from the bundled pubspec.yaml as a
@@ -38,32 +36,7 @@ class AppInfo implements Disposable {
     }
   }
 
-  /// Reads the webtrit_callkeep version from the bundled pubspec.yaml.
-  ///
-  /// A git ref in the webtrit_callkeep block is returned as-is. Builds of this
-  /// repository declare callkeep as a local path with no ref, so they report
-  /// [_localCallkeepVersion].
-  static Future<String> getCallkeepVersion() async {
-    try {
-      final pubspecString = await services.rootBundle.loadString(Assets.pubspec);
-      // Capture only the webtrit_callkeep block: its sub-lines are indented deeper
-      // than the 2-space dependency key, so a sibling git ref (e.g. flutter_webrtc)
-      // is not matched.
-      final block = RegExp(
-        r'^  webtrit_callkeep:\n((?:    .*\n?)*)',
-        multiLine: true,
-      ).firstMatch(pubspecString)?.group(1);
-      if (block == null) return _localCallkeepVersion;
-      return RegExp(r'ref:\s*(\S+)').firstMatch(block)?.group(1) ?? _localCallkeepVersion;
-    } catch (e) {
-      _logger.warning(e);
-      return _localCallkeepVersion;
-    }
-  }
-
-  static const String _localCallkeepVersion = 'local';
-
-  AppInfo._(this.appInfo, this._identifier, this._appVersion, this._callkeepVersion) {
+  AppInfo._(this.appInfo, this._identifier, this._appVersion) {
     _idChangeSubscription = appInfo.onIdChange.listen((String id) {
       _identifier = id;
     });
@@ -77,13 +50,9 @@ class AppInfo implements Disposable {
 
   final Version _appVersion;
 
-  final String _callkeepVersion;
-
   String get identifier => _identifier;
 
   Version get version => _appVersion;
-
-  String get callkeepVersion => _callkeepVersion;
 
   @override
   Future<void> dispose() async {
