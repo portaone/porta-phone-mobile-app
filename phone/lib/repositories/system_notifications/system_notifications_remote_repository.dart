@@ -47,7 +47,7 @@ class SystemNotificationsRemoteRepositoryApiImpl
   final String _token;
 
   /// Whether the backend reports deleted notifications in the updates
-  /// (`CoreInfo.supportsDeletedNotificationUpdates`). One that does not refuses
+  /// (`CoreInfo.notificationDeletedRetentionDays` is not null). One that does not refuses
   /// the parameter, so it is asked without it.
   ///
   /// Asked before every request, not once: the system info it is read from

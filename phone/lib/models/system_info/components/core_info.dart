@@ -14,6 +14,12 @@ class CoreInfo with EquatableMixin {
   /// notification updates: 0 for without limit, null for a core that reports
   /// none. A stored copy of the notifications older than that may hold some
   /// deleted since.
+  ///
+  /// Not null is also the one sign that the core reports deleted notifications
+  /// at all (`include_deleted`): a core that does always sends the field, 0
+  /// when no retention is set, and an older one sends neither and refuses the
+  /// parameter as an unknown field. The core version does not tell: the change
+  /// was released under a version that builds without it carry too.
   final int? notificationDeletedRetentionDays;
 
   @override
@@ -67,11 +73,5 @@ class CoreInfo with EquatableMixin {
     // core the app accepts (WEBTRIT_APP_CORE_VERSION_CONSTRAINT) is 1.0.0 - or
     // sooner, when no deployment is left on 0.38.x, the one line without it.
     return verifyVersionStr('>=1.0.0-alpha <2.0.0');
-  }
-
-  bool get supportsDeletedNotificationUpdates {
-    // Deleted notifications in the notification updates (`include_deleted`)
-    // were added in 1.2.0. An older core refuses the parameter.
-    return verifyVersionStr('>=1.2.0-alpha <2.0.0');
   }
 }
