@@ -45,8 +45,5 @@ flutter analyze
 dart format --line-length 120 .
 ```
 
-The package is pure Dart, but it is a member of the phone workspace, which needs the Flutter SDK
-to resolve - so `flutter test` (or the Flutter SDK's own `dart`), not a `dart` from PATH.
-
-Tests inject a `MockClient`; no real network. Not part of `flutter test` in `phone/`; the
-pre-push hook runs it as `link-preview-test`.
+Tests inject a `MockClient`; no real network. The pre-push gate runs this package's tests
+(`link-preview-test`); run `fvm flutter test` here.

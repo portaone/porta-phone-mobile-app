@@ -2,7 +2,7 @@
 
 Index of the per-feature docs under `docs/features/`. How to author and split these
 docs (the file pattern and conventions) is in [`../../AGENTS.md`](../../AGENTS.md)
-under "Documentation".
+under "Writing docs".
 
 ## Index
 

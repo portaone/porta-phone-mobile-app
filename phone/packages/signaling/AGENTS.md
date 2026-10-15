@@ -1,19 +1,26 @@
-# signaling
+# AGENTS.md - signaling
 
-Pure Dart library implementing the WebTrit Core Signalling protocol — a WebRTC/VoIP signaling
-layer over WebSocket. No Flutter dependency, no code generation.
+Pure Dart client of the WebTrit Core signaling protocol over WebSocket: no Flutter, no code
+generation, models hand-written with `Equatable`. The connection the app keeps open - reconnect,
+buffering, background - is `../signaling_service`, not this package. Before you change what the
+app sends or how a call reacts to an event, read
+[signaling_architecture_target.md](../../docs/architecture/signaling_architecture_target.md)
+and use the skill `callbloc-change` ([SKILL.md](../../../.agents/skills/callbloc-change/SKILL.md)).
+Protocol docs: <https://github.com/WebTrit/webtrit_docs/blob/main/signaling/index.md>.
 
-**Protocol docs:** <https://github.com/WebTrit/webtrit_docs/blob/main/signaling/index.md>
+## Client lifecycle
 
-## Client Lifecycle
-
-`WebtritSignalingClient` is the single public entry point:
+`WebtritSignalingClient` is the entry point:
 
 ```dart
-// 1. Connect (static factory)
-final client = await WebtritSignalingClient.connect(baseUrl, tenantId, token, force);
+// 1. Connect (static factory); force takes the session over from another device.
+final client = await WebtritSignalingClient.connect(
+  baseUrl, tenantId, token, force,
+  connectionTimeout: timeout,   // optional
+  certs: certs,                 // optional, TrustedCertificates.empty by default
+);
 
-// 2. Register callbacks (single-use; throws StateError if called twice)
+// 2. Register callbacks, once; a second call throws StateError.
 client.listen(
   onStateHandshake: (sh) { ... },
   onEvent: (e) { ... },
@@ -21,122 +28,148 @@ client.listen(
   onDisconnect: (code, reason) { ... },
 );
 
-// 3. Send requests and await acknowledgment
+// 3. Send a request and await its ack.
 await client.execute(HangupRequest(...));
 
-// 4. Disconnect
+// 4. Disconnect.
 await client.disconnect();
 ```
 
-## Message Hierarchy
+The URL is `<baseUrl>/tenant/<tenantId>/signaling/v1?token=<token>&force=<true|false>`
+(`buildTenantUrl`, `@visibleForTesting`, adds the tenant segment and replaces one the base URL
+already has; an empty tenant id adds none), subprotocol `webtrit-protocol`.
+
+## Message hierarchy
 
 ```
 Event / Request
-├── SessionEvent / SessionRequest  (field: transaction)
-│   ├── RegisteringEvent, RegisteredEvent, UnregisteredEvent, RegistrationFailedEvent…
-│   └── Conference*: ConferenceOfferEvent, ConferenceUpdatedEvent, …
-│       MergeRequest, ConferenceAddRequest, ConferenceMuteRequest, …
-│       Session-level even when they carry `line`: there it is a participant
-│       index, not an address. Never register them as LineEvent/LineRequest.
-└── LineEvent / LineRequest        (field: line, an address)
-    ├── IceTrickleEvent, IceHangupEvent, TransferEvent…
-    └── CallEvent / CallRequest    (field: callId)
-        ├── IncomingCallEvent, CallingEvent, RingingEvent, AcceptedEvent, HangupEvent…
-        └── OutgoingCallRequest, AcceptRequest, DeclineRequest, HangupRequest…
+  GlobalEvent                         NumberPresenceUpdate, NumberDialogsUpdate
+  SessionEvent / SessionRequest       (transaction)
+    RegisteringEvent, RegisteredEvent, UnregisteredEvent, RegistrationFailedEvent, ...
+    Conference*: ConferenceOfferEvent, ConferenceUpdatedEvent, ...,
+                 MergeRequest, ConferenceAddRequest, ConferenceMuteRequest, ...
+    LineEvent / LineRequest           (line, an address)
+      IceTrickleEvent, IceHangupEvent, TransferEvent, ...
+      CallEvent / CallRequest         (callId)
+        IncomingCallEvent, CallingEvent, RingingEvent, AcceptedEvent, HangupEvent, ...
+        OutgoingCallRequest, AcceptRequest, DeclineRequest, HangupRequest, ...
 ```
 
-Polymorphic deserialization uses decoder maps keyed by the `type` JSON field — no `if/switch`.
+`Conference*` classes are session-level even when they carry `line`: there it is a participant
+index, not an address. Never register them as `LineEvent` / `LineRequest`. Their wire format is
+[docs/conference_protocol.md](docs/conference_protocol.md); read it before touching any
+`Conference*` class and update it in the same change when the wire format moves.
 
-**Conference protocol.** The wire-level specification of every
-`merge` / `conference_*` request, response and event, the handshake `conference`
-block, refusal reasons, sequences and the client's local obligations is
-[`docs/conference_protocol.md`](docs/conference_protocol.md). It is self-contained
-and written from the Core implementation; read it before touching any
-`Conference*` class, and update it in the same change when the wire format moves.
+Inbound messages, as `_onMessage` tells them apart:
 
-## Key Internals
+| Kind | JSON key | Class |
+|---|---|---|
+| Handshake | `handshake` | `StateHandshake` (with `conference: ConferenceInfo?`), `KeepaliveHandshake` |
+| Event | `event` | `GlobalEvent`, `SessionEvent`, `LineEvent`, `CallEvent` |
+| Response | `response` | `AckResponse`, `ErrorResponse` |
 
-**Transaction pattern** — `execute(Request)` creates a `Transaction` (auto-generated ID, 10s
-timeout) backed by a `Completer`. Resolved when matching response arrives; rejected on timeout
-or disconnect.
+## Decoding
 
-**Keepalive** — after `StateHandshake`, a recurring timer sends `KeepaliveHandshake` at
-`keepaliveInterval`. `StateError` on closed socket is caught and logged — do not add bare
-`try/catch` that swallows other errors.
+- Events and requests decode through static maps keyed by the `event` / `request` value, one per
+  level: `_globalEventFromJsonDecoders`, `_sessionEventFromJsonDecoders`,
+  `_lineEventFromJsonDecoders`, `_callEventFromJsonDecoders`, and the `_...RequestFromJsonDecoders`
+  of `SessionRequest`, `LineRequest`, `CallRequest`. Each level tries its map, then the level
+  below; an event level ends with its error event (`SessionErrorEvent`, `CallErrorEvent`, ...).
+- A few decoders switch instead: `Response.fromJson` on `response`, `PeerMessageEvent` and
+  `PeerMessageRequest` on the `type` inside the message, `NotifyEvent` on `notify`. The peer
+  message event and notify event fall back to `UnknownPeerMessageEvent` / `UnknownNotifyEvent`.
 
-**Inbound message kinds:**
+### Adding an event or a request
 
-| Kind | JSON key | Class | Direction |
-|------|----------|-------|-----------|
-| Handshake | `handshake` | `StateHandshake` (with `conference: ConferenceInfo?`), `KeepaliveHandshake` | Server → Client |
-| Event | `event` | `SessionEvent`, `LineEvent`, `CallEvent` | Server → Client |
-| Response | `response` | `AckResponse`, `ErrorResponse` | Server → Client |
+- A class extending the right level (`SessionEvent`, `LineEvent`, `CallEvent`, or the request
+  counterpart) with `typeValue`, `fromJson`, `toJson` and `props`; export it from that level's
+  barrel (`call_events.dart`, `line_requests.dart`, ...).
+- Register `typeValue: X.fromJson` in that level's decoder map. An unregistered event type is
+  unknown: `Event.fromJson` throws `ArgumentError`, the client hands it to `onError`, and
+  `SignalingModuleImpl` treats any `onError` as a failed connection (`SignalingConnectionFailed`)
+  and drops the client. An event the server sends before the app knows it therefore costs a
+  reconnect; so does a `fromJson` that throws on a field.
+- An unregistered request is not caught here, since the client only calls `toJson()`. It fails
+  on Android: the foreground-service hub decodes every request it receives from the app isolate
+  with `Request.fromJson` (`signaling_hub.dart`) and answers the execute with the error.
+- A JSON fixture in `test/src/events/event_jsons.dart` (or a test file next to the others under
+  `test/src/events/` / `test/src/requests/`) and a round-trip test.
+- Outbound JSON always comes from the request's `toJson()`.
 
-## Exception Hierarchy
+### Enums from the wire
+
+A value the server may extend gets a fallback: `X.values.asNameMap()[raw] ?? X.unknown`, as
+`SignalingDialogState` in [events/global/dialog_info.dart](lib/src/events/global/dialog_info.dart).
+Never `X.values.byName(raw)`: an unknown value throws inside `fromJson`, which, as above, fails
+the connection. Several decoders still use `byName` (`state_handshake.dart`, `hold_request.dart`,
+`notify_event.dart`, `ice_media_event.dart`, `ice_slowlink_event.dart`, `presence_info.dart`);
+do not copy them.
+
+## Key internals
+
+- Transaction: `execute(request)` registers a `Transaction` (generated id unless the request
+  carries one, default timeout `defaultExecuteTransactionTimeoutDuration`, 10 s) and resolves on
+  the matching `AckResponse`, throws `WebtritSignalingErrorException` on `ErrorResponse`. A
+  response for a transaction already gone (timed out) is logged and ignored.
+- Keepalive: a one-shot timer, started after `StateHandshake` with its `keepaliveInterval`
+  (30 s when the handshake has none), restarted by every `execute`, and scheduled again after
+  each keepalive answer while the socket is open. Timing out raises
+  `WebtritSignalingKeepaliveTransactionTimeoutException` through `onError`; a write to a closed
+  socket (`WebtritSignalingBadStateException`) just ends the loop.
+- `disconnect([code, reason])` stops the timer, terminates open transactions with
+  `WebtritSignalingTransactionTerminateByDisconnectException`, cancels the subscription (so
+  `onDisconnect` is not called) and closes the sink.
+- Close codes: `SignalingDisconnectCode` in
+  [signaling_disconnect_code.dart](lib/src/signaling_disconnect_code.dart) (standard WebSocket
+  codes and Core's 4xxx, `byCode`). What delay a code gets before reconnecting is decided in
+  `signaling_service`: [ARCHITECTURE.md](../signaling_service/ARCHITECTURE.md), "Reconnect".
+
+## Exceptions
 
 All extend `WebtritSignalingException`:
 
-- `WebtritSignalingErrorException` — server returned error code
-- `WebtritSignalingDisconnectedException` — `execute()` called after `disconnect()` (subscription already nil)
-- `WebtritSignalingUnknownMessageException` — unrecognised inbound message kind
-- `WebtritSignalingUnknownResponseException` — response with no matching transaction
-- `WebtritSignalingBadStateException` — API misuse (e.g. calling `listen()` twice)
-- `WebtritSignalingTransactionException` ← abstract base for transaction errors
-  - `WebtritSignalingTransactionTimeoutException` — no response within 10 s timeout
-    - `WebtritSignalingKeepaliveTransactionTimeoutException` — keepalive timed out
-  - `WebtritSignalingTransactionTerminateException` ← abstract base for terminations
-    - `WebtritSignalingTransactionTerminateByDisconnectException` — in-flight transaction cancelled because socket closed
+- `WebtritSignalingErrorException` - the server answered with an error code
+- `WebtritSignalingDisconnectedException` - `execute()` with no live subscription
+- `WebtritSignalingUnknownMessageException` - an inbound message of no known kind
+- `WebtritSignalingUnknownResponseException` - a response that is neither ack nor error
+- `WebtritSignalingBadStateException` - a write to a closed socket
+- `WebtritSignalingTransactionException` (abstract)
+  - `WebtritSignalingTransactionTimeoutException`
+    - `WebtritSignalingKeepaliveTransactionTimeoutException`
+  - `WebtritSignalingTransactionTerminateException` (abstract)
+    - `WebtritSignalingTransactionTerminateByDisconnectException`
 
-## Constraints
+Static helpers: `generateTransactionId()`, `generateCallId()` (24 characters), `subprotocol`,
+`defaultExecuteTransactionTimeoutDuration`.
 
-- No code generation (no `build_runner`, `freezed`, `.g.dart`). All models hand-written with `Equatable`.
-- No Flutter — package must stay platform-independent.
-- Callback API, not streams. `listen()` is single-use.
-- Outbound JSON: requests implement `toJson()` — do not bypass.
+## Tests
 
-## Static Helpers
-
-```dart
-WebtritSignalingClient.generateTransactionId()   // random ID for Request.transaction
-WebtritSignalingClient.generateCallId()          // random 24-char call ID
-WebtritSignalingClient.buildTenantUrl(base, id)  // appends /tenant/{id} (@visibleForTesting)
-WebtritSignalingClient.subprotocol               // 'webtrit-protocol'
-WebtritSignalingClient.defaultExecuteTransactionTimeoutDuration  // 10 s
-```
-
-## Test Patterns
-
-### Unit tests
-
-- JSON fixtures in `test/src/events/event_jsons.dart` and `error_event_jsons.dart`.
-- `MockWebSocketChannel` + `MockWebSocketSink` via `mocktail`; `StreamController` injects server messages.
-- `fake_async` for deterministic keepalive/timeout tests.
-- `FakeWebtritSignalingClient` in `test/src/factories/` for higher-level tests.
-
-### Live tests (`test/live_signaling_test.dart`, tag `live`)
-
-One client connects to a real server: handshake, disconnect, and network loss simulated through
-`TcpProxy` (`_tcp_proxy`). The groups skip themselves when the credentials are not set.
-
-Key patterns:
-
-- Fetch the session token once in `setUpAll`, over REST with `dart:io` `HttpClient`, so the package stays free of `api`.
-- Use `force=false` in `connect()` — `tearDown` disconnects cleanly so no stale sessions exist.
+- Unit: fixtures in `test/src/events/event_jsons.dart` and `error_event_jsons.dart`; one test
+  file per message family under `test/src/`. `FakeWebtritSignalingClient` in
+  `test/src/factories/fake_signaling.dart` for higher-level tests.
+- Client: [test/signaling_integration_test.dart](test/signaling_integration_test.dart) drives
+  `WebtritSignalingClient.inner` over a mocked `WebSocketChannel` with `fake_async` - keepalive,
+  timeouts, disconnect, transaction cleanup. Extend it when you change those.
+- Live: `test/live_signaling_test.dart`, tag `live`, against a real server through `TcpProxy`
+  (`_tcp_proxy`); the groups skip themselves without credentials. It fetches the token once in
+  `setUpAll` over `dart:io` `HttpClient`, so the package stays free of `api`, and connects with
+  `force=false`.
+- The pre-push gate does not run these tests; Jenkins does. Run them yourself.
 
 ## Commands
 
-```bash
-flutter test
-flutter test test/signaling_test.dart
-flutter test --name "buildTenantUrl"
-dart analyze
-dart format .
+From `phone/packages/signaling/`:
 
-# Live integration tests (requires real server credentials)
+```bash
+fvm dart test
+fvm dart test test/signaling_integration_test.dart
+fvm dart test --name "buildTenantUrl"
+fvm dart analyze
+fvm dart format .
+
+# live tests, real server credentials
 WEBTRIT_APP_TEST_CUSTOM_CORE_URL=<host> \
 WEBTRIT_APP_TEST_EMAIL_CREDENTIAL=<login> \
 WEBTRIT_APP_TEST_EMAIL_VERIFY_CREDENTIAL=<password> \
-flutter test test/live_signaling_test.dart --tags live --reporter expanded
+fvm dart test test/live_signaling_test.dart --tags live --reporter expanded
 ```
-
-Connection endpoint: `wss://<host>/signaling/v1?token=<token>[&force=<true|false>]`

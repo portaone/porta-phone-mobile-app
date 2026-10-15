@@ -54,7 +54,4 @@ flutter analyze
 dart format --line-length 120 .
 ```
 
-The package is pure Dart, but it is a member of the phone workspace, which needs the Flutter SDK
-to resolve - so `flutter test` (or the Flutter SDK's own `dart`), not a `dart` from PATH.
-
-Not part of `flutter test` in `phone/`; the pre-push hook runs it as `text-entities-test`.
+The pre-push gate runs this package's tests (`text-entities-test`); run `fvm flutter test` here.

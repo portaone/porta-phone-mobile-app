@@ -1,34 +1,17 @@
 # _web_socket_channel
 
-Internal platform abstraction for WebSocket connectivity. Wraps `web_socket_channel` with
-conditional imports; integrates with `ssl_certificates` for custom certificates on native.
+`connectWebSocket(url, {protocols, connectionTimeout, pingInterval, certs})` opens a platform
+socket and `createWebSocketChannel(socket)` wraps it in a `WebSocketChannel`. Used by
+`signaling` (`lib/src/signaling_client.dart`); re-exports `TrustedCertificates` from
+`ssl_certificates`.
 
-## Public API
+- Native (`dart.library.io`): `io.WebSocket` through an `HttpClient` with the `SecurityContext`
+  from `ssl_certificates`, the connection timeout and `pingInterval`.
+- Web (`dart.library.js_interop`): `package:web` `WebSocket`; `certs` and `pingInterval` are
+  ignored. `connectionTimeout` is a `Future.timeout` on the open, which does not close the
+  socket, and an error completes with a plain string - the browser gives no detail.
+- `connectWebSocket` returns `Future<dynamic>`: hand `createWebSocketChannel` only the socket the
+  same platform file made.
 
-Two functions form the entire public surface:
-
-- **`connectWebSocket(url, {protocols, connectionTimeout, pingInterval, certs})`** — opens a
-  platform-specific raw socket, returns `Future<dynamic>`.
-- **`createWebSocketChannel(socket)`** — wraps the raw socket in a `WebSocketChannel`.
-
-`TrustedCertificates` is re-exported from `ssl_certificates`.
-
-## Architecture
-
-| File                            | Platform                 | Key behavior                                                                                     |
-|---------------------------------|--------------------------|--------------------------------------------------------------------------------------------------|
-| `_web_socket_channel_io.dart`   | Native (dart.library.io) | `SecurityContext` from certs, `connectionTimeout`, `pingInterval` on `io.WebSocket`              |
-| `_web_socket_channel_web.dart`  | Web (dart.library.js_interop) | `package:web` `WebSocket`, resolves `Completer` on open/error, optional `.timeout()`. SSL/ping browser-managed. |
-| `_web_socket_channel_stub.dart` | Fallback                 | Throws `UnsupportedError`                                                                        |
-
-## Commands
-
-```bash
-dart analyze
-dart format lib/
-dart pub upgrade
-```
-
-## Code Style
-
-- Single quotes; 120-char line width; `lints/recommended.yaml`.
+No tests of its own; it is exercised through the `signaling` tests (`fvm flutter test` in
+`../signaling`).

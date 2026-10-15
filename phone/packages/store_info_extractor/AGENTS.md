@@ -1,53 +1,20 @@
 # store_info_extractor
 
-Fetches app metadata (current version and store URL) from Apple App Store and Google Play Store.
+`StoreInfoExtractor().getStoreInfo(packageName)`: the version and store URL of the app in its
+store, or `null` when the store does not list it. Used only by the two version gate screens
+(`lib/features/version_gate/view/`) for their Update button; the feature, the platform table and
+the known limits are in [app-update.md](../../docs/features/app-update.md).
 
-## Architecture
+- The client is picked at run time: `StubStoreClient` (always `null`) only on web; Android gets
+  `GooglePlayStoreClient`, iOS and macOS `AppleAppStoreClient`; any other desktop platform
+  throws `UnimplementedError`.
+- `StoreClient` is an abstract class. The two store clients extend `BaseStoreClient`, which holds
+  the `http.Client`; `StubStoreClient` extends `StoreClient` directly.
+- Google Play is scraped from the HTML with `RegExp(r'\[\[\["(\d+.\d+.\d+)"\]\]')` (the dots are
+  unescaped, so any character matches there); a markup change returns `null`, not an error.
+  `GooglePlayStoreClient` also carries a debug `print` of the URL.
+- `lib/src/_http_client/` is a private copy of an HTTP client factory without certificates: the
+  app's trusted certificates (`ssl_certificates`) do not apply to store lookups.
 
-`StoreInfoExtractor.getStoreInfo(appPackageName)` performs runtime platform detection:
-
-| Platform    | Client                  | Endpoint                                      |
-|-------------|-------------------------|-----------------------------------------------|
-| Android     | `GooglePlayStoreClient` | `play.google.com/store/apps/details?id=<pkg>` |
-| iOS / macOS | `AppleAppStoreClient`   | `itunes.apple.com/lookup?bundleId=<pkg>`      |
-| Web / other | `StubStoreClient`       | always returns `null`                         |
-
-### Client Hierarchy
-
-```
-StoreClient (abstract interface)
-  └── BaseStoreClient (abstract, holds HTTP client, exposes get())
-        ├── AppleAppStoreClient   – JSON response parsing
-        ├── GooglePlayStoreClient – HTML regex extraction
-        └── StubStoreClient       – no-op
-```
-
-### HTTP Client (Conditional Imports)
-
-- `_http_client_io.dart` — `IOClient` wrapping `HttpClient` (Android/iOS)
-- `_http_client_html.dart` — `BrowserClient` (Web)
-- `_http_client.dart` — throws `UnsupportedError` (fallback)
-
-### Key Types
-
-- **`StoreInfo`** — `{Version version, Uri viewUrl}`; `null` = app not found in store.
-- **`StoreInfoExtractorException`** — base; subclasses: `StoreInfoExtractorResponseError`,
-  `StoreInfoExtractorResponseFormatException`.
-
-### Parsing Notes
-
-- Apple: `results[0].version` + `results[0].trackViewUrl` from iTunes JSON.
-- Google: scrapes Play HTML with regex `\[\[\["(\d+\.\d+\.\d+)"\]\]` — brittle against markup changes.
-- Versions validated via `pub_semver`'s `Version.parse`.
-
-## Commands
-
-```bash
-flutter test
-flutter test test/src/store_clients/apple_app_store_client_test.dart
-dart analyze
-dart format --line-length=120 .
-```
-
-Tests use `http/testing.dart`'s `MockClient`. Each test verifies the outgoing request URL/headers
-and version extraction from a fixture response body.
+Tests: `test/src/store_clients/`, with `MockClient`; `fvm flutter test` here. The pre-push gate
+does not run them.

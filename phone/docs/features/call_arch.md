@@ -200,6 +200,19 @@ Flutter isolates share no memory. The isolate receives `CallkeepServiceStatus` a
 
 ## Key Patterns
 
+**Bookkeeping lives outside the bloc** - state the BLoC has to carry between events (which
+attempt is current, a deadline, a per-call debounce, retry counters, an offer waiting to be sent
+again) goes into a class of its own that knows nothing of signaling or of `CallState`: the
+BLoC tells it what happened and is told what to do or when a deadline passed. Such a class has its
+own unit tests, and a test can drive its timing (a timer factory in the constructor, or
+`fakeAsync`), so its rules are checked without building a call. `RoomOfferWait`
+(`lib/features/call/conference/room_offer_wait.dart`) is the model; `DebounceMap`
+(`lib/utils/debounce_map.dart`) follows the same idea. Loose maps, timers and counters on
+`CallBloc` itself are not tested anywhere but through a whole call, and every handler that
+touches them has to keep them consistent by hand. When a change would add such state to a flow
+that is already spread over the BLoC, the flow is extracted first, in a commit that changes no
+behaviour, and the change goes on top.
+
 **Perform-event futures** — `CallkeepDelegate` callbacks (`performStartCall`,
 `performAnswerCall`, `performEndCall`) are `async` and return `Future<bool>`. The BLoC completes
 these futures only after the actual operation finishes, so the native side waits for the result.

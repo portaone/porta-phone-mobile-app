@@ -65,7 +65,7 @@ errors change, or a feature must appear only on backends that advertise it.
   users out on one refused request: match Core codes only - [core_error_codes.md](../../../phone/docs/architecture/core_error_codes.md#traps).
 - An optional endpoint answering a bare 404 for a missing item reads as "route absent" and can
   switch the feature off for good: give the item-missing case its own code rule, as voicemail and
-  call queues do - [AGENTS.md](../../../phone/packages/api/AGENTS.md#exceptions).
+  call queues do - [AGENTS.md](../../../phone/packages/api/AGENTS.md#failures).
 - A repository that catches and logs instead of rethrowing keeps backoff off and polling green:
   throw the original error - [polling.md](../../../phone/docs/architecture/polling.md#refresh-completion-contract).
 - A capability flipped on the backend reaches the app only at the next session start, not live:

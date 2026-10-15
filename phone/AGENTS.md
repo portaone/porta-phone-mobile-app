@@ -1,129 +1,162 @@
-# AGENTS.md
+# AGENTS.md - phone
 
-WebTrit Phone — Flutter VoIP app, Melos monorepo.
-Flutter 3.47.1 (stable), Android SDK 35.0.1.
+WebTrit Phone, the Flutter VoIP app: `lib/` is the app, `packages/` the libraries it is built
+from. This page holds what is true for every change here and says where to read before a
+particular kind of change. The explanations live in `docs/` (map: [docs/README.md](docs/README.md))
+and in each package's own `AGENTS.md`, which loads when you read files in that package.
+
+## Layout
+
+```
+lib/                 the app: features/, app/ (router, keys), blocs/, repositories/, models/,
+                     services/, theme/, l10n/; bootstrap.dart builds the process-long objects
+packages/            libraries; they never import from lib/
+  api/               Core REST client
+  signaling/         signaling protocol client
+  signaling_service/ the connection the app keeps open, per platform
+  data/app_database/ Drift database and DAOs
+  theme_schema/      theme DTOs and their JSON schema
+  ...                each with its own AGENTS.md
+../callkeep/         the call plugin, a path dependency (callkeep/ of this repository)
+test/                unit and widget tests; integration_test/, patrol_test/ for devices
+docs/                architecture/, guides/, reference/, features/
+```
 
 ## Toolchain
 
-- Flutter version is pinned in `.fvmrc`, read by `fvm` locally and by the `porta-phone-mobile-app-cicd` build, and in the root `Dockerfile` (`FLUTTER_VERSION` and the archive's `FLUTTER_SHA256`), which the Jenkins checks build. When you bump it, update both and the version mentioned above in the same commit. (Older release branches may still carry the legacy `.github/flutter_version.yaml`; the builder falls back to it there.)
-- Use `fvm flutter ...` / `fvm dart ...` so the pinned SDK is used; a bare `flutter` from `PATH` may be a different version. The `.fvm/` SDK cache is gitignored — run `fvm install` once per machine.
+- Flutter is pinned in `.fvmrc` and, for the Jenkins checks, in the root `Dockerfile`
+  (`FLUTTER_VERSION`, `FLUTTER_SHA256`). A bump changes both in one commit. Older release
+  branches may carry `.github/flutter_version.yaml` instead; the builder falls back to it.
+- Run `fvm flutter ...` / `fvm dart ...`: a bare `flutter` or `dart` from `PATH` may be another
+  version and formats and generates differently. The git hooks call `dart` from `PATH`, so
+  keep it the same version. `fvm install` once per machine.
+- A new clone or worktree lacks files a build needs: [fresh_checkout.md](docs/guides/fresh_checkout.md).
 
-## Build & Test
-
-```bash
-melos bootstrap                                               # install all deps
-melos run analyze                                             # lint all packages
-melos run test                                                # test all packages
-flutter test                                                  # unit/widget (app root)
-dart run build_runner build --workspace                       # codegen, every workspace member
-(cd packages/data/app_database && dart run bin/create_new_schema_dump_and_test_migration.dart)  # after Drift table changes
-```
-
-Every build needs `--dart-define-from-file=dart_define.json` **and** `--no-tree-shake-icons`
-(`String.toIconData()` builds `IconData` at runtime, which the icon tree-shaker rejects in release
-mode — and every `flutter build` is release by default). The failure lands only after the full
-Dart compile, so a missing flag costs a whole build cycle: measured 256 s to fail, 381 s for a
-successful web build. The `melos run build:*` scripts already pass both flags; web has no script
-yet, so type them:
+## Commands
 
 ```bash
-flutter build web --dart-define-from-file=dart_define.json --no-tree-shake-icons
+melos bootstrap                          # dependencies of every package
+melos run check                          # format check, analyze, l10n check
+melos run test                           # tests of every package
+fvm flutter test                         # the app's tests (from phone/)
+fvm dart run build_runner build --workspace   # codegen, every workspace member
 ```
 
-Android APK/AAB builds need no `--flavor` - the project has no build flavors. Two features are
-optional at the manifest level (deep links, SMS call trigger) and follow the dart-defines the build
-already carries, so `dart_define.json` alone decides them; the build prints which ones it resolved.
-Background: [`docs/reference/optional_features.md`](docs/reference/optional_features.md).
+- Every `flutter build` needs `--dart-define-from-file=dart_define.json` and
+  `--no-tree-shake-icons`; without the second a release build fails only after the whole
+  compile. `melos run build:*` passes both; type them for web. There are no build flavors:
+  `dart_define.json` alone switches the optional manifest features
+  ([optional_features.md](docs/reference/optional_features.md)).
+- Which check proves which change and what each costs:
+  [build_verification.md](docs/guides/build_verification.md). Run format, analyze and test
+  before any build.
 
-Before any build, run the cheap checks — `dart format` → `analyze` → `test`. Which check for which
-change, measured costs, and how to drive a long build without wasted retries:
-[`docs/guides/build_verification.md`](docs/guides/build_verification.md).
+## Rules for every change
 
-## Code Standards
+Code:
 
-- No Cyrillic in source, comments, logs, strings, or keys, except translation values in localization ARB files (`lib/l10n/arb/*.arb`).
-- Comments: no redundant *what* comments that restate the code; comments explain non-obvious *why* (rationale, gotchas, workarounds, links to issues). DartDoc for public APIs.
-- No DI frameworks (`get_it`, `injectable`, Service Locator — forbidden).
-- Single quotes; 120-char line width.
-- Never edit `*.g.dart` / `*.freezed.dart` / `*.gr.dart` — regenerate via `build_runner`.
-- Required named params before optional named params.
-- Callbacks: single-expression only; extract multi-statement logic to a private method.
-- Imports: 6 groups, one blank line between, alphabetical within:
-  1. Dart SDK
-  2. Flutter SDK
-  3. External
-  4. Internal packages
-  5. `package:webtrit_phone/...`
-  6. Relative
+- English and ASCII only in source, comments, logs, strings and keys; Cyrillic only in the
+  translation values of `lib/l10n/arb/*.arb`.
+- A comment says why - the rationale, the platform fact, the failure it guards against - in
+  full, for a reader without our tickets: never a ticket id or "see the report". DartDoc on
+  public API.
+- No DI framework or service locator (`get_it`, `injectable`). Dependencies go in through
+  constructors and `Provider` / `RepositoryProvider`.
+- Never edit generated files (`*.g.dart`, `*.freezed.dart`, `*.gr.dart`, the l10n output) -
+  regenerate them, and commit only what your change regenerated
+  ([format_and_codegen.md](docs/guides/format_and_codegen.md)).
+- Single quotes, 120 columns, required named parameters before optional ones, callbacks of a
+  single expression (extract the rest into a private method). Imports in six groups, a blank
+  line between, alphabetical inside: Dart SDK, Flutter SDK, external, internal packages,
+  `package:webtrit_phone/...`, relative.
+- `super.initState()` first, `super.dispose()` last, dispose in reverse creation order;
+  `withValues(alpha: ...)`, not `withOpacity`; elevation through `Card`, not a `Container`
+  with a shadow; no raw `Colors.*` or `TextStyle` in widgets -
+  `Theme.of(context).extension<T>()`.
+- Widgets are `StatelessWidget` classes, not helper methods; dumb widgets sit in
+  `features/*/view/widgets/`.
 
-## Accessibility
+State and lifetime:
 
-Mandatory for any UI you add or touch - a control shipped without this is a defect.
-Full guide, wrapper choice and the traps: [`docs/guides/accessibility.md`](docs/guides/accessibility.md).
+- State classes are `@freezed`; events are `sealed class` + `Equatable`, never freezed.
+- Never pass a `BuildContext` into a bloc or service. A callback may close over
+  `context.l10n` only if it runs later; calling `context.l10n` inside `BlocProvider.create`
+  throws.
+- A bloc that awaits must not write back the `state` it read before the await, and must not
+  emit after `close()`: [bloc_async_state.md](docs/architecture/bloc_async_state.md).
+- Bookkeeping a bloc carries between events - per-call maps, timers, retry counters, pending
+  offers - is a class of its own with its own tests (`RoomOfferWait`, `DebounceMap`), not raw
+  fields; a flow already spread over a bloc is extracted first, in a commit that changes no
+  behaviour ([call_arch.md, Key Patterns](docs/features/call_arch.md#key-patterns)).
+- What lives for the process is built by `bootstrap()` and released only by
+  `AppDependencies.dispose()`; a provider disposes only what its own `create:` built
+  ([dependency_ownership.md](docs/architecture/dependency_ownership.md)).
+- New code reaches the database through DAOs, not through `AppDatabase` tables; Drift classes
+  stay in the repository layer (the exceptions: `packages/data/AGENTS.md`). Tests use `mocktail` / `MockClient`, never the network.
+- The `AppRouter.routes` tree is complete from the start: never declare a route conditionally
+  on a capability, login or flag - the collection is built once, before `system-info`, and a
+  route left out then throws on navigation. Declare every variant; choose at navigation time
+  (guards, `AutoTabsRouter.routes`). Siblings may share a `path` - only route names must be
+  unique.
 
-- Every interactive control carries a name and, where automation must reach it, a stable
-  identifier: wrap it in `SemanticAction` (`.button` for a bare `GestureDetector`/`InkWell`),
-  or in `SemanticId` for a screen anchor or a text field. Never wrap a tap target in a plain
-  `Semantics(identifier: ...)` - the id then lands on a node above the one carrying the action
-  (a raw `Semantics` that declares name, id and action itself is fine, but only with
-  `excludeSemantics: true`, or the tappable widgets below keep their own nameless nodes). In-call buttons go
-  through `CallActionButton`; `context.showSnackBar` already anchors the snackbar itself.
-- Identifiers come from `lib/app/keys.dart` as a `const String ...Id` (paired with a widget `Key`
-  built from it when a widget test needs that anchor too); names come from l10n (`<bloc>_SemanticsLabel_<control>`, all four arb files), never a
-  hardcoded string. Omit a name only when the framework already provides one (the Android back
-  button does) - a second one is announced twice.
-- Every screen with controls has a `*_semantics_test.dart`: `expectTapTargetSemantics` per
-  control, activation via `tapViaSemantics` (never `tester.tap` - a pointer tap passes while the
-  semantics path is broken), and `meetsGuideline(labeledTapTargetGuideline)` over the screen.
-- A pre-push gate (`tool/scripts/semantics-gate.sh`) fails the push when a diff adds a raw
-  `GestureDetector`/`InkWell`/`InkResponse`/`IconButton` in a file whose added lines wire no
-  semantics at all. A control that genuinely needs none takes a trailing
-  `// semantics-exempt: <reason>` - an opt-out is a review item, not a loophole. The script looks
-  for a merge-base with `origin/develop`, which a Gerrit clone does not have, so today it prints
-  "skipping" and checks nothing.
-- After renaming anything in `keys.dart`, grep `patrol_test/` and `integration_test/`:
-  `patrol_test/**` is excluded from analysis, so `analyze` stays green and the E2E run breaks.
+UI (a control shipped without this is a defect):
 
-## Architecture
+- Every interactive control has a name from l10n and, where automation reaches it, an id
+  from `lib/app/keys.dart`: `SemanticAction` for a control, `SemanticId` for an anchor or a
+  text field, `CallActionButton` in a call; never a bare `Semantics(identifier:)` around a tap
+  target. Every screen with controls has a `*_semantics_test.dart` that taps through
+  semantics. The rules, the wrappers and the traps:
+  [accessibility.md](docs/guides/accessibility.md).
+- Renaming in `keys.dart` breaks `patrol_test/` and `integration_test/` silently - they are
+  outside analysis; grep them.
+- A new or changed string goes into all four ARB files in the same change, with the key form
+  `<bloc>_<Widget><Fields>[_<variant>]`: [localization.md](docs/guides/localization.md).
 
-```
-lib/        → app (features/, theme/, repositories/, models/, blocs/, l10n/)
-packages/   → shared libs (must NOT import from lib/)
-  theme_schema/  pure Dart theme DTOs
-  data/app_database/         Drift DB + DAOs
-  api/               REST client
-  signaling/         WebSocket signaling
-../callkeep/webtrit_callkeep/ native call UI (callkeep/ of this repository, a path dependency)
-```
+## Before a particular change
 
-- State: `@freezed` for state; `sealed class + Equatable` for events (never `freezed` on events).
-- BLoC deps via `Provider`/`RepositoryProvider`; never pass `BuildContext` into BLoC/Service.
-  Exception: localized strings needed inside a callback may close over `context.l10n`, but ONLY
-  when the closure is evaluated lazily (after construction). Do NOT call `context.l10n` synchronously
-  inside `BlocProvider.create` — it uses `dependOnInheritedWidgetOfExactType` which throws
-  "Tried to listen to InheritedWidget in a life-cycle that will never be called again" there.
-- Dependency lifetime: everything process-long is built by `bootstrap()` and handed to the
-  `AppDependenciesBuilder` right there - `share` for what screens read, `keep` for what only has to keep
-  running - and released only by `AppDependencies.dispose()`, which `RootApp` runs when it leaves the
-  tree. There is no lookup by type; a provider disposes only what its own `create:` built
-  (`main_shell_services.dart` is the reference) and never performs a process-wide teardown. See
-  `docs/architecture/dependency_ownership.md`.
-- DB: DAOs only — never `AppDatabase` directly; Drift-generated classes stay in repo layer.
-- Theme: never raw `Colors.xxx` or `TextStyle` in widgets; `Theme.of(context).extension<T>()`.
-- Widgets: `StatelessWidget` always (not helper methods); dumb widgets in `features/*/view/widgets/`.
-- Tests: `MockClient`/`mocktail` — no real network calls; DB migrations via `SchemaVerifier`.
-- Routing (`auto_route`): the `AppRouter.routes` tree must ALWAYS be complete — never gate route
-  *declarations* on async/runtime values (server capability, login state, feature flags).
-  `routeCollection` is `late final`, built once at router construction (before server `system-info`
-  loads), so any `if (capability) AutoRoute(...)` is frozen with whatever the value was at startup;
-  later navigation to a route omitted then throws `Failed to navigate to <Route>`. Register every
-  variant unconditionally and decide which one to *show* at navigation/build time (e.g.
-  `AutoTabsRouter.routes`, guards, initial-tab resolver). Sibling routes may share a `path`
-  (`recents`) — `RouteCollection` only requires unique route *names*, and tab matching is name-based.
+| You are about to | Read first | Skill |
+|---|---|---|
+| change `CallBloc`: an event, handler, mutation, handshake step | [call_arch.md](docs/features/call_arch.md), [bloc_async_state.md](docs/architecture/bloc_async_state.md) | `callbloc-change` |
+| write the test for a fix in calls | [call_arch.md](docs/features/call_arch.md) | `call-tests` |
+| send something over signaling | [request_queue.md](packages/signaling_service/docs/request_queue.md), [signaling_architecture_target.md](docs/architecture/signaling_architecture_target.md) | `callbloc-change` |
+| touch how an incoming call arrives (push, background, socket) | [incoming_call_scenarios.md](docs/architecture/incoming_call_scenarios.md) | |
+| replace or rebuild `MainShell` for the same sign-in | [session_remount.md](docs/architecture/session_remount.md) | |
+| call a new Core endpoint, react to a Core error | [core_error_codes.md](docs/architecture/core_error_codes.md), `packages/api/AGENTS.md` | `core-endpoint` |
+| hide a feature behind a capability or a per-user answer | [feature_gates.md](docs/architecture/feature_gates.md), [feature_access.md](docs/features/feature_access.md) | `core-endpoint` |
+| add a theme property or a theme DTO | `packages/theme_schema/AGENTS.md` (recipes, schema contract rules) | |
+| refresh data periodically or on resume | [polling.md](docs/architecture/polling.md), [data_refresh.md](docs/architecture/data_refresh.md) | |
+| change a table or a column | `packages/data/AGENTS.md`, [schema_changes.md](packages/data/docs/schema_changes.md), [query_traps.md](packages/data/docs/query_traps.md) | `drift-schema-change` |
+| add or change a string, run a generator or the formatter | [localization.md](docs/guides/localization.md), [format_and_codegen.md](docs/guides/format_and_codegen.md) | `codegen-l10n` |
+| use a Material widget, write a dialog or a widget test | [material_ui.md](docs/guides/material_ui.md) | |
+| lay a screen out for landscape | [adaptive_layout.md](docs/architecture/adaptive_layout.md) | |
+| refactor without changing behaviour | [refactor_equivalence.md](docs/guides/refactor_equivalence.md) | |
+| raise a minimum OS or SDK version | [platform_versions.md](docs/reference/platform_versions.md) | |
+| change the call plugin | `../callkeep/AGENTS.md` | `callkeep-android-change`, `callkeep-ios-change` |
+| cut a release or a patch build | [release.md](docs/guides/release.md), [hotfix_builds.md](docs/guides/hotfix_builds.md) | `release-cut` |
+| push, or rework a chain in review | [gerrit_push.md](../docs/gerrit_push.md), [gerrit_chain_rework.md](../docs/gerrit_chain_rework.md) | `gerrit-push`, `gerrit-chain-rework` |
 
-## Documentation
+## Before handing over
 
-- `docs/README.md` is the map of every page. A page goes by what it is for: `docs/architecture/` (a mechanism several features share), `docs/guides/` (a procedure), `docs/reference/` (keys, variables, scripts a reader looks up), `docs/features/` (one feature, indexed by `docs/features/features.md`).
-- Per feature `<name>` (kebab-case): a small one is a single `docs/features/<name>.md`. Split a grown one into `<name>_ux.md` (product/UX: what the user does, screen states, key widgets, in-progress redesign) + `<name>_arch.md` (code/architecture: bloc, events, state machine, flows, isolates, key patterns), and drop the plain `<name>.md` — `features.md` is the index, keep no redundant per-feature index.
-- Cross-cutting components shared by several features live in `docs/architecture/` (e.g. `signaling_architecture_target.md`), not under features/; feature docs link to them rather than repeat them. Scenario docs (flows + diagrams) keep a descriptive name and live by scope — cross-component ones in `docs/architecture/` (e.g. `incoming_call_scenarios.md`).
-- Each doc: start with a one-line summary + a `Last reviewed:` date; describe current behavior first and put unfinished work under a marked "Redesign / in progress" section; link code by relative path (`lib/features/<name>/...`) and sibling docs relatively; update the doc in the same change that changes the feature. Plain ASCII (repo convention).
+- `fvm dart format`, `fvm flutter analyze` and `fvm flutter test` are clean in every package
+  you touched. The pre-push gate runs analyze and the tests of `phone/` itself, and the tests
+  of `text_entities` and `link_preview`; the tests of every other package (`theme_schema`,
+  `phone_number`, `app_database` with its migrations, ...) run only in Jenkins - run them in
+  the package by hand.
+- What the gate does not prove:
+  - `tool/scripts/semantics-gate.sh` looks for `origin/develop`, which a Gerrit clone does not
+    have, so it prints "skipping" and checks nothing - check the semantics rules yourself;
+  - `patrol_test/` is not analysed.
+- The doc of a feature changes in the same change as the feature.
+
+## Writing docs
+
+- A page goes by what it is for: `docs/architecture/` a mechanism several features share,
+  `docs/guides/` a procedure, `docs/reference/` names a reader looks up, `docs/features/` one
+  feature (indexed by `docs/features/features.md`). Add the page to its folder's README and to
+  `docs/README.md`.
+- A feature `<name>` (kebab-case) is one `docs/features/<name>.md`; a grown one splits into
+  `<name>_ux.md` (what the user does, screen states) and `<name>_arch.md` (bloc, events,
+  flows), and the plain page goes.
+- Each page opens with a one-line summary and a `Last reviewed:` date, describes current
+  behaviour first and unfinished work under a marked "Redesign / in progress" section, links
+  code and sibling pages by relative path, and is plain ASCII.
