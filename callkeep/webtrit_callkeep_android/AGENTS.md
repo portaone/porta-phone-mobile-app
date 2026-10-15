@@ -1,194 +1,76 @@
-# AGENTS.md — webtrit_callkeep_android
+# AGENTS.md - webtrit_callkeep_android
 
-Android platform implementation. Two layers: Dart (Flutter side) and Kotlin (native side).
+The Android implementation: Dart in `lib/`, Kotlin in `android/src/main/kotlin/com/webtrit/callkeep/`,
+the Pigeon definition in `pigeons/callkeep.messages.dart`. Every Kotlin component has a page in
+[docs/](docs); start from [docs/architecture.md](docs/architecture.md) and read the page of each
+component before you change it. The procedure and its traps are the `callkeep-android-change`
+skill; the commands are in [../AGENTS.md](../AGENTS.md).
 
-> Detailed per-component architecture documentation lives in **[docs/](docs)**.
-> Start with **[docs/architecture.md](docs/architecture.md)**.
-> Before modifying any Kotlin component, read the corresponding doc in `docs/`.
+## Two processes
 
----
+- `:callkeep_core` runs `PhoneConnectionService`, the Telecom `ConnectionService`, and the
+  `PhoneConnection` objects it holds. No Flutter engine runs there.
+- The main process runs the Flutter engines and the services around them: `ForegroundService`
+  (bound by the activity, host of `PHostApi`, forwards call events to Dart), `IncomingCallService`
+  (a ringing call on the Telecom path and the push isolate), `ActiveCallService` (the foreground
+  service and ongoing notification of every answered Telecom call, typed
+  `phoneCall|microphone|camera`) and `StandaloneCallService` (the call backend where Telecom
+  cannot host calls).
+- The processes talk through app-scoped broadcasts (`:callkeep_core` to main) and explicit
+  `startService` intents (main to the backend). The contract and the event catalogue:
+  [dual-process.md](docs/dual-process.md), [ipc-broadcasting.md](docs/ipc-broadcasting.md).
 
-## Package structure
+Main-process code reaches calls only through `CallkeepCore.instance`: its reads come from
+`MainProcessConnectionTracker`, its commands go out as intents. `ConnectionManager` in the main
+heap is not the one `PhoneConnectionService` fills, so reading or changing it there is a silent
+no-op. The one entry it does hold is the pending reservation `checkAndReservePending` makes
+during `startIncomingCall`; `InProcessCallkeepCore.clearAndMarkEndCallDispatched` removes it, or
+a call reported again under the same id is refused as a duplicate
+([callkeep-core.md](docs/callkeep-core.md)).
 
-```text
-webtrit_callkeep_android/
-├── lib/src/
-│   ├── webtrit_callkeep_android.dart   # WebtritCallkeepAndroid — platform impl
-│   └── common/
-│       ├── callkeep.pigeon.dart        # Pigeon-generated Dart bindings (DO NOT EDIT)
-│       └── converters.dart             # Extension methods: Pigeon ↔ platform_interface types
-├── pigeons/
-│   └── callkeep.messages.dart          # Pigeon input — edit this, then regenerate
-└── android/src/main/kotlin/com/webtrit/callkeep/
-    ├── WebtritCallkeepPlugin.kt         # Plugin entry point
-    ├── services/                        # Android services (see below)
-    ├── models/                          # Kotlin data models
-    ├── managers/                        # Audio, notification channel management
-    └── Generated.kt                     # Pigeon-generated Kotlin APIs (DO NOT EDIT)
-```
+## Push isolate
 
----
+`AndroidCallkeepServices.backgroundPushNotificationBootstrapService.initializeCallback(cb)`
+registers the entry point; `cb` is a top-level `Future<void> Function(CallkeepIncomingCallMetadata?)`
+(`CallKeepPushNotificationSyncStatusHandle`) annotated `@pragma('vm:entry-point')`.
+`reportNewIncomingCall` on the same service hands the call to `CallkeepCore.registerIncomingCall`;
+once Telecom shows it, `IncomingCallService` starts and runs the callback in a new isolate. Inside it `CallkeepBackgroundServiceDelegate` receives `performAnswerCall`,
+`performEndCall` and `performHandoff`; the callback's future completing is what stops the service.
+Details: [background-services.md](docs/background-services.md).
 
-## Dual-process architecture
+## SMS trigger
 
-The Android implementation runs in **two separate OS processes**:
-
-| Process          | Key class                | Role                                                                   |
-|------------------|--------------------------|------------------------------------------------------------------------|
-| Main app process | `ForegroundService`      | Hosts Flutter engine; Pigeon host API; bridges Telecom ↔ Flutter       |
-| `:callkeep_core` | `PhoneConnectionService` | Android Telecom `ConnectionService`; manages `PhoneConnection` objects |
-
-**IPC between processes**: app-scoped broadcasts (`sendBroadcast` with `setPackage`) via
-`ConnectionServicePerformBroadcaster`, and explicit `startService` intents for commands.
-
-`MainProcessConnectionTracker` is the main-process shadow of connection state, updated from
-broadcasts sent by `:callkeep_core`. It is an internal implementation detail exposed through
-`CallkeepCore`.
-
-### CallkeepCore -- the single access point
-
-**All code in the main process must interact with `PhoneConnectionService`
-through `CallkeepCore.instance`, not `connectionManager` directly.**
-
-- State reads: `CallkeepCore.instance.getAll()`, `.exists()`, `.getState()`, etc. -- backed by
-  `MainProcessConnectionTracker`.
-- Commands: `CallkeepCore.instance.startAnswerCall()`, `.tearDownService()`,
-  `.sendTearDownConnections()`, etc. -- dispatched via explicit `startService` intents.
-
-**Never touch connection state via `connectionManager.*` from the main process.**
-`PhoneConnectionService` runs in the `:callkeep_core` OS process -- the connections held by
-`connectionManager` in the main JVM heap do not exist, so reading or mutating them there is a
-silent no-op. ONE sanctioned exception: the `pendingCallIds` pre-registration, which
-`checkAndReservePending` populates in the MAIN-process heap during
-`PhoneConnectionService.startIncomingCall` -- `InProcessCallkeepCore.clearAndMarkEndCallDispatched`
-must drop it from the main process, or a transfer-back reusing the callId is rejected as a
-duplicate.
-
-### IPC events
-
-All cross-process communication uses app-scoped broadcasts (`sendBroadcast` with `setPackage`) and
-explicit `startService` intents. Events are grouped by broadcaster:
-
-**CallLifecycleEvent** (`:callkeep_core` -> Main):
-`AnswerCall`, `DeclineCall`, `HungUp`, `OngoingCall`, `IncomingConnectionReported`, `ConnectionStateChanged`,
-`ReplayIncomingCall`, `OutgoingFailure`, `IncomingFailure`, `ConnectionNotFound`
-
-**CallMediaEvent** (`:callkeep_core` -> Main):
-`AudioMuting`, `AudioDeviceSet`, `AudioDevicesUpdate`, `SentDTMF`, `ConnectionHolding`
-
-**Commands** (Main -> call backend) are explicit `startService` intents, not broadcasts:
-`CallServiceRouter` sends a `ServiceAction` to `PhoneConnectionService` on the Telecom path, or a
-`StandaloneServiceAction` to `StandaloneCallService` without Telecom. The only `CallCommandEvent`
-sent is the `TearDownComplete` ack; every other row is a `ServiceAction` / `StandaloneServiceAction`
-command:
-
-| Command / ack         | Direction                | Payload  | Purpose                                                                                                                                                  |
-|-----------------------|--------------------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `TearDownConnections` | Main -> backend          | --       | Trigger `hungUp()` + `cleanConnections()` on all PhoneConnections                                                                                        |
-| `TearDownComplete`    | backend -> Main          | --       | Ack that tearDown completed                                                                                                                              |
-| `ReserveAnswer`       | Main -> backend          | `callId` | Deferred answer reservation, made before the connection exists                                                                                           |
-| `CancelIncomingCall`  | Main -> backend          | `callId` | Withdraw an incoming call rejected before the app presented it; a later Telecom creation or answer of it is refused                                      |
-| `CleanConnections`    | Main -> backend          | --       | Clear all connections without `hungUp()`                                                                                                                 |
-| `ReplayAudioState`    | Main -> backend          | --       | Ask all PhoneConnections to re-emit audio device + mute state; used by `ForegroundService.onDelegateSet()` to restore Flutter audio UI after hot restart |
-
----
-
-## Android services
-
-| Service                  | Process          | Purpose                                                 |
-|--------------------------|------------------|---------------------------------------------------------|
-| `PhoneConnectionService` | `:callkeep_core` | Telecom integration; creates/destroys `PhoneConnection` |
-| `ForegroundService`      | main             | Active call; Pigeon host; mute/hold/speaker/DTMF        |
-| `IncomingCallService`    | main             | Ringing call on the Telecom path; one-shot push isolate |
-| `ActiveCallService`      | main             | Notification for multiple simultaneous calls            |
-| `StandaloneCallService`  | main             | Calls without Telecom (unsupported device or API < 26)  |
-
----
-
-## Pigeon workflow
-
-1. Edit `pigeons/callkeep.messages.dart`.
-2. Run from this package directory:
-
-   ```bash
-   ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
-   ```
-
-3. Commit both the input file and all generated output (`callkeep.pigeon.dart`,
-   `android/src/main/kotlin/com/webtrit/callkeep/Generated.kt`).
-
-**Never manually edit** `lib/src/common/callkeep.pigeon.dart` or
-`android/src/main/kotlin/com/webtrit/callkeep/Generated.kt`.
-
-When adding a converter for a new Pigeon type, add an extension in `lib/src/common/converters.dart`.
-
----
-
-## Background modes
-
-### Push notification isolate (one-shot)
-
-- Entry point: `AndroidCallkeepServices.backgroundPushNotificationBootstrapService`
-- Triggered by: FCM or another isolate calling `reportNewIncomingCall` on the bootstrap service
-- Callback signature:
-  `Future<void> onCallback(CallkeepPushNotificationSyncStatus, CallkeepIncomingCallMetadata?)`
-- Service: `IncomingCallService`
-
-The background isolate entry point function **must** be annotated `@pragma('vm:entry-point')`. The
-isolate uses `CallkeepBackgroundServiceDelegate` (`performAnswerCall`, `performEndCall`,
-`performHandoff`) for native → Dart events. The session's callback future is what stops
-`IncomingCallService`; `performHandoff` says callkeep no longer needs the session for the call.
-
----
-
-## SMS-triggered calls
-
-- Android only; requires `RECEIVE_SMS` + `BROADCAST_SMS` permissions.
-- Message prefix: `<#> WEBTRIT:` (hard-coded security filter, do not change).
-- Regex pattern (4 capture groups in order): `callId`, `handle`, `displayName`, `hasVideo`.
-- Configured via `initializeSmsReception(messagePrefix:, regexPattern:)`.
-- A matched message is registered through `CallkeepCore.registerIncomingCall`, the same operation
-  as push and signaling, so it joins a report of the same call and gets its outcome.
-- Full regex spec: `../docs/sms_trigger_regex_requirements.md` (in `callkeep/docs/`).
-
----
-
-## Android-only APIs (accessed via platform interface)
-
-| API                                                                    | Purpose                          |
-|------------------------------------------------------------------------|----------------------------------|
-| `showOverLockscreen` / `wakeScreenOnShow`                              | Activity control for lock screen |
-| `sendToBackground` / `isDeviceLocked`                                  | App window management            |
-| `getFullScreenIntentPermissionStatus` / `openFullScreenIntentSettings` | Full-screen intent permissions   |
-| `getBatteryMode`                                                       | Battery optimization status      |
-| `requestPermissions` / `checkPermissionsStatus`                        | Runtime permission management    |
-| `getDiagnosticReport`                                                  | Debug diagnostics map            |
-| `getConnection` / `getConnections` / `cleanConnections`                | Connection state queries         |
-| `playRingbackSound` / `stopRingbackSound`                              | Audio control                    |
-
----
-
-## Integration tests
-
-The public API is covered by integration tests in
-`../webtrit_callkeep/example/integration_test/`. See the **Integration tests** section in
-[README.md](README.md) for the full list of test files and what each covers.
-
----
+The app turns it on: it declares `RECEIVE_SMS` and the `IncomingCallSmsTriggerReceiver` receiver
+(guarded by `android:permission="android.permission.BROADCAST_SMS"`) in its own manifest - both
+are only comments in this package's manifest - and calls
+`AndroidCallkeepUtils.smsReceptionConfig.configureReceivedSms(prefix:, regexPattern:)`. The
+prefix is the app's configuration, stored with the regex in `StorageDelegate`; the receiver
+takes a message whose body contains it and that the regex matches. A matched message goes
+through `CallkeepCore.registerIncomingCall`, as push and signaling do. The regex:
+[sms_trigger_regex_requirements.md](../docs/sms_trigger_regex_requirements.md).
 
 ## Key invariants
 
-- Classes annotated `@Keep` in Kotlin **must not** be renamed or removed — they are referenced by
-  ProGuard/R8 rules.
-- All Pigeon host API implementations run on the platform thread; do not block. The one
-  exception is the push session's `reportEndCall`, served on a Pigeon background thread so a
-  caller's hangup does not wait for a cold start: `CallkeepCore.reportCallEnded` and
-  `markTerminated` may be called off the platform thread, and anything they reach that lives on
-  the main looper (`IncomingRegistrations`, the `IncomingCallService.isRunning` check) is posted
-  there.
-- `PhoneConnectionService` runs in a separate process — it cannot share in-memory state with the
-  main process; use IPC.
-- **Never call `connectionManager.*` from the main process.** Use `CallkeepCore.instance` instead.
-  `PhoneConnectionService` runs in a separate OS process -- any direct `connectionManager` access
-  from the main process is a silent no-op.
-- Never import Kotlin-layer constants or classes into the Dart layer directly; go through Pigeon.
+- `CallMetadata` must not be `Parcelable` or `@Parcelize`: it reaches `system_server` inside a
+  Telecom `Bundle`, whose class loader does not know the class, and unmarshalling throws
+  `BadParcelableException`. Pass it as `toBundle()` / `fromBundle()` (the warning in
+  `models/CallMetaData.kt`).
+- Pigeon host calls run on the main looper and must not block it. The exception is
+  `PHostBackgroundPushNotificationIsolateApi.reportEndCall`, declared
+  `@TaskQueue(type: TaskQueueType.serialBackgroundThread)` so a hangup during a cold start does
+  not wait for it; its path posts to the main looper whatever lives there
+  (`IncomingRegistrations` throws off it). See "Host calls wait for the main looper" in
+  [pigeon-apis.md](docs/pigeon-apis.md).
+- `@Keep` (`androidx.annotation.Keep`) is on `ForegroundService`, `IncomingCallService` and
+  `StandaloneCallService`; R8 keeps them by that annotation. `consumer-rules.pro` holds one rule,
+  `-keepnames` for `PhoneConnectionService`, whose name is addressed by `ComponentName` across
+  the process boundary. Do not rename or remove any of the four.
+- The Pigeon output (`lib/src/common/callkeep.pigeon.dart`, `Generated.kt`) is regenerated with
+  `../tool/pigeon.sh`, never edited; converters between Pigeon and platform interface types are
+  in `lib/src/common/converters.dart`. The iOS definition is a separate file.
+
+## Tests
+
+- Dart: `test/`. JVM (Robolectric): `android/src/test/kotlin/com/webtrit/callkeep/`, run with
+  `./gradlew testDebugUnitTest` from `android/` once `android/local.properties` exists.
+- On a device: the example's integration tests, listed in [README.md](README.md#integration-tests).

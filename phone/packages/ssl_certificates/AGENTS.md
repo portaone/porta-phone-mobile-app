@@ -1,37 +1,16 @@
 # ssl_certificates
 
-Minimal Dart package wrapping `dart:io`'s `SecurityContext` to load custom trusted X.509
-certificates (e.g. self-signed CAs). No external runtime dependencies — pure Dart stdlib.
+`TrustedCertificates` (a list of `TrustCertificate`: bytes and an optional password) and
+`initializeSecurityContext(certs)`, which builds a `dart:io` `SecurityContext` with the platform
+roots plus these certificates. Used by `_http_client`, `_web_socket_channel` and the
+signaling_service packages; the app loads the certificates in `lib/data/app_certificates.dart`
+([certificates.md](../../docs/guides/certificates.md)).
 
-## Public API
+- `initializeSecurityContext` returns `null` for an empty list, and the caller's `HttpClient`
+  then uses its default context. `TrustCertificate` throws `ArgumentError` on empty bytes.
+- It reaches only the Dart VM's TLS (REST, signaling socket), never the TLS inside libwebrtc: a
+  `turns:` certificate needs another path ([ice_servers.md](../../docs/architecture/ice_servers.md#trusting-a-turns-certificate)).
+- `lib/src/securety_context.dart` is an old typo, not a convention. Renaming it touches only the
+  barrel `lib/ssl_certificates.dart`; dependents import the barrel.
 
-| File                                | Role                                                    |
-|-------------------------------------|---------------------------------------------------------|
-| `lib/ssl_certificates.dart`         | Barrel export                                           |
-| `lib/src/trusted_certificates.dart` | Data models: `TrustedCertificates`, `TrustCertificate`  |
-| `lib/src/securety_context.dart`     | Single function `initializeSecurityContext()`           |
-
-### Data Flow
-
-1. Caller builds `TrustedCertificates` from a list of `TrustCertificate` (raw `List<int>` bytes + optional password).
-2. `initializeSecurityContext(trustedCertificates)` returns `SecurityContext?` — `null` when list is empty, otherwise `SecurityContext(withTrustedRoots: true)` with every cert registered via `setTrustedCertificatesBytes`.
-
-### Key Design
-
-- `TrustedCertificates.empty` is a `const` singleton.
-- `TrustCertificate` uses a private `_internal` constructor; public factory throws `ArgumentError` if `bytes` is empty.
-- Returns `null` (not throws) when no certs configured — callers branch simply without try/catch.
-
-## Known Issues
-
-- `securety_context.dart` has an intentional misspelling ("securety" not "security"). Do not
-  rename it without also updating the barrel export `lib/ssl_certificates.dart`, the only file
-  that references it; dependents import the barrel.
-
-## Commands
-
-```bash
-dart pub get
-dart analyze
-dart format lib/ --line-length 120
-```
+No tests of its own.

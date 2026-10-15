@@ -1,47 +1,59 @@
 # device_auto_rotate
 
-Flutter plugin that checks and monitors the Android system auto-rotate setting.
-Android-only — iOS and other platforms always return `true` (safe default).
+Flutter plugin that reads and watches the Android system auto-rotate setting. Android only -
+every other platform answers `true`. The app reads it through
+`lib/features/orientations/utils/device_rotation_util.dart` before it forces an orientation
+([adaptive_layout.md](../../docs/architecture/adaptive_layout.md)).
 
 ## Public API
 
-- `static Future<bool> get DeviceAutoRotate.isEnabled` — one-time check via MethodChannel
-- `static Stream<bool> get DeviceAutoRotate.stream` — real-time updates via EventChannel + ContentObserver
-
-Error handling contract: any exception or unsupported platform returns `true` (never locks into portrait silently).
+- `static Future<bool> get DeviceAutoRotate.isEnabled` - one query over a MethodChannel;
+  `true` on any error or a `null` answer.
+- `static Stream<bool> get DeviceAutoRotate.stream` - an EventChannel backed by a
+  ContentObserver. It emits the current value as soon as it is listened to, then on every
+  change of the setting.
+- Errors on the stream are swallowed without a value: `handleError((_) => true)` drops the
+  error and emits nothing, so a listener keeps the last value it had (current behaviour, not a
+  `true` fallback).
 
 Why only Android: there `SystemChrome.setPreferredOrientations` can override the system rotation
 lock, so the app checks the setting before forcing landscape.
 
-| Platform    | Returns                         | Why                                                                                      |
-|-------------|---------------------------------|------------------------------------------------------------------------------------------|
-| Android     | `Settings.System.ACCELEROMETER_ROTATION` (`false` if locked) | the app's orientation request would bypass the lock          |
-| iOS         | always `true`                   | iOS enforces the orientation lock itself and ignores a landscape request while it is on |
-| Others      | always `true`                   | fallback for web, desktop and tests                                                      |
+| Platform | Returns | Why |
+|---|---|---|
+| Android | `Settings.System.ACCELEROMETER_ROTATION == 1` (`false` if locked or unset, `true` if unreadable) | the app's orientation request would bypass the lock |
+| iOS | always `true` | iOS enforces the orientation lock itself and ignores a landscape request while it is on |
+| Others | always `true` (`stream` is a single `true`) | fallback for web, desktop and tests |
 
 ## Architecture
 
 ```
 DeviceAutoRotate (lib/device_auto_rotate.dart)
-    ├── MethodChannel "device_auto_rotate"        → one-time query
-    └── EventChannel "device_auto_rotate_stream"  → real-time stream
-              ↓
-    DeviceAutoRotatePlugin.kt (android/)
-        ├── onMethodCall() → Settings.System.ACCELEROMETER_ROTATION
-        └── ContentObserver → emits on every settings change
+  +-- MethodChannel "device_auto_rotate"          one query
+  +-- EventChannel  "device_auto_rotate_stream"   stream
+        |
+DeviceAutoRotatePlugin.kt (android/)
+  +-- onMethodCall()  reads Settings.System.ACCELEROMETER_ROTATION
+  +-- onListen()      registers the ContentObserver and sends the current value
+  +-- onCancel()      unregisters it
 ```
 
 ## Key Rules
 
-- Native class `DeviceAutoRotatePlugin` (Kotlin) implements `FlutterPlugin`, `MethodChannel.MethodCallHandler`, `EventChannel.StreamHandler`.
-- ContentObserver: registered in `onListen()`, unregistered in `onCancel()` — do not break this lifecycle.
-- Monitored setting: `Settings.System.ACCELEROMETER_ROTATION` (1 = enabled, 0 = disabled).
-- Do not add iOS native code — the Dart layer already handles it.
+- `DeviceAutoRotatePlugin` (Kotlin) implements `FlutterPlugin`, `MethodChannel.MethodCallHandler`
+  and `EventChannel.StreamHandler`.
+- The ContentObserver is registered in `onListen()` and unregistered in `onCancel()` - keep
+  that lifecycle.
+- Do not add iOS native code - the Dart layer already answers there.
 
 ## Commands
 
 ```bash
-flutter test test/device_auto_rotate_test.dart
-cd example && flutter test integration_test/plugin_integration_test.dart
-cd example && flutter run
+fvm flutter test test/device_auto_rotate_test.dart
+cd example && fvm flutter test integration_test/plugin_integration_test.dart   # on a device
+cd example && fvm flutter run
 ```
+
+- The pre-push gate does not run this package's tests; run them here.
+- `example/` is not a member of the phone workspace: it resolves on its own (`fvm flutter pub get`
+  inside it) and keeps its own `pubspec.lock`.

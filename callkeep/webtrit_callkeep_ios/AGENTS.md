@@ -1,83 +1,43 @@
-# AGENTS.md — webtrit_callkeep_ios
+# AGENTS.md - webtrit_callkeep_ios
 
-iOS platform implementation. Two layers: Dart (Flutter side) and Objective-C (native side,
-CallKit + PushKit).
+The iOS implementation: CallKit and PushKit in Objective-C, with the call-group bookkeeping in
+Dart. How it behaves - call groups, their hold, mute after the audio session comes back, the
+simulator - is in [README.md](README.md); the procedure and its traps are the
+`callkeep-ios-change` skill; the commands are in [../AGENTS.md](../AGENTS.md).
 
----
+## Where things are
 
-## Package structure
+- `lib/src/webtrit_callkeep_ios.dart` - the platform class; maps callId to the CallKit UUID.
+- `lib/src/common/call_group_assignment.dart`, `lib/src/common/call_group_coordinator.dart` -
+  the group record and the ordered requests against it, tested in `test/`.
+- `lib/src/common/converters.dart` - Pigeon to platform interface types.
+- `ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/WebtritCallkeepPlugin.m` - the
+  `CXProvider` and `PKPushRegistry` delegates.
+- Pigeon: definition `pigeons/callkeep.messages.dart` (separate from the Android one); output
+  `lib/src/common/callkeep.pigeon.dart`,
+  `ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/Generated.m` and
+  `ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/include/webtrit_callkeep_ios/Generated.h`.
+  Regenerate with `../tool/pigeon.sh`, never edit.
 
-```text
-webtrit_callkeep_ios/
-├── lib/src/
-│   ├── webtrit_callkeep_ios.dart       # WebtritCallkeep — platform impl
-│   └── common/
-│       ├── callkeep.pigeon.dart        # Pigeon-generated Dart bindings (DO NOT EDIT)
-│       └── converters.dart             # Extension methods: Pigeon ↔ platform_interface types
-├── pigeons/
-│   └── callkeep.messages.dart          # Pigeon input — edit this, then regenerate
-└── ios/webtrit_callkeep_ios/Sources/webtrit_callkeep_ios/
-                                        # Objective-C implementation
-```
+Group logic and request ordering belong in Dart, where they are tested; Objective-C gets only
+what CallKit itself needs - it has no native tests.
 
----
+## CallKit invariants
 
-## Pigeon workflow
+- Every incoming call is shown by CallKit, in the foreground as well; the plugin has no call
+  screen of its own.
+- A VoIP push is reported to CallKit natively, in `didReceiveIncomingPushWithPayloadForPushTypeVoIP`,
+  from the payload keys `callId`, `handleType`, `handleValue`, `displayName`, `hasVideo`; Dart
+  learns of it from `CallkeepDelegate.didPresentIncomingCall`. A malformed payload is still
+  reported, and ended at once, or iOS stops delivering pushes. `PushRegistryDelegate` gets only
+  the VoIP token (`didUpdatePushTokenForPushTypeVoIP`, `null` when it is invalidated).
+- The CallKit UUID is a name-based v5 UUID of the callId, computed the same way in Dart and
+  Objective-C, so a push and a signaling report of one call meet on one UUID.
+- CallKit keeps one active and one held call; a call going active while another ungrouped one is
+  active makes CallKit end that one. Hold the other call in the same transaction.
+- A `perform...Action` is fulfilled or failed only once the delegate answered; `false` fails it
+  and the system UI goes back. Never block the main thread in a provider delegate callback - call
+  Dart asynchronously through Pigeon.
 
-1. Edit `pigeons/callkeep.messages.dart`.
-2. Run from this package directory:
-
-   ```bash
-   ../tool/pigeon.sh   # runs pigeon and strips the trailing whitespace its Kotlin and Objective-C generators leave
-   ```
-
-3. Commit both the input file and all generated output (`callkeep.pigeon.dart`, `Generated.h`, `Generated.m`).
-
-**Never manually edit** `lib/src/common/callkeep.pigeon.dart`, `Generated.h` or `Generated.m`.
-
-When adding a converter for a new Pigeon type, add an extension in `lib/src/common/converters.dart`.
-
----
-
-## iOS call UI behavior
-
-| App state           | UI used                                       |
-|---------------------|-----------------------------------------------|
-| Foreground          | Flutter-based incoming call screen            |
-| Background / locked | System CallKit UI                             |
-| Terminated          | CallKit via PushKit (VoIP push) wakes the app |
-
----
-
-## Delegates
-
-| Delegate               | How to register                           | Purpose                                      |
-|------------------------|-------------------------------------------|----------------------------------------------|
-| `CallkeepDelegate`     | `Callkeep().setDelegate(...)`             | All call lifecycle events                    |
-| `PushRegistryDelegate` | `Callkeep().setPushRegistryDelegate(...)` | PushKit VoIP token updates and incoming push |
-
-`PushRegistryDelegate` is iOS-only and must be set before the app enters background if VoIP pushes are expected.
-
----
-
-## Required iOS entitlements
-
-- **Push Notifications** capability.
-- **Background Modes → Voice over IP**.
-
-Without these, `reportNewIncomingCall` will silently fail when the app is in the background.
-
----
-
-## iOS-only API
-
-`pushTokenForPushTypeVoIP()` — returns the current PushKit VoIP token. Returns `null` if PushKit is not available or the token has not been issued yet.
-
----
-
-## Key invariants
-
-- There is **no persistent background service** on iOS — all background work goes through CallKit/PushKit.
-- The `PushRegistryDelegate` is separate from `CallkeepDelegate`; do not conflate them.
-- Never block the main thread in CallKit delegate callbacks — call Dart asynchronously via Pigeon.
-- iOS minimum deployment target: **iOS 13.0** (`webtrit_callkeep_ios.podspec`, `Package.swift`).
+Minimum deployment target: iOS 13.0 (`ios/webtrit_callkeep_ios.podspec`,
+`ios/webtrit_callkeep_ios/Package.swift`).

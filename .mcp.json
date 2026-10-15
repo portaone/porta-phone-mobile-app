@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "dart": {
+      "command": "bash",
+      "args": [
+        "-c",
+        "exec \"$(git rev-parse --show-toplevel)/scripts/dart-mcp-server.sh\" --enable run_tests"
+      ]
+    }
+  }
+}

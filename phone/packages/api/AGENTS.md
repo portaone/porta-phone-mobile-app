@@ -1,112 +1,156 @@
-# api
+# AGENTS.md - api
 
-Standalone Dart library — typed REST API client for the WebTrit Core backend.
-No Flutter dependency, no dependency on `lib/`.
+Typed REST client for WebTrit Core, pure Dart: no Flutter, nothing from `lib/` of the app. What
+you usually do here is add an endpoint, give an endpoint a failure of its own, or add a model;
+the steps for all three, with the tests, are the skill `core-endpoint`
+([SKILL.md](../../../.agents/skills/core-endpoint/SKILL.md)). Which error codes Core sends and
+which of them end the session: [core_error_codes.md](../../docs/architecture/core_error_codes.md).
+Backend reference (Swagger UI): <https://webtrit.github.io/webtrit_core_pages/>.
 
-**Backend API reference (Swagger UI):** <https://webtrit.github.io/webtrit_core_pages/>
+## Layout
 
-## Entry Point
-
-`lib/api.dart` — single barrel export. Re-exports `dart:io`'s `HttpStatus`,
-`http`'s `ClientException`, plus all internal sources.
-
-## Client
-
-`WebtritApiClient` is the only public API surface:
-
-```dart
-WebtritApiClient(Uri baseUrl, String tenantId, {
-  Duration? connectionTimeout,
-  TrustedCertificates certs,
-  bool isDebug = false,
-  String? userAgent,
-})
+```
+lib/api.dart                       the barrel
+lib/src/api_client.dart            WebtritApiClient: one method per endpoint, the per-endpoint ResponseOptions
+lib/src/api_failure_rules.dart     FailureContext, FailureRule, defaultFailureRules, the endpoint rules
+lib/src/exceptions.dart            RequestFailure, SessionRejection and every typed exception
+lib/src/api_request_options.dart   RequestOptions (retries)
+lib/src/api_response_options.dart  ResponseOptions (response type, optional endpoint, failures)
+lib/src/webtrit_http_request_executor.dart  HttpRequestExecutor
+lib/src/models/                    request and response models, barrel models.dart
+test/                              one file per area: api_client_<area>_test.dart
 ```
 
-- `buildTenantUrl()` (`@visibleForTesting`) appends `/tenant/{tenantId}`, strips pre-existing tenant segment. All requests under `/api/v1/...`.
-- For tests: `WebtritApiClient.inner(...)` accepts an injectable `http.Client`.
+## Public surface
 
-## Request/Response Options
+`lib/api.dart` exports `exceptions.dart`, `models/models.dart`, `api_client.dart`,
+`api_request_options.dart` and `webtrit_http_request_executor.dart`, plus `HttpStatus` from
+`dart:io` and `ClientException` from `package:http`. Not exported: `ResponseOptions`,
+`FailureRule` and the rules - a caller cannot choose how a response is read; the client method
+does.
 
-- `RequestOptions` — retry count + delay. Factories: `withNoRetries()`,
-  `withDefaultRetries()` (3 retries, 1s delay), `withExtraRetries()`.
-- `ResponseOptions` — decoding: `json` (default), `bytes`, or `raw`; plus
-  `optionalEndpoint` (default `false`) marking the endpoint as optional in the
-  adapter contract. Constructed inside the client methods, not caller-supplied.
+- `WebtritApiClient` - the Core API. `HttpRequestExecutor` is also public and is used by the app
+  for requests outside the Core API (embedded pages, the connectivity check); it applies no
+  failure rules and no retries and throws a plain `RequestFailure` for any status but 200 and
+  204.
+- Constructor:
+
+  ```dart
+  WebtritApiClient(Uri baseUrl, String tenantId, {
+    Duration? connectionTimeout,
+    TrustedCertificates certs = TrustedCertificates.empty,
+    bool isDebug = false,
+    String? userAgent,
+  })
+  ```
+
+  `WebtritApiClient.inner(...)` (`@visibleForTesting`) takes an `http.Client` for tests.
+  `buildTenantUrl` (`@visibleForTesting`) appends `tenant/<tenantId>` and drops a tenant segment
+  the base URL already carries; an empty tenant id leaves the base URL as it is. Endpoints live
+  under `api/v1/...` of that URL (`healthCheck` is `api/health-check`). Query parameters of the
+  base URL are kept on every call.
+- `sessionRejections` - a broadcast stream of every `SessionRejection` the client receives,
+  published as it is rethrown. `UnauthorizedException`, `SessionMissingException` and
+  `UserNotFoundException` implement it. `MainShell` listens and ends the session, so a request
+  needs no handling of its own for these. `close()` closes it.
+
+## Options
+
+- `RequestOptions` - retries of transport failures only. Default (`const RequestOptions()` and
+  `withDefaultRetries()`): 3 retries, 1 s apart. `withExtraRetries()`: 5 retries, 2 s apart.
+  `withNoRetries()`: none. A response with a status, a 5xx included, is never retried: it
+  surfaces as `RequestFailure` at once.
+- `ResponseOptions`, built inside `api_client.dart` as static fields:
+  - `responseType`: `json` (default), `bytes` (downloads), `raw` (the `http.Response`);
+  - `optionalEndpoint`: the endpoint is optional in the adapter contract, so 501 or a 404
+    without a backend code becomes `EndpointNotSupportedException`. A flag, not a rule, because
+    it reads the absence of a code;
+  - `failures`: the `FailureRule`s of this endpoint, checked before `defaultFailureRules`.
+
+Success is 200, 201, 204 or 304. An error body is read for what it adds: a body in an unknown
+shape leaves `error` null and keeps up to 256 characters in `rawBody`; the status always
+survives.
+
+## Failures
+
+Order on an error status: the optional-endpoint check, then `ResponseOptions.failures`, then
+`defaultFailureRules`, then a plain `RequestFailure`. The default rules (session and account
+codes, then any unclaimed 5xx as `ServerFailureException`) and the codes behind them are in
+[core_error_codes.md](../../docs/architecture/core_error_codes.md); do not repeat them here.
+
+`RequestFailure` carries the status, `requestId`, the parsed `error`, `rawBody`, and
+`isClientError` (4xx), `isServerError` (5xx), `isTransient` (408, 425, 429), `errorCode`.
+
+Rules an endpoint declares (all in `api_failure_rules.dart`):
+
+| Rule | Exception | Declared by |
+|---|---|---|
+| `incorrectCredentialsOn401Rule` (status only) | `IncorrectCredentialsException` | `createSession` (`_sessionCreateEndpoint`) |
+| `deviceLimitRules`: 409 `device_limit_reached`, 403 `device_switch_limit_reached` | `DeviceLimitReachedException` (with `sessions`, `pendingLoginToken`), `DeviceSwitchLimitReachedException` | `createSession`, `createUser`, `verifySessionOtp`, `createSessionAutoProvision`, `completeSession` |
+| `pendingLoginRules`: 404 `pending_login_not_found`, 404 `session_not_found` | `PendingLoginNotFoundException`, `PendingLoginSessionNotFoundException` | `completeSession` |
+| `userNotFoundOn404Rule` (status only) | `UserNotFoundException` | `getUserInfo`, `createSessionOtp` |
+| `voicemailNotConfiguredRule`, `voicemailMessageGoneRule` (`message_not_found`) | `VoicemailNotConfiguredException`, `VoicemailMessageGoneException` | the voicemail endpoints |
+| `voicemailForwardRules`: `recipient_not_found`, `attachment_too_large`, `recipient_forward_limit_reached` | `VoicemailForward*Exception` | `forwardUserVoicemail` |
+| `callQueueNotFoundRule` | `CallQueueNotFoundException` | the call queue endpoints |
+| `systemNotificationGoneRule` (`notification_not_found`) | `SystemNotificationGoneException` | `markSystemNotificationAsSeen`, `deleteSystemNotification` |
+
+Logging: a 4xx logs as `warning`, a 5xx or transport failure as `severe`;
+`EndpointNotSupportedException` and `VoicemailNotConfiguredException` are not logged.
+
+## Adding an endpoint
+
+- A method in `api_client.dart` built on `_httpClientExecuteGet` / `Post` / `Patch` / `Delete`
+  with `[..._apiBasePathSegmentsV1, ...]`, taking `RequestOptions options = const RequestOptions()`.
+- An endpoint an adapter may lack passes `responseOptions: _optionalEndpoint`, or its own
+  `ResponseOptions(optionalEndpoint: true, failures: [...])`.
+- A failure that means something on this endpoint only: a `FailureRule` keyed on Core's `code`
+  (a status alone only when the endpoint gives no code) in `api_failure_rules.dart`, a typed
+  exception extending `RequestFailure` in `exceptions.dart`, and a static
+  `ResponseOptions(failures: [...])` field on the client used by that method. Never add it to
+  `defaultFailureRules`: that list is for what holds for every call.
+- A refusal that hands data back reads it from `FailureContext.body` inside the rule, forgivingly
+  (see `_sessionsOf`).
 
 ## Models
 
-All in `lib/src/models/`. Use `@freezed` + `json_serializable` (`FieldRename.snake`).
-Never edit `.freezed.dart` / `.g.dart` — re-run `build_runner`.
+- `@freezed` + `json_serializable` with `FieldRename.snake`, exported from `models/models.dart`.
+  Fields the backend may omit are nullable or have a default.
+- An enum read from the wire always has a fallback: `@JsonKey(unknownEnumValue: X.unknown)`
+  (`cdr.dart`, `user_session.dart`), or `X.values.asNameMap()[raw] ?? X.unknown` in hand-written
+  code. Never `X.values.byName(raw)`: a value the app does not know yet then throws and takes the
+  whole response with it.
+- Several existing models do not follow this yet - `SystemNotification.type`, `UserInfo.status`,
+  `UserContact.sipStatus`, `Favorite*.sourceType`, `SipSubscription*.type` decode without a
+  fallback. Do not copy them.
+- Never edit `*.freezed.dart` / `*.g.dart`; regenerate (skill `codegen-l10n`).
 
 | Prefix | Domain |
-|--------|--------|
-| `Session*` | Auth / session lifecycle |
-| `User*` | Authenticated user data and contacts |
-| `App*` | App-level status, contacts, push tokens |
-| `System*` | Health, system info, notifications |
-| `Cdr*` | Call detail records |
-| `Voicemail*` / `UserVoicemail*` | Voicemail resources |
-| `CallerIdSettings` | Caller-ID preferences |
-| `CallQueue*` | Call queues |
-| `Favorite*` / `SipSubscription*` | Server-side favorites and SIP subscriptions, with batch sync |
-| `IceServer*` | STUN/TURN servers |
-| `SelfConfigResponse`, `ExternalPageAccessToken` | Self-config and embedded-page access |
-| `Demo*` | Demo/CTA endpoints |
+|---|---|
+| `Session*` | auth and session lifecycle |
+| `User*` | the signed-in user, contacts, sessions, voicemail |
+| `App*` | app status, contacts, push tokens |
+| `System*` | system info, notifications |
+| `Cdr*` | call detail records |
+| `CallQueue*`, `CallerIdSettings` | call queues, caller id |
+| `Favorite*`, `SipSubscription*` | server-side favorites and SIP subscriptions, batch sync |
+| `IceServer*`, `SelfConfigResponse`, `ExternalPageAccessToken`, `Demo*` | the rest |
 
-## Exceptions
+## Tests
 
-All extend `RequestFailure`, which carries the status code, the parsed error
-body, and classification getters: `isClientError` (4xx), `isServerError` (5xx),
-`isTransient` (408/425/429), `errorCode` (backend error code from the body).
-
-| Exception | Trigger |
-|-----------|---------|
-| `SessionMissingException` | 401 with `session_missing` |
-| `UnauthorizedException` | 401 with `token_invalid`; 422 with `refresh_token_invalid` |
-| `IncorrectCredentialsException` | any 401 from `createSession` - the one call made without a session, so the status alone means the credentials were refused (adapters disagree on the code, and the PortaSwitch one sends none) |
-| `UserNotFoundException` | 404 with `user_not_found` (any endpoint); any 404 from `getUserInfo` / `createSessionOtp` |
-| `EndpointNotSupportedException` | methods declared `ResponseOptions(optionalEndpoint: true)` only: 501, or 404 without a backend error code |
-| `ServerFailureException` | any 5xx no earlier rule claimed - the backend blamed itself, so nothing follows about what the request did |
-| `VoicemailNotConfiguredException` | `voicemail_not_configured` |
-| `VoicemailMessageGoneException` | `message_not_found` on the voicemail endpoints - the mailbox no longer has that message. By the code, not the status: these calls are optional, so a bare 404 means the route is absent |
-| `SystemNotificationGoneException` | `notification_not_found` on `deleteSystemNotification` and `markSystemNotificationAsSeen` - another device or the retention cleaner deleted it since the list was read |
-| `CallQueueNotFoundException` | `call_queue_not_found` on the call queue endpoints |
-| `VoicemailForwardRecipientNotFoundException` / `VoicemailForwardAttachmentTooLargeException` / `VoicemailForwardLimitReachedException` | `recipient_not_found` / `attachment_too_large` / `recipient_forward_limit_reached`, on forwarding a voicemail only |
-| `PasswordChangeRequiredException` | `password_change_required` |
-| `DeviceLimitReachedException` | 409 with `device_limit_reached` on the calls that end in a session (`createSession`, `verifySessionOtp`, `createSessionAutoProvision`, `createUser`, `completeSession`). Carries the account's `sessions` and the `pendingLoginToken`; with a token the login is finished by `completeSession`, without one nothing here can be revoked |
-| `DeviceSwitchLimitReachedException` | 403 with `device_switch_limit_reached` on the same calls |
-| `PendingLoginNotFoundException` | 404 with `pending_login_not_found` from `completeSession` - the token ran out or was used, the login starts over |
-| `PendingLoginSessionNotFoundException` | 404 with `session_not_found` from `completeSession` - the session picked to be revoked is already gone, the token is still good |
-
-An error body is read for what it can add and never for permission to fail:
-`details` arrives as one object from an adaptee and as a list from Core (one
-entry per field it refused), both read the same, and a body in any other shape
-leaves `error` null with the text kept in `rawBody`. A rule of an endpoint
-whose refusal hands something back reads it from `FailureContext.body`, the
-decoded JSON object, and reads it the same forgiving way. A failure always surfaces
-as `RequestFailure` carrying the status the backend sent.
-
-Failure log level: client errors (4xx) log as `warning`; `severe` is reserved
-for server-side (5xx) and transport failures. `EndpointNotSupportedException`
-and `VoicemailNotConfiguredException` are not logged.
-
-## Dependencies
-
-Depends on `../_http_client` (path dep) for `createHttpClient()` and `TrustedCertificates`.
+- `MockClient` (`package:http/testing.dart`) or `mocktail`, never the network. Assert method, URL
+  and headers, then answer with a status and a JSON body; one case per failure the endpoint maps.
+- Patterns to follow: `api_client_failure_rules_test.dart`, `api_client_optional_endpoint_test.dart`,
+  `api_client_session_rejection_test.dart`.
+- The pre-push gate does not run these tests; Jenkins does. Run them yourself.
 
 ## Commands
 
+From `phone/packages/api/`:
+
 ```bash
-flutter test
-flutter test test/api_test.dart
-flutter test --name "buildTenantUrl"
-dart run build_runner build --delete-conflicting-outputs
-dart run build_runner watch --delete-conflicting-outputs
+fvm dart test
+fvm dart test test/api_client_failure_rules_test.dart
+fvm dart test --name "buildTenantUrl"
+fvm dart analyze
+fvm dart run build_runner build --delete-conflicting-outputs
 ```
-
-## Testing Conventions
-
-- Use `MockClient` (`http/testing.dart`) or `mocktail` — never real network calls.
-- Assert request method, URL, headers before returning mock response.
-- Map error scenarios via status code + JSON body to exercise exception subtypes.

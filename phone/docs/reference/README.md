@@ -15,6 +15,7 @@ What exists, named exactly: configuration keys, variables, scripts, test coverag
 | [make_file.md](make_file.md) | Melos scripts |
 | [optional_features.md](optional_features.md) | Features chosen at build time by permission or capability |
 | [page_configuration.md](page_configuration.md) | Page-level appearance configuration read from JSON |
+| [platform_versions.md](platform_versions.md) | Minimum Android, iOS and Dart versions the app and callkeep declare, and what holds each |
 | [qr_signin.md](qr_signin.md) | QR code sign-in on the login screen |
 | [widgets_configuration.md](widgets_configuration.md) | UI component configuration |
 
