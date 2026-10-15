@@ -2241,8 +2241,6 @@
   "@settings_AboutText_AppVersion": {},
   "settings_AboutText_BundleVersion": "เวอร์ชันบันเดิล",
   "@settings_AboutText_BundleVersion": {},
-  "settings_AboutText_CallkeepVersion": "เวอร์ชัน CallKeep",
-  "@settings_AboutText_CallkeepVersion": {},
   "settings_AboutText_CoreVersion": "เวอร์ชัน Cloud Backend",
   "@settings_AboutText_CoreVersion": {},
   "settings_AboutText_CoreVersionUndefined": "?.?.?",

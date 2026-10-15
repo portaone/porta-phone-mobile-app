@@ -2562,9 +2562,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_AboutText_BundleVersion => 'Versione bundle';
 
   @override
-  String get settings_AboutText_CallkeepVersion => 'Versione di CallKeep';
-
-  @override
   String get settings_AboutText_CoreVersion => 'Versione Cloud Backend';
 
   @override

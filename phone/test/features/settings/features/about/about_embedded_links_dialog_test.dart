@@ -56,7 +56,6 @@ void main() {
         userAgent: 'user-agent',
         appInfo: 'app-info',
         deviceInfo: 'device-info',
-        callkeepVersion: '1.3.3',
       ),
     );
 
