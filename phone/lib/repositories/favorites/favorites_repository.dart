@@ -35,7 +35,7 @@ abstract class FavoritesRepository {
 /// reports the full sync outcome, including remote and local persistence errors.
 class FavoritesRepositorySyncableImpl implements FavoritesRepository, Refreshable {
   // TODO: In a follow-up, move sync into FavoritesSyncWorker/FavoritesSync
-  // using docs/polling_workers.md. Keep local edits/outbox here and route all
+  // using docs/architecture/polling_workers.md. Keep local edits/outbox here and route all
   // sync triggers through one polling task. Invalidate for committed local
   // edits, not retry bookkeeping. Outbox acknowledgement and remote snapshot
   // writes must preserve newer local edits made while a request was in flight.

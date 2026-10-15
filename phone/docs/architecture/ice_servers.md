@@ -47,13 +47,13 @@ deployment might serve it.
 | Piece | Where | Role |
 |-------|-------|------|
 | `getUserIceServers` | `packages/api/lib/src/api_client.dart` | the request; declared an optional endpoint, so a core without it fails quietly instead of logging a server error |
-| `IceServersConfig` | [`../lib/models/ice_servers_config.dart`](../lib/models/ice_servers_config.dart) | the servers, already in `RTCIceServer` shape, plus the single instant their credentials expire |
-| `IceServersRepository` | [`../lib/repositories/ice_servers/`](../lib/repositories/ice_servers/) | fetch, cache, renew, and the fallback |
-| `CoreSupport.supportsBundledIceServers` | [`../lib/utils/core_support.dart`](../lib/utils/core_support.dart) | the capability flag, read from `core.ice_servers_configured` |
-| `IceServersResolver` | [`../lib/features/call/utils/peer_connection_factory.dart`](../lib/features/call/utils/peer_connection_factory.dart) | how a consumer asks for the current configuration |
+| `IceServersConfig` | [`../../lib/models/ice_servers_config.dart`](../../lib/models/ice_servers_config.dart) | the servers, already in `RTCIceServer` shape, plus the single instant their credentials expire |
+| `IceServersRepository` | [`../../lib/repositories/ice_servers`](../../lib/repositories/ice_servers) | fetch, cache, renew, and the fallback |
+| `CoreSupport.supportsBundledIceServers` | [`../../lib/utils/core_support.dart`](../../lib/utils/core_support.dart) | the capability flag, read from `core.ice_servers_configured` |
+| `IceServersResolver` | [`../../lib/features/call/utils/peer_connection_factory.dart`](../../lib/features/call/utils/peer_connection_factory.dart) | how a consumer asks for the current configuration |
 | `rtcConfigurationFrom` | the same file | the one place the map handed to `createPeerConnection` is built - servers, anchors and certificate policy together |
-| `TurnCertificateVerification` | [`../lib/models/ice_settings.dart`](../lib/models/ice_settings.dart) | `verify` or `disabled`, stored per device |
-| `IceConfig` | [`../lib/models/feature_access/ice_config.dart`](../lib/models/feature_access/ice_config.dart) | what the build decided: the default policy, and whether the control is offered at all |
+| `TurnCertificateVerification` | [`../../lib/models/ice_settings.dart`](../../lib/models/ice_settings.dart) | `verify` or `disabled`, stored per device |
+| `IceConfig` | [`../../lib/models/feature_access/ice_config.dart`](../../lib/models/feature_access/ice_config.dart) | what the build decided: the default policy, and whether the control is offered at all |
 
 ## Resolution
 
@@ -178,7 +178,7 @@ Janus fingerprint arrives over the signaling socket, which is verified properly;
 that connection gains is the TURN credentials, short-lived and scoped to one subscriber.
 
 The default comes from the build (`callConfig.ice` in the app config, see
-[application_config.md](application_config.md)) and a device overrides it in media settings, where
+[application_config.md](../reference/application_config.md)) and a device overrides it in media settings, where
 the section appears only if the deployment asked for it. The stored value is nullable so that "never
 touched" and "chose the same as the default" stay distinguishable, and a later change of the brand
 default still moves everyone who never touched it.

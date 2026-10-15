@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-push gate for the Accessibility rule (AGENTS.md, docs/accessibility.md):
+# Pre-push gate for the Accessibility rule (AGENTS.md, docs/guides/accessibility.md):
 # an interactive control added without semantics wiring is a defect, and the
 # behavioural test suite stays green when one slips in - only this check and
 # review stand in the way.
@@ -54,7 +54,7 @@ awk '
     }
     if (bad) {
       print ""
-      print "Wrap the control in SemanticAction (or SemanticId) - see docs/accessibility.md."
+      print "Wrap the control in SemanticAction (or SemanticId) - see docs/guides/accessibility.md."
       print "A control that genuinely needs none takes a trailing:  // semantics-exempt: <reason>"
       exit 1
     }

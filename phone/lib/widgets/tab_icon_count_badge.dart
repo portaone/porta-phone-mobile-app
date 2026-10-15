@@ -34,7 +34,7 @@ class TabIconCountBadge extends StatelessWidget {
     // it from what is displayed, so there is nothing of ours drawn later to
     // hang the phrase on and no way to add to the caption without changing what
     // is on screen. A value at least says what the number means; its position
-    // is the price. See docs/accessibility.md, "Counting things".
+    // is the price. See docs/guides/accessibility.md, "Counting things".
     //
     // Deliberately no `container: true`: the node must merge into the entry the
     // bar builds, the one that carries the name, the id and the press.

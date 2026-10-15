@@ -7,7 +7,7 @@ history is the only user of it today; nothing in the mechanism knows that.
 Last reviewed: 2026-09-22.
 
 The endpoint's own rules, and which CDR path asks for what, are in
-[`features/call_history.md`](features/call_history.md).
+[`features/call_history.md`](../features/call_history.md).
 
 ## The shape of the problem
 

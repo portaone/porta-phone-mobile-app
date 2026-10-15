@@ -53,11 +53,11 @@ lefthook install
 claims without calling it, so a lefthook `commit-msg` section would silently stop `Change-Id` being
 written and every push would be refused. That is why the subject is checked at pre-push.
 
-For installation details, manual execution, and troubleshooting see [docs/development.md](docs/development.md).
+For installation details, manual execution, and troubleshooting see [docs/guides/development.md](docs/guides/development.md).
 
 ## Accessibility
 
 Any UI change ships accessibility coverage: every interactive control gets a spoken name and,
 where automation has to reach it, a stable identifier, plus a semantics test for the screen.
-See [docs/accessibility.md](docs/accessibility.md) for what to attach, how to verify it, and the
+See [docs/guides/accessibility.md](docs/guides/accessibility.md) for what to attach, how to verify it, and the
 traps that a passing widget test does not catch.

@@ -50,19 +50,19 @@ maintainability and enabling tools to parse configuration reliably.
   positive whole seconds (default: **900**). A longer task interval remains the
   minimum delay. Invalid values fall back safely; the shell reads this value
   when creating the polling service, not on each tick. See
-  [polling cap configuration](polling.md#application-cap-configuration).
+  [polling cap configuration](../architecture/polling.md#application-cap-configuration).
 - `WEBTRIT_APP_POLLING_LEADING_REFRESH_MIN_AGE_CAP_SECONDS` - Leading refresh
   freshness cap in non-negative whole seconds (default: **30**; **0 disables**).
   Each task uses the smaller of its interval and this cap. Invalid/negative
   runtime values use the validated build value; invalid/negative build values
   use 30. The shell snapshots it when creating the polling service. See
-  [leading refresh freshness](polling.md#leading-refresh-freshness).
+  [leading refresh freshness](../architecture/polling.md#leading-refresh-freshness).
 - `WEBTRIT_APP_USER_REPOSITORY_POLLING_INTERVAL_SECONDS` - User record poll
   interval in positive whole seconds (default: **900**). The record (balance,
   numbers, SIP credentials) changes on events the app already sees, so the
   timer is only a safety net: foreground, reconnect, the Settings pull and a
   finished call refresh it on their own. See
-  [data refresh](data_refresh.md).
+  [data refresh](../architecture/data_refresh.md).
 - `WEBTRIT_APP_CDRS_REPOSITORY_POLLING_INTERVAL_SECONDS` - Call history poll
   interval in positive whole seconds (default: **300**). New records appear
   after calls, and a finished call already refreshes the list (see
@@ -81,7 +81,7 @@ maintainability and enabling tools to parse configuration reliably.
   (default: **1800**). Presence rides the SIP channel, so this fetch only
   refreshes the directory and can run far less often. The shell picks between the
   two at registration from the deployment's presence mode. Invalid values fall
-  back safely. See [contacts presence interval](polling.md#contacts-presence-interval).
+  back safely. See [contacts presence interval](../architecture/polling.md#contacts-presence-interval).
 - `WEBTRIT_APP_POLLING_REACHABILITY_TTL_SECONDS` - How long a reachability probe
   result is reused before the polling service probes the check URL again, in
   positive whole seconds (default: **30**). Together with the task intervals this
@@ -112,7 +112,7 @@ maintainability and enabling tools to parse configuration reliably.
 - `WEBTRIT_CALL_TRIGGER_MECHANISM_SMS_REGEX_PATTERN` – Regex pattern to extract call data from SMS
   content.
 
-> Default build variables are located in [`dart_define.json`](../dart_define.json) and can be
+> Default build variables are located in [`dart_define.json`](../../dart_define.json) and can be
 > applied
 > via:
 > ```bash

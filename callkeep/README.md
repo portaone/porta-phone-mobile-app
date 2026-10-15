@@ -306,7 +306,7 @@ Full regex specification: [`docs/sms_trigger_regex_requirements.md`](docs/sms_tr
 ## Integration tests
 
 The public API is covered by integration tests in
-[`webtrit_callkeep/example/integration_test/`](webtrit_callkeep/example/integration_test/).
+[`webtrit_callkeep/example/integration_test/`](webtrit_callkeep/example/integration_test).
 
 Tests cover: lifecycle, incoming/outgoing call scenarios, state machine (hold, mute, DTMF),
 foreground service timing, push notification background service path, connection queries,
@@ -324,7 +324,7 @@ flutter test integration_test/<test_file>.dart
 - [CallKit documentation (Apple)](https://developer.apple.com/documentation/callkit)
 - [ConnectionService API (Android)](https://developer.android.com/reference/android/telecom/ConnectionService)
 - [Android architecture docs](webtrit_callkeep_android/docs/architecture.md)
-- The app that uses this plugin: [`phone/`](../phone/) in this repository
+- The app that uses this plugin: [`phone/`](../phone) in this repository
 
 ---
 

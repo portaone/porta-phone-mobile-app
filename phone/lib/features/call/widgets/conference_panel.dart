@@ -223,7 +223,7 @@ class _ParticipantRow extends StatelessWidget {
             identifier: numberedId(conferenceParticipantMuteId, index),
             // Named, not "this participant": four rows of identical
             // destructive controls say nothing about which one they act on
-            // (docs/accessibility.md, naming a control that is one of many).
+            // (docs/guides/accessibility.md, naming a control that is one of many).
             label: muted
                 ? context.l10n.call_SemanticsLabel_conferenceParticipantUnmute(name)
                 : context.l10n.call_SemanticsLabel_conferenceParticipantMute(name),

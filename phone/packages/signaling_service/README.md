@@ -186,7 +186,7 @@ await WebtritSignalingService.stopService(); // on logout: stops the Android ser
 ## Integration tests
 
 Located in
-[`signaling_service_android/test/integration/`](signaling_service_android/test/integration/).
+[`signaling_service_android/test/integration/`](signaling_service_android/test/integration).
 
 | Test file | What it covers |
 | --- | --- |

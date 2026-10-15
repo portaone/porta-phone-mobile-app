@@ -233,7 +233,7 @@ Three independent tests — each skipped automatically if the required credentia
 
 ## Background Polling - User Repository Refresh
 
-**File:** [user_repository_refresh_test.dart](../patrol_test/user_repository_refresh_test.dart)
+**File:** [user_repository_refresh_test.dart](../../patrol_test/user_repository_refresh_test.dart)
 
 Two focused native-integration tests compose the real `UserRepository`, API
 client, remote/local datasources, mappers, preferences plugin and `PollingService`,
@@ -251,14 +251,14 @@ bootstrap the full app, log in, contact a backend or toggle device connectivity.
 
 Teardown restores the previous `user-info` preference and disposes the polling
 service. To retain unrelated application data, follow the
-[runner configuration and no-uninstall instructions](integration_test_commands.md#run-the-user-repository-refresh-guards).
+[runner configuration and no-uninstall instructions](../guides/integration_test_commands.md#run-the-user-repository-refresh-guards).
 
-The companion [host integration suite](../test/repository/user_repository_integration_test.dart)
+The companion [host integration suite](../../test/repository/user_repository_integration_test.dart)
 runs in ordinary `flutter test`/CI with an in-memory preferences backend. It also
 covers HTTP 429, transport retry exhaustion, original timeout/stack propagation,
 `session_missing`, `user_not_found`, invalid payloads and cache replay. Exact
 20/40/10-second scheduling assertions use virtual time. The
-[worker unit tests](../test/features/user_info/user_info_sync_worker_test.dart)
+[worker unit tests](../../test/features/user_info/user_info_sync_worker_test.dart)
 cover injected persistence failures and delayed-write completion through the
 worker over the real repository; these native tests do not simulate a device
 storage failure.
@@ -267,7 +267,7 @@ storage failure.
 
 ## Startup - An Unreachable Core With No Cache
 
-**File:** [core_unreachable_recovery_test.dart](../test/app/router/core_unreachable_recovery_test.dart)
+**File:** [core_unreachable_recovery_test.dart](../../test/app/router/core_unreachable_recovery_test.dart)
 
 A host suite over the real system-info pipeline (repository, datasources,
 mapper and API client against a refusing HTTP client), the real `AppBloc`
@@ -291,7 +291,7 @@ shell cannot be built from when the core does not.
 3. A second guard pass while the teardown runs does not start another one.
 
 The device counterpart is
-[core_unreachable_recovery_test.dart](../patrol_test/core_unreachable_recovery_test.dart):
+[core_unreachable_recovery_test.dart](../../patrol_test/core_unreachable_recovery_test.dart):
 it seeds native storage with a session pointing at a port nothing listens on and
 no cached system info, boots the real app, and waits for the login screen. It
 drives the real navigator, which is what the host suite cannot stand in for -
@@ -304,7 +304,7 @@ it on a device whose session you are willing to lose.
 
 ## Background Polling - Voicemail Refresh
 
-**File:** [voicemail_repository_refresh_test.dart](../patrol_test/voicemail_repository_refresh_test.dart)
+**File:** [voicemail_repository_refresh_test.dart](../../patrol_test/voicemail_repository_refresh_test.dart)
 
 Two component-integration guards compose the real API client, voicemail
 repository/mappers, polling service and file-backed SQLite on the device.
@@ -322,13 +322,13 @@ these are not live-backend E2E, OS connectivity or physical disk-failure tests.
 
 Each scenario uses an isolated temporary database and removes it in teardown.
 The application's database is never opened. Use the
-[safe runner configuration](integration_test_commands.md#run-the-voicemail-refresh-guards)
+[safe runner configuration](../guides/integration_test_commands.md#run-the-voicemail-refresh-guards)
 to retain unrelated application data.
 
-The [host integration suite](../test/repository/voicemail_repository_integration_test.dart)
+The [host integration suite](../../test/repository/voicemail_repository_integration_test.dart)
 also covers failed detail requests, failed writes, delayed persistence and
 unsupported/unconfigured voicemail. The
-[unit contract suite](../test/repository/voicemail_refresh_contract_test.dart)
+[unit contract suite](../../test/repository/voicemail_refresh_contract_test.dart)
 covers every waiting mutation, eager-fetch error ownership, inactive no-work
 and exact 20/40/10-second backoff recovery in virtual time.
 
@@ -336,7 +336,7 @@ and exact 20/40/10-second backoff recovery in virtual time.
 
 ## Background Polling - Favorites Refresh
 
-**File:** [favorites_repository_refresh_test.dart](../patrol_test/favorites_repository_refresh_test.dart)
+**File:** [favorites_repository_refresh_test.dart](../../patrol_test/favorites_repository_refresh_test.dart)
 
 Two component-integration guards use the real repository, API client/mapping,
 polling and isolated file-backed SQLite on the device. HTTP responses and
@@ -353,13 +353,13 @@ connectivity/disk-failure tests.
    writes the server snapshot to SQLite.
 
 Each scenario removes only its own temporary database in teardown. Follow the
-[safe runner instructions](integration_test_commands.md#run-the-favorites-refresh-guards)
+[safe runner instructions](../guides/integration_test_commands.md#run-the-favorites-refresh-guards)
 to preserve unrelated application data.
 
-The [host integration suite](../test/repository/favorites_repository_integration_test.dart)
+The [host integration suite](../../test/repository/favorites_repository_integration_test.dart)
 shares the same API/SQLite harness and additionally covers 401/429, invalid
 payloads and request-body mapping. The
-[contract tests](../test/repository/favorites_repository_test.dart) cover
+[contract tests](../../test/repository/favorites_repository_test.dart) cover
 original errors/stacks, persistence ordering, bookkeeping failures, local
 mutations and exact backoff recovery with virtual time.
 
@@ -367,7 +367,7 @@ mutations and exact backoff recovery with virtual time.
 
 ## Background Polling - SIP Subscriptions Refresh
 
-**File:** [sip_subscriptions_repository_refresh_test.dart](../patrol_test/sip_subscriptions_repository_refresh_test.dart)
+**File:** [sip_subscriptions_repository_refresh_test.dart](../../patrol_test/sip_subscriptions_repository_refresh_test.dart)
 
 Two component-integration guards compose the real API client, mapping,
 repository, polling service and isolated file-backed SQLite. HTTP responses
@@ -382,22 +382,22 @@ bootstrap, OS network toggle or application database is involved.
    outbox entry. A failing polling cycle increments its attempt count; a later
    backed-off success drains the outbox and persists the server snapshot.
 
-The [host integration suite](../test/repository/sip_subscriptions_repository_integration_test.dart)
+The [host integration suite](../../test/repository/sip_subscriptions_repository_integration_test.dart)
 also covers 401/429, malformed payloads, and deletion of a presence subscription
 with its resolved contact user ID preserved across retries. The
-[unit contract tests](../test/repository/sip_subscriptions_repository_test.dart)
+[unit contract tests](../../test/repository/sip_subscriptions_repository_test.dart)
 cover injected write/acknowledgement failures, original errors and stacks,
 secondary bookkeeping failures, disabled sync and exact virtual-time backoff.
 They do not simulate a physical disk failure or change the production backoff cap.
 
 Each native scenario removes only its own temporary database. Follow the
-[safe runner instructions](integration_test_commands.md#run-the-sip-subscriptions-refresh-guards).
+[safe runner instructions](../guides/integration_test_commands.md#run-the-sip-subscriptions-refresh-guards).
 
 ---
 
 ## Background Polling - System Info Persistence
 
-**File:** [system_info_repository_refresh_test.dart](../patrol_test/system_info_repository_refresh_test.dart)
+**File:** [system_info_repository_refresh_test.dart](../../patrol_test/system_info_repository_refresh_test.dart)
 
 The native scenario composes the real repository, remote/local datasources,
 API client, mappers, preferences plugin and polling service. The client factory
@@ -414,14 +414,14 @@ controlled. The hook is not a simulation of native filesystem failure.
 
 The scenario restores the prior `system-info` preference in teardown. No login,
 backend credentials or connectivity toggles are needed. Use the same
-[safe runner configuration](integration_test_commands.md#run-the-system-info-refresh-guard)
+[safe runner configuration](../guides/integration_test_commands.md#run-the-system-info-refresh-guard)
 as the User Repository guard.
 
-The [host integration suite](../test/repository/system_info_repository_integration_test.dart)
+The [host integration suite](../../test/repository/system_info_repository_integration_test.dart)
 also covers `preload()`, network-only/cache-first fetches, original write errors
 and stacks, remote HTTP 503 failures, 20/40/10-second retry/recovery cadence in
 virtual time, and unchanged cache-only behavior. The
-[AppBloc tests](../test/blocs/app/app_compatibility_gate_test.dart) verify that
+[AppBloc tests](../../test/blocs/app/app_compatibility_gate_test.dart) verify that
 login awaits preload and handles its failure without discarding the valid session.
 
 ---

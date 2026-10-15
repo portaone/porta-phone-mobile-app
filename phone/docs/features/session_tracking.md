@@ -13,7 +13,7 @@ Last reviewed: 2026-10-10
     - `view/sessions_screen_page.dart` - `@RoutePage`; refreshes the shared
       cubit on open and passes the `DateFormat` taken from `AppTime`.
     - `view/sessions_screen.dart` - app bar, pull-to-refresh list, placeholders
-      (how every list refreshes: [`../data_refresh.md`](../data_refresh.md)).
+      (how every list refreshes: [`../architecture/data_refresh.md`](../architecture/data_refresh.md)).
 - `lib/features/settings/view/settings_router_page.dart` - owns the
   `SessionsCubit`, above both the settings screen and the sessions screen.
 - `lib/features/settings/view/settings_screen.dart` - the settings row
@@ -145,7 +145,7 @@ devices, signing one out is rolled back and the same list comes again, so the
 login cannot be finished from the app.
 
 The identifier that tells one device from another is described in
-[`../startup.md`](../startup.md) (`app-info`).
+[`../architecture/startup.md`](../architecture/startup.md) (`app-info`).
 
 ## Tests
 

@@ -280,7 +280,7 @@ no longer in it - so the mailbox says it through the app's notifications channel
 the trash is offered. That one is a confirmation, not a refusal, so it leaves on
 its own after three seconds like a deleted recent or favorite (`persist` false;
 a bar with an action would otherwise wait to be answered, see
-`docs/accessibility.md`). The list only asks.
+`docs/guides/accessibility.md`). The list only asks.
 
 The line between the last two is the point. A refusal that names the message
 tells us something about the state and the list can be put right. A server that
@@ -380,7 +380,7 @@ which is a poor name but a true one.
 
 Forwarding has no picker of its own. The person is sent to the address book -
 the app's own, with its presence, its sources and its favourites - through the
-destination-picking mechanism: [`../destination_picking.md`](../destination_picking.md).
+destination-picking mechanism: [`../architecture/destination_picking.md`](../architecture/destination_picking.md).
 
 ```
 menu -> Forward

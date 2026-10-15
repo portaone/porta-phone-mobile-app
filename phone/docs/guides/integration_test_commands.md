@@ -83,7 +83,7 @@ native preferences. No credentials, local Core, call companion or integration
 environment file are needed. The previous `user-info` preference is restored
 after each scenario. With the runner setting above, `--no-uninstall` also keeps
 the existing installation and its unrelated data.
-See [coverage and boundaries](integration_test_coverage.md#background-polling---user-repository-refresh).
+See [coverage and boundaries](../reference/integration_test_coverage.md#background-polling---user-repository-refresh).
 
 ## Run the system-info refresh guard
 
@@ -108,7 +108,7 @@ fvm exec patrol test \
 
 HTTP and the failure before a preferences write are controlled. Successful
 writes use the native preferences plugin; the original `system-info` key is
-restored afterwards. See [coverage](integration_test_coverage.md#background-polling---system-info-persistence).
+restored afterwards. See [coverage](../reference/integration_test_coverage.md#background-polling---system-info-persistence).
 
 ## Run the voicemail refresh guards
 
@@ -137,7 +137,7 @@ The tests create and remove their own temporary SQLite database; they never
 open the application's database or need an account, backend or call companion.
 HTTP and cache-boundary faults are controlled. Restore the runner setting and
 remove the temporary Patrol dependency afterwards without committing either.
-See [coverage](integration_test_coverage.md#background-polling---voicemail-refresh).
+See [coverage](../reference/integration_test_coverage.md#background-polling---voicemail-refresh).
 
 ## Run the favorites refresh guards
 
@@ -166,7 +166,7 @@ The tests use their own temporary file-backed SQLite database and controlled
 HTTP/connectivity. They do not log in, contact a live backend, open the app's
 database, or alter OS connectivity. Restore the runner setting and temporary
 Patrol dependency after the run. See
-[coverage](integration_test_coverage.md#background-polling---favorites-refresh).
+[coverage](../reference/integration_test_coverage.md#background-polling---favorites-refresh).
 
 ## Run the SIP subscriptions refresh guards
 
@@ -194,7 +194,7 @@ fvm exec patrol test \
 The scenarios use controlled HTTP/connectivity and a temporary SQLite file,
 not the app's database. No login, backend credentials or network toggles are
 needed. Restore the temporary Patrol dependency and runner setting after the
-run. See [coverage](integration_test_coverage.md#background-polling---sip-subscriptions-refresh).
+run. See [coverage](../reference/integration_test_coverage.md#background-polling---sip-subscriptions-refresh).
 
 ## Run the polling freshness guards on Android
 
@@ -222,7 +222,7 @@ Real Android transport and Home/resume scenarios complement the precise
 `freshness_trace` lines report request and successful-completion timestamps in
 milliseconds relative to the first request. Restore the temporary dependency
 and runner changes afterwards. See
-[coverage and boundaries](integration_test_coverage.md#background-polling---leading-refresh-freshness).
+[coverage and boundaries](../reference/integration_test_coverage.md#background-polling---leading-refresh-freshness).
 
 ## Run the polling guards
 
@@ -287,7 +287,7 @@ Run from the `tool/scripts` directory:
 
 ## Run Android integration tests locally with call companion
 
-Starts the [pjsua Companion](../packages/pjsua_companion/README.md) server automatically and runs the tests:
+Starts the [pjsua Companion](../../packages/pjsua_companion/README.md) server automatically and runs the tests:
 
 ```bash
 ./tool/scripts/patrol_e2e_run_local_android.sh <testfile(optional)>
@@ -319,4 +319,4 @@ and push service. HTTP and the native push repository are controlled; no account
 live backend or notification permission is needed. Push assertions verify the
 request to display, not an Android notification drawer entry. The logout race
 invokes owner disposal and database cleanup directly rather than driving logout UI.
-See [coverage](integration_test_coverage.md#system-notifications---sync-regressions).
+See [coverage](../reference/integration_test_coverage.md#system-notifications---sync-regressions).

@@ -111,7 +111,7 @@ void main() {
 
     testWidgets('every control activates through semantics, not only by pointer', (tester) async {
       // A pointer tap passes while the semantics path is broken, which is
-      // what docs/accessibility.md asks these tests to catch.
+      // what docs/guides/accessibility.md asks these tests to catch.
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(subject());
 

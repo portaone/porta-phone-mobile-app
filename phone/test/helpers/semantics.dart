@@ -32,7 +32,7 @@ void expectTapTargetSemantics(
   if (pressArea != null) {
     // Measured on the box that answers the press, never on the semantics node:
     // a merged node inherits the rectangle of its whole subtree and reads
-    // large even when the pressable area is not (docs/accessibility.md, Trap 1).
+    // large even when the pressable area is not (docs/guides/accessibility.md, Trap 1).
     final size = tester.getSize(pressArea);
     expect(
       size.shortestSide,

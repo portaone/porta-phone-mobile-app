@@ -2,7 +2,7 @@
 
 Android platform implementation. Two layers: Dart (Flutter side) and Kotlin (native side).
 
-> Detailed per-component architecture documentation lives in **[docs/](docs/)**.
+> Detailed per-component architecture documentation lives in **[docs/](docs)**.
 > Start with **[docs/architecture.md](docs/architecture.md)**.
 > Before modifying any Kotlin component, read the corresponding doc in `docs/`.
 

@@ -30,7 +30,7 @@ Defines the default font settings from [Google Fonts](https://fonts.google.com/)
 - `fontFamily`: Default font family (e.g., Montserrat)
 
 How that family reaches the app - the build step that bundles it, its registration at startup
-and the weights - is in [fonts.md](fonts.md).
+and the weights - is in [fonts.md](../architecture/fonts.md).
 
 ### Button Configuration
 

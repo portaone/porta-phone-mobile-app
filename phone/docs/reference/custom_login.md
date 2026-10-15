@@ -8,7 +8,7 @@ web page and the Flutter application is handled via the `WebtritLoginChannel` Ja
 allowing the web UI to
 securely transmit user data to the app for authentication.
 
-An example HTML file is available here: [custom_signup.html](../assets/themes/custom_signup.html)
+An example HTML file is available here: [custom_signup.html](../../assets/themes/custom_signup.html)
 
 ## Table of Contents
 

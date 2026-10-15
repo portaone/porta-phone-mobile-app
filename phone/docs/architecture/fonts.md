@@ -34,7 +34,7 @@ family is bundled, so any other name falls back to it.
 
 ## Build step
 
-[`tools/lib/src/commands/app_resources/processors/font_asset_processor.dart`](../../tools/lib/src/commands/app_resources/processors/font_asset_processor.dart)
+[`tools/lib/src/commands/app_resources/processors/font_asset_processor.dart`](../../../tools/lib/src/commands/app_resources/processors/font_asset_processor.dart)
 runs as the `font` step of `configurator-resources`:
 
 - It fetches the weights 400, 500, 600 and 700 - the ones the app draws whatever the theme says -
@@ -52,7 +52,7 @@ A development checkout has no faces in `assets/fonts/` and is drawn in the platf
 
 ## AppFonts
 
-[`lib/theme/app_fonts.dart`](../lib/theme/app_fonts.dart) holds everything the app knows about
+[`lib/theme/app_fonts.dart`](../../lib/theme/app_fonts.dart) holds everything the app knows about
 its typeface and is the only place that uses the `google_fonts` package.
 
 - `AppFonts.load(families)` runs once in bootstrap, inside the `app-themes` stage. It turns

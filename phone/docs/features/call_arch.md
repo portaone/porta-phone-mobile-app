@@ -5,7 +5,7 @@ It implements both `Bloc<CallEvent, CallState>` and `CallkeepDelegate`, making i
 that bridges signaling, native call UI, WebRTC media, and the Flutter UI layer.
 
 The product/UX view lives in [`call_ux.md`](call_ux.md); incoming-call background scenarios with
-diagrams in [`../incoming_call_scenarios.md`](../incoming_call_scenarios.md); merging calls into a
+diagrams in [`../architecture/incoming_call_scenarios.md`](../architecture/incoming_call_scenarios.md); merging calls into a
 room, and what that does to each of them, in [`call_conference.md`](call_conference.md).
 
 ## Where it lives
@@ -217,7 +217,7 @@ after the wait. The bloc holds no such list of its own.
 which resolves them per connection through `IceServersRepository` rather than holding a fixed list,
 so a deployment's bundled coturn and its short-lived TURN credentials are picked up without
 rebuilding the BLoC. The renewal rule and the public-STUN fallback:
-[`../ice_servers.md`](../ice_servers.md).
+[`../architecture/ice_servers.md`](../architecture/ice_servers.md).
 
 **Disposal barrier** — `CallPeerConnectionManager` tracks pending disposal futures. Creating a new
 `RTCPeerConnection` for a call ID waits until the previous one is fully disposed, preventing
@@ -243,7 +243,7 @@ replaying the original offer/answer exchange.
 The transfer target follows the normal outgoing flow from that status onward. Picking that target
 sends the user to the contacts, recents, favourites and keypad lists; what those lists do while a
 choice is being made, and how another feature can ask for one, is
-[`../destination_picking.md`](../destination_picking.md).
+[`../architecture/destination_picking.md`](../architecture/destination_picking.md).
 
 The bloc takes no part in that mechanism and holds no state for it. `Transfer.blindTransferInitiated`
 on `ActiveCall` stays the only truth about a transfer looking for a target, and
@@ -284,7 +284,7 @@ is kept and the button follows Telecom.
 The option is `callConfig.audio.speakerOnMinimize` in the app config (on by default), read every
 time the screen is left. Where the deployment sets `speakerOnMinimizeConfigurable`, media settings
 shows a switch and the device's choice wins (`CallAudioSettingsRepository`); see
-[`../application_config.md`](../application_config.md).
+[`../reference/application_config.md`](../reference/application_config.md).
 
 `CallState.shouldListenToProximity` is therefore `isActive && isVoiceChat`, with no part for
 `minimized`. It used to be turned off for a minimized call, which on iOS is done by the
@@ -303,7 +303,7 @@ calls.
 ## Signaling edges (`onChange` / `onError`)
 
 How `CallBloc` reacts to signaling/reconnect edges. The signaling layer itself is documented
-in [`../signaling_architecture_target.md`](../signaling_architecture_target.md); this section
+in [`../architecture/signaling_architecture_target.md`](../architecture/signaling_architecture_target.md); this section
 covers only the CallBloc-side behaviour.
 
 ### Background call-active edge (`onChange`)
