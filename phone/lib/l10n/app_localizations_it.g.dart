@@ -2502,6 +2502,61 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sessions_AppType_windows => 'App Windows';
 
   @override
+  String get sessions_AutoTerminate_title => 'Termina le sessioni inattive';
+
+  @override
+  String get sessions_AutoTerminate_never => 'Mai';
+
+  @override
+  String get sessions_AutoTerminate_oneWeek => '1 settimana';
+
+  @override
+  String get sessions_AutoTerminate_oneMonth => '1 mese';
+
+  @override
+  String get sessions_AutoTerminate_threeMonths => '3 mesi';
+
+  @override
+  String sessions_AutoTerminate_days(int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days giorni', one: '$days giorno');
+    return '$_temp0';
+  }
+
+  @override
+  String sessions_AutoTerminate_default(String period) {
+    return 'Predefinito ($period)';
+  }
+
+  @override
+  String get sessions_AutoTerminate_other => 'Altro…';
+
+  @override
+  String sessions_AutoTerminate_adminLimitNote(int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days giorni', one: '$days giorno');
+    return 'Le sessioni inattive da più di $_temp0 vengono terminate automaticamente. Questo limite è impostato dal tuo amministratore.';
+  }
+
+  @override
+  String sessions_AutoTerminate_info(int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days giorni', one: '$days giorno');
+    return 'Le sessioni inattive terminano dopo $_temp0';
+  }
+
+  @override
+  String get sessions_AutoTerminateOther_title => 'Periodo personalizzato';
+
+  @override
+  String get sessions_AutoTerminateOther_label => 'Giorni';
+
+  @override
+  String sessions_AutoTerminateOther_range(int max) {
+    return 'Da 1 a $max';
+  }
+
+  @override
+  String get sessions_AutoTerminateOther_save => 'Salva';
+
+  @override
   String get sessions_Button_retry => 'Riprova';
 
   @override
@@ -2525,6 +2580,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sessions_RevokeConfirmDialog_title => 'Disconnettere questa sessione?';
+
+  @override
+  String get sessions_SnackBar_autoTerminateFailed => 'Impossibile modificare quando terminano le sessioni inattive';
+
+  @override
+  String get sessions_SnackBar_autoTerminateLimitChanged =>
+      'Il tuo amministratore ha modificato il limite. Scegli di nuovo il periodo.';
+
+  @override
+  String get sessions_SnackBar_autoTerminateNotSupported =>
+      'La scelta di quando terminano le sessioni inattive non è più disponibile';
 
   @override
   String get sessions_SnackBar_revokeFailed => 'Impossibile disconnettere la sessione';

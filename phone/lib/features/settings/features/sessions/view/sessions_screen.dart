@@ -9,11 +9,24 @@ import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../cubit/sessions_cubit.dart';
+import 'session_auto_terminate_snack_bar.dart';
+import 'widgets/widgets.dart';
 
 class SessionsScreen extends StatelessWidget {
-  const SessionsScreen({super.key, required this.dateFormat});
+  const SessionsScreen({
+    super.key,
+    required this.dateFormat,
+    required this.autoTerminateSnackBar,
+    this.autoTerminateSelectable = false,
+  });
 
   final DateFormat dateFormat;
+
+  final SessionAutoTerminateSnackBar autoTerminateSnackBar;
+
+  /// Whether the user may choose when idle sessions end (the adapter's
+  /// `sessionAutoTerminate`); without it the period is only stated.
+  final bool autoTerminateSelectable;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +55,13 @@ class SessionsScreen extends StatelessWidget {
                         ? _EmptyPlaceholder(text: l10n.sessions_Placeholder_empty)
                         : ListView(
                             children: [
+                              if (state.autoTerminate case final autoTerminate?)
+                                SessionAutoTerminateTile(
+                                  autoTerminate: autoTerminate,
+                                  selectable: autoTerminateSelectable,
+                                  saving: state.savingAutoTerminate,
+                                  onTap: () => _onAutoTerminate(context, autoTerminate),
+                                ),
                               for (final session in state.sessionsStartedFromCurrent)
                                 SessionTile(
                                   session: session,
@@ -72,6 +92,68 @@ class SessionsScreen extends StatelessWidget {
   }
 
   Future<void> _onRefresh(BuildContext context) => context.read<SessionsCubit>().fetch();
+
+  Future<void> _onAutoTerminate(BuildContext context, SessionAutoTerminate autoTerminate) {
+    final cubit = context.read<SessionsCubit>();
+    return SessionAutoTerminateSheet.show(
+      context,
+      autoTerminate: autoTerminate,
+      onSave: (days) => _saveAutoTerminate(context, cubit, days),
+    );
+  }
+
+  /// Saves and reports the outcome from the screen itself, not from the sheet: the sheet can be
+  /// dragged away while the core is being asked, and a failure must still be said, with its retry.
+  ///
+  /// A new save takes down what an earlier one said: its "try again" no longer stands for the
+  /// user's choice, and a save that succeeds puts up nothing that would replace it.
+  Future<SessionAutoTerminateSaveResult> _saveAutoTerminate(
+    BuildContext context,
+    SessionsCubit cubit,
+    int? days,
+  ) async {
+    autoTerminateSnackBar.hide();
+    final pending = cubit.setInactivityTimeout(days);
+    final save = cubit.latestSave;
+    final result = await pending;
+    if (context.mounted) _reportAutoTerminate(context, cubit, save, days, result);
+    return result;
+  }
+
+  /// The snack bar that offers this belongs to the messenger above the route and outlives the
+  /// screen: once the user has left Active sessions there is nothing left to retry for, and once
+  /// another save has begun a retry of this one would undo it.
+  void _retryAutoTerminate(BuildContext context, SessionsCubit cubit, int save, int? days) {
+    if (!context.mounted || cubit.isClosed || !cubit.isLatestSave(save)) return;
+    _saveAutoTerminate(context, cubit, days);
+  }
+
+  void _reportAutoTerminate(
+    BuildContext context,
+    SessionsCubit cubit,
+    int save,
+    int? days,
+    SessionAutoTerminateSaveResult result,
+  ) {
+    final l10n = context.l10n;
+    switch (result) {
+      case SessionAutoTerminateSaveResult.saved:
+        return;
+      case SessionAutoTerminateSaveResult.exceedsInstallationLimit:
+        autoTerminateSnackBar.showError(context, l10n.sessions_SnackBar_autoTerminateLimitChanged);
+      case SessionAutoTerminateSaveResult.notSupported:
+        autoTerminateSnackBar.showError(context, l10n.sessions_SnackBar_autoTerminateNotSupported);
+      case SessionAutoTerminateSaveResult.failed:
+        autoTerminateSnackBar.showError(
+          context,
+          l10n.sessions_SnackBar_autoTerminateFailed,
+          action: SnackBarAction(
+            label: l10n.sessions_Button_retry,
+            onPressed: () => _retryAutoTerminate(context, cubit, save, days),
+          ),
+        );
+    }
+  }
 
   Future<void> _onRevoke(BuildContext context, ActiveSession session) async {
     final confirmed = await ConfirmDialog.showDangerous(

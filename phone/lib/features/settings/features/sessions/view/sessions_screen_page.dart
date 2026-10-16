@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webtrit_phone/data/data.dart';
 
 import '../cubit/sessions_cubit.dart';
+import 'session_auto_terminate_snack_bar.dart';
 import 'sessions_screen.dart';
 
 /// The [SessionsCubit] is owned by the settings router so the settings row
@@ -19,6 +20,8 @@ class SessionsScreenPage extends StatefulWidget {
 }
 
 class _SessionsScreenPageState extends State<SessionsScreenPage> {
+  final _autoTerminateSnackBar = SessionAutoTerminateSnackBar();
+
   @override
   void initState() {
     super.initState();
@@ -27,6 +30,13 @@ class _SessionsScreenPageState extends State<SessionsScreenPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SessionsScreen(dateFormat: context.read<AppTime>().formatDateTime(true));
+    final autoTerminateSelectable = context.select<FeatureAccess, bool>(
+      (features) => features.coreSupport.supportsSessionAutoTerminate,
+    );
+    return SessionsScreen(
+      dateFormat: context.read<AppTime>().formatDateTime(true),
+      autoTerminateSelectable: autoTerminateSelectable,
+      autoTerminateSnackBar: _autoTerminateSnackBar,
+    );
   }
 }

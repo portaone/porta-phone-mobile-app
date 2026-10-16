@@ -2460,6 +2460,61 @@ class AppLocalizationsTh extends AppLocalizations {
   String get sessions_AppType_windows => 'แอป Windows';
 
   @override
+  String get sessions_AutoTerminate_title => 'สิ้นสุดเซสชันที่ไม่ได้ใช้งาน';
+
+  @override
+  String get sessions_AutoTerminate_never => 'ไม่สิ้นสุด';
+
+  @override
+  String get sessions_AutoTerminate_oneWeek => '1 สัปดาห์';
+
+  @override
+  String get sessions_AutoTerminate_oneMonth => '1 เดือน';
+
+  @override
+  String get sessions_AutoTerminate_threeMonths => '3 เดือน';
+
+  @override
+  String sessions_AutoTerminate_days(int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days วัน');
+    return '$_temp0';
+  }
+
+  @override
+  String sessions_AutoTerminate_default(String period) {
+    return 'ค่าเริ่มต้น ($period)';
+  }
+
+  @override
+  String get sessions_AutoTerminate_other => 'อื่นๆ…';
+
+  @override
+  String sessions_AutoTerminate_adminLimitNote(int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days วัน');
+    return 'เซสชันที่ไม่ได้ใช้งานนานกว่า $_temp0 จะสิ้นสุดโดยอัตโนมัติ ผู้ดูแลระบบของคุณเป็นผู้กำหนดขีดจำกัดนี้';
+  }
+
+  @override
+  String sessions_AutoTerminate_info(int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days วัน');
+    return 'เซสชันที่ไม่ได้ใช้งานจะสิ้นสุดหลังจาก $_temp0';
+  }
+
+  @override
+  String get sessions_AutoTerminateOther_title => 'ระยะเวลาที่กำหนดเอง';
+
+  @override
+  String get sessions_AutoTerminateOther_label => 'วัน';
+
+  @override
+  String sessions_AutoTerminateOther_range(int max) {
+    return 'ตั้งแต่ 1 ถึง $max';
+  }
+
+  @override
+  String get sessions_AutoTerminateOther_save => 'บันทึก';
+
+  @override
   String get sessions_Button_retry => 'ลองอีกครั้ง';
 
   @override
@@ -2482,6 +2537,16 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get sessions_RevokeConfirmDialog_title => 'ออกจากระบบเซสชันนี้หรือไม่';
+
+  @override
+  String get sessions_SnackBar_autoTerminateFailed => 'ไม่สามารถเปลี่ยนเวลาสิ้นสุดเซสชันที่ไม่ได้ใช้งานได้';
+
+  @override
+  String get sessions_SnackBar_autoTerminateLimitChanged => 'ผู้ดูแลระบบได้เปลี่ยนขีดจำกัด โปรดเลือกระยะเวลาอีกครั้ง';
+
+  @override
+  String get sessions_SnackBar_autoTerminateNotSupported =>
+      'การเลือกเวลาสิ้นสุดเซสชันที่ไม่ได้ใช้งานไม่สามารถใช้ได้อีกต่อไป';
 
   @override
   String get sessions_SnackBar_revokeFailed => 'ไม่สามารถออกจากระบบเซสชันได้';
