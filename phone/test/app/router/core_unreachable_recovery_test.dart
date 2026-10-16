@@ -156,42 +156,31 @@ void main() {
     );
   }
 
-  test('an authenticated start with no cache and no core ends at login, not on an empty stack', () async {
-    appBloc.add(const AppLoggedIn(session: _session));
-    await pumpEventQueue();
-    expect(appBloc.state.status, AppLifecycleStatus.authenticated);
-    expect(systemInfo.preferences.getSystemInfo(), isNull, reason: 'the storage move left no cached value');
+  test(
+    'an authenticated start with no cache and no core stays signed in, on a screen, not on an empty stack',
+    () async {
+      appBloc.add(const AppLoggedIn(session: _session));
+      await pumpEventQueue();
+      expect(appBloc.state.status, AppLifecycleStatus.authenticated);
+      expect(systemInfo.preferences.getSystemInfo(), isNull, reason: 'the storage move left no cached value');
+      // The bloc resolves the compatibility gate on its own at startup; only
+      // what the guard does is under test here.
+      systemInfo.requests.clear();
 
-    final appRouter = buildRouter();
+      await buildRouter().onMainShellRouteGuardNavigation(resolver, router);
+      await pumpEventQueue();
 
-    // 1. The shell cannot be built: the cache is empty, so the real repository
-    //    reaches for the core and the core refuses the connection.
-    await appRouter.onMainShellRouteGuardNavigation(resolver, router);
-
-    expect(systemInfo.requests, isNotEmpty, reason: 'the cache miss must have reached the network');
-    expect(resolver.resolutions, [false]);
-    expect(router.replacements.single.single, isA<TeardownScreenPageRoute>());
-
-    // 2. The session ends, and the teardown runs for real.
-    await pumpEventQueue();
-    expect(appBloc.state.status, AppLifecycleStatus.teardown);
-    expect(appBloc.state.logoutReason, AppLogoutReason.coreUnreachable);
-
-    appBloc.add(const AppCleanupRequested());
-    await pumpEventQueue();
-    expect(appBloc.state.status, AppLifecycleStatus.unauthenticated);
-    verify(() => cleanupResolver.resolve()).called(1);
-    // The core never answered, so nothing says the remote session is spent.
-    verifyNever(() => sessionRepository.revokeSession(any()));
-
-    // 3. The teardown screen hands the user to login, which is where another
-    //    core can be entered - the only thing that can help here.
-    final loginResolver = _FakeNavigationResolver();
-    final loginRouter = _FakeStackRouter();
-    appRouter.onTeardownScreenGuardNavigation(loginResolver, loginRouter);
-
-    expect(loginRouter.replacements.single.single, isA<LoginRouterPageRoute>());
-  });
+      // The restart screen is built in place of the shell: it loads the value,
+      // and says the core cannot be reached when it cannot, with a way to try
+      // again and a way to log out (see SessionRestartScreen).
+      expect(resolver.resolutions, [false]);
+      expect(router.replacements.single.single, isA<SessionRestartScreenPageRoute>());
+      expect(systemInfo.requests, isEmpty, reason: 'the guard leaves the loading to the screen');
+      // A network fault signs nobody out.
+      expect(appBloc.state.status, AppLifecycleStatus.authenticated);
+      verifyNever(() => cleanupResolver.resolve());
+    },
+  );
 
   test('the guard leaves a cached session alone, however dead the core is', () async {
     // The same dead core, but the cache survived: the shell builds and polling
@@ -211,9 +200,8 @@ void main() {
     expect(appBloc.state.status, AppLifecycleStatus.authenticated);
   });
 
-  test('a second guard pass does not start a second teardown', () async {
-    // Navigation can be re-evaluated while the sequence is running; entering
-    // teardown again would strand the app on that screen.
+  test('a second guard pass goes to the same screen and still ends nothing', () async {
+    // Navigation can be re-evaluated while the screen is up.
     appBloc.add(const AppLoggedIn(session: _session));
     await pumpEventQueue();
 
@@ -226,10 +214,7 @@ void main() {
     await appRouter.onMainShellRouteGuardNavigation(second, secondRouter);
     await pumpEventQueue();
 
-    expect(appBloc.state.status, AppLifecycleStatus.teardown);
-    expect(appBloc.state.logoutReason, AppLogoutReason.coreUnreachable);
-    // The teardown branch at the top of the guard takes over, so the second
-    // pass routes without asking the repository again.
-    expect(secondRouter.replacements.single.single, isA<TeardownScreenPageRoute>());
+    expect(secondRouter.replacements.single.single, isA<SessionRestartScreenPageRoute>());
+    expect(appBloc.state.status, AppLifecycleStatus.authenticated);
   });
 }

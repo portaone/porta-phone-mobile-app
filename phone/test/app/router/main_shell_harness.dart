@@ -211,6 +211,7 @@ void registerHarnessFallbacks() {
 class MainShellHarness {
   MainShellHarness({required List<String> initialSupported}) {
     initialSystemInfo = systemInfoWithSupported(initialSupported);
+    storedSystemInfo = initialSystemInfo;
     initialFeatureAccess = featureAccessFor(initialSystemInfo);
 
     when(() => notificationsBloc.state).thenReturn(const NotificationsState());
@@ -227,9 +228,9 @@ class MainShellHarness {
       ),
     );
 
-    when(() => systemInfoRepository.getLocalSystemInfo()).thenReturn(initialSystemInfo);
+    when(() => systemInfoRepository.getLocalSystemInfo()).thenAnswer((_) => storedSystemInfo);
     when(() => systemInfoRepository.getSystemInfo(fetchPolicy: any(named: 'fetchPolicy')))
-        .thenAnswer((_) async => initialSystemInfo);
+        .thenAnswer((_) async => storedSystemInfo);
     when(() => systemInfoRepository.infoStream).thenAnswer((_) => systemInfoController.stream);
 
     when(() => appPermissions.isDenied).thenAnswer((_) async => false);
@@ -245,6 +246,9 @@ class MainShellHarness {
   }
 
   late final WebtritSystemInfo initialSystemInfo;
+
+  /// What app preferences hold: the initial value until the backend answers.
+  late WebtritSystemInfo storedSystemInfo;
   late final FeatureAccess initialFeatureAccess;
 
   final appBloc = MockAppBloc();
@@ -314,10 +318,14 @@ class MainShellHarness {
 
   /// Replays the session's first read of the backend answering with
   /// [featureAccess]: stored, handed to the reactive stream, and announced.
-  void backendAnswers(FeatureAccess featureAccess) {
-    backendFeatureAccess = featureAccess;
-    pushFeatureAccess(featureAccess);
-    systemInfoController.add(initialSystemInfo);
+  /// The backend answers [systemInfo]: it is stored, and the app-wide
+  /// configuration becomes [featureAccess], built from it unless given.
+  void backendAnswers(WebtritSystemInfo systemInfo, {FeatureAccess? featureAccess}) {
+    final answered = featureAccess ?? featureAccessFor(systemInfo);
+    storedSystemInfo = systemInfo;
+    backendFeatureAccess = answered;
+    pushFeatureAccess(answered);
+    systemInfoController.add(systemInfo);
   }
 
   Widget build(AppTime appTime) {

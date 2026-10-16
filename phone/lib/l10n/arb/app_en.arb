@@ -2224,6 +2224,22 @@
   "@session_Restart_progressText": {
     "description": "Shown under a progress indicator while the app restarts its session by itself, because the server changed which features are available. On screen for a few seconds."
   },
+  "session_Restart_loadingText": "Loading your settings from the server...",
+  "@session_Restart_loadingText": {
+    "description": "Shown under a progress indicator on the first start after an update when the app has no stored server details and loads them before opening the main screen. On screen for about a second."
+  },
+  "session_Restart_unreachableText": "Could not reach the server to load your settings. Check your connection and try again.",
+  "@session_Restart_unreachableText": {
+    "description": "Shown instead of the progress indicator when the server details could not be loaded. Two buttons follow: try again, log out."
+  },
+  "session_Restart_retryButton": "Try again",
+  "@session_Restart_retryButton": {
+    "description": "Button under session_Restart_unreachableText: loads the server details again."
+  },
+  "session_Restart_logoutButton": "Log out",
+  "@session_Restart_logoutButton": {
+    "description": "Button under session_Restart_unreachableText: ends the session and goes to the login screen, where another server can be entered."
+  },
   "sessions_AppBar_title": "Active sessions",
   "@sessions_AppBar_title": {
     "description": "Title of the screen listing the devices the account is currently signed in on."

@@ -2399,6 +2399,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_Restart_progressText => 'Applying changes from the server...';
 
   @override
+  String get session_Restart_loadingText => 'Loading your settings from the server...';
+
+  @override
+  String get session_Restart_unreachableText =>
+      'Could not reach the server to load your settings. Check your connection and try again.';
+
+  @override
+  String get session_Restart_retryButton => 'Try again';
+
+  @override
+  String get session_Restart_logoutButton => 'Log out';
+
+  @override
   String get sessions_AppBar_title => 'Active sessions';
 
   @override
