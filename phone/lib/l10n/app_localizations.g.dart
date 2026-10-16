@@ -4495,6 +4495,90 @@ abstract class AppLocalizations {
   /// **'Windows app'**
   String get sessions_AppType_windows;
 
+  /// Row above the session list, and title of the sheet it opens: after how long idle sessions are ended automatically. The row shows the period under it.
+  ///
+  /// In en, this message translates to:
+  /// **'End inactive sessions'**
+  String get sessions_AutoTerminate_title;
+
+  /// Period of the inactive-sessions setting when sessions are never ended.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get sessions_AutoTerminate_never;
+
+  /// Preset period of the inactive-sessions setting.
+  ///
+  /// In en, this message translates to:
+  /// **'1 week'**
+  String get sessions_AutoTerminate_oneWeek;
+
+  /// Preset period of the inactive-sessions setting: 30 days.
+  ///
+  /// In en, this message translates to:
+  /// **'1 month'**
+  String get sessions_AutoTerminate_oneMonth;
+
+  /// Preset period of the inactive-sessions setting: 90 days.
+  ///
+  /// In en, this message translates to:
+  /// **'3 months'**
+  String get sessions_AutoTerminate_threeMonths;
+
+  /// A period of the inactive-sessions setting that is none of the presets.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, one{{days} day} other{{days} days}}'**
+  String sessions_AutoTerminate_days(int days);
+
+  /// Choice that returns to the period the administrator set; the placeholder is that period, e.g. '3 months' or 'Never'.
+  ///
+  /// In en, this message translates to:
+  /// **'Default ({period})'**
+  String sessions_AutoTerminate_default(String period);
+
+  /// Choice that opens a field to enter a number of days of one's own.
+  ///
+  /// In en, this message translates to:
+  /// **'Other…'**
+  String get sessions_AutoTerminate_other;
+
+  /// Note in the inactive-sessions sheet when the installation has a limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions inactive for longer than {days, plural, one{{days} day} other{{days} days}} are ended automatically. This limit is set by your administrator.'**
+  String sessions_AutoTerminate_adminLimitNote(int days);
+
+  /// Shown above the session list where the user cannot choose the period: after how long idle sessions end.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive sessions end after {days, plural, one{{days} day} other{{days} days}}'**
+  String sessions_AutoTerminate_info(int days);
+
+  /// Title of the page "Other..." opens in the inactive-sessions sheet: a number of days of the user's own.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom period'**
+  String get sessions_AutoTerminateOther_title;
+
+  /// Label of the number field on the page "Other..." opens in the inactive-sessions sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get sessions_AutoTerminateOther_label;
+
+  /// Helper and error text of the number field: the allowed range.
+  ///
+  /// In en, this message translates to:
+  /// **'From 1 to {max}'**
+  String sessions_AutoTerminateOther_range(int max);
+
+  /// Saves the number of days typed on the page "Other..." opens in the inactive-sessions sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get sessions_AutoTerminateOther_save;
+
   /// No description provided for @sessions_Button_retry.
   ///
   /// In en, this message translates to:
@@ -4542,6 +4626,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign out this session?'**
   String get sessions_RevokeConfirmDialog_title;
+
+  /// The period for inactive sessions could not be saved; the old one stays.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change when inactive sessions end'**
+  String get sessions_SnackBar_autoTerminateFailed;
+
+  /// The administrator's limit became shorter than the chosen period while the screen was open.
+  ///
+  /// In en, this message translates to:
+  /// **'Your administrator has changed the limit. Choose the period again.'**
+  String get sessions_SnackBar_autoTerminateLimitChanged;
+
+  /// The backend stopped letting the user choose the period for inactive sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Choosing when inactive sessions end is no longer available'**
+  String get sessions_SnackBar_autoTerminateNotSupported;
 
   /// No description provided for @sessions_SnackBar_revokeFailed.
   ///

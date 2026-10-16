@@ -17,4 +17,11 @@ mixin ActiveSessionApiMapper {
       lastActivityAt: session.lastActivityAt,
     );
   }
+
+  SessionAutoTerminate sessionAutoTerminateFromApi(api.UserSessionsAutoTerminate autoTerminate) {
+    return SessionAutoTerminate(
+      inactivityTimeoutDays: autoTerminate.inactivityTimeoutDays,
+      installationMaxDays: autoTerminate.installationMaxDays,
+    );
+  }
 }

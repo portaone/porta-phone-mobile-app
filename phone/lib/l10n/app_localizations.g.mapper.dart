@@ -1078,6 +1078,16 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessions_AppType_unknown' => sessions_AppType_unknown,
       'sessions_AppType_web' => sessions_AppType_web,
       'sessions_AppType_windows' => sessions_AppType_windows,
+      'sessions_AutoTerminate_title' => sessions_AutoTerminate_title,
+      'sessions_AutoTerminate_never' => sessions_AutoTerminate_never,
+      'sessions_AutoTerminate_oneWeek' => sessions_AutoTerminate_oneWeek,
+      'sessions_AutoTerminate_oneMonth' => sessions_AutoTerminate_oneMonth,
+      'sessions_AutoTerminate_threeMonths' =>
+        sessions_AutoTerminate_threeMonths,
+      'sessions_AutoTerminate_other' => sessions_AutoTerminate_other,
+      'sessions_AutoTerminateOther_title' => sessions_AutoTerminateOther_title,
+      'sessions_AutoTerminateOther_label' => sessions_AutoTerminateOther_label,
+      'sessions_AutoTerminateOther_save' => sessions_AutoTerminateOther_save,
       'sessions_Button_retry' => sessions_Button_retry,
       'sessions_Button_revokeAllOthers' => sessions_Button_revokeAllOthers,
       'sessions_Placeholder_empty' => sessions_Placeholder_empty,
@@ -1090,6 +1100,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         sessions_RevokeConfirmDialog_content,
       'sessions_RevokeConfirmDialog_title' =>
         sessions_RevokeConfirmDialog_title,
+      'sessions_SnackBar_autoTerminateFailed' =>
+        sessions_SnackBar_autoTerminateFailed,
+      'sessions_SnackBar_autoTerminateLimitChanged' =>
+        sessions_SnackBar_autoTerminateLimitChanged,
+      'sessions_SnackBar_autoTerminateNotSupported' =>
+        sessions_SnackBar_autoTerminateNotSupported,
       'sessions_SnackBar_revokeFailed' => sessions_SnackBar_revokeFailed,
       'sessions_Tile_currentSession' => sessions_Tile_currentSession,
       'sessions_Tile_revokeTooltip' => sessions_Tile_revokeTooltip,
@@ -2298,6 +2314,36 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final DateTime time] => recentTimeBeforeMidnight(time),
         _ => throw ArgumentError(
           'recentTimeBeforeMidnight requires 1 arguments',
+        ),
+      },
+      'sessions_AutoTerminate_days' => switch (args) {
+        [final int days] => sessions_AutoTerminate_days(days),
+        _ => throw ArgumentError(
+          'sessions_AutoTerminate_days requires 1 arguments',
+        ),
+      },
+      'sessions_AutoTerminate_default' => switch (args) {
+        [final String period] => sessions_AutoTerminate_default(period),
+        _ => throw ArgumentError(
+          'sessions_AutoTerminate_default requires 1 arguments',
+        ),
+      },
+      'sessions_AutoTerminate_adminLimitNote' => switch (args) {
+        [final int days] => sessions_AutoTerminate_adminLimitNote(days),
+        _ => throw ArgumentError(
+          'sessions_AutoTerminate_adminLimitNote requires 1 arguments',
+        ),
+      },
+      'sessions_AutoTerminate_info' => switch (args) {
+        [final int days] => sessions_AutoTerminate_info(days),
+        _ => throw ArgumentError(
+          'sessions_AutoTerminate_info requires 1 arguments',
+        ),
+      },
+      'sessions_AutoTerminateOther_range' => switch (args) {
+        [final int max] => sessions_AutoTerminateOther_range(max),
+        _ => throw ArgumentError(
+          'sessions_AutoTerminateOther_range requires 1 arguments',
         ),
       },
       'sessions_Tile_created' => switch (args) {
