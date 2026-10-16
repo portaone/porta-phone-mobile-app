@@ -30,6 +30,12 @@ class StartupFeatureAccessCheck {
   /// backend can put its session behind.
   StartupFeatureAccessCheck.never() : _systemInfoReads = null, _current = null, _asked = true;
 
+  /// Whether the app's configuration is built from what the backend answers.
+  ///
+  /// False for a host that supplies its own: nothing the backend answers
+  /// reaches it, so nothing is worth waiting for.
+  bool get followsBackend => _systemInfoReads != null;
+
   /// Emits when a system info answer has been stored.
   final Stream<Object?>? _systemInfoReads;
 
