@@ -99,6 +99,11 @@ const kChatMessagingFeatureFlag = 'internalMessaging';
 const kConversationMuteFeatureFlag = 'conversationMute';
 const kVoicemailFeatureFlag = 'voicemail';
 
+/// The user may choose after how many idle days the core ends their sessions.
+/// Without it the core still ends them after the installation's period, it
+/// only refuses a choice of the user's own.
+const kSessionAutoTerminateFeatureFlag = 'sessionAutoTerminate';
+
 /// The three WT-1878 voicemail functionalities. All hang off
 /// [kVoicemailFeatureFlag] and are withdrawn with it, so a client reads them as
 /// "offer this control", never as "voicemail is on".

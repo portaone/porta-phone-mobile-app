@@ -61,6 +61,9 @@ abstract class CoreSupport {
   /// Check if the remote system bundles its own STUN/TURN servers, which the app
   /// then loads instead of falling back to a public STUN server.
   bool get supportsBundledIceServers;
+
+  /// Whether the user may choose when their idle sessions end.
+  bool get supportsSessionAutoTerminate;
 }
 
 class CoreSupportImpl extends Equatable implements CoreSupport {
@@ -120,6 +123,9 @@ class CoreSupportImpl extends Equatable implements CoreSupport {
 
   @override
   bool get supportsBundledIceServers => _iceServersConfigured;
+
+  @override
+  bool get supportsSessionAutoTerminate => _has(kSessionAutoTerminateFeatureFlag);
 
   @override
   List<Object?> get props {
