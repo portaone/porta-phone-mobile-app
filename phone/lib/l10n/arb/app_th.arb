@@ -3403,6 +3403,30 @@
   "@devTools_signalingService_simulateKill_confirm": {},
   "devTools_signalingService_simulateKill_cancel": "ยกเลิก",
   "@devTools_signalingService_simulateKill_cancel": {},
+  "devTools_systemInfo_groupTitle": "ข้อมูลเซิร์ฟเวอร์",
+  "@devTools_systemInfo_groupTitle": {
+    "description": "Dev tools group: the server details (system info) the app keeps between starts."
+  },
+  "devTools_systemInfo_clear_title": "ล้างข้อมูลเซิร์ฟเวอร์ที่บันทึกไว้",
+  "@devTools_systemInfo_clear_title": {
+    "description": "Dev tools item: removes the stored server details and closes the app, so the next start runs as the first start after an update."
+  },
+  "devTools_systemInfo_clear_subtitle": "ปิดแอป การเปิดครั้งถัดไปจะโหลดข้อมูลก่อน เหมือนหลังการอัปเดต",
+  "@devTools_systemInfo_clear_subtitle": {
+    "description": "Subtitle of devTools_systemInfo_clear_title."
+  },
+  "devTools_systemInfo_clear_confirmMessage": "ข้อมูลเซิร์ฟเวอร์ที่บันทึกไว้จะถูกลบและแอปจะปิด เปิดแอปอีกครั้งเพื่อเริ่มโดยไม่มีข้อมูลเหล่านี้",
+  "@devTools_systemInfo_clear_confirmMessage": {
+    "description": "Confirmation dialog of devTools_systemInfo_clear_title."
+  },
+  "devTools_systemInfo_clear_confirm": "ล้างและปิด",
+  "@devTools_systemInfo_clear_confirm": {
+    "description": "Confirm button of the dialog: removes the details and closes the app."
+  },
+  "devTools_systemInfo_clear_cancel": "ยกเลิก",
+  "@devTools_systemInfo_clear_cancel": {
+    "description": "Cancel button of the dialog."
+  },
   "common_SemanticsLabel_refresh": "รีเฟรช",
   "@common_SemanticsLabel_refresh": {
     "description": "Accessibility name of a button that reloads the content of the screen."
