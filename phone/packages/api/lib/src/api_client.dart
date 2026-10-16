@@ -110,6 +110,10 @@ class WebtritApiClient {
   // the retention cleaner may have removed it since the list was read.
   static final _systemNotificationEndpoint = ResponseOptions(failures: [systemNotificationGoneRule]);
 
+  // Changing the idle-session period has two refusals that only this endpoint
+  // can give meaning to.
+  static final _sessionAutoTerminateSettingsEndpoint = ResponseOptions(failures: sessionAutoTerminateSettingsRules);
+
   static final _voicemailEndpointBytes = ResponseOptions(
     responseType: ResponseType.bytes,
     optionalEndpoint: true,
@@ -381,6 +385,25 @@ class WebtritApiClient {
     );
   }
 
+  Future<dynamic> _httpClientExecutePut(
+    List<String> pathSegments,
+    Map<String, String>? headers,
+    String? token,
+    Object? requestDataJson, {
+    RequestOptions requestOptions = const RequestOptions(),
+    ResponseOptions responseOptions = const ResponseOptions(),
+  }) {
+    return _httpClientExecute(
+      'put',
+      pathSegments,
+      token,
+      requestDataJson,
+      headers: headers,
+      requestOptions: requestOptions,
+      responseOptions: responseOptions,
+    );
+  }
+
   Future<dynamic> _httpClientExecuteDelete(
     List<String> pathSegments,
     Map<String, String>? headers,
@@ -601,6 +624,12 @@ class WebtritApiClient {
   }
 
   Future<List<UserSession>> getUserSessions(String token, {RequestOptions options = const RequestOptions()}) async {
+    return (await getUserSessionList(token, options: options)).items;
+  }
+
+  /// The sessions together with when idle ones end, when the core sends both
+  /// in the same answer.
+  Future<UserSessionList> getUserSessionList(String token, {RequestOptions options = const RequestOptions()}) async {
     final responseJson = await _httpClientExecuteGet(
       [..._apiBasePathSegmentsV1, 'user', 'sessions'],
       null,
@@ -608,9 +637,33 @@ class WebtritApiClient {
       requestOptions: options,
     );
 
-    return (responseJson['items'] as List<dynamic>).map((e) {
-      return UserSession.fromJson(e as Map<String, dynamic>);
-    }).toList();
+    return UserSessionList.fromJson(responseJson as Map<String, dynamic>);
+  }
+
+  /// Sets after how many idle days the user's sessions end; null returns to the
+  /// installation's timeout. Answers with what the core now holds.
+  ///
+  /// The core refuses with 422 `exceeds_installation_limit` past the
+  /// installation's limit, 501 `functionality_not_implemented` when the adapter
+  /// lacks `sessionAutoTerminate` and 503 `external_api_issue` when it cannot
+  /// tell.
+  Future<UserSessionsAutoTerminate> updateUserSessionsSettings(
+    String token, {
+    required int? inactivityTimeoutDays,
+    RequestOptions options = const RequestOptions(),
+  }) async {
+    final responseJson = await _httpClientExecutePut(
+      [..._apiBasePathSegmentsV1, 'user', 'sessions', 'settings'],
+      null,
+      token,
+      // The key is required: a null value is the request to return to the
+      // installation's timeout, not an absent field.
+      {'inactivity_timeout_days': inactivityTimeoutDays},
+      requestOptions: options,
+      responseOptions: _sessionAutoTerminateSettingsEndpoint,
+    );
+
+    return UserSessionsAutoTerminate.fromJson(responseJson as Map<String, dynamic>);
   }
 
   Future<void> deleteUserSession(
