@@ -1,7 +1,8 @@
 /// The cached system info used to live in secure storage and now lives in app
 /// preferences, so every install that upgrades starts with an empty cache.
-/// These tests pin what that costs the user: the shell guard refetches the
-/// value, and sends them back to login when it cannot.
+/// These tests pin what that costs the user: the shell guard does not build a
+/// session without the value, and sends them to the restart screen to load it
+/// - signed in, whether the core answers or not.
 library;
 
 import 'package:material_ui/material_ui.dart';
@@ -107,67 +108,44 @@ void main() {
 
   bool wasSentToLogin() => router.replacements.any((routes) => routes.first is LoginRouterPageRoute);
 
-  bool wasSentToTeardown() => router.replacements.any((routes) => routes.first is TeardownScreenPageRoute);
+  bool wasSentToRestartScreen() => router.replacements.any((routes) => routes.first is SessionRestartScreenPageRoute);
 
   group('main shell guard without cached system info', () {
-    test('ends the session when the value cannot be fetched', () async {
-      when(() => systemInfoRepository.getSystemInfo(fetchPolicy: any(named: 'fetchPolicy')))
-          .thenThrow(Exception('no network'));
-
-      await buildRouter().onMainShellRouteGuardNavigation(resolver, router);
-
-      expect(resolver.resolutions, [false]);
-      verify(() => appBloc.add(const AppLogoutRequested(reason: AppLogoutReason.coreUnreachable))).called(1);
-      // Routing to login instead is what spun between the two guards: the
-      // login guard sends a logged-in session straight back here.
-      expect(wasSentToLogin(), isFalse);
-      // And the stack must not be left empty: refusing the navigation
-      // without replacing it ends the session behind a white screen.
-      expect(wasSentToTeardown(), isTrue);
-    });
-
-    test('ends the session when the core answers without it', () async {
+    test('sends the start to the restart screen and keeps the user signed in', () async {
       when(() => systemInfoRepository.getSystemInfo(fetchPolicy: any(named: 'fetchPolicy')))
           .thenAnswer((_) async => null);
 
       await buildRouter().onMainShellRouteGuardNavigation(resolver, router);
 
       expect(resolver.resolutions, [false]);
-      verify(() => appBloc.add(const AppLogoutRequested(reason: AppLogoutReason.coreUnreachable))).called(1);
+      expect(resolver.overrodeNext, isFalse);
+      // The stack must not be left empty: refusing the navigation without
+      // replacing it is a white screen.
+      expect(wasSentToRestartScreen(), isTrue);
       expect(wasSentToLogin(), isFalse);
-      // And the stack must not be left empty: refusing the navigation
-      // without replacing it ends the session behind a white screen.
-      expect(wasSentToTeardown(), isTrue);
+      verifyNever(() => appBloc.add(any(that: isA<AppLogoutRequested>())));
     });
 
-    test('leaves the session alone when the value is there', () async {
+    test('does not reach for the network: the configuration it builds from would not carry the answer', () async {
+      when(() => systemInfoRepository.getSystemInfo(fetchPolicy: any(named: 'fetchPolicy')))
+          .thenAnswer((_) async => null);
+
+      await buildRouter().onMainShellRouteGuardNavigation(resolver, router);
+
+      verify(() => systemInfoRepository.getSystemInfo(fetchPolicy: FetchPolicy.cacheOnly)).called(1);
+      verifyNever(() => systemInfoRepository.getSystemInfo(fetchPolicy: FetchPolicy.cacheFirst));
+      verifyNever(() => systemInfoRepository.getSystemInfo(fetchPolicy: FetchPolicy.networkOnly));
+    });
+
+    test('builds the shell when the value is stored', () async {
       when(() => systemInfoRepository.getSystemInfo(fetchPolicy: any(named: 'fetchPolicy')))
           .thenAnswer((_) async => systemInfoWithSupported(const []));
 
       await buildRouter().onMainShellRouteGuardNavigation(resolver, router);
 
-      verifyNever(() => appBloc.add(any(that: isA<AppLogoutRequested>())));
-    });
-
-    test('keeps the user signed in when the value is refetched', () async {
-      final systemInfo = systemInfoWithSupported(const []);
-      when(() => systemInfoRepository.getSystemInfo(fetchPolicy: any(named: 'fetchPolicy')))
-          .thenAnswer((_) async => systemInfo);
-
-      await buildRouter().onMainShellRouteGuardNavigation(resolver, router);
-
-      expect(wasSentToLogin(), isFalse);
       expect(resolver.overrodeNext, isTrue);
-    });
-
-    test('reads the value through the cache-first policy, so one fetch refills the cache', () async {
-      final systemInfo = systemInfoWithSupported(const []);
-      when(() => systemInfoRepository.getSystemInfo(fetchPolicy: any(named: 'fetchPolicy')))
-          .thenAnswer((_) async => systemInfo);
-
-      await buildRouter().onMainShellRouteGuardNavigation(resolver, router);
-
-      verify(() => systemInfoRepository.getSystemInfo(fetchPolicy: FetchPolicy.cacheFirst)).called(1);
+      expect(router.replacements, isEmpty);
+      verifyNever(() => appBloc.add(any(that: isA<AppLogoutRequested>())));
     });
   });
 }

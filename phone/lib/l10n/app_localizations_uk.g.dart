@@ -2468,6 +2468,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get session_Restart_progressText => 'Застосовуємо зміни із сервера...';
 
   @override
+  String get session_Restart_loadingText => 'Завантажуємо ваші налаштування із сервера...';
+
+  @override
+  String get session_Restart_unreachableText =>
+      'Не вдалося зв\'язатися із сервером, щоб завантажити налаштування. Перевірте з\'єднання і спробуйте ще раз.';
+
+  @override
+  String get session_Restart_retryButton => 'Спробувати ще';
+
+  @override
+  String get session_Restart_logoutButton => 'Вийти';
+
+  @override
   String get sessions_AppBar_title => 'Активні сесії';
 
   @override
@@ -4107,6 +4120,26 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get devTools_signalingService_simulateKill_cancel => 'Скасувати';
+
+  @override
+  String get devTools_systemInfo_groupTitle => 'Дані сервера';
+
+  @override
+  String get devTools_systemInfo_clear_title => 'Очистити збережені дані сервера';
+
+  @override
+  String get devTools_systemInfo_clear_subtitle =>
+      'Закриває застосунок; наступний запуск спершу завантажить їх, як після оновлення';
+
+  @override
+  String get devTools_systemInfo_clear_confirmMessage =>
+      'Збережені дані сервера буде видалено, а застосунок закриється. Відкрийте його знову, щоб почати без них.';
+
+  @override
+  String get devTools_systemInfo_clear_confirm => 'Очистити й закрити';
+
+  @override
+  String get devTools_systemInfo_clear_cancel => 'Скасувати';
 
   @override
   String get common_SemanticsLabel_refresh => 'Оновити';

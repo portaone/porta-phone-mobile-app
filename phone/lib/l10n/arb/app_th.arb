@@ -2159,6 +2159,22 @@
   "@session_Restart_progressText": {
     "description": "Shown under a progress indicator while the app restarts its session by itself, because the server changed which features are available. On screen for a few seconds."
   },
+  "session_Restart_loadingText": "กำลังโหลดการตั้งค่าของคุณจากเซิร์ฟเวอร์...",
+  "@session_Restart_loadingText": {
+    "description": "Shown under a progress indicator on the first start after an update when the app has no stored server details and loads them before opening the main screen. On screen for about a second."
+  },
+  "session_Restart_unreachableText": "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์เพื่อโหลดการตั้งค่าได้ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+  "@session_Restart_unreachableText": {
+    "description": "Shown instead of the progress indicator when the server details could not be loaded. Two buttons follow: try again, log out."
+  },
+  "session_Restart_retryButton": "ลองอีกครั้ง",
+  "@session_Restart_retryButton": {
+    "description": "Button under session_Restart_unreachableText: loads the server details again."
+  },
+  "session_Restart_logoutButton": "ออกจากระบบ",
+  "@session_Restart_logoutButton": {
+    "description": "Button under session_Restart_unreachableText: ends the session and goes to the login screen, where another server can be entered."
+  },
   "sessions_AppBar_title": "เซสชันที่ใช้งานอยู่",
   "@sessions_AppBar_title": {},
   "sessions_AppType_android": "แอป Android",
@@ -3385,6 +3401,30 @@
   "@devTools_signalingService_simulateKill_confirm": {},
   "devTools_signalingService_simulateKill_cancel": "ยกเลิก",
   "@devTools_signalingService_simulateKill_cancel": {},
+  "devTools_systemInfo_groupTitle": "ข้อมูลเซิร์ฟเวอร์",
+  "@devTools_systemInfo_groupTitle": {
+    "description": "Dev tools group: the server details (system info) the app keeps between starts."
+  },
+  "devTools_systemInfo_clear_title": "ล้างข้อมูลเซิร์ฟเวอร์ที่บันทึกไว้",
+  "@devTools_systemInfo_clear_title": {
+    "description": "Dev tools item: removes the stored server details and closes the app, so the next start runs as the first start after an update."
+  },
+  "devTools_systemInfo_clear_subtitle": "ปิดแอป การเปิดครั้งถัดไปจะโหลดข้อมูลก่อน เหมือนหลังการอัปเดต",
+  "@devTools_systemInfo_clear_subtitle": {
+    "description": "Subtitle of devTools_systemInfo_clear_title."
+  },
+  "devTools_systemInfo_clear_confirmMessage": "ข้อมูลเซิร์ฟเวอร์ที่บันทึกไว้จะถูกลบและแอปจะปิด เปิดแอปอีกครั้งเพื่อเริ่มโดยไม่มีข้อมูลเหล่านี้",
+  "@devTools_systemInfo_clear_confirmMessage": {
+    "description": "Confirmation dialog of devTools_systemInfo_clear_title."
+  },
+  "devTools_systemInfo_clear_confirm": "ล้างและปิด",
+  "@devTools_systemInfo_clear_confirm": {
+    "description": "Confirm button of the dialog: removes the details and closes the app."
+  },
+  "devTools_systemInfo_clear_cancel": "ยกเลิก",
+  "@devTools_systemInfo_clear_cancel": {
+    "description": "Cancel button of the dialog."
+  },
   "common_SemanticsLabel_refresh": "รีเฟรช",
   "@common_SemanticsLabel_refresh": {
     "description": "Accessibility name of a button that reloads the content of the screen."
