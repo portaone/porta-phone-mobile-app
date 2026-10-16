@@ -2420,6 +2420,19 @@ class AppLocalizationsTh extends AppLocalizations {
   String get session_Restart_progressText => 'กำลังนำการเปลี่ยนแปลงจากเซิร์ฟเวอร์มาใช้...';
 
   @override
+  String get session_Restart_loadingText => 'กำลังโหลดการตั้งค่าของคุณจากเซิร์ฟเวอร์...';
+
+  @override
+  String get session_Restart_unreachableText =>
+      'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์เพื่อโหลดการตั้งค่าได้ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง';
+
+  @override
+  String get session_Restart_retryButton => 'ลองอีกครั้ง';
+
+  @override
+  String get session_Restart_logoutButton => 'ออกจากระบบ';
+
+  @override
   String get sessions_AppBar_title => 'เซสชันที่ใช้งานอยู่';
 
   @override
@@ -3981,6 +3994,25 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get devTools_signalingService_simulateKill_cancel => 'ยกเลิก';
+
+  @override
+  String get devTools_systemInfo_groupTitle => 'ข้อมูลเซิร์ฟเวอร์';
+
+  @override
+  String get devTools_systemInfo_clear_title => 'ล้างข้อมูลเซิร์ฟเวอร์ที่บันทึกไว้';
+
+  @override
+  String get devTools_systemInfo_clear_subtitle => 'ปิดแอป การเปิดครั้งถัดไปจะโหลดข้อมูลก่อน เหมือนหลังการอัปเดต';
+
+  @override
+  String get devTools_systemInfo_clear_confirmMessage =>
+      'ข้อมูลเซิร์ฟเวอร์ที่บันทึกไว้จะถูกลบและแอปจะปิด เปิดแอปอีกครั้งเพื่อเริ่มโดยไม่มีข้อมูลเหล่านี้';
+
+  @override
+  String get devTools_systemInfo_clear_confirm => 'ล้างและปิด';
+
+  @override
+  String get devTools_systemInfo_clear_cancel => 'ยกเลิก';
 
   @override
   String get common_SemanticsLabel_refresh => 'รีเฟรช';

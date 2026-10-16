@@ -95,4 +95,9 @@ void main() {
   test('a host that draws its own configuration is never behind', () async {
     expect(await StartupFeatureAccessCheck.never().changedSince(started), isNull);
   });
+
+  test('a configuration built from the backend answer is waited for; a host one is not', () {
+    expect(check().followsBackend, isTrue);
+    expect(StartupFeatureAccessCheck.never().followsBackend, isFalse);
+  });
 }

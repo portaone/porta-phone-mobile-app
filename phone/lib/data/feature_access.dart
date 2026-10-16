@@ -63,6 +63,7 @@ class FeatureAccess extends Equatable {
     this.coreSupport,
     this.overrides,
     this.loggingConfig,
+    this.hasSystemInfo,
   );
 
   final EmbeddedConfig embeddedConfig;
@@ -91,6 +92,14 @@ class FeatureAccess extends Equatable {
   /// features at runtime, potentially modifying or extending the behavior defined
   /// by [supportedConfig] and [coreSupport].
   final FeatureOverrides overrides;
+
+  /// Whether this configuration was built from system info the backend gave.
+  ///
+  /// A start with none stored builds one as if the backend supported nothing,
+  /// and the capability checks above cannot tell it apart from a backend that
+  /// really supports nothing. A session must not be mounted on such a
+  /// configuration: it keeps the one it was mounted with.
+  final bool hasSystemInfo;
 
   /// Whether voicemail runs for this session: the core advertises it, and the
   /// configuration offers it somewhere.
@@ -198,6 +207,7 @@ class FeatureAccess extends Equatable {
         coreSupport,
         featureOverrides,
         loggingConfig,
+        systemInfo != null,
       );
     } catch (e, stackTrace) {
       _logger.severe('Failed to initialize FeatureAccess', e, stackTrace);
@@ -221,6 +231,7 @@ class FeatureAccess extends Equatable {
     supportedConfig,
     coreSupport,
     overrides,
+    hasSystemInfo,
   ];
 }
 
