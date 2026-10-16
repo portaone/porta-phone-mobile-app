@@ -189,6 +189,8 @@ const String messageExchangeConfirmId = 'messageExchangeConfirm';
 const String conversationMenuId = 'conversationMenu';
 
 // Identifier-only entries: controls that have no widget-test key.
+const String aboutBackendCapabilitiesButtonId = 'aboutBackendCapabilitiesButton';
+const String aboutBackendCapabilitiesId = 'aboutBackendCapabilities';
 const String actionPadOverflowId = 'actionPadOverflow';
 const String appSnackBarId = 'appSnackBar';
 const String actionPadTransferId = 'actionPadTransfer';
@@ -367,6 +369,18 @@ const String contactPhoneTileFavIconId = 'contactPhoneTileFavIcon';
 const contactPhoneTileFavIconKey = Key(contactPhoneTileFavIconId);
 const String contactEmailTileId = 'contactEmailTile';
 const contactEmailTileKey = Key(contactEmailTileId);
+
+// Shown in place of the main screen when its settings could not be loaded from
+// the server: load them again, or log out to enter another server.
+const String sessionRestartRetryButtonId = 'sessionRestartRetryButton';
+const sessionRestartRetryButtonKey = Key(sessionRestartRetryButtonId);
+const String sessionRestartLogoutButtonId = 'sessionRestartLogoutButton';
+const sessionRestartLogoutButtonKey = Key(sessionRestartLogoutButtonId);
+
+// Dev tools: removes the stored server details and closes the app, so the next
+// start runs as the first one after an update.
+const String devToolsClearSystemInfoId = 'devToolsClearSystemInfo';
+const devToolsClearSystemInfoKey = Key(devToolsClearSystemInfoId);
 
 /// Id of the [index]th control in a list of identical ones: the first keeps the
 /// plain id, the rest are numbered from two, the way a person would count them.

@@ -1046,6 +1046,11 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessionStatus_subtitle_serviceUnavailable' =>
         sessionStatus_subtitle_serviceUnavailable,
       'session_Teardown_progressText' => session_Teardown_progressText,
+      'session_Restart_progressText' => session_Restart_progressText,
+      'session_Restart_loadingText' => session_Restart_loadingText,
+      'session_Restart_unreachableText' => session_Restart_unreachableText,
+      'session_Restart_retryButton' => session_Restart_retryButton,
+      'session_Restart_logoutButton' => session_Restart_logoutButton,
       'sessions_AppBar_title' => sessions_AppBar_title,
       'sessions_AppType_android' => sessions_AppType_android,
       'sessions_AppType_ios' => sessions_AppType_ios,
@@ -1072,6 +1077,14 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessions_Tile_revokeTooltip' => sessions_Tile_revokeTooltip,
       'settings_AboutText_ApplicationEmbeddedLinks' =>
         settings_AboutText_ApplicationEmbeddedLinks,
+      'settings_AboutText_BackendCapabilities' =>
+        settings_AboutText_BackendCapabilities,
+      'settings_AboutBackendCapabilities_none' =>
+        settings_AboutBackendCapabilities_none,
+      'settings_AboutBackendCapabilities_removedOnServer' =>
+        settings_AboutBackendCapabilities_removedOnServer,
+      'settings_AboutBackendCapabilities_addedOnServer' =>
+        settings_AboutBackendCapabilities_addedOnServer,
       'settings_AboutText_ThirdPartyLicenses' =>
         settings_AboutText_ThirdPartyLicenses,
       'settings_AboutText_AppSessionIdentifier' =>
@@ -1807,6 +1820,14 @@ extension AppLocalizationsExtension on AppLocalizations {
         devTools_signalingService_simulateKill_confirm,
       'devTools_signalingService_simulateKill_cancel' =>
         devTools_signalingService_simulateKill_cancel,
+      'devTools_systemInfo_groupTitle' => devTools_systemInfo_groupTitle,
+      'devTools_systemInfo_clear_title' => devTools_systemInfo_clear_title,
+      'devTools_systemInfo_clear_subtitle' =>
+        devTools_systemInfo_clear_subtitle,
+      'devTools_systemInfo_clear_confirmMessage' =>
+        devTools_systemInfo_clear_confirmMessage,
+      'devTools_systemInfo_clear_confirm' => devTools_systemInfo_clear_confirm,
+      'devTools_systemInfo_clear_cancel' => devTools_systemInfo_clear_cancel,
       'common_SemanticsLabel_refresh' => common_SemanticsLabel_refresh,
       'common_SemanticsLabel_scrollToBottom' =>
         common_SemanticsLabel_scrollToBottom,

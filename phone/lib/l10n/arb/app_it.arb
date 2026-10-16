@@ -2118,6 +2118,26 @@
   "@session_Teardown_progressText": {
     "description": "Status message displayed while the application is performing cleanup during the logout process."
   },
+  "session_Restart_progressText": "Applicazione delle modifiche dal server...",
+  "@session_Restart_progressText": {
+    "description": "Shown under a progress indicator while the app restarts its session by itself, because the server changed which features are available. On screen for a few seconds."
+  },
+  "session_Restart_loadingText": "Caricamento delle impostazioni dal server...",
+  "@session_Restart_loadingText": {
+    "description": "Shown under a progress indicator on the first start after an update when the app has no stored server details and loads them before opening the main screen. On screen for about a second."
+  },
+  "session_Restart_unreachableText": "Impossibile raggiungere il server per caricare le impostazioni. Controlla la connessione e riprova.",
+  "@session_Restart_unreachableText": {
+    "description": "Shown instead of the progress indicator when the server details could not be loaded. Two buttons follow: try again, log out."
+  },
+  "session_Restart_retryButton": "Riprova",
+  "@session_Restart_retryButton": {
+    "description": "Button under session_Restart_unreachableText: loads the server details again."
+  },
+  "session_Restart_logoutButton": "Esci",
+  "@session_Restart_logoutButton": {
+    "description": "Button under session_Restart_unreachableText: ends the session and goes to the login screen, where another server can be entered."
+  },
   "sessions_AppBar_title": "Sessioni attive",
   "@sessions_AppBar_title": {},
   "sessions_AppType_android": "App Android",
@@ -2176,6 +2196,22 @@
   "@sessions_Tile_revokeTooltip": {},
   "settings_AboutText_ApplicationEmbeddedLinks": "Collegamenti incorporati dell'applicazione",
   "@settings_AboutText_ApplicationEmbeddedLinks": {},
+  "settings_AboutText_BackendCapabilities": "Funzionalità del backend",
+  "@settings_AboutText_BackendCapabilities": {
+    "description": "Button on the About screen and title of the dialog it opens: the list of capability names the backend reported."
+  },
+  "settings_AboutBackendCapabilities_none": "Il backend non indica alcuna funzionalità.",
+  "@settings_AboutBackendCapabilities_none": {
+    "description": "Shown in the backend capabilities dialog when the backend reported an empty list."
+  },
+  "settings_AboutBackendCapabilities_removedOnServer": "Disattivata sul server - ancora in uso fino al prossimo avvio dell'app",
+  "@settings_AboutBackendCapabilities_removedOnServer": {
+    "description": "Under a capability name: the server has turned it off, the running app still uses it."
+  },
+  "settings_AboutBackendCapabilities_addedOnServer": "Attivata sul server - non in uso fino al prossimo avvio dell'app",
+  "@settings_AboutBackendCapabilities_addedOnServer": {
+    "description": "Under a capability name: the server has turned it on, the running app does not use it yet."
+  },
   "settings_AboutText_ThirdPartyLicenses": "Licenze di terze parti",
   "@settings_AboutText_ThirdPartyLicenses": {},
   "settings_AboutText_AppSessionIdentifier": "Identificatore della sessione dell'applicazione",
@@ -3248,6 +3284,30 @@
   "@devTools_signalingService_simulateKill_confirm": {},
   "devTools_signalingService_simulateKill_cancel": "Annulla",
   "@devTools_signalingService_simulateKill_cancel": {},
+  "devTools_systemInfo_groupTitle": "Dettagli del server",
+  "@devTools_systemInfo_groupTitle": {
+    "description": "Dev tools group: the server details (system info) the app keeps between starts."
+  },
+  "devTools_systemInfo_clear_title": "Cancella i dettagli del server salvati",
+  "@devTools_systemInfo_clear_title": {
+    "description": "Dev tools item: removes the stored server details and closes the app, so the next start runs as the first start after an update."
+  },
+  "devTools_systemInfo_clear_subtitle": "Chiude l'app; al prossimo avvio vengono caricati per primi, come dopo un aggiornamento",
+  "@devTools_systemInfo_clear_subtitle": {
+    "description": "Subtitle of devTools_systemInfo_clear_title."
+  },
+  "devTools_systemInfo_clear_confirmMessage": "I dettagli del server salvati vengono rimossi e l'app si chiude. Riaprila per avviarla senza di essi.",
+  "@devTools_systemInfo_clear_confirmMessage": {
+    "description": "Confirmation dialog of devTools_systemInfo_clear_title."
+  },
+  "devTools_systemInfo_clear_confirm": "Cancella e chiudi",
+  "@devTools_systemInfo_clear_confirm": {
+    "description": "Confirm button of the dialog: removes the details and closes the app."
+  },
+  "devTools_systemInfo_clear_cancel": "Annulla",
+  "@devTools_systemInfo_clear_cancel": {
+    "description": "Cancel button of the dialog."
+  },
   "common_SemanticsLabel_refresh": "Aggiorna",
   "@common_SemanticsLabel_refresh": {
     "description": "Accessibility name of a button that reloads the content of the screen."

@@ -4351,6 +4351,36 @@ abstract class AppLocalizations {
   /// **'Signing out...'**
   String get session_Teardown_progressText;
 
+  /// Shown under a progress indicator while the app restarts its session by itself, because the server changed which features are available. On screen for a few seconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying changes from the server...'**
+  String get session_Restart_progressText;
+
+  /// Shown under a progress indicator on the first start after an update when the app has no stored server details and loads them before opening the main screen. On screen for about a second.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your settings from the server...'**
+  String get session_Restart_loadingText;
+
+  /// Shown instead of the progress indicator when the server details could not be loaded. Two buttons follow: try again, log out.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server to load your settings. Check your connection and try again.'**
+  String get session_Restart_unreachableText;
+
+  /// Button under session_Restart_unreachableText: loads the server details again.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get session_Restart_retryButton;
+
+  /// Button under session_Restart_unreachableText: ends the session and goes to the login screen, where another server can be entered.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get session_Restart_logoutButton;
+
   /// Title of the screen listing the devices the account is currently signed in on.
   ///
   /// In en, this message translates to:
@@ -4488,6 +4518,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Application embedded links'**
   String get settings_AboutText_ApplicationEmbeddedLinks;
+
+  /// Button on the About screen and title of the dialog it opens: the list of capability names the backend reported.
+  ///
+  /// In en, this message translates to:
+  /// **'Backend capabilities'**
+  String get settings_AboutText_BackendCapabilities;
+
+  /// Shown in the backend capabilities dialog when the backend reported an empty list.
+  ///
+  /// In en, this message translates to:
+  /// **'The backend names no capabilities.'**
+  String get settings_AboutBackendCapabilities_none;
+
+  /// Under a capability name: the server has turned it off, the running app still uses it.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned off on the server - still in use until the app is started again'**
+  String get settings_AboutBackendCapabilities_removedOnServer;
+
+  /// Under a capability name: the server has turned it on, the running app does not use it yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned on on the server - not in use until the app is started again'**
+  String get settings_AboutBackendCapabilities_addedOnServer;
 
   /// No description provided for @settings_AboutText_ThirdPartyLicenses.
   ///
@@ -7086,6 +7140,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get devTools_signalingService_simulateKill_cancel;
+
+  /// Dev tools group: the server details (system info) the app keeps between starts.
+  ///
+  /// In en, this message translates to:
+  /// **'Server details'**
+  String get devTools_systemInfo_groupTitle;
+
+  /// Dev tools item: removes the stored server details and closes the app, so the next start runs as the first start after an update.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear stored server details'**
+  String get devTools_systemInfo_clear_title;
+
+  /// Subtitle of devTools_systemInfo_clear_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Closes the app; the next start loads them first, as after an update'**
+  String get devTools_systemInfo_clear_subtitle;
+
+  /// Confirmation dialog of devTools_systemInfo_clear_title.
+  ///
+  /// In en, this message translates to:
+  /// **'The stored server details are removed and the app closes. Open it again to start without them.'**
+  String get devTools_systemInfo_clear_confirmMessage;
+
+  /// Confirm button of the dialog: removes the details and closes the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear and close'**
+  String get devTools_systemInfo_clear_confirm;
+
+  /// Cancel button of the dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get devTools_systemInfo_clear_cancel;
 
   /// Accessibility name of a button that reloads the content of the screen.
   ///

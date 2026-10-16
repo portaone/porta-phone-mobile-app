@@ -1511,6 +1511,53 @@ class SelfConfigScreenPageRouteArgs {
 }
 
 /// generated route for
+/// [SessionRestartScreenPage]
+class SessionRestartScreenPageRoute
+    extends PageRouteInfo<SessionRestartScreenPageRouteArgs> {
+  SessionRestartScreenPageRoute({
+    Future<void>? sessionEnded,
+    List<PageRouteInfo>? children,
+  }) : super(
+         SessionRestartScreenPageRoute.name,
+         args: SessionRestartScreenPageRouteArgs(sessionEnded: sessionEnded),
+         initialChildren: children,
+       );
+
+  static const String name = 'SessionRestartScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<SessionRestartScreenPageRouteArgs>(
+        orElse: () => const SessionRestartScreenPageRouteArgs(),
+      );
+      return SessionRestartScreenPage(sessionEnded: args.sessionEnded);
+    },
+  );
+}
+
+class SessionRestartScreenPageRouteArgs {
+  const SessionRestartScreenPageRouteArgs({this.sessionEnded});
+
+  final Future<void>? sessionEnded;
+
+  @override
+  String toString() {
+    return 'SessionRestartScreenPageRouteArgs{sessionEnded: $sessionEnded}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! SessionRestartScreenPageRouteArgs) return false;
+    return sessionEnded == other.sessionEnded;
+  }
+
+  @override
+  int get hashCode => sessionEnded.hashCode;
+}
+
+/// generated route for
 /// [SessionsScreenPage]
 class SessionsScreenPageRoute extends PageRouteInfo<void> {
   const SessionsScreenPageRoute({List<PageRouteInfo>? children})

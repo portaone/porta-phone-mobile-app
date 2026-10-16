@@ -13,6 +13,9 @@ import 'package:webtrit_phone/models/system_info/system_info.dart';
 
 /// Abstraction for checking core system feature support.
 abstract class CoreSupport {
+  /// The capability names the remote system sent, as it spells them.
+  Set<String> get supported;
+
   /// Check if the voicemail feature is supported by remote system.
   bool get supportsVoicemail;
 
@@ -72,6 +75,9 @@ class CoreSupportImpl extends Equatable implements CoreSupport {
   final bool _iceServersConfigured;
 
   bool _has(String flag) => _flags.contains(flag);
+
+  @override
+  Set<String> get supported => Set.unmodifiable(_flags);
 
   @override
   bool get supportsVoicemail => _has(kVoicemailFeatureFlag);

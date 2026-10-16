@@ -2396,6 +2396,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session_Teardown_progressText => 'Signing out...';
 
   @override
+  String get session_Restart_progressText => 'Applying changes from the server...';
+
+  @override
+  String get session_Restart_loadingText => 'Loading your settings from the server...';
+
+  @override
+  String get session_Restart_unreachableText =>
+      'Could not reach the server to load your settings. Check your connection and try again.';
+
+  @override
+  String get session_Restart_retryButton => 'Try again';
+
+  @override
+  String get session_Restart_logoutButton => 'Log out';
+
+  @override
   String get sessions_AppBar_title => 'Active sessions';
 
   @override
@@ -2468,6 +2484,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_AboutText_ApplicationEmbeddedLinks => 'Application embedded links';
+
+  @override
+  String get settings_AboutText_BackendCapabilities => 'Backend capabilities';
+
+  @override
+  String get settings_AboutBackendCapabilities_none => 'The backend names no capabilities.';
+
+  @override
+  String get settings_AboutBackendCapabilities_removedOnServer =>
+      'Turned off on the server - still in use until the app is started again';
+
+  @override
+  String get settings_AboutBackendCapabilities_addedOnServer =>
+      'Turned on on the server - not in use until the app is started again';
 
   @override
   String get settings_AboutText_ThirdPartyLicenses => 'Third-party licenses';
@@ -3895,6 +3925,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devTools_signalingService_simulateKill_cancel => 'Cancel';
+
+  @override
+  String get devTools_systemInfo_groupTitle => 'Server details';
+
+  @override
+  String get devTools_systemInfo_clear_title => 'Clear stored server details';
+
+  @override
+  String get devTools_systemInfo_clear_subtitle =>
+      'Closes the app; the next start loads them first, as after an update';
+
+  @override
+  String get devTools_systemInfo_clear_confirmMessage =>
+      'The stored server details are removed and the app closes. Open it again to start without them.';
+
+  @override
+  String get devTools_systemInfo_clear_confirm => 'Clear and close';
+
+  @override
+  String get devTools_systemInfo_clear_cancel => 'Cancel';
 
   @override
   String get common_SemanticsLabel_refresh => 'Refresh';
