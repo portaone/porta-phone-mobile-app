@@ -3992,6 +3992,26 @@ class AppLocalizationsUk extends AppLocalizations {
   String get devTools_signalingService_simulateKill_cancel => 'Скасувати';
 
   @override
+  String get devTools_systemInfo_groupTitle => 'Дані сервера';
+
+  @override
+  String get devTools_systemInfo_clear_title => 'Очистити збережені дані сервера';
+
+  @override
+  String get devTools_systemInfo_clear_subtitle =>
+      'Закриває застосунок; наступний запуск спершу завантажить їх, як після оновлення';
+
+  @override
+  String get devTools_systemInfo_clear_confirmMessage =>
+      'Збережені дані сервера буде видалено, а застосунок закриється. Відкрийте його знову, щоб почати без них.';
+
+  @override
+  String get devTools_systemInfo_clear_confirm => 'Очистити й закрити';
+
+  @override
+  String get devTools_systemInfo_clear_cancel => 'Скасувати';
+
+  @override
   String get common_SemanticsLabel_refresh => 'Оновити';
 
   @override

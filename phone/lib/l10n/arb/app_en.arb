@@ -3434,6 +3434,30 @@
   "@devTools_signalingService_simulateKill_confirm": {},
   "devTools_signalingService_simulateKill_cancel": "Cancel",
   "@devTools_signalingService_simulateKill_cancel": {},
+  "devTools_systemInfo_groupTitle": "Server details",
+  "@devTools_systemInfo_groupTitle": {
+    "description": "Dev tools group: the server details (system info) the app keeps between starts."
+  },
+  "devTools_systemInfo_clear_title": "Clear stored server details",
+  "@devTools_systemInfo_clear_title": {
+    "description": "Dev tools item: removes the stored server details and closes the app, so the next start runs as the first start after an update."
+  },
+  "devTools_systemInfo_clear_subtitle": "Closes the app; the next start loads them first, as after an update",
+  "@devTools_systemInfo_clear_subtitle": {
+    "description": "Subtitle of devTools_systemInfo_clear_title."
+  },
+  "devTools_systemInfo_clear_confirmMessage": "The stored server details are removed and the app closes. Open it again to start without them.",
+  "@devTools_systemInfo_clear_confirmMessage": {
+    "description": "Confirmation dialog of devTools_systemInfo_clear_title."
+  },
+  "devTools_systemInfo_clear_confirm": "Clear and close",
+  "@devTools_systemInfo_clear_confirm": {
+    "description": "Confirm button of the dialog: removes the details and closes the app."
+  },
+  "devTools_systemInfo_clear_cancel": "Cancel",
+  "@devTools_systemInfo_clear_cancel": {
+    "description": "Cancel button of the dialog."
+  },
   "common_SemanticsLabel_refresh": "Refresh",
   "@common_SemanticsLabel_refresh": {
     "description": "Accessibility name of a button that reloads the content of the screen."

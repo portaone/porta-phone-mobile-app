@@ -3927,6 +3927,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devTools_signalingService_simulateKill_cancel => 'Cancel';
 
   @override
+  String get devTools_systemInfo_groupTitle => 'Server details';
+
+  @override
+  String get devTools_systemInfo_clear_title => 'Clear stored server details';
+
+  @override
+  String get devTools_systemInfo_clear_subtitle =>
+      'Closes the app; the next start loads them first, as after an update';
+
+  @override
+  String get devTools_systemInfo_clear_confirmMessage =>
+      'The stored server details are removed and the app closes. Open it again to start without them.';
+
+  @override
+  String get devTools_systemInfo_clear_confirm => 'Clear and close';
+
+  @override
+  String get devTools_systemInfo_clear_cancel => 'Cancel';
+
+  @override
   String get common_SemanticsLabel_refresh => 'Refresh';
 
   @override

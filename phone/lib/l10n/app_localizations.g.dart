@@ -7141,6 +7141,42 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get devTools_signalingService_simulateKill_cancel;
 
+  /// Dev tools group: the server details (system info) the app keeps between starts.
+  ///
+  /// In en, this message translates to:
+  /// **'Server details'**
+  String get devTools_systemInfo_groupTitle;
+
+  /// Dev tools item: removes the stored server details and closes the app, so the next start runs as the first start after an update.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear stored server details'**
+  String get devTools_systemInfo_clear_title;
+
+  /// Subtitle of devTools_systemInfo_clear_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Closes the app; the next start loads them first, as after an update'**
+  String get devTools_systemInfo_clear_subtitle;
+
+  /// Confirmation dialog of devTools_systemInfo_clear_title.
+  ///
+  /// In en, this message translates to:
+  /// **'The stored server details are removed and the app closes. Open it again to start without them.'**
+  String get devTools_systemInfo_clear_confirmMessage;
+
+  /// Confirm button of the dialog: removes the details and closes the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear and close'**
+  String get devTools_systemInfo_clear_confirm;
+
+  /// Cancel button of the dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get devTools_systemInfo_clear_cancel;
+
   /// Accessibility name of a button that reloads the content of the screen.
   ///
   /// In en, this message translates to:
