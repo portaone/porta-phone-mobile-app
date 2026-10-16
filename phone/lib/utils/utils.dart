@@ -18,6 +18,7 @@ export 'fixed_delay_scheduler.dart';
 export 'gravatar.dart';
 export 'ice_checker.dart';
 export 'jitter.dart';
+export 'latest_attempt.dart';
 export 'link_preview.dart';
 export 'mail_to.dart';
 export 'multi_tap_trigger.dart';
