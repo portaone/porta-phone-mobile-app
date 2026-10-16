@@ -2468,6 +2468,19 @@ class AppLocalizationsUk extends AppLocalizations {
   String get session_Restart_progressText => 'Застосовуємо зміни із сервера...';
 
   @override
+  String get session_Restart_loadingText => 'Завантажуємо ваші налаштування із сервера...';
+
+  @override
+  String get session_Restart_unreachableText =>
+      'Не вдалося зв\'язатися із сервером, щоб завантажити налаштування. Перевірте з\'єднання і спробуйте ще раз.';
+
+  @override
+  String get session_Restart_retryButton => 'Спробувати ще';
+
+  @override
+  String get session_Restart_logoutButton => 'Вийти';
+
+  @override
   String get sessions_AppBar_title => 'Активні сесії';
 
   @override

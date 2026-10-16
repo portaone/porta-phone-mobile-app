@@ -4417,6 +4417,30 @@ abstract class AppLocalizations {
   /// **'Applying changes from the server...'**
   String get session_Restart_progressText;
 
+  /// Shown under a progress indicator on the first start after an update when the app has no stored server details and loads them before opening the main screen. On screen for about a second.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your settings from the server...'**
+  String get session_Restart_loadingText;
+
+  /// Shown instead of the progress indicator when the server details could not be loaded. Two buttons follow: try again, log out.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server to load your settings. Check your connection and try again.'**
+  String get session_Restart_unreachableText;
+
+  /// Button under session_Restart_unreachableText: loads the server details again.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get session_Restart_retryButton;
+
+  /// Button under session_Restart_unreachableText: ends the session and goes to the login screen, where another server can be entered.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get session_Restart_logoutButton;
+
   /// Title of the screen listing the devices the account is currently signed in on.
   ///
   /// In en, this message translates to:

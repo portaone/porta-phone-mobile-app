@@ -65,8 +65,9 @@ void main() {
     expect(find.byType(MainShell), findsOneWidget);
     final callBlocBefore = tester.element(find.byType(CallShell)).read<CallBloc>();
 
-    final offered = featureAccessFor(systemInfoWithSupported([]));
-    harness.backendAnswers(offered);
+    final answer = systemInfoWithSupported([]);
+    final offered = featureAccessFor(answer);
+    harness.backendAnswers(answer, featureAccess: offered);
     sessionKnown(harness);
     await settle(tester);
 
@@ -97,7 +98,7 @@ void main() {
     final teardown = Completer<void>();
     harness.signalingFactory.created.single.disposeGate = teardown;
 
-    harness.backendAnswers(featureAccessFor(systemInfoWithSupported([])));
+    harness.backendAnswers(systemInfoWithSupported([]));
     sessionKnown(harness);
     await settle(tester);
 
@@ -132,7 +133,7 @@ void main() {
     final teardown = Completer<void>();
     harness.callkeep.tearDownGate = teardown;
 
-    harness.backendAnswers(featureAccessFor(systemInfoWithSupported([])));
+    harness.backendAnswers(systemInfoWithSupported([]));
     sessionKnown(harness);
     await settle(tester);
 
@@ -164,7 +165,7 @@ void main() {
     await settle(tester);
     final callBlocBefore = tester.element(find.byType(CallShell)).read<CallBloc>();
 
-    harness.backendAnswers(featureAccessFor(systemInfoWithSupported([])));
+    harness.backendAnswers(systemInfoWithSupported([]));
     serverOutOfReach(harness);
     await settle(tester);
 
