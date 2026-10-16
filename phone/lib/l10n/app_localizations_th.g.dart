@@ -2420,6 +2420,19 @@ class AppLocalizationsTh extends AppLocalizations {
   String get session_Restart_progressText => 'กำลังนำการเปลี่ยนแปลงจากเซิร์ฟเวอร์มาใช้...';
 
   @override
+  String get session_Restart_loadingText => 'กำลังโหลดการตั้งค่าของคุณจากเซิร์ฟเวอร์...';
+
+  @override
+  String get session_Restart_unreachableText =>
+      'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์เพื่อโหลดการตั้งค่าได้ โปรดตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง';
+
+  @override
+  String get session_Restart_retryButton => 'ลองอีกครั้ง';
+
+  @override
+  String get session_Restart_logoutButton => 'ออกจากระบบ';
+
+  @override
   String get sessions_AppBar_title => 'เซสชันที่ใช้งานอยู่';
 
   @override
