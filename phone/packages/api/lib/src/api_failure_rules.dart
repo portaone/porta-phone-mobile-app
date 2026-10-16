@@ -225,6 +225,35 @@ final FailureRule systemNotificationGoneRule = FailureRule(
   ),
 );
 
+/// Refusals that belong to changing when idle sessions end.
+///
+/// Both match a status and Core's code. A different 422 is another validation
+/// error, while a 501 without this code may have come from a proxy.
+final List<FailureRule> sessionAutoTerminateSettingsRules = [
+  FailureRule(
+    status: 422,
+    code: 'exceeds_installation_limit',
+    build: (f) => SessionAutoTerminateLimitExceededException(
+      url: f.url,
+      requestId: f.requestId,
+      statusCode: f.statusCode,
+      token: f.token,
+      error: f.error,
+    ),
+  ),
+  FailureRule(
+    status: 501,
+    code: 'functionality_not_implemented',
+    build: (f) => SessionAutoTerminateNotSupportedException(
+      url: f.url,
+      requestId: f.requestId,
+      statusCode: f.statusCode,
+      token: f.token,
+      error: f.error,
+    ),
+  ),
+];
+
 /// Creating a session was refused because the credentials are wrong.
 ///
 /// Declared on that endpoint rather than globally: everywhere else a 401 is

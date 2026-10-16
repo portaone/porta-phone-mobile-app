@@ -93,6 +93,7 @@ Rules an endpoint declares (all in `api_failure_rules.dart`):
 | `voicemailForwardRules`: `recipient_not_found`, `attachment_too_large`, `recipient_forward_limit_reached` | `VoicemailForward*Exception` | `forwardUserVoicemail` |
 | `callQueueNotFoundRule` | `CallQueueNotFoundException` | the call queue endpoints |
 | `systemNotificationGoneRule` (`notification_not_found`) | `SystemNotificationGoneException` | `markSystemNotificationAsSeen`, `deleteSystemNotification` |
+| `sessionAutoTerminateSettingsRules`: `exceeds_installation_limit`, `functionality_not_implemented` | `SessionAutoTerminateLimitExceededException`, `SessionAutoTerminateNotSupportedException` | `updateUserSessionsSettings` |
 
 Logging: a 4xx logs as `warning`, a 5xx or transport failure as `severe`;
 `EndpointNotSupportedException` and `VoicemailNotConfiguredException` are not logged.
