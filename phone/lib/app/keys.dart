@@ -391,6 +391,20 @@ const sessionRestartLogoutButtonKey = Key(sessionRestartLogoutButtonId);
 const String devToolsClearSystemInfoId = 'devToolsClearSystemInfo';
 const devToolsClearSystemInfoKey = Key(devToolsClearSystemInfoId);
 
+/// Active sessions: when idle sessions end. The row and the sheet it
+/// opens, one id per choice built from what it stands for (`default`, `days7`,
+/// `days30`, `days90`, `current`, `other`); the info line shown where the user
+/// cannot choose; the back arrow, the number field and the save button of the
+/// page "Other" opens in the sheet.
+const String sessionsAutoTerminateId = 'sessionsAutoTerminate';
+const sessionsAutoTerminateKey = Key(sessionsAutoTerminateId);
+const String sessionsAutoTerminateInfoId = 'sessionsAutoTerminateInfo';
+const String sessionsAutoTerminateSheetId = 'sessionsAutoTerminateSheet';
+const String sessionsAutoTerminateOptionIdPrefix = 'sessionsAutoTerminateOption';
+const String sessionsAutoTerminateOtherInputId = 'sessionsAutoTerminateOtherInput';
+const String sessionsAutoTerminateOtherSaveId = 'sessionsAutoTerminateOtherSave';
+const String sessionsAutoTerminateOtherBackId = 'sessionsAutoTerminateOtherBack';
+
 /// Id of the [index]th control in a list of identical ones: the first keeps the
 /// plain id, the rest are numbered from two, the way a person would count them.
 ///

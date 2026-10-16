@@ -4,7 +4,7 @@ The settings screen that lists the sessions the account is signed in with and
 lets the user sign the other ones out; and the screen shown at login when the
 account is signed in on as many devices as it is allowed.
 
-Last reviewed: 2026-10-10
+Last reviewed: 2026-10-15
 
 ## Where it lives
 
@@ -14,6 +14,8 @@ Last reviewed: 2026-10-10
       cubit on open and passes the `DateFormat` taken from `AppTime`.
     - `view/sessions_screen.dart` - app bar, pull-to-refresh list, placeholders
       (how every list refreshes: [`../architecture/data_refresh.md`](../architecture/data_refresh.md)).
+    - `view/widgets/` - the idle-sessions row and the sheet it opens, with
+      the page "Other..." opens inside it for a number of days of one's own.
 - `lib/features/settings/view/settings_router_page.dart` - owns the
   `SessionsCubit`, above both the settings screen and the sessions screen.
 - `lib/features/settings/view/settings_screen.dart` - the settings row
@@ -23,10 +25,13 @@ Last reviewed: 2026-10-10
 - `lib/widgets/session_tile.dart` - one session row, shared with the device
   limit screen of the login.
 - `lib/models/active_session.dart` - `ActiveSession`, the domain model.
+- `lib/models/session_auto_terminate.dart` - `SessionAutoTerminate` (when idle
+  sessions end), `SessionList` (one answer of the list) and the refusals.
 - `lib/mappers/api/active_session_mapper.dart` - `api.UserSession` ->
   `ActiveSession`.
-- `packages/api` - `getUserSessions` / `deleteUserSession` and the
-  `UserSession` DTO.
+- `packages/api` - `getUserSessionList` / `deleteUserSession` /
+  `updateUserSessionsSettings` and the `UserSession`, `UserSessionList` and
+  `UserSessionsAutoTerminate` DTOs.
 
 ## Backend contract
 
@@ -34,6 +39,7 @@ Last reviewed: 2026-10-10
 |---------------------------------|-------------------------------------------------------------|
 | `GET /user/sessions`            | All active sessions of the current user, `current` flagging the caller's own |
 | `DELETE /user/sessions/{id}`    | Revokes one session and tears down its SIP registration; 404 `session_not_found` when it is not the user's |
+| `PUT /user/sessions/settings`   | After how many idle days the user's sessions end; `null` returns to the installation's period |
 
 A session carries the `User-Agent` captured at creation, the app type /
 identifier / bundle id, the creation and last-activity timestamps, and two ISO
@@ -107,6 +113,52 @@ that cannot load.
   the core has no bulk endpoint. Each success drops its own row, so a partial
   failure still shows exactly what survived; the snack bar reports that
   something failed.
+
+## Idle sessions (WT-2103)
+
+The core (WT-1789) ends a session that has seen no request, no signaling
+connection and no signaling message for longer than a period: the
+installation's (`SESSION_INACTIVITY_TIMEOUT_DAYS`, 90 by default, none at
+`0`), or a shorter one the user chose where the adapter reports
+`sessionAutoTerminate`.
+
+The list answer carries `auto_terminate`:
+`{inactivity_timeout_days, installation_max_days}`. The first is the period in
+force - the shorter of the user's choice and the installation's - not the
+choice itself, so a choice equal to the installation's period reads the same as
+no choice, and an administrator lowering the limit below a choice simply shows
+the lower one. Either is `null` when there is none. A core without WT-1789
+sends no `auto_terminate` and the screen shows nothing new.
+
+| Adapter has `sessionAutoTerminate` | Period in force | Above the list |
+|------------------------------------|-----------------|----------------|
+| yes                                | any             | the row "End inactive sessions" with the period ("Never" for `null`); a tap opens the sheet |
+| no                                 | N days          | the line "Inactive sessions end after N days", no action |
+| no                                 | `null`          | nothing |
+
+The sheet offers "Default (<installation's period>)", the presets 1 week / 1
+month / 3 months shorter than the installation's period (one equal to it is the
+default, a longer one the core refuses; 365 days caps them where there is no
+limit), the period in force as a row of its own when it is none of those (set
+by another client), and "Other..." - a page inside the sheet (the list slides
+away; back, its arrow or the system one, returns to the list) with a field for
+a number of days from 1 to the limit (or 365), saved by its own button. A note says the limit is the administrator's when there is one.
+
+A pick is saved at once with `PUT /user/sessions/settings` and the sheet waits
+for the answer, the picked row showing progress; it closes when the core
+answered and the row shows what the core now holds. Nothing is shown as saved
+before that. The outcome is reported by the screen rather than
+by the sheet, so a failure is still said - with its retry - when the sheet was
+dragged away while the core was being asked. On a refusal of the period itself - 422
+`exceeds_installation_limit` (the limit was lowered while the screen was open)
+or 501 `functionality_not_implemented` (the adapter stopped letting users
+choose) - the screen reloads and says so; any other failure (503
+`external_api_issue`, no network) keeps the period that was in force and offers
+to try again from the snack bar.
+
+The capability comes from `system-info`, which the running app reads at start:
+an adapter that turns `sessionAutoTerminate` on or off is picked up at the next
+start, and until then the core's 501 covers a row shown by mistake.
 
 ## Device limits at login
 

@@ -2508,6 +2508,82 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sessions_AppType_windows => 'Застосунок Windows';
 
   @override
+  String get sessions_AutoTerminate_title => 'Завершувати неактивні сесії';
+
+  @override
+  String get sessions_AutoTerminate_never => 'Ніколи';
+
+  @override
+  String get sessions_AutoTerminate_oneWeek => '1 тиждень';
+
+  @override
+  String get sessions_AutoTerminate_oneMonth => '1 місяць';
+
+  @override
+  String get sessions_AutoTerminate_threeMonths => '3 місяці';
+
+  @override
+  String sessions_AutoTerminate_days(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days дня',
+      many: '$days днів',
+      few: '$days дні',
+      one: '$days день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String sessions_AutoTerminate_default(String period) {
+    return 'За замовчуванням ($period)';
+  }
+
+  @override
+  String get sessions_AutoTerminate_other => 'Інше…';
+
+  @override
+  String sessions_AutoTerminate_adminLimitNote(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days дня',
+      many: '$days днів',
+      few: '$days дні',
+      one: '$days день',
+    );
+    return 'Сесії, неактивні довше ніж $_temp0, завершуються автоматично. Цей ліміт встановлює ваш адміністратор.';
+  }
+
+  @override
+  String sessions_AutoTerminate_info(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days дня',
+      many: '$days днів',
+      few: '$days дні',
+      one: '$days день',
+    );
+    return 'Неактивні сесії завершуються через $_temp0';
+  }
+
+  @override
+  String get sessions_AutoTerminateOther_title => 'Свій строк';
+
+  @override
+  String get sessions_AutoTerminateOther_label => 'Днів';
+
+  @override
+  String sessions_AutoTerminateOther_range(int max) {
+    return 'Від 1 до $max';
+  }
+
+  @override
+  String get sessions_AutoTerminateOther_save => 'Зберегти';
+
+  @override
   String get sessions_Button_retry => 'Спробувати ще раз';
 
   @override
@@ -2531,6 +2607,15 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get sessions_RevokeConfirmDialog_title => 'Вийти з цієї сесії?';
+
+  @override
+  String get sessions_SnackBar_autoTerminateFailed => 'Не вдалося змінити строк неактивних сесій';
+
+  @override
+  String get sessions_SnackBar_autoTerminateLimitChanged => 'Адміністратор змінив ліміт. Оберіть строк ще раз.';
+
+  @override
+  String get sessions_SnackBar_autoTerminateNotSupported => 'Вибір строку неактивних сесій більше недоступний';
 
   @override
   String get sessions_SnackBar_revokeFailed => 'Не вдалося завершити сесію';
