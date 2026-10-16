@@ -1849,6 +1849,14 @@ extension AppLocalizationsExtension on AppLocalizations {
         devTools_signalingService_simulateKill_confirm,
       'devTools_signalingService_simulateKill_cancel' =>
         devTools_signalingService_simulateKill_cancel,
+      'devTools_systemInfo_groupTitle' => devTools_systemInfo_groupTitle,
+      'devTools_systemInfo_clear_title' => devTools_systemInfo_clear_title,
+      'devTools_systemInfo_clear_subtitle' =>
+        devTools_systemInfo_clear_subtitle,
+      'devTools_systemInfo_clear_confirmMessage' =>
+        devTools_systemInfo_clear_confirmMessage,
+      'devTools_systemInfo_clear_confirm' => devTools_systemInfo_clear_confirm,
+      'devTools_systemInfo_clear_cancel' => devTools_systemInfo_clear_cancel,
       'common_SemanticsLabel_refresh' => common_SemanticsLabel_refresh,
       'common_SemanticsLabel_scrollToBottom' =>
         common_SemanticsLabel_scrollToBottom,
