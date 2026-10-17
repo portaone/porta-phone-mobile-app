@@ -30,4 +30,5 @@ export 'user_contact.dart';
 export 'user_info.dart';
 export 'user_session.dart';
 export 'user_session_status.dart';
+export 'user_sessions.dart';
 export 'voicemail/voicemail.dart';

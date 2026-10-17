@@ -2473,6 +2473,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessions_AppType_windows => 'Windows app';
 
   @override
+  String get sessions_AutoTerminate_title => 'End inactive sessions';
+
+  @override
+  String get sessions_AutoTerminate_never => 'Never';
+
+  @override
+  String get sessions_AutoTerminate_oneWeek => '1 week';
+
+  @override
+  String get sessions_AutoTerminate_oneMonth => '1 month';
+
+  @override
+  String get sessions_AutoTerminate_threeMonths => '3 months';
+
+  @override
+  String sessions_AutoTerminate_days(int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days days', one: '$days day');
+    return '$_temp0';
+  }
+
+  @override
+  String sessions_AutoTerminate_default(String period) {
+    return 'Default ($period)';
+  }
+
+  @override
+  String get sessions_AutoTerminate_other => 'Other…';
+
+  @override
+  String sessions_AutoTerminate_adminLimitNote(int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days days', one: '$days day');
+    return 'Sessions inactive for longer than $_temp0 are ended automatically. This limit is set by your administrator.';
+  }
+
+  @override
+  String sessions_AutoTerminate_info(int days) {
+    String _temp0 = intl.Intl.pluralLogic(days, locale: localeName, other: '$days days', one: '$days day');
+    return 'Inactive sessions end after $_temp0';
+  }
+
+  @override
+  String get sessions_AutoTerminateOther_title => 'Custom period';
+
+  @override
+  String get sessions_AutoTerminateOther_label => 'Days';
+
+  @override
+  String sessions_AutoTerminateOther_range(int max) {
+    return 'From 1 to $max';
+  }
+
+  @override
+  String get sessions_AutoTerminateOther_save => 'Save';
+
+  @override
   String get sessions_Button_retry => 'Try again';
 
   @override
@@ -2496,6 +2551,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessions_RevokeConfirmDialog_title => 'Sign out this session?';
+
+  @override
+  String get sessions_SnackBar_autoTerminateFailed => 'Could not change when inactive sessions end';
+
+  @override
+  String get sessions_SnackBar_autoTerminateLimitChanged =>
+      'Your administrator has changed the limit. Choose the period again.';
+
+  @override
+  String get sessions_SnackBar_autoTerminateNotSupported =>
+      'Choosing when inactive sessions end is no longer available';
 
   @override
   String get sessions_SnackBar_revokeFailed => 'Could not sign out the session';

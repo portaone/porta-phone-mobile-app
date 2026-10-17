@@ -108,6 +108,34 @@ class CallQueueNotFoundException extends RequestFailure {
   }) : super();
 }
 
+/// The idle-session period is longer than the installation allows.
+///
+/// The limit may have changed after the caller read it, so the caller should
+/// refresh the setting and let the user choose from the current range.
+class SessionAutoTerminateLimitExceededException extends RequestFailure {
+  SessionAutoTerminateLimitExceededException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.token,
+    super.error,
+  }) : super();
+}
+
+/// The adapter no longer lets users choose an idle-session period.
+///
+/// This is distinct from a proxy or an unrelated endpoint returning 501: the
+/// Core error code says that this setting itself is unavailable.
+class SessionAutoTerminateNotSupportedException extends RequestFailure {
+  SessionAutoTerminateNotSupportedException({
+    required super.url,
+    required super.requestId,
+    required super.statusCode,
+    super.token,
+    super.error,
+  }) : super();
+}
+
 /// The backend failed on its own side, and nothing follows from it about what
 /// the request did.
 ///
