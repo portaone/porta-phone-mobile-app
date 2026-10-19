@@ -24,6 +24,7 @@ void main() {
     bool interactionsEnabled = true,
     VoidCallback? onHangup,
     VoidCallback? onAccept,
+    ConferenceState conference = const ConferenceState(),
   }) {
     return CallActionArea(
       params: CallControlsParams(
@@ -47,6 +48,7 @@ void main() {
         onKeyPressed: (_) {},
         onHangup: onHangup ?? () {},
         onAccept: onAccept ?? () {},
+        conference: conference,
       ),
     );
   }
@@ -161,6 +163,48 @@ void main() {
       await tester.pumpWidget(wrap(buildArea(activeCalls: [outgoingRinging], focusedCall: outgoingRinging)));
 
       expect(buttonWithIcon(tester, Icons.phone_forwarded).onPressed, isNull);
+    });
+
+    testWidgets('a leg of the room is not offered for a transfer, nor as a target', (tester) async {
+      // The other legs used to be listed as calls to hand this one to; the
+      // server refuses a transfer of a leg either way.
+      final other = makeCall(callId: 'other', acceptedTime: DateTime(2024), displayName: 'Clara Diaz');
+      await tester.pumpWidget(
+        wrap(
+          buildArea(
+            activeCalls: [active, other],
+            focusedCall: active,
+            callConfig: const CallCapabilitiesConfig(isAttendedTransferEnabled: true, isBlindTransferEnabled: true),
+            conference: const ConferenceState(phase: ConferencePhase.active, legs: {'active': 0, 'other': 1}),
+          ),
+        ),
+      );
+
+      expect(buttonWithIcon(tester, Icons.phone_forwarded).onPressed, isNull);
+    });
+
+    testWidgets('a call next to the room is not offered the legs as transfer targets', (tester) async {
+      // Focus on a call outside the room still listed the legs as calls to
+      // hand it to, and the server refuses each of them.
+      final legA = makeCall(callId: 'a', acceptedTime: DateTime(2024), displayName: 'Anna Leg');
+      final legB = makeCall(callId: 'b', acceptedTime: DateTime(2024), displayName: 'Boris Leg');
+      final outside = makeCall(callId: 'c', acceptedTime: DateTime(2024), displayName: 'Clara Outside');
+      await tester.pumpWidget(
+        wrap(
+          buildArea(
+            activeCalls: [legA, legB, outside],
+            focusedCall: outside,
+            callConfig: const CallCapabilitiesConfig(isAttendedTransferEnabled: true, isBlindTransferEnabled: true),
+            conference: const ConferenceState(phase: ConferencePhase.active, legs: {'a': 0, 'b': 1}),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.phone_forwarded));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Anna Leg'), findsNothing);
+      expect(find.text('Boris Leg'), findsNothing);
     });
 
     testWidgets('transfer is offered on an accepted focus', (tester) async {
