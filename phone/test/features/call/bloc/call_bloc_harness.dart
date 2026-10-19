@@ -51,9 +51,13 @@ class CallBlocHarness {
     ManualOfferDeadline? offerDeadline,
     FakePeerConnectionFactory? peerConnectionFactory,
     ContactResolver? contactResolver,
+    int? lines,
   }) : peerFactory = peerConnectionFactory ?? FakePeerConnectionFactory() {
     TestWidgetsFlutterBinding.ensureInitialized();
     installPlatformStubs();
+    // The line rotation is process-wide; left as an earlier test set it, the
+    // line an outgoing call takes would depend on the order tests run in.
+    CallState.lastUsedLine = null;
     bloc = CallBloc(
       callLogsRepository: _FakeCallLogsRepository(),
       onMissedCall: (_, _) {},
@@ -80,6 +84,10 @@ class CallBlocHarness {
       connectivityService: _FakeConnectivityService(),
       roomOfferDeadlineTimer: offerDeadline?.createTimer,
     );
+    if (lines != null) {
+      // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+      bloc.emit(bloc.state.copyWith(linesCount: lines));
+    }
   }
 
   late final CallBloc bloc;
@@ -137,6 +145,29 @@ class CallBlocHarness {
     bloc.emit(bloc.state.copyWithPushActiveCall(call));
     peers.complete(callId, peer);
     return peer;
+  }
+
+  /// Marks the session ready for an outgoing call - connected and
+  /// registered - so a call the platform starts goes on to send its offer
+  /// rather than wait for signalling.
+  void seedSignalingReady() {
+    // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+    bloc.emit(
+      bloc.state.copyWith(
+        callServiceState: const CallServiceState(
+          signalingClientStatus: SignalingClientStatus.connect,
+          registration: Registration(status: RegistrationStatus.registered),
+        ),
+      ),
+    );
+  }
+
+  /// Pumps until [done], or gives up after enough turns for anything the bloc
+  /// queues in response to one event.
+  Future<void> settle(bool Function() done) async {
+    for (var turn = 0; turn < 50 && !done(); turn++) {
+      await pumpEventQueue();
+    }
   }
 
   Future<void> close() async {
@@ -387,6 +418,38 @@ class FakeCallkeep extends Fake implements Callkeep {
     return null;
   }
 
+  /// Every outgoing call the bloc asked the platform to place, in order, as
+  /// it was asked.
+  final List<({String callId, CallkeepHandle handle, bool hasVideo, bool proximityEnabled})> starts = [];
+
+  /// The ids of [starts].
+  List<String> get startCalls => [for (final start in starts) start.callId];
+
+  /// Returned by every outgoing start while set: the platform refusing to
+  /// place the call.
+  CallkeepCallRequestError? startError;
+
+  /// Records the request and answers it; the platform's own perform callback
+  /// that follows a start is not made - a test that needs it calls
+  /// `bloc.performStartCall` itself.
+  @override
+  Future<CallkeepCallRequestError?> startCall(
+    String callId,
+    CallkeepHandle handle, {
+    String? displayNameOrContactIdentifier,
+    bool hasVideo = false,
+    bool proximityEnabled = false,
+  }) async {
+    starts.add((callId: callId, handle: handle, hasVideo: hasVideo, proximityEnabled: proximityEnabled));
+    return startError;
+  }
+
+  @override
+  Future<void> reportConnectingOutgoingCall(String callId) async {}
+
+  @override
+  Future<void> reportConnectedOutgoingCall(String callId) async {}
+
   @override
   Future<CallkeepCallRequestError?> endCall(String callId) async {
     endCalls.add(callId);
@@ -463,6 +526,36 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
 
   @override
   Function(RTCPeerConnectionState state)? onConnectionState;
+
+  // The call peer connection manager wires every callback a connection has;
+  // these are taken and never fired, as the fake raises no media events of
+  // its own. A test that needs one of them fires it through the field.
+  @override
+  Function(RTCSignalingState state)? onSignalingState;
+
+  @override
+  Function(RTCIceConnectionState state)? onIceConnectionState;
+
+  @override
+  Function(MediaStream stream)? onAddStream;
+
+  @override
+  Function(MediaStream stream)? onRemoveStream;
+
+  @override
+  Function(MediaStream stream, MediaStreamTrack track)? onAddTrack;
+
+  @override
+  Function(MediaStream stream, MediaStreamTrack track)? onRemoveTrack;
+
+  @override
+  Function(RTCDataChannel channel)? onDataChannel;
+
+  @override
+  Function()? onRenegotiationNeeded;
+
+  @override
+  Function(RTCTrackEvent event)? onTrack;
 
   @override
   RTCPeerConnectionState? connectionState;
