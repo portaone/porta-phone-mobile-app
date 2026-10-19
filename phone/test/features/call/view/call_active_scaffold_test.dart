@@ -145,6 +145,146 @@ void main() {
     });
   });
 
+  group('CallActiveScaffold - calling somebody in', () {
+    late DestinationPickingCubit picking;
+    setUp(() => picking = DestinationPickingCubit());
+    tearDown(() => picking.close());
+
+    // Add participant is an entry of the transfer menu: open it, then press it.
+    Future<void> pressInMenu(WidgetTester tester, String identifier) async {
+      await tester.tap(find.bySemanticsIdentifier(callActionsTransferMenuId));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsIdentifier(identifier));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Add participant sends the person to the lists for the focused call', (tester) async {
+      when(() => callBloc.state).thenReturn(CallState(activeCalls: [active]));
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [active],
+          focusedCall: active,
+          addParticipantAvailability: AddParticipantAvailability.available,
+          picking: picking,
+        ),
+      );
+
+      await pressInMenu(tester, callActionsTransferMenuAddParticipantId);
+
+      final purpose = picking.state.purpose;
+      expect(purpose, isA<AddParticipantPurpose>());
+      expect((purpose! as AddParticipantPurpose).anchorCallId, 'active');
+      verify(() => callBloc.add(const CallControlEvent.addParticipantInitiated())).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('with a room up, the call is placed through the focused leg', (tester) async {
+      final other = makeCall(callId: 'other', acceptedTime: DateTime(2024), displayName: 'Clara Diaz');
+      const room = ConferenceState(phase: ConferencePhase.active, legs: {'active': 0, 'other': 1});
+      when(() => callBloc.state).thenReturn(CallState(activeCalls: [active, other], conference: room));
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [active, other],
+          focusedCall: active,
+          conference: room,
+          callConfig: const CallCapabilitiesConfig(isConferenceEnabled: true),
+          addParticipantAvailability: AddParticipantAvailability.available,
+          picking: picking,
+        ),
+      );
+
+      await pressInMenu(tester, callActionsTransferMenuAddParticipantId);
+
+      expect((picking.state.purpose! as AddParticipantPurpose).anchorCallId, 'active');
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('nothing is asked where somebody is already choosing for a call', (tester) async {
+      // A transfer looking for its target outranks nothing and is outranked by
+      // nothing: the person stays on the call rather than being sent to lists
+      // picking for something else.
+      when(() => callBloc.state).thenReturn(CallState(activeCalls: [active]));
+      picking.ask(
+        BlindTransferPurpose(
+          announcement: 'Performing blind transfer',
+          pickLabel: (number) => number,
+          controller: CallController(callBloc: callBloc),
+        ),
+      );
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [active],
+          focusedCall: active,
+          addParticipantAvailability: AddParticipantAvailability.available,
+          picking: picking,
+        ),
+      );
+
+      await pressInMenu(tester, callActionsTransferMenuAddParticipantId);
+
+      expect(picking.state.purpose, isA<BlindTransferPurpose>());
+      verifyNever(() => callBloc.add(const CallControlEvent.addParticipantInitiated()));
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('while the call rings, Cancel invite ends it', (tester) async {
+      final ringing = makeCall(callId: 'c', processingStatus: CallProcessingStatus.outgoingRinging);
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [active, ringing],
+          focusedCall: active,
+          linkedCall: const LinkedCall(callId: 'c', anchorCallId: 'active', purpose: LinkedCallPurpose.join),
+        ),
+      );
+
+      await pressInMenu(tester, callActionsTransferMenuCancelInviteId);
+
+      verify(() => callBloc.add(const CallControlEvent.ended('c'))).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('once the call is answered there is nothing to cancel', (tester) async {
+      // Answered while the room was on its way back, it waits to be added;
+      // the person is talking, and only the hangup ends that call.
+      final answered = makeCall(callId: 'c', acceptedTime: DateTime(2024), displayName: 'Clara Diaz');
+      await tester.pumpWidget(
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [active, answered],
+          focusedCall: active,
+          linkedCall: const LinkedCall(
+            callId: 'c',
+            anchorCallId: 'active',
+            purpose: LinkedCallPurpose.join,
+            intoRoom: true,
+            awaitingRoom: true,
+          ),
+          addParticipantAvailability: AddParticipantAvailability.unavailable,
+          callConfig: const CallCapabilitiesConfig(isConferenceEnabled: true),
+        ),
+      );
+      await tester.tap(find.bySemanticsIdentifier(callActionsTransferMenuId));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsIdentifier(callActionsTransferMenuCancelInviteId), findsNothing);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('the control is absent where the deployment offers no conferences', (tester) async {
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await tester.tap(find.bySemanticsIdentifier(callActionsTransferMenuId));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsIdentifier(callActionsTransferMenuAddParticipantId), findsNothing);
+      expect(find.byIcon(Icons.phone_forwarded), findsOneWidget);
+      await teardownCallScaffold(tester);
+    });
+  });
+
   group('CallActiveScaffold - merging the calls', () {
     final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
     const conferencing = CallCapabilitiesConfig(isConferenceEnabled: true);

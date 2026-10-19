@@ -230,6 +230,17 @@ submits through `CallController.placeAttendedTransferCall`, which places the
 second call as a linked call of the first (see "Attended transfer" in
 [`features/call_arch.md`](../features/call_arch.md)).
 
+**Calling somebody in** -
+`lib/features/call/models/add_participant_purpose.dart`. The same reach again,
+for the same reason. It names the conversation the call is for (`anchorCallId`,
+a call or a leg of the room) and submits through
+`CallController.placeParticipantCall`, which places a linked call with the
+purpose `join` (see "Calling somebody in" in
+[`features/call_conference.md`](../features/call_conference.md)). Like the
+consultation it is asked for in `CallActiveScaffold`, which steps the call
+screen aside (`CallControlEvent.addParticipantInitiated`) only when the request
+took the floor, and ended by the choice or the banner's cancel.
+
 **Passing a voice message on** -
 `lib/features/voicemail/models/forward_voicemail_purpose.dart`, and the feature
 around it in [`features/voicemail.md`](../features/voicemail.md). Narrower: it
@@ -322,4 +333,6 @@ banner, at `main_screen.dart`.
 | `test/features/call/widgets/blind_transfer_picking_test.dart` | The bridge, including a transfer that ends without taking somebody else's request with it |
 | `test/widgets/destination_pick_report_presenter_test.dart` | What a feature has to say, the retry offered only where one can change the answer, and a report that was waiting before the presenter arrived |
 | `test/features/voicemail/forward_voicemail_purpose_test.dart` | The second purpose, and how much narrower it is |
+| `test/features/call/models/add_participant_purpose_test.dart` | The add-participant policy, and the conversation a choice places the call into |
+| `test/features/call/widgets/add_participant_picking_test.dart` | The request taken back when the call it was asked from goes or the person returns, and not before the screen steps aside |
 | `test/features/voicemail/utils/voicemail_forwarding_test.dart` | How a forward went, said by name: through, or refused with a retry to the same colleague |

@@ -94,7 +94,8 @@ class CallActionArea extends StatelessWidget {
         availableAudioDevices: params.availableAudioDevices,
         onAudioDeviceChanged: params.onAudioDeviceChanged,
         // A leg is neither a call to hand over nor one to hand a call to: the
-        // server refuses a transfer of one, from whichever side.
+        // server refuses a transfer of one, from whichever side. For a leg the
+        // menu is only the way to invite somebody into the room.
         transferableCalls: focusedIsLeg ? const [] : transferTargets,
         onBlindTransferInitiated: callConfig.isBlindTransferEnabled && !focusedIsLeg
             ? (!focusedCall.wasAccepted || focusedTransfer != null ? null : params.onBlindTransferInitiated)
@@ -127,6 +128,11 @@ class CallActionArea extends StatelessWidget {
         hangupLabel: focusedIsLeg ? context.l10n.call_SemanticsLabel_conferenceEnd : null,
 
         onKeyPressed: params.onKeyPressed,
+        addParticipantAvailability: params.addParticipantAvailability,
+        addParticipantPendingName: params.addParticipantPendingName,
+        onAddParticipant: params.onAddParticipant,
+        onAddParticipantCancelled: params.onAddParticipantCancelled,
+        addParticipantIntoRoom: params.addParticipantIntoRoom,
       );
     }
 

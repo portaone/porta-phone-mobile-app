@@ -41,6 +41,11 @@ class ActiveCallActions extends StatefulWidget {
     this.hangupRowShown = true,
     this.padded = true,
     this.style,
+    this.addParticipantAvailability = AddParticipantAvailability.hidden,
+    this.addParticipantPendingName,
+    this.onAddParticipant,
+    this.onAddParticipantCancelled,
+    this.addParticipantIntoRoom = false,
   });
 
   final bool enableInteractions;
@@ -98,6 +103,21 @@ class ActiveCallActions extends StatefulWidget {
   final bool padded;
 
   final CallScreenActionsStyle? style;
+
+  /// Whether somebody can be invited into the conversation, which the transfer
+  /// menu then offers too; see [CallState.addParticipantAvailability].
+  final AddParticipantAvailability addParticipantAvailability;
+
+  /// Who is being invited, while an invite is under way; the menu then offers
+  /// to give it up instead.
+  final String? addParticipantPendingName;
+
+  final VoidCallback? onAddParticipant;
+  final VoidCallback? onAddParticipantCancelled;
+
+  /// Whether the invite, started or under way, is into the room rather than
+  /// into a single call; it is said in the entry's second line.
+  final bool addParticipantIntoRoom;
 
   @override
   State<ActiveCallActions> createState() => _ActiveCallActionsState();
@@ -290,8 +310,27 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
 
     // With no transfer intent wired the trigger renders disabled; each branch
     // of the menu has its own set of items, so each has its own condition.
-    final transferInitAvailable = onBlindTransferInitiated != null || onAttendedTransferInitiated != null;
-    final transferToCallAvailable = onBlindTransferInitiated != null || widget.onAttendedTransferSubmitted != null;
+    // Calling somebody in shares the menu with the transfer: both start with
+    // choosing who else the call is about, and a separate control for it had
+    // no place in the grid. Where the deployment offers no conferences the
+    // button stays the plain transfer it always was.
+    final inviteShown = widget.addParticipantPendingName != null || widget.addParticipantAvailability.shown;
+    // The button opens the menu only for an entry that acts, or that says why
+    // it cannot (every line taken): a menu holding one inert entry with no
+    // reason - a call still ringing, a video call - is a dead end, and the
+    // button stays disabled as the plain transfer did.
+    final inviteOffered =
+        widget.addParticipantPendingName != null ||
+        widget.addParticipantAvailability == AddParticipantAvailability.available ||
+        widget.addParticipantAvailability == AddParticipantAvailability.noFreeLine;
+    final transferInitAvailable =
+        onBlindTransferInitiated != null || onAttendedTransferInitiated != null || inviteOffered;
+    final transferToCallAvailable =
+        onBlindTransferInitiated != null || widget.onAttendedTransferSubmitted != null || inviteOffered;
+    final transferMenuLabel = inviteShown
+        ? context.l10n.call_CallActionsTooltip_addOrTransfer
+        : context.l10n.call_CallActionsTooltip_transfer;
+    final transferMenuIcon = inviteShown ? Icons.add_call : Icons.phone_forwarded;
 
     // Icons
     final actionPadIconSize = themeData.textTheme.headlineMedium!.fontSize;
@@ -382,23 +421,23 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
           CallActionMenuButton(
             key: callActionsTransferMenuKey,
             identifier: callActionsTransferMenuId,
-            label: context.l10n.call_CallActionsTooltip_transfer,
+            label: transferMenuLabel,
             enabled: transferToCallAvailable,
             offset: Offset(_dimension + 8, 0),
             style: widget.style?.transfer,
-            items: _buildTransferToCallItems(themeData),
-            child: Icon(Icons.phone_forwarded, size: actionPadIconSize),
+            items: _withInviteItems(_buildTransferToCallItems(themeData), themeData),
+            child: Icon(transferMenuIcon, size: actionPadIconSize),
           ),
         if (widget.transferableCalls.isEmpty)
           CallActionMenuButton(
             key: callActionsTransferMenuKey,
             identifier: callActionsTransferMenuId,
-            label: context.l10n.call_CallActionsTooltip_transfer,
+            label: transferMenuLabel,
             enabled: transferInitAvailable,
             offset: Offset(_dimension + 8, 0),
             style: widget.style?.transfer,
-            items: _buildTransferInitItems(themeData),
-            child: Icon(Icons.phone_forwarded, size: actionPadIconSize),
+            items: _withInviteItems(_buildTransferInitItems(themeData), themeData),
+            child: Icon(transferMenuIcon, size: actionPadIconSize),
           ),
         CallActionButton(
           key: callActionsHoldKey,
@@ -580,6 +619,57 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
           ),
           textStyle: themeData.textTheme.bodyMedium,
         ),
+    ];
+  }
+
+  /// [transferItems] followed by the invite entry, set apart by a divider:
+  /// handing the call on and bringing somebody into it are different
+  /// gestures that start the same way.
+  List<PopupMenuEntry<dynamic>> _withInviteItems(List<PopupMenuEntry<dynamic>> transferItems, ThemeData themeData) {
+    final invite = _buildInviteItems(themeData);
+    return [...transferItems, if (transferItems.isNotEmpty && invite.isNotEmpty) const PopupMenuDivider(), ...invite];
+  }
+
+  /// The invite entry: start one, or give up the one that is ringing. One at
+  /// a time, so the two never stand together. With every main line taken the
+  /// entry stays, inert, and says why - nothing about the call explains it.
+  List<PopupMenuEntry<dynamic>> _buildInviteItems(ThemeData themeData) {
+    final popupMenuIconSize = themeData.textTheme.bodyLarge!.fontSize;
+    final iconColor = themeData.textTheme.bodyMedium!.color;
+    final pendingName = widget.addParticipantPendingName;
+    if (pendingName != null) {
+      return [
+        CallPopupMenuItem(
+          identifier: callActionsTransferMenuCancelInviteId,
+          // Ending a call is never held back, like the hangup itself.
+          onTap: widget.onAddParticipantCancelled,
+          text: context.l10n.call_CallActionsTooltip_cancelInvite(pendingName),
+          subtitle: widget.addParticipantIntoRoom
+              ? context.l10n.call_CallActionsTooltip_cancelInviteHint_conference
+              : context.l10n.call_CallActionsTooltip_cancelInviteHint,
+          icon: Icon(Icons.person_remove_alt_1_outlined, size: popupMenuIconSize, color: iconColor),
+          textStyle: themeData.textTheme.bodyMedium,
+        ),
+      ];
+    }
+
+    final availability = widget.addParticipantAvailability;
+    if (!availability.shown) return const [];
+    return [
+      CallPopupMenuItem(
+        identifier: callActionsTransferMenuAddParticipantId,
+        // Placing the call is signaling-dependent, like a transfer.
+        enabled: availability.enabled && widget.enableInteractions,
+        onTap: widget.onAddParticipant,
+        text: context.l10n.call_CallActionsTooltip_addParticipant,
+        subtitle: availability == AddParticipantAvailability.noFreeLine
+            ? context.l10n.call_Text_addParticipantNoFreeLine
+            : widget.addParticipantIntoRoom
+            ? context.l10n.call_CallActionsTooltip_addParticipantHint_conference
+            : context.l10n.call_CallActionsTooltip_addParticipantHint,
+        icon: Icon(Icons.person_add_alt_1_outlined, size: popupMenuIconSize, color: iconColor),
+        textStyle: themeData.textTheme.bodyMedium,
+      ),
     ];
   }
 

@@ -283,6 +283,29 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_CallActionsTooltip_transferChooseHint => 'Переадресувати на інший номер';
 
   @override
+  String get call_CallActionsTooltip_addParticipantHint => 'Подзвонити комусь і додати до цієї розмови';
+
+  @override
+  String get call_CallActionsTooltip_addParticipantHint_conference => 'Подзвонити комусь і додати до конференції';
+
+  @override
+  String get call_CallActionsTooltip_cancelInviteHint => 'Перестати дзвонити й повернутися до розмови';
+
+  @override
+  String get call_CallActionsTooltip_cancelInviteHint_conference => 'Перестати дзвонити й повернутися до конференції';
+
+  @override
+  String get call_CallActionsTooltip_addOrTransfer => 'Додати або перевести';
+
+  @override
+  String get call_CallActionsTooltip_addParticipant => 'Додати учасника';
+
+  @override
+  String call_CallActionsTooltip_cancelInvite(String name) {
+    return 'Скасувати запрошення для $name';
+  }
+
+  @override
   String get call_CallActionsTooltip_changeAudioDevice => 'Змінити аудіопристрій';
 
   @override
@@ -381,6 +404,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get call_SemanticsLabel_add => 'Додати дзвінки до конференції';
+
+  @override
+  String get call_Text_addParticipantNoFreeLine => 'Усі лінії зайняті';
 
   @override
   String call_CallList_outsideHeader(int count) {
@@ -667,6 +693,11 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String contact_SemanticsLabel_transfer(String number) {
     return 'Перевести поточний дзвінок на $number';
+  }
+
+  @override
+  String contact_SemanticsLabel_addParticipant(String number) {
+    return 'Додати $number до розмови';
   }
 
   @override
@@ -1544,6 +1575,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get main_Text_blindTransferInitiated => 'Безумовне переведення дзвінка';
+
+  @override
+  String get main_Text_addParticipantInitiated => 'Оберіть, кого додати до розмови';
 
   @override
   String get main_Text_attendedTransferInitiated => 'Оберіть, з ким поговорити перед переадресацією';

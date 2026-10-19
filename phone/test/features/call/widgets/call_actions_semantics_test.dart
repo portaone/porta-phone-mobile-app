@@ -43,6 +43,11 @@ void main() {
     bool mutedValue = false,
     bool keypadShown = false,
     ValueChanged<bool>? onKeypadToggle,
+    AddParticipantAvailability addParticipantAvailability = AddParticipantAvailability.hidden,
+    String? addParticipantPendingName,
+    VoidCallback? onAddParticipant,
+    VoidCallback? onAddParticipantCancelled,
+    bool addParticipantIntoRoom = false,
   }) {
     return ActiveCallActions(
       keypadShown: keypadShown,
@@ -66,6 +71,11 @@ void main() {
       onHeldChanged: onHeldChanged,
       onHangupPressed: onHangupPressed,
       onKeyPressed: onKeyPressed,
+      addParticipantAvailability: addParticipantAvailability,
+      addParticipantPendingName: addParticipantPendingName,
+      onAddParticipant: onAddParticipant,
+      onAddParticipantCancelled: onAddParticipantCancelled,
+      addParticipantIntoRoom: addParticipantIntoRoom,
     );
   }
 
@@ -149,6 +159,145 @@ void main() {
       expect(subtitleColor.a, lessThan(nameColor.a));
     });
 
+    testWidgets('with conferences offered the menu is named for both and invites somebody', (tester) async {
+      final handle = tester.ensureSemantics();
+      var invited = 0;
+      await tester.pumpWidget(
+        wrap(
+          buildActive(
+            onBlindTransferInitiated: () {},
+            onAttendedTransferInitiated: () {},
+            addParticipantAvailability: AddParticipantAvailability.available,
+            onAddParticipant: () => invited++,
+          ),
+        ),
+      );
+
+      final menu = find.bySemanticsIdentifier(callActionsTransferMenuId);
+      expectTapTargetSemantics(tester, menu, label: 'Add or transfer', isButton: true);
+      await tapViaSemantics(tester, menu);
+      await tester.pumpAndSettle();
+
+      // The transfers are still there; the invite comes after them.
+      expect(find.text('Unattended transfer'), findsOneWidget);
+      final add = find.bySemanticsIdentifier(callActionsTransferMenuAddParticipantId);
+      expectTapTargetSemantics(
+        tester,
+        add,
+        // Both lines are read: the name, then what it does.
+        label: 'Add participant\nCall someone and bring them into this call',
+        identifier: callActionsTransferMenuAddParticipantId,
+      );
+      await tapViaSemantics(tester, add);
+      await tester.pumpAndSettle();
+      expect(invited, 1);
+
+      handle.dispose();
+    });
+
+    testWidgets('a leg of the room opens the menu for the invite alone', (tester) async {
+      // No transfer callbacks: a leg is not a call to hand over.
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        wrap(
+          buildActive(
+            addParticipantAvailability: AddParticipantAvailability.available,
+            onAddParticipant: () {},
+            addParticipantIntoRoom: true,
+          ),
+        ),
+      );
+
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(callActionsTransferMenuId));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsIdentifier(callActionsTransferMenuAddParticipantId), findsOneWidget);
+      expect(find.text('Call someone and bring them into the conference'), findsOneWidget);
+      expect(find.text('Unattended transfer'), findsNothing);
+
+      handle.dispose();
+    });
+
+    testWidgets('with every line taken the invite stays, inert, and says why', (tester) async {
+      final handle = tester.ensureSemantics();
+      var invited = 0;
+      await tester.pumpWidget(
+        wrap(
+          buildActive(
+            onBlindTransferInitiated: () {},
+            addParticipantAvailability: AddParticipantAvailability.noFreeLine,
+            onAddParticipant: () => invited++,
+          ),
+        ),
+      );
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(callActionsTransferMenuId));
+      await tester.pumpAndSettle();
+
+      final add = find.bySemanticsIdentifier(callActionsTransferMenuAddParticipantId);
+      expect(tester.getSemantics(add).getSemanticsData().label, contains('All lines are busy'));
+      await tester.tap(add, warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(invited, 0);
+
+      handle.dispose();
+    });
+
+    testWidgets('a menu that would hold only an inert entry is not opened', (tester) async {
+      // A call still ringing or a video call: no transfer, and nobody can be
+      // called in. The button stays disabled as the plain transfer did,
+      // rather than open on one greyed entry with no reason.
+      await tester.pumpWidget(wrap(buildActive(addParticipantAvailability: AddParticipantAvailability.unavailable)));
+
+      expect(tester.widget<CallActionMenuButton>(find.byKey(callActionsTransferMenuKey)).enabled, isFalse);
+      expect(find.byIcon(Icons.add_call), findsOneWidget, reason: 'still named for both where rooms are offered');
+    });
+
+    testWidgets('while an invite rings the same place gives it up, naming who is being called', (tester) async {
+      final handle = tester.ensureSemantics();
+      var cancelled = 0;
+      await tester.pumpWidget(
+        wrap(
+          buildActive(
+            onBlindTransferInitiated: () {},
+            addParticipantAvailability: AddParticipantAvailability.unavailable,
+            addParticipantPendingName: 'Anna Marchenko',
+            onAddParticipantCancelled: () => cancelled++,
+          ),
+        ),
+      );
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(callActionsTransferMenuId));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsIdentifier(callActionsTransferMenuAddParticipantId), findsNothing);
+      final cancel = find.bySemanticsIdentifier(callActionsTransferMenuCancelInviteId);
+      expectTapTargetSemantics(
+        tester,
+        cancel,
+        label: 'Cancel invite to Anna Marchenko\nStop calling and go back to the call',
+        identifier: callActionsTransferMenuCancelInviteId,
+      );
+      await tapViaSemantics(tester, cancel);
+      await tester.pumpAndSettle();
+      expect(cancelled, 1);
+
+      handle.dispose();
+    });
+
+    testWidgets('without conferences the button is the plain transfer it always was', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(wrap(buildActive(onBlindTransferInitiated: () {})));
+
+      expectTapTargetSemantics(
+        tester,
+        find.bySemanticsIdentifier(callActionsTransferMenuId),
+        label: 'Transfer',
+        isButton: true,
+      );
+      expect(find.byIcon(Icons.phone_forwarded), findsOneWidget);
+
+      handle.dispose();
+    });
+
     testWidgets('each way of transferring can be told apart by id and pressed through it', (tester) async {
       final handle = tester.ensureSemantics();
       var blind = 0;
@@ -165,7 +314,6 @@ void main() {
       expectTapTargetSemantics(
         tester,
         find.bySemanticsIdentifier(callActionsTransferMenuBlindInitId),
-        // Both lines are read: the name, then what it does.
         label: 'Unattended transfer\nHand the call over without talking first',
         identifier: callActionsTransferMenuBlindInitId,
       );
