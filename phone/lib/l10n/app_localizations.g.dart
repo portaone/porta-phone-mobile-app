@@ -3451,6 +3451,30 @@ abstract class AppLocalizations {
   /// **'Transfer failed, returning to active call'**
   String get notifications_errorSnackBar_blindTransferFailed;
 
+  /// Shown when the person called as the second call of an attended transfer declines. The call being transferred is resumed.
+  ///
+  /// In en, this message translates to:
+  /// **'They declined, returning to the call'**
+  String get notifications_errorSnackBar_attendedTransferDeclined;
+
+  /// Shown when the person called as the second call of an attended transfer does not answer. The call being transferred is resumed.
+  ///
+  /// In en, this message translates to:
+  /// **'No answer, returning to the call'**
+  String get notifications_errorSnackBar_attendedTransferUnanswered;
+
+  /// Shown when the person called to consult before an attended transfer declines. The call being transferred is resumed.
+  ///
+  /// In en, this message translates to:
+  /// **'They declined, returning to the call'**
+  String get notifications_errorSnackBar_consultationDeclined;
+
+  /// Shown when the person called to consult before an attended transfer does not answer. The call being transferred is resumed.
+  ///
+  /// In en, this message translates to:
+  /// **'No answer, returning to the call'**
+  String get notifications_errorSnackBar_consultationUnanswered;
+
   /// Shown in a notification or snackbar when the application is offline. Condition: the app loses connection to the server or network and cannot perform online actions.
   ///
   /// In en, this message translates to:

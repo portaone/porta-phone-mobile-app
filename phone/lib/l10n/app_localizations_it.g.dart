@@ -1919,6 +1919,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get notifications_errorSnackBar_blindTransferFailed => 'Trasferimento fallito, ritorno alla chiamata attiva';
 
   @override
+  String get notifications_errorSnackBar_attendedTransferDeclined => 'Ha rifiutato, ritorno alla chiamata';
+
+  @override
+  String get notifications_errorSnackBar_attendedTransferUnanswered => 'Nessuna risposta, ritorno alla chiamata';
+
+  @override
+  String get notifications_errorSnackBar_consultationDeclined => 'Ha rifiutato, ritorno alla chiamata';
+
+  @override
+  String get notifications_errorSnackBar_consultationUnanswered => 'Nessuna risposta, ritorno alla chiamata';
+
+  @override
   String get notifications_errorSnackBar_appOffline => 'La tua apllicazione è offline';
 
   @override

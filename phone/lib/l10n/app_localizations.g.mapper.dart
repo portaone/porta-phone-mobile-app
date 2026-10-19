@@ -855,6 +855,14 @@ extension AppLocalizationsExtension on AppLocalizations {
         notifications_errorSnackBar_activeLineBlindTransferWarning,
       'notifications_errorSnackBar_blindTransferFailed' =>
         notifications_errorSnackBar_blindTransferFailed,
+      'notifications_errorSnackBar_attendedTransferDeclined' =>
+        notifications_errorSnackBar_attendedTransferDeclined,
+      'notifications_errorSnackBar_attendedTransferUnanswered' =>
+        notifications_errorSnackBar_attendedTransferUnanswered,
+      'notifications_errorSnackBar_consultationDeclined' =>
+        notifications_errorSnackBar_consultationDeclined,
+      'notifications_errorSnackBar_consultationUnanswered' =>
+        notifications_errorSnackBar_consultationUnanswered,
       'notifications_errorSnackBar_appOffline' =>
         notifications_errorSnackBar_appOffline,
       'notifications_errorSnackBar_appOnline' =>

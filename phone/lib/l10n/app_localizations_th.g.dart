@@ -1887,6 +1887,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get notifications_errorSnackBar_blindTransferFailed => 'การโอนสายล้มเหลว กำลังกลับสู่สายที่ใช้งานอยู่';
 
   @override
+  String get notifications_errorSnackBar_attendedTransferDeclined => 'ปฏิเสธสาย กำลังกลับไปยังสายสนทนา';
+
+  @override
+  String get notifications_errorSnackBar_attendedTransferUnanswered => 'ไม่รับสาย กำลังกลับไปยังสายสนทนา';
+
+  @override
+  String get notifications_errorSnackBar_consultationDeclined => 'ปฏิเสธสาย กำลังกลับไปยังสายสนทนา';
+
+  @override
+  String get notifications_errorSnackBar_consultationUnanswered => 'ไม่รับสาย กำลังกลับไปยังสายสนทนา';
+
+  @override
   String get notifications_errorSnackBar_appOffline => 'ขณะนี้แอปพลิเคชันของคุณออฟไลน์';
 
   @override

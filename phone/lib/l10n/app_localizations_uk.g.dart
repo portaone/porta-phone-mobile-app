@@ -1932,6 +1932,18 @@ class AppLocalizationsUk extends AppLocalizations {
       'Переадресація не вдалась, повертаємо до активного дзвінка';
 
   @override
+  String get notifications_errorSnackBar_attendedTransferDeclined => 'Відхилено, повертаємось до розмови';
+
+  @override
+  String get notifications_errorSnackBar_attendedTransferUnanswered => 'Не відповідає, повертаємось до розмови';
+
+  @override
+  String get notifications_errorSnackBar_consultationDeclined => 'Відхилено, повертаємось до розмови';
+
+  @override
+  String get notifications_errorSnackBar_consultationUnanswered => 'Не відповідає, повертаємось до розмови';
+
+  @override
   String get notifications_errorSnackBar_appOffline => 'Ваш застосунок зараз офлайн.';
 
   @override

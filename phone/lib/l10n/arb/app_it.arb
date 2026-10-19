@@ -1711,6 +1711,22 @@
   "@notifications_errorSnackBar_blindTransferFailed": {
     "description": "Shown when a blind transfer fails because the transfer target declined. The original call is restored and the user is returned to the active call screen."
   },
+  "notifications_errorSnackBar_attendedTransferDeclined": "Ha rifiutato, ritorno alla chiamata",
+  "@notifications_errorSnackBar_attendedTransferDeclined": {
+    "description": "Shown when the person called as the second call of an attended transfer declines. The call being transferred is resumed."
+  },
+  "notifications_errorSnackBar_attendedTransferUnanswered": "Nessuna risposta, ritorno alla chiamata",
+  "@notifications_errorSnackBar_attendedTransferUnanswered": {
+    "description": "Shown when the person called as the second call of an attended transfer does not answer. The call being transferred is resumed."
+  },
+  "notifications_errorSnackBar_consultationDeclined": "Ha rifiutato, ritorno alla chiamata",
+  "@notifications_errorSnackBar_consultationDeclined": {
+    "description": "Shown when the person called to consult before an attended transfer declines. The call being transferred is resumed."
+  },
+  "notifications_errorSnackBar_consultationUnanswered": "Nessuna risposta, ritorno alla chiamata",
+  "@notifications_errorSnackBar_consultationUnanswered": {
+    "description": "Shown when the person called to consult before an attended transfer does not answer. The call being transferred is resumed."
+  },
   "notifications_errorSnackBar_appOffline": "La tua apllicazione è offline",
   "@notifications_errorSnackBar_appOffline": {
     "description": "Shown in a notification or snackbar when the application is offline. Condition: the app loses connection to the server or network and cannot perform online actions."

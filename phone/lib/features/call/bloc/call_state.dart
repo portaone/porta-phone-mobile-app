@@ -13,6 +13,7 @@ class CallState with _$CallState {
     this.availableAudioDevices = const [],
     this.selectedCallId,
     this.conference = const ConferenceState(),
+    this.linkedCall,
   });
 
   @override
@@ -61,6 +62,11 @@ class CallState with _$CallState {
   @override
   final ConferenceState conference;
 
+  /// The call being placed on behalf of another one - a consultation before a
+  /// transfer - while it is being placed; null when there is none.
+  @override
+  final LinkedCall? linkedCall;
+
   CallStatus get status => callServiceState.status;
 
   /// Whether [callId] is a leg of the conference room.
@@ -102,6 +108,37 @@ class CallState with _$CallState {
   /// exactly the calls outside it that qualify.
   bool canAdd({required bool isConferenceEnabled}) =>
       isConferenceEnabled && conference.phase == ConferencePhase.active && mergeableCallIds.isNotEmpty;
+
+  /// The main lines no call is on, in [lines] order.
+  Iterable<int> _idleLinesAmong(Iterable<int> lines) =>
+      lines.where((line) => !activeCalls.any((activeCall) => activeCall.line == line));
+
+  /// Whether a main line is free for one more call.
+  ///
+  /// Counted, not taken: [retrieveIdleLine] also moves the line rotation, and a
+  /// control asking whether it can be pressed must not change which line the
+  /// next call gets.
+  bool get hasIdleMainLine => _idleLinesAmong(List.generate(linesCount, (index) => index)).isNotEmpty;
+
+  /// Whether a call can be placed on behalf of [anchorCallId] now: the anchor
+  /// is an answered audio call on a numbered line, not a leg of the room, not
+  /// in a transfer, no other linked call is under way, and a main line is
+  /// free for the new call.
+  bool canLinkCallTo(String anchorCallId) {
+    if (linkedCall != null || !hasIdleMainLine) return false;
+    final anchor = retrieveActiveCall(anchorCallId);
+    if (anchor == null) return false;
+    return anchor.wasAccepted &&
+        !anchor.video &&
+        anchor.line != null &&
+        anchor.transfer == null &&
+        !anchor.wasHungUp &&
+        anchor.processingStatus != CallProcessingStatus.disconnecting &&
+        !isConferenced(anchorCallId);
+  }
+
+  /// Whether [callId] is the call placed by the current link.
+  bool isLinkedCall(String callId) => linkedCall?.callId == callId;
 
   /// Whether the room must stand aside: the host has a call outside it, and a
   /// person talks to one party at a time.
@@ -327,8 +364,7 @@ class CallState with _$CallState {
         return 0;
       });
 
-    final idleLines = linesList.where((line) => !activeCalls.any((activeCall) => activeCall.line == line));
-    final choosenLine = idleLines.firstOrNull;
+    final choosenLine = _idleLinesAmong(linesList).firstOrNull;
     if (choosenLine != null) {
       lastUsedLine = choosenLine;
     }
