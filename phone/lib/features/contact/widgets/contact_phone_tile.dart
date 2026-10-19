@@ -94,7 +94,7 @@ class ContactPhoneTile extends StatelessWidget {
         SemanticAction(
           label: pickLabel ?? l10n.contact_SemanticsLabel_transfer(number),
           identifier: numberedId(contactPhoneTransferId, index),
-          child: IconButton(splashRadius: 24, icon: const Icon(Icons.phone_forwarded), onPressed: onPickPressed),
+          child: IconButton(splashRadius: 24, icon: Icon(pickIcon ?? Icons.phone_forwarded), onPressed: onPickPressed),
         ),
       );
     } else {

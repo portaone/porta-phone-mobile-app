@@ -20,6 +20,9 @@ class Actionpad extends StatelessWidget {
     this.onVideoCallPressed,
     this.onTransferPressed,
     this.onInitiatedTransferPressed,
+    this.pickIcon,
+    this.pickLabel,
+    this.pickEnabled = true,
     this.onBackspacePressed,
     this.onBackspaceLongPress,
     this.onCallFrom,
@@ -32,6 +35,17 @@ class Actionpad extends StatelessWidget {
   final VoidCallback? onVideoCallPressed;
   final VoidCallback? onTransferPressed;
   final VoidCallback? onInitiatedTransferPressed;
+
+  /// The mark and the name of the control that answers a choice being made,
+  /// from what it is being made for: handing a call on and calling somebody
+  /// into it are different gestures. Absent, it reads as a transfer.
+  final IconData? pickIcon;
+  final String? pickLabel;
+
+  /// Whether what is typed is an answer the choice takes. The control stays
+  /// in place either way: while somebody is being chosen the pad is there to
+  /// choose, and a call button standing in for it would place a new call.
+  final bool pickEnabled;
   final VoidCallback? onBackspacePressed;
   final VoidCallback? onBackspaceLongPress;
   final Function(String)? onCallFrom;
@@ -100,12 +114,12 @@ class Actionpad extends StatelessWidget {
           Transform.scale(
             scale: localStyle?.primary?.scale ?? 1.0,
             child: SemanticAction(
-              label: context.l10n.numberActions_transfer,
+              label: pickLabel ?? context.l10n.numberActions_transfer,
               identifier: actionPadTransferId,
               child: TextButton(
-                onPressed: actionsEnabled ? onInitiatedTransferPressed : null,
+                onPressed: actionsEnabled && pickEnabled ? onInitiatedTransferPressed : null,
                 style: localStyle?.primary?.style,
-                child: Icon(Icons.phone_forwarded, size: iconSize),
+                child: Icon(pickIcon ?? Icons.phone_forwarded, size: iconSize),
               ),
             ),
           )

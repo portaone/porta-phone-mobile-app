@@ -20,6 +20,11 @@ void main() {
 
   Finder pickControl() => find.bySemanticsIdentifier(actionPadTransferId);
 
+  /// Whether the pick control can be pressed now.
+  bool pickEnabled(WidgetTester tester) =>
+      tester.widget<TextButton>(find.descendant(of: pickControl(), matching: find.byType(TextButton))).onPressed !=
+      null;
+
   Future<void> pump(WidgetTester tester, {DestinationPickPurpose? purpose, bool transferEnabled = false}) async {
     await tester.pumpWidget(harness.build(purpose: purpose, transferEnabled: transferEnabled));
     await tester.pump();
@@ -34,6 +39,21 @@ void main() {
     await teardownKeypad(tester);
   });
 
+  testWidgets('the control carries the mark and the name of what is being chosen for', (tester) async {
+    // Calling somebody into a call is not handing it over, and a pad that
+    // drew the transfer mark for every purpose said so for all of them.
+    final semantics = tester.ensureSemantics();
+    harness.keypadCubit.setValue('1001');
+
+    await pump(tester, purpose: _Purpose(icon: Icons.person_add));
+
+    expect(find.byIcon(Icons.person_add), findsOneWidget);
+    expect(find.byIcon(Icons.phone_forwarded), findsNothing);
+    expect(tester.getSemantics(pickControl()).getSemanticsData().label, 'Choose 1001');
+    semantics.dispose();
+    await teardownKeypad(tester);
+  });
+
   testWidgets('a number it refuses cannot', (tester) async {
     // Offering the section is not acceptance of everything typed into it. The
     // pad used to ask only the first question and hand over whatever was
@@ -42,7 +62,34 @@ void main() {
 
     await pump(tester, purpose: _Purpose(takes: false));
 
-    expect(pickControl(), findsNothing);
+    // Still the control that answers the choice, not a call button that would
+    // place a new call instead - only it cannot be pressed.
+    expect(pickControl(), findsOneWidget);
+    expect(pickEnabled(tester), isFalse);
+    expect(find.bySemanticsIdentifier(actionPadVoiceCallId), findsNothing);
+    await teardownKeypad(tester);
+  });
+
+  testWidgets('an empty pad already shows that a choice is being made', (tester) async {
+    // It used to look like the ordinary dialer until a number was typed.
+    await pump(tester, purpose: _Purpose(icon: Icons.person_add));
+
+    expect(pickControl(), findsOneWidget);
+    expect(find.byIcon(Icons.person_add), findsOneWidget);
+    expect(pickEnabled(tester), isFalse);
+    expect(find.bySemanticsIdentifier(actionPadVoiceCallId), findsNothing);
+    await teardownKeypad(tester);
+  });
+
+  testWidgets('with nothing typed the control is named after the choice, not a number', (tester) async {
+    // Named after the typed number it read 'Choose ' - a sentence missing its
+    // end - and a purpose that names a contact could not be asked at all.
+    final semantics = tester.ensureSemantics();
+
+    await pump(tester, purpose: _Purpose());
+
+    expect(tester.getSemantics(pickControl()).getSemanticsData().label, 'Pick somebody');
+    semantics.dispose();
     await teardownKeypad(tester);
   });
 
@@ -51,12 +98,12 @@ void main() {
     // would never notice the difference.
     harness.keypadCubit.setValue('2002');
     await pump(tester, purpose: _Purpose(takes: false, only: '1001'));
-    expect(pickControl(), findsNothing);
+    expect(pickEnabled(tester), isFalse);
 
     harness.keypadCubit.setValue('1001');
     await tester.pumpAndSettle();
 
-    expect(pickControl(), findsOneWidget);
+    expect(pickEnabled(tester), isTrue);
     await teardownKeypad(tester);
   });
 
@@ -82,7 +129,9 @@ void main() {
 }
 
 class _Purpose implements DestinationPickPurpose {
-  _Purpose({this.takes = true, this.only});
+  _Purpose({this.takes = true, this.only, this.icon = Icons.phone_forwarded});
+
+  final IconData icon;
 
   final bool takes;
 
@@ -113,7 +162,7 @@ class _Purpose implements DestinationPickPurpose {
   bool get cancellable => false;
 
   @override
-  IconData get pickIcon => Icons.phone_forwarded;
+  IconData get pickIcon => icon;
 
   @override
   String pickLabel(DestinationCandidate candidate) => 'Choose ${candidate.number}';
