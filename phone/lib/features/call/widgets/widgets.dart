@@ -1,4 +1,3 @@
-export 'add_participant_picking.dart';
 export 'blind_transfer_picking.dart';
 export 'incoming_call_actions.dart';
 export 'active_call_actions.dart';
@@ -16,7 +15,7 @@ export 'call_duration.dart';
 export 'call_row_frame.dart';
 export 'call_list_action.dart';
 export 'conference_panel.dart';
-export 'attended_transfer_picking.dart';
+export 'linked_call_picking.dart';
 export 'focused_action_hint.dart';
 export 'call_network_quality_meter.dart';
 export 'call_toolbar_status.dart';

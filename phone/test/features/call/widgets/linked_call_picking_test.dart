@@ -24,8 +24,9 @@ ActiveCall _call(String callId, {int line = 0}) => ActiveCall(
   acceptedTime: DateTime(2024),
 );
 
-// The request to choose somebody to call in is made where the person asks for
-// it; this takes it back when the call it was asked from is gone, or when the person is
+// A request to choose whom to call for a call on the screen is made where the
+// person asks for it; this takes it back when it has outlived what it was
+// asked for, or when the person is
 // back on the call without choosing.
 void main() {
   late _MockCallBloc callBloc;
@@ -68,7 +69,7 @@ void main() {
             BlocProvider<CallBloc>.value(value: callBloc),
             BlocProvider<DestinationPickingCubit>.value(value: picking),
           ],
-          child: MultiBlocListener(listeners: [AddParticipantPicking()], child: const SizedBox.shrink()),
+          child: MultiBlocListener(listeners: [LinkedCallPicking()], child: const SizedBox.shrink()),
         ),
       ),
     );
@@ -134,6 +135,25 @@ void main() {
     picking.ask(purpose(anchorCallId: 'a', intoRoom: true));
 
     callStates.add(room.copyWith(conference: const ConferenceState()));
+    await tester.pump();
+
+    expect(picking.state.purpose, isNull);
+  });
+
+  testWidgets('a consultation request goes the same way when its call ends', (tester) async {
+    await pump(tester);
+    picking.ask(
+      AttendedTransferPurpose(
+        announcement: 'Choose who to consult before transferring',
+        pickLabel: (number) => number,
+        controller: controller,
+        anchorCallId: 'b',
+      ),
+    );
+    callStates.add(away);
+    await tester.pump();
+
+    callStates.add(const CallState(activeCalls: [], minimized: true));
     await tester.pump();
 
     expect(picking.state.purpose, isNull);

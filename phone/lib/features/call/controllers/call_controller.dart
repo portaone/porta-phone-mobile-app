@@ -48,9 +48,13 @@ class CallController {
 
   /// Calls [number] on behalf of [anchorCallId], to consult them before
   /// handing that call over.
-  void placeAttendedTransferCall({required String anchorCallId, required String number}) {
+  ///
+  /// [displayName] is the picked contact's, shown while the call rings.
+  void placeAttendedTransferCall({required String anchorCallId, required String number, String? displayName}) {
     _logger.info('Placing the attended transfer call to $number for $anchorCallId');
-    callBloc.add(CallControlEvent.attendedTransferCallPlaced(anchorCallId: anchorCallId, number: number));
+    callBloc.add(
+      CallControlEvent.attendedTransferCallPlaced(anchorCallId: anchorCallId, number: number, displayName: displayName),
+    );
   }
 
   /// Calls [number] into the conversation of [anchorCallId]: that call, or

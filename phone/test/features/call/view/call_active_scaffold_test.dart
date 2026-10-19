@@ -175,7 +175,7 @@ void main() {
       final purpose = picking.state.purpose;
       expect(purpose, isA<AddParticipantPurpose>());
       expect((purpose! as AddParticipantPurpose).anchorCallId, 'active');
-      verify(() => callBloc.add(const CallControlEvent.addParticipantInitiated())).called(1);
+      verify(() => callBloc.add(const CallControlEvent.linkedCallPickingStarted())).called(1);
       await teardownCallScaffold(tester);
     });
 
@@ -226,7 +226,7 @@ void main() {
       await pressInMenu(tester, callActionsTransferMenuAddParticipantId);
 
       expect(picking.state.purpose, isA<BlindTransferPurpose>());
-      verifyNever(() => callBloc.add(const CallControlEvent.addParticipantInitiated()));
+      verifyNever(() => callBloc.add(const CallControlEvent.linkedCallPickingStarted()));
       await teardownCallScaffold(tester);
     });
 
@@ -533,7 +533,7 @@ void main() {
       final purpose = picking.state.purpose;
       expect(purpose, isA<AttendedTransferPurpose>());
       expect((purpose! as AttendedTransferPurpose).anchorCallId, 'active');
-      verify(() => callBloc.add(const CallControlEvent.attendedTransferInitiated('active'))).called(1);
+      verify(() => callBloc.add(const CallControlEvent.linkedCallPickingStarted())).called(1);
       await teardownCallScaffold(tester);
     });
 
@@ -556,7 +556,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(picking.state.purpose, isA<BlindTransferPurpose>());
-      verifyNever(() => callBloc.add(const CallControlEvent.attendedTransferInitiated('active')));
+      verifyNever(() => callBloc.add(const CallControlEvent.linkedCallPickingStarted()));
       await teardownCallScaffold(tester);
     });
 

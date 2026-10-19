@@ -775,8 +775,6 @@ sealed class CallControlEvent extends CallEvent {
 
   const factory CallControlEvent.blindTransferInitiated(String callId) = _CallControlEventBlindTransferInitiated;
 
-  const factory CallControlEvent.attendedTransferInitiated(String callId) = _CallControlEventAttendedTransferInitiated;
-
   const factory CallControlEvent.blindTransferSubmitted({required String number}) =
       _CallControlEventBlindTransferSubmitted;
 
@@ -818,9 +816,10 @@ sealed class CallControlEvent extends CallEvent {
     String? displayName,
   }) = _CallControlEventAttendedTransferCallPlaced;
 
-  /// The person went to the lists to choose who to call into the
-  /// conversation: the call screen steps aside for them, as for a transfer.
-  const factory CallControlEvent.addParticipantInitiated() = _CallControlEventAddParticipantInitiated;
+  /// The person went to the lists to choose whom to call for a call on the
+  /// screen - a consultation, or somebody to bring in: the call screen steps
+  /// aside for them, as for a transfer.
+  const factory CallControlEvent.linkedCallPickingStarted() = _CallControlEventLinkedCallPickingStarted;
 
   /// Calls [number] into the conversation of [anchorCallId] - that call, or
   /// the room it is a leg of. The call joins once answered, and one that does
@@ -1010,15 +1009,6 @@ class _CallControlEventBlindTransferInitiated extends CallControlEvent {
   List<Object?> get props => [callId];
 }
 
-class _CallControlEventAttendedTransferInitiated extends CallControlEvent {
-  const _CallControlEventAttendedTransferInitiated(this.callId);
-
-  final String callId;
-
-  @override
-  List<Object?> get props => [callId];
-}
-
 class _CallControlEventBlindTransferSubmitted extends CallControlEvent {
   const _CallControlEventBlindTransferSubmitted({required this.number});
 
@@ -1094,8 +1084,8 @@ class _CallControlEventConferenceEnded extends CallControlEvent {
   List<Object?> get props => const [];
 }
 
-class _CallControlEventAddParticipantInitiated extends CallControlEvent {
-  const _CallControlEventAddParticipantInitiated();
+class _CallControlEventLinkedCallPickingStarted extends CallControlEvent {
+  const _CallControlEventLinkedCallPickingStarted();
 
   @override
   List<Object?> get props => [];

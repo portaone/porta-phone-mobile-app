@@ -1757,7 +1757,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallControlEventAudioDeviceSet() => _onCallControlEventAudioDeviceSet(event, emit),
       _CallControlEventFailureApproved() => _onCallControlEventFailureApproved(event, emit),
       _CallControlEventBlindTransferInitiated() => _onCallControlEventBlindTransferInitiated(event, emit),
-      _CallControlEventAttendedTransferInitiated() => _onCallControlEventAttendedTransferInitiated(event, emit),
       _CallControlEventBlindTransferSubmitted() => _onCallControlEventBlindTransferSubmitted(event, emit),
       _CallControlEventAttendedTransferSubmitted() => _onCallControlEventAttendedTransferSubmitted(event, emit),
       _CallControlEventAttendedRequestApproved() => _onCallControlEventAttendedRequestApproved(event, emit),
@@ -1768,7 +1767,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallControlEventConferenceSelfMuted() => __onCallControlEventConferenceSelfMuted(event, emit),
       _CallControlEventConferenceEnded() => __onCallControlEventConferenceEnded(event, emit),
       _CallControlEventAttendedTransferCallPlaced() => __onCallControlEventAttendedTransferCallPlaced(event, emit),
-      _CallControlEventAddParticipantInitiated() => __onCallControlEventAddParticipantInitiated(event, emit),
+      _CallControlEventLinkedCallPickingStarted() => __onCallControlEventLinkedCallPickingStarted(event, emit),
       _CallControlEventParticipantCallPlaced() => __onCallControlEventParticipantCallPlaced(event, emit),
     };
   }
@@ -1979,8 +1978,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     );
   }
 
-  Future<void> __onCallControlEventAddParticipantInitiated(
-    _CallControlEventAddParticipantInitiated event,
+  Future<void> __onCallControlEventLinkedCallPickingStarted(
+    _CallControlEventLinkedCallPickingStarted event,
     Emitter<CallState> emit,
   ) async {
     emit(state.copyWith(minimized: true));
@@ -2093,17 +2092,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     // Hendgehog been there and removed putting on hold
     // He knows it was nessacery for first implementation of attended! transfer when our code can't auto hold on new call creation
-    // but now we have it and hold inside _onCallControlEventAttendedTransferInitiated removed too
+    // but now we have it and hold at the start of the attended transfer removed too
     //
     // The question is why it was added there (blind transter) also, because it cause race conditions
     // Attentioin: if you wanna bring it back, consider to prevent race condition (WT-1399) beetween holding and submitting refer (e.g fast initiating above recents tab and click on user)
-  }
-
-  Future<void> _onCallControlEventAttendedTransferInitiated(
-    _CallControlEventAttendedTransferInitiated event,
-    Emitter<CallState> emit,
-  ) async {
-    emit(state.copyWith(minimized: true));
   }
 
   Future<void> _onCallControlEventBlindTransferSubmitted(

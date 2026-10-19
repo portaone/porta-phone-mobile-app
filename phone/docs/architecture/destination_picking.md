@@ -223,23 +223,26 @@ choice that cannot be made there.
 Accepts anything with a number, is offered by favourites, recents, contacts and
 the keypad, and submits through `CallController.submitTransfer`.
 
-**Consulting before a hand-over** -
-`lib/features/call/models/attended_transfer_purpose.dart`. The same reach as the
-blind transfer - anything with a number, from the same four sections - and it
-submits through `CallController.placeAttendedTransferCall`, which places the
-second call as a linked call of the first (see "Attended transfer" in
-[`features/call_arch.md`](../features/call_arch.md)).
+**Choosing whom to call for a call on the screen** -
+`lib/features/call/models/linked_call_pick_purpose.dart`, `LinkedCallPickPurpose`,
+the base of the next two. The same reach as the blind transfer - anything with a
+number, from the same four sections - and it names the call the new one is
+placed for (`anchorCallId`). A choice from a contact carries its name, so the
+ringing call is shown under it. Both are asked for in `CallActiveScaffold`,
+which steps the call screen aside (`CallControlEvent.linkedCallPickingStarted`)
+only when the request took the floor, and ended by the choice or the banner's
+cancel.
 
-**Calling somebody in** -
-`lib/features/call/models/add_participant_purpose.dart`. The same reach again,
-for the same reason. It names the conversation the call is for (`anchorCallId`,
-a call or a leg of the room) and submits through
-`CallController.placeParticipantCall`, which places a linked call with the
-purpose `join` (see "Calling somebody in" in
-[`features/call_conference.md`](../features/call_conference.md)). Like the
-consultation it is asked for in `CallActiveScaffold`, which steps the call
-screen aside (`CallControlEvent.addParticipantInitiated`) only when the request
-took the floor, and ended by the choice or the banner's cancel.
+- **Consulting before a hand-over** -
+  `lib/features/call/models/attended_transfer_purpose.dart`, submitting through
+  `CallController.placeAttendedTransferCall`, which places the second call as a
+  linked call of the first (see "Attended transfer" in
+  [`features/call_arch.md`](../features/call_arch.md)).
+- **Calling somebody in** -
+  `lib/features/call/models/add_participant_purpose.dart`, for a call or a leg
+  of the room, submitting through `CallController.placeParticipantCall`, which
+  places a linked call with the purpose `join` (see "Calling somebody in" in
+  [`features/call_conference.md`](../features/call_conference.md)).
 
 **Passing a voice message on** -
 `lib/features/voicemail/models/forward_voicemail_purpose.dart`, and the feature
@@ -292,13 +295,16 @@ collaborators already live and where the `CallControllerScope` it needs is in
 scope. The mechanism learns nothing about calls; the call learns nothing about
 the mechanism.
 
-The attended transfer sits between the two. Its request is made on the call
-screen where the person asks for it, and the choice or the banner's cancel ends
-it (`closedByChoice` and `cancellable` are true): the call keeps no state saying
-a choice is pending. What it does not own is the call going on meanwhile, so
-`lib/features/call/widgets/attended_transfer_picking.dart`, mounted beside the
-blind transfer's bridge, only takes the request back - when the call it was for
-ends, or when the person returns to the call screen without choosing. It looks
+A choice for a call on the screen - a consultation, or somebody to call in -
+sits between the two. Its request is made on the call screen where the person
+asks for it, and the choice or the banner's cancel ends it (`closedByChoice` and
+`cancellable` are true): the call keeps no state saying a choice is pending.
+What it does not own is the call going on meanwhile, so
+`lib/features/call/widgets/linked_call_picking.dart`, mounted beside the blind
+transfer's bridge, only takes the request back - once it has outlived what it
+was asked for (`LinkedCallPickPurpose.outlivedIn`: the call it was for ended,
+or the room a request for the room was made in), or when the person returns to
+the call screen without choosing. It looks
 at the calls only while the screen is away: the request is made a moment before
 the screen steps aside, and a call update in that moment is not the person
 giving up.
@@ -322,7 +328,7 @@ banner, at `main_screen.dart`.
 |---|---|
 | `test/features/call/models/blind_transfer_purpose_test.dart` | The transfer policy, walking every `MainFlavor` |
 | `test/features/call/models/attended_transfer_purpose_test.dart` | The consultation policy, and that a choice places the second call for the call it was asked for |
-| `test/features/call/widgets/attended_transfer_picking_test.dart` | The request taken back when its call ends or the person returns, and kept through a call update on the screen |
+| `test/features/call/widgets/linked_call_picking_test.dart` | A request for a call on the screen taken back when it has outlived its call or room, or the person returns, and kept through a call update while the screen is still up |
 | `test/widgets/destination_picking_test.dart` | The scope, and that an unchanged purpose does not notify |
 | `test/features/main/main_screen_test.dart` | The banner, driven by a fake purpose so the screen cannot hardcode wording |
 | `test/features/contact/contact_screen_semantics_test.dart` | A card row in picking mode, through `contact_screen_harness.dart` |
@@ -334,5 +340,4 @@ banner, at `main_screen.dart`.
 | `test/widgets/destination_pick_report_presenter_test.dart` | What a feature has to say, the retry offered only where one can change the answer, and a report that was waiting before the presenter arrived |
 | `test/features/voicemail/forward_voicemail_purpose_test.dart` | The second purpose, and how much narrower it is |
 | `test/features/call/models/add_participant_purpose_test.dart` | The add-participant policy, and the conversation a choice places the call into |
-| `test/features/call/widgets/add_participant_picking_test.dart` | The request taken back when the call it was asked from goes or the person returns, and not before the screen steps aside |
 | `test/features/voicemail/utils/voicemail_forwarding_test.dart` | How a forward went, said by name: through, or refused with a retry to the same colleague |
