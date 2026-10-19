@@ -553,6 +553,8 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
             enabled: widget.enableInteractions,
             onTap: () => onAttendedTransferSubmitted.call(call),
             text: call.displayName ?? call.handle.value,
+            // The name is the entry's own; the second line says what happens.
+            subtitle: context.l10n.call_CallActionsTooltip_transferToCallHint,
             icon: Icon(
               Icons.phone_paused_outlined,
               size: popupMenuIconSize,
@@ -570,6 +572,7 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
           enabled: widget.enableInteractions,
           onTap: widget.onBlindTransferInitiated,
           text: context.l10n.call_CallActionsTooltip_transfer_choose,
+          subtitle: context.l10n.call_CallActionsTooltip_transferChooseHint,
           icon: Icon(
             Icons.phone_forwarded_outlined,
             size: popupMenuIconSize,
@@ -593,6 +596,7 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
           enabled: widget.enableInteractions,
           onTap: widget.onBlindTransferInitiated,
           text: context.l10n.call_CallActionsTooltip_unattended_transfer,
+          subtitle: context.l10n.call_CallActionsTooltip_unattendedTransferHint,
           icon: Icon(
             Icons.phone_forwarded_outlined,
             size: popupMenuIconSize,
@@ -608,6 +612,7 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
           enabled: widget.enableInteractions,
           onTap: widget.onAttendedTransferInitiated,
           text: context.l10n.call_CallActionsTooltip_attended_transfer,
+          subtitle: context.l10n.call_CallActionsTooltip_attendedTransferHint,
           icon: Icon(
             Icons.phone_forwarded_outlined,
             size: popupMenuIconSize,

@@ -90,6 +90,14 @@ extension AppLocalizationsExtension on AppLocalizations {
         call_CallActionsTooltip_accept_inviteToAttendedTransfer,
       'call_CallActionsTooltip_attended_transfer' =>
         call_CallActionsTooltip_attended_transfer,
+      'call_CallActionsTooltip_unattendedTransferHint' =>
+        call_CallActionsTooltip_unattendedTransferHint,
+      'call_CallActionsTooltip_attendedTransferHint' =>
+        call_CallActionsTooltip_attendedTransferHint,
+      'call_CallActionsTooltip_transferToCallHint' =>
+        call_CallActionsTooltip_transferToCallHint,
+      'call_CallActionsTooltip_transferChooseHint' =>
+        call_CallActionsTooltip_transferChooseHint,
       'call_CallActionsTooltip_changeAudioDevice' =>
         call_CallActionsTooltip_changeAudioDevice,
       'call_CallActionsTooltip_decline_inviteToAttendedTransfer' =>

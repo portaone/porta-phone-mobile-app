@@ -460,6 +460,30 @@ abstract class AppLocalizations {
   /// **'Attended transfer'**
   String get call_CallActionsTooltip_attended_transfer;
 
+  /// Second line of the unattended transfer entry of the call screen's transfer menu, saying what it does.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand the call over without talking first'**
+  String get call_CallActionsTooltip_unattendedTransferHint;
+
+  /// Second line of the attended transfer entry of the call screen's transfer menu, saying what it does.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to them first, then hand the call over'**
+  String get call_CallActionsTooltip_attendedTransferHint;
+
+  /// Second line of a transfer menu entry named after another call on the screen: transferring connects that call with this one.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect them with this call'**
+  String get call_CallActionsTooltip_transferToCallHint;
+
+  /// Second line of the transfer menu entry that sends the person to the lists to choose where the call goes.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer the call to another number'**
+  String get call_CallActionsTooltip_transferChooseHint;
+
   /// No description provided for @call_CallActionsTooltip_changeAudioDevice.
   ///
   /// In en, this message translates to:

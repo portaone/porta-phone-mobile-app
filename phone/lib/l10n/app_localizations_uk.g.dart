@@ -271,6 +271,18 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_CallActionsTooltip_attended_transfer => 'Керована переадресація';
 
   @override
+  String get call_CallActionsTooltip_unattendedTransferHint => 'Переадресувати, не поговоривши спершу';
+
+  @override
+  String get call_CallActionsTooltip_attendedTransferHint => 'Спершу поговорити, потім переадресувати';
+
+  @override
+  String get call_CallActionsTooltip_transferToCallHint => 'З\'єднати з цим дзвінком';
+
+  @override
+  String get call_CallActionsTooltip_transferChooseHint => 'Переадресувати на інший номер';
+
+  @override
   String get call_CallActionsTooltip_changeAudioDevice => 'Змінити аудіопристрій';
 
   @override

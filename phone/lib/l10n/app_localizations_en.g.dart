@@ -254,6 +254,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call_CallActionsTooltip_attended_transfer => 'Attended transfer';
 
   @override
+  String get call_CallActionsTooltip_unattendedTransferHint => 'Hand the call over without talking first';
+
+  @override
+  String get call_CallActionsTooltip_attendedTransferHint => 'Talk to them first, then hand the call over';
+
+  @override
+  String get call_CallActionsTooltip_transferToCallHint => 'Connect them with this call';
+
+  @override
+  String get call_CallActionsTooltip_transferChooseHint => 'Transfer the call to another number';
+
+  @override
   String get call_CallActionsTooltip_changeAudioDevice => 'Change audio device';
 
   @override

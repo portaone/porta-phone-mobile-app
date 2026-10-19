@@ -73,6 +73,7 @@ class CallPopupMenuItem<T> extends PopupMenuEntry<T> {
     this.textStyle,
     this.identifier,
     required this.text,
+    this.subtitle,
     required this.icon,
   });
 
@@ -86,6 +87,12 @@ class CallPopupMenuItem<T> extends PopupMenuEntry<T> {
   final String? identifier;
 
   final String text;
+
+  /// A second, quieter line saying what the entry does, where its name alone
+  /// does not: a person's name in a transfer menu says who, not what happens
+  /// to the call.
+  final String? subtitle;
+
   final Widget icon;
 
   /// The entries size themselves; the menu is asked to reserve nothing.
@@ -121,12 +128,53 @@ class _CallPopupMenuItemState<T> extends State<CallPopupMenuItem<T>> {
               Flexible(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(widget.text, overflow: TextOverflow.ellipsis, maxLines: 2),
+                  child: _CallPopupMenuItemText(text: widget.text, subtitle: widget.subtitle),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The name of an entry and, where it has one, the quieter line under it.
+///
+/// Built below the menu item, so the text style the item sets - greyed for a
+/// disabled entry - is the one it reads.
+class _CallPopupMenuItemText extends StatelessWidget {
+  const _CallPopupMenuItemText({required this.text, this.subtitle});
+
+  final String text;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = Text(text, overflow: TextOverflow.ellipsis, maxLines: 2);
+    final subtitle = this.subtitle;
+    if (subtitle == null) return title;
+
+    // Fainter than the name by a factor, not set to a fixed opacity: a fixed
+    // one would draw the second line of a disabled entry brighter than its
+    // greyed name.
+    final color = DefaultTextStyle.of(context).style.color;
+    final subtitleColor = color?.withValues(alpha: color.a * 0.7);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 2,
+        children: [
+          title,
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: subtitleColor),
+          ),
+        ],
       ),
     );
   }
