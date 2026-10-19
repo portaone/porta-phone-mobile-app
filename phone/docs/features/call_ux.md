@@ -4,7 +4,7 @@ The product-level view of the calling experience: what the user can do, the
 screen states and the widgets that back them. The
 implementation deep-dive lives in [`call_arch.md`](call_arch.md).
 
-Last reviewed: 2026-09-28
+Last reviewed: 2026-10-19
 
 ## What the user can do
 
@@ -82,6 +82,37 @@ it was given; it demands a decision and is in neither conversation. Moving
 between the two is a tap on either block, which asks for the hold and leaves the
 focus to follow - see
 [`call_conference.md`](call_conference.md).
+
+### Transferring a call
+
+The transfer button opens a menu, and every entry carries a second line saying
+what it does.
+
+- **Unattended transfer** ("Hand the call over without talking first") - the
+  screen steps aside and the person picks a number in favourites, recents,
+  contacts or the keypad. The call is handed over at once; if the switch
+  refuses, it comes back to the screen.
+- **Attended transfer** ("Talk to them first, then hand the call over") -
+  offered for an answered audio call while a line is free for a second one. The
+  screen steps aside with "Choose who to consult before transferring". The
+  choice places a second call and holds the first. Once the second call is
+  answered, the menu offers the first call as the one to connect ("Connect them
+  with this call"); choosing it joins the two parties and ends both calls on
+  this phone. No other call is offered as a target while a consultation is up.
+  - The second call declined or not answered: the first call is taken off hold
+    and a notice says so ("They declined, returning to the call", "No answer,
+    returning to the call"). Busy is told by the call ending as busy. The first
+    call stays on hold if the person had held it before starting, or if another
+    call is live by then.
+  - Back on the call screen without choosing, or the first call ending while
+    choosing: the banner goes.
+  - The first call ending while the second still rings: the second stays as an
+    ordinary call.
+- Two calls up with no consultation between them - the second one came in, or
+  was dialled as an ordinary call: the menu offers no hand-over from one to the
+  other, only the two transfers above. Nothing says which call such a transfer
+  would be for, and a held call offered next to one answered meanwhile handed
+  people over to a stranger.
 
 ## Key widgets
 

@@ -2,7 +2,7 @@
 
 How a feature asks the user to pick somebody out of the contacts, recents,
 favourites and keypad, and what those lists do while the choice is being made.
-Last reviewed: 2026-10-06.
+Last reviewed: 2026-10-19.
 
 ## The three pieces
 
@@ -223,6 +223,13 @@ choice that cannot be made there.
 Accepts anything with a number, is offered by favourites, recents, contacts and
 the keypad, and submits through `CallController.submitTransfer`.
 
+**Consulting before a hand-over** -
+`lib/features/call/models/attended_transfer_purpose.dart`. The same reach as the
+blind transfer - anything with a number, from the same four sections - and it
+submits through `CallController.placeAttendedTransferCall`, which places the
+second call as a linked call of the first (see "Attended transfer" in
+[`features/call_arch.md`](../features/call_arch.md)).
+
 **Passing a voice message on** -
 `lib/features/voicemail/models/forward_voicemail_purpose.dart`, and the feature
 around it in [`features/voicemail.md`](../features/voicemail.md). Narrower: it
@@ -274,6 +281,17 @@ collaborators already live and where the `CallControllerScope` it needs is in
 scope. The mechanism learns nothing about calls; the call learns nothing about
 the mechanism.
 
+The attended transfer sits between the two. Its request is made on the call
+screen where the person asks for it, and the choice or the banner's cancel ends
+it (`closedByChoice` and `cancellable` are true): the call keeps no state saying
+a choice is pending. What it does not own is the call going on meanwhile, so
+`lib/features/call/widgets/attended_transfer_picking.dart`, mounted beside the
+blind transfer's bridge, only takes the request back - when the call it was for
+ends, or when the person returns to the call screen without choosing. It looks
+at the calls only while the screen is away: the request is made a moment before
+the screen steps aside, and a call update in that moment is not the person
+giving up.
+
 A bridge is not what a feature normally needs. It is for a mode that already
 lives in somebody else's bloc and is driven from there. A feature that decides
 for itself - passing a voice message on - calls `ask` where the person asks for
@@ -292,6 +310,8 @@ banner, at `main_screen.dart`.
 | File | What it pins |
 |---|---|
 | `test/features/call/models/blind_transfer_purpose_test.dart` | The transfer policy, walking every `MainFlavor` |
+| `test/features/call/models/attended_transfer_purpose_test.dart` | The consultation policy, and that a choice places the second call for the call it was asked for |
+| `test/features/call/widgets/attended_transfer_picking_test.dart` | The request taken back when its call ends or the person returns, and kept through a call update on the screen |
 | `test/widgets/destination_picking_test.dart` | The scope, and that an unchanged purpose does not notify |
 | `test/features/main/main_screen_test.dart` | The banner, driven by a fake purpose so the screen cannot hardcode wording |
 | `test/features/contact/contact_screen_semantics_test.dart` | A card row in picking mode, through `contact_screen_harness.dart` |
