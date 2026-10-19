@@ -265,7 +265,7 @@ in one direction. Every path that clears `transfer` - a signalling failure, the 
 attended-transfer branch - therefore takes the banner off the lists with it, without any of them
 knowing there is a banner.
 
-**Attended transfer** — `CallControlEvent.attendedTransferInitiated` steps the screen aside
+**Attended transfer** — `CallControlEvent.linkedCallPickingStarted` steps the screen aside
 after the screen has asked the lists for somebody to consult (`AttendedTransferPurpose`, the
 same mechanism as the blind transfer's target). The choice places the second call through
 `CallControlEvent.attendedTransferCallPlaced`, which puts it in `CallState.linkedCall`
@@ -285,7 +285,7 @@ announced (`LinkedCallFailedNotification`); busy is already said by the hangup. 
 call ends while the second still rings, the second stays as an ordinary call.
 The same link, with the purpose `join`, calls somebody into a call or a room - see
 [`call_conference.md`](call_conference.md), "Calling somebody in".
-`features/call/widgets/attended_transfer_picking.dart` takes the request back from the lists when
+`features/call/widgets/linked_call_picking.dart` takes the request back from the lists when
 the first call ends or the person returns to the call screen without choosing.
 
 **Leaving the call screen** — `CallScreenEvent.didPop` and the start of a transfer set

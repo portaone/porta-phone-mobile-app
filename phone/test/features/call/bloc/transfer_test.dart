@@ -170,7 +170,7 @@ void main() {
 
   group('attended transfer', () {
     Future<void> initiate() async {
-      h.bloc.add(const CallControlEvent.attendedTransferInitiated('b'));
+      h.bloc.add(const CallControlEvent.linkedCallPickingStarted());
       await h.settle(() => h.bloc.state.minimized == true);
     }
 

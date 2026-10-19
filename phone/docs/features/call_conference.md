@@ -369,7 +369,7 @@ the call or the conference. Pressed, it sends the person to the lists with
 `AddParticipantPurpose` (see
 [`../architecture/destination_picking.md`](../architecture/destination_picking.md)),
 for the focused call; for a leg that is the room.
-`lib/features/call/widgets/add_participant_picking.dart` takes the request back
+`lib/features/call/widgets/linked_call_picking.dart` takes the request back
 when that call goes - a leg leaving included, so the person asks again from
 the room as it is - when a request made for the room outlives the room, or
 when the person returns to the call without choosing. While the call rings,

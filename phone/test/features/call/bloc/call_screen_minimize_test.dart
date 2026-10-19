@@ -177,7 +177,7 @@ void main() {
     test('attended: minimizes and reports no proximity change', () async {
       h.seedEstablishedCall('a');
 
-      h.bloc.add(const CallControlEvent.attendedTransferInitiated('a'));
+      h.bloc.add(const CallControlEvent.linkedCallPickingStarted());
       await pumpEventQueue();
 
       expect(h.bloc.state.minimized, isTrue);
@@ -186,7 +186,7 @@ void main() {
 
     for (final (kind, start) in [
       ('blind', const CallControlEvent.blindTransferInitiated('a')),
-      ('attended', const CallControlEvent.attendedTransferInitiated('a')),
+      ('attended', const CallControlEvent.linkedCallPickingStarted()),
     ]) {
       test('$kind with the speaker on: asks for no audio device on return', () async {
         await seedCallOn(speaker);

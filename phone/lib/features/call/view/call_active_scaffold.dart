@@ -295,7 +295,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
         anchorCallId: widget.focusedCall.callId,
       ),
     );
-    if (asked) _callBloc.add(CallControlEvent.attendedTransferInitiated(widget.focusedCall.callId));
+    if (asked) _callBloc.add(const CallControlEvent.linkedCallPickingStarted());
   }
 
   void _toggleFocusedCamera(bool value) {
@@ -535,7 +535,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
         intoRoom: _callBloc.state.isConferenced(anchorCallId),
       ),
     );
-    if (asked) _callBloc.add(const CallControlEvent.addParticipantInitiated());
+    if (asked) _callBloc.add(const CallControlEvent.linkedCallPickingStarted());
   }
 
   /// Gives up on the call placed to join while it rings: ending it is what
