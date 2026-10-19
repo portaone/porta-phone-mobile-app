@@ -648,6 +648,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String contact_SemanticsLabel_attendedTransfer(String number) {
+    return 'Consult $number before transferring the call';
+  }
+
+  @override
   String get contacts_ContactsScreen_emptyFavorites =>
       'No favorites among your contacts yet.\nAdd one from a contact card using the star icon';
 
@@ -1512,6 +1517,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get main_Text_blindTransferInitiated => 'Performing blind transfer';
 
   @override
+  String get main_Text_attendedTransferInitiated => 'Choose who to consult before transferring';
+
+  @override
   String get main_BottomNavigationBarItemLabel_contacts => 'Contacts';
 
   @override
@@ -1904,12 +1912,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifications_errorSnackBar_attendedTransferUnanswered => 'No answer, returning to the call';
-
-  @override
-  String get notifications_errorSnackBar_consultationDeclined => 'They declined, returning to the call';
-
-  @override
-  String get notifications_errorSnackBar_consultationUnanswered => 'No answer, returning to the call';
 
   @override
   String get notifications_errorSnackBar_appOffline => 'Your application is currently offline';

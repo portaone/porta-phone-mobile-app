@@ -11,6 +11,7 @@ export 'call_network_quality.dart';
 export 'conference_membership_plan.dart';
 export 'conference_request_result.dart';
 export 'conference_state.dart';
+export 'attended_transfer_purpose.dart';
 export 'conversation_target.dart';
 export 'ice_connection_issue.dart';
 export 'jsep_value.dart';

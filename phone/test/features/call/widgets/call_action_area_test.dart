@@ -25,7 +25,18 @@ void main() {
     VoidCallback? onHangup,
     VoidCallback? onAccept,
     ConferenceState conference = const ConferenceState(),
+    LinkedCall? linkedCall,
+    bool? canStartAttendedTransfer,
   }) {
+    // As the screen reads it: from the state, unless a test says otherwise.
+    final canStart =
+        canStartAttendedTransfer ??
+        CallState(
+          linesCount: 3,
+          activeCalls: activeCalls,
+          conference: conference,
+          linkedCall: linkedCall,
+        ).canLinkCallTo(focusedCall.callId);
     return CallActionArea(
       params: CallControlsParams(
         activeCalls: activeCalls,
@@ -49,6 +60,8 @@ void main() {
         onHangup: onHangup ?? () {},
         onAccept: onAccept ?? () {},
         conference: conference,
+        linkedCall: linkedCall,
+        canStartAttendedTransfer: canStart,
       ),
     );
   }
@@ -205,6 +218,24 @@ void main() {
 
       expect(find.text('Anna Leg'), findsNothing);
       expect(find.text('Boris Leg'), findsNothing);
+    });
+
+    testWidgets('attended transfer is not offered while the call cannot have one placed for it', (tester) async {
+      // Sent to the lists only to be refused on the choice - a video call,
+      // every line taken, another linked call up - is worse than a disabled
+      // entry; the one rule lives in the state and the screen reads it.
+      await tester.pumpWidget(
+        wrap(
+          buildArea(
+            activeCalls: [active],
+            focusedCall: active,
+            callConfig: const CallCapabilitiesConfig(isAttendedTransferEnabled: true, isBlindTransferEnabled: false),
+            canStartAttendedTransfer: false,
+          ),
+        ),
+      );
+
+      expect(buttonWithIcon(tester, Icons.phone_forwarded).onPressed, isNull);
     });
 
     testWidgets('transfer is offered on an accepted focus', (tester) async {

@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'active_call.dart';
+
 part 'linked_call.freezed.dart';
 
 /// What a linked call is placed for.
@@ -83,4 +85,18 @@ class LinkedCall with _$LinkedCall {
   /// under way.
   @override
   final LinkedCallFailure? failure;
+
+  /// The linked call among [calls], once it has been answered; null before
+  /// that, or when it is not an attended transfer's second call.
+  ///
+  /// This is the call an attended transfer hands the anchor over to, and the
+  /// one rule for it: a menu that offered the hand-over on one reading and a
+  /// submit that refused it on another would leave a dead entry.
+  ActiveCall? answeredTransferCallIn(Iterable<ActiveCall> calls) {
+    if (purpose != LinkedCallPurpose.attendedTransfer) return null;
+    for (final call in calls) {
+      if (call.callId == callId) return call.wasAccepted ? call : null;
+    }
+    return null;
+  }
 }

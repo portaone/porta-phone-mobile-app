@@ -658,6 +658,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'main_BottomNavigationBarItemLabel_chats' =>
         main_BottomNavigationBarItemLabel_chats,
       'main_Text_blindTransferInitiated' => main_Text_blindTransferInitiated,
+      'main_Text_attendedTransferInitiated' =>
+        main_Text_attendedTransferInitiated,
       'main_BottomNavigationBarItemLabel_contacts' =>
         main_BottomNavigationBarItemLabel_contacts,
       'main_BottomNavigationBarItemLabel_favorites' =>
@@ -859,10 +861,6 @@ extension AppLocalizationsExtension on AppLocalizations {
         notifications_errorSnackBar_attendedTransferDeclined,
       'notifications_errorSnackBar_attendedTransferUnanswered' =>
         notifications_errorSnackBar_attendedTransferUnanswered,
-      'notifications_errorSnackBar_consultationDeclined' =>
-        notifications_errorSnackBar_consultationDeclined,
-      'notifications_errorSnackBar_consultationUnanswered' =>
-        notifications_errorSnackBar_consultationUnanswered,
       'notifications_errorSnackBar_appOffline' =>
         notifications_errorSnackBar_appOffline,
       'notifications_errorSnackBar_appOnline' =>
@@ -2116,6 +2114,14 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final String number] => contact_SemanticsLabel_transfer(number),
         _ => throw ArgumentError(
           'contact_SemanticsLabel_transfer requires 1 arguments',
+        ),
+      },
+      'contact_SemanticsLabel_attendedTransfer' => switch (args) {
+        [final String number] => contact_SemanticsLabel_attendedTransfer(
+          number,
+        ),
+        _ => throw ArgumentError(
+          'contact_SemanticsLabel_attendedTransfer requires 1 arguments',
         ),
       },
       'contacts_ContactTile_inCall' => switch (args) {

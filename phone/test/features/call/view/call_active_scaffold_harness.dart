@@ -15,6 +15,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
+import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call/view/call_active_scaffold.dart';
@@ -166,6 +167,9 @@ Widget buildCallScaffold(
   bool canAdd = false,
   ConferenceState conference = const ConferenceState(),
   bool conferenceParked = false,
+  LinkedCall? linkedCall,
+  DestinationPickingCubit? picking,
+  bool canStartAttendedTransfer = true,
 }) {
   Widget scaffold = BlocProvider<CallBloc>.value(
     value: callBloc,
@@ -183,8 +187,21 @@ Widget buildCallScaffold(
       localePlaceholderBuilder: null,
       remotePlaceholderBuilder: null,
       keepControlsVisible: keepControlsVisible,
+      linkedCall: linkedCall,
+      canStartAttendedTransfer: canStartAttendedTransfer,
     ),
   );
+  // Only a transfer that asks the lists for a choice needs them; provide
+  // them on demand, with the controller the choice is submitted through.
+  if (picking != null) {
+    scaffold = BlocProvider<DestinationPickingCubit>.value(
+      value: picking,
+      child: CallControllerScope(
+        controller: CallController(callBloc: callBloc),
+        child: scaffold,
+      ),
+    );
+  }
   // Only the camera permission-denied tap reads AppPermissions; provide it on demand.
   if (appPermissions != null) {
     scaffold = Provider<AppPermissions>.value(value: appPermissions, child: scaffold);

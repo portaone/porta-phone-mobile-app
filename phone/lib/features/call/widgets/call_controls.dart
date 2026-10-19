@@ -47,6 +47,8 @@ class CallControlsParams {
     this.onConversationSwitched,
     this.onMerge,
     this.onConferenceAdd,
+    this.linkedCall,
+    this.canStartAttendedTransfer = false,
     this.onConferenceSelfMuted,
     this.onConferenceParticipantMuted,
     this.onConferenceParticipantHangup,
@@ -111,6 +113,19 @@ class CallControlsParams {
   /// Moves the user between the room and a call outside it; `null` where the
   /// screen has no room to move between.
   final ValueChanged<String>? onConversationSwitched;
+
+  /// The call placed on behalf of another one, while one is being placed
+  /// (see [CallState.linkedCall]). For an attended transfer it names both
+  /// calls of the transfer, so the menu offers that one hand-over rather than
+  /// every held call as a possible target.
+  final LinkedCall? linkedCall;
+
+  /// The answered second call of the attended transfer under way, if any.
+  ActiveCall? get attendedTransferCall => linkedCall?.answeredTransferCallIn(activeCalls);
+
+  /// Whether an attended transfer can be started for the focused call (see
+  /// [CallState.canLinkCallTo]); the control is offered disabled otherwise.
+  final bool canStartAttendedTransfer;
 
   /// Brings the calls outside the room into it; `null` while none of them
   /// can join, which shows the control disabled rather than hiding it.

@@ -82,6 +82,8 @@ class _CallScreenState extends State<CallScreen> with AutoRouteAwareStateMixin {
               canMerge: state.canMerge(isConferenceEnabled: widget.callConfig.isConferenceEnabled),
               conferenceParked: state.conferenceMustPark,
               canAdd: state.canAdd(isConferenceEnabled: widget.callConfig.isConferenceEnabled),
+              linkedCall: state.linkedCall,
+              canStartAttendedTransfer: state.canLinkCallTo(state.focusedCall!.callId),
               conference: state.conference,
               localePlaceholderBuilder: widget.localePlaceholderBuilder,
               remotePlaceholderBuilder: widget.remotePlaceholderBuilder,

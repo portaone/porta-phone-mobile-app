@@ -1150,6 +1150,12 @@ abstract class AppLocalizations {
   /// **'Transfer current call to {number}'**
   String contact_SemanticsLabel_transfer(String number);
 
+  /// Accessibility name of the control on a number in the lists that calls that number as the second call of an attended transfer, to talk to them before handing the current call over; the number is who is called.
+  ///
+  /// In en, this message translates to:
+  /// **'Consult {number} before transferring the call'**
+  String contact_SemanticsLabel_attendedTransfer(String number);
+
   /// No description provided for @contacts_ContactsScreen_emptyFavorites.
   ///
   /// In en, this message translates to:
@@ -2716,6 +2722,12 @@ abstract class AppLocalizations {
   /// **'Performing blind transfer'**
   String get main_Text_blindTransferInitiated;
 
+  /// Shown above the contact, recent call and keypad lists while the person is choosing whom to call as the second call of an attended transfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who to consult before transferring'**
+  String get main_Text_attendedTransferInitiated;
+
   /// No description provided for @main_BottomNavigationBarItemLabel_contacts.
   ///
   /// In en, this message translates to:
@@ -3462,18 +3474,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No answer, returning to the call'**
   String get notifications_errorSnackBar_attendedTransferUnanswered;
-
-  /// Shown when the person called to consult before an attended transfer declines. The call being transferred is resumed.
-  ///
-  /// In en, this message translates to:
-  /// **'They declined, returning to the call'**
-  String get notifications_errorSnackBar_consultationDeclined;
-
-  /// Shown when the person called to consult before an attended transfer does not answer. The call being transferred is resumed.
-  ///
-  /// In en, this message translates to:
-  /// **'No answer, returning to the call'**
-  String get notifications_errorSnackBar_consultationUnanswered;
 
   /// Shown in a notification or snackbar when the application is offline. Condition: the app loses connection to the server or network and cannot perform online actions.
   ///
