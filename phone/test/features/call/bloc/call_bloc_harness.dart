@@ -387,6 +387,34 @@ class FakeCallkeep extends Fake implements Callkeep {
     return null;
   }
 
+  /// The outgoing calls the bloc asked the platform to place, in order.
+  final List<String> startCalls = [];
+
+  /// Returned by every outgoing start while set: the platform refusing to
+  /// place the call.
+  CallkeepCallRequestError? startError;
+
+  /// Records the request and answers it; the platform's own perform callback
+  /// that follows a start is not made - a test that needs it calls
+  /// `bloc.performStartCall` itself.
+  @override
+  Future<CallkeepCallRequestError?> startCall(
+    String callId,
+    CallkeepHandle handle, {
+    String? displayNameOrContactIdentifier,
+    bool hasVideo = false,
+    bool proximityEnabled = false,
+  }) async {
+    startCalls.add(callId);
+    return startError;
+  }
+
+  @override
+  Future<void> reportConnectingOutgoingCall(String callId) async {}
+
+  @override
+  Future<void> reportConnectedOutgoingCall(String callId) async {}
+
   @override
   Future<CallkeepCallRequestError?> endCall(String callId) async {
     endCalls.add(callId);
