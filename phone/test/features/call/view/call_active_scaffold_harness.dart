@@ -170,6 +170,7 @@ Widget buildCallScaffold(
   LinkedCall? linkedCall,
   DestinationPickingCubit? picking,
   bool canStartAttendedTransfer = true,
+  AddParticipantAvailability addParticipantAvailability = AddParticipantAvailability.hidden,
 }) {
   Widget scaffold = BlocProvider<CallBloc>.value(
     value: callBloc,
@@ -189,10 +190,12 @@ Widget buildCallScaffold(
       keepControlsVisible: keepControlsVisible,
       linkedCall: linkedCall,
       canStartAttendedTransfer: canStartAttendedTransfer,
+      addParticipantAvailability: addParticipantAvailability,
     ),
   );
-  // Only a transfer that asks the lists for a choice needs them; provide
-  // them on demand, with the controller the choice is submitted through.
+  // Only a transfer or a call to join that asks the lists for a choice needs
+  // them; provide them on demand, with the controller the choice is submitted
+  // through.
   if (picking != null) {
     scaffold = BlocProvider<DestinationPickingCubit>.value(
       value: picking,

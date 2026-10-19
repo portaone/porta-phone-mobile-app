@@ -98,6 +98,18 @@ extension AppLocalizationsExtension on AppLocalizations {
         call_CallActionsTooltip_transferToCallHint,
       'call_CallActionsTooltip_transferChooseHint' =>
         call_CallActionsTooltip_transferChooseHint,
+      'call_CallActionsTooltip_addParticipantHint' =>
+        call_CallActionsTooltip_addParticipantHint,
+      'call_CallActionsTooltip_addParticipantHint_conference' =>
+        call_CallActionsTooltip_addParticipantHint_conference,
+      'call_CallActionsTooltip_cancelInviteHint' =>
+        call_CallActionsTooltip_cancelInviteHint,
+      'call_CallActionsTooltip_cancelInviteHint_conference' =>
+        call_CallActionsTooltip_cancelInviteHint_conference,
+      'call_CallActionsTooltip_addOrTransfer' =>
+        call_CallActionsTooltip_addOrTransfer,
+      'call_CallActionsTooltip_addParticipant' =>
+        call_CallActionsTooltip_addParticipant,
       'call_CallActionsTooltip_changeAudioDevice' =>
         call_CallActionsTooltip_changeAudioDevice,
       'call_CallActionsTooltip_decline_inviteToAttendedTransfer' =>
@@ -151,6 +163,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'conferenceRefusal_unavailable' => conferenceRefusal_unavailable,
       'call_CallList_add' => call_CallList_add,
       'call_SemanticsLabel_add' => call_SemanticsLabel_add,
+      'call_Text_addParticipantNoFreeLine' =>
+        call_Text_addParticipantNoFreeLine,
       'call_ConferencePanel_you' => call_ConferencePanel_you,
       'call_ConferencePanel_hostStatus' => call_ConferencePanel_hostStatus,
       'call_ConferencePanel_hostStatusAside' =>
@@ -658,6 +672,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'main_BottomNavigationBarItemLabel_chats' =>
         main_BottomNavigationBarItemLabel_chats,
       'main_Text_blindTransferInitiated' => main_Text_blindTransferInitiated,
+      'main_Text_addParticipantInitiated' => main_Text_addParticipantInitiated,
       'main_Text_attendedTransferInitiated' =>
         main_Text_attendedTransferInitiated,
       'main_BottomNavigationBarItemLabel_contacts' =>
@@ -2028,6 +2043,12 @@ extension AppLocalizationsExtension on AppLocalizations {
           'callerId_SemanticsLabel_matchRule requires 2 arguments',
         ),
       },
+      'call_CallActionsTooltip_cancelInvite' => switch (args) {
+        [final String name] => call_CallActionsTooltip_cancelInvite(name),
+        _ => throw ArgumentError(
+          'call_CallActionsTooltip_cancelInvite requires 1 arguments',
+        ),
+      },
       'call_CallList_outsideHeader' => switch (args) {
         [final int count] => call_CallList_outsideHeader(count),
         _ => throw ArgumentError(
@@ -2114,6 +2135,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final String number] => contact_SemanticsLabel_transfer(number),
         _ => throw ArgumentError(
           'contact_SemanticsLabel_transfer requires 1 arguments',
+        ),
+      },
+      'contact_SemanticsLabel_addParticipant' => switch (args) {
+        [final String number] => contact_SemanticsLabel_addParticipant(number),
+        _ => throw ArgumentError(
+          'contact_SemanticsLabel_addParticipant requires 1 arguments',
         ),
       },
       'contact_SemanticsLabel_attendedTransfer' => switch (args) {

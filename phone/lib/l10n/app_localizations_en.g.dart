@@ -266,6 +266,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call_CallActionsTooltip_transferChooseHint => 'Transfer the call to another number';
 
   @override
+  String get call_CallActionsTooltip_addParticipantHint => 'Call someone and bring them into this call';
+
+  @override
+  String get call_CallActionsTooltip_addParticipantHint_conference => 'Call someone and bring them into the conference';
+
+  @override
+  String get call_CallActionsTooltip_cancelInviteHint => 'Stop calling and go back to the call';
+
+  @override
+  String get call_CallActionsTooltip_cancelInviteHint_conference => 'Stop calling and go back to the conference';
+
+  @override
+  String get call_CallActionsTooltip_addOrTransfer => 'Add or transfer';
+
+  @override
+  String get call_CallActionsTooltip_addParticipant => 'Add participant';
+
+  @override
+  String call_CallActionsTooltip_cancelInvite(String name) {
+    return 'Cancel invite to $name';
+  }
+
+  @override
   String get call_CallActionsTooltip_changeAudioDevice => 'Change audio device';
 
   @override
@@ -363,6 +386,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get call_SemanticsLabel_add => 'Add the calls to the conference';
+
+  @override
+  String get call_Text_addParticipantNoFreeLine => 'All lines are busy';
 
   @override
   String call_CallList_outsideHeader(int count) {
@@ -645,6 +671,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String contact_SemanticsLabel_transfer(String number) {
     return 'Transfer current call to $number';
+  }
+
+  @override
+  String contact_SemanticsLabel_addParticipant(String number) {
+    return 'Add $number to the call';
   }
 
   @override
@@ -1515,6 +1546,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get main_Text_blindTransferInitiated => 'Performing blind transfer';
+
+  @override
+  String get main_Text_addParticipantInitiated => 'Choose who to add to the call';
 
   @override
   String get main_Text_attendedTransferInitiated => 'Choose who to consult before transferring';

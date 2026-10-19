@@ -2,6 +2,7 @@ export 'package:flutter_webrtc/flutter_webrtc.dart' show RTCVideoRenderer;
 
 export 'active_call.dart';
 export 'add_participant_availability.dart';
+export 'add_participant_purpose.dart';
 export 'blind_transfer_purpose.dart';
 export 'call_audio.dart';
 export 'audio_device_request.dart';

@@ -38,6 +38,7 @@ class _CallShellState extends State<CallShell> {
         // app are what the person is choosing from.
         BlindTransferPicking(controller: CallControllerScope.of(context)),
         AttendedTransferPicking(),
+        AddParticipantPicking(),
       ],
       child: widget.child,
     );

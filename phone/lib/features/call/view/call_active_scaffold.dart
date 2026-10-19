@@ -36,6 +36,7 @@ class CallActiveScaffold extends StatefulWidget {
     required this.keepControlsVisible,
     this.contactResolver,
     this.linkedCall,
+    this.addParticipantAvailability = AddParticipantAvailability.hidden,
   });
 
   final CallStatus callStatus;
@@ -67,6 +68,10 @@ class CallActiveScaffold extends StatefulWidget {
   /// (see [CallState.linkedCall]): the consultation an attended transfer
   /// hands the call it is for over to.
   final LinkedCall? linkedCall;
+
+  /// Whether somebody can be called into the conversation on the screen
+  /// (see [CallState.addParticipantAvailability]).
+  final AddParticipantAvailability addParticipantAvailability;
 
   /// Whether the room has stood aside for a call outside it
   /// ([CallState.conferenceMustPark]).
@@ -481,6 +486,9 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                       onConferenceParticipantMuted: (callId, muted) =>
                           _callBloc.add(CallControlEvent.conferenceParticipantMuted(callId, muted)),
                       onConferenceParticipantHangup: (callId) => _callBloc.add(CallControlEvent.ended(callId)),
+                      addParticipantAvailability: widget.addParticipantAvailability,
+                      onAddParticipant: _addParticipant,
+                      onAddParticipantCancelled: _cancelAddParticipant,
                     ),
                   ),
                 ),
@@ -505,6 +513,37 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     for (final callId in _callBloc.state.mergeableCallIds) {
       _callBloc.add(CallControlEvent.conferenceAdded(callId));
     }
+  }
+
+  /// Sends the person to the lists to choose who to call into the
+  /// conversation on the screen: the focused call, or the room when it is one
+  /// of its legs. What it is for is read at the moment of the press, as for a
+  /// merge: the focus may have moved since the frame was built.
+  ///
+  /// Refused where somebody is already choosing for something that outranks
+  /// it; then the person stays on the call.
+  void _addParticipant() {
+    final anchorCallId = _callBloc.state.focusedCall?.callId;
+    if (anchorCallId == null) return;
+    final l10n = context.l10n;
+    final asked = context.read<DestinationPickingCubit>().ask(
+      AddParticipantPurpose(
+        announcement: l10n.main_Text_addParticipantInitiated,
+        pickLabel: l10n.contact_SemanticsLabel_addParticipant,
+        controller: CallControllerScope.of(context),
+        anchorCallId: anchorCallId,
+        intoRoom: _callBloc.state.isConferenced(anchorCallId),
+      ),
+    );
+    if (asked) _callBloc.add(const CallControlEvent.addParticipantInitiated());
+  }
+
+  /// Gives up on the call placed to join while it rings: ending it is what
+  /// gives the conversation back (see [CallState.linkedCall]).
+  void _cancelAddParticipant() {
+    final linked = widget.linkedCall;
+    if (linked == null || linked.purpose != LinkedCallPurpose.join) return;
+    _callBloc.add(CallControlEvent.ended(linked.callId));
   }
 
   /// Generates the list of menu items for the call options popup.

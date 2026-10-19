@@ -354,6 +354,32 @@ mute, and hold and transfer are gone because a leg has neither.
 
 Refusals reach the person as a sentence, not as the code the server sent.
 
+Calling somebody in is an entry of the transfer menu (`ActiveCallActions`),
+under a divider after the transfers: both start with choosing who else the call
+is about, and the grid has no place for a control of its own. Where the
+deployment offers rooms the button is named "Add or transfer" and shows
+`Icons.add_call`; elsewhere it stays the plain transfer. For a leg of the room
+the menu holds Add participant alone - a leg is not a call to hand over. The
+entry is disabled rather than absent while the conversation cannot take
+somebody, and with every main line taken it says so in its second line. Every
+entry of that menu carries such a second line (`CallPopupMenuItem.subtitle`)
+saying what it does - a person's name in a transfer menu says who, not what
+happens to the call - and Add participant's says whether the call goes into
+the call or the conference. Pressed, it sends the person to the lists with
+`AddParticipantPurpose` (see
+[`../architecture/destination_picking.md`](../architecture/destination_picking.md)),
+for the focused call; for a leg that is the room.
+`lib/features/call/widgets/add_participant_picking.dart` takes the request back
+when that call goes - a leg leaving included, so the person asks again from
+the room as it is - when a request made for the room outlives the room, or
+when the person returns to the call without choosing. While the call rings,
+the same entry offers Cancel invite, named after who is being called; it ends
+the linked call, which gives the conversation back, and goes once the call is
+answered, since ending a call somebody is talking on is the hangup's. One at a
+time, so the two never stand together. The button opens the menu only when an
+entry in it acts or says why it cannot; with nothing but an inert entry it
+stays disabled, as the plain transfer did.
+
 ## The operating system
 
 The legs are declared as one group (`setCallGroup('room-<room>', legs)`), which
