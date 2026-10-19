@@ -254,6 +254,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_CallActionsTooltip_attended_transfer => 'โอนสายแบบรอรับ';
 
   @override
+  String get call_CallActionsTooltip_unattendedTransferHint => 'โอนสายโดยไม่ต้องพูดคุยก่อน';
+
+  @override
+  String get call_CallActionsTooltip_attendedTransferHint => 'พูดคุยก่อน แล้วจึงโอนสาย';
+
+  @override
+  String get call_CallActionsTooltip_transferToCallHint => 'เชื่อมต่อกับสายนี้';
+
+  @override
+  String get call_CallActionsTooltip_transferChooseHint => 'โอนสายไปยังหมายเลขอื่น';
+
+  @override
   String get call_CallActionsTooltip_changeAudioDevice => 'เปลี่ยนอุปกรณ์เสียง';
 
   @override

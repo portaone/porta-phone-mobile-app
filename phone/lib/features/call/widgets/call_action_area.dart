@@ -54,6 +54,14 @@ class CallActionArea extends StatelessWidget {
     // silence the whole conference. The grid acts on the room instead.
     final focusedIsLeg = params.conference.isLeg(focusedCall.callId);
 
+    // The calls a transfer can go to, and the one it would replace, are never
+    // legs of the room: the server refuses a transfer that involves one.
+    final transferTargets = [
+      for (final call in heldCalls)
+        if (!params.conference.isLeg(call.callId)) call,
+    ];
+    final currentIsLeg = params.conference.isLeg(activeCall.callId);
+
     if (!focusedIsRinging) {
       return ActiveCallActions(
         style: style?.actions,
@@ -78,7 +86,9 @@ class CallActionArea extends StatelessWidget {
         audioDevice: params.audioDevice,
         availableAudioDevices: params.availableAudioDevices,
         onAudioDeviceChanged: params.onAudioDeviceChanged,
-        transferableCalls: heldCalls,
+        // A leg is neither a call to hand over nor one to hand a call to: the
+        // server refuses a transfer of one, from whichever side.
+        transferableCalls: focusedIsLeg ? const [] : transferTargets,
         onBlindTransferInitiated: callConfig.isBlindTransferEnabled && !focusedIsLeg
             ? (!focusedCall.wasAccepted || focusedTransfer != null ? null : params.onBlindTransferInitiated)
             : null,
@@ -103,7 +113,7 @@ class CallActionArea extends StatelessWidget {
         // a new regression). A proper fix needs an explicit
         // referor<->consultation link, not a positional guess -
         // see git history for a prior (closed) attempt.
-        onAttendedTransferSubmitted: callConfig.isAttendedTransferEnabled
+        onAttendedTransferSubmitted: callConfig.isAttendedTransferEnabled && !currentIsLeg
             ? (!activeCall.wasAccepted || focusedTransfer != null ? null : params.onAttendedTransferSubmitted)
             : null,
         heldValue: focusedCall.held,

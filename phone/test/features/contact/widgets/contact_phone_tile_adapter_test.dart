@@ -202,6 +202,15 @@ void main() {
         expect(find.byIcon(Icons.phone_forwarded), findsOneWidget);
       });
 
+      testWidgets('carries the mark of what is being chosen for', (tester) async {
+        await tester.pumpWidget(
+          buildTestable(buildAdapter(isPickingDestination: true, onPickPressed: () {}, pickIcon: Icons.person_add)),
+        );
+
+        expect(find.byIcon(Icons.person_add), findsOneWidget);
+        expect(find.byIcon(Icons.phone_forwarded), findsNothing);
+      });
+
       testWidgets('is not shown for one it refuses', (tester) async {
         // A refusal has one shape - no callback - so the row cannot look
         // pickable and then decline.

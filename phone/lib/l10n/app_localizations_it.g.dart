@@ -256,6 +256,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get call_CallActionsTooltip_attended_transfer => 'Trasferimento assistito';
 
   @override
+  String get call_CallActionsTooltip_unattendedTransferHint => 'Passa la chiamata senza parlare prima';
+
+  @override
+  String get call_CallActionsTooltip_attendedTransferHint => 'Parla prima, poi passa la chiamata';
+
+  @override
+  String get call_CallActionsTooltip_transferToCallHint => 'Collegalo a questa chiamata';
+
+  @override
+  String get call_CallActionsTooltip_transferChooseHint => 'Trasferisci la chiamata a un altro numero';
+
+  @override
   String get call_CallActionsTooltip_changeAudioDevice => 'Cambia dispositivo audio';
 
   @override

@@ -209,6 +209,22 @@
   "@call_CallActionsTooltip_accept_inviteToAttendedTransfer": {},
   "call_CallActionsTooltip_attended_transfer": "Trasferimento assistito",
   "@call_CallActionsTooltip_attended_transfer": {},
+  "call_CallActionsTooltip_unattendedTransferHint": "Passa la chiamata senza parlare prima",
+  "@call_CallActionsTooltip_unattendedTransferHint": {
+    "description": "Second line of the unattended transfer entry of the call screen's transfer menu, saying what it does."
+  },
+  "call_CallActionsTooltip_attendedTransferHint": "Parla prima, poi passa la chiamata",
+  "@call_CallActionsTooltip_attendedTransferHint": {
+    "description": "Second line of the attended transfer entry of the call screen's transfer menu, saying what it does."
+  },
+  "call_CallActionsTooltip_transferToCallHint": "Collegalo a questa chiamata",
+  "@call_CallActionsTooltip_transferToCallHint": {
+    "description": "Second line of a transfer menu entry named after another call on the screen: transferring connects that call with this one."
+  },
+  "call_CallActionsTooltip_transferChooseHint": "Trasferisci la chiamata a un altro numero",
+  "@call_CallActionsTooltip_transferChooseHint": {
+    "description": "Second line of the transfer menu entry that sends the person to the lists to choose where the call goes."
+  },
   "call_CallActionsTooltip_changeAudioDevice": "Cambia dispositivo audio",
   "@call_CallActionsTooltip_changeAudioDevice": {},
   "call_CallActionsTooltip_decline_inviteToAttendedTransfer": "Rifiuta trasferimento",

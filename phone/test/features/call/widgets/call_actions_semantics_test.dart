@@ -134,6 +134,21 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('the second line of a disabled entry is fainter than its greyed name', (tester) async {
+      // A fixed opacity drew it brighter than the name it explains.
+      await tester.pumpWidget(
+        wrap(
+          buildActive(enableInteractions: false, onBlindTransferInitiated: () {}, onAttendedTransferInitiated: () {}),
+        ),
+      );
+      await tester.tap(find.bySemanticsIdentifier(callActionsTransferMenuId));
+      await tester.pumpAndSettle();
+
+      final nameColor = DefaultTextStyle.of(tester.element(find.text('Unattended transfer'))).style.color!;
+      final subtitleColor = tester.widget<Text>(find.text('Hand the call over without talking first')).style!.color!;
+      expect(subtitleColor.a, lessThan(nameColor.a));
+    });
+
     testWidgets('each way of transferring can be told apart by id and pressed through it', (tester) async {
       final handle = tester.ensureSemantics();
       var blind = 0;
@@ -150,13 +165,14 @@ void main() {
       expectTapTargetSemantics(
         tester,
         find.bySemanticsIdentifier(callActionsTransferMenuBlindInitId),
-        label: 'Unattended transfer',
+        // Both lines are read: the name, then what it does.
+        label: 'Unattended transfer\nHand the call over without talking first',
         identifier: callActionsTransferMenuBlindInitId,
       );
       expectTapTargetSemantics(
         tester,
         find.bySemanticsIdentifier(callActionsTransferMenuAttendedInitId),
-        label: 'Attended transfer',
+        label: 'Attended transfer\nTalk to them first, then hand the call over',
         identifier: callActionsTransferMenuAttendedInitId,
       );
 
@@ -191,10 +207,15 @@ void main() {
       expectTapTargetSemantics(
         tester,
         find.bySemanticsIdentifier(callActionsTransferMenuNumberId),
-        label: _transferableCall.handle.value,
+        label: '${_transferableCall.handle.value}\nConnect them with this call',
         identifier: callActionsTransferMenuNumberId,
       );
-      expectTapTargetSemantics(tester, find.bySemanticsIdentifier(second), label: '1003', identifier: second);
+      expectTapTargetSemantics(
+        tester,
+        find.bySemanticsIdentifier(second),
+        label: '1003\nConnect them with this call',
+        identifier: second,
+      );
 
       // The second row hands the call to the second call, not to the first.
       await tapViaSemantics(tester, find.bySemanticsIdentifier(second));

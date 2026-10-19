@@ -177,7 +177,12 @@ class KeypadViewState extends State<KeypadView> {
               // answer it would take.
               final purpose = context.pickPurpose;
               final typed = DestinationCandidate(number: _sanitized(keypadState.value));
-              final picksTyped = purpose != null && purpose.offeredBy(MainFlavor.keypad) && purpose.accepts(typed);
+              final picking = purpose != null && purpose.offeredBy(MainFlavor.keypad);
+              // What the typed number offers is asked the way every list asks
+              // it. With nothing typed there is no number to name, so the
+              // control is called after the choice itself rather than read as
+              // a sentence missing its end.
+              final offer = picking && typed.number != null ? context.pickOfferFor(typed) : null;
 
               return BlocBuilder<CallBloc, CallState>(
                 buildWhen: (p, c) => p.activeCalls != c.activeCalls,
@@ -200,7 +205,13 @@ class KeypadViewState extends State<KeypadView> {
                         // Not gated on the transfer configuration: that is
                         // permission to hand a call over, not permission to
                         // answer whatever is being asked.
-                        onInitiatedTransferPressed: picksTyped ? () => _pickTyped(purpose) : null,
+                        // Shown for as long as the choice is being made, from
+                        // the first key: an empty pad that looked like the
+                        // ordinary dialer gave no sign it was choosing.
+                        onInitiatedTransferPressed: picking ? () => _pickTyped(purpose) : null,
+                        pickEnabled: offer?.isAnswer ?? false,
+                        pickIcon: picking ? purpose.pickIcon : null,
+                        pickLabel: picking ? offer?.label ?? purpose.announcement : null,
                         callNumbers: callRoutingState?.allNumbers ?? [],
                         onCallFrom: (number) =>
                             _callController.createCall(destination: _popNumber(), fromNumber: number),
