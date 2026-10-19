@@ -2894,6 +2894,29 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   Future<void> __onMutationControlStart(_CallMutationEventControlStart e, Emitter<CallState> emit) async {
+    await _startOutgoing(
+      emit,
+      handle: e.handle,
+      video: e.video,
+      displayName: e.displayName,
+      fromNumber: e.fromNumber,
+      fromReplaces: e.fromReplaces,
+      source: '__onMutationControlStart',
+    );
+  }
+
+  /// Places an outgoing call: picks its line, holds the calls it would
+  /// otherwise end, and hands it to callkeep. [source] names whoever asked,
+  /// in the log and in what is reported.
+  Future<void> _startOutgoing(
+    Emitter<CallState> emit, {
+    required CallkeepHandle handle,
+    required bool video,
+    required String? displayName,
+    required String? fromNumber,
+    required String? fromReplaces,
+    required String source,
+  }) async {
     // De-duplicate retry taps on the same destination while a previous attempt
     // has not yet sent its SIP INVITE. Covers every pre-offer-sent outgoing
     // status (created / created-from-refer / connecting-to-signaling /
@@ -2904,28 +2927,24 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // instead of a single retry. WT-1554.
     final hasPendingToSameHandle = state.activeCalls.any(
       (c) =>
-          c.direction == CallDirection.outgoing &&
-          c.processingStatus.isPreOfferSent &&
-          c.handle.value == e.handle.value,
+          c.direction == CallDirection.outgoing && c.processingStatus.isPreOfferSent && c.handle.value == handle.value,
     );
     if (hasPendingToSameHandle) {
-      _logger.info(
-        '__onMutationControlStart: ignoring duplicate tap, outgoing call to ${e.handle.value} already pending',
-      );
+      _logger.info('$source: ignoring duplicate tap, outgoing call to ${handle.value} already pending');
       // Bring the user back to the pending call screen so the tap feels acknowledged.
       emit(state.copyWith(minimized: false));
       return;
     }
 
     int? line;
-    if (e.fromNumber != null) {
+    if (fromNumber != null) {
       // Guest line is implied; signaling layer handles it without a line index.
       line = null;
     } else {
       line = state.pickOutgoingMainLine();
       if (line == null) {
         // Lines are known and all main lines are in use - fail fast.
-        _logger.info('__onMutationControlStart no idle line');
+        _logger.info('$source no idle line');
         submitNotification(const GeneralUnableToCallNotification());
         return;
       }
@@ -2939,18 +2958,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     });
 
     final callId = WebtritSignalingClient.generateCallId();
-    final contactName = (await contactResolver.resolve(e.handle.value))?.maybeName;
-    final displayName = contactName ?? e.displayName;
+    final contactName = (await contactResolver.resolve(handle.value))?.maybeName;
+    final shownName = contactName ?? displayName;
 
     final newCall = ActiveCall(
       direction: CallDirection.outgoing,
       line: line,
       callId: callId,
-      handle: e.handle,
-      displayName: displayName,
-      video: e.video,
-      fromNumber: e.fromNumber,
-      fromReplaces: e.fromReplaces,
+      handle: handle,
+      displayName: shownName,
+      video: video,
+      fromNumber: fromNumber,
+      fromReplaces: fromReplaces,
       createdTime: clock.now(),
       processingStatus: CallProcessingStatus.outgoingCreated,
     );
@@ -2958,20 +2977,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     final callkeepError = await callkeep.startCall(
       callId,
-      e.handle,
-      displayNameOrContactIdentifier: displayName,
-      hasVideo: e.video,
-      proximityEnabled: !e.video,
+      handle,
+      displayNameOrContactIdentifier: shownName,
+      hasVideo: video,
+      proximityEnabled: !video,
     );
 
     if (callkeepError != null) {
       if (callkeepError == CallkeepCallRequestError.selfManagedPhoneAccountNotRegistered) {
         CrashlyticsUtils.recordError(
-          'CallBloc - __onMutationControlStart selfManagedPhoneAccountNotRegistered',
-          information: ['callId: $callId', 'handle: ${e.handle.value}'],
+          'CallBloc - $source selfManagedPhoneAccountNotRegistered',
+          information: ['callId: $callId', 'handle: ${handle.value}'],
         );
       } else {
-        _logger.warning('__onMutationControlStart error: $callkeepError');
+        _logger.warning('$source error: $callkeepError');
         onDiagnosticReportRequested(callId, callkeepError);
       }
       emit(state.copyWithPopActiveCall(callId));
@@ -4766,19 +4785,24 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   // The wire format and the obligations followed here are in
   // packages/signaling/docs/conference_protocol.md.
 
-  Future<void> __onMutationControlMerge(_CallMutationEventControlMerge e, Emitter<CallState> emit) async {
+  Future<void> __onMutationControlMerge(_CallMutationEventControlMerge e, Emitter<CallState> emit) =>
+      _merge(e.callIds, emit, source: '__onMutationControlMerge');
+
+  /// Asks the server to merge [callIds] into a room; [source] names whoever
+  /// asked, in the log and on the request.
+  Future<void> _merge(List<String> callIds, Emitter<CallState> emit, {required String source}) async {
     if (!state.canMerge(isConferenceEnabled: capabilities.isConferenceEnabled)) {
-      _logger.warning('__onMutationControlMerge: nothing to merge now, ignoring');
+      _logger.warning('$source: nothing to merge now, ignoring');
       return;
     }
-    final legs = state.mergeableLegs(e.callIds);
+    final legs = state.mergeableLegs(callIds);
     if (legs.length < 2) {
-      _logger.warning('__onMutationControlMerge: fewer than two mergeable calls in ${e.callIds}, ignoring');
+      _logger.warning('$source: fewer than two mergeable calls in $callIds, ignoring');
       return;
     }
     final taken = await _executeConferenceRequest(
       MergeRequest(transaction: WebtritSignalingClient.generateTransactionId(), lines: legs.values.toList()),
-      source: '__onMutationControlMerge',
+      source: source,
       notifyRefusal: true,
     );
     if (!taken) return;
@@ -4787,7 +4811,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     legs.removeWhere((callId, _) => state.retrieveActiveCall(callId) == null);
     await _quietLegs(legs.keys, emit);
     if (state.conference.isPresent) {
-      _logger.warning('__onMutationControlMerge: a room appeared while this merge was being acknowledged');
+      _logger.warning('$source: a room appeared while this merge was being acknowledged');
       return;
     }
     _offerWait.begin();
@@ -4799,29 +4823,31 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _armConferenceAssembly();
   }
 
-  Future<void> __onMutationControlConferenceAdd(
-    _CallMutationEventControlConferenceAdd e,
-    Emitter<CallState> emit,
-  ) async {
-    final line = state.mergeableLegs([e.callId])[e.callId];
+  Future<void> __onMutationControlConferenceAdd(_CallMutationEventControlConferenceAdd e, Emitter<CallState> emit) =>
+      _addToRoom(e.callId, emit, source: '__onMutationControlConferenceAdd');
+
+  /// Asks the server to add [callId] to the room; [source] names whoever
+  /// asked, in the log and on the request.
+  Future<void> _addToRoom(String callId, Emitter<CallState> emit, {required String source}) async {
+    final line = state.mergeableLegs([callId])[callId];
     if (!state.conference.isPresent || line == null) {
-      _logger.warning('__onMutationControlConferenceAdd: ${e.callId} cannot join now, ignoring');
+      _logger.warning('$source: $callId cannot join now, ignoring');
       return;
     }
     final taken = await _executeConferenceRequest(
       ConferenceAddRequest(transaction: WebtritSignalingClient.generateTransactionId(), line: line),
-      source: '__onMutationControlConferenceAdd',
+      source: source,
       notifyRefusal: true,
     );
-    if (!taken || !state.conference.isPresent || state.retrieveActiveCall(e.callId) == null) return;
-    await _quietLegs([e.callId], emit);
+    if (!taken || !state.conference.isPresent || state.retrieveActiveCall(callId) == null) return;
+    await _quietLegs([callId], emit);
     if (!state.conference.isPresent) return;
-    emit(state.copyWith(conference: state.conference.copyWith(legs: {...state.conference.legs, e.callId: line})));
+    emit(state.copyWith(conference: state.conference.copyWith(legs: {...state.conference.legs, callId: line})));
     // After the room has been found to be still there, and after the call is
     // one of its legs: told any earlier, a call whose room fell away while it
     // was being quieted would be left saying the host had stepped out of a room
     // it never joined, with nothing to ever correct it.
-    if (_conferencePeerConnection.isParked) _tellLegsTheRoomIsParked([e.callId], true);
+    if (_conferencePeerConnection.isParked) _tellLegsTheRoomIsParked([callId], true);
   }
 
   /// A room-wide mute of one participant. Accepted by the server only once
