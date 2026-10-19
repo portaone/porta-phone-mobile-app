@@ -9,6 +9,10 @@ enum LinkedCallPurpose {
   /// The second call of an attended transfer: the person talks to the new
   /// party first, then hands the anchor call over to them.
   attendedTransfer,
+
+  /// A call that brings somebody into the conversation: once answered it is
+  /// merged with the anchor call, or added to the room the anchor is a leg of.
+  join,
 }
 
 /// Why a linked call ended without doing what it was placed for.
@@ -52,6 +56,10 @@ enum LinkedCallFailure {
 /// knows which call it was placed for, and when it fails the anchor is left on
 /// hold with nothing to take it off.
 ///
+/// The anchor can be a leg of the room when the call joins it ([intoRoom]):
+/// the room is addressed through its legs everywhere else too, and the leg
+/// then stands for the room rather than for the one person on it.
+///
 /// There is one at a time: a second one needs a second free line and a second
 /// conversation to be about, and nothing asks for that.
 @freezed
@@ -61,6 +69,8 @@ class LinkedCall with _$LinkedCall {
     required this.anchorCallId,
     required this.purpose,
     this.anchorWasLive = false,
+    this.intoRoom = false,
+    this.awaitingRoom = false,
     this.failure,
   });
 
@@ -80,6 +90,23 @@ class LinkedCall with _$LinkedCall {
   /// is the link's to take off when the call fails.
   @override
   final bool anchorWasLive;
+
+  /// Whether the call joins the room the anchor was a leg of when it was
+  /// placed, rather than the anchor call alone. Read from the moment of
+  /// placing: the leg may leave the room while the call rings, and the room is
+  /// still what the call was placed for.
+  ///
+  /// The room is not held for the call, it stands aside while a call outside
+  /// it is up and comes back by itself once there is none, so a failed call
+  /// has nothing of it to give back.
+  @override
+  final bool intoRoom;
+
+  /// Whether the call was answered while the room it joins could not take a
+  /// call - still assembling, or rejoining after a lost connection. It joins
+  /// once the room is up again.
+  @override
+  final bool awaitingRoom;
 
   /// Why the linked call is ending, once that is known; null while it is
   /// under way.

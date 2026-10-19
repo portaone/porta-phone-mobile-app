@@ -421,9 +421,21 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       add(_CallMutationEvent.linkedCallFinish(linked.callId));
       return;
     }
-    if (previous.retrieveActiveCall(linked.anchorCallId) != null &&
-        next.retrieveActiveCall(linked.anchorCallId) == null) {
+    // A call joining the room is for the room, not for the leg it was placed
+    // through: that leg leaving is one person going, not the conversation.
+    final anchorGone = linked.intoRoom
+        ? previous.conference.isPresent && !next.conference.isPresent
+        : previous.retrieveActiveCall(linked.anchorCallId) != null &&
+              next.retrieveActiveCall(linked.anchorCallId) == null;
+    if (anchorGone) {
       add(_CallMutationEvent.linkedCallDetach(linked.callId));
+      return;
+    }
+
+    if (linked.awaitingRoom &&
+        previous.conference.phase != ConferencePhase.active &&
+        next.conference.phase == ConferencePhase.active) {
+      add(_CallMutationEvent.linkedCallJoin(linked.callId));
     }
   }
 
@@ -1756,6 +1768,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallControlEventConferenceSelfMuted() => __onCallControlEventConferenceSelfMuted(event, emit),
       _CallControlEventConferenceEnded() => __onCallControlEventConferenceEnded(event, emit),
       _CallControlEventAttendedTransferCallPlaced() => __onCallControlEventAttendedTransferCallPlaced(event, emit),
+      _CallControlEventAddParticipantInitiated() => __onCallControlEventAddParticipantInitiated(event, emit),
+      _CallControlEventParticipantCallPlaced() => __onCallControlEventParticipantCallPlaced(event, emit),
     };
   }
 
@@ -1961,6 +1975,27 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         handle: CallkeepHandle.number(event.number),
         displayName: event.displayName,
         purpose: LinkedCallPurpose.attendedTransfer,
+      ),
+    );
+  }
+
+  Future<void> __onCallControlEventAddParticipantInitiated(
+    _CallControlEventAddParticipantInitiated event,
+    Emitter<CallState> emit,
+  ) async {
+    emit(state.copyWith(minimized: true));
+  }
+
+  Future<void> __onCallControlEventParticipantCallPlaced(
+    _CallControlEventParticipantCallPlaced event,
+    Emitter<CallState> emit,
+  ) async {
+    add(
+      _CallMutationEvent.controlLink(
+        anchorCallId: event.anchorCallId,
+        handle: CallkeepHandle.number(event.number),
+        displayName: event.displayName,
+        purpose: LinkedCallPurpose.join,
       ),
     );
   }
@@ -2418,6 +2453,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventConferenceAnswered() => __onMutationConferenceAnswered(event, emit),
       _CallMutationEventConferenceAnswerFailed() => __onMutationConferenceAnswerFailed(event, emit),
       _CallMutationEventControlLink() => __onMutationControlLink(event, emit),
+      _CallMutationEventLinkedCallJoin() => __onMutationLinkedCallJoin(event, emit),
       _CallMutationEventLinkedCallFinish() => __onMutationLinkedCallFinish(event, emit),
       _CallMutationEventLinkedCallDetach() => __onMutationLinkedCallDetach(event, emit),
     };
@@ -3525,6 +3561,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
 
     emit(state.copyWithMappedActiveCall(event.callId, (_) => call!));
+
+    // Queued, so the join runs after this answer has been applied to the
+    // call's connection, and in turn with any merge the person asked for.
+    final linked = state.linkedCall;
+    if (initialAccept && linked?.callId == event.callId && linked?.purpose == LinkedCallPurpose.join) {
+      add(_CallMutationEvent.linkedCallJoin(event.callId));
+    }
 
     final peerConnection = await _callPeerConnectionManager.retrieve(event.callId);
     if (jsep != null && peerConnection != null) {
@@ -4917,15 +4960,22 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// from the lists while the calls went on, and the call they started from
   /// may have ended or been merged since.
   Future<void> __onMutationControlLink(_CallMutationEventControlLink e, Emitter<CallState> emit) async {
-    if (!state.canLinkCallTo(e.anchorCallId)) {
+    final allowed = state.canLinkCallTo(
+      e.anchorCallId,
+      purpose: e.purpose,
+      isConferenceEnabled: capabilities.isConferenceEnabled,
+    );
+    if (!allowed) {
       _logger.warning('__onMutationControlLink: ${e.anchorCallId} cannot have a call placed for it now');
       submitNotification(const GeneralUnableToCallNotification());
       return;
     }
 
+    // A leg stands for its room here (see [LinkedCall.intoRoom]).
+    final intoRoom = state.isConferenced(e.anchorCallId);
     // Read before the call is placed: placing it holds the anchor, and only a
-    // hold the link put on is the link's to take off.
-    final anchorWasLive = state.retrieveActiveCall(e.anchorCallId)?.held == false;
+    // hold the link put on is the link's to take off. The room is not held.
+    final anchorWasLive = !intoRoom && state.retrieveActiveCall(e.anchorCallId)?.held == false;
 
     // Always from the main line: a call from another number is placed on the
     // guest line, which has no line number, and a transfer names a call by line.
@@ -4937,9 +4987,58 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       fromNumber: null,
       fromReplaces: null,
       source: '__onMutationControlLink',
-      link: (callId) =>
-          LinkedCall(callId: callId, anchorCallId: e.anchorCallId, purpose: e.purpose, anchorWasLive: anchorWasLive),
+      link: (callId) => LinkedCall(
+        callId: callId,
+        anchorCallId: e.anchorCallId,
+        purpose: e.purpose,
+        anchorWasLive: anchorWasLive,
+        intoRoom: intoRoom,
+      ),
     );
+  }
+
+  /// Brings the answered call into the conversation it was placed for:
+  /// merged with the anchor call, or added to the room.
+  ///
+  /// Which of the two is read now, not from when the call was placed: the
+  /// person may have merged the anchor into a room while the call rang, and a
+  /// merge asked for a leg is refused. A room that stands apart from the
+  /// anchor leaves the two calls apart, both on the screen; the server would
+  /// refuse a second room.
+  ///
+  /// The link is over once this has run, joined or not. A refused merge
+  /// leaves two ordinary calls - the new party answered and is talking, so
+  /// ending their call would be worse - and the refusal has been said. The
+  /// call ending while the server is asked is the exception: the link is left
+  /// for [__onMutationLinkedCallFinish], queued by then, to give the anchor
+  /// back.
+  Future<void> __onMutationLinkedCallJoin(_CallMutationEventLinkedCallJoin e, Emitter<CallState> emit) async {
+    var linked = state.linkedCall;
+    if (linked == null || linked.callId != e.callId || linked.purpose != LinkedCallPurpose.join) return;
+    final call = state.retrieveActiveCall(e.callId);
+    if (call == null || !call.wasAccepted) return;
+
+    if (!linked.intoRoom && state.isConferenced(linked.anchorCallId)) {
+      linked = linked.copyWith(intoRoom: true);
+      emit(state.copyWith(linkedCall: linked));
+    }
+
+    if (linked.intoRoom) {
+      if (state.conference.phase != ConferencePhase.active) {
+        // A room assembling or rejoining cannot take a call yet; the join is
+        // made when it is up (see [_followLinkedCall]).
+        emit(state.copyWith(linkedCall: linked.copyWith(awaitingRoom: true)));
+        return;
+      }
+      await _addToRoom(e.callId, emit, source: '__onMutationLinkedCallJoin');
+    } else if (state.conference.isPresent) {
+      _logger.warning('__onMutationLinkedCallJoin: a room stands apart from ${linked.anchorCallId}; calls stay apart');
+    } else {
+      await _merge([linked.anchorCallId, e.callId], emit, source: '__onMutationLinkedCallJoin');
+    }
+
+    if (state.retrieveActiveCall(e.callId) == null) return;
+    if (state.linkedCall?.callId == e.callId) emit(state.copyWith(linkedCall: null));
   }
 
   /// Gives the anchor back after the linked call is gone without having done
@@ -4958,7 +5057,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final failure = linked.failure ?? LinkedCallFailure.failed;
     _logger.info('__onMutationLinkedCallFinish: linked call ${e.callId} ended ($failure)');
 
-    if (linked.anchorWasLive) {
+    // A room is not held for the call (see [LinkedCall.intoRoom]): it comes
+    // back by itself once no call outside it is up.
+    if (linked.anchorWasLive && !linked.intoRoom) {
       final anchor = state.retrieveActiveCall(linked.anchorCallId);
       // A call answered while the linked one rang is the live one now; taking
       // the anchor off hold beside it would be the two live calls the

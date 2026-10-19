@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LinkedCall {
 
- String get callId; String get anchorCallId; LinkedCallPurpose get purpose; bool get anchorWasLive; LinkedCallFailure? get failure;
+ String get callId; String get anchorCallId; LinkedCallPurpose get purpose; bool get anchorWasLive; bool get intoRoom; bool get awaitingRoom; LinkedCallFailure? get failure;
 /// Create a copy of LinkedCall
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $LinkedCallCopyWith<LinkedCall> get copyWith => _$LinkedCallCopyWithImpl<LinkedC
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinkedCall&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.anchorCallId, anchorCallId) || other.anchorCallId == anchorCallId)&&(identical(other.purpose, purpose) || other.purpose == purpose)&&(identical(other.anchorWasLive, anchorWasLive) || other.anchorWasLive == anchorWasLive)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinkedCall&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.anchorCallId, anchorCallId) || other.anchorCallId == anchorCallId)&&(identical(other.purpose, purpose) || other.purpose == purpose)&&(identical(other.anchorWasLive, anchorWasLive) || other.anchorWasLive == anchorWasLive)&&(identical(other.intoRoom, intoRoom) || other.intoRoom == intoRoom)&&(identical(other.awaitingRoom, awaitingRoom) || other.awaitingRoom == awaitingRoom)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,callId,anchorCallId,purpose,anchorWasLive,failure);
+int get hashCode => Object.hash(runtimeType,callId,anchorCallId,purpose,anchorWasLive,intoRoom,awaitingRoom,failure);
 
 @override
 String toString() {
-  return 'LinkedCall(callId: $callId, anchorCallId: $anchorCallId, purpose: $purpose, anchorWasLive: $anchorWasLive, failure: $failure)';
+  return 'LinkedCall(callId: $callId, anchorCallId: $anchorCallId, purpose: $purpose, anchorWasLive: $anchorWasLive, intoRoom: $intoRoom, awaitingRoom: $awaitingRoom, failure: $failure)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $LinkedCallCopyWith<$Res>  {
   factory $LinkedCallCopyWith(LinkedCall value, $Res Function(LinkedCall) _then) = _$LinkedCallCopyWithImpl;
 @useResult
 $Res call({
- String callId, String anchorCallId, LinkedCallPurpose purpose, bool anchorWasLive, LinkedCallFailure? failure
+ String callId, String anchorCallId, LinkedCallPurpose purpose, bool anchorWasLive, bool intoRoom, bool awaitingRoom, LinkedCallFailure? failure
 });
 
 
@@ -62,12 +62,14 @@ class _$LinkedCallCopyWithImpl<$Res>
 
 /// Create a copy of LinkedCall
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? callId = null,Object? anchorCallId = null,Object? purpose = null,Object? anchorWasLive = null,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? callId = null,Object? anchorCallId = null,Object? purpose = null,Object? anchorWasLive = null,Object? intoRoom = null,Object? awaitingRoom = null,Object? failure = freezed,}) {
   return _then(LinkedCall(
 callId: null == callId ? _self.callId : callId // ignore: cast_nullable_to_non_nullable
 as String,anchorCallId: null == anchorCallId ? _self.anchorCallId : anchorCallId // ignore: cast_nullable_to_non_nullable
 as String,purpose: null == purpose ? _self.purpose : purpose // ignore: cast_nullable_to_non_nullable
 as LinkedCallPurpose,anchorWasLive: null == anchorWasLive ? _self.anchorWasLive : anchorWasLive // ignore: cast_nullable_to_non_nullable
+as bool,intoRoom: null == intoRoom ? _self.intoRoom : intoRoom // ignore: cast_nullable_to_non_nullable
+as bool,awaitingRoom: null == awaitingRoom ? _self.awaitingRoom : awaitingRoom // ignore: cast_nullable_to_non_nullable
 as bool,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
 as LinkedCallFailure?,
   ));

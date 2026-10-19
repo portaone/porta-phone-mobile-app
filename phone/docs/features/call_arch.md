@@ -283,6 +283,8 @@ platform, and only a hold the link put on is taken off - never while another cal
 which the first call would cut into. A decline and an unanswered call are
 announced (`LinkedCallFailedNotification`); busy is already said by the hangup. If the first
 call ends while the second still rings, the second stays as an ordinary call.
+The same link, with the purpose `join`, calls somebody into a call or a room - see
+[`call_conference.md`](call_conference.md), "Calling somebody in".
 `features/call/widgets/attended_transfer_picking.dart` takes the request back from the lists when
 the first call ends or the person returns to the call screen without choosing.
 

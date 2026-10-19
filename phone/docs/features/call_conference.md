@@ -3,7 +3,7 @@
 Merging the calls a person already holds into one room where everybody hears
 everybody. The room is the server's - a Janus AudioBridge the backend builds
 and owns - and this client asks for it, joins it, and follows what it says.
-Last reviewed: 2026-10-09.
+Last reviewed: 2026-10-19.
 
 The wire format, every refusal reason and the obligations this client is held
 to are in
@@ -19,6 +19,7 @@ lib/features/call/
     conference_peer_connection.dart   the client's own connection to the mixer
     leg_mute_sync.dart                keeps the platform's mute for each leg in step with the room's
   models/conference_state.dart        ConferenceState, ConferencePhase
+  models/linked_call.dart             LinkedCall: a call placed to join a call or the room (purpose join)
   bloc/call_bloc.dart                 the handlers, in the "conference" section
   bloc/call_state.dart                the derivations: mergeableCallIds, mergeableLegs, canMerge, canAdd
   widgets/conference_panel.dart       the room on screen: the host, the participants
@@ -269,6 +270,50 @@ It is a **claim, not a fact**, and the receiving side treats it as one:
 A far end that is not this app gets nothing, and cannot. The authoritative fix
 is an event from the core into the muted subscriber's own session; this is what
 can be done without one.
+
+## Calling somebody in
+
+Merging needs the calls to exist first. Calling somebody in places the call and
+joins it in one go: the person picks somebody, the call they are in is held,
+the new call is placed, and once it is answered it is merged with that call -
+or added to the room when it was made from one of the room's legs. Nothing has
+to be pressed in between.
+
+It is a linked call with the purpose `join` (`CallState.linkedCall`,
+`LinkedCall`): placing it, holding the call it is for and giving that call
+back when the new one does not come up are the linked call's, shared with the
+attended transfer and described in [`call_arch.md`](call_arch.md) under
+"Attended transfer". What joining adds:
+
+- **Who can be called into what** - `CallState.addParticipantAvailability`:
+  the deployment builds rooms; no other linked call is under way; a free main
+  line, counted without taking it (`retrieveIdleLine` would move the line
+  rotation); and for a call, an answered audio call on a numbered line, not in
+  a transfer and not next to a room - a second room is refused, and the room
+  is joined through its legs; for a leg, a room that is up, since an
+  assembling or rejoining room cannot take a call. With every main line taken
+  the control stays and says so (`noFreeLine`). The answer is asked again when
+  the choice arrives (`canLinkCallTo(..., purpose: join)`): the calls went on
+  while the person was in the lists.
+- **The room through a leg** - the room has no id of its own on this side, so
+  the call is placed for one of its legs and `intoRoom` records that it is for
+  the room. That leg leaving while the call rings is one person going, not the
+  conversation: the call stays tied until the room itself ends. A room is never
+  held for the call - it stands aside while a call outside it is up and comes
+  back by itself - so a failed call leaves the room as it was.
+- **The line** - always a main line, never the guest line of another caller
+  ID: the server merges calls by line, and a guest-line call has none.
+- **The join** - `signalingAccepted` of the new call queues `linkedCallJoin`,
+  which runs the same merge or add a person's tap runs. Being queued, it runs
+  after the answer has been applied, and a Merge pressed at the same moment
+  finds the room already there and is ignored rather than asked twice. A room
+  that is rejoining at that moment is waited for (`awaitingRoom`); the join is
+  made when it is up again. The link is over once the join has run, joined or
+  not: a refused merge leaves two ordinary calls, because ending a call the new
+  party has just answered would be worse than one more tap.
+- **What is said** - as for the attended transfer: a decline and an unanswered
+  call get a line of their own, busy and every other refusal are told by the
+  hangup, and a cancel is the person's own.
 
 ## On the screen
 
