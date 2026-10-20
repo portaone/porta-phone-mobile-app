@@ -251,9 +251,16 @@ normal answer/start flow and enter `incomingRestoringMedia` or `outgoingRestorin
 Media is re-established via ICE restart (renegotiationNeeded → `UpdateRequest`), not by
 replaying the original offer/answer exchange.
 
-`RenegotiationCoordinator` (`features/call/utils/renegotiation_coordinator.dart`) owns the per-call restart and retry
-bookkeeping. If signaling disconnects or times out after an ICE offer has already been installed,
-the call stays active and the coordinator keeps that exact local offer. It is sent in a new
+**ICE restart over a lost signaling connection** — `RenegotiationCoordinator`
+(`features/call/utils/renegotiation_coordinator.dart`) owns the per-call restart and retry
+bookkeeping. `__onMutationRenegotiate` asks it to classify a failed `update`: a loss of signaling
+(`NotConnectedException`, `WebtritSignalingDisconnectedException`,
+`WebtritSignalingTransactionTimeoutException`,
+`WebtritSignalingTransactionTerminateByDisconnectException`, or a `TimeoutException` while waiting
+for the final reply) is transient; any other error - a failed SDP or peer connection step, a
+rejection by the server - still ends the call. After a transient failure of an ICE offer that has
+already been installed, the call stays active and the coordinator keeps that exact local offer.
+It is sent in a new
 transaction after signaling reconnects, or by a retry while signaling remains connected: two
 quick ones at the failure's own delay, then a delay that doubles up to 30 s for as long as the
 call lives (a reconnect gives the quick ones back). Ending the call there would end a call the
@@ -391,12 +398,13 @@ carries no call context (only `error` + `stackTrace`), so it cannot tell which `
 exception belongs to, and a live call must survive a transient signaling/network drop rather
 than be torn down on the first error.
 
-Finalization of a call whose signaling drops is instead handled by four narrower paths that do
+Finalization of a call whose signaling drops is instead handled by five narrower paths that do
 have call context:
 
 | Path                         | Where                                                                                                                                                                   | Behaviour                                                                                                                                        |
 |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | Survive-and-recover          | `__onSignalingClientEventConnected` (`safeRenegotiate`), `_onConnectivityResultChanged` / `__onMutationIceConnectionFailed` (`restartIce`), the silent disconnect codes | keep the call in `activeCalls` across the outage and recover it on reconnect instead of finalizing it                                            |
+| Failed ICE restart update    | `__onMutationRenegotiate` -> `RenegotiationCoordinator.isTransientSignalingFailure`                                                                                     | a loss of signaling keeps the call and its installed offer, replayed on reconnect or by retry; any other error ends the call                     |
 | Remote hangup                | `__onCallSignalingEventHangup` -> `__onMutationSignalingHangup` -> `callkeep.reportEndCall`                                                                             | when signaling reconnects and the server tore the leg down, its hangup ends the call authoritatively                                             |
 | `requestCallIdError` cleanup | `__onSignalingClientEventDisconnected`                                                                                                                                  | for calls already marked `wasHungUp`, completes them once the disconnect confirms the call id is gone                                            |
 | Visible ICE issue            | `__onPeerConnectionEventIceConnectionStateChanged`                                                                                                                      | a persistent ICE failure surfaces `iceConnectionIssue` on the call so the user can end it manually instead of it sitting as an invisible phantom |
