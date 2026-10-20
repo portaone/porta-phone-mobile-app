@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:webtrit_phone/widgets/widgets.dart';
+
 import 'list_tile_separator.dart';
 
 /// A reusable settings list tile widget that combines a [ListTile]
@@ -20,6 +22,7 @@ class SettingsTile extends StatelessWidget {
     this.separatorColor,
     this.enabled = true,
     this.opacity = 1.0,
+    this.identifier,
     super.key,
   }) : assert(opacity >= 0.0 && opacity <= 1.0, 'opacity must be between 0.0 and 1.0');
 
@@ -43,6 +46,10 @@ class SettingsTile extends StatelessWidget {
   final bool enabled;
   final double opacity;
 
+  /// Stable automation id of the row; the title is translated and, for some
+  /// rows, configured per install, so it cannot be relied on to find one.
+  final String? identifier;
+
   @override
   Widget build(BuildContext context) {
     final trailingLabel = this.trailingLabel;
@@ -55,15 +62,20 @@ class SettingsTile extends StatelessWidget {
         ? trailing
         : Semantics(label: trailingLabel, child: trailing);
 
+    final identifier = this.identifier;
+    final listTile = ListTile(
+      leading: Icon(icon, color: iconColor),
+      title: Text(title, style: textStyle),
+      trailing: spokenTrailing,
+      onTap: onTap,
+      enabled: enabled,
+    );
+
+    // Only a row that is given an id is wrapped: merging a row whose trailing
+    // widget forms a node of its own would fold that node into the row.
     final tile = Opacity(
       opacity: opacity,
-      child: ListTile(
-        leading: Icon(icon, color: iconColor),
-        title: Text(title, style: textStyle),
-        trailing: spokenTrailing,
-        onTap: onTap,
-        enabled: enabled,
-      ),
+      child: identifier == null ? listTile : SemanticAction(identifier: identifier, child: listTile),
     );
 
     if (!showSeparator) return tile;

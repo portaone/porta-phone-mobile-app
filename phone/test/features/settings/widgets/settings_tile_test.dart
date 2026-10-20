@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:webtrit_phone/features/settings/widgets/settings_tile.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import '../../../helpers/helpers.dart';
+
 void main() {
   Widget buildTestable({Widget? trailing, String? trailingLabel}) {
     return MaterialApp(
@@ -41,6 +43,33 @@ void main() {
     await tester.pumpWidget(buildTestable());
 
     expect(tester.getSemantics(find.byType(ListTile)).getSemanticsData().label, 'Voicemail');
+
+    handle.dispose();
+  });
+
+  testWidgets('an identifier lands on the node that is pressed', (tester) async {
+    final handle = tester.ensureSemantics();
+    var pressed = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SettingsTile(
+            title: 'About',
+            icon: Icons.info_outline,
+            identifier: 'settingsAboutTile',
+            showSeparator: false,
+            onTap: () => pressed = true,
+          ),
+        ),
+      ),
+    );
+
+    final about = find.bySemanticsIdentifier('settingsAboutTile');
+    expect(tester.getSemantics(about).getSemanticsData().label, 'About');
+
+    await tapViaSemantics(tester, about);
+    expect(pressed, isTrue);
 
     handle.dispose();
   });

@@ -74,12 +74,17 @@ class UserInfoListTile extends StatelessWidget {
                         ),
                       ),
                     if (info.hasAnyPhoneNumber)
-                      CopyToClipboard(
-                        data: info.numbers.main,
-                        child: Text(
-                          info.formatPhoneNumber(context),
-                          style: themeData.textTheme.bodyLarge,
-                          overflow: TextOverflow.ellipsis,
+                      // Around the copy rather than inside it, so the number and
+                      // the long press that copies it stay one node.
+                      SemanticId(
+                        identifier: settingsUserInfoNumberId,
+                        child: CopyToClipboard(
+                          data: info.numbers.main,
+                          child: Text(
+                            info.formatPhoneNumber(context),
+                            style: themeData.textTheme.bodyLarge,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
                     if (info.balanceWithCurrency?.isNotEmpty == true)

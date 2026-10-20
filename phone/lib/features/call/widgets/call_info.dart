@@ -4,8 +4,10 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:clock/clock.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../extensions/extensions.dart';
 import '../models/models.dart';
@@ -134,6 +136,11 @@ class _CallInfoState extends State<CallInfo> {
     final textAlign = widget.textAlign;
     final statusTextAlign = centered ? null : widget.textAlign;
 
+    final showsUsername =
+        widget.username != null &&
+        widget.username != widget.number &&
+        (widget.number.contains(widget.username ?? '') == false);
+
     return Column(
       spacing: 8,
       // Its own height only: inside a bounded box (the landscape info zone)
@@ -142,9 +149,7 @@ class _CallInfoState extends State<CallInfo> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
-        if (widget.username != null &&
-            widget.username != widget.number &&
-            (widget.number.contains(widget.username ?? '') == false)) ...[
+        if (showsUsername)
           Text(
             widget.username!,
             style: userInfoTextStyle,
@@ -152,21 +157,17 @@ class _CallInfoState extends State<CallInfo> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        // Smaller under a name, in the name's place when there is none.
+        SemanticId(
+          identifier: callPeerNumberId,
+          child: Text(
             widget.number,
-            style: numberTextStyle,
+            style: showsUsername ? numberTextStyle : userInfoTextStyle,
             textAlign: textAlign,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-        ] else
-          Text(
-            widget.number,
-            style: userInfoTextStyle,
-            textAlign: textAlign,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+        ),
         Text(statusMessage, style: statusTextStyle, textAlign: statusTextAlign),
         if (processingStatus != null) Text(processingStatus, style: processingStatusTextStyle, textAlign: textAlign),
       ],
