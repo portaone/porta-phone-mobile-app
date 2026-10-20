@@ -251,6 +251,34 @@ normal answer/start flow and enter `incomingRestoringMedia` or `outgoingRestorin
 Media is re-established via ICE restart (renegotiationNeeded → `UpdateRequest`), not by
 replaying the original offer/answer exchange.
 
+**ICE restart over a lost signaling connection** — `RenegotiationCoordinator`
+(`features/call/utils/renegotiation_coordinator.dart`) owns the per-call restart and retry
+bookkeeping. `__onMutationRenegotiate` asks it to classify a failed `update`: a loss of signaling
+(`NotConnectedException`, `WebtritSignalingDisconnectedException`,
+`WebtritSignalingTransactionTimeoutException`,
+`WebtritSignalingTransactionTerminateByDisconnectException`, or a `TimeoutException` while waiting
+for the final reply) is transient; any other error - a failed SDP or peer connection step, a
+rejection by the server - still ends the call. After a transient failure of an ICE offer that has
+already been installed, the call stays active and the coordinator keeps that exact local offer.
+It is sent in a new
+transaction after signaling reconnects, or by a retry while signaling remains connected: two
+quick ones at the failure's own delay, then a delay that doubles up to 30 s for as long as the
+call lives (a reconnect gives the quick ones back). Ending the call there would end a call the
+server still holds, and stopping would leave it silent with nothing to recover it. A successful
+update or any path that removes the call clears the pending offer and its timers; the removal
+clears them before the teardown, so a teardown that throws leaves nothing armed.
+An interim `updating` reply does not clear it: the answer comes later as a non-initial `accepted`,
+and if signaling drops before that the offer is replayed on reconnect (the call's `updating` flag
+from the lost session is reset first). Only an applied answer or a remote offer clears it; an
+`accepted` without an answer leaves it kept. A call error on the update (a 491 collision, say)
+leaves the offer installed, so the same offer is sent again after a random 2-9 s delay, within the
+same schedule of retries. A renegotiation that finds the call `updating` (a hold, a transfer or
+a remote update in progress) waits a second and tries again; after ten such waits in a row the
+flag is taken as stale - the reply that would clear it is lost - and is cleared, so the ICE
+restart goes out instead of being deferred for the rest of the call. While an offer is kept,
+both the renegotiation guard and the answer guard of `accepted` ask the native peer connection
+for its signaling state instead of the Dart-side cache, which lags behind `setLocalDescription`.
+
 **Blind transfer** — `CallControlEvent.blindTransferInitiated` creates a new outgoing
 `ActiveCall` with status `outgoingCreatedFromRefer`, linked to the original call via `fromReferId`.
 The transfer target follows the normal outgoing flow from that status onward. Picking that target
@@ -370,12 +398,13 @@ carries no call context (only `error` + `stackTrace`), so it cannot tell which `
 exception belongs to, and a live call must survive a transient signaling/network drop rather
 than be torn down on the first error.
 
-Finalization of a call whose signaling drops is instead handled by four narrower paths that do
+Finalization of a call whose signaling drops is instead handled by five narrower paths that do
 have call context:
 
 | Path                         | Where                                                                                                                                                                   | Behaviour                                                                                                                                        |
 |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | Survive-and-recover          | `__onSignalingClientEventConnected` (`safeRenegotiate`), `_onConnectivityResultChanged` / `__onMutationIceConnectionFailed` (`restartIce`), the silent disconnect codes | keep the call in `activeCalls` across the outage and recover it on reconnect instead of finalizing it                                            |
+| Failed ICE restart update    | `__onMutationRenegotiate` -> `RenegotiationCoordinator.isTransientSignalingFailure`                                                                                     | a loss of signaling keeps the call and its installed offer, replayed on reconnect or by retry; any other error ends the call                     |
 | Remote hangup                | `__onCallSignalingEventHangup` -> `__onMutationSignalingHangup` -> `callkeep.reportEndCall`                                                                             | when signaling reconnects and the server tore the leg down, its hangup ends the call authoritatively                                             |
 | `requestCallIdError` cleanup | `__onSignalingClientEventDisconnected`                                                                                                                                  | for calls already marked `wasHungUp`, completes them once the disconnect confirms the call id is gone                                            |
 | Visible ICE issue            | `__onPeerConnectionEventIceConnectionStateChanged`                                                                                                                      | a persistent ICE failure surfaces `iceConnectionIssue` on the call so the user can end it manually instead of it sitting as an invisible phantom |
