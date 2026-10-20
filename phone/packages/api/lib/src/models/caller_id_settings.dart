@@ -6,13 +6,20 @@ part 'caller_id_settings.g.dart';
 @freezed
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 class PrefixMatcher with _$PrefixMatcher {
-  const PrefixMatcher({required this.prefix, required this.number});
+  const PrefixMatcher({required this.prefix, required this.number, this.country});
 
   @override
   final String prefix;
 
   @override
   final String number;
+
+  /// ISO 3166-1 alpha-2 code of the country picked for [prefix], for display
+  /// only. Left out of the request when unknown: the backend then keeps the
+  /// country it already has for the same prefix.
+  @override
+  @JsonKey(includeIfNull: false)
+  final String? country;
 
   factory PrefixMatcher.fromJson(Map<String, Object?> json) => _$PrefixMatcherFromJson(json);
 

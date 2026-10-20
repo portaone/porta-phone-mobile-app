@@ -58,11 +58,11 @@ class CallerIdSettingsCubit extends Cubit<CallerIdSettingsState?> {
     emit(state.copyWith(settings: settings));
   }
 
-  void addPrefixMatcher(String prefix, String number) {
+  void addPrefixMatcher(String prefix, String number, {String? country}) {
     final state = this.state;
     if (state == null) return;
 
-    final matcher = PrefixMatcher(prefix, number);
+    final matcher = PrefixMatcher(prefix, number, country: country);
     final settings = state.settings.copyWithMatchers([...state.settings.matchers, matcher]);
     _callerIdSettingsRepository.setCallerIdSettings(settings);
     emit(state.copyWith(settings: settings));

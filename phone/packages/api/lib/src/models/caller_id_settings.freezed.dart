@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PrefixMatcher {
 
- String get prefix; String get number;
+ String get prefix; String get number; String? get country;
 /// Create a copy of PrefixMatcher
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +26,16 @@ $PrefixMatcherCopyWith<PrefixMatcher> get copyWith => _$PrefixMatcherCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrefixMatcher&&(identical(other.prefix, prefix) || other.prefix == prefix)&&(identical(other.number, number) || other.number == number));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrefixMatcher&&(identical(other.prefix, prefix) || other.prefix == prefix)&&(identical(other.number, number) || other.number == number)&&(identical(other.country, country) || other.country == country));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,prefix,number);
+int get hashCode => Object.hash(runtimeType,prefix,number,country);
 
 @override
 String toString() {
-  return 'PrefixMatcher(prefix: $prefix, number: $number)';
+  return 'PrefixMatcher(prefix: $prefix, number: $number, country: $country)';
 }
 
 
@@ -46,7 +46,7 @@ abstract mixin class $PrefixMatcherCopyWith<$Res>  {
   factory $PrefixMatcherCopyWith(PrefixMatcher value, $Res Function(PrefixMatcher) _then) = _$PrefixMatcherCopyWithImpl;
 @useResult
 $Res call({
- String prefix, String number
+ String prefix, String number, String? country
 });
 
 
@@ -63,11 +63,12 @@ class _$PrefixMatcherCopyWithImpl<$Res>
 
 /// Create a copy of PrefixMatcher
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? prefix = null,Object? number = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? prefix = null,Object? number = null,Object? country = freezed,}) {
   return _then(PrefixMatcher(
 prefix: null == prefix ? _self.prefix : prefix // ignore: cast_nullable_to_non_nullable
 as String,number: null == number ? _self.number : number // ignore: cast_nullable_to_non_nullable
-as String,
+as String,country: freezed == country ? _self.country : country // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

@@ -262,6 +262,11 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String callerId_SemanticsLabel_matchRuleWithCountry(String dialCode, String country, String number) {
+    return 'Дзвінки на $dialCode, $country, показують $number';
+  }
+
+  @override
   String get call_CallActionsTooltip_accept => 'Прийняти';
 
   @override
