@@ -2022,6 +2022,17 @@ extension AppLocalizationsExtension on AppLocalizations {
           'callerId_SemanticsLabel_matchRule requires 2 arguments',
         ),
       },
+      'callerId_SemanticsLabel_matchRuleWithCountry' => switch (args) {
+        [final String dialCode, final String country, final String number] =>
+          callerId_SemanticsLabel_matchRuleWithCountry(
+            dialCode,
+            country,
+            number,
+          ),
+        _ => throw ArgumentError(
+          'callerId_SemanticsLabel_matchRuleWithCountry requires 3 arguments',
+        ),
+      },
       'call_CallList_outsideHeader' => switch (args) {
         [final int count] => call_CallList_outsideHeader(count),
         _ => throw ArgumentError(

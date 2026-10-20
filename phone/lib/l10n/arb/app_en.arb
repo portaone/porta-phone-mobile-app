@@ -276,6 +276,21 @@
       }
     }
   },
+  "callerId_SemanticsLabel_matchRuleWithCountry": "Calls to {dialCode}, {country}, show {number}",
+  "@callerId_SemanticsLabel_matchRuleWithCountry": {
+    "description": "The whole caller id rule read as one sentence when the rule keeps the country picked for its dial code: the dial code, the country's name and the number shown for it.",
+    "placeholders": {
+      "dialCode": {
+        "type": "String"
+      },
+      "country": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "call_CallActionsTooltip_accept": "Accept",
   "@call_CallActionsTooltip_accept": {},
   "call_CallActionsTooltip_accept_inviteToAttendedTransfer": "Accept transfer",

@@ -442,6 +442,12 @@ abstract class AppLocalizations {
   /// **'Calls to {dialCode} show {number}'**
   String callerId_SemanticsLabel_matchRule(String dialCode, String number);
 
+  /// The whole caller id rule read as one sentence when the rule keeps the country picked for its dial code: the dial code, the country's name and the number shown for it.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls to {dialCode}, {country}, show {number}'**
+  String callerId_SemanticsLabel_matchRuleWithCountry(String dialCode, String country, String number);
+
   /// No description provided for @call_CallActionsTooltip_accept.
   ///
   /// In en, this message translates to:

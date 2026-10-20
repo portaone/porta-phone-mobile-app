@@ -245,6 +245,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String callerId_SemanticsLabel_matchRuleWithCountry(String dialCode, String country, String number) {
+    return 'Calls to $dialCode, $country, show $number';
+  }
+
+  @override
   String get call_CallActionsTooltip_accept => 'Accept';
 
   @override

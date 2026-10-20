@@ -75,8 +75,8 @@ class _CallerIdSettingsScreenState extends State<CallerIdSettingsScreen> {
                       MatcherAddingForm(
                         numbers: state.additionalNumbers,
                         addedPrefixes: state.settings.matchers.whereType<PrefixMatcher>().map((e) => e.prefix).toList(),
-                        onSave: (prefix, number) {
-                          context.read<CallerIdSettingsCubit>().addPrefixMatcher(prefix, number);
+                        onSave: (prefix, number, country) {
+                          context.read<CallerIdSettingsCubit>().addPrefixMatcher(prefix, number, country: country);
                           setState(() => showMatcherForm = false);
                         },
                         onCancel: () => setState(() => showMatcherForm = false),

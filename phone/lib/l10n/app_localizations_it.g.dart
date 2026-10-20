@@ -247,6 +247,11 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String callerId_SemanticsLabel_matchRuleWithCountry(String dialCode, String country, String number) {
+    return 'Le chiamate verso $dialCode, $country, mostrano $number';
+  }
+
+  @override
   String get call_CallActionsTooltip_accept => 'Accetta chiamata';
 
   @override

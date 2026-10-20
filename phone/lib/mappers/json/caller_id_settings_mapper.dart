@@ -11,13 +11,18 @@ mixin CallerIdSettingsJsonMapper {
         'type': prefixMatcherDescriminator,
         'prefix': prefixMatcher.prefix,
         'number': prefixMatcher.number,
+        'country': prefixMatcher.country,
       },
     };
   }
 
   NumberMatcher numberMatcherFromMap(Map<String, dynamic> map) {
     return switch (map['type']) {
-      prefixMatcherDescriminator => PrefixMatcher(map['prefix'] as String, map['number'] as String),
+      prefixMatcherDescriminator => PrefixMatcher(
+        map['prefix'] as String,
+        map['number'] as String,
+        country: map['country'] as String?,
+      ),
       _ => throw Exception('Unknown matcher type: ${map['type']}'),
     };
   }

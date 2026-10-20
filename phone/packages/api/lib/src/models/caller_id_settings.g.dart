@@ -10,10 +10,15 @@ PrefixMatcher _$PrefixMatcherFromJson(Map<String, dynamic> json) =>
     PrefixMatcher(
       prefix: json['prefix'] as String,
       number: json['number'] as String,
+      country: json['country'] as String?,
     );
 
 Map<String, dynamic> _$PrefixMatcherToJson(PrefixMatcher instance) =>
-    <String, dynamic>{'prefix': instance.prefix, 'number': instance.number};
+    <String, dynamic>{
+      'prefix': instance.prefix,
+      'number': instance.number,
+      'country': ?instance.country,
+    };
 
 CallerIdSettings _$CallerIdSettingsFromJson(Map<String, dynamic> json) =>
     CallerIdSettings(

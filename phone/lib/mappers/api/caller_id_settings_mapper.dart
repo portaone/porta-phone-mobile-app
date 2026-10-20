@@ -22,10 +22,10 @@ mixin CallerIdSettingsApiMapper {
   }
 
   NumberMatcher prefixMatcherFromApi(api.PrefixMatcher matcher) {
-    return PrefixMatcher(matcher.prefix, matcher.number);
+    return PrefixMatcher(matcher.prefix, matcher.number, country: matcher.country);
   }
 
   api.PrefixMatcher prefixMatcherToApi(PrefixMatcher matcher) {
-    return api.PrefixMatcher(prefix: matcher.prefix, number: matcher.number);
+    return api.PrefixMatcher(prefix: matcher.prefix, number: matcher.number, country: matcher.country);
   }
 }
