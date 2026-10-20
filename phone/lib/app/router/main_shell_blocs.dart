@@ -275,6 +275,7 @@ class MainShellBlocs extends StatelessWidget {
               smsRepository: context.read<SmsRepository>(),
               sessionRepository: context.read<SessionRepository>(),
               userSettings: context.read<ConversationUserSettingsCubit>(),
+              messagingConfig: featureAccess.messagingConfig,
             )..init();
           },
         ),

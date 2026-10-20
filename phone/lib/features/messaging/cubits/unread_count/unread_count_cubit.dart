@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import 'package:webtrit_phone/features/messaging/cubits/conversation_user_settings/conversation_user_settings_cubit.dart';
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 final _logger = Logger('UnreadCountCubit');
@@ -19,12 +20,18 @@ final _logger = Logger('UnreadCountCubit');
 /// decided here, once, so a reader of a total never has to know about the
 /// mutes - and follows [ConversationUserSettingsCubit]'s clock, since a mute
 /// lapses with no message arriving to recount on.
+///
+/// A kind of conversation that is switched off counts nothing. The local
+/// database keeps whatever was synced while it was on - turning a kind off
+/// stops its sync and hides its screens but removes no rows - so counting
+/// those rows would leave a badge the user has no screen to clear.
 class UnreadCountCubit extends Cubit<UnreadCountState> {
   UnreadCountCubit({
     required this.chatsRepository,
     required this.smsRepository,
     required this.sessionRepository,
     required this.userSettings,
+    required this.messagingConfig,
     this.updateDebounce = const Duration(seconds: 1),
   }) : super(UnreadCountState.initial());
 
@@ -32,7 +39,17 @@ class UnreadCountCubit extends Cubit<UnreadCountState> {
   final SmsRepository smsRepository;
   final SessionRepository sessionRepository;
   final ConversationUserSettingsCubit userSettings;
+
+  /// Which kinds of conversation the user has; a kind that is not present
+  /// is not counted.
+  final MessagingConfig messagingConfig;
+
   final Duration updateDebounce;
+
+  bool get _chatsEnabled => messagingConfig.chatsPresent;
+
+  bool get _smsEnabled => messagingConfig.smsPresent;
+
   StreamSubscription? _chatsUpdatesSub;
   StreamSubscription? _smsUpdatesSub;
   StreamSubscription? _userSettingsSub;
@@ -43,16 +60,20 @@ class UnreadCountCubit extends Cubit<UnreadCountState> {
   void init() {
     _logger.fine('Initializing');
     _updateUnreadCount();
-    _chatsUpdatesSub = chatsRepository.eventBus.debounce(updateDebounce).listen((_) => _updateUnreadCount());
-    _smsUpdatesSub = smsRepository.eventBus.debounce(updateDebounce).listen((_) => _updateUnreadCount());
+    if (_chatsEnabled) {
+      _chatsUpdatesSub = chatsRepository.eventBus.debounce(updateDebounce).listen((_) => _updateUnreadCount());
+    }
+    if (_smsEnabled) {
+      _smsUpdatesSub = smsRepository.eventBus.debounce(updateDebounce).listen((_) => _updateUnreadCount());
+    }
     // The counts are unchanged by a mute; only the totals over them move.
     _userSettingsSub = userSettings.stream.listen((_) => _emit());
   }
 
   void _updateUnreadCount() async {
     final userId = sessionRepository.getCurrent().userId;
-    _chatCounts = await chatsRepository.unreadedCountPerChat(userId);
-    _smsCounts = await smsRepository.unreadedCountPerConversation(userId);
+    if (_chatsEnabled) _chatCounts = await chatsRepository.unreadedCountPerChat(userId);
+    if (_smsEnabled) _smsCounts = await smsRepository.unreadedCountPerConversation(userId);
     if (isClosed) return;
     _emit();
   }
