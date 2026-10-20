@@ -2,6 +2,7 @@ export 'package:flutter_webrtc/flutter_webrtc.dart' show RTCVideoRenderer;
 
 export 'active_call.dart';
 export 'add_participant_availability.dart';
+export 'add_participant_purpose.dart';
 export 'blind_transfer_purpose.dart';
 export 'call_audio.dart';
 export 'audio_device_request.dart';
@@ -17,6 +18,7 @@ export 'conversation_target.dart';
 export 'ice_connection_issue.dart';
 export 'jsep_value.dart';
 export 'linked_call.dart';
+export 'linked_call_pick_purpose.dart';
 export 'notification.dart';
 export 'processing_status.dart';
 export 'transfer.dart';

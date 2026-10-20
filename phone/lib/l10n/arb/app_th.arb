@@ -225,6 +225,40 @@
   "@call_CallActionsTooltip_transferChooseHint": {
     "description": "Second line of the transfer menu entry that sends the person to the lists to choose where the call goes."
   },
+  "call_CallActionsTooltip_addParticipantHint": "โทรหาใครสักคนแล้วดึงเข้าสายนี้",
+  "@call_CallActionsTooltip_addParticipantHint": {
+    "description": "Second line of the Add participant entry of the call screen's transfer menu, when the conversation is one call."
+  },
+  "call_CallActionsTooltip_addParticipantHint_conference": "โทรหาใครสักคนแล้วดึงเข้าการประชุม",
+  "@call_CallActionsTooltip_addParticipantHint_conference": {
+    "description": "Second line of the Add participant entry of the call screen's transfer menu, when the conversation is a conference."
+  },
+  "call_CallActionsTooltip_cancelInviteHint": "หยุดโทรและกลับไปที่สายสนทนา",
+  "@call_CallActionsTooltip_cancelInviteHint": {
+    "description": "Second line of the Cancel invite entry of the call screen's transfer menu, when the invite is into a call."
+  },
+  "call_CallActionsTooltip_cancelInviteHint_conference": "หยุดโทรและกลับไปที่การประชุม",
+  "@call_CallActionsTooltip_cancelInviteHint_conference": {
+    "description": "Second line of the Cancel invite entry of the call screen's transfer menu, when the invite is into a conference."
+  },
+  "call_CallActionsTooltip_addOrTransfer": "เพิ่มหรือโอนสาย",
+  "@call_CallActionsTooltip_addOrTransfer": {
+    "description": "Name of the call screen button that opens the menu for transferring the call or calling somebody into it, where the deployment offers conferences."
+  },
+  "call_CallActionsTooltip_addParticipant": "เพิ่มผู้เข้าร่วม",
+  "@call_CallActionsTooltip_addParticipant": {
+    "description": "Entry of the call screen's transfer menu that calls somebody and brings them into the call or the conference once they answer."
+  },
+  "call_CallActionsTooltip_cancelInvite": "ยกเลิกคำเชิญถึง {name}",
+  "@call_CallActionsTooltip_cancelInvite": {
+    "description": "Entry of the call screen's transfer menu that ends the call placed to bring somebody into the call or the conference, while it is still ringing; the name is who is being called.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "John Smith"
+      }
+    }
+  },
   "call_CallActionsTooltip_changeAudioDevice": "เปลี่ยนอุปกรณ์เสียง",
   "@call_CallActionsTooltip_changeAudioDevice": {},
   "call_CallActionsTooltip_decline_inviteToAttendedTransfer": "ปฏิเสธการโอนสาย",
@@ -310,6 +344,10 @@
   "call_SemanticsLabel_add": "เพิ่มสายเข้าการประชุมสาย",
   "@call_SemanticsLabel_add": {
     "description": "Accessibility name of the button that brings the calls outside a conference into it."
+  },
+  "call_Text_addParticipantNoFreeLine": "สายทั้งหมดไม่ว่าง",
+  "@call_Text_addParticipantNoFreeLine": {
+    "description": "Shown under the disabled Add participant button when every line is taken by a call, so there is no line to call somebody on."
   },
   "call_CallList_outsideHeader": "{count, plural, other{{count} สายนอกการประชุมสาย}}",
   "@call_CallList_outsideHeader": {
@@ -610,6 +648,16 @@
     "placeholders": {
       "number": {
         "type": "String"
+      }
+    }
+  },
+  "contact_SemanticsLabel_addParticipant": "เพิ่ม {number} ในการสนทนา",
+  "@contact_SemanticsLabel_addParticipant": {
+    "description": "Accessibility name of the control on a number in the lists that calls that number and brings them into the current call; the number is who is called.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "+380441234567"
       }
     }
   },
@@ -1393,6 +1441,10 @@
   "@main_BottomNavigationBarItemLabel_chats": {},
   "main_Text_blindTransferInitiated": "กำลังโอนสายแบบไม่แจ้ง",
   "@main_Text_blindTransferInitiated": {},
+  "main_Text_addParticipantInitiated": "เลือกผู้ที่จะเพิ่มในการสนทนา",
+  "@main_Text_addParticipantInitiated": {
+    "description": "Shown above the contact, recent call and keypad lists while the person is choosing who to bring into the call."
+  },
   "main_Text_attendedTransferInitiated": "เลือกผู้ที่จะปรึกษาก่อนโอนสาย",
   "@main_Text_attendedTransferInitiated": {
     "description": "Shown above the contact, recent call and keypad lists while the person is choosing whom to call as the second call of an attended transfer."

@@ -55,6 +55,9 @@ class CallControlsParams {
     this.audioDevice,
     this.contactResolver,
     this.keypadShown = false,
+    this.addParticipantAvailability = AddParticipantAvailability.hidden,
+    this.onAddParticipant,
+    this.onAddParticipantCancelled,
   });
 
   final List<ActiveCall> activeCalls;
@@ -130,6 +133,37 @@ class CallControlsParams {
   /// Brings the calls outside the room into it; `null` while none of them
   /// can join, which shows the control disabled rather than hiding it.
   final VoidCallback? onConferenceAdd;
+
+  /// Whether somebody can be called into the conversation on the screen;
+  /// see [CallState.addParticipantAvailability].
+  final AddParticipantAvailability addParticipantAvailability;
+
+  /// Sends the person to the lists to choose somebody to call in.
+  final VoidCallback? onAddParticipant;
+
+  /// Gives up on the call placed to join while it rings.
+  final VoidCallback? onAddParticipantCancelled;
+
+  /// Who is being called in, while the call placed to join still rings: the
+  /// name the call shows, or its number. Null once it is answered - the
+  /// person is talking then, and ending the call is the hangup's to do, not
+  /// a cancel's.
+  String? get addParticipantPendingName {
+    final linked = linkedCall;
+    if (linked == null || linked.purpose != LinkedCallPurpose.join) return null;
+    for (final call in activeCalls) {
+      if (call.callId == linked.callId) return call.wasAccepted ? null : call.displayName ?? call.handle.value;
+    }
+    return null;
+  }
+
+  /// Whether the call placed to join, under way or about to be started from
+  /// the focused call, goes into the room rather than into a single call.
+  bool get addParticipantIntoRoom {
+    final linked = linkedCall;
+    if (linked != null && linked.purpose == LinkedCallPurpose.join) return linked.intoRoom;
+    return conference.isLeg(focusedCall.callId);
+  }
 
   final ValueChanged<bool>? onConferenceSelfMuted;
   final void Function(String callId, bool muted)? onConferenceParticipantMuted;

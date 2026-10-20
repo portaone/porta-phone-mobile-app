@@ -266,6 +266,29 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_CallActionsTooltip_transferChooseHint => 'โอนสายไปยังหมายเลขอื่น';
 
   @override
+  String get call_CallActionsTooltip_addParticipantHint => 'โทรหาใครสักคนแล้วดึงเข้าสายนี้';
+
+  @override
+  String get call_CallActionsTooltip_addParticipantHint_conference => 'โทรหาใครสักคนแล้วดึงเข้าการประชุม';
+
+  @override
+  String get call_CallActionsTooltip_cancelInviteHint => 'หยุดโทรและกลับไปที่สายสนทนา';
+
+  @override
+  String get call_CallActionsTooltip_cancelInviteHint_conference => 'หยุดโทรและกลับไปที่การประชุม';
+
+  @override
+  String get call_CallActionsTooltip_addOrTransfer => 'เพิ่มหรือโอนสาย';
+
+  @override
+  String get call_CallActionsTooltip_addParticipant => 'เพิ่มผู้เข้าร่วม';
+
+  @override
+  String call_CallActionsTooltip_cancelInvite(String name) {
+    return 'ยกเลิกคำเชิญถึง $name';
+  }
+
+  @override
   String get call_CallActionsTooltip_changeAudioDevice => 'เปลี่ยนอุปกรณ์เสียง';
 
   @override
@@ -363,6 +386,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get call_SemanticsLabel_add => 'เพิ่มสายเข้าการประชุมสาย';
+
+  @override
+  String get call_Text_addParticipantNoFreeLine => 'สายทั้งหมดไม่ว่าง';
 
   @override
   String call_CallList_outsideHeader(int count) {
@@ -634,6 +660,11 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String contact_SemanticsLabel_transfer(String number) {
     return 'โอนสายปัจจุบันไปที่ $number';
+  }
+
+  @override
+  String contact_SemanticsLabel_addParticipant(String number) {
+    return 'เพิ่ม $number ในการสนทนา';
   }
 
   @override
@@ -1503,6 +1534,9 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get main_Text_blindTransferInitiated => 'กำลังโอนสายแบบไม่แจ้ง';
+
+  @override
+  String get main_Text_addParticipantInitiated => 'เลือกผู้ที่จะเพิ่มในการสนทนา';
 
   @override
   String get main_Text_attendedTransferInitiated => 'เลือกผู้ที่จะปรึกษาก่อนโอนสาย';

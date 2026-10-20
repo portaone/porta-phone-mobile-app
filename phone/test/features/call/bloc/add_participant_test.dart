@@ -280,7 +280,7 @@ void main() {
   });
 
   test('picking who to call steps the screen aside', () async {
-    h.bloc.add(const CallControlEvent.addParticipantInitiated());
+    h.bloc.add(const CallControlEvent.linkedCallPickingStarted());
     await h.settle(() => h.bloc.state.minimized == true);
 
     expect(h.bloc.state.minimized, isTrue);

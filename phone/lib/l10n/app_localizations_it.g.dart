@@ -268,6 +268,29 @@ class AppLocalizationsIt extends AppLocalizations {
   String get call_CallActionsTooltip_transferChooseHint => 'Trasferisci la chiamata a un altro numero';
 
   @override
+  String get call_CallActionsTooltip_addParticipantHint => 'Chiama qualcuno e aggiungilo a questa chiamata';
+
+  @override
+  String get call_CallActionsTooltip_addParticipantHint_conference => 'Chiama qualcuno e aggiungilo alla conferenza';
+
+  @override
+  String get call_CallActionsTooltip_cancelInviteHint => 'Smetti di chiamare e torna alla chiamata';
+
+  @override
+  String get call_CallActionsTooltip_cancelInviteHint_conference => 'Smetti di chiamare e torna alla conferenza';
+
+  @override
+  String get call_CallActionsTooltip_addOrTransfer => 'Aggiungi o trasferisci';
+
+  @override
+  String get call_CallActionsTooltip_addParticipant => 'Aggiungi partecipante';
+
+  @override
+  String call_CallActionsTooltip_cancelInvite(String name) {
+    return 'Annulla l\'invito a $name';
+  }
+
+  @override
   String get call_CallActionsTooltip_changeAudioDevice => 'Cambia dispositivo audio';
 
   @override
@@ -366,6 +389,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get call_SemanticsLabel_add => 'Aggiungi le chiamate alla conferenza';
+
+  @override
+  String get call_Text_addParticipantNoFreeLine => 'Tutte le linee sono occupate';
 
   @override
   String call_CallList_outsideHeader(int count) {
@@ -650,6 +676,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String contact_SemanticsLabel_transfer(String number) {
     return 'Trasferisci la chiamata corrente a $number';
+  }
+
+  @override
+  String contact_SemanticsLabel_addParticipant(String number) {
+    return 'Aggiungi $number alla chiamata';
   }
 
   @override
@@ -1532,6 +1563,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get main_Text_blindTransferInitiated => 'Trasferimento senza vedere';
+
+  @override
+  String get main_Text_addParticipantInitiated => 'Scegli chi aggiungere alla chiamata';
 
   @override
   String get main_Text_attendedTransferInitiated => 'Scegli chi consultare prima del trasferimento';

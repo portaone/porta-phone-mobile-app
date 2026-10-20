@@ -484,6 +484,48 @@ abstract class AppLocalizations {
   /// **'Transfer the call to another number'**
   String get call_CallActionsTooltip_transferChooseHint;
 
+  /// Second line of the Add participant entry of the call screen's transfer menu, when the conversation is one call.
+  ///
+  /// In en, this message translates to:
+  /// **'Call someone and bring them into this call'**
+  String get call_CallActionsTooltip_addParticipantHint;
+
+  /// Second line of the Add participant entry of the call screen's transfer menu, when the conversation is a conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Call someone and bring them into the conference'**
+  String get call_CallActionsTooltip_addParticipantHint_conference;
+
+  /// Second line of the Cancel invite entry of the call screen's transfer menu, when the invite is into a call.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop calling and go back to the call'**
+  String get call_CallActionsTooltip_cancelInviteHint;
+
+  /// Second line of the Cancel invite entry of the call screen's transfer menu, when the invite is into a conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop calling and go back to the conference'**
+  String get call_CallActionsTooltip_cancelInviteHint_conference;
+
+  /// Name of the call screen button that opens the menu for transferring the call or calling somebody into it, where the deployment offers conferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Add or transfer'**
+  String get call_CallActionsTooltip_addOrTransfer;
+
+  /// Entry of the call screen's transfer menu that calls somebody and brings them into the call or the conference once they answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add participant'**
+  String get call_CallActionsTooltip_addParticipant;
+
+  /// Entry of the call screen's transfer menu that ends the call placed to bring somebody into the call or the conference, while it is still ringing; the name is who is being called.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel invite to {name}'**
+  String call_CallActionsTooltip_cancelInvite(String name);
+
   /// No description provided for @call_CallActionsTooltip_changeAudioDevice.
   ///
   /// In en, this message translates to:
@@ -681,6 +723,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add the calls to the conference'**
   String get call_SemanticsLabel_add;
+
+  /// Shown under the disabled Add participant button when every line is taken by a call, so there is no line to call somebody on.
+  ///
+  /// In en, this message translates to:
+  /// **'All lines are busy'**
+  String get call_Text_addParticipantNoFreeLine;
 
   /// Header above the calls that are up while a conference is running but are not part of it.
   ///
@@ -1149,6 +1197,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transfer current call to {number}'**
   String contact_SemanticsLabel_transfer(String number);
+
+  /// Accessibility name of the control on a number in the lists that calls that number and brings them into the current call; the number is who is called.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {number} to the call'**
+  String contact_SemanticsLabel_addParticipant(String number);
 
   /// Accessibility name of the control on a number in the lists that calls that number as the second call of an attended transfer, to talk to them before handing the current call over; the number is who is called.
   ///
@@ -2721,6 +2775,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Performing blind transfer'**
   String get main_Text_blindTransferInitiated;
+
+  /// Shown above the contact, recent call and keypad lists while the person is choosing who to bring into the call.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who to add to the call'**
+  String get main_Text_addParticipantInitiated;
 
   /// Shown above the contact, recent call and keypad lists while the person is choosing whom to call as the second call of an attended transfer.
   ///
