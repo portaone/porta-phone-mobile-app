@@ -49,6 +49,8 @@ class CallBlocHarness {
     bool Function()? speakerOnMinimize,
     CallMediaManager Function(Callkeep callkeep)? mediaManager,
     ManualOfferDeadline? offerDeadline,
+    Timer Function(Duration, void Function())? renegotiationReplayTimer,
+    Future<void> Function(Duration)? renegotiationUpdatingDelay,
     FakePeerConnectionFactory? peerConnectionFactory,
     ContactResolver? contactResolver,
     int? lines,
@@ -83,6 +85,8 @@ class CallBlocHarness {
       callPeerConnectionManager: peers,
       connectivityService: _FakeConnectivityService(),
       roomOfferDeadlineTimer: offerDeadline?.createTimer,
+      renegotiationReplayTimer: renegotiationReplayTimer,
+      renegotiationUpdatingDelay: renegotiationUpdatingDelay,
     );
     if (lines != null) {
       // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
@@ -114,6 +118,7 @@ class CallBlocHarness {
     String callId, {
     int line = 0,
     bool held = false,
+    bool updating = false,
     CallDirection direction = CallDirection.outgoing,
     String number = '100',
   }) {
@@ -136,6 +141,7 @@ class CallBlocHarness {
       createdTime: DateTime(2026),
       video: false,
       held: held,
+      updating: updating,
       processingStatus: CallProcessingStatus.connected,
       acceptedTime: DateTime(2026),
       localStream: localStream,
@@ -501,10 +507,21 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   /// recognisable once its track has been taken off.
   final Map<FakeRtpSender, String> _kinds = {};
 
+  /// The Dart-side cache flutter_webrtc keeps, updated only by its native
+  /// state events.
+  RTCSignalingState signalingStateValue = RTCSignalingState.RTCSignalingStateStable;
+
+  /// What the native side reports when asked directly; null means the cache
+  /// is current. Set it to model the cache lagging behind setLocalDescription.
+  RTCSignalingState? nativeSignalingStateValue;
+
   @override
-  RTCSignalingState get signalingState => RTCSignalingState.RTCSignalingStateStable;
+  RTCSignalingState get signalingState => signalingStateValue;
   @override
-  Future<RTCSignalingState> getSignalingState() async => signalingState;
+  Future<RTCSignalingState> getSignalingState() async => nativeSignalingStateValue ?? signalingState;
+  @override
+  Future<RTCSessionDescription?> getLocalDescription() async =>
+      localDescriptions.isEmpty ? null : localDescriptions.last;
   @override
   Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async =>
       RTCSessionDescription('v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n', 'offer');
@@ -634,6 +651,17 @@ class FakeRtpTransceiver extends Fake implements RTCRtpTransceiver {
 
   @override
   final FakeRtpReceiver receiver;
+
+  @override
+  String get mid => '0';
+
+  /// An established call sends and receives on every transceiver; the bloc
+  /// only logs these after applying an answer.
+  @override
+  Future<TransceiverDirection> getDirection() async => TransceiverDirection.SendRecv;
+
+  @override
+  Future<TransceiverDirection> getCurrentDirection() async => TransceiverDirection.SendRecv;
 }
 
 class FakeRtpReceiver extends Fake implements RTCRtpReceiver {
