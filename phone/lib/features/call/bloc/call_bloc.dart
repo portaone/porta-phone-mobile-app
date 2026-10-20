@@ -218,13 +218,19 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     bool Function()? speakerOnMinimize,
     CallMediaManager? mediaManager,
     Timer Function(Duration, void Function())? roomOfferDeadlineTimer,
+    Timer Function(Duration, void Function())? renegotiationReplayTimer,
+    Future<void> Function(Duration)? renegotiationUpdatingDelay,
   }) : _onMissedCall = onMissedCall,
        _connectivityService = connectivityService,
        _speakerOnMinimize = SpeakerOnMinimize(isEnabled: speakerOnMinimize ?? () => false),
        super(const CallState()) {
     _mediaManager = mediaManager ?? CallMediaManager(callkeep: callkeep);
     _offerWait = RoomOfferWait(timeout: conferenceAssemblyTimeout, createTimer: roomOfferDeadlineTimer);
-    _renegotiationCoordinator = RenegotiationCoordinator(onCommand: _executeRenegotiationCommand);
+    _renegotiationCoordinator = RenegotiationCoordinator(
+      onCommand: _executeRenegotiationCommand,
+      createTimer: renegotiationReplayTimer,
+      delay: renegotiationUpdatingDelay,
+    );
     _signalingModule = signalingModule;
     _callPeerConnectionManager = callPeerConnectionManager;
     _handshakeProcessor = HandshakeProcessor(queuedTerminationRequestsRepository: queuedTerminationRequestsRepository);
@@ -803,6 +809,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   Future<void> __onResetStateEventCompleteCall(_ResetStateEventCompleteCall event, Emitter<CallState> emit) async {
     _logger.warning('__onResetStateEventCompleteCall: ${event.callId}');
 
+    // Before the teardown, which may throw: a replay or ICE restart left armed
+    // would otherwise fire for a call that is gone.
     _renegotiationCoordinator.callRemoved(event.callId);
     _slowlinkDebounce.cancel(event.callId);
     _slowlinkHits.remove(event.callId);
@@ -832,7 +840,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         );
         await _releaseLocalStream(activeCall.localStream);
       });
-      emit(state.copyWithPopActiveCall(event.callId));
+      _removeActiveCall(event.callId, emit);
     } catch (e) {
       _logger.warning('__onResetStateEventCompleteCall: $e');
     }
@@ -873,10 +881,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // user turn off all network interfaces >> __onPeerConnectionEventIceConnectionStateChanged >> RTCIceConnectionStateFailed >> peerConnection.restartIce() >> onRenegotiationNeeded >> __onMutationRenegotiate >> if(!signalingConnected) return;
     // user turn on network interfaces >> _onSignalingClientEventConnected >> safeRenegotiate
     final calls = state.activeCalls.where((c) => c.processingStatus == CallProcessingStatus.connected);
-    for (final command in _renegotiationCoordinator.signalingConnected(
+    final commands = _renegotiationCoordinator.signalingConnected(
       calls.map((call) => (callId: call.callId, lineId: call.line)),
-    )) {
+    );
+    for (final command in commands) {
       final callId = command.callId;
+      // A call that still holds its own offer was marked updating by that
+      // offer's interim acknowledgement on the lost session; its answer will
+      // not come on this one, and the flag would hold the replay back forever.
+      if (_renegotiationCoordinator.replayableOffer(callId) != null) {
+        emit(state.copyWithMappedActiveCall(callId, (call) => call.copyWith(updating: false)));
+      }
       _logger.warning('__onSignalingClientEventConnected: triggering safe renegotiation for call $callId');
       _executeRenegotiationCommand(command);
     }
@@ -2215,7 +2230,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (line == null) {
         _logger.info('no idle main line after outgoing signaling wait (callId=${event.callId})');
         event.fail();
-        emit(state.copyWithPopActiveCall(event.callId));
+        _removeActiveCall(event.callId, emit);
         submitNotification(const GeneralUnableToCallNotification());
         return;
       }
@@ -2282,7 +2297,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     if (state.retrieveActiveCall(event.callId)?.wasHungUp == true) {
       // TODO: There's an issue where the user might have already ended the call, but the active call screen remains visible.
-      if (state.isActive) emit(state.copyWithPopActiveCall(event.callId));
+      if (state.isActive) _removeActiveCall(event.callId, emit);
       event.fail();
       return;
     }
@@ -2750,7 +2765,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         await _releaseLocalStream(activeCall.localStream);
       });
 
-      emit(state.copyWithPopActiveCall(event.callId));
+      _removeActiveCall(event.callId, emit);
     } finally {
       // Release the post-cancel enqueue guard so the entry does not accumulate
       // for the lifetime of the signaling module.
@@ -2979,7 +2994,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         _logger.warning('__onMutationControlStart error: $callkeepError');
         onDiagnosticReportRequested(callId, callkeepError);
       }
-      emit(state.copyWithPopActiveCall(callId));
+      _removeActiveCall(callId, emit);
     }
   }
 
@@ -3463,7 +3478,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // stable. Applying a stale answer in stable throws a wrong-state error,
       // so skip it and rely on libwebrtc re-firing onRenegotiationNeeded once
       // the PC returns to stable.
-      final signalingState = peerConnection.signalingState;
+      //
+      // While an offer of ours is kept the cache cannot be trusted: a quick
+      // answer can arrive before the native state event that follows
+      // setLocalDescription, and skipping it would leave the native side in
+      // have-local-offer. Ask the native side then.
+      final cachedSignalingState = peerConnection.signalingState;
+      final signalingState = _renegotiationCoordinator.hasKeptOffer(event.callId)
+          ? await peerConnection.getSignalingState()
+          : cachedSignalingState;
       if (remoteDescription.type == 'answer' && signalingState != RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
         _logger.warning(
           '__onMutationSignalingAccepted: skipping setRemoteDescription(answer) '
@@ -3477,6 +3500,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
       try {
         await peerConnection.setRemoteDescription(remoteDescription);
+        // Only an applied answer closes the offer/answer round; until then the
+        // kept offer is what recovers the call after a signaling loss.
+        if (!initialAccept && remoteDescription.type == 'answer') {
+          _renegotiationCoordinator.offerCompleted(event.callId);
+        }
         final transceivers = await peerConnection.getTransceivers();
         for (final t in transceivers) {
           final dir = await t.getDirection();
@@ -3558,7 +3586,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _logger.warning('__onMutationSignalingHangup: disposePeerConnection error $e');
     });
 
-    emit(state.copyWithPopActiveCall(event.callId));
+    _removeActiveCall(event.callId, emit);
 
     await callkeep.reportEndCall(event.callId, call.displayName ?? call.handle.value, endReason);
   }
@@ -3618,6 +3646,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
               );
               await peerConnection.setLocalDescription(RTCSessionDescription('', 'rollback'));
             }
+
+            // A remote offer replaces any local offer, rolled back above or
+            // below, so nothing kept for replay is valid after this point.
+            _renegotiationCoordinator.offerCompleted(event.callId);
 
             try {
               await peerConnection.setRemoteDescription(remoteDescription);
@@ -3747,10 +3779,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // native state event. On a freshly created PC the event may not have
     // arrived yet; force a platform round-trip in that case so the guard
     // gets the real native state instead of guessing what null means.
+    // A kept offer makes the cache untrustworthy too: it is updated only after
+    // setLocalDescription has completed natively, so a reconnect that follows
+    // a transport failure quickly can still read stable while the native side
+    // is in have-local-offer. Creating another offer then would fail in the
+    // wrong state and end the call this replay is meant to keep.
+    final pendingOffer = _renegotiationCoordinator.replayableOffer(e.callId);
     final cachedSigState = pc.signalingState;
-    final sigState = cachedSigState ?? await pc.getSignalingState();
+    final sigState = (cachedSigState == null || pendingOffer != null) ? await pc.getSignalingState() : cachedSigState;
     _logger.info('__onMutationRenegotiate: sigState=$sigState (cache=$cachedSigState)');
-    if (sigState != RTCSignalingState.RTCSignalingStateStable) {
+    final canReplayPendingOffer = pendingOffer != null && sigState == RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+    if (sigState != RTCSignalingState.RTCSignalingStateStable && !canReplayPendingOffer) {
       _logger.fine(() => '__onMutationRenegotiate: pc signalingState is $sigState, skipping renegotiation');
       return;
     }
@@ -3767,10 +3806,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // restoration produces a BUNDLE 0 1 offer (m=audio + m=video recvonly), and
     // the next renegotiate cycle drifts the mids to 2/3 — which Janus then
     // answers with mid:0 and libwebrtc rejects on mid mismatch, killing audio.
-    final offerCandidate = await pc.createOffer(<String, dynamic>{
-      'mandatory': <String, dynamic>{'OfferToReceiveAudio': true, 'OfferToReceiveVideo': renegotiateHasVideo},
-      'optional': <dynamic>[],
-    });
+    final offerCandidate = canReplayPendingOffer
+        ? pendingOffer
+        : await pc.createOffer(<String, dynamic>{
+            'mandatory': <String, dynamic>{'OfferToReceiveAudio': true, 'OfferToReceiveVideo': renegotiateHasVideo},
+            'optional': <dynamic>[],
+          });
 
     // Note: prepare all asychronous info before checking synchrounous state below
     // to avoid races as possible,
@@ -3811,16 +3852,28 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // If call already in updating state, mostly by remote renegetiation, hold, transfer etc..
     // skip it but schedule another renegotiation in 1 second later to ensure the pending one is finished
     if (activeCall.updating) {
-      final command = await _renegotiationCoordinator.retryAfterUpdating(e.callId, e.lineId);
-      _logger.info('__onMutationRenegotiate: activeCall is updating, retrying renegotiation');
-      _executeRenegotiationCommand(command);
+      if (!_renegotiationCoordinator.isUpdatingStale(e.callId)) {
+        final command = await _renegotiationCoordinator.retryAfterUpdating(e.callId, e.lineId);
+        _logger.info('__onMutationRenegotiate: activeCall is updating, retrying renegotiation');
+        _executeRenegotiationCommand(command);
+        return;
+      }
+      // The reply that would clear the flag is lost; waiting longer would
+      // keep this call from renegotiating for the rest of its life.
+      _logger.warning('__onMutationRenegotiate: updating flag is stale for callId=${e.callId}, clearing it');
+      emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: false)));
     }
+    _renegotiationCoordinator.updatingSettled(e.callId);
 
     try {
       final offer = offerCandidate;
-      sdpMunger?.apply(offer);
-      _logger.infoPretty(offer.sdp, tag: 'onRenegotiationNeeded offer SDP (callId=${e.callId}):');
-      await pc.setLocalDescription(offer);
+      if (!canReplayPendingOffer) {
+        sdpMunger?.apply(offer);
+        _logger.infoPretty(offer.sdp, tag: 'onRenegotiationNeeded offer SDP (callId=${e.callId}):');
+        await pc.setLocalDescription(offer);
+      } else {
+        _logger.info('__onMutationRenegotiate: replaying the pending local offer for callId=${e.callId}');
+      }
 
       final transaction = WebtritSignalingClient.generateTransactionId();
 
@@ -3848,8 +3901,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _logger.info('__onMutationSignalingCallUpdating: received response for update request: $result');
 
       if (result is UpdatedEvent) {
+        _renegotiationCoordinator.offerCompleted(e.callId);
         emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: false)));
       } else if (result is UpdatingEvent) {
+        // Only an interim acknowledgement: the answer comes later through the
+        // accepted event, so the offer stays kept until then.
+        _renegotiationCoordinator.awaitAnswer(e.callId, offerCandidate);
         emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: true)));
       } else if (result is CallErrorEvent) {
         _logger.warning(
@@ -3859,13 +3916,28 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: false)));
         // May help to recover from the error by renegotiating the call again
         // According to sip 491 error resolution spec, randomize the delay before retrying to avoid potential collision
+        //
+        // The rejected offer is still installed: nothing has answered or rolled
+        // it back, so the peer connection stays in have-local-offer and a fresh
+        // offer could not be made. The retry sends this same offer again.
         final delaySeconds = 2 + Random().nextInt(8);
-        Future.delayed(Duration(seconds: delaySeconds), () => _scheduleIceRestart(activeCall.callId));
+        _renegotiationCoordinator.keepOffer(
+          e.callId,
+          offerCandidate,
+          signalingConnected: true,
+          retryDelay: Duration(seconds: delaySeconds),
+        );
         _logger.info('__onCallSignalingEventCallError: dispatch renegotiation after (delay: $delaySeconds)');
       } else {
         throw result;
       }
     } catch (er, st) {
+      if (_renegotiationCoordinator.isTransientSignalingFailure(er)) {
+        _renegotiationCoordinator.keepOffer(e.callId, offerCandidate, signalingConnected: state.isSignalingEstablished);
+        _logger.warning('__onMutationRenegotiate: ${er.runtimeType}, keeping the pending offer for callId=${e.callId}');
+        return;
+      }
+      _renegotiationCoordinator.offerCompleted(e.callId);
       callErrorReporter.handle(er, st, '__onMutationRenegotiate failed for callId=${e.callId}');
       _callPeerConnectionManager.completeError(activeCall.callId, er, st);
       add(_ResetStateEvent.completeCall(activeCall.callId));
@@ -5739,6 +5811,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       case Renegotiate(:final callId, :final lineId):
         add(_CallMutationEvent.renegotiate(callId, lineId));
     }
+  }
+
+  void _removeActiveCall(String callId, Emitter<CallState> emit) {
+    _renegotiationCoordinator.callRemoved(callId);
+    emit(state.copyWithPopActiveCall(callId));
   }
 
   Future<void> _onIceRestartTriggered(_IceRestartTriggered event, Emitter<CallState> emit) async {
