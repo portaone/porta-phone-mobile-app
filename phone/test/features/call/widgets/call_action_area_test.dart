@@ -36,7 +36,7 @@ void main() {
           activeCalls: activeCalls,
           conference: conference,
           linkedCall: linkedCall,
-        ).canLinkCallTo(focusedCall.callId);
+        ).canLinkCallTo(focusedCall.callId, purpose: LinkedCallPurpose.attendedTransfer, isConferenceEnabled: true);
     return CallActionArea(
       params: CallControlsParams(
         activeCalls: activeCalls,

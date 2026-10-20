@@ -279,9 +279,12 @@ Every way the second call can fail before it is answered - the platform refusing
 the signalling wait timing out, media, a hangup with any code, the person ending it - ends with
 it leaving `activeCalls`, and that is the one place the give-back hangs on (`_followLinkedCall`
 in `onChange`): the first call is taken off hold strictly after the second has ended on the
-platform, and only a hold the link put on is taken off. A decline and an unanswered call are
+platform, and only a hold the link put on is taken off - never while another call is live,
+which the first call would cut into. A decline and an unanswered call are
 announced (`LinkedCallFailedNotification`); busy is already said by the hangup. If the first
 call ends while the second still rings, the second stays as an ordinary call.
+The same link, with the purpose `join`, calls somebody into a call or a room - see
+[`call_conference.md`](call_conference.md), "Calling somebody in".
 `features/call/widgets/attended_transfer_picking.dart` takes the request back from the lists when
 the first call ends or the person returns to the call screen without choosing.
 

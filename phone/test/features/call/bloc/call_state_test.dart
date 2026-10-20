@@ -1867,4 +1867,156 @@ void main() {
       expect(plain.shouldPlayLocalRingback, isTrue);
     });
   });
+  // ---------------------------------------------------------------------------
+  // CallState — calling somebody into the conversation
+  // ---------------------------------------------------------------------------
+
+  group('CallState.addParticipantAvailability', () {
+    final answered = DateTime(2024);
+
+    AddParticipantAvailability ofCall(CallState state, {bool enabled = true, String? anchorCallId = 'b'}) =>
+        state.addParticipantAvailability(isConferenceEnabled: enabled, anchorCallId: anchorCallId);
+
+    test('is hidden where the server cannot build a room', () {
+      final state = CallState(
+        linesCount: 2,
+        activeCalls: [_makeCall(callId: 'b', acceptedTime: answered)],
+      );
+      expect(ofCall(state, enabled: false), AddParticipantAvailability.hidden);
+    });
+
+    test('is available for an answered audio call with a free line', () {
+      final state = CallState(
+        linesCount: 2,
+        activeCalls: [_makeCall(callId: 'b', acceptedTime: answered)],
+      );
+      expect(ofCall(state), AddParticipantAvailability.available);
+    });
+
+    test('is unavailable with no call to bring anybody into', () {
+      final state = CallState(
+        linesCount: 2,
+        activeCalls: [_makeCall(callId: 'b', acceptedTime: answered)],
+      );
+      expect(ofCall(state, anchorCallId: null), AddParticipantAvailability.unavailable);
+    });
+
+    test('says so when every main line is taken', () {
+      final state = CallState(
+        linesCount: 2,
+        activeCalls: [
+          _makeCall(callId: 'b', acceptedTime: answered),
+          _makeCall(callId: 'd', line: 1, acceptedTime: answered, held: true),
+        ],
+      );
+      expect(ofCall(state), AddParticipantAvailability.noFreeLine);
+    });
+
+    test('a guest-line call does not take a main line', () {
+      final state = CallState(
+        linesCount: 2,
+        activeCalls: [
+          _makeCall(callId: 'b', acceptedTime: answered),
+          _makeCall(callId: 'g', line: null, acceptedTime: answered),
+        ],
+      );
+      expect(ofCall(state), AddParticipantAvailability.available);
+    });
+
+    for (final (name, call) in [
+      ('a call not answered yet', _makeCall(callId: 'b', processingStatus: CallProcessingStatus.outgoingRinging)),
+      ('a video call', _makeCall(callId: 'b', acceptedTime: DateTime(2024), video: true)),
+      ('a call on the guest line', _makeCall(callId: 'b', acceptedTime: DateTime(2024), line: null)),
+      (
+        'a call being transferred',
+        _makeCall(callId: 'b', acceptedTime: DateTime(2024), transfer: const Transfer.blindTransferInitiated()),
+      ),
+      ('a call that is ending', _makeCall(callId: 'b', acceptedTime: DateTime(2024), hungUpTime: DateTime(2024))),
+    ]) {
+      test('is unavailable for $name', () {
+        final state = CallState(linesCount: 2, activeCalls: [call]);
+        expect(ofCall(state), AddParticipantAvailability.unavailable);
+      });
+    }
+
+    test('is unavailable while another linked call is under way', () {
+      final state = CallState(
+        linesCount: 3,
+        activeCalls: [_makeCall(callId: 'b', acceptedTime: answered)],
+        linkedCall: const LinkedCall(callId: 'c', anchorCallId: 'b', purpose: LinkedCallPurpose.attendedTransfer),
+      );
+      expect(ofCall(state), AddParticipantAvailability.unavailable);
+    });
+
+    test('a leg brings somebody into the room; a call next to the room does not', () {
+      final state = CallState(
+        linesCount: 4,
+        activeCalls: [
+          _makeCall(callId: 'a', acceptedTime: answered),
+          _makeCall(callId: 'b', line: 1, acceptedTime: answered),
+          _makeCall(callId: 'd', line: 2, acceptedTime: answered),
+        ],
+        conference: const ConferenceState(phase: ConferencePhase.active, legs: {'a': 0, 'b': 1}),
+      );
+      expect(ofCall(state, anchorCallId: 'a'), AddParticipantAvailability.available);
+      expect(ofCall(state, anchorCallId: 'd'), AddParticipantAvailability.unavailable);
+    });
+
+    test('a room still assembling cannot take anybody yet', () {
+      final state = CallState(
+        linesCount: 3,
+        activeCalls: [
+          _makeCall(callId: 'a', acceptedTime: answered),
+          _makeCall(callId: 'b', line: 1, acceptedTime: answered),
+        ],
+        conference: const ConferenceState(phase: ConferencePhase.assembling, legs: {'a': 0, 'b': 1}),
+      );
+      expect(ofCall(state, anchorCallId: 'a'), AddParticipantAvailability.unavailable);
+    });
+
+    test('asking does not move the line rotation', () {
+      CallState.lastUsedLine = 0;
+      final state = CallState(
+        linesCount: 3,
+        activeCalls: [_makeCall(callId: 'b', acceptedTime: answered)],
+      );
+      ofCall(state);
+      expect(CallState.lastUsedLine, 0);
+    });
+  });
+
+  group('CallState.canLinkCallTo', () {
+    test('a leg of the room can have a call placed to join it, and none to consult', () {
+      final answered = DateTime(2024);
+      final state = CallState(
+        linesCount: 3,
+        activeCalls: [
+          _makeCall(callId: 'a', acceptedTime: answered),
+          _makeCall(callId: 'b', line: 1, acceptedTime: answered),
+        ],
+        conference: const ConferenceState(phase: ConferencePhase.active, legs: {'a': 0, 'b': 1}),
+      );
+      expect(state.canLinkCallTo('a', purpose: LinkedCallPurpose.join, isConferenceEnabled: true), isTrue);
+      expect(state.canLinkCallTo('a', purpose: LinkedCallPurpose.join, isConferenceEnabled: false), isFalse);
+      expect(state.canLinkCallTo('a', purpose: LinkedCallPurpose.attendedTransfer, isConferenceEnabled: true), isFalse);
+    });
+  });
+
+  group('LinkedCall.answeredTransferCallIn', () {
+    test('names no call for one placed to join: only a consultation is handed over', () {
+      final calls = [_makeCall(callId: 'c', line: 1, acceptedTime: DateTime(2024))];
+      expect(
+        const LinkedCall(callId: 'c', anchorCallId: 'b', purpose: LinkedCallPurpose.join).answeredTransferCallIn(calls),
+        isNull,
+      );
+      expect(
+        const LinkedCall(
+          callId: 'c',
+          anchorCallId: 'b',
+          purpose: LinkedCallPurpose.attendedTransfer,
+        ).answeredTransferCallIn(calls)?.callId,
+        'c',
+      );
+    });
+  });
 }

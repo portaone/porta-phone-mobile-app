@@ -120,21 +120,62 @@ class CallState with _$CallState {
   /// next call gets.
   bool get hasIdleMainLine => _idleLinesAmong(List.generate(linesCount, (index) => index)).isNotEmpty;
 
-  /// Whether a call can be placed on behalf of [anchorCallId] now: the anchor
-  /// is an answered audio call on a numbered line, not a leg of the room, not
-  /// in a transfer, no other linked call is under way, and a main line is
-  /// free for the new call.
-  bool canLinkCallTo(String anchorCallId) {
-    if (linkedCall != null || !hasIdleMainLine) return false;
+  /// Whether a call can be placed on behalf of [anchorCallId] for [purpose]
+  /// now: the anchor can have one ([_canAnchor]), no other linked call is
+  /// under way, and a main line is free for the new call.
+  ///
+  /// [isConferenceEnabled] says whether the server builds rooms, which a
+  /// call placed to join needs; a consultation does not.
+  bool canLinkCallTo(String anchorCallId, {required LinkedCallPurpose purpose, required bool isConferenceEnabled}) =>
+      (purpose != LinkedCallPurpose.join || isConferenceEnabled) &&
+      linkedCall == null &&
+      hasIdleMainLine &&
+      _canAnchor(anchorCallId, purpose);
+
+  /// Whether somebody can be called into the conversation of [anchorCallId]:
+  /// the call itself, or the room when it is a leg of one. Null [anchorCallId]
+  /// is no conversation at all.
+  ///
+  /// Kept apart from [canLinkCallTo] for the control: with every main line
+  /// taken it stays on the screen and says so, since nothing about the call
+  /// explains why it does nothing.
+  AddParticipantAvailability addParticipantAvailability({
+    required bool isConferenceEnabled,
+    required String? anchorCallId,
+  }) {
+    if (!isConferenceEnabled) return AddParticipantAvailability.hidden;
+    if (anchorCallId == null || linkedCall != null || !_canAnchor(anchorCallId, LinkedCallPurpose.join)) {
+      return AddParticipantAvailability.unavailable;
+    }
+    if (!hasIdleMainLine) return AddParticipantAvailability.noFreeLine;
+    return AddParticipantAvailability.available;
+  }
+
+  /// Whether [anchorCallId] is a conversation a call can be placed for.
+  ///
+  /// A call has to be an answered audio call on a numbered line - the server
+  /// merges and transfers calls by line - and not in a transfer or on its way
+  /// out.
+  ///
+  /// A leg of the room stands for the room, and only a call that joins it can
+  /// be placed for it: the server transfers no leg. The room has to be up, not
+  /// assembling - a call is added to a room only once its offer is answered.
+  /// With a room up, a call outside it is not one to join either: the server
+  /// refuses a second room, and a call brought into the conversation goes into
+  /// the room through one of its legs.
+  bool _canAnchor(String anchorCallId, LinkedCallPurpose purpose) {
     final anchor = retrieveActiveCall(anchorCallId);
     if (anchor == null) return false;
+    if (isConferenced(anchorCallId)) {
+      return purpose == LinkedCallPurpose.join && conference.phase == ConferencePhase.active;
+    }
+    if (purpose == LinkedCallPurpose.join && conference.isPresent) return false;
     return anchor.wasAccepted &&
         !anchor.video &&
         anchor.line != null &&
         anchor.transfer == null &&
         !anchor.wasHungUp &&
-        anchor.processingStatus != CallProcessingStatus.disconnecting &&
-        !isConferenced(anchorCallId);
+        anchor.processingStatus != CallProcessingStatus.disconnecting;
   }
 
   /// Whether [callId] is the call placed by the current link.
