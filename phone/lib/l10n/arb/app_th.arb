@@ -613,6 +613,16 @@
       }
     }
   },
+  "contact_SemanticsLabel_attendedTransfer": "ปรึกษา {number} ก่อนโอนสาย",
+  "@contact_SemanticsLabel_attendedTransfer": {
+    "description": "Accessibility name of the control on a number in the lists that calls that number as the second call of an attended transfer, to talk to them before handing the current call over; the number is who is called.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "+380441234567"
+      }
+    }
+  },
   "contacts_ContactsScreen_emptyFavorites": "ยังไม่มีรายการโปรดในรายชื่อของคุณ\nเพิ่มได้จากการ์ดรายชื่อโดยแตะไอคอนดาว",
   "@contacts_ContactsScreen_emptyFavorites": {},
   "contacts_ContactsScreen_searchSemanticsLabel": "ค้นหารายชื่อ",
@@ -1383,6 +1393,10 @@
   "@main_BottomNavigationBarItemLabel_chats": {},
   "main_Text_blindTransferInitiated": "กำลังโอนสายแบบไม่แจ้ง",
   "@main_Text_blindTransferInitiated": {},
+  "main_Text_attendedTransferInitiated": "เลือกผู้ที่จะปรึกษาก่อนโอนสาย",
+  "@main_Text_attendedTransferInitiated": {
+    "description": "Shown above the contact, recent call and keypad lists while the person is choosing whom to call as the second call of an attended transfer."
+  },
   "main_BottomNavigationBarItemLabel_contacts": "รายชื่อ",
   "@main_BottomNavigationBarItemLabel_contacts": {},
   "main_BottomNavigationBarItemLabel_favorites": "รายการโปรด",
@@ -1710,6 +1724,14 @@
   "notifications_errorSnackBar_blindTransferFailed": "การโอนสายล้มเหลว กำลังกลับสู่สายที่ใช้งานอยู่",
   "@notifications_errorSnackBar_blindTransferFailed": {
     "description": "Shown when a blind transfer fails because the transfer target declined. The original call is restored and the user is returned to the active call screen."
+  },
+  "notifications_errorSnackBar_attendedTransferDeclined": "ปฏิเสธสาย กำลังกลับไปยังสายสนทนา",
+  "@notifications_errorSnackBar_attendedTransferDeclined": {
+    "description": "Shown when the person called as the second call of an attended transfer declines. The call being transferred is resumed."
+  },
+  "notifications_errorSnackBar_attendedTransferUnanswered": "ไม่รับสาย กำลังกลับไปยังสายสนทนา",
+  "@notifications_errorSnackBar_attendedTransferUnanswered": {
+    "description": "Shown when the person called as the second call of an attended transfer does not answer. The call being transferred is resumed."
   },
   "notifications_errorSnackBar_appOffline": "ขณะนี้แอปพลิเคชันของคุณออฟไลน์",
   "@notifications_errorSnackBar_appOffline": {

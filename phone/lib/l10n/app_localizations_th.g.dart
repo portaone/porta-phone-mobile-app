@@ -637,6 +637,11 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String contact_SemanticsLabel_attendedTransfer(String number) {
+    return 'ปรึกษา $number ก่อนโอนสาย';
+  }
+
+  @override
   String get contacts_ContactsScreen_emptyFavorites =>
       'ยังไม่มีรายการโปรดในรายชื่อของคุณ\nเพิ่มได้จากการ์ดรายชื่อโดยแตะไอคอนดาว';
 
@@ -1500,6 +1505,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get main_Text_blindTransferInitiated => 'กำลังโอนสายแบบไม่แจ้ง';
 
   @override
+  String get main_Text_attendedTransferInitiated => 'เลือกผู้ที่จะปรึกษาก่อนโอนสาย';
+
+  @override
   String get main_BottomNavigationBarItemLabel_contacts => 'รายชื่อ';
 
   @override
@@ -1885,6 +1893,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get notifications_errorSnackBar_blindTransferFailed => 'การโอนสายล้มเหลว กำลังกลับสู่สายที่ใช้งานอยู่';
+
+  @override
+  String get notifications_errorSnackBar_attendedTransferDeclined => 'ปฏิเสธสาย กำลังกลับไปยังสายสนทนา';
+
+  @override
+  String get notifications_errorSnackBar_attendedTransferUnanswered => 'ไม่รับสาย กำลังกลับไปยังสายสนทนา';
 
   @override
   String get notifications_errorSnackBar_appOffline => 'ขณะนี้แอปพลิเคชันของคุณออฟไลน์';

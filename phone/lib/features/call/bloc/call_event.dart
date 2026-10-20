@@ -808,6 +808,15 @@ sealed class CallControlEvent extends CallEvent {
 
   /// Ends the conference and hangs up every leg.
   const factory CallControlEvent.conferenceEnded() = _CallControlEventConferenceEnded;
+
+  /// Calls [number] on behalf of [anchorCallId] to consult them before an
+  /// attended transfer: the anchor is held, and given back if the
+  /// consultation call does not come up.
+  const factory CallControlEvent.attendedTransferCallPlaced({
+    required String anchorCallId,
+    required String number,
+    String? displayName,
+  }) = _CallControlEventAttendedTransferCallPlaced;
 }
 
 class _CallControlEventStarted extends CallControlEvent with CallControlEventStartedMixin {
@@ -1070,6 +1079,23 @@ class _CallControlEventConferenceEnded extends CallControlEvent {
 
   @override
   List<Object?> get props => const [];
+}
+
+class _CallControlEventAttendedTransferCallPlaced extends CallControlEvent {
+  const _CallControlEventAttendedTransferCallPlaced({
+    required this.anchorCallId,
+    required this.number,
+    this.displayName,
+  });
+
+  final String anchorCallId;
+
+  final String number;
+
+  final String? displayName;
+
+  @override
+  List<Object?> get props => [anchorCallId, number, displayName];
 }
 
 class _CallControlEventAttendedRequestApproved extends CallControlEvent {
@@ -1513,6 +1539,17 @@ sealed class _CallMutationEvent extends CallEvent {
       _CallMutationEventControlConferenceMute;
   const factory _CallMutationEvent.controlConferenceSelfMute(bool muted) = _CallMutationEventControlConferenceSelfMute;
   const factory _CallMutationEvent.controlConferenceEnd() = _CallMutationEventControlConferenceEnd;
+
+  // linked call: placing a call on behalf of another, and giving that one back
+  // when the new call does not come up
+  const factory _CallMutationEvent.controlLink({
+    required String anchorCallId,
+    required CallkeepHandle handle,
+    required String? displayName,
+    required LinkedCallPurpose purpose,
+  }) = _CallMutationEventControlLink;
+  const factory _CallMutationEvent.linkedCallFinish(String callId) = _CallMutationEventLinkedCallFinish;
+  const factory _CallMutationEvent.linkedCallDetach(String callId) = _CallMutationEventLinkedCallDetach;
   const factory _CallMutationEvent.conferenceOffer({
     required int room,
     required JsepValue jsep,
@@ -2016,4 +2053,33 @@ class _CallMutationEventConferenceAnswerFailed extends _CallMutationEvent {
   final ConferenceRequestResult? result;
   @override
   List<Object?> get props => [attempt, result];
+}
+
+class _CallMutationEventControlLink extends _CallMutationEvent {
+  const _CallMutationEventControlLink({
+    required this.anchorCallId,
+    required this.handle,
+    required this.displayName,
+    required this.purpose,
+  });
+  final String anchorCallId;
+  final CallkeepHandle handle;
+  final String? displayName;
+  final LinkedCallPurpose purpose;
+  @override
+  List<Object?> get props => [anchorCallId, handle, displayName, purpose];
+}
+
+class _CallMutationEventLinkedCallFinish extends _CallMutationEvent {
+  const _CallMutationEventLinkedCallFinish(this.callId);
+  final String callId;
+  @override
+  List<Object?> get props => [callId];
+}
+
+class _CallMutationEventLinkedCallDetach extends _CallMutationEvent {
+  const _CallMutationEventLinkedCallDetach(this.callId);
+  final String callId;
+  @override
+  List<Object?> get props => [callId];
 }

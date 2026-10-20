@@ -39,7 +39,6 @@ class CallActionArea extends StatelessWidget {
     final callConfig = params.callConfig;
     final interactionsEnabled = params.interactionsEnabled;
 
-    final activeCall = activeCalls.current;
     final heldCalls = activeCalls.nonCurrent;
 
     final nonIncomingRingingCalls = activeCalls.nonIncomingRinging;
@@ -56,11 +55,19 @@ class CallActionArea extends StatelessWidget {
 
     // The calls a transfer can go to, and the one it would replace, are never
     // legs of the room: the server refuses a transfer that involves one.
+    //
+    // The hand-over is of the call the attended transfer was started for, to
+    // the call placed to consult, and there is one to offer only while such
+    // a call is up and answered. Every held call used to be listed, and a
+    // third call answered meanwhile was offered as a target too, which
+    // handed people over to a stranger.
+    final attendedTransferCall = params.attendedTransferCall;
+    final transferAnchorId = attendedTransferCall == null ? null : params.linkedCall?.anchorCallId;
     final transferTargets = [
       for (final call in heldCalls)
-        if (!params.conference.isLeg(call.callId)) call,
+        if (call.callId == transferAnchorId && !params.conference.isLeg(call.callId)) call,
     ];
-    final currentIsLeg = params.conference.isLeg(activeCall.callId);
+    final transferCallIsLeg = attendedTransferCall != null && params.conference.isLeg(attendedTransferCall.callId);
 
     if (!focusedIsRinging) {
       return ActiveCallActions(
@@ -93,28 +100,20 @@ class CallActionArea extends StatelessWidget {
             ? (!focusedCall.wasAccepted || focusedTransfer != null ? null : params.onBlindTransferInitiated)
             : null,
         // TODO (Serdun): Simplify complex condition in the widget tree.
-        onAttendedTransferInitiated: callConfig.isAttendedTransferEnabled && !focusedIsLeg
-            ? (!focusedCall.wasAccepted || focusedTransfer != null ? null : params.onAttendedTransferInitiated)
+        onAttendedTransferInitiated: callConfig.isAttendedTransferEnabled && params.canStartAttendedTransfer
+            ? params.onAttendedTransferInitiated
             : null,
         // TODO (Serdun): Simplify complex condition in the widget tree.
-        // The submit acts on the consultation call (the derived
-        // `current`), not the focused one: focus may sit on the
-        // held original call being transferred (an incoming call
-        // grabs the selection at ring time), and using it as the
-        // replace target would produce a self-referential REFER.
-        //
-        // KNOWN LIMITATION: `current` is still a positional guess
-        // ("the live non-held call"), which breaks once a third,
-        // unrelated call is concurrently active - it can point at
-        // that call instead of the real consultation call. Left out
-        // of scope here: server config typically caps concurrent
-        // lines at 3 (not hardcoded in the app - see linesCount),
-        // and this heuristic is unchanged from pre-1.16.0 behavior (not
-        // a new regression). A proper fix needs an explicit
-        // referor<->consultation link, not a positional guess -
-        // see git history for a prior (closed) attempt.
-        onAttendedTransferSubmitted: callConfig.isAttendedTransferEnabled && !currentIsLeg
-            ? (!activeCall.wasAccepted || focusedTransfer != null ? null : params.onAttendedTransferSubmitted)
+        // The submit hands the call named in the menu over to the call placed
+        // for it; which call that is comes from the link, not from which call
+        // happens to be live (see [CallControlsParams.attendedTransferCall]).
+        // Gated on the link the submit acts on, not on which call is live.
+        onAttendedTransferSubmitted:
+            callConfig.isAttendedTransferEnabled &&
+                attendedTransferCall != null &&
+                !transferCallIsLeg &&
+                focusedTransfer == null
+            ? params.onAttendedTransferSubmitted
             : null,
         heldValue: focusedCall.held,
         // Hold pauses just the focused call; Resume brings it

@@ -7,6 +7,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
+import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -27,12 +28,14 @@ class CallActiveScaffold extends StatefulWidget {
     required this.callConfig,
     required this.canMerge,
     required this.canAdd,
+    required this.canStartAttendedTransfer,
     required this.conference,
     required this.conferenceParked,
     required this.localePlaceholderBuilder,
     required this.remotePlaceholderBuilder,
     required this.keepControlsVisible,
     this.contactResolver,
+    this.linkedCall,
   });
 
   final CallStatus callStatus;
@@ -53,6 +56,17 @@ class CallActiveScaffold extends StatefulWidget {
   /// Whether a call standing outside the room can be brought into it now (see
   /// [CallState.canAdd]).
   final bool canAdd;
+
+  /// Whether an attended transfer can be started for the focused call (see
+  /// [CallState.canLinkCallTo]). Gated here rather than by a looser rule in
+  /// the widget, so the person is not sent to the lists for a transfer the
+  /// bloc will then refuse.
+  final bool canStartAttendedTransfer;
+
+  /// The call placed on behalf of another one, while one is being placed
+  /// (see [CallState.linkedCall]): the consultation an attended transfer
+  /// hands the call it is for over to.
+  final LinkedCall? linkedCall;
 
   /// Whether the room has stood aside for a call outside it
   /// ([CallState.conferenceMustPark]).
@@ -250,13 +264,33 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     dispatchInteractionDebounce();
   }
 
-  /// Hands the consultation call over to the referor. The call that gets
-  /// replaced is the derived `current` one rather than the focused one - see
-  /// the note at the submit button.
+  /// Hands [referorCall] over to the attended transfer's second call. Which call that is
+  /// is read from the link rather than guessed from which call is live: a
+  /// third call answered meanwhile would be the live one, and handing the
+  /// referor to it would connect two people who never meant to talk.
   void _submitAttendedTransfer(ActiveCall referorCall) {
-    _callBloc.add(
-      CallControlEvent.attendedTransferSubmitted(referorCall: referorCall, replaceCall: widget.activeCalls.current),
+    final transferCall = _attendedTransferCall;
+    if (transferCall == null) return;
+    _callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: referorCall, replaceCall: transferCall));
+  }
+
+  /// The answered second call of the attended transfer under way, if any.
+  ActiveCall? get _attendedTransferCall => widget.linkedCall?.answeredTransferCallIn(widget.activeCalls);
+
+  /// Sends the person to the lists to choose whom to consult before handing
+  /// the focused call over. Refused where somebody is already choosing for
+  /// something that outranks it; then the person stays on the call.
+  void _startAttendedTransfer() {
+    final l10n = context.l10n;
+    final asked = context.read<DestinationPickingCubit>().ask(
+      AttendedTransferPurpose(
+        announcement: l10n.main_Text_attendedTransferInitiated,
+        pickLabel: l10n.contact_SemanticsLabel_attendedTransfer,
+        controller: CallControllerScope.of(context),
+        anchorCallId: widget.focusedCall.callId,
+      ),
     );
+    if (asked) _callBloc.add(CallControlEvent.attendedTransferInitiated(widget.focusedCall.callId));
   }
 
   void _toggleFocusedCamera(bool value) {
@@ -430,9 +464,10 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                           _callBloc.add(CallControlEvent.audioDeviceSet(widget.focusedCall.callId, device)),
                       onBlindTransferInitiated: () =>
                           _callBloc.add(CallControlEvent.blindTransferInitiated(widget.focusedCall.callId)),
-                      onAttendedTransferInitiated: () =>
-                          _callBloc.add(CallControlEvent.attendedTransferInitiated(widget.focusedCall.callId)),
+                      onAttendedTransferInitiated: _startAttendedTransfer,
                       onAttendedTransferSubmitted: _submitAttendedTransfer,
+                      linkedCall: widget.linkedCall,
+                      canStartAttendedTransfer: widget.canStartAttendedTransfer,
                       onHeldChanged: _toggleFocusedHeld,
                       onKeyPressed: _sendDtmfKey,
                       onHangup: _hangupFocused,

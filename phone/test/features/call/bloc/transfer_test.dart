@@ -185,29 +185,36 @@ void main() {
       expect(h.callkeep.held, isEmpty);
     });
 
-    test('the consultation call is an ordinary call that puts the first on hold', () async {
+    test('the second call is placed on behalf of the first, which it puts on hold', () async {
       h.seedEstablishedCall('b', line: 0);
       await initiate();
 
-      h.bloc.add(const CallControlEvent.started(number: '300', video: false));
+      h.bloc.add(const CallControlEvent.attendedTransferCallPlaced(anchorCallId: 'b', number: '300'));
       await h.settle(() => h.callkeep.starts.isNotEmpty);
 
       expect(h.callkeep.held, [(callId: 'b', onHold: true)]);
       final consultation = _placed(h).single;
-      // A gap, pinned so changing it is a decision: nothing ties the
-      // consultation call to the call it is a consultation for.
-      expect(consultation.fromReferId, isNull);
-      expect(consultation.transfer, isNull);
+      // The link is what ties the two: which call this one was placed for,
+      // and so which call the hand-over is of.
+      expect(
+        h.bloc.state.linkedCall,
+        LinkedCall(
+          callId: consultation.callId,
+          anchorCallId: 'b',
+          purpose: LinkedCallPurpose.attendedTransfer,
+          anchorWasLive: true,
+        ),
+      );
       expect(_transferOf(h, 'b'), isNull);
     });
 
-    test('a consultation call that rings out leaves the first call on hold', () async {
-      // A gap, pinned so changing it is a decision: nothing takes the first
-      // call off hold when the consultation call ends without an answer.
+    test('a second call that rings out gives the first call back', () async {
+      // It used to stay on hold: nothing took it off when the call placed
+      // for it ended without an answer.
       h.seedSignalingReady();
       h.seedEstablishedCall('b', line: 0);
       await initiate();
-      h.bloc.add(const CallControlEvent.started(number: '300', video: false));
+      h.bloc.add(const CallControlEvent.attendedTransferCallPlaced(anchorCallId: 'b', number: '300'));
       await h.settle(() => h.callkeep.starts.isNotEmpty);
       final consultation = _placed(h).single;
 
@@ -224,11 +231,15 @@ void main() {
       h.signaling.emit(
         HangupEvent(line: consultation.line, callId: consultation.callId, code: 480, reason: 'No Answer'),
       );
-      await h.settle(() => h.bloc.state.retrieveActiveCall(consultation.callId) == null);
+      await h.settle(() => _resumes(h, 'b').isNotEmpty);
 
       expect(h.bloc.state.retrieveActiveCall(consultation.callId), isNull);
       expect(h.bloc.state.retrieveActiveCall('b'), isNotNull);
-      expect(_resumes(h, 'b'), isEmpty);
+      expect(h.bloc.state.linkedCall, isNull);
+      expect(_resumes(h, 'b'), hasLength(1));
+      expect(h.notifications.whereType<LinkedCallFailedNotification>().map((it) => it.failure), [
+        LinkedCallFailure.unanswered,
+      ]);
     });
 
     test('submitting sends a REFER of the first call that replaces the consultation call', () async {

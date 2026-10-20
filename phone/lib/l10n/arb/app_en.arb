@@ -686,6 +686,16 @@
       }
     }
   },
+  "contact_SemanticsLabel_attendedTransfer": "Consult {number} before transferring the call",
+  "@contact_SemanticsLabel_attendedTransfer": {
+    "description": "Accessibility name of the control on a number in the lists that calls that number as the second call of an attended transfer, to talk to them before handing the current call over; the number is who is called.",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "+380441234567"
+      }
+    }
+  },
   "contacts_ContactsScreen_emptyFavorites": "No favorites among your contacts yet.\nAdd one from a contact card using the star icon",
   "@contacts_ContactsScreen_emptyFavorites": {},
   "contacts_ContactsScreen_searchSemanticsLabel": "Search contacts",
@@ -1458,6 +1468,10 @@
   "@main_BottomNavigationBarItemLabel_chats": {},
   "main_Text_blindTransferInitiated": "Performing blind transfer",
   "@main_Text_blindTransferInitiated": {},
+  "main_Text_attendedTransferInitiated": "Choose who to consult before transferring",
+  "@main_Text_attendedTransferInitiated": {
+    "description": "Shown above the contact, recent call and keypad lists while the person is choosing whom to call as the second call of an attended transfer."
+  },
   "main_BottomNavigationBarItemLabel_contacts": "Contacts",
   "@main_BottomNavigationBarItemLabel_contacts": {},
   "main_BottomNavigationBarItemLabel_favorites": "Favorites",
@@ -1799,6 +1813,14 @@
   "notifications_errorSnackBar_blindTransferFailed": "Transfer failed, returning to active call",
   "@notifications_errorSnackBar_blindTransferFailed": {
     "description": "Shown when a blind transfer fails because the transfer target declined. The original call is restored and the user is returned to the active call screen."
+  },
+  "notifications_errorSnackBar_attendedTransferDeclined": "They declined, returning to the call",
+  "@notifications_errorSnackBar_attendedTransferDeclined": {
+    "description": "Shown when the person called as the second call of an attended transfer declines. The call being transferred is resumed."
+  },
+  "notifications_errorSnackBar_attendedTransferUnanswered": "No answer, returning to the call",
+  "@notifications_errorSnackBar_attendedTransferUnanswered": {
+    "description": "Shown when the person called as the second call of an attended transfer does not answer. The call being transferred is resumed."
   },
   "notifications_errorSnackBar_appOffline": "Your application is currently offline",
   "@notifications_errorSnackBar_appOffline": {

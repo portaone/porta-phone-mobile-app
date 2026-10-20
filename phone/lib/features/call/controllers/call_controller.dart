@@ -7,8 +7,8 @@ import 'package:webtrit_phone/features/call/call.dart';
 ///
 /// Does two things:
 ///   - debounce rapid taps (kDebounceDuration);
-///   - dispatch [CallControlEvent.started] / [CallControlEvent.blindTransferSubmitted]
-///     to [CallBloc].
+///   - dispatch [CallControlEvent.started] / [CallControlEvent.blindTransferSubmitted] /
+///     [CallControlEvent.attendedTransferCallPlaced] to [CallBloc].
 ///
 /// All gating (registration, signaling readiness, line availability,
 /// fromNumber resolution, offline detection) lives in CallBloc, which owns
@@ -43,6 +43,13 @@ class CallController {
   void submitTransfer(String destination) {
     _logger.info('Submitting blind transfer to $destination');
     callBloc.add(CallControlEvent.blindTransferSubmitted(number: destination));
+  }
+
+  /// Calls [number] on behalf of [anchorCallId], to consult them before
+  /// handing that call over.
+  void placeAttendedTransferCall({required String anchorCallId, required String number}) {
+    _logger.info('Placing the attended transfer call to $number for $anchorCallId');
+    callBloc.add(CallControlEvent.attendedTransferCallPlaced(anchorCallId: anchorCallId, number: number));
   }
 
   void dispose() {}

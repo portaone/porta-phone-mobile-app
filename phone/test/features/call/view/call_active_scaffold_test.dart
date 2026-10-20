@@ -9,6 +9,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:signaling/signaling.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
+import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call/view/call_active_scaffold.dart';
@@ -357,7 +358,7 @@ void main() {
     });
   });
 
-  group('CallActiveScaffold - attended transfer submit', () {
+  group('CallActiveScaffold - attended transfer', () {
     final original = makeCall(callId: 'original', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
     final consultation = makeCall(
       callId: 'consultation',
@@ -365,21 +366,68 @@ void main() {
       acceptedTime: DateTime(2024),
       displayName: 'Boris Klein',
     );
+    const link = LinkedCall(
+      callId: 'consultation',
+      anchorCallId: 'original',
+      purpose: LinkedCallPurpose.attendedTransfer,
+      anchorWasLive: true,
+    );
 
     Future<void> openTransferMenu(WidgetTester tester) async {
       await tester.tap(find.byKey(callActionsTransferMenuKey));
       await tester.pumpAndSettle();
     }
 
-    // The replace target must always be the consultation call, regardless of
-    // which row is focused - an incoming call grabs the selection at ring
-    // time and keeps it, so the held original call may stay focused through
-    // the whole transfer flow. A self-referential transfer (referor ==
-    // replace) is rejected by the backend.
+    testWidgets('starting one sends the person to the lists for the focused call, and steps aside', (tester) async {
+      final picking = DestinationPickingCubit();
+      addTearDown(picking.close);
+      when(() => callBloc.state).thenReturn(CallState(activeCalls: [active]));
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active, picking: picking),
+      );
+
+      await openTransferMenu(tester);
+      await tester.tap(find.byKey(callActionsTransferMenuAttendedInitKey));
+      await tester.pumpAndSettle();
+
+      final purpose = picking.state.purpose;
+      expect(purpose, isA<AttendedTransferPurpose>());
+      expect((purpose! as AttendedTransferPurpose).anchorCallId, 'active');
+      verify(() => callBloc.add(const CallControlEvent.attendedTransferInitiated('active'))).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('nothing is asked where somebody is already choosing for a call', (tester) async {
+      final picking = DestinationPickingCubit();
+      addTearDown(picking.close);
+      picking.ask(
+        BlindTransferPurpose(
+          announcement: 'Performing blind transfer',
+          pickLabel: (number) => number,
+          controller: CallController(callBloc: callBloc),
+        ),
+      );
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active, picking: picking),
+      );
+
+      await openTransferMenu(tester);
+      await tester.tap(find.byKey(callActionsTransferMenuAttendedInitKey));
+      await tester.pumpAndSettle();
+
+      expect(picking.state.purpose, isA<BlindTransferPurpose>());
+      verifyNever(() => callBloc.add(const CallControlEvent.attendedTransferInitiated('active')));
+      await teardownCallScaffold(tester);
+    });
+
+    // The call handed over and the call it is handed to both come from the
+    // link, whichever row is focused: an incoming call grabs the selection at
+    // ring time and keeps it, so the held original may stay focused through
+    // the whole transfer.
     for (final focused in [consultation, original]) {
-      testWidgets('submit targets the consultation call when ${focused.callId} is focused', (tester) async {
+      testWidgets('submit hands the original to the linked call when ${focused.callId} is focused', (tester) async {
         await tester.pumpWidget(
-          buildCallScaffold(callBloc, activeCalls: [original, consultation], focusedCall: focused),
+          buildCallScaffold(callBloc, activeCalls: [original, consultation], focusedCall: focused, linkedCall: link),
         );
 
         await openTransferMenu(tester);
@@ -395,14 +443,37 @@ void main() {
       });
     }
 
-    testWidgets('attended item is absent while the consultation call is not yet accepted', (tester) async {
-      final ringingConsultation = makeCall(
-        callId: 'consultation',
-        direction: CallDirection.outgoing,
-        displayName: 'Boris Klein',
+    testWidgets('a third call answered meanwhile is not offered as a target', (tester) async {
+      // Every held call used to be listed, so a stranger who called in during
+      // the consultation could be handed the original call.
+      final stranger = makeCall(
+        callId: 'stranger',
+        acceptedTime: DateTime(2024),
+        held: true,
+        displayName: 'Dana Weber',
       );
       await tester.pumpWidget(
-        buildCallScaffold(callBloc, activeCalls: [original, ringingConsultation], focusedCall: original),
+        buildCallScaffold(
+          callBloc,
+          activeCalls: [original, stranger, consultation],
+          focusedCall: consultation,
+          linkedCall: link,
+        ),
+      );
+
+      await openTransferMenu(tester);
+
+      // Scoped to the menu: both names are in the roster behind it.
+      Finder inMenu(String name) => find.descendant(of: find.byType(PopupMenuItem<dynamic>), matching: find.text(name));
+      expect(inMenu('Clara Diaz'), findsOneWidget);
+      expect(inMenu('Dana Weber'), findsNothing);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('the hand-over is absent while the linked call is not yet answered', (tester) async {
+      final ringing = makeCall(callId: 'consultation', direction: CallDirection.outgoing, displayName: 'Boris Klein');
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [original, ringing], focusedCall: original, linkedCall: link),
       );
 
       await openTransferMenu(tester);

@@ -265,6 +265,26 @@ in one direction. Every path that clears `transfer` - a signalling failure, the 
 attended-transfer branch - therefore takes the banner off the lists with it, without any of them
 knowing there is a banner.
 
+**Attended transfer** — `CallControlEvent.attendedTransferInitiated` steps the screen aside
+after the screen has asked the lists for somebody to consult (`AttendedTransferPurpose`, the
+same mechanism as the blind transfer's target). The choice places the second call through
+`CallControlEvent.attendedTransferCallPlaced`, which puts it in `CallState.linkedCall`
+(`LinkedCall`, `lib/features/call/models/linked_call.dart`): the call placed, the call it was
+placed for, and whether that one was live. Placing it holds the first call. The link is what the
+hand-over is made of - the transfer menu then offers one target, the call the transfer was
+started for, and the submit replaces the linked call - rather than a guess from which call
+happens to be live, which a third call answered meanwhile used to break.
+
+Every way the second call can fail before it is answered - the platform refusing to place it,
+the signalling wait timing out, media, a hangup with any code, the person ending it - ends with
+it leaving `activeCalls`, and that is the one place the give-back hangs on (`_followLinkedCall`
+in `onChange`): the first call is taken off hold strictly after the second has ended on the
+platform, and only a hold the link put on is taken off. A decline and an unanswered call are
+announced (`LinkedCallFailedNotification`); busy is already said by the hangup. If the first
+call ends while the second still rings, the second stays as an ordinary call.
+`features/call/widgets/attended_transfer_picking.dart` takes the request back from the lists when
+the first call ends or the person returns to the call screen without choosing.
+
 **Leaving the call screen** — `CallScreenEvent.didPop` and the start of a transfer set
 `minimized: true`: the call is drawn as an overlay and the proximity sensor is not touched.
 Coming back (`didPush`, a submitted blind transfer) sets `minimized: false`.

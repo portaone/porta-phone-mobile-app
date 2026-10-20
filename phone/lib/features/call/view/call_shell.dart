@@ -37,6 +37,7 @@ class _CallShellState extends State<CallShell> {
         // lifetime: while one is being handed over, the lists elsewhere in the
         // app are what the person is choosing from.
         BlindTransferPicking(controller: CallControllerScope.of(context)),
+        AttendedTransferPicking(),
       ],
       child: widget.child,
     );

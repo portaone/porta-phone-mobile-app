@@ -11,6 +11,8 @@ import 'package:webtrit_phone/app/notifications/models/error_field.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 
+import 'linked_call.dart';
+
 @Deprecated.instantiate('will be removed, (see [app/notifications/models/notification.dart] for details)')
 final class SignalingSessionMissedNotification extends ErrorNotification {
   SignalingSessionMissedNotification();
@@ -296,6 +298,21 @@ final class BlindTransferFailedNotification extends MessageNotification {
   String l10n(BuildContext context) {
     return context.l10n.notifications_errorSnackBar_blindTransferFailed;
   }
+}
+
+/// The party a call was placed on behalf of another did not come, and that
+/// call is back. Said only for the endings the hangup itself does not
+/// announce.
+final class LinkedCallFailedNotification extends MessageNotification {
+  const LinkedCallFailedNotification(this.failure);
+
+  final LinkedCallFailure failure;
+
+  @override
+  String l10n(BuildContext context) => switch (failure) {
+    LinkedCallFailure.declined => context.l10n.notifications_errorSnackBar_attendedTransferDeclined,
+    _ => context.l10n.notifications_errorSnackBar_attendedTransferUnanswered,
+  };
 }
 
 /// The server refused to build the room, or to add a call to it.

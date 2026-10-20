@@ -670,6 +670,11 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String contact_SemanticsLabel_attendedTransfer(String number) {
+    return 'Поговорити з $number перед переадресацією дзвінка';
+  }
+
+  @override
   String get contacts_ContactsScreen_emptyFavorites =>
       'Серед ваших контактів ще немає улюблених.\nДодайте на картці контакта, натиснувши зірочку';
 
@@ -1541,6 +1546,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get main_Text_blindTransferInitiated => 'Безумовне переведення дзвінка';
 
   @override
+  String get main_Text_attendedTransferInitiated => 'Оберіть, з ким поговорити перед переадресацією';
+
+  @override
   String get main_BottomNavigationBarItemLabel_contacts => 'Контакти';
 
   @override
@@ -1930,6 +1938,12 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get notifications_errorSnackBar_blindTransferFailed =>
       'Переадресація не вдалась, повертаємо до активного дзвінка';
+
+  @override
+  String get notifications_errorSnackBar_attendedTransferDeclined => 'Відхилено, повертаємось до розмови';
+
+  @override
+  String get notifications_errorSnackBar_attendedTransferUnanswered => 'Не відповідає, повертаємось до розмови';
 
   @override
   String get notifications_errorSnackBar_appOffline => 'Ваш застосунок зараз офлайн.';
