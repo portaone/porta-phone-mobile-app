@@ -260,6 +260,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'contacts_agreement_checkbox_text' => contacts_agreement_checkbox_text,
       'contacts_agreement_description' => contacts_agreement_description,
       'contacts_agreement_title' => contacts_agreement_title,
+      'contacts_DestinationNumberPicker_title' =>
+        contacts_DestinationNumberPicker_title,
       'contacts_ExternalTabButton_refresh' =>
         contacts_ExternalTabButton_refresh,
       'contacts_ExternalTabSnackBar_requestFailed' =>

@@ -16,7 +16,12 @@ import '../bloc/call_bloc.dart';
 /// ([CallControlEvent.linkedCallPickingStarted]);
 /// `widgets/linked_call_picking.dart` takes it back once it has outlived what
 /// it was asked for ([outlivedIn]).
-abstract class LinkedCallPickPurpose extends Equatable implements DestinationPickPurpose {
+///
+/// A row with one number is the choice. A contact with several is not: which
+/// number the row would dial is a guess the person never sees, so the row
+/// opens a chooser of its numbers instead ([acceptsFallback]).
+abstract class LinkedCallPickPurpose extends Equatable
+    implements DestinationPickPurpose, DestinationPickFallbackPurpose {
   const LinkedCallPickPurpose({
     required this.announcement,
     required String Function(String number) pickLabel,
@@ -38,7 +43,10 @@ abstract class LinkedCallPickPurpose extends Equatable implements DestinationPic
   };
 
   @override
-  bool accepts(DestinationCandidate candidate) => candidate.number != null;
+  bool accepts(DestinationCandidate candidate) => candidate.number != null && candidate.availableNumbers.length == 1;
+
+  @override
+  bool acceptsFallback(DestinationCandidate candidate) => candidate.availableNumbers.length > 1;
 
   /// Somebody is on the line while this is being chosen, as for a transfer.
   @override
@@ -51,7 +59,13 @@ abstract class LinkedCallPickPurpose extends Equatable implements DestinationPic
   bool get cancellable => true;
 
   @override
-  String pickLabel(DestinationCandidate candidate) => _pickLabel(candidate.number ?? '');
+  String pickLabel(DestinationCandidate candidate) => _pickLabel(_named(candidate) ?? '');
+
+  // A contact with several numbers is named rather than numbered: a tap there
+  // opens the chooser, and naming the number the row shows would announce a
+  // call to it.
+  String? _named(DestinationCandidate candidate) =>
+      candidate.availableNumbers.length > 1 ? candidate.contact?.displayTitle ?? candidate.number : candidate.number;
 
   /// The picked contact's name goes with the number, so the ringing call is
   /// shown under it rather than as a bare number.

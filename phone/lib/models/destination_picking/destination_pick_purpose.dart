@@ -76,3 +76,12 @@ abstract interface class DestinationPickPurpose {
   /// Acts on the choice. Called once, and only for a candidate [accepts] took.
   void submit(DestinationCandidate candidate);
 }
+
+/// A purpose that can turn a refused aggregate row into a concrete choice.
+///
+/// The ordinary picking contract keeps refused rows inert. A contact with
+/// several numbers is different for purposes that explicitly support it: the
+/// row is not itself an answer, but it can open a chooser whose entries are.
+abstract interface class DestinationPickFallbackPurpose {
+  bool acceptsFallback(DestinationCandidate candidate);
+}

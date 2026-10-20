@@ -713,6 +713,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contacts_agreement_title => 'Data collection';
 
   @override
+  String get contacts_DestinationNumberPicker_title => 'Choose a number to call';
+
+  @override
   String get contacts_ExternalTabButton_refresh => 'Refresh';
 
   @override

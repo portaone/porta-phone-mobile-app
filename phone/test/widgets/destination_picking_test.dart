@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -195,6 +197,33 @@ void main() {
       verifyNever(() => router.maybePop());
     });
 
+    testWidgets('a choice that arrives after the row is gone is still handed over', (tester) async {
+      // A number chooser is open over the list while the list rebuilds; the
+      // row that opened it may not be there when the number is tapped.
+      final purpose = _Purpose();
+      await pumpPicking(tester);
+      picking.ask(purpose);
+      final choice = Completer<DestinationCandidate?>();
+
+      final picked = pickDestinationLater(pickingContext, purpose, choice.future);
+      await tester.pumpWidget(const SizedBox.shrink());
+      choice.complete(const DestinationCandidate(number: '1002'));
+
+      expect(await picked, isTrue);
+      expect(purpose.submitted.single.number, '1002');
+      verify(() => router.maybePop()).called(1);
+    });
+
+    testWidgets('nothing, when no choice comes', (tester) async {
+      final purpose = _Purpose();
+      await pumpPicking(tester);
+      picking.ask(purpose);
+
+      expect(await pickDestinationLater(pickingContext, purpose, Future.value()), isFalse);
+      expect(purpose.submitted, isEmpty);
+      verifyNever(() => router.maybePop());
+    });
+
     testWidgets('nowhere, when the choice was refused', (tester) async {
       final purpose = _ReturningPurpose(const _Route('Asker'), takes: false);
       await pumpPicking(tester);
@@ -212,14 +241,21 @@ void main() {
     // hand they were four lines written out five times, and a copy that asks
     // one of them and forgets the other is exactly how a row ends up dialling
     // somebody the person was only trying to choose.
-    Future<DestinationPickOffer?> offerIn(WidgetTester tester, DestinationPickPurpose? purpose) async {
+    Future<DestinationPickOffer?> offerIn(
+      WidgetTester tester,
+      DestinationPickPurpose? purpose, {
+      void Function(DestinationPickPurpose purpose)? onFallbackPressed,
+    }) async {
       DestinationPickOffer? offer;
       await tester.pumpWidget(
         DestinationPicking(
           purpose: purpose,
           child: Builder(
             builder: (context) {
-              offer = context.pickOfferFor(const DestinationCandidate(number: '1001'));
+              offer = context.pickOfferFor(
+                const DestinationCandidate(number: '1001'),
+                onFallbackPressed: onFallbackPressed,
+              );
               return const SizedBox.shrink();
             },
           ),
@@ -247,6 +283,22 @@ void main() {
       expect(offer, isNotNull);
       expect(offer!.isAnswer, isFalse);
     });
+
+    testWidgets('a purpose can make a refused aggregate row open its fallback, for that purpose', (tester) async {
+      final purpose = _FallbackPurpose();
+      DestinationPickPurpose? openedFor;
+      final offer = await offerIn(tester, purpose, onFallbackPressed: (purpose) => openedFor = purpose);
+
+      expect(offer!.isAnswer, isTrue);
+      offer.onPressed!();
+      expect(openedFor, same(purpose));
+    });
+
+    testWidgets('a refused row stays inert where the purpose has no fallback', (tester) async {
+      final offer = await offerIn(tester, _Purpose(takes: false), onFallbackPressed: (_) => fail('no fallback'));
+
+      expect(offer!.isAnswer, isFalse);
+    });
   });
 
   test('an unchanged purpose does not notify the lists', () {
@@ -268,6 +320,13 @@ void main() {
     expect(picking.updateShouldNotify(idle), isTrue);
     expect(idle.updateShouldNotify(picking), isTrue);
   });
+}
+
+class _FallbackPurpose extends _Purpose implements DestinationPickFallbackPurpose {
+  _FallbackPurpose() : super(takes: false);
+
+  @override
+  bool acceptsFallback(DestinationCandidate candidate) => true;
 }
 
 class _Purpose implements DestinationPickPurpose {

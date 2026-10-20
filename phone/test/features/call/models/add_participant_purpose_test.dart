@@ -50,6 +50,20 @@ void main() {
     expect(purpose().accepts(const DestinationCandidate(number: '200')), isTrue);
   });
 
+  test('opens a chooser instead of taking a contact with several numbers', () {
+    const candidate = DestinationCandidate(number: '200', numbers: ['200', '201']);
+
+    expect(purpose().accepts(candidate), isFalse);
+    expect(purpose().acceptsFallback(candidate), isTrue);
+  });
+
+  test('a contact whose numbers come down to one is taken at once', () {
+    const candidate = DestinationCandidate(number: '200', numbers: ['200']);
+
+    expect(purpose().accepts(candidate), isTrue);
+    expect(purpose().acceptsFallback(candidate), isFalse);
+  });
+
   test('is ended by the choice and can be given up from the banner', () {
     expect(purpose().closedByChoice, isTrue);
     expect(purpose().cancellable, isTrue);
@@ -57,6 +71,12 @@ void main() {
 
   test('names the number the control would call in', () {
     expect(purpose().pickLabel(const DestinationCandidate(number: '200')), 'Add 200 to the call');
+  });
+
+  test('names a contact with several numbers rather than the number its row shows', () {
+    final candidate = DestinationCandidate(number: '200', numbers: const ['200', '201'], contact: _clara());
+
+    expect(purpose().pickLabel(candidate), 'Add ${_clara().displayTitle} to the call');
   });
 
   test('a choice places the call into the conversation it was asked for', () {
@@ -67,14 +87,7 @@ void main() {
   });
 
   test('a choice from a contact carries the name the ringing call is shown under', () {
-    final contact = Contact(
-      id: 1,
-      sourceType: ContactSourceType.external,
-      sourceId: 'contact-1',
-      kind: ContactKind.visible,
-      firstName: 'Clara',
-      lastName: 'Diaz',
-    );
+    final contact = _clara();
     purpose().submit(DestinationCandidate(number: '200', contact: contact));
 
     verify(
@@ -90,3 +103,12 @@ void main() {
     expect(purpose(), isNot(purpose(anchorCallId: 'd')));
   });
 }
+
+Contact _clara() => Contact(
+  id: 1,
+  sourceType: ContactSourceType.external,
+  sourceId: 'contact-1',
+  kind: ContactKind.visible,
+  firstName: 'Clara',
+  lastName: 'Diaz',
+);

@@ -7,6 +7,7 @@ import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dart';
+import 'package:webtrit_phone/features/contact/extensions/extensions.dart';
 import 'package:webtrit_phone/features/messaging/extensions/contact.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
@@ -60,7 +61,16 @@ class ContactTileAdapter extends StatelessWidget {
     // Whoever is asking, and whether this row is an answer. Both are needed
     // and they are not the same: while a choice is being made no row does what
     // it normally does, but only a row the purpose accepts can be chosen.
-    final pick = context.pickOfferFor(DestinationCandidate(number: number, contact: contact));
+    //
+    // Every number the row stands for is counted only while somebody is being
+    // chosen: it is what tells a contact with one number from one with
+    // several, and nothing else asks.
+    final candidate = DestinationCandidate(
+      number: number,
+      contact: contact,
+      numbers: context.isPickingDestination ? {for (final phone in contact.phones) phone.number}.toList() : null,
+    );
+    final pick = context.pickOfferFor(candidate, onFallbackPressed: (purpose) => _pickNumber(context, purpose));
 
     return BlocBuilder<CallBloc, CallState>(
       buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
@@ -119,6 +129,22 @@ class ContactTileAdapter extends StatelessWidget {
           },
         );
       },
+    );
+  }
+
+  /// One of the contact's numbers, for a purpose that will not take the
+  /// contact as a whole because it has several.
+  void _pickNumber(BuildContext context, DestinationPickPurpose purpose) {
+    final choices = [
+      for (final entry in contact.displayPhoneEntries)
+        NumberChoice(number: entry.phone.number, label: entry.displayLabel),
+    ];
+    final number = DestinationNumberPicker.show(context, purpose: purpose, choices: choices);
+
+    pickDestinationLater(
+      context,
+      purpose,
+      number.then((number) => number == null ? null : DestinationCandidate(number: number, contact: contact)),
     );
   }
 }
