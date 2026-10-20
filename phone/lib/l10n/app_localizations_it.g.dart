@@ -718,6 +718,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get contacts_agreement_title => 'Raccolta dati';
 
   @override
+  String get contacts_DestinationNumberPicker_title => 'Scegli il numero da chiamare';
+
+  @override
   String get contacts_ExternalTabButton_refresh => 'Aggiorna';
 
   @override

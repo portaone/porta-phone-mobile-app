@@ -1258,6 +1258,12 @@ abstract class AppLocalizations {
   /// **'Data collection'**
   String get contacts_agreement_title;
 
+  /// No description provided for @contacts_DestinationNumberPicker_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a number to call'**
+  String get contacts_DestinationNumberPicker_title;
+
   /// No description provided for @contacts_ExternalTabButton_refresh.
   ///
   /// In en, this message translates to:

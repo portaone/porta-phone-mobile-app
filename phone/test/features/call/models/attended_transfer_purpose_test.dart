@@ -50,6 +50,34 @@ void main() {
     expect(purpose().accepts(const DestinationCandidate(number: '300')), isTrue);
   });
 
+  test('opens a chooser instead of taking a contact with several numbers', () {
+    const candidate = DestinationCandidate(number: '300', numbers: ['300', '301']);
+
+    expect(purpose().accepts(candidate), isFalse);
+    expect(purpose().acceptsFallback(candidate), isTrue);
+  });
+
+  test('a contact whose numbers come down to one is taken at once', () {
+    const candidate = DestinationCandidate(number: '300', numbers: ['300']);
+
+    expect(purpose().accepts(candidate), isTrue);
+    expect(purpose().acceptsFallback(candidate), isFalse);
+  });
+
+  test('names a contact with several numbers rather than the number its row shows', () {
+    final contact = Contact(
+      id: 1,
+      sourceType: ContactSourceType.external,
+      sourceId: 'contact-1',
+      kind: ContactKind.visible,
+      firstName: 'Clara',
+    );
+    final candidate = DestinationCandidate(number: '300', numbers: const ['300', '301'], contact: contact);
+
+    expect(purpose().pickLabel(candidate), 'Consult ${contact.displayTitle} before transferring the call');
+    expect(purpose().pickLabel(const DestinationCandidate(number: '300')), 'Consult 300 before transferring the call');
+  });
+
   test('is ended by the choice and can be given up from the banner', () {
     expect(purpose().closedByChoice, isTrue);
     expect(purpose().cancellable, isTrue);

@@ -699,6 +699,8 @@
   "@contacts_agreement_description": {},
   "contacts_agreement_title": "การเก็บรวบรวมข้อมูล",
   "@contacts_agreement_title": {},
+  "contacts_DestinationNumberPicker_title": "เลือกหมายเลขที่จะโทร",
+  "@contacts_DestinationNumberPicker_title": {},
   "contacts_ExternalTabButton_refresh": "รีเฟรช",
   "@contacts_ExternalTabButton_refresh": {},
   "contacts_ExternalTabSnackBar_requestFailed": "ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ - โปรดลองอีกครั้ง",
