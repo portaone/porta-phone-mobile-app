@@ -66,6 +66,17 @@ const permissionTipsButtonKey = Key(permissionTipsButtonId);
 
 const String mainAppBarId = 'mainAppBar';
 const mainAppBarKey = Key(mainAppBarId);
+
+/// Whether the session is up, on every main tab: exactly one of the two is on
+/// screen - connected once the session is ready, connecting before that - so
+/// a flow can wait for the app to be ready without reading the translated
+/// status line.
+///
+/// The state is the id itself, on a node with nothing to say. Any text on a
+/// node - a value included - is also what a screen reader speaks, and an
+/// untranslated "connected" would be read out ahead of the screen's name.
+const String mainAppBarConnectionStatusConnectedId = 'mainAppBarConnectionStatusConnected';
+const String mainAppBarConnectionStatusConnectingId = 'mainAppBarConnectionStatusConnecting';
 const String settingsLogoutButtonId = 'settingsLogoutButton';
 const settingsLogoutButtonKey = Key(settingsLogoutButtonId);
 
@@ -262,6 +273,21 @@ const String presenceSettingsStatusIconPickId = 'presenceSettingsStatusIconPick'
 const String registerStatusSwitchId = 'registerStatusSwitch';
 const String sessionStatusTileId = 'sessionStatusTile';
 const String settingsUserInfoEditId = 'settingsUserInfoEdit';
+
+/// The account number shown under the name at the top of the settings.
+const String settingsUserInfoNumberId = 'settingsUserInfoNumber';
+
+/// The About row of the settings list.
+const String settingsAboutTileId = 'settingsAboutTile';
+
+/// Values on the About screen: the Core address the app is connected to and
+/// the identifier of this app's session.
+const String aboutCoreUrlId = 'aboutCoreUrl';
+const String aboutAppSessionIdentifierId = 'aboutAppSessionIdentifier';
+
+/// The number of the other party on the call screen, whether or not a name
+/// is shown above it.
+const String callPeerNumberId = 'callPeerNumber';
 const String signupVerifyResendButtonId = 'signupVerifyResendButton';
 const String statusIconPickerId = 'statusIconPicker';
 const String statusIconPickerSearchId = 'statusIconPickerSearch';

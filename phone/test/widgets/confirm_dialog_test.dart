@@ -5,6 +5,8 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import '../helpers/helpers.dart';
+
 void main() {
   /// Opens the dialog and hands back what the caller is left holding. The
   /// answer is captured by the button that opened it, so it can only be read
@@ -79,5 +81,25 @@ void main() {
     await tester.tapAt(const Offset(10, 10));
 
     expect(await answer(), isNull);
+  });
+
+  testWidgets('yes and no can be found and pressed by their identifiers', (tester) async {
+    final handle = tester.ensureSemantics();
+
+    for (final (id, label, expected) in [
+      (confirmDialogYesButtonId, 'Yes', true),
+      (confirmDialogNoButtonId, 'No', false),
+    ]) {
+      final answer = await open(tester, dangerous: true);
+
+      final button = find.bySemanticsIdentifier(id);
+      expect(tester.getSemantics(button).getSemanticsData().label, label);
+
+      await tapViaSemantics(tester, button);
+
+      expect(await answer(), expected);
+    }
+
+    handle.dispose();
   });
 }

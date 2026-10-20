@@ -5,6 +5,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 
 import 'confirm_dialog_style.dart';
 import 'confirm_dialog_styles.dart';
+import 'semantic_action.dart';
 
 export 'confirm_dialog_style.dart';
 export 'confirm_dialog_styles.dart';
@@ -70,17 +71,23 @@ class ConfirmDialog extends StatelessWidget {
       title: Text(title),
       content: content == null ? null : Text(content),
       actions: [
-        TextButton(
-          key: confirmDialogNoButtonKey,
-          onPressed: () => Navigator.of(context).pop(false),
-          style: localStyle.activeButtonStyle1,
-          child: Text(context.l10n.alertDialogActions_no),
+        SemanticAction(
+          identifier: confirmDialogNoButtonId,
+          child: TextButton(
+            key: confirmDialogNoButtonKey,
+            onPressed: () => Navigator.of(context).pop(false),
+            style: localStyle.activeButtonStyle1,
+            child: Text(context.l10n.alertDialogActions_no),
+          ),
         ),
-        TextButton(
-          key: confirmDialogYesButtonKey,
-          onPressed: () => Navigator.of(context).pop(true),
-          style: dangerous ? localStyle.activeButtonStyle2 : localStyle.defaultButtonStyle,
-          child: Text(context.l10n.alertDialogActions_yes),
+        SemanticAction(
+          identifier: confirmDialogYesButtonId,
+          child: TextButton(
+            key: confirmDialogYesButtonKey,
+            onPressed: () => Navigator.of(context).pop(true),
+            style: dangerous ? localStyle.activeButtonStyle2 : localStyle.defaultButtonStyle,
+            child: Text(context.l10n.alertDialogActions_yes),
+          ),
         ),
       ],
     );

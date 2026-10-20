@@ -106,6 +106,7 @@ class _AboutScreenState extends State<AboutScreen> {
                                   InfoTile(
                                     label: context.l10n.settings_AboutText_AppSessionIdentifier,
                                     value: state.appIdentifier,
+                                    valueIdentifier: aboutAppSessionIdentifierId,
                                   ),
                                   SizedBox(height: delimiterHeight / 2),
                                   InfoTile(

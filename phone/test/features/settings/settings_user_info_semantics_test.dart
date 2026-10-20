@@ -140,6 +140,17 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets('the account number is readable by its identifier', (tester) async {
+    final handle = tester.ensureSemantics();
+
+    await tester.pumpWidget(wrap(const UserInfoListTile(info: info)));
+
+    final data = tester.getSemantics(find.bySemanticsIdentifier(settingsUserInfoNumberId)).getSemanticsData();
+    expect(data.label, contains('555002'));
+
+    handle.dispose();
+  });
+
   testWidgets('pressing the pencil through semantics starts the edit', (tester) async {
     final handle = tester.ensureSemantics();
 

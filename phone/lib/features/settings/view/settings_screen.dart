@@ -244,6 +244,7 @@ class SettingsScreen extends StatelessWidget {
                                 textStyle: effectiveStyle?.itemTextStyle,
                                 showSeparator: showSeparators,
                                 separatorColor: effectiveStyle?.separatorColor,
+                                identifier: item.flavor == SettingsFlavor.about ? settingsAboutTileId : null,
                                 onTap: () => _onItemTap(context, item),
                               ),
                           ],

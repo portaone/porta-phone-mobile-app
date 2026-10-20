@@ -143,4 +143,18 @@ void main() {
 
     expect(tester.widget<Text>(find.text('Boris Klein')).textAlign, TextAlign.start);
   });
+
+  testWidgets('the number of the other party is readable by its identifier, with a name or without', (tester) async {
+    final handle = tester.ensureSemantics();
+    final unnamed = makeCall(callId: 'unnamed', acceptedTime: DateTime(2024));
+
+    for (final call in [active, unnamed]) {
+      await tester.pumpWidget(wrap(CallInfoBlock(activeCalls: [call], focusedCall: call, onCallSelected: (_) {})));
+
+      final data = tester.getSemantics(find.bySemanticsIdentifier(callPeerNumberId)).getSemanticsData();
+      expect(data.label, kHandle.value);
+    }
+
+    handle.dispose();
+  });
 }

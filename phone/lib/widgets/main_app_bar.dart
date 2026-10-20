@@ -90,26 +90,43 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                 }
                 widgetToShow ??= Row(mainAxisSize: MainAxisSize.max, children: [title ?? SizedBox.shrink()]);
 
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  transitionBuilder: (child, animation) {
-                    final r = animation.status == AnimationStatus.reverse;
-                    return FadeTransition(
-                      opacity: animation.drive(CurveTween(curve: Curves.easeInOut)),
-                      child: SlideTransition(
-                        position: animation.drive(
-                          Tween<Offset>(
-                            begin: Offset(0, r ? -1 : 1),
-                            end: Offset.zero,
-                          ).chain(CurveTween(curve: Curves.easeOut)),
-                        ),
-                        child: child,
+                // The session state rides on an empty node laid under the
+                // title: it carries the state as its id and nothing else, so a
+                // screen reader passes it by and the title keeps the node that
+                // names the screen to itself.
+                return Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Semantics(
+                        container: true,
+                        identifier: status.isReady
+                            ? mainAppBarConnectionStatusConnectedId
+                            : mainAppBarConnectionStatusConnectingId,
+                        child: const SizedBox.expand(),
                       ),
-                    );
-                  },
-                  switchInCurve: Curves.easeInExpo,
-                  switchOutCurve: Curves.easeOutExpo,
-                  child: widgetToShow,
+                    ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 500),
+                      transitionBuilder: (child, animation) {
+                        final r = animation.status == AnimationStatus.reverse;
+                        return FadeTransition(
+                          opacity: animation.drive(CurveTween(curve: Curves.easeInOut)),
+                          child: SlideTransition(
+                            position: animation.drive(
+                              Tween<Offset>(
+                                begin: Offset(0, r ? -1 : 1),
+                                end: Offset.zero,
+                              ).chain(CurveTween(curve: Curves.easeOut)),
+                            ),
+                            child: child,
+                          ),
+                        );
+                      },
+                      switchInCurve: Curves.easeInExpo,
+                      switchOutCurve: Curves.easeOutExpo,
+                      child: widgetToShow,
+                    ),
+                  ],
                 );
               },
             ),
