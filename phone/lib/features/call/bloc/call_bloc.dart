@@ -128,7 +128,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   StreamSubscription<ConnectivityResult>? _connectivityChangedSubscription;
   StreamSubscription<void>? _foregroundCallPushSubscription;
-  final _iceRestartDebounce = DebounceMap<String>(const Duration(seconds: 2));
+  late final RenegotiationCoordinator _renegotiationCoordinator;
 
   /// Auto-hides the slowlink network-quality indicator once events stop, and
   /// drives the brief "recovered" confirmation. Keyed by callId; rescheduling
@@ -224,6 +224,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
        super(const CallState()) {
     _mediaManager = mediaManager ?? CallMediaManager(callkeep: callkeep);
     _offerWait = RoomOfferWait(timeout: conferenceAssemblyTimeout, createTimer: roomOfferDeadlineTimer);
+    _renegotiationCoordinator = RenegotiationCoordinator(onCommand: _executeRenegotiationCommand);
     _signalingModule = signalingModule;
     _callPeerConnectionManager = callPeerConnectionManager;
     _handshakeProcessor = HandshakeProcessor(queuedTerminationRequestsRepository: queuedTerminationRequestsRepository);
@@ -336,7 +337,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _presenceInfoSyncTimer?.cancel();
 
     _offerWait.dispose();
-    _iceRestartDebounce.dispose();
+    _renegotiationCoordinator.dispose();
 
     _slowlinkDebounce.dispose();
     _slowlinkHits.clear();
@@ -841,7 +842,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   Future<void> __onResetStateEventCompleteCall(_ResetStateEventCompleteCall event, Emitter<CallState> emit) async {
     _logger.warning('__onResetStateEventCompleteCall: ${event.callId}');
 
-    _iceRestartDebounce.cancel(event.callId);
+    _renegotiationCoordinator.callRemoved(event.callId);
     _slowlinkDebounce.cancel(event.callId);
     _slowlinkHits.remove(event.callId);
     await _ringback.stop(event.callId);
@@ -910,9 +911,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // Important to do in case if there was connection loss for a while and then webrtc detects network loss and restarts ice e.g
     // user turn off all network interfaces >> __onPeerConnectionEventIceConnectionStateChanged >> RTCIceConnectionStateFailed >> peerConnection.restartIce() >> onRenegotiationNeeded >> __onMutationRenegotiate >> if(!signalingConnected) return;
     // user turn on network interfaces >> _onSignalingClientEventConnected >> safeRenegotiate
-    for (final call in state.activeCalls.where((c) => c.processingStatus == CallProcessingStatus.connected)) {
-      _logger.warning('__onSignalingClientEventConnected: triggering safe renegotiation for call ${call.callId}');
-      add(_CallMutationEvent.renegotiate(call.callId, call.line));
+    final calls = state.activeCalls.where((c) => c.processingStatus == CallProcessingStatus.connected);
+    for (final command in _renegotiationCoordinator.signalingConnected(
+      calls.map((call) => (callId: call.callId, lineId: call.line)),
+    )) {
+      final callId = command.callId;
+      _logger.warning('__onSignalingClientEventConnected: triggering safe renegotiation for call $callId');
+      _executeRenegotiationCommand(command);
     }
 
     emit(
@@ -3921,9 +3926,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // If call already in updating state, mostly by remote renegetiation, hold, transfer etc..
     // skip it but schedule another renegotiation in 1 second later to ensure the pending one is finished
     if (activeCall.updating) {
-      await Future.delayed(Duration(seconds: 1));
+      final command = await _renegotiationCoordinator.retryAfterUpdating(e.callId, e.lineId);
       _logger.info('__onMutationRenegotiate: activeCall is updating, retrying renegotiation');
-      add(_CallMutationEventRenegotiate(e.callId, e.lineId));
+      _executeRenegotiationCommand(command);
     }
 
     try {
@@ -5990,7 +5995,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// rapid consecutive connectivity events result in a single restart.
   void _scheduleIceRestart(String callId) {
     if (isClosed) return;
-    _iceRestartDebounce.schedule(callId, () => add(_IceRestartTriggered(callId)));
+    _renegotiationCoordinator.networkAvailable(callId);
+  }
+
+  void _executeRenegotiationCommand(RenegotiationCommand command) {
+    if (isClosed) return;
+    switch (command) {
+      case RestartIce(:final callId):
+        add(_IceRestartTriggered(callId));
+      case Renegotiate(:final callId, :final lineId):
+        add(_CallMutationEvent.renegotiate(callId, lineId));
+    }
   }
 
   Future<void> _onIceRestartTriggered(_IceRestartTriggered event, Emitter<CallState> emit) async {
