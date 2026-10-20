@@ -2875,7 +2875,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // No future means nothing was sent, not an acknowledged transition.
       // In particular, it must not release a former leg's local isolation.
       if (pending == null) return;
-      await pending;
+      try {
+        await pending;
+      } catch (e) {
+        if (!_renegotiationCoordinator.isTransientSignalingFailure(e)) rethrow;
+        // Lost with the signaling, the hold is treated as one that did not
+        // happen: the call stays and keeps its state. The request may still have
+        // reached the server, so the two can differ until the next hold or
+        // unhold, which the server answers either way - the same as a reply
+        // that timed out always did.
+        _logger.warning('__onMutationPerformSetHeld: ${e.runtimeType}, let call survive');
+        return;
+      }
 
       emit(
         state.copyWithMappedActiveCall(event.callId, (activeCall) {
@@ -2888,10 +2899,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         emit(state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(transition: null)));
         await _restoreLegAudio(event.callId, emit);
       }
-    } on NotConnectedException {
-      _logger.warning('__onMutationPerformSetHeld: not connected, let call survive');
-    } on WebtritSignalingTransactionTimeoutException {
-      _logger.warning('__onMutationPerformSetHeld: transaction timeout, let call survive');
     } on WebtritSignalingErrorException catch (e, stackTrace) {
       // A hold the server declined is only a hold that did not happen: the call is
       // still up and still carrying audio, and the one thing lost is the state
@@ -4076,11 +4083,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         line: activeCall.line,
         candidate: event.candidate.toMap(),
       );
-      await _signalingModule.execute(iceTrickleRequest);
-    } on NotConnectedException {
-      _logger.warning('__onMutationTrickleIce: not connected, let call survive');
-    } on WebtritSignalingTransactionTimeoutException {
-      _logger.warning('__onMutationTrickleIce: transaction timeout, let call survive');
+      try {
+        await _signalingModule.execute(iceTrickleRequest);
+      } catch (e) {
+        if (!_renegotiationCoordinator.isTransientSignalingFailure(e)) rethrow;
+        // A call that is up loses nothing it cannot get back: the ICE restart that
+        // follows the reconnect gathers and sends a fresh set. A call still being
+        // set up is not renegotiated on reconnect, so there only the two losses
+        // this handler always let through keep it.
+        final connected = state.retrieveActiveCall(callId)?.processingStatus == CallProcessingStatus.connected;
+        if (!connected && e is! NotConnectedException && e is! WebtritSignalingTransactionTimeoutException) rethrow;
+        _logger.warning('__onMutationTrickleIce: ${e.runtimeType}, let call survive');
+      }
     } catch (e, stackTrace) {
       callErrorReporter.handle(e, stackTrace, '__onMutationTrickleIce error');
       _callPeerConnectionManager.completeError(callId, e, stackTrace);
@@ -4103,11 +4117,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         line: activeCall.line,
         candidate: null,
       );
-      await _signalingModule.execute(iceTrickleRequest);
-    } on NotConnectedException {
-      _logger.warning('__onMutationIceGatheringComplete: not connected, let call survive');
-    } on WebtritSignalingTransactionTimeoutException {
-      _logger.warning('__onMutationIceGatheringComplete: transaction timeout, let call survive');
+      try {
+        await _signalingModule.execute(iceTrickleRequest);
+      } catch (e) {
+        if (!_renegotiationCoordinator.isTransientSignalingFailure(e)) rethrow;
+        // A call that is up loses nothing it cannot get back: the ICE restart that
+        // follows the reconnect gathers and sends a fresh set. A call still being
+        // set up is not renegotiated on reconnect, so there only the two losses
+        // this handler always let through keep it.
+        final connected = state.retrieveActiveCall(callId)?.processingStatus == CallProcessingStatus.connected;
+        if (!connected && e is! NotConnectedException && e is! WebtritSignalingTransactionTimeoutException) rethrow;
+        _logger.warning('__onMutationIceGatheringComplete: ${e.runtimeType}, let call survive');
+      }
     } catch (e, stackTrace) {
       callErrorReporter.handle(e, stackTrace, '__onMutationIceGatheringComplete error');
       _callPeerConnectionManager.completeError(callId, e, stackTrace);
