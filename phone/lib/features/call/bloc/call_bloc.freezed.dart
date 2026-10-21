@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CallState {
 
- CallServiceState get callServiceState; AppLifecycleState? get currentAppLifecycleState; int get linesCount; List<ActiveCall> get activeCalls; bool? get minimized; CallAudioDevice? get audioDevice; AudioDeviceRequest? get audioDeviceRequest; List<CallAudioDevice> get availableAudioDevices; String? get selectedCallId; ConferenceState get conference; LinkedCall? get linkedCall;
+ CallServiceState get callServiceState; AppLifecycleState? get currentAppLifecycleState; int get linesCount; List<ActiveCall> get activeCalls; bool? get minimized; CallAudioDevice? get audioDevice; AudioDeviceRequest? get audioDeviceRequest; List<CallAudioDevice> get availableAudioDevices; String? get selectedCallId; ({String callId, String? returnsTo})? get placedCallFocus; ConferenceState get conference; LinkedCall? get linkedCall;
 /// Create a copy of CallState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $CallStateCopyWith<CallState> get copyWith => _$CallStateCopyWithImpl<CallState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallState&&(identical(other.callServiceState, callServiceState) || other.callServiceState == callServiceState)&&(identical(other.currentAppLifecycleState, currentAppLifecycleState) || other.currentAppLifecycleState == currentAppLifecycleState)&&(identical(other.linesCount, linesCount) || other.linesCount == linesCount)&&const DeepCollectionEquality().equals(other.activeCalls, activeCalls)&&(identical(other.minimized, minimized) || other.minimized == minimized)&&(identical(other.audioDevice, audioDevice) || other.audioDevice == audioDevice)&&(identical(other.audioDeviceRequest, audioDeviceRequest) || other.audioDeviceRequest == audioDeviceRequest)&&const DeepCollectionEquality().equals(other.availableAudioDevices, availableAudioDevices)&&(identical(other.selectedCallId, selectedCallId) || other.selectedCallId == selectedCallId)&&(identical(other.conference, conference) || other.conference == conference)&&(identical(other.linkedCall, linkedCall) || other.linkedCall == linkedCall));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallState&&(identical(other.callServiceState, callServiceState) || other.callServiceState == callServiceState)&&(identical(other.currentAppLifecycleState, currentAppLifecycleState) || other.currentAppLifecycleState == currentAppLifecycleState)&&(identical(other.linesCount, linesCount) || other.linesCount == linesCount)&&const DeepCollectionEquality().equals(other.activeCalls, activeCalls)&&(identical(other.minimized, minimized) || other.minimized == minimized)&&(identical(other.audioDevice, audioDevice) || other.audioDevice == audioDevice)&&(identical(other.audioDeviceRequest, audioDeviceRequest) || other.audioDeviceRequest == audioDeviceRequest)&&const DeepCollectionEquality().equals(other.availableAudioDevices, availableAudioDevices)&&(identical(other.selectedCallId, selectedCallId) || other.selectedCallId == selectedCallId)&&(identical(other.placedCallFocus, placedCallFocus) || other.placedCallFocus == placedCallFocus)&&(identical(other.conference, conference) || other.conference == conference)&&(identical(other.linkedCall, linkedCall) || other.linkedCall == linkedCall));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,callServiceState,currentAppLifecycleState,linesCount,const DeepCollectionEquality().hash(activeCalls),minimized,audioDevice,audioDeviceRequest,const DeepCollectionEquality().hash(availableAudioDevices),selectedCallId,conference,linkedCall);
+int get hashCode => Object.hash(runtimeType,callServiceState,currentAppLifecycleState,linesCount,const DeepCollectionEquality().hash(activeCalls),minimized,audioDevice,audioDeviceRequest,const DeepCollectionEquality().hash(availableAudioDevices),selectedCallId,placedCallFocus,conference,linkedCall);
 
 @override
 String toString() {
-  return 'CallState(callServiceState: $callServiceState, currentAppLifecycleState: $currentAppLifecycleState, linesCount: $linesCount, activeCalls: $activeCalls, minimized: $minimized, audioDevice: $audioDevice, audioDeviceRequest: $audioDeviceRequest, availableAudioDevices: $availableAudioDevices, selectedCallId: $selectedCallId, conference: $conference, linkedCall: $linkedCall)';
+  return 'CallState(callServiceState: $callServiceState, currentAppLifecycleState: $currentAppLifecycleState, linesCount: $linesCount, activeCalls: $activeCalls, minimized: $minimized, audioDevice: $audioDevice, audioDeviceRequest: $audioDeviceRequest, availableAudioDevices: $availableAudioDevices, selectedCallId: $selectedCallId, placedCallFocus: $placedCallFocus, conference: $conference, linkedCall: $linkedCall)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $CallStateCopyWith<$Res>  {
   factory $CallStateCopyWith(CallState value, $Res Function(CallState) _then) = _$CallStateCopyWithImpl;
 @useResult
 $Res call({
- CallServiceState callServiceState, AppLifecycleState? currentAppLifecycleState, int linesCount, List<ActiveCall> activeCalls, bool? minimized, CallAudioDevice? audioDevice, AudioDeviceRequest? audioDeviceRequest, List<CallAudioDevice> availableAudioDevices, String? selectedCallId, ConferenceState conference, LinkedCall? linkedCall
+ CallServiceState callServiceState, AppLifecycleState? currentAppLifecycleState, int linesCount, List<ActiveCall> activeCalls, bool? minimized, CallAudioDevice? audioDevice, AudioDeviceRequest? audioDeviceRequest, List<CallAudioDevice> availableAudioDevices, String? selectedCallId, ({String callId, String? returnsTo})? placedCallFocus, ConferenceState conference, LinkedCall? linkedCall
 });
 
 
@@ -62,7 +62,7 @@ class _$CallStateCopyWithImpl<$Res>
 
 /// Create a copy of CallState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? callServiceState = null,Object? currentAppLifecycleState = freezed,Object? linesCount = null,Object? activeCalls = null,Object? minimized = freezed,Object? audioDevice = freezed,Object? audioDeviceRequest = freezed,Object? availableAudioDevices = null,Object? selectedCallId = freezed,Object? conference = null,Object? linkedCall = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? callServiceState = null,Object? currentAppLifecycleState = freezed,Object? linesCount = null,Object? activeCalls = null,Object? minimized = freezed,Object? audioDevice = freezed,Object? audioDeviceRequest = freezed,Object? availableAudioDevices = null,Object? selectedCallId = freezed,Object? placedCallFocus = freezed,Object? conference = null,Object? linkedCall = freezed,}) {
   return _then(CallState(
 callServiceState: null == callServiceState ? _self.callServiceState : callServiceState // ignore: cast_nullable_to_non_nullable
 as CallServiceState,currentAppLifecycleState: freezed == currentAppLifecycleState ? _self.currentAppLifecycleState : currentAppLifecycleState // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as bool?,audioDevice: freezed == audioDevice ? _self.audioDevice : audioDevice /
 as CallAudioDevice?,audioDeviceRequest: freezed == audioDeviceRequest ? _self.audioDeviceRequest : audioDeviceRequest // ignore: cast_nullable_to_non_nullable
 as AudioDeviceRequest?,availableAudioDevices: null == availableAudioDevices ? _self.availableAudioDevices : availableAudioDevices // ignore: cast_nullable_to_non_nullable
 as List<CallAudioDevice>,selectedCallId: freezed == selectedCallId ? _self.selectedCallId : selectedCallId // ignore: cast_nullable_to_non_nullable
-as String?,conference: null == conference ? _self.conference : conference // ignore: cast_nullable_to_non_nullable
+as String?,placedCallFocus: freezed == placedCallFocus ? _self.placedCallFocus : placedCallFocus // ignore: cast_nullable_to_non_nullable
+as ({String callId, String? returnsTo})?,conference: null == conference ? _self.conference : conference // ignore: cast_nullable_to_non_nullable
 as ConferenceState,linkedCall: freezed == linkedCall ? _self.linkedCall : linkedCall // ignore: cast_nullable_to_non_nullable
 as LinkedCall?,
   ));

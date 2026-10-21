@@ -96,6 +96,26 @@ void main() {
     expect(_placed(h), hasLength(1));
   });
 
+  test('a second tap on the same number brings the focus back to the call being placed', () async {
+    // The hangup acts on the focused call: left on the held one, it would end
+    // that call while the one placed again goes on ringing.
+    h = CallBlocHarness(lines: 2);
+    h.seedEstablishedCall('b', line: 0);
+
+    h.bloc.add(const CallControlEvent.started(number: '200', video: false));
+    await h.settle(() => h.callkeep.starts.isNotEmpty);
+    final placed = _placed(h).single.callId;
+    expect(h.bloc.state.focusedCall?.callId, placed);
+
+    h.bloc.add(const CallControlEvent.callSelected('b'));
+    await h.settle(() => h.bloc.state.selectedCallId == 'b');
+    h.bloc.add(const CallControlEvent.started(number: '200', video: false));
+    await h.settle(() => h.bloc.state.selectedCallId == placed);
+
+    expect(h.bloc.state.focusedCall?.callId, placed);
+    expect(h.callkeep.starts, hasLength(1));
+  });
+
   test('with every main line taken nothing is placed or held, and the person is told', () async {
     h = CallBlocHarness(lines: 1);
     h.seedEstablishedCall('b', line: 0);

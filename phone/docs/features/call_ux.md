@@ -4,7 +4,7 @@ The product-level view of the calling experience: what the user can do, the
 screen states and the widgets that back them. The
 implementation deep-dive lives in [`call_arch.md`](call_arch.md).
 
-Last reviewed: 2026-10-19
+Last reviewed: 2026-10-21
 
 ## What the user can do
 
@@ -69,16 +69,26 @@ Multiple calls (list-based):
 `CallState.selectedCallId` + the `focusedCall` getter express which call the
 info block and action area act on: the explicitly selected call when it still
 maps to a live call, otherwise the derived `current` (= last non-held call).
-Auto-focus: a new ringing incoming call grabs the focus; when the focused call
-ends, the next ringing incoming call is focused. The media overlay keeps
-following the derived `current` call.
+Auto-focus: a new ringing incoming call grabs the focus, and so does a call the
+user has just placed - an ordinary second call, an attended-transfer
+consultation, a call placed to add somebody, or a second tap on a number still
+being placed - unless an incoming call is ringing. Left on the call it was
+placed from, the End button would end that held call (or the whole room) while
+the new call went on ringing. When the focused call ends, the next ringing
+incoming call is focused; otherwise the selection a placed call took over is
+given back, unless the user picked another call meanwhile. It is given back too
+once the placed call joins the room, so a room that comes apart later does not
+hand the focus to a call nobody picked. A call restored after a reconnect does
+not take the focus. The media overlay keeps following the
+derived `current` call.
 
 With a conference room up, an accepted selection is not consulted at all. The
 screen then shows two conversations - the room and a call taken outside it - and
 which of them is in use is a fact rather than a preference, so the focus follows
 the audio: the live call outside the room while it stands aside, the room's first
-leg otherwise. A call that is still ringing is the exception and keeps the focus
-it was given; it demands a decision and is in neither conversation. Moving
+leg otherwise. A call that is still ringing - incoming, or placed and not yet
+answered - is the exception and keeps the focus it was given; it is in neither
+conversation. Moving
 between the two is a tap on either block, which asks for the hold and leaves the
 focus to follow - see
 [`call_conference.md`](call_conference.md).

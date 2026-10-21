@@ -12,6 +12,7 @@ class CallState with _$CallState {
     this.audioDeviceRequest,
     this.availableAudioDevices = const [],
     this.selectedCallId,
+    this.placedCallFocus,
     this.conference = const ConferenceState(),
     this.linkedCall,
   });
@@ -57,6 +58,13 @@ class CallState with _$CallState {
   /// to `current`.
   @override
   final String? selectedCallId;
+
+  /// The call the person placed that holds the focus (see
+  /// [copyWithFocusOnPlacedCall]), with the selection it took over: the focus
+  /// goes back to that one when the call ends or joins the room. Null when no
+  /// placed call holds the focus.
+  @override
+  final ({String callId, String? returnsTo})? placedCallFocus;
 
   /// The conference room this client hosts; an empty one when there is none.
   @override
@@ -243,8 +251,8 @@ class CallState with _$CallState {
   /// or the call it stands aside for - and the two blocks on that screen frame
   /// themselves from the same rule. A selection would let the frame sit on a
   /// call held long before the room existed, or on one whose hold the server
-  /// refused. A call that is still ringing keeps the focus it was given: it
-  /// demands a decision, and it is in neither conversation.
+  /// refused. A call that is still ringing - incoming, or placed and not yet
+  /// answered - keeps the focus it was given: it is in neither conversation.
   ///
   /// Returns `null` only when there are no active calls.
   ActiveCall? get focusedCall {
@@ -504,24 +512,64 @@ class CallState with _$CallState {
     return copyWith(activeCalls: activeCalls);
   }
 
+  /// Adds [activeCall]. A ringing incoming call takes the focus: it demands a
+  /// decision. Any other call keeps the selection as it is - a call placed by
+  /// the person is focused by whoever placed it (see
+  /// [copyWithFocusOnPlacedCall]) - and so does a call restored after a
+  /// reconnect: it was answered before, and is not yet known to be accepted
+  /// only because the restore has not got that far.
   CallState copyWithPushActiveCall(ActiveCall activeCall) {
+    final grabsFocus =
+        activeCall.isIncomingRinging && activeCall.processingStatus != CallProcessingStatus.incomingRestoringMedia;
     return copyWith(
       activeCalls: [...activeCalls, activeCall],
-      // A new ringing incoming call demands a decision, so it grabs the focus;
-      // any other call keeps the user's selection.
-      selectedCallId: activeCall.isIncoming && !activeCall.wasAccepted ? activeCall.callId : selectedCallId,
+      selectedCallId: grabsFocus ? activeCall.callId : selectedCallId,
     );
   }
+
+  /// Focuses [callId], a call the person has just placed: it is the one they
+  /// are now waiting on. Left on the call they placed it from, the hangup ended
+  /// the conversation they meant to come back to - the held call, or the
+  /// whole room - while the new call went on ringing.
+  ///
+  /// The selection it replaces is kept and given back when the call ends (see
+  /// [copyWithPopActiveCall]) or joins the room (see
+  /// [copyWithPlacedCallFocusSettled]). A ringing incoming call keeps the
+  /// focus: it still demands a decision.
+  CallState copyWithFocusOnPlacedCall(String callId) {
+    if (retrieveActiveCall(callId) == null || selectedCallId == callId) return this;
+    if (focusedCall?.isIncomingRinging ?? false) return this;
+    return copyWith(selectedCallId: callId, placedCallFocus: (callId: callId, returnsTo: selectedCallId));
+  }
+
+  /// Gives the selection back once the placed call that took it has joined
+  /// the room. As a leg it no longer has the focus - the room has (see
+  /// [focusedCall]) - but kept as the selection, it would take the focus back
+  /// the moment the room is gone, picked by no one.
+  CallState copyWithPlacedCallFocusSettled() {
+    final placed = placedCallFocus;
+    if (placed == null || !conference.isLeg(placed.callId)) return this;
+    return copyWith(
+      selectedCallId: selectedCallId == placed.callId ? _alive(placed.returnsTo) : selectedCallId,
+      placedCallFocus: null,
+    );
+  }
+
+  String? _alive(String? callId) => callId != null && retrieveActiveCall(callId) != null ? callId : null;
 
   CallState copyWithPopActiveCall(String callId) {
     final activeCalls = this.activeCalls.where((activeCall) {
       return activeCall.callId != callId;
     }).toList();
     // When the focused call ends, prefer the next ringing incoming call (it
-    // still demands a decision); otherwise clear so [focusedCall] falls back
-    // to `current`. An unrelated selection is kept as is.
+    // still demands a decision); otherwise give the focus back to what was
+    // selected before a placed call took it, or clear so [focusedCall] falls
+    // back to `current`. An unrelated selection is kept as is.
+    final placed = placedCallFocus;
+    final returnsTo = placed?.returnsTo == callId ? null : placed?.returnsTo;
+    final placedEnds = placed?.callId == callId;
     final selectedCallId = this.selectedCallId == callId
-        ? activeCalls.firstWhereOrNull((call) => call.isIncoming && !call.wasAccepted)?.callId
+        ? activeCalls.firstWhereOrNull((call) => call.isIncomingRinging)?.callId ?? (placedEnds ? returnsTo : null)
         : this.selectedCallId;
     // A leg that ends leaves the room; the server's next list says the same.
     final conference = this.conference.isLeg(callId)
@@ -534,6 +582,7 @@ class CallState with _$CallState {
       activeCalls: activeCalls,
       minimized: activeCalls.isEmpty ? null : minimized,
       selectedCallId: selectedCallId,
+      placedCallFocus: placed == null || placedEnds ? null : (callId: placed.callId, returnsTo: returnsTo),
       conference: conference,
     );
   }
@@ -542,7 +591,8 @@ class CallState with _$CallState {
   /// the state unchanged. Keeps [selectedCallId] clamped to an existing call.
   CallState copyWithSelectedCall(String callId) {
     if (retrieveActiveCall(callId) == null) return this;
-    return copyWith(selectedCallId: callId);
+    // The person's own choice: nothing is given back to over it.
+    return copyWith(selectedCallId: callId, placedCallFocus: null);
   }
 
   /// Ids of every active call except [callId] and the room's legs, in list

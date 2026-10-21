@@ -3025,14 +3025,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // callback fires. Without this, each tap allocates the next idle line and
     // the user ends up with N parallel pending calls to the same number
     // instead of a single retry. WT-1554.
-    final hasPendingToSameHandle = state.activeCalls.any(
+    final pendingToSameHandle = state.activeCalls.firstWhereOrNull(
       (c) =>
           c.direction == CallDirection.outgoing && c.processingStatus.isPreOfferSent && c.handle.value == handle.value,
     );
-    if (hasPendingToSameHandle) {
+    if (pendingToSameHandle != null) {
       _logger.info('$source: ignoring duplicate tap, outgoing call to ${handle.value} already pending');
-      // Bring the user back to the pending call screen so the tap feels acknowledged.
-      emit(state.copyWith(minimized: false));
+      // Bring the user back to the pending call screen so the tap feels
+      // acknowledged, and on that call: the person is placing it again.
+      emit(state.copyWithFocusOnPlacedCall(pendingToSameHandle.callId).copyWith(minimized: false));
       return;
     }
 
@@ -3076,6 +3077,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     emit(
       state
           .copyWithPushActiveCall(newCall)
+          .copyWithFocusOnPlacedCall(callId)
           .copyWith(minimized: false, linkedCall: link?.call(callId) ?? state.linkedCall),
     );
 
@@ -3404,7 +3406,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       processingStatus: CallProcessingStatus.outgoingCreatedFromRefer,
     );
 
-    emit(state.copyWithPushActiveCall(newCall).copyWith(minimized: false));
+    emit(state.copyWithPushActiveCall(newCall).copyWithFocusOnPlacedCall(callId).copyWith(minimized: false));
   }
 
   Future<void> __onMutationControlAttendedDecline(
@@ -5015,7 +5017,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     if (!taken || !state.conference.isPresent || state.retrieveActiveCall(callId) == null) return;
     await _quietLegs([callId], emit);
     if (!state.conference.isPresent) return;
-    emit(state.copyWith(conference: state.conference.copyWith(legs: {...state.conference.legs, callId: line})));
+    emit(
+      state
+          .copyWith(conference: state.conference.copyWith(legs: {...state.conference.legs, callId: line}))
+          .copyWithPlacedCallFocusSettled(),
+    );
     // After the room has been found to be still there, and after the call is
     // one of its legs: told any earlier, a call whose room fell away while it
     // was being quieted would be left saying the host had stepped out of a room
@@ -5675,7 +5681,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           })
           .copyWith(
             conference: state.conference.copyWith(legs: plan.legs, participants: participants),
-          ),
+          )
+          .copyWithPlacedCallFocusSettled(),
     );
     // From here the order is the rule. The group is declared before any hold,
     // because a hold on a member is refused and a leg can only leave a group

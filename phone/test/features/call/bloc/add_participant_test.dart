@@ -254,6 +254,38 @@ void main() {
     });
   });
 
+  group('the call placed is what the screen acts on while it rings', () {
+    // The hangup, the microphone and the rest of the controls act on the
+    // focused call. Left on the call it was placed from, the hangup ended that
+    // call - or the whole room - and the new call went on ringing.
+    test('beside the call it was placed from, and back on that call once it fails', () async {
+      h.seedEstablishedCall('b', line: 0);
+      h.bloc.add(const CallControlEvent.callSelected('b'));
+      await pumpEventQueue();
+
+      final c = await _add(h, anchorCallId: 'b');
+      expect(h.bloc.state.focusedCall?.callId, c);
+
+      await _hangUp(h, c, 487);
+      await h.settle(() => _resumes(h, 'b').isNotEmpty);
+      expect(h.bloc.state.focusedCall?.callId, 'b');
+    });
+
+    test('beside the room, and back on the room once it joins', () async {
+      await _roomUp(h);
+      expect(h.bloc.state.focusedCall?.callId, 'a');
+
+      final c = await _add(h, anchorCallId: 'a');
+      expect(h.bloc.state.focusedCall?.callId, c);
+      expect(h.bloc.state.conference.isLeg(c), isFalse, reason: 'so the hangup ends the call, not the room');
+
+      await _answer(h, c);
+      expect(h.bloc.state.conference.isLeg(h.bloc.state.focusedCall!.callId), isTrue);
+      expect(h.bloc.state.selectedCallId, isNot(c), reason: 'a room gone later must not hand the focus to it');
+      expect(h.bloc.state.placedCallFocus, isNull);
+    });
+  });
+
   test('a conversation that can no longer take somebody gets no call', () async {
     h.seedEstablishedCall('b', line: 0);
     h.seedEstablishedCall('d', line: 1);
