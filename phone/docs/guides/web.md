@@ -22,9 +22,22 @@ and the icon tree-shaker rejects the runtime `IconData` built by `String.toIconD
 only after the full Dart compile (~4 min), so leaving it out costs a whole build cycle - see
 [Verifying a Change Compiles](build_verification.md).
 
-A bare `flutter build web` leaves the `${WEBTRIT_APP_NAME}` placeholder
-unsubstituted and lacks the real web Firebase config; use the project's configurator-driven
-web pipeline (configurator -> dart-defines) for a real backend.
+The web runs without Firebase: there are no web Firebase options (they are not generated for
+the brands), so `main.dart` starts it on `FirebaseIntegrationDisabled`, and the push tokens bloc,
+the permission request and the WebRTC initialize skip the web. No pipeline builds the web
+version, so `web/index.html` and `web/manifest.json` carry plain values rather than placeholders.
+
+Against a backend (the local stand, for one):
+
+```bash
+flutter run -d web-server --web-hostname localhost --web-port <free port> \
+  --dart-define-from-file=dart_define.json \
+  --dart-define=WEBTRIT_APP_WEB_BUNDLE_ID=<bundle-id-registered-on-the-server> \
+  --dart-define=WEBTRIT_APP_CORE_URL=<core url>
+```
+
+The browser console still shows a 404 per contact without a Gravatar picture: the avatar is
+asked for with `d=404` on purpose, so that a missing picture falls back to the initials.
 
 ## Important dart-defines on web
 
@@ -49,7 +62,7 @@ Login, contacts, and audio+video calls (WebRTC + signaling over `wss`).
 
 ## Not available on web (intentionally skipped / guarded)
 
-- Push notifications (FCM + local notifications) - deferred.
+- Push notifications (FCM + local notifications) - deferred; there is no Firebase app on the web.
 - Background services (WorkManager, callkeep background isolate, persistent
   signaling) - the web platform has none; signaling runs in the main isolate.
 - Native lock-screen control and native audio routing - the browser owns the

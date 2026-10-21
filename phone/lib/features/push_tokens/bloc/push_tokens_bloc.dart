@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -29,11 +30,11 @@ class PushTokensBloc extends Bloc<PushTokensEvent, PushTokensState> implements P
     required this.pushTokensRepository,
     required this.secureStorage,
     required this.appPreferences,
-    required this.firebaseMessaging,
+    this.firebaseMessaging,
     required this.callkeep,
     required this.pushEnvironment,
   }) : super(PushTokensState.initial()) {
-    _onTokenRefreshSubscription = firebaseMessaging.onTokenRefresh.listen((fcmToken) {
+    _onTokenRefreshSubscription = firebaseMessaging?.onTokenRefresh.listen((fcmToken) {
       add(PushTokensEventInsertedOrUpdated(AppPushTokenType.fcm, fcmToken));
     });
     callkeep.setPushRegistryDelegate(this);
@@ -46,11 +47,14 @@ class PushTokensBloc extends Bloc<PushTokensEvent, PushTokensState> implements P
   final PushTokensRepository pushTokensRepository;
   final SecureStorage secureStorage;
   final AppPreferences appPreferences;
-  final FirebaseMessaging firebaseMessaging;
+
+  /// Null where there is no Firebase app (the web): no FCM token is then
+  /// retrieved, refreshed or deleted.
+  final FirebaseMessaging? firebaseMessaging;
   final Callkeep callkeep;
   final PushEnvironment pushEnvironment;
 
-  late StreamSubscription _onTokenRefreshSubscription;
+  late StreamSubscription? _onTokenRefreshSubscription;
 
   // TODO: Move to repository when repository is ready
   bool get _isSignedIn => secureStorage.readToken() != null;
@@ -75,7 +79,7 @@ class PushTokensBloc extends Bloc<PushTokensEvent, PushTokensState> implements P
 
   Future<void> _cancelInternalDisposables() async {
     try {
-      await _onTokenRefreshSubscription.cancel();
+      await _onTokenRefreshSubscription?.cancel();
     } catch (e, stackTrace) {
       _logger.warning('Failed to cancel token refresh subscription', e, stackTrace);
     }
@@ -88,6 +92,8 @@ class PushTokensBloc extends Bloc<PushTokensEvent, PushTokensState> implements P
   }
 
   Future<void> _deleteFcmTokenIfSignedOut() async {
+    final firebaseMessaging = this.firebaseMessaging;
+    if (firebaseMessaging == null) return;
     if (_isSignedIn) {
       _logger.finest('Skipping FCM token deletion because a user token is still present.');
       return;
@@ -102,10 +108,12 @@ class PushTokensBloc extends Bloc<PushTokensEvent, PushTokensState> implements P
   }
 
   void _onStarted(PushTokensEvent event, Emitter<PushTokensState> emit) async {
-    if (Platform.isAndroid || Platform.isIOS) {
+    // dart:io's Platform throws on the web, where there is no push yet.
+    if (kIsWeb) return;
+    if (firebaseMessaging != null && (Platform.isAndroid || Platform.isIOS)) {
       unawaited(retrieveAndStoreFcmToken());
     }
-    if (Platform.isIOS) {
+    if (firebaseMessaging != null && Platform.isIOS) {
       unawaited(retrieveAndStoreApnsToken());
     }
   }
@@ -124,7 +132,7 @@ class PushTokensBloc extends Bloc<PushTokensEvent, PushTokensState> implements P
     }
 
     final fcmToken = await _backoffRetries.execute<String?>(
-      (_) => firebaseMessaging.getToken(vapidKey: vapidKey),
+      (_) => firebaseMessaging!.getToken(vapidKey: vapidKey),
       shouldRetry: (e, attempt) async {
         _logger.warning('Attempt $attempt failed: $e');
 
@@ -149,7 +157,7 @@ class PushTokensBloc extends Bloc<PushTokensEvent, PushTokensState> implements P
   @visibleForTesting
   Future<void> retrieveAndStoreApnsToken() async {
     final apnsToken = await _backoffRetries.execute<String?>(
-      (attempt) => firebaseMessaging.getAPNSToken(),
+      (attempt) => firebaseMessaging!.getAPNSToken(),
       shouldRetry: (e, attempt) {
         if (!isClosed) add(PushTokensEventError('Failed to retrieve APNS token: $e at attempt $attempt'));
         return true;

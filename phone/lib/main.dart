@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 import 'package:webtrit_phone/app/app.dart';
+import 'package:webtrit_phone/app/firebase_integration.dart';
 import 'package:webtrit_phone/app/app_dependencies.dart';
 import 'package:webtrit_phone/app/startup_trace.dart';
 import 'package:webtrit_phone/bootstrap.dart';
@@ -47,7 +48,15 @@ void main() {
         await startupTrace.measure('system-ui', () => SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
       }
 
-      final dependencies = await startupTrace.measure('bootstrap', () => bootstrap(startupTrace: startupTrace));
+      // The web has no Firebase app to talk to (no web options are generated
+      // for the brands), so it starts on the Firebase-free strategy.
+      final dependencies = await startupTrace.measure(
+        'bootstrap',
+        () => bootstrap(
+          firebase: kIsWeb ? const FirebaseIntegrationDisabled() : const FirebaseIntegrationEnabled(),
+          startupTrace: startupTrace,
+        ),
+      );
 
       // After bootstrap so the application logger exists, and long before the
       // first peer connection is built - see initializeNativeWebrtcLogging.

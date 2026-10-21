@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' hide Notification;
 
 import 'package:bloc/bloc.dart';
@@ -734,7 +735,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // handshake (the disconnect path inside notifyNetworkAvailable assumes a
     // real interface change, which a bootstrap snapshot is not).
 
-    WebRTC.initialize(options: webRtcOptionsBuilder?.build());
+    // flutter_webrtc's initialize is native only; on the web it throws.
+    if (!kIsWeb) WebRTC.initialize(options: webRtcOptionsBuilder?.build());
   }
 
   Future<void> _onAppLifecycleStateChanged(_AppLifecycleStateChanged event, Emitter<CallState> emit) async {

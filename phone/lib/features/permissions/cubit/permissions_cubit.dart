@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:bloc/bloc.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -129,6 +131,8 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   }
 
   Future<void> _requestFirebaseMessagingPermission() async {
+    // No Firebase app on the web (see main.dart).
+    if (kIsWeb) return;
     final notificationSettings = await FirebaseMessaging.instance.requestPermission();
     if (notificationSettings.authorizationStatus == AuthorizationStatus.authorized) {
       _logger.info('User granted firebase permission');
