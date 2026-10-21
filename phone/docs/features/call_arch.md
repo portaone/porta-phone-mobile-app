@@ -55,6 +55,7 @@ List<CallAudioDevice> availableAudioDevices
 
 AppLifecycleState? currentAppLifecycleState // last known Flutter lifecycle state
 String? selectedCallId // the call the user chose; read through focusedCall
+({String callId, String? returnsTo})? placedCallFocus // a placed call holding the focus, and the selection to give back
 ConferenceState conference // the room this client hosts, empty when there is none
 ```
 

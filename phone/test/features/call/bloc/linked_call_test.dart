@@ -51,6 +51,18 @@ void main() {
     expect(h.bloc.state.minimized, isFalse);
   });
 
+  test('the consultation is what the screen acts on while it rings, not the call it is for', () async {
+    // The hangup acts on the focused call: left on the held call, it ended
+    // that call and the consultation went on ringing.
+    h.seedEstablishedCall('b', line: 0);
+    h.bloc.add(const CallControlEvent.callSelected('b'));
+    await pumpEventQueue();
+
+    final c = await _consult(h);
+
+    expect(h.bloc.state.focusedCall?.callId, c);
+  });
+
   group('a consultation that does not come up gives the call back', () {
     for (final (code, failure) in [
       (486, LinkedCallFailure.busy),

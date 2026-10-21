@@ -535,12 +535,129 @@ void main() {
       expect(next.focusedCall?.callId, 'incoming');
     });
 
-    test('a new outgoing call keeps the existing selection', () {
+    test('an incoming call restored after a reconnect keeps the selection', () {
+      // It was answered before; it is not yet marked accepted only because the
+      // restore has not got that far.
+      final answered = _makeCall(callId: 'answered', acceptedTime: DateTime(2024));
+      final state = CallState(activeCalls: [answered], selectedCallId: 'answered');
+      final restored = _makeCall(callId: 'restored', processingStatus: CallProcessingStatus.incomingRestoringMedia);
+      expect(state.copyWithPushActiveCall(restored).selectedCallId, 'answered');
+    });
+
+    test('any other call keeps the selection: the one who placed it focuses it', () {
       final answered = _makeCall(callId: 'answered', acceptedTime: DateTime(2024));
       final state = CallState(activeCalls: [answered], selectedCallId: 'answered');
       final outgoing = _makeCall(callId: 'outgoing', direction: CallDirection.outgoing);
       final next = state.copyWithPushActiveCall(outgoing);
       expect(next.selectedCallId, 'answered');
+    });
+  });
+
+  group('CallState.copyWithFocusOnPlacedCall', () {
+    ActiveCall placed(String callId, {int line = 2}) => _makeCall(
+      callId: callId,
+      line: line,
+      direction: CallDirection.outgoing,
+      processingStatus: CallProcessingStatus.outgoingCreated,
+    );
+
+    test('focuses the placed call, and gives the selection back when it ends', () {
+      // 'a' is chosen and comes first; 'b' is held after it, so `current`
+      // alone would land on 'b' once the placed call is gone.
+      final a = _makeCall(callId: 'a', line: 0, held: true, acceptedTime: DateTime(2024));
+      final b = _makeCall(callId: 'b', line: 1, held: true, acceptedTime: DateTime(2024));
+      final state = CallState(activeCalls: [a, b], selectedCallId: 'a');
+
+      final placing = state.copyWithPushActiveCall(placed('c')).copyWithFocusOnPlacedCall('c');
+      expect(placing.focusedCall?.callId, 'c');
+
+      final ended = placing.copyWithPopActiveCall('c');
+      expect(ended.selectedCallId, 'a');
+      expect(ended.placedCallFocus, isNull);
+      expect(ended.focusedCall?.callId, 'a');
+    });
+
+    test('beside a room it takes the focus from the room, which has it back once the call joins', () {
+      final legA = _makeCall(callId: 'leg-a', line: 0, acceptedTime: DateTime(2024));
+      final legB = _makeCall(callId: 'leg-b', line: 1, acceptedTime: DateTime(2024));
+      const room = ConferenceState(room: 7, phase: ConferencePhase.active, legs: {'leg-a': 0, 'leg-b': 1});
+      final state = CallState(activeCalls: [legA, legB], conference: room);
+      expect(state.focusedCall?.callId, 'leg-a');
+
+      final outgoing = placed('outgoing');
+      final next = state.copyWithPushActiveCall(outgoing).copyWithFocusOnPlacedCall('outgoing');
+      expect(next.focusedCall?.callId, 'outgoing');
+
+      final joined = next
+          .copyWith(
+            activeCalls: [
+              legA,
+              legB,
+              outgoing.copyWith(acceptedTime: DateTime(2024)),
+            ],
+            conference: room.copyWith(legs: {...room.legs, 'outgoing': 2}),
+          )
+          .copyWithPlacedCallFocusSettled();
+      expect(joined.focusedCall?.callId, 'leg-a');
+      // Given back, so a room that comes apart later does not hand the focus
+      // to a call nobody picked.
+      expect(joined.selectedCallId, isNull);
+      expect(joined.placedCallFocus, isNull);
+    });
+
+    test('joined into a room, the call gives the selection back to the call it was placed from', () {
+      final b = _makeCall(callId: 'b', line: 0, held: true, acceptedTime: DateTime(2024));
+      final c = placed('c', line: 1);
+      final state = CallState(
+        activeCalls: [b],
+        selectedCallId: 'b',
+      ).copyWithPushActiveCall(c).copyWithFocusOnPlacedCall('c');
+
+      final joined = state
+          .copyWith(
+            activeCalls: [
+              b.copyWith(held: false),
+              c.copyWith(acceptedTime: DateTime(2024)),
+            ],
+            conference: const ConferenceState(room: 7, phase: ConferencePhase.active, legs: {'b': 0, 'c': 1}),
+          )
+          .copyWithPlacedCallFocusSettled();
+      expect(joined.selectedCallId, 'b');
+
+      final dissolved = joined.copyWith(conference: const ConferenceState());
+      expect(dissolved.focusedCall?.callId, 'b');
+    });
+
+    test('a ringing incoming call keeps the focus', () {
+      final answered = _makeCall(callId: 'answered', line: 0, held: true, acceptedTime: DateTime(2024));
+      final ringing = _makeCall(callId: 'ringing', line: 1, processingStatus: CallProcessingStatus.incomingFromOffer);
+      final state = CallState(activeCalls: [answered], selectedCallId: 'answered').copyWithPushActiveCall(ringing);
+
+      final next = state.copyWithPushActiveCall(placed('outgoing')).copyWithFocusOnPlacedCall('outgoing');
+      expect(next.focusedCall?.callId, 'ringing');
+    });
+
+    test('a selection the person makes meanwhile is not overridden when the call ends', () {
+      final a = _makeCall(callId: 'a', line: 0, held: true, acceptedTime: DateTime(2024));
+      final b = _makeCall(callId: 'b', line: 1, held: true, acceptedTime: DateTime(2024));
+      final state = CallState(
+        activeCalls: [a, b],
+        selectedCallId: 'a',
+      ).copyWithPushActiveCall(placed('c')).copyWithFocusOnPlacedCall('c').copyWithSelectedCall('b');
+
+      expect(state.placedCallFocus, isNull);
+      expect(state.copyWithPopActiveCall('a').copyWithPopActiveCall('c').selectedCallId, 'b');
+    });
+
+    test('the call to give back to ending first leaves nothing to give back to', () {
+      final a = _makeCall(callId: 'a', line: 0, held: true, acceptedTime: DateTime(2024));
+      final state = CallState(
+        activeCalls: [a],
+        selectedCallId: 'a',
+      ).copyWithPushActiveCall(placed('c')).copyWithFocusOnPlacedCall('c').copyWithPopActiveCall('a');
+
+      expect(state.placedCallFocus, (callId: 'c', returnsTo: null));
+      expect(state.selectedCallId, 'c');
     });
   });
 
