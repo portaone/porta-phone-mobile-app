@@ -114,6 +114,9 @@ what it does.
     returning to the call"). Busy is told by the call ending as busy. The first
     call stays on hold if the person had held it before starting, or if another
     call is live by then.
+  - A contact with one number is the choice. A contact with several asks
+    which ("Choose a number to call"); the sheet closes with the request. The
+    same holds for Add participant.
   - Back on the call screen without choosing, or the first call ending while
     choosing: the banner goes.
   - The first call ending while the second still rings: the second stays as an

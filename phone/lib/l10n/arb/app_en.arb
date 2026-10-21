@@ -773,6 +773,8 @@
   "@contacts_agreement_description": {},
   "contacts_agreement_title": "Data collection",
   "@contacts_agreement_title": {},
+  "contacts_DestinationNumberPicker_title": "Choose a number to call",
+  "@contacts_DestinationNumberPicker_title": {},
   "contacts_ExternalTabButton_refresh": "Refresh",
   "@contacts_ExternalTabButton_refresh": {},
   "contacts_ExternalTabSnackBar_requestFailed": "Could not reach the server - please try again",

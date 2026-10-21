@@ -699,6 +699,8 @@
   "@contacts_agreement_description": {},
   "contacts_agreement_title": "Raccolta dati",
   "@contacts_agreement_title": {},
+  "contacts_DestinationNumberPicker_title": "Scegli il numero da chiamare",
+  "@contacts_DestinationNumberPicker_title": {},
   "contacts_ExternalTabButton_refresh": "Aggiorna",
   "@contacts_ExternalTabButton_refresh": {},
   "contacts_ExternalTabSnackBar_requestFailed": "Impossibile raggiungere il server - riprova",

@@ -2,7 +2,7 @@
 
 How a feature asks the user to pick somebody out of the contacts, recents,
 favourites and keypad, and what those lists do while the choice is being made.
-Last reviewed: 2026-10-19.
+Last reviewed: 2026-10-20.
 
 ## The three pieces
 
@@ -60,12 +60,25 @@ row offers what it has and the purpose decides whether that is enough:
 class DestinationCandidate {
   final String? number;
   final Contact? contact;
+  final List<String>? numbers;
 }
 ```
 
 Handing a call on needs a number and ignores the rest. Something that addresses
 an account on the backend rather than dialling it - forwarding a voice message
 to a colleague, say - reads the contact and ignores the number.
+
+While somebody is being chosen, a contacts row also gives every distinct
+number it has, in `numbers`. Most purposes ignore them and take the number the
+row would dial. A purpose that implements `DestinationPickFallbackPurpose` can
+refuse a row with several numbers and still let it open
+`DestinationNumberPicker`; the number chosen there is handed over through
+`pickDestinationLater`, which reads the request and the router while the row is
+still there, so the choice is not lost if the row is rebuilt away meanwhile. A
+contact with several numbers then neither dials whichever one the row shows nor
+goes inert. The chooser belongs to the request it was opened for and closes
+when the request goes - the call ended, or another request took over - rather
+than taking a number for nobody.
 
 ## Adding a purpose
 
@@ -198,6 +211,11 @@ the one object:
 Written out by hand this is four lines, and it was written out once per list -
 five copies, each a place to ask one half and forget the other.
 
+Contacts also pass `onFallbackPressed`. It is used only when the purpose
+implements `DestinationPickFallbackPurpose` and takes the row as a fallback,
+and it is handed that purpose, so the choice goes back to the request the offer
+was made for; for every other purpose a refused row stays inert.
+
 ## Call sites
 
 | Section | File |
@@ -231,7 +249,9 @@ placed for (`anchorCallId`). A choice from a contact carries its name, so the
 ringing call is shown under it. Both are asked for in `CallActiveScaffold`,
 which steps the call screen aside (`CallControlEvent.linkedCallPickingStarted`)
 only when the request took the floor, and ended by the choice or the banner's
-cancel.
+cancel. A contact whose numbers come down to one is taken at once; one with
+several opens the number chooser, and its row is announced by the contact's
+name rather than by the number it shows.
 
 - **Consulting before a hand-over** -
   `lib/features/call/models/attended_transfer_purpose.dart`, submitting through
@@ -327,7 +347,9 @@ banner, at `main_screen.dart`.
 | File | What it pins |
 |---|---|
 | `test/features/call/models/blind_transfer_purpose_test.dart` | The transfer policy, walking every `MainFlavor` |
-| `test/features/call/models/attended_transfer_purpose_test.dart` | The consultation policy, and that a choice places the second call for the call it was asked for |
+| `test/features/call/models/attended_transfer_purpose_test.dart` | The consultation policy, the chooser for a contact with several numbers, and that a choice places the second call for the call it was asked for |
+| `test/widgets/destination_number_picker_semantics_test.dart` | The number chooser: each number an action with its own id, and the sheet closing with its request |
+| `test/features/contacts/widgets/contact_tile_adapter_picking_test.dart` | A contacts row: one number called at once, several asking which, the chosen one called |
 | `test/features/call/widgets/linked_call_picking_test.dart` | A request for a call on the screen taken back when it has outlived its call or room, or the person returns, and kept through a call update while the screen is still up |
 | `test/widgets/destination_picking_test.dart` | The scope, and that an unchanged purpose does not notify |
 | `test/features/main/main_screen_test.dart` | The banner, driven by a fake purpose so the screen cannot hardcode wording |
@@ -339,5 +361,5 @@ banner, at `main_screen.dart`.
 | `test/features/call/widgets/blind_transfer_picking_test.dart` | The bridge, including a transfer that ends without taking somebody else's request with it |
 | `test/widgets/destination_pick_report_presenter_test.dart` | What a feature has to say, the retry offered only where one can change the answer, and a report that was waiting before the presenter arrived |
 | `test/features/voicemail/forward_voicemail_purpose_test.dart` | The second purpose, and how much narrower it is |
-| `test/features/call/models/add_participant_purpose_test.dart` | The add-participant policy, and the conversation a choice places the call into |
+| `test/features/call/models/add_participant_purpose_test.dart` | The add-participant policy, the chooser for a contact with several numbers, and the conversation a choice places the call into |
 | `test/features/voicemail/utils/voicemail_forwarding_test.dart` | How a forward went, said by name: through, or refused with a retry to the same colleague |

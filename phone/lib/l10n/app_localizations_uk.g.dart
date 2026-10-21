@@ -735,6 +735,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get contacts_agreement_title => 'Збір даних';
 
   @override
+  String get contacts_DestinationNumberPicker_title => 'Виберіть номер для дзвінка';
+
+  @override
   String get contacts_ExternalTabButton_refresh => 'Оновити';
 
   @override

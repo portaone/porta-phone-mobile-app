@@ -702,6 +702,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get contacts_agreement_title => 'การเก็บรวบรวมข้อมูล';
 
   @override
+  String get contacts_DestinationNumberPicker_title => 'เลือกหมายเลขที่จะโทร';
+
+  @override
   String get contacts_ExternalTabButton_refresh => 'รีเฟรช';
 
   @override

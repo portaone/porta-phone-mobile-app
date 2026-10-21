@@ -39,9 +39,10 @@ class DestinationPicking extends InheritedWidget {
 /// standing would keep every list in picking mode with nothing left to pick
 /// for. Only where the choice is what ends it - a purpose mirroring a mode it
 /// does not own here says so, and is closed by whoever does own it.
-bool submitDestination(BuildContext context, DestinationPickPurpose purpose, DestinationCandidate candidate) {
-  final picking = context.read<DestinationPickingCubit>();
+bool submitDestination(BuildContext context, DestinationPickPurpose purpose, DestinationCandidate candidate) =>
+    _submit(context.read<DestinationPickingCubit>(), purpose, candidate);
 
+bool _submit(DestinationPickingCubit picking, DestinationPickPurpose purpose, DestinationCandidate candidate) {
   // A row built for a request that no longer holds the floor is no answer to
   // the one that does. A live request can take over between a row being built
   // and a tap landing on it, and the tap must not act for whoever has since
@@ -65,17 +66,45 @@ bool submitDestination(BuildContext context, DestinationPickPurpose purpose, Des
 /// Where the purpose names the screen that asked, leaving means going there.
 /// Otherwise it is a step back, and whoever owns the request brings its own
 /// screen forward.
-bool pickDestination(BuildContext context, DestinationPickPurpose purpose, DestinationCandidate candidate) {
-  if (!submitDestination(context, purpose, candidate)) return false;
+bool pickDestination(BuildContext context, DestinationPickPurpose purpose, DestinationCandidate candidate) =>
+    _pick(context.read<DestinationPickingCubit>(), context.router, purpose, candidate);
+
+/// [pickDestination] for a choice that arrives later - from a number chooser -
+/// when the row that asked for it may be gone by then.
+///
+/// What the choice needs is read from [context] now, while the row is still
+/// there, so a choice made after it was rebuilt away is still handed over
+/// rather than dropped. A choice that never comes - the chooser closed, or
+/// gone with its request - hands nothing over.
+Future<bool> pickDestinationLater(
+  BuildContext context,
+  DestinationPickPurpose purpose,
+  Future<DestinationCandidate?> choice,
+) async {
+  final picking = context.read<DestinationPickingCubit>();
+  final router = context.router;
+
+  final candidate = await choice;
+  if (candidate == null) return false;
+  return _pick(picking, router, purpose, candidate);
+}
+
+bool _pick(
+  DestinationPickingCubit picking,
+  StackRouter router,
+  DestinationPickPurpose purpose,
+  DestinationCandidate candidate,
+) {
+  if (!_submit(picking, purpose, candidate)) return false;
 
   if (purpose case final DestinationPickOrigin asker) {
     // The choice may have been made on a screen pushed over the list - a
     // colleague's card. Left there, it would be what the section shows the
     // next time the person comes to it.
-    context.router.popUntilRoot();
-    context.router.navigate(asker.origin);
+    router.popUntilRoot();
+    router.navigate(asker.origin);
   } else {
-    context.router.maybePop();
+    router.maybePop();
   }
   return true;
 }
@@ -98,14 +127,35 @@ extension DestinationPickingContext on BuildContext {
   /// Both questions answered in one place. Written out by hand it is four
   /// lines, and it was written out five times - once per list - each copy a
   /// place to ask one of the two and forget the other.
-  DestinationPickOffer? pickOfferFor(DestinationCandidate candidate) {
+  ///
+  /// [onFallbackPressed] is what a row does when the purpose will not take it
+  /// as it is but will take a choice made from it - a contact with several
+  /// numbers. It is handed the purpose that decided so, so the choice goes
+  /// back to the same request the offer was made for.
+  DestinationPickOffer? pickOfferFor(
+    DestinationCandidate candidate, {
+    void Function(DestinationPickPurpose purpose)? onFallbackPressed,
+  }) {
     final purpose = pickPurpose;
     if (purpose == null) return null;
 
     return DestinationPickOffer(
       icon: purpose.pickIcon,
       label: purpose.pickLabel(candidate),
-      onPressed: purpose.accepts(candidate) ? () => pickDestination(this, purpose, candidate) : null,
+      onPressed: _pickAction(purpose, candidate, onFallbackPressed),
     );
+  }
+
+  VoidCallback? _pickAction(
+    DestinationPickPurpose purpose,
+    DestinationCandidate candidate,
+    void Function(DestinationPickPurpose purpose)? onFallbackPressed,
+  ) {
+    if (purpose.accepts(candidate)) return () => pickDestination(this, purpose, candidate);
+    if (onFallbackPressed == null) return null;
+    if (purpose case final DestinationPickFallbackPurpose fallback when fallback.acceptsFallback(candidate)) {
+      return () => onFallbackPressed(purpose);
+    }
+    return null;
   }
 }

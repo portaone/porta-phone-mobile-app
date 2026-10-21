@@ -176,6 +176,9 @@ Key callCenterQueueSwitchKey(String queueId) => Key(callCenterQueueSwitchId(queu
 const String callerIdScreenId = 'callerIdScreen';
 const String chatConversationScreenId = 'chatConversationScreen';
 const String contactScreenId = 'contactScreen';
+const String destinationNumberPickerId = 'destinationNumberPicker';
+
+String destinationNumberOptionId(int index) => 'destinationNumberOption-$index';
 const String loginCoreUrlScreenId = 'loginCoreUrlScreen';
 const String loginDeviceLimitScreenId = 'loginDeviceLimitScreen';
 const String loginModeScreenId = 'loginModeScreen';
