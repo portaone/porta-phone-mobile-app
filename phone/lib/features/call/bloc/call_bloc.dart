@@ -1824,7 +1824,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // WT-1554: do NOT reject here when not registered. The downstream
     // [__onCallPerformEventStarted] path handles signaling/registration wait
     // and surfaces the appropriate notifications after the timeout.
-    final fromNumber = resolveOutgoingFromNumber(event.fromNumber, event.handle.value);
+    //
+    // A pull (Replaces) takes over a dialog of the account's own identity, so it
+    // goes out without a `from`: a caller ID picked for the destination would make
+    // the server place it as a separate call from that number, which carries no
+    // Replaces and rings the other party instead of moving the call here.
+    final replaces = event.replaces;
+    final fromNumber = replaces != null ? null : resolveOutgoingFromNumber(event.fromNumber, event.handle.value);
 
     add(
       _CallMutationEvent.controlStart(
@@ -1832,7 +1838,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         video: event.video,
         displayName: event.displayName,
         fromNumber: fromNumber,
-        fromReplaces: event.replaces,
+        fromReplaces: replaces,
       ),
     );
   }
