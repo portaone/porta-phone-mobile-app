@@ -245,6 +245,11 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String callerId_SemanticsLabel_matchRuleWithCountry(String dialCode, String country, String number) {
+    return 'สายไปยัง $dialCode ($country) จะแสดง $number';
+  }
+
+  @override
   String get call_CallActionsTooltip_accept => 'รับสาย';
 
   @override

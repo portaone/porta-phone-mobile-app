@@ -21,6 +21,17 @@ class MatcherTile extends StatelessWidget {
   /// because a rule is identified by a dial code the test cannot know upfront.
   final int index;
 
+  /// Rules on one dial code differ only by the flag when their countries
+  /// differ (+1 picked as Canada or as the United States), so the country is
+  /// named whenever the rule carries one.
+  String _semanticsLabel(BuildContext context) {
+    final country = pickedCountryOfRule(matcher.prefix, matcher.country);
+    if (country == null) return context.l10n.callerId_SemanticsLabel_matchRule(matcher.prefix, matcher.number);
+
+    final countryName = CountryCode.fromCountryCode(country).localize(context).name ?? country;
+    return context.l10n.callerId_SemanticsLabel_matchRuleWithCountry(matcher.prefix, countryName, matcher.number);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -41,12 +52,12 @@ class MatcherTile extends StatelessWidget {
           // here, so the whole thing is read as the one sentence it states.
           MergeSemantics(
             child: Semantics(
-              label: context.l10n.callerId_SemanticsLabel_matchRule(matcher.prefix, matcher.number),
+              label: _semanticsLabel(context),
               child: ExcludeSemantics(
                 child: Row(
                   children: [
                     CountryCodePicker(
-                      initialSelection: countrySelectionForDialCode(matcher.prefix),
+                      initialSelection: countrySelectionForRule(matcher.prefix, matcher.country),
                       showFlag: true,
                       showFlagDialog: true,
                       showCountryOnly: false,

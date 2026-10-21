@@ -19,7 +19,7 @@ class MatcherAddingForm extends StatefulWidget {
 
   final List<String> numbers;
   final List<String> addedPrefixes;
-  final Function(String prefix, String number) onSave;
+  final Function(String prefix, String number, String? country) onSave;
   final Function() onCancel;
 
   @override
@@ -35,10 +35,16 @@ class _MatcherAddingFormState extends State<MatcherAddingForm> {
   /// rule ended up on.
   String country = '';
 
+  /// ISO code of the country behind [prefix], saved with the rule so that the
+  /// flag shown for it later is the one picked here and not the dial code's
+  /// main country.
+  String? countryCode;
+
   void _onCountryChanged(CountryCode? value) {
     setState(() {
       prefix = value?.dialCode ?? '';
       country = value?.name ?? '';
+      countryCode = value?.code;
     });
   }
 
@@ -120,7 +126,7 @@ class _MatcherAddingFormState extends State<MatcherAddingForm> {
                 onPressed: isValid
                     ? () {
                         if (prefix.isNotEmpty && number.isNotEmpty) {
-                          widget.onSave(prefix, number);
+                          widget.onSave(prefix, number, countryCode);
                         }
                       }
                     : null,

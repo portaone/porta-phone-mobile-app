@@ -203,6 +203,20 @@
       }
     }
   },
+  "callerId_SemanticsLabel_matchRuleWithCountry": "Дзвінки на {dialCode}, {country}, показують {number}",
+  "@callerId_SemanticsLabel_matchRuleWithCountry": {
+    "placeholders": {
+      "dialCode": {
+        "type": "String"
+      },
+      "country": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "call_CallActionsTooltip_accept": "Прийняти",
   "@call_CallActionsTooltip_accept": {},
   "call_CallActionsTooltip_accept_inviteToAttendedTransfer": "Прийняти переадресацію",

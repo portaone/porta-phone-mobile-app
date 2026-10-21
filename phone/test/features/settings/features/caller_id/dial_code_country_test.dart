@@ -45,6 +45,14 @@ void main() {
       expect(countrySelectionForDialCode('+358'), 'FI');
     });
 
+    test('takes the country picked for a rule only when it has the rule\'s code', () {
+      expect(countrySelectionForRule('+1', 'CA'), 'CA');
+      expect(countrySelectionForRule('+1', 'GB'), 'US');
+      expect(countrySelectionForRule('+1', 'XX'), 'US');
+      expect(countrySelectionForRule('+1', null), 'US');
+      expect(countrySelectionForRule('+54', null), '+54');
+    });
+
     test('leaves +7 to the picker', () {
       expect(countrySelectionForDialCode('+7'), '+7');
     });
@@ -57,14 +65,18 @@ void main() {
   });
 
   group('a saved rule', () {
-    Future<void> pumpRule(WidgetTester tester, String prefix) => tester.pumpWidget(
+    Future<void> pumpRule(WidgetTester tester, String prefix, {String? country}) => tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         // Keyed by the code, so each rule is a row of its own, the way the
         // screen builds them, rather than one row told to change.
         home: Scaffold(
-          body: MatcherTile(key: ValueKey(prefix), matcher: PrefixMatcher(prefix, '555306'), index: 0),
+          body: MatcherTile(
+            key: ValueKey(prefix),
+            matcher: PrefixMatcher(prefix, '555306', country: country),
+            index: 0,
+          ),
         ),
       ),
     );
@@ -81,6 +93,45 @@ void main() {
       await pumpRule(tester, '+1');
 
       expect(shownFlag(tester), 'flags/us.png');
+    });
+
+    testWidgets('for +1 picked as Canada carries the flag of Canada', (tester) async {
+      // +1 is shared, so only the country kept with the rule can tell Canada
+      // from the United States, which the code alone would show.
+      await pumpRule(tester, '+1', country: 'CA');
+
+      expect(shownFlag(tester), 'flags/ca.png');
+      expect(find.text('+1'), findsOneWidget);
+    });
+
+    testWidgets('with a country of another code carries the flag of its own code', (tester) async {
+      // The picker draws the code of the country it is handed: GB would turn
+      // a +1 rule into a +44 one on screen.
+      await pumpRule(tester, '+1', country: 'GB');
+
+      expect(shownFlag(tester), 'flags/us.png');
+      expect(find.text('+1'), findsOneWidget);
+    });
+
+    testWidgets('with a country the picker does not know carries the flag of its code', (tester) async {
+      // Unknown to the picker, the code would fall to the first country of
+      // its list, Afghanistan.
+      await pumpRule(tester, '+1', country: 'XX');
+
+      expect(shownFlag(tester), 'flags/us.png');
+      expect(find.text('+1'), findsOneWidget);
+    });
+
+    testWidgets('names the country it keeps to a screen reader', (tester) async {
+      await pumpRule(tester, '+1', country: 'CA');
+
+      expect(find.bySemanticsLabel('Calls to +1, Canada, show 555306'), findsOneWidget);
+    });
+
+    testWidgets('without a country reads out the code and the number alone', (tester) async {
+      await pumpRule(tester, '+1');
+
+      expect(find.bySemanticsLabel('Calls to +1 show 555306'), findsOneWidget);
     });
 
     testWidgets('for the other shared codes carries the flag the dialer shows', (tester) async {
