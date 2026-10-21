@@ -125,6 +125,87 @@ void main() {
       expect(result, isNot(contains('a=rtcp-fb:126 nack')));
     });
 
+    group('keepAudioCodecs', () {
+      const mixed = {RTPCodec.opus, RTPCodec.pcma, RTPCodec.pcmu};
+
+      test('keeps the allowed codecs, DTMF and comfort noise, and drops every other voice codec', () {
+        final builder = _buildBuilder()..keepAudioCodecs(mixed);
+
+        final result = builder.sdp;
+        expect(_line(result, 'm=audio'), 'm=audio 9 UDP/TLS/RTP/SAVPF 111 126 0 8 13');
+        for (final kept in ['rtpmap:111 opus', 'rtpmap:126 telephone-event', 'rtpmap:0 PCMU', 'rtpmap:8 PCMA']) {
+          expect(result, contains('a=$kept'));
+        }
+        expect(result, contains('a=rtpmap:13 CN/8000'));
+        expect(result, contains('a=fmtp:8 vad=on'));
+        // red, G.722, G.729a and G.726, with what belongs to them.
+        for (final dropped in ['red/', 'G722', 'G729a', 'G726', 'a=fmtp:63', 'a=rtcp-fb:9 nack']) {
+          expect(result, isNot(contains(dropped)), reason: dropped);
+        }
+        // Video is left alone.
+        expect(_line(result, 'm=video'), 'm=video 9 UDP/TLS/RTP/SAVPF 127 103 39 40 96 97 200');
+      });
+
+      test('names a payload whose rtpmap was left out by its static number; keeps one it cannot name', () {
+        final builder = SDPModBuilder(
+          sdp:
+              'v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n'
+              'm=audio 9 UDP/TLS/RTP/SAVPF 111 9 0 98\r\nc=IN IP4 0.0.0.0\r\n'
+              'a=rtpmap:111 opus/48000/2\r\n',
+        )..keepAudioCodecs(mixed);
+
+        expect(_line(builder.sdp, 'm=audio'), 'm=audio 9 UDP/TLS/RTP/SAVPF 111 0 98');
+      });
+
+      test('names a static payload past the ones it has a profile for', () {
+        final builder = SDPModBuilder(
+          sdp:
+              'v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n'
+              'm=audio 9 RTP/AVP 18 3 0\r\nc=IN IP4 0.0.0.0\r\n',
+        );
+
+        expect(builder.keepAudioCodecs(mixed), isTrue);
+        expect(_line(builder.sdp, 'm=audio'), 'm=audio 9 RTP/AVP 0');
+      });
+
+      test('changes nothing when none of the allowed codecs is offered', () {
+        const sdp =
+            'v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n'
+            'm=audio 9 UDP/TLS/RTP/SAVPF 9 13 126\r\nc=IN IP4 0.0.0.0\r\n'
+            'a=rtpmap:9 G722/8000\r\na=rtpmap:13 CN/8000\r\na=rtpmap:126 telephone-event/8000\r\n';
+        final builder = SDPModBuilder(sdp: sdp);
+
+        expect(builder.keepAudioCodecs(mixed), isFalse);
+        expect(_line(builder.sdp, 'm=audio'), 'm=audio 9 UDP/TLS/RTP/SAVPF 9 13 126');
+      });
+
+      test('says when there was nothing to remove', () {
+        final builder = SDPModBuilder(
+          sdp:
+              'v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n'
+              'm=audio 9 UDP/TLS/RTP/SAVPF 111 0\r\nc=IN IP4 0.0.0.0\r\na=rtpmap:111 opus/48000/2\r\n',
+        );
+
+        expect(builder.keepAudioCodecs(mixed), isFalse);
+      });
+
+      test('drops an rtx payload with the codec it repairs, and keeps one for an allowed codec', () {
+        final builder = SDPModBuilder(
+          sdp:
+              'v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n'
+              'm=audio 9 UDP/TLS/RTP/SAVPF 111 96 9 97\r\nc=IN IP4 0.0.0.0\r\n'
+              'a=rtpmap:111 opus/48000/2\r\n'
+              'a=rtpmap:96 rtx/48000\r\na=fmtp:96 apt=111\r\n'
+              'a=rtpmap:9 G722/8000\r\n'
+              'a=rtpmap:97 rtx/8000\r\na=fmtp:97 apt=9;rtx-time=3000\r\n',
+        )..keepAudioCodecs(mixed);
+
+        final result = builder.sdp;
+        expect(_line(result, 'm=audio'), 'm=audio 9 UDP/TLS/RTP/SAVPF 111 96');
+        expect(result, isNot(contains('apt=9')));
+      });
+    });
+
     test('remove unknown audio profiles', () {
       final builder = _buildBuilder();
 

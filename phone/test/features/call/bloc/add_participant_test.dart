@@ -286,6 +286,123 @@ void main() {
     });
   });
 
+  group('the offer', () {
+    // What a browser-grade WebRTC stack offers: opus, redundancy, G.722 and
+    // the G.711 pair, comfort noise and DTMF.
+    const webrtcOffer =
+        'v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n'
+        'm=audio 9 UDP/TLS/RTP/SAVPF 111 63 9 0 8 13 110 126\r\nc=IN IP4 0.0.0.0\r\n'
+        'a=rtpmap:111 opus/48000/2\r\na=fmtp:111 minptime=10;useinbandfec=1\r\n'
+        'a=rtpmap:63 red/48000/2\r\na=fmtp:63 111/111\r\n'
+        'a=rtpmap:9 G722/8000\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\n'
+        'a=rtpmap:13 CN/8000\r\na=rtpmap:110 telephone-event/48000\r\na=rtpmap:126 telephone-event/8000\r\n';
+
+    /// Lets the platform start [callId] and returns the audio line of the
+    /// offer it went out with.
+    Future<String> offeredAudio(String callId) async {
+      final call = h.bloc.state.retrieveActiveCall(callId)!;
+      h.bloc.performStartCall(callId, call.handle, null, false);
+      await h.settle(() => h.signaling.requests.whereType<OutgoingCallRequest>().any((it) => it.callId == callId));
+      final sdp = h.signaling.requests
+          .whereType<OutgoingCallRequest>()
+          .singleWhere((it) => it.callId == callId)
+          .jsep['sdp'];
+      return (sdp as String).split('\r\n').firstWhere((line) => line.startsWith('m=audio'));
+    }
+
+    setUp(() {
+      h.seedSignalingReady();
+      h.peerFactory.offerSdp = webrtcOffer;
+    });
+
+    test('of a call placed to join carries only the codecs the room mixes', () async {
+      // The server leaves a call on G.722 out of the room and closes a room
+      // left with one call; a callee that speaks only G.722 turns this offer
+      // down instead.
+      h.seedEstablishedCall('b', line: 0);
+      h.bloc.add(const CallControlEvent.participantCallPlaced(anchorCallId: 'b', number: '200'));
+      await h.settle(() => h.bloc.state.linkedCall != null);
+
+      expect(await offeredAudio(h.bloc.state.linkedCall!.callId), 'm=audio 9 UDP/TLS/RTP/SAVPF 111 0 8 13 110 126');
+    });
+
+    /// Has the signalling session start again, which renegotiates the one
+    /// call that is up, and returns the audio line of that offer.
+    Future<String> renegotiatedAudio() async {
+      h.signaling.emitLifecycle(SignalingConnected());
+      await h.settle(() => h.signaling.requests.whereType<UpdateRequest>().isNotEmpty);
+      final update = h.signaling.requests.whereType<UpdateRequest>().single;
+      // The server takes it, so nothing is left waiting on the answer.
+      h.signaling.emit(UpdatedEvent(transaction: update.transaction, line: update.line, callId: update.callId));
+      await pumpEventQueue();
+      return (update.jsep['sdp'] as String).split('\r\n').firstWhere((line) => line.startsWith('m=audio'));
+    }
+
+    test('of a leg of the room renegotiating carries only the codecs the room mixes', () async {
+      h.seedEstablishedCall('a', line: 0, offerSdp: webrtcOffer);
+      // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+      h.bloc.emit(
+        h.bloc.state.copyWith(
+          conference: const ConferenceState(room: 7, phase: ConferencePhase.active, legs: {'a': 0}),
+        ),
+      );
+
+      expect(await renegotiatedAudio(), 'm=audio 9 UDP/TLS/RTP/SAVPF 111 0 8 13 110 126');
+    });
+
+    test('of the far end, answered by a leg, gets only the codecs the room mixes in the answer', () async {
+      // The far end re-offers with G.722 first; answered as it comes, the leg
+      // would move onto it and out of the room.
+      const answer =
+          'v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n'
+          'm=audio 9 UDP/TLS/RTP/SAVPF 9 8 13 126\r\nc=IN IP4 0.0.0.0\r\n'
+          'a=rtpmap:9 G722/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:13 CN/8000\r\na=rtpmap:126 telephone-event/8000\r\n';
+      h.seedEstablishedCall('a', line: 0, answerSdp: answer);
+      // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+      h.bloc.emit(
+        h.bloc.state.copyWith(
+          conference: const ConferenceState(room: 7, phase: ConferencePhase.active, legs: {'a': 0}),
+        ),
+      );
+
+      h.signaling.emit(
+        const UpdatingCallEvent(
+          line: 0,
+          callId: 'a',
+          callee: '100',
+          caller: '200',
+          jsep: {'type': 'offer', 'sdp': 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 9 8 13 126\r\n'},
+        ),
+      );
+      await h.settle(() => h.signaling.requests.whereType<UpdateRequest>().isNotEmpty);
+      final update = h.signaling.requests.whereType<UpdateRequest>().single;
+      h.signaling.emit(UpdatedEvent(transaction: update.transaction, line: update.line, callId: update.callId));
+      await pumpEventQueue();
+
+      final sdp = h.signaling.requests.whereType<UpdateRequest>().single.jsep['sdp'] as String;
+      expect(
+        sdp.split('\r\n').firstWhere((line) => line.startsWith('m=audio')),
+        'm=audio 9 UDP/TLS/RTP/SAVPF 8 13 126',
+      );
+    });
+
+    test('of a call outside the room renegotiating is left as it is', () async {
+      h.seedEstablishedCall('c', line: 2, offerSdp: webrtcOffer);
+
+      expect(await renegotiatedAudio(), 'm=audio 9 UDP/TLS/RTP/SAVPF 111 63 9 0 8 13 110 126');
+    });
+
+    test('of an ordinary call is left as it is', () async {
+      h.bloc.add(const CallControlEvent.started(number: '200', video: false));
+      await h.settle(() => h.bloc.state.activeCalls.isNotEmpty);
+
+      expect(
+        await offeredAudio(h.bloc.state.activeCalls.single.callId),
+        'm=audio 9 UDP/TLS/RTP/SAVPF 111 63 9 0 8 13 110 126',
+      );
+    });
+  });
+
   test('a conversation that can no longer take somebody gets no call', () async {
     h.seedEstablishedCall('b', line: 0);
     h.seedEstablishedCall('d', line: 1);

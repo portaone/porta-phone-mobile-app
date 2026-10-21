@@ -2473,6 +2473,25 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     };
   }
 
+  /// Leaves in [description] only the audio codecs the room's mixer speaks
+  /// ([kConferenceAudioCodecs]) when [callId] is in or on its way into the
+  /// room: a call placed to join a conversation, or a leg - its own offers, and
+  /// its answers to an offer from the far end, which could otherwise move it
+  /// off them. A codec outside them is left out of the room by the server, and
+  /// a room left with one call is closed with no reason given.
+  ///
+  /// Applied after the encoding settings, which a deployment may switch off as
+  /// a whole: this is what the room needs, not a preference.
+  void _keepConferenceCodecs(String callId, RTCSessionDescription description) {
+    final linked = state.linkedCall;
+    final joins = linked?.callId == callId && linked?.purpose == LinkedCallPurpose.join;
+    if (!joins && !state.conference.isLeg(callId)) return;
+    final sdp = description.sdp;
+    if (sdp == null) return;
+    final builder = SDPModBuilder(sdp: sdp);
+    if (builder.keepAudioCodecs(kConferenceAudioCodecs)) description.sdp = builder.sdp;
+  }
+
   // Stub handlers — replaced in Tasks 3-6
   Future<void> __onMutationPerformStart(_CallMutationEventPerformStart event, Emitter<CallState> emit) async {
     ///
@@ -2544,6 +2563,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
       final localDescription = await peerConnection.createOffer({});
       sdpMunger?.apply(localDescription);
+      _keepConferenceCodecs(event.callId, localDescription);
       _logger.infoPretty(localDescription.sdp, tag: '__onMutationPerformStart');
 
       // Need to initiate outgoing call before set localDescription to avoid races
@@ -3815,6 +3835,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             // localDescription should be set before sending the answer to transition into stable state.
             final localDescription = await peerConnection.createAnswer({});
             sdpMunger?.apply(localDescription);
+            _keepConferenceCodecs(activeCall.callId, localDescription);
             _logger.infoPretty(localDescription.sdp, tag: '__onMutationSignalingCallUpdating created answer SDP');
 
             await peerConnection.setLocalDescription(localDescription);
@@ -3995,6 +4016,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       final offer = offerCandidate;
       if (!canReplayPendingOffer) {
         sdpMunger?.apply(offer);
+        _keepConferenceCodecs(e.callId, offer);
         _logger.infoPretty(offer.sdp, tag: 'onRenegotiationNeeded offer SDP (callId=${e.callId}):');
         await pc.setLocalDescription(offer);
       } else {

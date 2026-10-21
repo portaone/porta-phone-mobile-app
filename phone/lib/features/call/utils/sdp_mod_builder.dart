@@ -213,6 +213,83 @@ class SDPModBuilder {
     }
   }
 
+  /// Leaves in the audio section only the payloads of the [allowed] codecs,
+  /// and those that carry no voice of their own - DTMF (`telephone-event`) and
+  /// comfort noise (`CN`) - dropping with every other payload what is tied to
+  /// it: its rtpmap, fmtp and rtcp-fb lines and an rtx payload pointing at it.
+  ///
+  /// A payload is named by its rtpmap, or by its RFC 3551 static number when
+  /// the rtpmap line has been left out (see [removeStaticAudioRtpMaps]); a
+  /// dynamic one with neither is unknown and kept.
+  ///
+  /// Changes nothing when none of the [allowed] codecs is offered: an audio
+  /// section left with no voice codec cannot carry a call at all, which is
+  /// worse than one the far end may answer on another codec.
+  ///
+  /// Returns whether anything was removed.
+  bool keepAudioCodecs(Set<RTPCodec> allowed) {
+    final media = _getMedia(RTPCodecKind.audio);
+    if (media == null) return false;
+
+    final payloads = switch (media['payloads']) {
+      String p => p.split(' '),
+      int p => [p.toString()],
+      _ => <String>[],
+    };
+    final rtpMaps = media['rtp'] is List<dynamic> ? media['rtp'] as List<dynamic> : const [];
+    final fmtps = media['fmtp'] is List<dynamic> ? media['fmtp'] as List<dynamic> : const [];
+    final rtcpFbs = media['rtcpFb'] is List<dynamic> ? media['rtcpFb'] as List<dynamic> : const [];
+
+    final voice = allowed.map((c) => c.sdpKey.toLowerCase()).toSet();
+    final service = {RTPCodec.telephoneEvent, RTPCodec.cn}.map((c) => c.sdpKey.toLowerCase()).toSet();
+    String? nameOf(String payload) {
+      final rtpMap = rtpMaps.firstWhereOrNull((r) => r['payload'].toString() == payload);
+      return (rtpMap?['codec'] as String?)?.toLowerCase() ?? _rfc3551AudioPayloads[payload];
+    }
+
+    final names = {for (final payload in payloads) payload: nameOf(payload)};
+    if (!names.values.any(voice.contains)) return false;
+
+    final removed = <String>{
+      for (final MapEntry(key: payload, value: name) in names.entries)
+        if (name != null && name != 'rtx' && !voice.contains(name) && !service.contains(name)) payload,
+    };
+    for (final fmtp in fmtps) {
+      final apt = RegExp(r'(?:^|;)\s*apt=(\d+)').firstMatch('${fmtp['config']}')?.group(1);
+      if (apt != null && removed.contains(apt)) removed.add(fmtp['payload'].toString());
+    }
+    if (removed.isEmpty) return false;
+
+    bool isKept(dynamic record) => !removed.contains(record['payload'].toString());
+    media['payloads'] = payloads.where((p) => !removed.contains(p)).join(' ');
+    media['rtp'] = rtpMaps.where(isKept).toList();
+    media['fmtp'] = fmtps.where(isKept).toList();
+    media['rtcpFb'] = rtcpFbs.where(isKept).toList();
+    return true;
+  }
+
+  /// The audio payload types RFC 3551 assigns statically, by encoding name in
+  /// lower case: a payload offered without its rtpmap line is one of these.
+  static const _rfc3551AudioPayloads = {
+    '0': 'pcmu',
+    '3': 'gsm',
+    '4': 'g723',
+    '5': 'dvi4',
+    '6': 'dvi4',
+    '7': 'lpc',
+    '8': 'pcma',
+    '9': 'g722',
+    '10': 'l16',
+    '11': 'l16',
+    '12': 'qcelp',
+    '13': 'cn',
+    '14': 'mpa',
+    '15': 'g728',
+    '16': 'dvi4',
+    '17': 'dvi4',
+    '18': 'g729',
+  };
+
   /// Removes all audio extmaps from the SDP.
   /// Used to reduce the SDP size and avoid issues with some endpoints.
   void removeAudioExtmaps() {

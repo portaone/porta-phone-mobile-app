@@ -3,7 +3,7 @@
 Merging the calls a person already holds into one room where everybody hears
 everybody. The room is the server's - a Janus AudioBridge the backend builds
 and owns - and this client asks for it, joins it, and follows what it says.
-Last reviewed: 2026-10-19.
+Last reviewed: 2026-10-21.
 
 The wire format, every refusal reason and the obligations this client is held
 to are in
@@ -303,6 +303,23 @@ attended transfer and described in [`call_arch.md`](call_arch.md) under
   back by itself - so a failed call leaves the room as it was.
 - **The line** - always a main line, never the guest line of another caller
   ID: the server merges calls by line, and a guest-line call has none.
+- **The codecs** - the room is a mixer on the server that speaks opus, PCMA
+  and PCMU only. A call on another codec (G.722, iLBC) is left out of the room,
+  and a room left with one call is closed with nothing but
+  `conference_terminated` - no reason, so this side cannot tell it from an
+  ordinary end. The call's offer therefore carries only those codecs
+  (`kConferenceAudioCodecs`, `SDPModBuilder.keepAudioCodecs`), and so do a
+  leg's own offers and its answers to an offer from the far end, which could
+  otherwise move it off them. A callee that speaks none of them turns the call
+  down before answering - an ordinary failed call that gives the conversation
+  back. DTMF and comfort noise stay; where none of the codecs is offered at all
+  nothing is removed, since a description with no voice codec carries no call.
+  It is applied after the encoding settings, which a deployment may bypass as a
+  whole: the room needs it regardless. Not covered: the call the new one joins,
+  and any call merged by hand - they were placed with every codec before anybody
+  knew they would be merged, so one already on G.722 still breaks the room; and
+  an offer kept for replay from before the call became a leg goes out as it was
+  kept.
 - **The join** - `signalingAccepted` of the new call queues `linkedCallJoin`,
   which runs the same merge or add a person's tap runs. Being queued, it runs
   after the answer has been applied, and a Merge pressed at the same moment
