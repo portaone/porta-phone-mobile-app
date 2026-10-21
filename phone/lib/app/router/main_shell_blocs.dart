@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:logging/logging.dart';
 
@@ -75,7 +76,7 @@ class MainShellBlocs extends StatelessWidget {
               pushTokensRepository: context.read<PushTokensRepository>(),
               secureStorage: context.read<SecureStorage>(),
               appPreferences: context.read<AppPreferences>(),
-              firebaseMessaging: context.read<FirebaseMessaging>(),
+              firebaseMessaging: kIsWeb ? null : context.read<FirebaseMessaging>(),
               callkeep: callkeep,
               pushEnvironment: context.read<PushEnvironment>(),
             )..add(const PushTokensEventStarted());
