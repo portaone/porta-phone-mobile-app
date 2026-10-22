@@ -41,9 +41,25 @@ if [ ! -f "$DART_DEFINE" ]; then
   exit 1
 fi
 
-# Absent and empty mean the same thing here: no domain, no deep links.
-domain=$(plutil -extract WEBTRIT_APP_LINK_DOMAIN raw -o - "$DART_DEFINE" 2>/dev/null || true)
-domain=$(printf '%s' "$domain" | tr -d '[:space:]')
+# Absent, empty and null mean the same thing here: no domain, no deep links.
+#
+# What plutil prints counts only when it succeeded. On the macOS 15 runner a
+# failed extract - no such key - writes its error to stdout, and that text was
+# taken for a domain: the entitlement stayed and the archive could not be signed
+# with a profile that has no Associated Domains (WT-2132). A value that is not a
+# host name is no domain either, whatever printed it.
+if domain=$(plutil -extract WEBTRIT_APP_LINK_DOMAIN raw -o - "$DART_DEFINE" 2>/dev/null); then
+  domain=$(printf '%s' "$domain" | tr -d '[:space:]')
+else
+  domain=
+fi
+case "$domain" in
+  null) domain= ;;
+  *[!A-Za-z0-9.-]*)
+    echo "WEBTRIT_APP_LINK_DOMAIN is not a host name (${domain}) - treating it as no domain" >&2
+    domain=
+    ;;
+esac
 
 if [ -n "$domain" ]; then
   echo "Deep links: enabled (${domain}) - keeping ${ASSOCIATED_DOMAINS}"
