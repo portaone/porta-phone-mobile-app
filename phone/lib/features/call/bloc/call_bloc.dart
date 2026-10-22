@@ -221,12 +221,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     Timer Function(Duration, void Function())? roomOfferDeadlineTimer,
     Timer Function(Duration, void Function())? renegotiationReplayTimer,
     Future<void> Function(Duration)? renegotiationUpdatingDelay,
+    Timer Function(Duration, void Function())? roomCodecMoveTimer,
   }) : _onMissedCall = onMissedCall,
        _connectivityService = connectivityService,
        _speakerOnMinimize = SpeakerOnMinimize(isEnabled: speakerOnMinimize ?? () => false),
        super(const CallState()) {
     _mediaManager = mediaManager ?? CallMediaManager(callkeep: callkeep);
     _offerWait = RoomOfferWait(timeout: conferenceAssemblyTimeout, createTimer: roomOfferDeadlineTimer);
+    _roomCodecMove = RoomCodecMove(timeout: const Duration(seconds: 20), createTimer: roomCodecMoveTimer);
     _renegotiationCoordinator = RenegotiationCoordinator(
       onCommand: _executeRenegotiationCommand,
       createTimer: renegotiationReplayTimer,
@@ -345,6 +347,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     _offerWait.dispose();
     _renegotiationCoordinator.dispose();
+    _roomCodecMove.dispose();
 
     _slowlinkDebounce.dispose();
     _slowlinkHits.clear();
@@ -2485,11 +2488,110 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   void _keepConferenceCodecs(String callId, RTCSessionDescription description) {
     final linked = state.linkedCall;
     final joins = linked?.callId == callId && linked?.purpose == LinkedCallPurpose.join;
-    if (!joins && !state.conference.isLeg(callId)) return;
+    if (!joins && !_roomCodecMove.moves(callId) && !state.conference.isLeg(callId)) return;
     final sdp = description.sdp;
     if (sdp == null) return;
     final builder = SDPModBuilder(sdp: sdp);
     if (builder.keepAudioCodecs(kConferenceAudioCodecs)) description.sdp = builder.sdp;
+  }
+
+  // Moving calls onto the conference codecs
+  //
+  // A call placed as an ordinary call settled on whatever codec its two ends
+  // liked best, often G.722, long before anybody thought of a room; the
+  // room's mixer would leave it out. Before such a call is merged or added it
+  // is renegotiated with the conference codecs alone, and the merge or add is
+  // asked again once every such call has its answer - checking the codecs
+  // again. A request asked while a move is on waits for it. A far end that
+  // turns the offer down keeps the call as it was: the offer is rolled back,
+  // not sent again as other refused offers are, and the request asked again
+  // finds the call still off the codecs and says the conference could not be
+  // set up. So it goes when the answers do not come in time.
+  //
+  // A held call is moved as it is. The connection offers sendrecv - a hold is
+  // the server's, asked for apart from it - so the move takes the call off
+  // hold on the far end. The merge would do so a moment later anyway; when the
+  // call ends up in no room, the hold is asked for again. The direction cannot
+  // be written into the offer instead: the connection would see its
+  // transceiver differ from what was agreed and renegotiate again, sendrecv,
+  // on what is by then a leg of the room.
+  //
+  // What is kept about a move is RoomCodecMove's.
+
+  late final RoomCodecMove _roomCodecMove;
+
+  /// What a far end answers when it will not speak the codecs offered.
+  static const _codecRefusalCodes = {415, 488, 606};
+
+  static const _codecNotMixable = 'codec_not_mixable';
+
+  /// Whether [callIds] can be put in a room now. When one of them is on a
+  /// codec the room does not mix, the calls are moved onto the conference
+  /// codecs first, and [request] asks again once they are; so it does when a
+  /// move is already on. A call already moved for this request and still off
+  /// the codecs makes it [_RoomCodecs.off].
+  Future<_RoomCodecs> _roomCodecsFor(
+    Iterable<String> callIds, {
+    required void Function() request,
+    required String source,
+  }) async {
+    if (_roomCodecMove.isOn) {
+      _logger.info('$source: waits for the calls being moved onto the conference codecs');
+      _roomCodecMove.wait(request);
+      return _RoomCodecs.moving;
+    }
+    final mixable = kConferenceAudioCodecs.map((c) => c.sdpKey.toLowerCase()).toSet();
+    final off = <String, String>{};
+    for (final callId in callIds) {
+      if (state.conference.isLeg(callId)) continue;
+      final codec = await _audioCodecInUse(callId);
+      if (codec != null && !mixable.contains(codec)) off[callId] = codec;
+    }
+    if (off.isEmpty) return _RoomCodecs.ready;
+    if (off.keys.any(_roomCodecMove.wasTried)) {
+      _logger.warning('$source: still off the conference codecs after a move: $off');
+      return _RoomCodecs.off;
+    }
+
+    _logger.info('$source: moving $off onto the conference codecs first');
+    _roomCodecMove.start(
+      {for (final callId in off.keys) callId: state.retrieveActiveCall(callId)?.held ?? false},
+      request: request,
+      onOverdue: () {
+        _logger.warning('$source: the calls being moved were not answered in time, giving the move up');
+        _askAgain(_roomCodecMove.giveUp());
+      },
+    );
+    for (final callId in off.keys) {
+      add(_CallMutationEvent.renegotiate(callId, state.retrieveActiveCall(callId)?.line));
+    }
+    return _RoomCodecs.moving;
+  }
+
+  /// A request asked for [callIds] is done, the room taking them or not:
+  /// calls the move took off hold on the far end that no room took are held
+  /// again - unless the person has resumed them meanwhile.
+  void _roomCodecsSettled(Iterable<String> callIds, {required bool roomTook}) {
+    for (final callId in _roomCodecMove.settled(callIds, roomTook: roomTook)) {
+      if (state.retrieveActiveCall(callId)?.held ?? false) add(_CallMutationEvent.performSetHeld(callId, true));
+    }
+  }
+
+  void _askAgain(List<void Function()> requests) {
+    for (final request in requests) {
+      request();
+    }
+  }
+
+  /// The voice codec [callId] settled on, from the answer of its last
+  /// offer/answer round; null when that cannot be read.
+  Future<String?> _audioCodecInUse(String callId) async {
+    final pc = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
+    if (pc == null) return null;
+    final local = await pc.getLocalDescription();
+    final answer = local?.type == 'answer' ? local : await pc.getRemoteDescription();
+    final sdp = answer?.type == 'answer' ? answer?.sdp : null;
+    return sdp == null ? null : SDPModBuilder(sdp: sdp).audioCodecInUse();
   }
 
   // Stub handlers — replaced in Tasks 3-6
@@ -3649,6 +3751,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         // kept offer is what recovers the call after a signaling loss.
         if (!initialAccept && remoteDescription.type == 'answer') {
           _renegotiationCoordinator.offerCompleted(event.callId);
+          if (_roomCodecMove.hasOfferOut(event.callId)) _askAgain(_roomCodecMove.answered(event.callId));
         }
         final transceivers = await peerConnection.getTransceivers();
         for (final t in transceivers) {
@@ -3931,10 +4034,28 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // a transport failure quickly can still read stable while the native side
     // is in have-local-offer. Creating another offer then would fail in the
     // wrong state and end the call this replay is meant to keep.
-    final pendingOffer = _renegotiationCoordinator.replayableOffer(e.callId);
+    var pendingOffer = _renegotiationCoordinator.replayableOffer(e.callId);
     final cachedSigState = pc.signalingState;
-    final sigState = (cachedSigState == null || pendingOffer != null) ? await pc.getSignalingState() : cachedSigState;
+    var sigState = (cachedSigState == null || pendingOffer != null) ? await pc.getSignalingState() : cachedSigState;
     _logger.info('__onMutationRenegotiate: sigState=$sigState (cache=$cachedSigState)');
+    if (pendingOffer != null && _roomCodecMove.moves(e.callId) && !_roomCodecMove.hasOfferOut(e.callId)) {
+      // A move needs an offer of the conference codecs alone. One kept from
+      // before carries every codec, and its answer would be taken for the
+      // move's: it is withdrawn, and a fresh offer made.
+      _logger.info(
+        '__onMutationRenegotiate: withdrawing the offer kept for ${e.callId} to move it to the conference codecs',
+      );
+      if (sigState == RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
+        try {
+          await pc.setLocalDescription(RTCSessionDescription('', 'rollback'));
+        } catch (er) {
+          _logger.warning('__onMutationRenegotiate: rolling back the kept offer of ${e.callId} failed: $er');
+        }
+      }
+      _renegotiationCoordinator.offerCompleted(e.callId);
+      pendingOffer = null;
+      sigState = await pc.getSignalingState();
+    }
     final canReplayPendingOffer = pendingOffer != null && sigState == RTCSignalingState.RTCSignalingStateHaveLocalOffer;
     if (sigState != RTCSignalingState.RTCSignalingStateStable && !canReplayPendingOffer) {
       _logger.fine(() => '__onMutationRenegotiate: pc signalingState is $sigState, skipping renegotiation');
@@ -4019,6 +4140,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         _keepConferenceCodecs(e.callId, offer);
         _logger.infoPretty(offer.sdp, tag: 'onRenegotiationNeeded offer SDP (callId=${e.callId}):');
         await pc.setLocalDescription(offer);
+        _roomCodecMove.offerSent(e.callId);
       } else {
         _logger.info('__onMutationRenegotiate: replaying the pending local offer for callId=${e.callId}');
       }
@@ -4048,9 +4170,34 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
       _logger.info('__onMutationSignalingCallUpdating: received response for update request: $result');
 
+      if (result is CallErrorEvent &&
+          _roomCodecMove.hasOfferOut(e.callId) &&
+          (_codecRefusalCodes.contains(result.code) || !_roomCodecMove.moves(e.callId))) {
+        // The far end will not speak the conference codecs - or the move was
+        // given up while its offer was out. Sent again it would be turned
+        // down again, or move the call for a room nobody waits for: the call
+        // goes back to what it had. Other errors are retried as usual.
+        _logger.warning(
+          '__onMutationRenegotiate: the move of ${e.callId} to the conference codecs failed: code=${result.code} reason="${result.reason}"',
+        );
+        try {
+          await pc.setLocalDescription(RTCSessionDescription('', 'rollback'));
+        } catch (er) {
+          _logger.warning('__onMutationRenegotiate: rolling back the offer of ${e.callId} failed: $er');
+        }
+        _renegotiationCoordinator.offerCompleted(e.callId);
+        emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: false)));
+        _roomCodecMove.offerWithdrawn(e.callId);
+        _askAgain(_roomCodecMove.giveUp());
+        return;
+      }
       if (result is UpdatedEvent) {
         _renegotiationCoordinator.offerCompleted(e.callId);
         emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: false)));
+        // `updated` carries no answer: the move's is in only once the
+        // connection is back in stable, else the accepted event brings it.
+        final answered = await pc.getSignalingState() == RTCSignalingState.RTCSignalingStateStable;
+        if (answered && _roomCodecMove.hasOfferOut(e.callId)) _askAgain(_roomCodecMove.answered(e.callId));
       } else if (result is UpdatingEvent) {
         // Only an interim acknowledgement: the answer comes later through the
         // accepted event, so the offer stays kept until then.
@@ -5010,37 +5157,68 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   /// Asks the server to merge [callIds] into a room; [source] names whoever
   /// asked, in the log and on the request.
-  Future<void> _merge(List<String> callIds, Emitter<CallState> emit, {required String source}) async {
-    if (!state.canMerge(isConferenceEnabled: capabilities.isConferenceEnabled)) {
-      _logger.warning('$source: nothing to merge now, ignoring');
-      return;
+  ///
+  /// Returns false when the merge waits for calls being moved onto the
+  /// conference codecs; [request] - by default this merge again - is asked
+  /// once they are.
+  Future<bool> _merge(
+    List<String> callIds,
+    Emitter<CallState> emit, {
+    required String source,
+    void Function()? request,
+  }) async {
+    var settles = true;
+    var roomTook = false;
+    try {
+      if (!state.canMerge(isConferenceEnabled: capabilities.isConferenceEnabled)) {
+        _logger.warning('$source: nothing to merge now, ignoring');
+        return true;
+      }
+      final legs = state.mergeableLegs(callIds);
+      if (legs.length < 2) {
+        _logger.warning('$source: fewer than two mergeable calls in $callIds, ignoring');
+        return true;
+      }
+      final codecs = await _roomCodecsFor(
+        legs.keys,
+        request: request ?? () => add(_CallMutationEvent.controlMerge(callIds)),
+        source: source,
+      );
+      switch (codecs) {
+        case _RoomCodecs.moving:
+          settles = false;
+          return false;
+        case _RoomCodecs.off:
+          submitNotification(const ConferenceFailedNotification(reason: _codecNotMixable));
+          return true;
+        case _RoomCodecs.ready:
+      }
+      final taken = await _executeConferenceRequest(
+        MergeRequest(transaction: WebtritSignalingClient.generateTransactionId(), lines: legs.values.toList()),
+        source: source,
+        notifyRefusal: true,
+      );
+      if (!taken) return true;
+      roomTook = true;
+      // From the ack on the legs are the server's: quiet now, not at the offer,
+      // so that a failure between the two undoes exactly what was recorded.
+      legs.removeWhere((callId, _) => state.retrieveActiveCall(callId) == null);
+      await _quietLegs(legs.keys, emit);
+      if (state.conference.isPresent) {
+        _logger.warning('$source: a room appeared while this merge was being acknowledged');
+        return true;
+      }
+      _offerWait.begin();
+      emit(
+        state.copyWith(
+          conference: ConferenceState(phase: ConferencePhase.assembling, legs: legs),
+        ),
+      );
+      _armConferenceAssembly();
+      return true;
+    } finally {
+      if (settles) _roomCodecsSettled(callIds, roomTook: roomTook);
     }
-    final legs = state.mergeableLegs(callIds);
-    if (legs.length < 2) {
-      _logger.warning('$source: fewer than two mergeable calls in $callIds, ignoring');
-      return;
-    }
-    final taken = await _executeConferenceRequest(
-      MergeRequest(transaction: WebtritSignalingClient.generateTransactionId(), lines: legs.values.toList()),
-      source: source,
-      notifyRefusal: true,
-    );
-    if (!taken) return;
-    // From the ack on the legs are the server's: quiet now, not at the offer,
-    // so that a failure between the two undoes exactly what was recorded.
-    legs.removeWhere((callId, _) => state.retrieveActiveCall(callId) == null);
-    await _quietLegs(legs.keys, emit);
-    if (state.conference.isPresent) {
-      _logger.warning('$source: a room appeared while this merge was being acknowledged');
-      return;
-    }
-    _offerWait.begin();
-    emit(
-      state.copyWith(
-        conference: ConferenceState(phase: ConferencePhase.assembling, legs: legs),
-      ),
-    );
-    _armConferenceAssembly();
   }
 
   Future<void> __onMutationControlConferenceAdd(_CallMutationEventControlConferenceAdd e, Emitter<CallState> emit) =>
@@ -5048,30 +5226,62 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   /// Asks the server to add [callId] to the room; [source] names whoever
   /// asked, in the log and on the request.
-  Future<void> _addToRoom(String callId, Emitter<CallState> emit, {required String source}) async {
-    final line = state.mergeableLegs([callId])[callId];
-    if (!state.conference.isPresent || line == null) {
-      _logger.warning('$source: $callId cannot join now, ignoring');
-      return;
+  ///
+  /// Returns false when the add waits for the call being moved onto the
+  /// conference codecs; [request] - by default this add again - is asked once
+  /// it is.
+  Future<bool> _addToRoom(
+    String callId,
+    Emitter<CallState> emit, {
+    required String source,
+    void Function()? request,
+  }) async {
+    var settles = true;
+    var roomTook = false;
+    try {
+      final line = state.mergeableLegs([callId])[callId];
+      if (!state.conference.isPresent || line == null) {
+        _logger.warning('$source: $callId cannot join now, ignoring');
+        return true;
+      }
+      final codecs = await _roomCodecsFor(
+        [callId],
+        request: request ?? () => add(_CallMutationEvent.controlConferenceAdd(callId)),
+        source: source,
+      );
+      switch (codecs) {
+        case _RoomCodecs.moving:
+          settles = false;
+          return false;
+        case _RoomCodecs.off:
+          submitNotification(const ConferenceFailedNotification(reason: _codecNotMixable));
+          return true;
+        case _RoomCodecs.ready:
+      }
+      final taken = await _executeConferenceRequest(
+        ConferenceAddRequest(transaction: WebtritSignalingClient.generateTransactionId(), line: line),
+        source: source,
+        notifyRefusal: true,
+      );
+      if (!taken) return true;
+      roomTook = true;
+      if (!state.conference.isPresent || state.retrieveActiveCall(callId) == null) return true;
+      await _quietLegs([callId], emit);
+      if (!state.conference.isPresent) return true;
+      emit(
+        state
+            .copyWith(conference: state.conference.copyWith(legs: {...state.conference.legs, callId: line}))
+            .copyWithPlacedCallFocusSettled(),
+      );
+      // After the room has been found to be still there, and after the call is
+      // one of its legs: told any earlier, a call whose room fell away while it
+      // was being quieted would be left saying the host had stepped out of a room
+      // it never joined, with nothing to ever correct it.
+      if (_conferencePeerConnection.isParked) _tellLegsTheRoomIsParked([callId], true);
+      return true;
+    } finally {
+      if (settles) _roomCodecsSettled([callId], roomTook: roomTook);
     }
-    final taken = await _executeConferenceRequest(
-      ConferenceAddRequest(transaction: WebtritSignalingClient.generateTransactionId(), line: line),
-      source: source,
-      notifyRefusal: true,
-    );
-    if (!taken || !state.conference.isPresent || state.retrieveActiveCall(callId) == null) return;
-    await _quietLegs([callId], emit);
-    if (!state.conference.isPresent) return;
-    emit(
-      state
-          .copyWith(conference: state.conference.copyWith(legs: {...state.conference.legs, callId: line}))
-          .copyWithPlacedCallFocusSettled(),
-    );
-    // After the room has been found to be still there, and after the call is
-    // one of its legs: told any earlier, a call whose room fell away while it
-    // was being quieted would be left saying the host had stepped out of a room
-    // it never joined, with nothing to ever correct it.
-    if (_conferencePeerConnection.isParked) _tellLegsTheRoomIsParked([callId], true);
   }
 
   /// Places a call on behalf of [e.anchorCallId], tied to it.
@@ -5143,6 +5353,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       emit(state.copyWith(linkedCall: linked));
     }
 
+    // A join that waits for a call being moved onto the conference codecs is
+    // asked again as a join, so the link stays until it is made - or the
+    // anchor would not be given back if the new call ended meanwhile.
+    void joinAgain() => add(_CallMutationEvent.linkedCallJoin(e.callId));
     if (linked.intoRoom) {
       if (state.conference.phase != ConferencePhase.active) {
         // A room assembling or rejoining cannot take a call yet; the join is
@@ -5150,11 +5364,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         emit(state.copyWith(linkedCall: linked.copyWith(awaitingRoom: true)));
         return;
       }
-      await _addToRoom(e.callId, emit, source: '__onMutationLinkedCallJoin');
+      if (!await _addToRoom(e.callId, emit, source: '__onMutationLinkedCallJoin', request: joinAgain)) return;
     } else if (state.conference.isPresent) {
       _logger.warning('__onMutationLinkedCallJoin: a room stands apart from ${linked.anchorCallId}; calls stay apart');
     } else {
-      await _merge([linked.anchorCallId, e.callId], emit, source: '__onMutationLinkedCallJoin');
+      final done = await _merge(
+        [linked.anchorCallId, e.callId],
+        emit,
+        source: '__onMutationLinkedCallJoin',
+        request: joinAgain,
+      );
+      if (!done) return;
     }
 
     if (state.retrieveActiveCall(e.callId) == null) return;
@@ -6134,6 +6354,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   void _removeActiveCall(String callId, Emitter<CallState> emit) {
     _renegotiationCoordinator.callRemoved(callId);
+    // The last call a move awaited gone: the request is asked again without it.
+    _askAgain(_roomCodecMove.callRemoved(callId));
     emit(state.copyWithPopActiveCall(callId));
   }
 
@@ -6147,4 +6369,16 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     );
     throw TimeoutException('getUserMedia timeout', _getUserMediaPushKitTimeout);
   }
+}
+
+/// Whether calls can be put in a room as they are (see [CallBloc._roomCodecsFor]).
+enum _RoomCodecs {
+  /// On the conference codecs: the request goes ahead.
+  ready,
+
+  /// Being moved onto them: the request is asked again once they are.
+  moving,
+
+  /// Still off them after a move: the request fails.
+  off,
 }

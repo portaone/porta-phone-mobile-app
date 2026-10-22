@@ -51,6 +51,7 @@ class CallBlocHarness {
     ManualOfferDeadline? offerDeadline,
     Timer Function(Duration, void Function())? renegotiationReplayTimer,
     Future<void> Function(Duration)? renegotiationUpdatingDelay,
+    Timer Function(Duration, void Function())? roomCodecMoveTimer,
     FakePeerConnectionFactory? peerConnectionFactory,
     ContactResolver? contactResolver,
     int? lines,
@@ -87,6 +88,7 @@ class CallBlocHarness {
       roomOfferDeadlineTimer: offerDeadline?.createTimer,
       renegotiationReplayTimer: renegotiationReplayTimer,
       renegotiationUpdatingDelay: renegotiationUpdatingDelay,
+      roomCodecMoveTimer: roomCodecMoveTimer,
     );
     if (lines != null) {
       // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
@@ -532,6 +534,9 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   Future<RTCSessionDescription?> getLocalDescription() async =>
       localDescriptions.isEmpty ? null : localDescriptions.last;
   @override
+  Future<RTCSessionDescription?> getRemoteDescription() async =>
+      remoteDescriptions.isEmpty ? null : remoteDescriptions.last;
+  @override
   Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async =>
       RTCSessionDescription(offerSdp, 'offer');
 
@@ -652,6 +657,11 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   @override
   Future<void> setLocalDescription(RTCSessionDescription description) async {
     localDescriptions.add(description);
+    // A rollback takes the connection back to stable, as on a real one.
+    if (description.type == 'rollback') {
+      nativeSignalingStateValue = null;
+      signalingStateValue = RTCSignalingState.RTCSignalingStateStable;
+    }
   }
 
   @override

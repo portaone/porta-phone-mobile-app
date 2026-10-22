@@ -315,11 +315,42 @@ attended transfer and described in [`call_arch.md`](call_arch.md) under
   back. DTMF and comfort noise stay; where none of the codecs is offered at all
   nothing is removed, since a description with no voice codec carries no call.
   It is applied after the encoding settings, which a deployment may bypass as a
-  whole: the room needs it regardless. Not covered: the call the new one joins,
-  and any call merged by hand - they were placed with every codec before anybody
-  knew they would be merged, so one already on G.722 still breaks the room; and
-  an offer kept for replay from before the call became a leg goes out as it was
-  kept.
+  whole: the room needs it regardless.
+- **A call already off the codecs** - the call the new one joins, and any call
+  merged or added by hand, was placed with every codec before anybody knew it
+  would be merged, and may have settled on G.722. Before the merge or add is
+  asked, each such call (read from the first voice payload of its last answer,
+  `SDPModBuilder.audioCodecInUse`) is renegotiated with the conference codecs
+  alone, and the request is asked again once every one has its answer -
+  checking the codecs again, so a far end that answered on G.722 anyway is not
+  merged nor moved a second time. What is kept about a move is
+  `RoomCodecMove`'s (`conference/room_codec_move.dart`):
+  - only an applied answer counts: `updated` carries none, and stands for one
+    only when the connection is back in stable;
+  - a request asked while a move is on waits for it and is asked after it; a
+    join of an Add participant is asked again as a join, so its link - and the
+    anchor's way back if the new call ends - stays until it is made;
+  - an offer kept for replay from before carries every codec: it is withdrawn
+    and the move's own offer made;
+  - a far end that answers 415, 488 or 606 keeps its call as it was: the offer
+    is rolled back, not kept and sent again as other refused offers are, and
+    the request asked again fails with `ConferenceFailedNotification`
+    (`codec_not_mixable`). Other errors (491, a 5xx) are retried as for any
+    renegotiation. Answers that do not come in 20 s give the move up the same
+    way, and an error that arrives after that rolls the offer back too;
+  - a held call is moved as it is: the connection offers sendrecv - the hold is
+    the server's - so the move takes it off hold on the far end, as the merge
+    would a moment later; when no room takes it after all, the hold is asked
+    for again. A refused call never left hold and is left alone. The direction
+    is not written into the offer instead: the connection would then see its
+    transceiver differ from what was agreed and renegotiate again, sendrecv, on
+    what is by then a leg of the room (seen on the stand);
+  - a moved call that ends takes nothing with it: the request asked again
+    finds fewer calls and does nothing, and the person has seen the call end.
+
+  PortaSIP answers such an offer itself and transcodes, so a refusal comes from
+  a PBX that passes SDP through. Not covered: an offer kept for replay from
+  before a call became a leg goes out as it was kept.
 - **The join** - `signalingAccepted` of the new call queues `linkedCallJoin`,
   which runs the same merge or add a person's tap runs. Being queued, it runs
   after the answer has been applied, and a Merge pressed at the same moment

@@ -231,23 +231,14 @@ class SDPModBuilder {
     final media = _getMedia(RTPCodecKind.audio);
     if (media == null) return false;
 
-    final payloads = switch (media['payloads']) {
-      String p => p.split(' '),
-      int p => [p.toString()],
-      _ => <String>[],
-    };
+    final names = _payloadNames(media);
+    final payloads = names.keys.toList();
     final rtpMaps = media['rtp'] is List<dynamic> ? media['rtp'] as List<dynamic> : const [];
     final fmtps = media['fmtp'] is List<dynamic> ? media['fmtp'] as List<dynamic> : const [];
     final rtcpFbs = media['rtcpFb'] is List<dynamic> ? media['rtcpFb'] as List<dynamic> : const [];
 
     final voice = allowed.map((c) => c.sdpKey.toLowerCase()).toSet();
     final service = {RTPCodec.telephoneEvent, RTPCodec.cn}.map((c) => c.sdpKey.toLowerCase()).toSet();
-    String? nameOf(String payload) {
-      final rtpMap = rtpMaps.firstWhereOrNull((r) => r['payload'].toString() == payload);
-      return (rtpMap?['codec'] as String?)?.toLowerCase() ?? _rfc3551AudioPayloads[payload];
-    }
-
-    final names = {for (final payload in payloads) payload: nameOf(payload)};
     if (!names.values.any(voice.contains)) return false;
 
     final removed = <String>{
@@ -268,9 +259,47 @@ class SDPModBuilder {
     return true;
   }
 
+  /// The voice codec an answer settled on: the first audio payload that
+  /// carries voice, as [RTPCodec.sdpKey] in lower case. Redundancy, rtx, DTMF
+  /// and comfort noise wrap or sit beside the voice and are passed over.
+  ///
+  /// Null when the description has no audio, or names no voice payload this
+  /// can recognise - a dynamic payload without its rtpmap line.
+  String? audioCodecInUse() {
+    final media = _getMedia(RTPCodecKind.audio);
+    if (media == null) return null;
+    const notVoice = {'red', 'rtx', 'ulpfec', 'telephone-event', 'cn'};
+    for (final name in _payloadNames(media).values) {
+      if (name == null) return null;
+      if (!notVoice.contains(name)) return name;
+    }
+    return null;
+  }
+
+  /// The payloads of [media] in their order, each with its encoding name in
+  /// lower case: from its rtpmap line, or for a static payload whose line was
+  /// left out (see [removeStaticAudioRtpMaps]) from RFC 3551; null for a
+  /// payload that is neither.
+  static Map<String, String?> _payloadNames(Map<String, dynamic> media) {
+    final payloads = switch (media['payloads']) {
+      String p => p.split(' '),
+      int p => [p.toString()],
+      _ => <String>[],
+    };
+    final rtpMaps = media['rtp'] is List<dynamic> ? media['rtp'] as List<dynamic> : const [];
+    return {
+      for (final payload in payloads)
+        payload:
+            (rtpMaps.firstWhereOrNull((r) => r['payload'].toString() == payload)?['codec'] as String?)?.toLowerCase() ??
+            _staticPayloadNames[payload],
+    };
+  }
+
   /// The audio payload types RFC 3551 assigns statically, by encoding name in
-  /// lower case: a payload offered without its rtpmap line is one of these.
-  static const _rfc3551AudioPayloads = {
+  /// lower case. Wider than [RTPCodecProfile.staticPayload], which holds only
+  /// the codecs this app offers: a far end may send any of these without its
+  /// rtpmap line.
+  static const _staticPayloadNames = {
     '0': 'pcmu',
     '3': 'gsm',
     '4': 'g723',

@@ -206,6 +206,39 @@ void main() {
       });
     });
 
+    group('audioCodecInUse', () {
+      String? inUse(String audio) => SDPModBuilder(sdp: 'v=0\r\n$audio').audioCodecInUse();
+
+      test('is the first voice payload of an answer', () {
+        expect(
+          inUse('m=audio 9 UDP/TLS/RTP/SAVPF 0 8 9 111\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:111 opus/48000/2\r\n'),
+          'pcmu',
+        );
+      });
+
+      test('passes over redundancy, DTMF and comfort noise', () {
+        expect(
+          inUse(
+            'm=audio 9 UDP/TLS/RTP/SAVPF 63 126 13 9\r\na=rtpmap:63 red/48000/2\r\n'
+            'a=rtpmap:126 telephone-event/8000\r\na=rtpmap:13 CN/8000\r\na=rtpmap:9 G722/8000\r\n',
+          ),
+          'g722',
+        );
+      });
+
+      test('names a static payload without its rtpmap line', () {
+        expect(inUse('m=audio 9 UDP/TLS/RTP/SAVPF 9 126\r\na=rtpmap:126 telephone-event/8000\r\n'), 'g722');
+      });
+
+      test('is unknown for a dynamic payload without its rtpmap line', () {
+        expect(inUse('m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n'), isNull);
+      });
+
+      test('is unknown with no audio', () {
+        expect(inUse('m=video 9 UDP/TLS/RTP/SAVPF 96\r\na=rtpmap:96 VP8/90000\r\n'), isNull);
+      });
+    });
+
     test('remove unknown audio profiles', () {
       final builder = _buildBuilder();
 
