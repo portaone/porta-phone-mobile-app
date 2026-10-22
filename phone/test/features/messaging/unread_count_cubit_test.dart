@@ -22,13 +22,38 @@ void main() {
   late _MockChatsRepository chatsRepository;
   late _MockSmsRepository smsRepository;
   late _MockUserSettingsCubit userSettings;
+  late _MockSessionRepository sessionRepository;
   late UnreadCountCubit cubit;
+
+  UnreadCountCubit createCubit({bool chats = true, bool sms = true}) {
+    return cubit = UnreadCountCubit(
+      chatsRepository: chatsRepository,
+      smsRepository: smsRepository,
+      sessionRepository: sessionRepository,
+      userSettings: userSettings,
+      messagingConfig: MessagingConfig(
+        coreSmsSupport: sms,
+        coreChatsSupport: chats,
+        tabEnabled: true,
+        groupChatSupport: false,
+        contactInfoVideoCallSupport: false,
+      ),
+    );
+  }
+
+  void givenNoMutes() {
+    whenListen(
+      userSettings,
+      const Stream<ConversationUserSettingsState>.empty(),
+      initialState: const ConversationUserSettingsState(),
+    );
+  }
 
   setUp(() {
     chatsRepository = _MockChatsRepository();
     smsRepository = _MockSmsRepository();
     userSettings = _MockUserSettingsCubit();
-    final sessionRepository = _MockSessionRepository();
+    sessionRepository = _MockSessionRepository();
     final session = _MockSession();
     when(() => session.userId).thenReturn('user-1');
     when(() => sessionRepository.getCurrent()).thenReturn(session);
@@ -36,12 +61,6 @@ void main() {
     when(() => smsRepository.eventBus).thenAnswer((_) => const Stream.empty());
     when(() => chatsRepository.unreadedCountPerChat('user-1')).thenAnswer((_) async => {1: 3, 2: 1});
     when(() => smsRepository.unreadedCountPerConversation('user-1')).thenAnswer((_) async => {7: 5, 8: 2});
-    cubit = UnreadCountCubit(
-      chatsRepository: chatsRepository,
-      smsRepository: smsRepository,
-      sessionRepository: sessionRepository,
-      userSettings: userSettings,
-    );
   });
 
   tearDown(() => cubit.close());
@@ -58,7 +77,7 @@ void main() {
       initialState: const ConversationUserSettingsState(mutedChatIds: {2}, mutedSmsConversationIds: {7, 8}),
     );
 
-    cubit.init();
+    createCubit().init();
     await Future<void>.delayed(Duration.zero);
 
     expect(cubit.state.chatsWithUnreadCount, 1);
@@ -77,11 +96,40 @@ void main() {
       initialState: const ConversationUserSettingsState(),
     );
 
-    cubit.init();
+    createCubit().init();
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
 
     expect(cubit.state.chatsWithUnreadCount, 1);
     verify(() => chatsRepository.unreadedCountPerChat('user-1')).called(1);
+  });
+
+  // Switching SMS off stops its sync and hides its screens, but the rows
+  // synced before stay in the local database. Counted, they would hold a
+  // badge on the bar that no screen lets the user clear.
+  test('with SMS off the stored SMS conversations are not counted', () async {
+    givenNoMutes();
+
+    createCubit(sms: false).init();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(cubit.state.chatsWithUnreadCount, 2);
+    expect(cubit.state.smsConversationsWithUnreadCount, 0);
+    expect(cubit.state.unreadCountForSmsConversation(7), 0);
+    verifyNever(() => smsRepository.unreadedCountPerConversation(any()));
+    verifyNever(() => smsRepository.eventBus);
+  });
+
+  test('with chats off the stored chats are not counted', () async {
+    givenNoMutes();
+
+    createCubit(chats: false).init();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(cubit.state.chatsWithUnreadCount, 0);
+    expect(cubit.state.smsConversationsWithUnreadCount, 2);
+    expect(cubit.state.unreadCountForChatConversation(1), 0);
+    verifyNever(() => chatsRepository.unreadedCountPerChat(any()));
+    verifyNever(() => chatsRepository.eventBus);
   });
 }

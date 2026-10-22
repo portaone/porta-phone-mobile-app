@@ -105,7 +105,11 @@ to do:
 - the unread totals on the messaging tab and on the bottom bar leave muted
   conversations out - decided once, in `UnreadCountCubit`, which follows the
   settings cubit's clock - while the row's own badge still counts, so what
-  was missed stays visible where the user looks for it;
+  was missed stays visible where the user looks for it. The same cubit counts
+  nothing of a kind of conversation the user does not have (`smsPresent` /
+  `chatsPresent` of `MessagingConfig` false): switching a kind off stops its
+  sync and hides its screens but leaves its rows in the local database, and a
+  badge over them would have no screen to clear it from;
 - the foreground push handler drops a push for a muted conversation, which
   covers the window in which a mute set on another device is still on its way.
 
