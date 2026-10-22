@@ -1,4 +1,4 @@
 export 'leg_mute_sync.dart';
 export 'conference_peer_connection.dart';
 export 'room_offer_wait.dart';
-export 'room_codec_move.dart';
+export 'room_codecs.dart';

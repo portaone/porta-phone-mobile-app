@@ -308,7 +308,7 @@ attended transfer and described in [`call_arch.md`](call_arch.md) under
   and a room left with one call is closed with nothing but
   `conference_terminated` - no reason, so this side cannot tell it from an
   ordinary end. The call's offer therefore carries only those codecs
-  (`kConferenceAudioCodecs`, `SDPModBuilder.keepAudioCodecs`), and so do a
+  (`kConferenceAudioCodecs`, `RoomCodecs.restrict`), and so do a
   leg's own offers and its answers to an offer from the far end, which could
   otherwise move it off them. A callee that speaks none of them turns the call
   down before answering - an ordinary failed call that gives the conversation
@@ -323,8 +323,9 @@ attended transfer and described in [`call_arch.md`](call_arch.md) under
   `SDPModBuilder.audioCodecInUse`) is renegotiated with the conference codecs
   alone, and the request is asked again once every one has its answer -
   checking the codecs again, so a far end that answered on G.722 anyway is not
-  merged nor moved a second time. What is kept about a move is
-  `RoomCodecMove`'s (`conference/room_codec_move.dart`):
+  merged nor moved a second time. The policy and what is kept about a move
+  are `RoomCodecs`' (`conference/room_codecs.dart`), which hands `CallBloc`
+  commands - renegotiate, hold again, ask again - and is tested on its own:
   - only an applied answer counts: `updated` carries none, and stands for one
     only when the connection is back in stable;
   - a request asked while a move is on waits for it and is asked after it; a
