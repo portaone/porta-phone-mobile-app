@@ -26,10 +26,14 @@ void main() {
     WebtritSignalingErrorException(1, 403, 'forbidden'),
     WebtritSignalingErrorException(1, 500, 'internal'),
     WebtritSignalingTransactionTimeoutException(1, 'tx'),
+    // Lost with the signaling: the socket closed under the request, or the
+    // client gave up on its keepalive (4502) and terminated every transaction.
+    WebtritSignalingDisconnectedException(1),
+    WebtritSignalingTransactionTerminateByDisconnectException(1, 'tx', 4502, 'signaling keepalive timeout error'),
   ];
 
   for (final held in [false, true]) {
-    for (final failure in [...survivable, NotConnectedException()]) {
+    for (final failure in [...survivable, NotConnectedException(), TimeoutException('no reply')]) {
       test('held=$held survives $failure and can retry', () async {
         final peer = h.seedEstablishedCall('a', held: held);
         h.signaling.failure = failure;

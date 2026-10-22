@@ -3,6 +3,7 @@
 `CallBloc` (`lib/features/call/bloc/call_bloc.dart`) is the central component of the entire app.
 It implements both `Bloc<CallEvent, CallState>` and `CallkeepDelegate`, making it the single point
 that bridges signaling, native call UI, WebRTC media, and the Flutter UI layer.
+Last reviewed: 2026-10-21.
 
 The product/UX view lives in [`call_ux.md`](call_ux.md); incoming-call background scenarios with
 diagrams in [`../architecture/incoming_call_scenarios.md`](../architecture/incoming_call_scenarios.md); merging calls into a
@@ -259,9 +260,22 @@ bookkeeping. `__onMutationRenegotiate` asks it to classify a failed `update`: a 
 `WebtritSignalingTransactionTimeoutException`,
 `WebtritSignalingTransactionTerminateByDisconnectException`, or a `TimeoutException` while waiting
 for the final reply) is transient; any other error - a failed SDP or peer connection step, a
-rejection by the server - still ends the call. After a transient failure of an ICE offer that has
-already been installed, the call stays active and the coordinator keeps that exact local offer.
-It is sent in a new
+rejection by the server - still ends the call. The other requests sent in the middle of a call judge
+the request itself the same way, each catching only around the request with `isTransientSignalingFailure`,
+so a timeout of something local around it - waiting for the peer connection, say - is still the fault it is. A trickled candidate or
+the end of candidates (`__onMutationTrickleIce`, `__onMutationIceGatheringComplete`) lost on a call
+that is up leaves it up: the ICE restart after the reconnect gathers a fresh set. A call still being
+set up is not renegotiated on reconnect, so there only a request that was never sent or whose reply
+timed out is let through, as before. A hold or unhold lost with the signaling
+(`__onMutationPerformSetHeld`) is treated as one that did not happen; it may have reached the
+server, so the two can differ until the next hold or unhold. A lost answer to the far end's update
+(`__onMutationSignalingCallUpdating`) still ends the call: Core turns Janus's auto-accept of
+re-INVITEs off, so Janus waits for that answer with no timer of its own and buffers any offer of
+this side until the re-INVITE completes - an ICE restart would get no answer and the call would hang
+without audio. The loss these meet most is the client's own: when its keepalive gets no reply it closes the
+session (4502) and terminates every transaction still queued. After a transient failure of an ICE
+offer that has already been installed, the call stays active and the coordinator keeps that exact
+local offer. It is sent in a new
 transaction after signaling reconnects, or by a retry while signaling remains connected: two
 quick ones at the failure's own delay, then a delay that doubles up to 30 s for as long as the
 call lives (a reconnect gives the quick ones back). Ending the call there would end a call the
@@ -405,7 +419,7 @@ have call context:
 | Path                         | Where                                                                                                                                                                   | Behaviour                                                                                                                                        |
 |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | Survive-and-recover          | `__onSignalingClientEventConnected` (`safeRenegotiate`), `_onConnectivityResultChanged` / `__onMutationIceConnectionFailed` (`restartIce`), the silent disconnect codes | keep the call in `activeCalls` across the outage and recover it on reconnect instead of finalizing it                                            |
-| Failed ICE restart update    | `__onMutationRenegotiate` -> `RenegotiationCoordinator.isTransientSignalingFailure`                                                                                     | a loss of signaling keeps the call and its installed offer, replayed on reconnect or by retry; any other error ends the call                     |
+| Signaling lost mid-call      | `isTransientSignalingFailure` in renegotiate and around trickle, end of candidates and hold                                                                             | a loss of signaling keeps the call (and an installed offer, replayed on reconnect or by retry); any other error ends the call                    |
 | Remote hangup                | `__onCallSignalingEventHangup` -> `__onMutationSignalingHangup` -> `callkeep.reportEndCall`                                                                             | when signaling reconnects and the server tore the leg down, its hangup ends the call authoritatively                                             |
 | `requestCallIdError` cleanup | `__onSignalingClientEventDisconnected`                                                                                                                                  | for calls already marked `wasHungUp`, completes them once the disconnect confirms the call id is gone                                            |
 | Visible ICE issue            | `__onPeerConnectionEventIceConnectionStateChanged`                                                                                                                      | a persistent ICE failure surfaces `iceConnectionIssue` on the call so the user can end it manually instead of it sitting as an invisible phantom |
