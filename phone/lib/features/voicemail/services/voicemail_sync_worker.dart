@@ -1,13 +1,33 @@
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/services/services.dart';
 
+/// Core pushes as soon as the mailbox reports the message, so a short wait is
+/// enough; it is there to fold the pushes of one burst into one read.
+const _newMessageRefreshDelay = Duration(seconds: 1);
+
 /// Owns the mailbox worker and its polling registration.
 ///
-/// The standard owner is the whole of it for now: one lifecycle, one
-/// single-flight boundary, one backoff policy, and a place for a domain
-/// trigger to ask for a read through the same task.
+/// Scheduled refreshes and new-message pushes use the same polling task, so
+/// they share one lifecycle, single-flight boundary, and backoff policy.
 final class VoicemailSync extends PollingWorkerOwner<VoicemailSyncWorker> {
-  VoicemailSync({required super.worker, required super.pollingService, required super.interval});
+  VoicemailSync({
+    required super.worker,
+    required super.pollingService,
+    required super.interval,
+    this.newMessageRefreshDelay = _newMessageRefreshDelay,
+  });
+
+  final Duration newMessageRefreshDelay;
+
+  /// Requests one read of the mailbox after a push said a message arrived.
+  ///
+  /// A burst of pushes - the backend reports every change of the mailbox -
+  /// becomes one read through the task's trailing-edge debounce, and a push
+  /// that comes while offline or in the background waits for the connection
+  /// or the resume instead of failing.
+  void requestRefresh() {
+    invalidatePollingTask(after: newMessageRefreshDelay);
+  }
 }
 
 /// Reads the mailbox into the local store.

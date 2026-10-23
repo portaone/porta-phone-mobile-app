@@ -19,6 +19,15 @@ class PushChannel<T> {
     return PushChannel._(controller, controller.stream.asBroadcastStream());
   }
 
+  /// Holds nothing: a push nobody listens to is dropped at once.
+  ///
+  /// For a push that only matters at the moment it arrives, which replayed
+  /// into a later session would say something stale.
+  factory PushChannel.unbuffered() {
+    final controller = StreamController<T>.broadcast();
+    return PushChannel._(controller, controller.stream);
+  }
+
   final StreamController<T> _controller;
 
   /// The pushes of this kind; any number of listeners may subscribe.
