@@ -20,9 +20,42 @@ import 'package:webtrit_phone/widgets/webview/web_view_toolbar.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 
 import '_widgets/_widgets.dart';
+import 'frame_messages/frame_messages.dart';
+import 'frame_messages/page_origin.dart';
+import 'frame_messages/window_message_forwarder.dart';
 import 'models/models.dart';
 
 final _logger = Logger('WebViewContainer');
+
+/// The address a [WebViewContainer] last opened in each controller, with the
+/// locale it added; what a browser web view opens again in place of a reload.
+final _openedAddresses = Expando<Uri>('WebViewContainer opened address');
+
+/// Page navigation that holds on every platform.
+///
+/// A browser web view is a plain iframe: it keeps no history it can be asked
+/// about and throws on `canGoBack`, `goBack` and `reload`. These answer the
+/// same questions without throwing there - no history to step back through,
+/// and a reload is a fresh load of the address the [WebViewContainer] opened,
+/// locale included - and do exactly what the controller does everywhere else.
+/// Code that drives a page shown in a [WebViewContainer] uses these, not the
+/// controller's own.
+extension WebViewPageNavigation on WebViewController {
+  /// Whether the page has history to step back through.
+  Future<bool> canGoBackInPage() async => !kIsWeb && await canGoBack();
+
+  /// Steps back in the page's history; nothing to do in a browser.
+  Future<void> goBackInPage() async {
+    if (!kIsWeb) await goBack();
+  }
+
+  /// Loads the page again.
+  Future<void> reloadPage() async {
+    if (!kIsWeb) return reload();
+    final address = _openedAddresses[this];
+    if (address != null) await loadRequest(address);
+  }
+}
 
 class WebViewContainer extends StatefulWidget {
   const WebViewContainer({
@@ -72,6 +105,7 @@ class WebViewContainer extends StatefulWidget {
 class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMixin {
   late final WebViewController _webViewController;
   late final NavigationRequestHandler _navigationRequestHandler;
+  void Function()? _stopFrameListener;
   final _progressStreamController = StreamController<int>.broadcast();
 
   Color? _backgroundColorCache;
@@ -158,7 +192,7 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
     if (widget.showToolbar) {
       return Column(
         children: [
-          WebViewToolbar(title: widget.title, onReload: _webViewController.reload),
+          WebViewToolbar(title: widget.title, onReload: _webViewController.reloadPage),
           Expanded(child: content),
         ],
       );
@@ -180,9 +214,14 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
 
     final effectiveInitialUrl = _composeEffectiveInitialUrl();
     if (_effectiveInitialUrlCache != effectiveInitialUrl) {
-      _effectiveInitialUrlCache = effectiveInitialUrl;
-      _webViewController.loadRequest(effectiveInitialUrl);
+      _openPage(effectiveInitialUrl);
     }
+  }
+
+  void _openPage(Uri address) {
+    _effectiveInitialUrlCache = address;
+    _openedAddresses[_webViewController] = address;
+    _webViewController.loadRequest(address);
   }
 
   @override
@@ -191,9 +230,11 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
 
     if (widget.initialUri != oldWidget.initialUri ||
         widget.addLocaleNameToQueryParameters != oldWidget.addLocaleNameToQueryParameters) {
-      final effectiveInitialUrl = _composeEffectiveInitialUrl();
-      _effectiveInitialUrlCache = effectiveInitialUrl;
-      _webViewController.loadRequest(effectiveInitialUrl);
+      _openPage(_composeEffectiveInitialUrl());
+      if (kIsWeb) {
+        _stopFrameListener?.call();
+        _listenToFrame();
+      }
     }
   }
 
@@ -202,12 +243,18 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
     _disposeTimers();
     _disposeStreams();
     _disposeConnectivityStrategy();
+    _disposeFrameListeners();
     _disposeInjectionStrategies();
     super.dispose();
   }
 
   void _disposeTimers() {
     _finalLoadTimer?.cancel();
+  }
+
+  void _disposeFrameListeners() {
+    _stopFrameListener?.call();
+    _stopFrameListener = null;
   }
 
   void _disposeStreams() {
@@ -252,13 +299,20 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
         ..setJavaScriptMode(JavaScriptMode.unrestricted);
     }
 
-    if (widget.jSChannelStrategies.isNotEmpty) {
+    // A browser web view has no JavaScript channels and throws on adding one;
+    // a page there posts to the parent window instead, and that is listened to.
+    if (kIsWeb) {
+      _listenToFrame();
+    } else {
       for (final s in widget.jSChannelStrategies) {
         s._attach(_webViewController);
       }
     }
 
-    widget.connectivityRecoveryStrategy?._startMonitoring(_webViewController);
+    // Recovery decides from page events whether a load succeeded, and a browser
+    // web view reports none: it would take every page for unloaded and retry
+    // it on every network change, wiping what the user had typed.
+    if (!kIsWeb) widget.connectivityRecoveryStrategy?._startMonitoring(_webViewController);
   }
 
   void _onUrlChange(UrlChange change) {
@@ -266,11 +320,44 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
     widget.onUrlChange?.call(change.url);
   }
 
+  void _listenToFrame() {
+    if (widget.jSChannelStrategies.isEmpty) return;
+    _stopFrameListener = listenFrameMessages(
+      _webViewController,
+      pageUri: widget.initialUri,
+      channels: {for (final s in widget.jSChannelStrategies) s.name: (m) => s._deliver(_webViewController, m)},
+    );
+  }
+
+  /// Lets a page send to the channels the way it does in a browser, by posting
+  /// to `window.parent`, which on a phone is the page itself.
+  ///
+  /// Injected as soon as a page has finished, not after the debounce the page
+  /// injections wait for and not only after a clean load: a page that posts
+  /// this way has nothing else to reach the app through, and every moment
+  /// without the listener is a sign-up that could be lost.
+  ///
+  /// Only into a page on the origin the container was opened at: a page the
+  /// first one led to must not reach the channels this way, as it cannot in a
+  /// browser either.
+  void _forwardWindowMessages(String url) {
+    if (widget.jSChannelStrategies.isEmpty) return;
+    final at = Uri.tryParse(url);
+    if (at == null || pageOrigin(at) != pageOrigin(widget.initialUri)) return;
+    final script = windowMessageForwarderScript(widget.jSChannelStrategies.map((s) => s.name));
+    _webViewController.runJavaScript(script).catchError(_onForwarderFailed);
+  }
+
+  void _onForwarderFailed(Object error, StackTrace stackTrace) =>
+      _logger.warning('Could not forward window messages to the JavaScript channels', error, stackTrace);
+
   void _onPageFinished(String url) {
     if (!mounted) {
       _logger.finest('Skipped page finished handling because widget is unmounted');
       return;
     }
+
+    _forwardWindowMessages(url);
 
     if (_currentError == null) {
       _latestError = null;
@@ -377,7 +464,7 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
     _sslAuthError = null;
     _latestError = null;
     _currentError = null;
-    _webViewController.reload();
+    _webViewController.reloadPage();
   }
 }
 
@@ -827,7 +914,7 @@ class SoftReloadRecoveryStrategy implements ConnectivityRecoveryStrategy {
 
   /// Attempts to reload the WebView. Subclasses may override.
   Future<void> _onRetryAttempt() {
-    return _controller.reload();
+    return _controller.reloadPage();
   }
 
   /// Stops the retry timer and resets flags.
@@ -998,17 +1085,19 @@ class JSChannelStrategy {
   ///
   /// Called internally by [WebViewContainer] to register the channel.
   void _attach(WebViewController controller) {
-    controller.addJavaScriptChannel(
-      name,
-      onMessageReceived: (m) {
-        final e = JsonJsEvent.fromMessage(m);
-        if (e == null) {
-          onMalformed?.call(m.message);
-          return;
-        }
-        onEvent(controller, e);
-      },
-    );
+    controller.addJavaScriptChannel(name, onMessageReceived: (m) => _deliver(controller, m.message));
+  }
+
+  /// Hands a message the page sent to [onEvent], or to [onMalformed] when it
+  /// cannot be read; the same whether it came through the channel or, in a
+  /// browser, through the parent window.
+  void _deliver(WebViewController controller, String message) {
+    final e = JsonJsEvent.fromString(message);
+    if (e == null) {
+      onMalformed?.call(message);
+      return;
+    }
+    onEvent(controller, e);
   }
 
   /// Creates a router-based [JSChannelStrategy] that dispatches events

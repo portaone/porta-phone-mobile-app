@@ -16,9 +16,12 @@ class JsonJsEvent {
   final Map<String, dynamic>? callback;
   final Map<String, dynamic>? raw;
 
-  static JsonJsEvent? fromMessage(JavaScriptMessage msg) {
+  static JsonJsEvent? fromMessage(JavaScriptMessage msg) => fromString(msg.message);
+
+  /// Reads an event from the string a page sent, whichever way it came.
+  static JsonJsEvent? fromString(String message) {
     try {
-      final decoded = jsonDecode(msg.message);
+      final decoded = jsonDecode(message);
       if (decoded is! Map<String, dynamic>) {
         _jsLogger.warning('Decoded JSON is not an object');
         return null;

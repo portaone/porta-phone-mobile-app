@@ -158,7 +158,7 @@ class JSChannelBuilders {
 
         try {
           hits.add(DateTime.now());
-          await controller.reload();
+          await controller.reloadPage();
           _logger.info('[reload] WebView reloaded');
         } catch (err, st) {
           _logger.severe('[reload] failed', err, st);
