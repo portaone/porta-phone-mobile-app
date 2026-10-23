@@ -2,7 +2,9 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:pub_semver/pub_semver.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -18,9 +20,13 @@ class SessionsScreen extends StatelessWidget {
     required this.dateFormat,
     required this.autoTerminateSnackBar,
     this.autoTerminateSelectable = false,
+    this.appVersion,
   });
 
   final DateFormat dateFormat;
+
+  /// The version this build runs, so a row says its own only when it differs.
+  final Version? appVersion;
 
   final SessionAutoTerminateSnackBar autoTerminateSnackBar;
 
@@ -62,25 +68,62 @@ class SessionsScreen extends StatelessWidget {
                                   saving: state.savingAutoTerminate,
                                   onTap: () => _onAutoTerminate(context, autoTerminate),
                                 ),
-                              for (final session in state.sessionsStartedFromCurrent)
-                                SessionTile(
-                                  session: session,
-                                  dateFormat: dateFormat,
-                                  revoking: state.isRevoking(session.id),
-                                  onRevoke: (session) => _onRevoke(context, session),
+                              // Two sections under one kind of heading: this device,
+                              // then the others. Each row sits on one surface, a
+                              // divider between rows, edge to edge like the tiles of
+                              // the settings screens: the list reads as one list, not
+                              // a stack of cards each saying the same things over.
+                              if (state.currentSession case final current?) ...[
+                                _SectionHeader(l10n.sessions_Tile_currentSession),
+                                SessionTiles(
+                                  children: [
+                                    SessionTile(
+                                      session: current,
+                                      index: 0,
+                                      dateFormat: dateFormat,
+                                      revoking: false,
+                                      onRevoke: (_) {},
+                                      ownAppVersion: appVersion,
+                                    ),
+                                  ],
                                 ),
+                              ],
+                              if (state.hasOtherSessions) ...[
+                                _SectionHeader(l10n.sessions_Section_otherDevices(state.otherSessions.length)),
+                                SessionTiles(
+                                  children: [
+                                    for (final (index, session) in state.otherSessions.indexed)
+                                      SessionTile(
+                                        session: session,
+                                        index: index,
+                                        dateFormat: dateFormat,
+                                        revoking: state.isRevoking(session.id),
+                                        onRevoke: (session) => _onRevoke(context, session),
+                                        ownAppVersion: appVersion,
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                              ],
                             ],
                           ),
                   ),
                 ),
                 if (state.hasOtherSessions)
-                  TextButton.icon(
-                    icon: const Icon(Icons.logout),
-                    label: Text(l10n.sessions_Button_revokeAllOthers),
-                    onPressed: state.hasOtherSessions ? () => _onRevokeAllOthers(context) : null,
-                    style: TextButton.styleFrom(
-                      foregroundColor: colorScheme.onPrimary,
-                      backgroundColor: colorScheme.primary,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: SemanticAction(
+                      identifier: sessionsRevokeAllOthersButtonId,
+                      child: FilledButton.tonalIcon(
+                        icon: const Icon(Icons.logout),
+                        label: Text(l10n.sessions_Button_revokeAllOthers),
+                        onPressed: () => _onRevokeAllOthers(context),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                          foregroundColor: colorScheme.onErrorContainer,
+                          backgroundColor: colorScheme.errorContainer,
+                        ),
+                      ),
                     ),
                   ),
               ],
@@ -220,6 +263,21 @@ class _FailurePlaceholder extends StatelessWidget {
           ElevatedButton(onPressed: onRetry, child: Text(context.l10n.sessions_Button_retry)),
         ],
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(text, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
     );
   }
 }

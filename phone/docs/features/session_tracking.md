@@ -23,7 +23,9 @@ Last reviewed: 2026-10-15
 - `lib/repositories/sessions/sessions_repository.dart` - `SessionsRepository`
   and its API implementation.
 - `lib/widgets/session_tile.dart` - one session row, shared with the device
-  limit screen of the login.
+  limit screen of the login; what it shows is in "What a row shows" below.
+- `lib/models/session_device.dart` - `SessionDevice`, the device read back
+  out of the User-Agent of a session.
 - `lib/models/active_session.dart` - `ActiveSession`, the domain model.
 - `lib/models/session_auto_terminate.dart` - `SessionAutoTerminate` (when idle
   sessions end), `SessionList` (one answer of the list) and the refusals.
@@ -74,6 +76,50 @@ become brackets, anything outside ASCII is percent-encoded as UTF-8
 was created with, so a session opened by an older build shows its name only
 after that device signs in again.
 
+## What a row shows
+
+A row stands for one device, and says each thing once:
+
+- **Title**: the device name out of the User-Agent (`SessionDevice.parse`,
+  the text inside `(...;`), percent-decoded. A User-Agent of another shape
+  (a browser's, the `Dart/3.x` default of a build before the app sent its own)
+  gives the app-type label instead (`sessions_AppType_*`). A hardware code
+  (`SM-G525F`) is the name a session opened by an older build keeps until
+  that device signs in again.
+- **Second line**: the system and its version from the User-Agent
+  (`Android 14`, left out when the title is already the platform), the
+  country code of the last activity (`lastActivityLocation`, else
+  `location`), and when the device was last seen: "Active now" under five
+  minutes, then `agoTicker_minutesAgo` / `agoTicker_hoursAgo`, and the full
+  date past a day; a session with no activity yet is dated by its sign-in.
+  The sign-in date is not shown otherwise. The row re-reads the clock every
+  half minute while it is on screen, so "Active now" does not outlive the
+  activity.
+- **Third line, only when it differs**: the app version the session was
+  created from (`sessions_Tile_appVersion`), compared with this build's
+  `AppInfo.version` without the build number. Every row would say the own
+  version, so it is never shown; a version of a shape the app does not write
+  is not compared and not shown either.
+- **Icon** by kind: a phone, a tablet, a globe for the web, a monitor for a
+  desktop app. The User-Agent has no device kind, so a tablet is told by
+  "tab" or "pad" in its name (Galaxy Tab, iPad, MatePad, Pixel Tablet); a
+  tablet named otherwise, or listed under a hardware code by an older build,
+  shows as a phone.
+- **Sign out**: an icon button per row (`sessionsTileRevokeButton`, numbered
+  in the order of the other devices like the row's `sessionsTile`, the first
+  of each plain); while the request is in flight it stays, disabled, with
+  progress in place of its icon. The current device (`sessionsCurrentTile`)
+  has no button: signing it out is what logout in settings is for. The
+  button under the list is `sessionsRevokeAllOthersButton`.
+- Never shown: the raw User-Agent, the bundle id, "Android app" next to
+  `Android 14`.
+
+On the Active sessions screen the rows sit under two headings of one kind:
+"This device" (`sessions_Tile_currentSession`) over the current one, "Other
+devices" with their count (`sessions_Section_otherDevices`) over the rest, each section
+one surface with dividers, and the sign-out-all button is pinned under the
+list.
+
 Wired at every client that can create a session:
 
 | Site                                     | Path                                    |
@@ -116,7 +162,7 @@ that cannot load.
   at it.
 - A failed fetch keeps whatever was already loaded and only shows the failure
   placeholder when there is nothing to show.
-- The current session gets a "This device" chip and no revoke action - signing
+- The current session sits under its own heading and has no revoke action - signing
   this device out is what logout in settings is for.
 - Revoking removes the row on success and reports failure through a snack bar,
   leaving the row in place.
@@ -219,8 +265,12 @@ The identifier that tells one device from another is described in
   it is the same string presence uses as the device name.
 - `test/features/settings/features/sessions/cubit/sessions_cubit_test.dart` -
   fetch, single revoke, revoke-all-others incl. partial failure.
-- `test/widgets/session_tile_test.dart` -
-  row title per app type, current-session badge, revoke action.
+- `test/models/session_device_test.dart` - the User-Agent read back into a
+  device, and the shapes that are not one.
+- `test/widgets/session_tile_test.dart` - the device name and system out of
+  the User-Agent, the fallback to the app type, when the device was seen, the
+  app version shown only when foreign, the tablet icon, current-session
+  badge, revoke action.
 - `test/data/settings_mapper_test.dart` - the core-version gate behind
   `sessionsEnabled`.
 - `test/app/core_version_test.dart` - `supportsSessionTracking` boundaries.

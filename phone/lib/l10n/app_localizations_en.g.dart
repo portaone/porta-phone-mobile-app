@@ -2632,20 +2632,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choosing when inactive sessions end is no longer available';
 
   @override
+  String sessions_Section_otherDevices(int count) {
+    return 'Other devices · $count';
+  }
+
+  @override
   String get sessions_SnackBar_revokeFailed => 'Could not sign out the session';
 
   @override
-  String sessions_Tile_created(String time) {
-    return 'Signed in $time';
+  String get sessions_Tile_activeNow => 'Active now';
+
+  @override
+  String sessions_Tile_appVersion(String version) {
+    return 'App $version';
   }
 
   @override
   String get sessions_Tile_currentSession => 'This device';
-
-  @override
-  String sessions_Tile_lastActivity(String time) {
-    return 'Last used $time';
-  }
 
   @override
   String get sessions_Tile_revokeTooltip => 'Sign out';

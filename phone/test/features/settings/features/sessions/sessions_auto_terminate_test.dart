@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/settings/features/sessions/view/widgets/widgets.dart';
 import 'package:webtrit_phone/models/models.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'sessions_auto_terminate_harness.dart';
 
@@ -269,7 +270,7 @@ void main() {
       harness.repository.revokeFailure = Exception('offline');
       await harness.pump(tester);
 
-      await tester.tap(find.text('Sign out'));
+      await tester.tap(find.descendant(of: find.byType(SessionTile), matching: find.byIcon(Icons.logout)));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Yes'));
       await tester.pumpAndSettle();

@@ -436,6 +436,17 @@ const String sessionsAutoTerminateOtherInputId = 'sessionsAutoTerminateOtherInpu
 const String sessionsAutoTerminateOtherSaveId = 'sessionsAutoTerminateOtherSave';
 const String sessionsAutoTerminateOtherBackId = 'sessionsAutoTerminateOtherBack';
 
+/// Active sessions and the device limit screen: one row per device other than
+/// this one, numbered in the order shown ([numberedId]), and the sign-out
+/// button of the row, numbered the same; the row of this device, which has no
+/// button, has an id of its own.
+const String sessionsTileId = 'sessionsTile';
+const String sessionsTileRevokeButtonId = 'sessionsTileRevokeButton';
+const String sessionsCurrentTileId = 'sessionsCurrentTile';
+
+/// Active sessions: the button under the list that signs every other device out.
+const String sessionsRevokeAllOthersButtonId = 'sessionsRevokeAllOthersButton';
+
 /// Id of the [index]th control in a list of identical ones: the first keeps the
 /// plain id, the rest are numbered from two, the way a person would count them.
 ///

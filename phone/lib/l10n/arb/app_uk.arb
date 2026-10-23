@@ -2346,26 +2346,28 @@
   "@sessions_SnackBar_autoTerminateLimitChanged": {},
   "sessions_SnackBar_autoTerminateNotSupported": "Вибір строку неактивних сесій більше недоступний",
   "@sessions_SnackBar_autoTerminateNotSupported": {},
+  "sessions_Section_otherDevices": "Інші пристрої · {count}",
+  "@sessions_Section_otherDevices": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sessions_SnackBar_revokeFailed": "Не вдалося завершити сесію",
   "@sessions_SnackBar_revokeFailed": {},
-  "sessions_Tile_created": "Вхід {time}",
-  "@sessions_Tile_created": {
+  "sessions_Tile_activeNow": "Активний зараз",
+  "@sessions_Tile_activeNow": {},
+  "sessions_Tile_appVersion": "Застосунок {version}",
+  "@sessions_Tile_appVersion": {
     "placeholders": {
-      "time": {
+      "version": {
         "type": "String"
       }
     }
   },
   "sessions_Tile_currentSession": "Цей пристрій",
   "@sessions_Tile_currentSession": {},
-  "sessions_Tile_lastActivity": "Останнє використання {time}",
-  "@sessions_Tile_lastActivity": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
   "sessions_Tile_revokeTooltip": "Вийти",
   "@sessions_Tile_revokeTooltip": {},
   "settings_AboutText_ApplicationEmbeddedLinks": "Вбудовані посилання застосунку",

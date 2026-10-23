@@ -2514,29 +2514,33 @@
   "@sessions_SnackBar_autoTerminateNotSupported": {
     "description": "The backend stopped letting the user choose the period for inactive sessions."
   },
+  "sessions_Section_otherDevices": "Other devices · {count}",
+  "@sessions_Section_otherDevices": {
+    "description": "Heading over the devices other than this one on the Active sessions screen, with how many there are.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sessions_SnackBar_revokeFailed": "Could not sign out the session",
   "@sessions_SnackBar_revokeFailed": {},
-  "sessions_Tile_created": "Signed in {time}",
-  "@sessions_Tile_created": {
-    "description": "Session row detail with the formatted date and time the session was created.",
+  "sessions_Tile_activeNow": "Active now",
+  "@sessions_Tile_activeNow": {
+    "description": "Session row detail for a device seen within the last few minutes, in place of how long ago."
+  },
+  "sessions_Tile_appVersion": "App {version}",
+  "@sessions_Tile_appVersion": {
+    "description": "Session row detail with the app version the session was created from; shown only when it is not the version of this app.",
     "placeholders": {
-      "time": {
+      "version": {
         "type": "String"
       }
     }
   },
   "sessions_Tile_currentSession": "This device",
   "@sessions_Tile_currentSession": {
-    "description": "Badge marking the session the app itself is signed in with, which cannot be revoked here."
-  },
-  "sessions_Tile_lastActivity": "Last used {time}",
-  "@sessions_Tile_lastActivity": {
-    "description": "Session row detail with the formatted date and time of the last recorded activity.",
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
+    "description": "Heading over the row of the session the app itself is signed in with, which cannot be revoked here; the other rows sit under sessions_Section_otherDevices."
   },
   "sessions_Tile_revokeTooltip": "Sign out",
   "@sessions_Tile_revokeTooltip": {},

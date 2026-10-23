@@ -2686,20 +2686,23 @@ class AppLocalizationsUk extends AppLocalizations {
   String get sessions_SnackBar_autoTerminateNotSupported => 'Вибір строку неактивних сесій більше недоступний';
 
   @override
+  String sessions_Section_otherDevices(int count) {
+    return 'Інші пристрої · $count';
+  }
+
+  @override
   String get sessions_SnackBar_revokeFailed => 'Не вдалося завершити сесію';
 
   @override
-  String sessions_Tile_created(String time) {
-    return 'Вхід $time';
+  String get sessions_Tile_activeNow => 'Активний зараз';
+
+  @override
+  String sessions_Tile_appVersion(String version) {
+    return 'Застосунок $version';
   }
 
   @override
   String get sessions_Tile_currentSession => 'Цей пристрій';
-
-  @override
-  String sessions_Tile_lastActivity(String time) {
-    return 'Останнє використання $time';
-  }
 
   @override
   String get sessions_Tile_revokeTooltip => 'Вийти';

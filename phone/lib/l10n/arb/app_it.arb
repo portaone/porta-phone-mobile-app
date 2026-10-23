@@ -2346,26 +2346,28 @@
   "@sessions_SnackBar_autoTerminateLimitChanged": {},
   "sessions_SnackBar_autoTerminateNotSupported": "La scelta di quando terminano le sessioni inattive non è più disponibile",
   "@sessions_SnackBar_autoTerminateNotSupported": {},
+  "sessions_Section_otherDevices": "Altri dispositivi · {count}",
+  "@sessions_Section_otherDevices": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sessions_SnackBar_revokeFailed": "Impossibile disconnettere la sessione",
   "@sessions_SnackBar_revokeFailed": {},
-  "sessions_Tile_created": "Accesso il {time}",
-  "@sessions_Tile_created": {
+  "sessions_Tile_activeNow": "Attivo ora",
+  "@sessions_Tile_activeNow": {},
+  "sessions_Tile_appVersion": "App {version}",
+  "@sessions_Tile_appVersion": {
     "placeholders": {
-      "time": {
+      "version": {
         "type": "String"
       }
     }
   },
   "sessions_Tile_currentSession": "Questo dispositivo",
   "@sessions_Tile_currentSession": {},
-  "sessions_Tile_lastActivity": "Ultimo utilizzo {time}",
-  "@sessions_Tile_lastActivity": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
   "sessions_Tile_revokeTooltip": "Disconnetti",
   "@sessions_Tile_revokeTooltip": {},
   "settings_AboutText_ApplicationEmbeddedLinks": "Collegamenti incorporati dell'applicazione",
