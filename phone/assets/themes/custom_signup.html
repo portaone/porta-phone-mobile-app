@@ -183,7 +183,17 @@
             }
         };
 
-        WebtritLoginChannel.postMessage(JSON.stringify(json));
+        sendToApp(JSON.stringify(json));
+    }
+
+    // On a phone the app defines WebtritLoginChannel; in a browser there is none and the page
+    // posts to the parent window, which the app listens to.
+    function sendToApp(message) {
+        if (window.WebtritLoginChannel) {
+            WebtritLoginChannel.postMessage(message);
+        } else {
+            window.parent.postMessage({ channel: "WebtritLoginChannel", message: message }, "*");
+        }
     }
 
     // Initialize default locale
