@@ -183,7 +183,8 @@
             }
         };
 
-        WebtritLoginChannel.postMessage(JSON.stringify(json));
+        // The app takes this on a phone and in a browser alike.
+        window.parent.postMessage({ channel: "WebtritLoginChannel", message: JSON.stringify(json) }, "*");
     }
 
     // Initialize default locale

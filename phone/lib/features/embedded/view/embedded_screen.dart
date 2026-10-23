@@ -98,7 +98,7 @@ class _EmbeddedScreenState extends State<EmbeddedScreen> {
           final forwardPop = widget.shouldForwardPop && state.canGoBack;
 
           return PopScope(
-            onPopInvokedWithResult: (_, _) => _webViewController.goBack(),
+            onPopInvokedWithResult: (_, _) => _webViewController.goBackInPage(),
             canPop: forwardPop == false,
             child: WebViewContainer(
               initialUri: widget.initialUri,
@@ -122,7 +122,7 @@ class _EmbeddedScreenState extends State<EmbeddedScreen> {
   ///
   /// - Used to support system back navigation via `PopScope`.
   Future<void> _handleUrlChange(String? url) async {
-    final canGoBack = await _webViewController.canGoBack();
+    final canGoBack = await _webViewController.canGoBackInPage();
 
     if (!mounted || _cubit.isClosed) {
       _logger.finest('EmbeddedScreen is closed or not mounted, ignoring URL change: $url');
@@ -147,7 +147,7 @@ class _EmbeddedScreenState extends State<EmbeddedScreen> {
     return (context, error, controller) => EmbeddedRequestErrorDialog(
       title: error.titleL10n(context),
       error: error.messageL10n(context),
-      onRetry: () => _webViewController.reload(),
+      onRetry: _webViewController.reloadPage,
     );
   }
 
@@ -155,6 +155,6 @@ class _EmbeddedScreenState extends State<EmbeddedScreen> {
     _logger.info('onBlocStateChanged: $state');
 
     if (state.isReadyToInjectedScript) _pageInjectionStrategy.setPayload(state.payload);
-    if (state.isReloadWebView) _webViewController.reload();
+    if (state.isReloadWebView) _webViewController.reloadPage();
   }
 }
