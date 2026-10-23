@@ -36,7 +36,7 @@ class VoicemailTabScreen extends StatelessWidget {
       // No inset of its own: the body runs behind the bar and Scaffold already
       // hands it a MediaQuery whose top padding is the bar plus the status bar,
       // which a list with no padding of its own takes.
-      body: const VoicemailBody(origin: MainScreenPageRoute(children: [VoicemailRouterPageRoute()])),
+      body: const VoicemailBody(origin: voicemailTabRoute),
     );
   }
 }

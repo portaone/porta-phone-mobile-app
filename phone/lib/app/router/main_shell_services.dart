@@ -68,6 +68,12 @@ class MainShellServices extends StatelessWidget {
         if (featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>()?.supportsCallHistory == true)
           Provider<CdrsSync>(create: _createCdrsSync, dispose: (context, sync) => sync.dispose(), lazy: false),
         Provider<CdrsHistoryWalk>(create: _createCdrsHistoryWalk),
+        if (featureAccess.voicemailAvailable)
+          Provider<VoicemailSync>(
+            create: _createVoicemailSync,
+            dispose: (context, sync) => sync.dispose(),
+            lazy: false,
+          ),
         if (featureAccess.systemNotificationsConfig.systemNotificationsSupport) ...[
           Provider<SystemNotificationsSync>(
             create: _createSystemNotificationsSync,
@@ -97,8 +103,6 @@ class MainShellServices extends StatelessWidget {
   /// - [SystemInfoRepository]: polled every 5 minutes to refresh system information.
   /// - [ExternalContactsSyncWorker]: registered through its standard owner so
   ///   state and manual refresh share one task without exposing lifecycle control.
-  /// - [VoicemailRepository]: polled every 5 minutes, but only if voicemail runs for this session
-  ///   ([FeatureAccess.voicemailAvailable]) - whichever placement offers it.
   /// - [IceServersRepository]: polled every 5 minutes when the core bundles STUN/TURN servers.
   ///   The tick is a noop until the cached configuration approaches its expiration, so its only
   ///   job is to renew short-lived TURN credentials inside a long-running session.
@@ -106,8 +110,6 @@ class MainShellServices extends StatelessWidget {
   /// This method centralizes the polling configuration, so changes in polling logic or intervals
   /// can be made here without touching the [Provider] or [PollingService] setup.
   List<PollingRegistration> _pollingRegistrations(BuildContext context) {
-    final featureAccess = context.read<FeatureAccess>();
-    final isVoicemailsEnabled = featureAccess.voicemailAvailable;
     final cliSettingsRepository = context.read<CallerIdSettingsRepository>();
     final favoritesRepository = context.read<FavoritesRepository>();
     final sipSubscriptionsRepository = context.read<SipSubscriptionsRepository>();
@@ -118,11 +120,6 @@ class MainShellServices extends StatelessWidget {
         listener: context.read<SystemInfoRepository>(),
         interval: Duration(seconds: EnvironmentConfig.SYSTEM_INFO_REPOSITORY_POLLING_INTERVAL_SECONDS),
       ),
-      if (isVoicemailsEnabled)
-        PollingRegistration(
-          listener: context.read<VoicemailRepository>(),
-          interval: Duration(seconds: EnvironmentConfig.VOICEMAIL_REPOSITORY_POLLING_INTERVAL_SECONDS),
-        ),
       if (cliSettingsRepository is CallerIdSettingsRepositoryRemoteImpl)
         PollingRegistration(
           listener: cliSettingsRepository,
@@ -179,6 +176,16 @@ class MainShellServices extends StatelessWidget {
       pollingService: context.read<PollingService>(),
       interval: Duration(seconds: EnvironmentConfig.CDRS_REPOSITORY_POLLING_INTERVAL_SECONDS),
       postCallRefreshDelay: Duration(seconds: EnvironmentConfig.POST_CALL_REFRESH_DELAY_SECONDS),
+    );
+  }
+
+  /// Only where voicemail runs for this session ([FeatureAccess.voicemailAvailable]) - whichever
+  /// placement offers it.
+  VoicemailSync _createVoicemailSync(BuildContext context) {
+    return VoicemailSync(
+      worker: VoicemailSyncWorker(context.read<VoicemailRepository>()),
+      pollingService: context.read<PollingService>(),
+      interval: Duration(seconds: EnvironmentConfig.VOICEMAIL_REPOSITORY_POLLING_INTERVAL_SECONDS),
     );
   }
 

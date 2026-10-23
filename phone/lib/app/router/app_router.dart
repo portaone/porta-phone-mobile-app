@@ -605,6 +605,15 @@ PageRouteInfo<dynamic> recentsRouteOf(RecentsBottomMenuTab tab) {
   return tab.supportsCallHistory ? const RecentCdrsRouterPageRoute() : const RecentsRouterPageRoute();
 }
 
+/// The mailbox as its own bottom-menu tab, named from the root.
+const voicemailTabRoute = MainScreenPageRoute(children: [VoicemailRouterPageRoute()]);
+
+/// The mailbox under settings, named with the settings list under it so the
+/// page returns to that list when it is closed.
+const voicemailSettingsRoute = SettingsRouterPageRoute(
+  children: [SettingsScreenPageRoute(), VoicemailScreenPageRoute()],
+);
+
 Object _onNavigationLoggerMessage(String callbackName, NavigationResolver resolver) {
   return () =>
       '$callbackName: ${resolver.route.name} (${resolver.route.fullPath}) isReevaluating=${resolver.isReevaluating}';

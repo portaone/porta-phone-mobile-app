@@ -542,7 +542,7 @@ overridden by the matching dart-define.
 | `CdrsSyncWorker` | 300 s | Call history is enabled for the session |
 | `SystemNotificationsSyncWorker` (via `SystemNotificationsSync`) | 10 s | Core offers system notifications and the app configuration allows them |
 | `SystemNotificationsOutboxWorker` (via `SystemNotificationsOutbox`) | 300 s | Same gate as the sync; the interval is a safety net, a read receipt asks for a send at once |
-| `VoicemailRepository` | 300 s | Voicemail is available for the session |
+| `VoicemailSyncWorker` (via `VoicemailSync`) | 300 s | Voicemail is available for the session |
 | `CallQueuesRepository` | 10 s | ONLY while the call center screen is open - the page registers the task on mount and unregisters it on dispose, because every read reaches the PBX |
 | `CallerIdSettingsRepository` | 300 s | Remote implementation is active |
 | `FavoritesRepository` | 300 s | Syncable implementation is active |
@@ -568,11 +568,13 @@ per-repository guards are listed in
 How some of the conforming registrations meet the contract, since it is not visible from
 the table above:
 
-- Voicemail: `refresh()` and direct `fetchVoicemails()` calls share one future covering the
-  list request, detail requests and the SQLite writes, so a manual refresh joins a poll that
-  is already running instead of starting a second one. Every caller receives the original
-  error. An unconfigured mailbox or unsupported endpoint fails the cycle and sets `isActive`
-  to false, and polling unregisters the listener.
+- Voicemail: `VoicemailSyncWorker` only puts `VoicemailRepository` under polling; the
+  repository stays owned by the session's repositories. `refresh()` and direct
+  `fetchVoicemails()` calls share one future covering the list request, detail requests and
+  the SQLite writes, so a manual refresh joins a poll that is already running instead of
+  starting a second one. Every caller receives the original error. An unconfigured mailbox
+  or unsupported endpoint fails the cycle and sets the repository's `isActive`, which the
+  worker passes on, to false, and polling unregisters the listener.
 - Favorites and SIP subscriptions: a local add, remove or reorder persists the edit and its
   outbox entry first and syncs best-effort; `refresh()` is the strict path that awaits the
   outbox read, the remote pull or batch sync and the local writes, and rethrows the original
