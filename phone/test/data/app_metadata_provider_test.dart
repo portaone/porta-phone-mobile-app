@@ -25,15 +25,34 @@ void main() {
 
     when(() => packageInfo.appName).thenReturn('PortaPhone');
     when(() => appInfo.version).thenReturn(Version(1, 8, 2));
-    when(() => deviceInfo.model).thenReturn('iPhone14,3');
+    when(() => deviceInfo.model).thenReturn('iPhone');
+    when(() => deviceInfo.displayName).thenReturn('iPhone 13 mini');
     when(() => deviceInfo.systemName).thenReturn('iOS');
     when(() => deviceInfo.systemVersion).thenReturn('17.4');
   });
 
-  test('buildUserAgent names the app build and the device', () {
+  test('buildUserAgent names the app build and the device by its marketing name', () {
     expect(
       DefaultAppMetadataProvider.buildUserAgent(packageInfo, appInfo, deviceInfo),
-      equals('PortaPhone/1.8.2 (iPhone14,3; iOS: 17.4)'),
+      equals('PortaPhone/1.8.2 (iPhone 13 mini; iOS: 17.4)'),
+    );
+  });
+
+  test('buildUserAgent names the device by its model where no marketing name is known', () {
+    when(() => deviceInfo.displayName).thenReturn(null);
+
+    expect(
+      DefaultAppMetadataProvider.buildUserAgent(packageInfo, appInfo, deviceInfo),
+      equals('PortaPhone/1.8.2 (iPhone; iOS: 17.4)'),
+    );
+  });
+
+  test('buildUserAgent escapes a device name the User-Agent comment could not carry', () {
+    when(() => deviceInfo.displayName).thenReturn('Lenovo Tab M8 (4th Gen); Wi-Fi');
+
+    expect(
+      DefaultAppMetadataProvider.buildUserAgent(packageInfo, appInfo, deviceInfo),
+      equals('PortaPhone/1.8.2 (Lenovo Tab M8 [4th Gen], Wi-Fi; iOS: 17.4)'),
     );
   });
 

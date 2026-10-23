@@ -58,10 +58,21 @@ leaving the platform default (`Dart/3.x (dart:io)`).
 `WebtritApiClient` takes a `userAgent` and puts it on every request.
 It is filled from the same string presence uses as its device name -
 `AppMetadataProvider.userAgent`, format
-`AppName/AppVersion (Model; OSName: OSVersion)` - so a device is labelled
+`AppName/AppVersion (DeviceName; OSName: OSVersion)` - so a device is labelled
 identically in both places. `DefaultAppMetadataProvider.buildUserAgent` holds
 that format and is also called directly in `bootstrap`, which builds the API
 client factory before the provider exists (the provider needs `featureAccess`).
+
+`DeviceName` is the name a person knows the device by (`Samsung Galaxy XCover
+5`, `iPhone 12 mini`), read by the `device_display_name` plugin into
+`DeviceInfo.displayName`; the platform model (`SM-G525F`, `iPhone`) is sent only
+where the plugin gives no name. The name the user gave the device is never
+used: it can carry a person's name, and the core stores and logs the header.
+`buildUserAgent` escapes the name for the header: `;` becomes `,`, parentheses
+become brackets, anything outside ASCII is percent-encoded as UTF-8
+(`Uri.decodeComponent` turns it back). The core keeps the User-Agent a session
+was created with, so a session opened by an older build shows its name only
+after that device signs in again.
 
 Wired at every client that can create a session:
 

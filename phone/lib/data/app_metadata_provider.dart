@@ -1,3 +1,5 @@
+import 'package:device_display_name/device_display_name.dart' show userAgentToken;
+
 import 'package:webtrit_phone/data/data.dart';
 
 /// Provides application metadata, including device information,
@@ -11,7 +13,9 @@ abstract class AppMetadataProvider {
 
   /// Returns a formatted User-Agent string for HTTP requests and Presence.
   ///
-  /// Format: `AppName/AppVersion (Model; OSName: OSVersion)`
+  /// Format: `AppName/AppVersion (DeviceName; OSName: OSVersion)`. The device
+  /// name is the one a person knows the device by, escaped for the header:
+  /// `;` and parentheses replaced, anything outside ASCII percent-encoded.
   String get userAgent;
 
   /// Provides a summary of the application name, version, and build details.
@@ -86,9 +90,14 @@ class DefaultAppMetadataProvider implements AppMetadataProvider {
   ///
   /// Kept as the single source of the format, so the `User-Agent` header the
   /// backend stores on a session matches the device name shown in presence.
+  ///
+  /// The device is named by [DeviceInfo.displayName], the platform model where
+  /// there is none. The name is escaped here, not where it is read: a maker's
+  /// name can hold the `;` and parentheses the `(Model; OS: version)` comment
+  /// is parsed by, and a header value has to be ASCII.
   static String buildUserAgent(PackageInfo packageInfo, AppInfo appInfo, DeviceInfo deviceInfo) {
-    return '${packageInfo.appName}/${appInfo.version} '
-        '(${deviceInfo.model}; ${deviceInfo.systemName}: ${deviceInfo.systemVersion})';
+    final device = userAgentToken(deviceInfo.displayName ?? deviceInfo.model);
+    return '${packageInfo.appName}/${appInfo.version} ($device; ${deviceInfo.systemName}: ${deviceInfo.systemVersion})';
   }
 
   @override
