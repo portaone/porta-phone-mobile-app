@@ -3063,6 +3063,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get settings_encoding_Section_rtp_override_audio => 'Перевизначення аудіо профілів';
 
   @override
+  String get settings_encoding_Section_rtp_override_conference => 'Перевизначення аудіо профілів конференції';
+
+  @override
   String get settings_encoding_Section_rtp_override_title => 'Пріоритизація та вилучення профілів RTP';
 
   @override

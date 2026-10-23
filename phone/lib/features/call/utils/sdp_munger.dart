@@ -58,15 +58,20 @@ class ModifyWithEncodingSettings implements SDPMunger {
     return settings;
   }
 
+  /// The encoding settings in force now - the preset chosen, or the
+  /// deployment's default when the person may not choose - or null when the
+  /// deployment bypasses them altogether.
+  EncodingSettings? get settings {
+    if (_encodingConfig.bypassConfig) return null;
+    final preset = _encodingConfig.configurationAllowed ? _encodingPresetRepository.getEncodingPreset() : null;
+    return _makeSettings(preset);
+  }
+
   @override
   void apply(RTCSessionDescription description) {
-    final bypass = _encodingConfig.bypassConfig;
-    final configurationAllowed = _encodingConfig.configurationAllowed;
+    final settings = this.settings;
+    if (settings == null) return;
 
-    if (bypass) return;
-
-    final preset = configurationAllowed ? _encodingPresetRepository.getEncodingPreset() : null;
-    EncodingSettings settings = _makeSettings(preset);
     final (
       audioBitrate,
       videoBitrate,
@@ -78,6 +83,7 @@ class ModifyWithEncodingSettings implements SDPMunger {
       opusDtx,
       audioProfiles,
       videoProfiles,
+      _, // conferenceAudioProfiles: only for a call in a room, see RoomCodecs.restrict
       removeStaticAudioRtpMaps,
       remapTE8payloadTo101,
       removeREMBFeedback,

@@ -3,21 +3,9 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 
 import 'package:webtrit_phone/features/call/utils/sdp_mod_builder.dart';
+import 'package:webtrit_phone/models/enableble.dart';
+import 'package:webtrit_phone/models/feature_access/encoding_config.dart';
 import 'package:webtrit_phone/models/rtp_codec_profile.dart';
-
-/// The audio codecs the server's conference mixer speaks.
-///
-/// The room is a mixer on the server, and a call joins it with whatever codec
-/// its own offer and answer settled on. A call on any other codec is left out
-/// of the room, and a room left with fewer than two calls is closed - the
-/// client is told only that the conference ended, with no reason. So a call
-/// placed to join a room offers these alone: a callee that can speak none of
-/// them turns the call down before answering, which is an ordinary failed
-/// call, rather than answering into a room that then falls apart.
-///
-/// A list rather than a rule about one codec, so that a mixer that learns or
-/// drops a codec is followed by changing it here.
-const kConferenceAudioCodecs = {RTPCodec.opus, RTPCodec.pcma, RTPCodec.pcmu};
 
 /// What [RoomCodecs] asks of whoever drives the calls.
 sealed class RoomCodecsCommand {
@@ -69,6 +57,10 @@ enum RoomOfferError {
 /// answers of those that do, and the move of a call on another codec onto
 /// them before it is merged or added.
 ///
+/// The codecs are the mixer's ([codecs], see
+/// [EncodingConfig.conferenceAudioCodecs]); the person's media settings may
+/// order them and leave some out ([preferred]), never add one.
+///
 /// A call placed as an ordinary call settled on whatever codec its two ends
 /// liked best, often G.722, before anybody thought of a room, and the room's
 /// mixer leaves such a call out. Before a merge or an add takes it, the call
@@ -96,9 +88,13 @@ enum RoomOfferError {
 class RoomCodecs {
   RoomCodecs({
     required void Function(RoomCodecsCommand command) onCommand,
+    this.codecs = EncodingConfig.defaultConferenceAudioCodecs,
+    List<Enableble<RTPCodecProfile>>? Function()? preferred,
     this.timeout = const Duration(seconds: 20),
     Timer Function(Duration, void Function())? createTimer,
   }) : _onCommand = onCommand,
+       _preferred = preferred ?? (() => null),
+       _mixable = codecs.map((c) => c.sdpKey.toLowerCase()).toSet(),
        _createTimer = createTimer ?? Timer.new;
 
   static final _logger = Logger('RoomCodecs');
@@ -112,7 +108,16 @@ class RoomCodecs {
   /// The reason a request fails with when a call stays off the codecs.
   static const notMixable = 'codec_not_mixable';
 
-  static final _mixable = kConferenceAudioCodecs.map((c) => c.sdpKey.toLowerCase()).toSet();
+  /// The codecs the mixer speaks: a call on any of them can be put in a room
+  /// as it is.
+  final Set<RTPCodec> codecs;
+
+  /// The person's order of the conference codecs, read for each offer since
+  /// the settings may change between calls; null or empty for none.
+  final List<Enableble<RTPCodecProfile>>? Function() _preferred;
+
+  /// [codecs] by encoding name in lower case, as [codecOf] reads them.
+  final Set<String> _mixable;
 
   final void Function(RoomCodecsCommand command) _onCommand;
   final Timer Function(Duration, void Function()) _createTimer;
@@ -134,19 +139,34 @@ class RoomCodecs {
   /// The requests to ask again once the move is over.
   final List<void Function()> _waiting = [];
 
-  /// [sdp] with the conference codecs alone, or null when it has nothing
-  /// else - or none of them, since an audio section left with no voice codec
-  /// carries no call at all.
+  /// [sdp] with the conference codecs alone, in the person's order when they
+  /// set one, or null when that changes nothing - it has no other codec, or
+  /// none of them, since an audio section left with no voice codec carries no
+  /// call at all.
   ///
   /// For a call [inRoom] - a leg, or placed to join - and for one being
   /// moved: its own offers, and its answers to an offer from the far end,
   /// which could otherwise move it off them. Applied after the encoding
-  /// settings, which a deployment may switch off as a whole: this is what the
-  /// room needs, not a preference.
+  /// settings, which a deployment may switch off as a whole: what the room
+  /// needs is kept even then, and only the person's order goes with them.
+  ///
+  /// The codecs the person left are kept when the description has any of
+  /// them, and every codec the mixer speaks otherwise: a call the encoding
+  /// settings already narrowed to another of them still joins.
   String? restrict(String callId, String sdp, {required bool inRoom}) {
     if (!inRoom && !moves(callId)) return null;
+    final order = [
+      for (final p in _preferred() ?? const <Enableble<RTPCodecProfile>>[])
+        if (p.enabled && p.option.kind == RTPCodecKind.audio && codecs.contains(p.option.codec)) p.option,
+    ];
     final builder = SDPModBuilder(sdp: sdp);
-    return builder.keepAudioCodecs(kConferenceAudioCodecs) ? builder.sdp : null;
+    var changed = order.isNotEmpty && builder.keepAudioCodecs({for (final p in order) p.codec});
+    if (!changed) changed = builder.keepAudioCodecs(codecs);
+    if (order.isNotEmpty) {
+      builder.reorderProfiles(order, RTPCodecKind.audio);
+      changed = true;
+    }
+    return changed ? builder.sdp : null;
   }
 
   /// The voice codec an answer settled on, as its encoding name in lower

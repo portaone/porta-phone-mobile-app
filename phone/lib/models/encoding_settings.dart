@@ -68,6 +68,7 @@ class EncodingSettings extends Equatable {
     this.opusDtx,
     this.audioProfiles,
     this.videoProfiles,
+    this.conferenceAudioProfiles,
     this.removeStaticAudioRtpMaps = false,
     this.remapTE8payloadTo101 = false,
     this.removeREMBFeedback = false,
@@ -265,6 +266,19 @@ class EncodingSettings extends Equatable {
     (option: RTPCodecProfile.redundancy_video, enabled: true),
   ];
 
+  /// Ordered list of audio codec profiles a call in a conference offers.
+  /// Used to prioritize them or to leave some out, among the codecs the
+  /// conference mixer speaks (`EncodingConfig.conferenceAudioCodecs`) only: a
+  /// profile outside them, or one disabled here, is never offered to the room.
+  /// `null` means not set: every codec the mixer speaks, in the order of
+  /// [audioProfiles].
+  final List<Enableble<RTPCodecProfile>>? conferenceAudioProfiles;
+  static List<Enableble<RTPCodecProfile>> defaultConferenceAudioProfilesOrder = [
+    (option: RTPCodecProfile.opus, enabled: true),
+    (option: RTPCodecProfile.pcmu, enabled: true),
+    (option: RTPCodecProfile.pcma, enabled: true),
+  ];
+
   /// List of disabled by default extensions
   static List<SdpExtmapType> defaultExtmapsRemoveList = [
     // We not use VAD now, so lets drop it
@@ -281,7 +295,7 @@ class EncodingSettings extends Equatable {
   ];
 
   /// For tracking the model schema changes on serializing.
-  static int schemaVersion = 2;
+  static int schemaVersion = 3;
 
   EncodingSettings _copyWith({
     Object? audioBitrate = _absent,
@@ -294,6 +308,7 @@ class EncodingSettings extends Equatable {
     Object? opusDtx = _absent,
     Object? audioProfiles = _absent,
     Object? videoProfiles = _absent,
+    Object? conferenceAudioProfiles = _absent,
     bool? removeStaticAudioRtpMaps,
     bool? remapTE8payloadTo101,
     bool? removeREMBFeedback,
@@ -311,6 +326,9 @@ class EncodingSettings extends Equatable {
       opusDtx: opusDtx == _absent ? this.opusDtx : opusDtx as bool?,
       audioProfiles: audioProfiles == _absent ? this.audioProfiles : audioProfiles as List<Enableble<RTPCodecProfile>>?,
       videoProfiles: videoProfiles == _absent ? this.videoProfiles : videoProfiles as List<Enableble<RTPCodecProfile>>?,
+      conferenceAudioProfiles: conferenceAudioProfiles == _absent
+          ? this.conferenceAudioProfiles
+          : conferenceAudioProfiles as List<Enableble<RTPCodecProfile>>?,
       removeStaticAudioRtpMaps: removeStaticAudioRtpMaps ?? this.removeStaticAudioRtpMaps,
       remapTE8payloadTo101: remapTE8payloadTo101 ?? this.remapTE8payloadTo101,
       removeREMBFeedback: removeREMBFeedback ?? this.removeREMBFeedback,
@@ -343,6 +361,9 @@ class EncodingSettings extends Equatable {
   EncodingSettings copyWithVideoProfiles(List<Enableble<RTPCodecProfile>>? videoProfiles) =>
       _copyWith(videoProfiles: videoProfiles);
 
+  EncodingSettings copyWithConferenceAudioProfiles(List<Enableble<RTPCodecProfile>>? conferenceAudioProfiles) =>
+      _copyWith(conferenceAudioProfiles: conferenceAudioProfiles);
+
   EncodingSettings copyWithRemoveStaticAudioRtpMaps(bool removeStaticAudioRtpMaps) =>
       _copyWith(removeStaticAudioRtpMaps: removeStaticAudioRtpMaps);
 
@@ -368,6 +389,7 @@ class EncodingSettings extends Equatable {
     opusDtx,
     audioProfiles,
     videoProfiles,
+    conferenceAudioProfiles,
     removeStaticAudioRtpMaps,
     remapTE8payloadTo101,
     removeREMBFeedback,
@@ -387,6 +409,7 @@ class EncodingSettings extends Equatable {
     opusDtx,
     audioProfiles,
     videoProfiles,
+    conferenceAudioProfiles,
     removeStaticAudioRtpMaps,
     remapTE8payloadTo101,
     removeREMBFeedback,
@@ -396,6 +419,6 @@ class EncodingSettings extends Equatable {
 
   @override
   String toString() {
-    return 'EncodingSettings{audioBitrate: $audioBitrate, videoBitrate: $videoBitrate, ptime: $ptime, maxptime: $maxptime, opusSamplingRate: $opusSamplingRate, opusBitrate: $opusBitrate, opusStereo: $opusStereo, opusDtx: $opusDtx, audioProfiles: $audioProfiles, videoProfiles: $videoProfiles, removeStaticAudioRtpMaps: $removeStaticAudioRtpMaps, remapTE8payloadTo101: $remapTE8payloadTo101, removeREMBFeedback: $removeREMBFeedback, removeTWCCFeedback: $removeTWCCFeedback, removeExtmaps: $removeExtmaps}';
+    return 'EncodingSettings{audioBitrate: $audioBitrate, videoBitrate: $videoBitrate, ptime: $ptime, maxptime: $maxptime, opusSamplingRate: $opusSamplingRate, opusBitrate: $opusBitrate, opusStereo: $opusStereo, opusDtx: $opusDtx, audioProfiles: $audioProfiles, videoProfiles: $videoProfiles, conferenceAudioProfiles: $conferenceAudioProfiles, removeStaticAudioRtpMaps: $removeStaticAudioRtpMaps, remapTE8payloadTo101: $remapTE8payloadTo101, removeREMBFeedback: $removeREMBFeedback, removeTWCCFeedback: $removeTWCCFeedback, removeExtmaps: $removeExtmaps}';
   }
 }

@@ -589,6 +589,7 @@ abstract final class CallMapper {
           removeTWCCFeedback: defaultPresetOverride.removeTWCCFeedback,
           removeExtmaps: _parseExtmapList(defaultPresetOverride.removeExtmaps),
         ),
+        conferenceAudioCodecs: _parseConferenceCodecs(encodingConfig.conferenceAudioCodecs),
       ),
       // An unrecognised value reads as `verify` rather than raising: a build
       // must not refuse to start because a configuration names a policy it does
@@ -614,6 +615,22 @@ abstract final class CallMapper {
   static List<SdpExtmapType>? _parseExtmapList(List<String>? names) {
     if (names == null) return null;
     return names.map((name) => SdpExtmapType.values.where((t) => t.name == name).firstOrNull).nonNulls.toList();
+  }
+
+  /// The conference mixer's codecs by encoding name, case aside. A name this
+  /// build does not know, or one that carries no voice (DTMF, comfort noise,
+  /// redundancy), is skipped, and a list left with none reads as unset: a build
+  /// must not start with no codec a room could take a call on.
+  static Set<RTPCodec> _parseConferenceCodecs(List<String>? names) {
+    const notVoice = {RTPCodec.telephoneEvent, RTPCodec.cn, RTPCodec.red};
+    final voice = {
+      for (final p in RTPCodecProfile.values)
+        if (p.kind == RTPCodecKind.audio && !notVoice.contains(p.codec)) p.codec,
+    };
+    final codecs = {
+      for (final name in names ?? const <String>[]) ...voice.where((c) => c.sdpKey.toLowerCase() == name.toLowerCase()),
+    };
+    return codecs.isEmpty ? EncodingConfig.defaultConferenceAudioCodecs : codecs;
   }
 }
 

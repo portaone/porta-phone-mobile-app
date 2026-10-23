@@ -176,6 +176,11 @@ class MainShellBlocs extends StatelessWidget {
               monitorDelegatesFactory: (callId, logger) => [LoggingRtpTrafficMonitorDelegate(logger: logger)],
             );
 
+            final sdpMunger = ModifyWithEncodingSettings(
+              encodingSettingsRepository,
+              encodingConfig,
+              encodingPresetRepository,
+            );
             final localPushRepository = context.read<LocalPushRepository>();
             final userRepository = context.read<UserRepository>();
             final callerIdSettingsRepository = context.read<CallerIdSettingsRepository>();
@@ -211,11 +216,9 @@ class MainShellBlocs extends StatelessWidget {
               isCameraPermissionGranted: () => appPermissions.isPermissionGranted(Permission.camera),
               callkeep: callkeep,
               callkeepConnections: callkeepConnections,
-              sdpMunger: ModifyWithEncodingSettings(
-                encodingSettingsRepository,
-                encodingConfig,
-                encodingPresetRepository,
-              ),
+              sdpMunger: sdpMunger,
+              conferenceAudioCodecs: encodingConfig.conferenceAudioCodecs,
+              conferenceAudioProfiles: () => sdpMunger.settings?.conferenceAudioProfiles,
               sdpSanitizer: RemoteSdpSanitizer(),
               webRtcOptionsBuilder: WebrtcOptionsWithAppSettingsBuilder(audioProcessingSettingsRepository),
               userMediaBuilder: userMediaBuilder,

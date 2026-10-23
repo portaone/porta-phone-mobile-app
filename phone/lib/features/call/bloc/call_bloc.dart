@@ -222,13 +222,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     Timer Function(Duration, void Function())? renegotiationReplayTimer,
     Future<void> Function(Duration)? renegotiationUpdatingDelay,
     Timer Function(Duration, void Function())? roomCodecMoveTimer,
+    Set<RTPCodec> conferenceAudioCodecs = EncodingConfig.defaultConferenceAudioCodecs,
+    List<Enableble<RTPCodecProfile>>? Function()? conferenceAudioProfiles,
   }) : _onMissedCall = onMissedCall,
        _connectivityService = connectivityService,
        _speakerOnMinimize = SpeakerOnMinimize(isEnabled: speakerOnMinimize ?? () => false),
        super(const CallState()) {
     _mediaManager = mediaManager ?? CallMediaManager(callkeep: callkeep);
     _offerWait = RoomOfferWait(timeout: conferenceAssemblyTimeout, createTimer: roomOfferDeadlineTimer);
-    _roomCodecs = RoomCodecs(onCommand: _executeRoomCodecsCommand, createTimer: roomCodecMoveTimer);
+    _roomCodecs = RoomCodecs(
+      onCommand: _executeRoomCodecsCommand,
+      codecs: conferenceAudioCodecs,
+      preferred: conferenceAudioProfiles,
+      createTimer: roomCodecMoveTimer,
+    );
     _renegotiationCoordinator = RenegotiationCoordinator(
       onCommand: _executeRenegotiationCommand,
       createTimer: renegotiationReplayTimer,

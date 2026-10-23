@@ -2,6 +2,8 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/features/call/conference/conference.dart';
+import 'package:webtrit_phone/models/enableble.dart';
+import 'package:webtrit_phone/models/rtp_codec_profile.dart';
 
 /// The conference codecs on their own: the offers and answers of calls in the
 /// room, and the move of a call on another codec onto them - which calls are
@@ -63,6 +65,58 @@ void main() {
       expect(codecs.restrict('a', offer, inRoom: false), isNull);
       move({'a': false});
       expect(codecs.restrict('a', offer, inRoom: false), isNotNull);
+    });
+  });
+
+  group('the codecs and their order', () {
+    List<Enableble<RTPCodecProfile>>? preferred;
+    RoomCodecs withCodecs({Set<RTPCodec>? mixer}) => mixer == null
+        ? RoomCodecs(onCommand: onCommand, preferred: () => preferred)
+        : RoomCodecs(onCommand: onCommand, codecs: mixer, preferred: () => preferred);
+    String? restricted(RoomCodecs codecs) =>
+        RegExp(r'm=audio \S+ \S+ ([\d ]+)').firstMatch(codecs.restrict('a', offer, inRoom: true) ?? '')?.group(1);
+
+    setUp(() => preferred = null);
+
+    test('are offered in the person\'s order, the ones left out dropped', () {
+      preferred = [
+        (option: RTPCodecProfile.pcmu, enabled: true),
+        (option: RTPCodecProfile.opus, enabled: false),
+        (option: RTPCodecProfile.pcma, enabled: true),
+      ];
+      expect(restricted(withCodecs()), '0 126');
+
+      preferred = [(option: RTPCodecProfile.pcmu, enabled: true), (option: RTPCodecProfile.opus, enabled: true)];
+      expect(restricted(withCodecs()), '0 111 126');
+    });
+
+    test('never take a codec the mixer does not speak, whatever the person enabled', () {
+      preferred = [(option: RTPCodecProfile.g722, enabled: true), (option: RTPCodecProfile.pcmu, enabled: true)];
+      expect(restricted(withCodecs()), '0 126');
+    });
+
+    test('are every codec the mixer speaks when none of the person\'s is offered', () {
+      preferred = [(option: RTPCodecProfile.pcma, enabled: true)];
+      expect(restricted(withCodecs()), '111 0 126');
+
+      preferred = [(option: RTPCodecProfile.opus, enabled: false)];
+      expect(restricted(withCodecs()), '111 0 126');
+    });
+
+    test('follow a mixer the build names', () {
+      final codecs = withCodecs(mixer: {RTPCodec.g722, RTPCodec.pcmu});
+
+      expect(restricted(codecs), '9 0 126');
+      expect(codecs.check({'a': (codec: 'g722', held: false)}, request: request('merge')), RoomCodecsCheck.ready);
+      expect(codecs.check({'a': (codec: 'opus', held: false)}, request: request('merge')), RoomCodecsCheck.moving);
+      codecs.dispose();
+    });
+
+    test('a call on a codec the person left out is not moved: the mixer takes it', () {
+      preferred = [(option: RTPCodecProfile.opus, enabled: false)];
+      final codecs = withCodecs();
+
+      expect(codecs.check({'a': (codec: 'opus', held: false)}, request: request('merge')), RoomCodecsCheck.ready);
     });
   });
 

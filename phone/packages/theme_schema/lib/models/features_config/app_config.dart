@@ -366,6 +366,7 @@ class AppConfigEncoding with _$AppConfigEncoding {
   const AppConfigEncoding({
     this.bypassConfig = false,
     this.defaultPresetOverride = const EncodingDefaultPresetOverride(),
+    this.conferenceAudioCodecs,
   });
 
   @override
@@ -373,6 +374,18 @@ class AppConfigEncoding with _$AppConfigEncoding {
 
   @override
   final EncodingDefaultPresetOverride defaultPresetOverride;
+
+  /// The audio codecs the server's conference mixer speaks, by encoding name
+  /// (`opus`, `PCMA`, `PCMU`; case does not matter). A call in a conference
+  /// offers only these, and a call on another codec is moved onto them before
+  /// it is merged.
+  ///
+  /// Unset, or naming no codec this build knows, means opus, PCMA and PCMU -
+  /// what the mixer speaks today. Set it only for a mixer that speaks
+  /// something else: a codec named here that the mixer cannot speak leaves the
+  /// call out of the room.
+  @override
+  final List<String>? conferenceAudioCodecs;
 
   factory AppConfigEncoding.fromJson(Map<String, Object?> json) => _$AppConfigEncodingFromJson(json);
 

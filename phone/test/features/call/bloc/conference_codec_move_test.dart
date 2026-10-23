@@ -206,6 +206,53 @@ void main() {
     ], reason: 'the legs are not touched');
   });
 
+  group('the codecs from the build and the media settings', () {
+    Future<void> restart({
+      Set<RTPCodec> codecs = EncodingConfig.defaultConferenceAudioCodecs,
+      List<Enableble<RTPCodecProfile>>? Function()? profiles,
+    }) async {
+      await h.close();
+      h = CallBlocHarness(
+        lines: 3,
+        capabilities: CallCapabilitiesConfig(isConferenceEnabled: true),
+        conferenceAudioCodecs: codecs,
+        conferenceAudioProfiles: profiles,
+      );
+      h.seedSignalingReady();
+    }
+
+    test('the move offers the person\'s codecs in their order', () async {
+      await restart(
+        profiles: () => [
+          (option: RTPCodecProfile.pcma, enabled: true),
+          (option: RTPCodecProfile.pcmu, enabled: true),
+          (option: RTPCodecProfile.opus, enabled: false),
+        ],
+      );
+      final a = seedCallOn('a', 0, _g722);
+      seedCallOn('b', 1, _pcmu);
+
+      h.bloc.add(const CallControlEvent.merged(['a', 'b']));
+      final update = await updateOf('a');
+
+      expect(_audioLine(update.jsep['sdp'] as String), 'm=audio 9 UDP/TLS/RTP/SAVPF 8 0 13 110 126');
+
+      await answer(a, update, _answerOn(8, 'PCMA/8000'));
+      await h.settle(() => h.signaling.requests.whereType<MergeRequest>().isNotEmpty);
+    });
+
+    test('a call on a codec the build\'s mixer speaks is merged as it is', () async {
+      await restart(codecs: {RTPCodec.g722, RTPCodec.pcmu});
+      seedCallOn('a', 0, _g722);
+      seedCallOn('b', 1, _pcmu);
+
+      h.bloc.add(const CallControlEvent.merged(['a', 'b']));
+      await h.settle(() => h.signaling.requests.whereType<MergeRequest>().isNotEmpty);
+
+      expect(h.signaling.requests.whereType<UpdateRequest>(), isEmpty);
+    });
+  });
+
   group('review', () {
     test('an Add participant whose anchor is moved keeps its link until the join is made', () async {
       final b = seedCallOn('b', 0, _g722);

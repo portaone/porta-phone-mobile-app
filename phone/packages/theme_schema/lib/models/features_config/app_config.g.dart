@@ -229,6 +229,12 @@ const _$AppConfigJsonSchema = {
         'defaultPresetOverride': {
           r'$ref': r'#/$defs/EncodingDefaultPresetOverride',
         },
+        'conferenceAudioCodecs': {
+          'type': 'array',
+          'items': {'type': 'string'},
+          'description':
+              "The audio codecs the server's conference mixer speaks, by encoding name\n(`opus`, `PCMA`, `PCMU`; case does not matter). A call in a conference\noffers only these, and a call on another codec is moved onto them before\nit is merged.\n\nUnset, or naming no codec this build knows, means opus, PCMA and PCMU -\nwhat the mixer speaks today. Set it only for a mixer that speaks\nsomething else: a codec named here that the mixer cannot speak leaves the\ncall out of the room.",
+        },
       },
     },
     'AppConfigNegotiationSettingsOverride': {
@@ -585,12 +591,16 @@ AppConfigEncoding _$AppConfigEncodingFromJson(Map<String, dynamic> json) =>
           : EncodingDefaultPresetOverride.fromJson(
               json['defaultPresetOverride'] as Map<String, dynamic>,
             ),
+      conferenceAudioCodecs: (json['conferenceAudioCodecs'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
     );
 
 Map<String, dynamic> _$AppConfigEncodingToJson(AppConfigEncoding instance) =>
     <String, dynamic>{
       'bypassConfig': instance.bypassConfig,
       'defaultPresetOverride': instance.defaultPresetOverride.toJson(),
+      'conferenceAudioCodecs': instance.conferenceAudioCodecs,
     };
 
 AppConfigIce _$AppConfigIceFromJson(Map<String, dynamic> json) => AppConfigIce(

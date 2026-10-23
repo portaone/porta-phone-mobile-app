@@ -26,6 +26,7 @@ const nullableProperties = <String, List<String>>{
     'toolbarTextStyle',
   ],
   'AppConfigContactDetailsActions': ['appBar', 'emailTile', 'phoneTile'],
+  'AppConfigEncoding': ['conferenceAudioCodecs'],
   'AppConfigLoginCommon': ['fullScreenLaunchEmbeddedResourceId'],
   'AppConfigLoginModeSelect': ['greetingL10n'],
   'AppConfigLoginQr': ['expectedHost'],

@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/settings/features/media_settings/media_settings.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/encoding_settings.dart';
@@ -13,6 +14,7 @@ class EncodingCustomContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<MediaSettingsCubit>();
+    final callConfig = context.read<FeatureAccess>().callConfig;
 
     return BlocBuilder<MediaSettingsCubit, MediaSettingsState>(
       buildWhen: (p, c) => p.encodingSettings != c.encodingSettings,
@@ -216,6 +218,27 @@ class EncodingCustomContent extends StatelessWidget {
               items: encodingSettings.videoProfiles ?? [],
               onChange: (items) => cubit.setEncodingSettings(encodingSettings.copyWithVideoProfiles(items)),
             ),
+            if (callConfig.capabilities.isConferenceEnabled)
+              ReorderableSection<RTPCodecProfile>(
+                title: context.l10n.settings_encoding_Section_rtp_override_conference,
+                warningTitle: context.l10n.settings_encoding_Section_rtp_override_warning_title,
+                warningMessage: context.l10n.settings_encoding_Section_rtp_override_warning_message,
+                buildOptionTitle: (option) {
+                  if (option == null) return Text(context.l10n.settings_encoding_Section_value_auto);
+                  return Text(option.name);
+                },
+                enabled: encodingSettings.conferenceAudioProfiles != null,
+                onEnable: (enabled) {
+                  if (enabled) {
+                    var profiles = callConfig.encoding.conferenceAudioProfilesToChoose;
+                    cubit.setEncodingSettings(encodingSettings.copyWithConferenceAudioProfiles(profiles));
+                  } else {
+                    cubit.setEncodingSettings(encodingSettings.copyWithConferenceAudioProfiles(null));
+                  }
+                },
+                items: encodingSettings.conferenceAudioProfiles ?? [],
+                onChange: (items) => cubit.setEncodingSettings(encodingSettings.copyWithConferenceAudioProfiles(items)),
+              ),
             const Divider(height: 24),
             HeadingSection(
               title: context.l10n.settings_encoding_Section_rtp_extensions_title,

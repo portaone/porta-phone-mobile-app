@@ -52,6 +52,8 @@ class CallBlocHarness {
     Timer Function(Duration, void Function())? renegotiationReplayTimer,
     Future<void> Function(Duration)? renegotiationUpdatingDelay,
     Timer Function(Duration, void Function())? roomCodecMoveTimer,
+    Set<RTPCodec> conferenceAudioCodecs = EncodingConfig.defaultConferenceAudioCodecs,
+    List<Enableble<RTPCodecProfile>>? Function()? conferenceAudioProfiles,
     FakePeerConnectionFactory? peerConnectionFactory,
     ContactResolver? contactResolver,
     int? lines,
@@ -89,6 +91,8 @@ class CallBlocHarness {
       renegotiationReplayTimer: renegotiationReplayTimer,
       renegotiationUpdatingDelay: renegotiationUpdatingDelay,
       roomCodecMoveTimer: roomCodecMoveTimer,
+      conferenceAudioCodecs: conferenceAudioCodecs,
+      conferenceAudioProfiles: conferenceAudioProfiles,
     );
     if (lines != null) {
       // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member

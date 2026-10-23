@@ -2084,7 +2084,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigEncoding {
 
- bool get bypassConfig; EncodingDefaultPresetOverride get defaultPresetOverride;
+ bool get bypassConfig; EncodingDefaultPresetOverride get defaultPresetOverride; List<String>? get conferenceAudioCodecs;
 /// Create a copy of AppConfigEncoding
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2095,16 +2095,16 @@ $AppConfigEncodingCopyWith<AppConfigEncoding> get copyWith => _$AppConfigEncodin
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigEncoding&&(identical(other.bypassConfig, bypassConfig) || other.bypassConfig == bypassConfig)&&(identical(other.defaultPresetOverride, defaultPresetOverride) || other.defaultPresetOverride == defaultPresetOverride));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigEncoding&&(identical(other.bypassConfig, bypassConfig) || other.bypassConfig == bypassConfig)&&(identical(other.defaultPresetOverride, defaultPresetOverride) || other.defaultPresetOverride == defaultPresetOverride)&&const DeepCollectionEquality().equals(other.conferenceAudioCodecs, conferenceAudioCodecs));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,bypassConfig,defaultPresetOverride);
+int get hashCode => Object.hash(runtimeType,bypassConfig,defaultPresetOverride,const DeepCollectionEquality().hash(conferenceAudioCodecs));
 
 @override
 String toString() {
-  return 'AppConfigEncoding(bypassConfig: $bypassConfig, defaultPresetOverride: $defaultPresetOverride)';
+  return 'AppConfigEncoding(bypassConfig: $bypassConfig, defaultPresetOverride: $defaultPresetOverride, conferenceAudioCodecs: $conferenceAudioCodecs)';
 }
 
 
@@ -2115,7 +2115,7 @@ abstract mixin class $AppConfigEncodingCopyWith<$Res>  {
   factory $AppConfigEncodingCopyWith(AppConfigEncoding value, $Res Function(AppConfigEncoding) _then) = _$AppConfigEncodingCopyWithImpl;
 @useResult
 $Res call({
- bool bypassConfig, EncodingDefaultPresetOverride defaultPresetOverride
+ bool bypassConfig, EncodingDefaultPresetOverride defaultPresetOverride, List<String>? conferenceAudioCodecs
 });
 
 
@@ -2132,11 +2132,12 @@ class _$AppConfigEncodingCopyWithImpl<$Res>
 
 /// Create a copy of AppConfigEncoding
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? bypassConfig = null,Object? defaultPresetOverride = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? bypassConfig = null,Object? defaultPresetOverride = null,Object? conferenceAudioCodecs = freezed,}) {
   return _then(AppConfigEncoding(
 bypassConfig: null == bypassConfig ? _self.bypassConfig : bypassConfig // ignore: cast_nullable_to_non_nullable
 as bool,defaultPresetOverride: null == defaultPresetOverride ? _self.defaultPresetOverride : defaultPresetOverride // ignore: cast_nullable_to_non_nullable
-as EncodingDefaultPresetOverride,
+as EncodingDefaultPresetOverride,conferenceAudioCodecs: freezed == conferenceAudioCodecs ? _self.conferenceAudioCodecs : conferenceAudioCodecs // ignore: cast_nullable_to_non_nullable
+as List<String>?,
   ));
 }
 

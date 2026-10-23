@@ -2992,6 +2992,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settings_encoding_Section_rtp_override_audio => 'การแทนที่โปรไฟล์เสียง';
 
   @override
+  String get settings_encoding_Section_rtp_override_conference => 'แทนที่โปรไฟล์เสียงของการประชุม';
+
+  @override
   String get settings_encoding_Section_rtp_override_title => 'เปิด/ปิดและจัดลำดับโปรไฟล์ RTP ใหม่';
 
   @override
