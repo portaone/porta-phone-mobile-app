@@ -25,6 +25,13 @@ final class HoldAgain extends RoomCodecsCommand {
   final String callId;
 }
 
+/// Take the move's offer of [callId] back: the server acknowledged it, and
+/// its answer did not come in time. See [RoomCodecs.takesBack].
+final class TakeBackForRoom extends RoomCodecsCommand {
+  const TakeBackForRoom(this.callId);
+  final String callId;
+}
+
 /// Ask [request] again: the move it waited for is over.
 final class AskAgain extends RoomCodecsCommand {
   const AskAgain(this.request);
@@ -75,6 +82,16 @@ enum RoomOfferError {
 /// answers do not come within [timeout], and an error that arrives after that
 /// rolls its offer back too.
 ///
+/// An offer the server acknowledged with `updating` gets no error after that:
+/// its answer is the only thing left to come, and a call left waiting for it
+/// stays updating - hold and the keypad locked - with nothing that would end
+/// the wait. Such an offer is taken back when [timeout] runs out, even when a
+/// refusal of another call gave the move up first, or at once when its
+/// acknowledgement arrives after the move was given up ([TakeBackForRoom]).
+/// The owner then brings both ends back to one description with a fresh
+/// offer, since the server may have applied the answer that was lost; a held
+/// call is held again once that offer is answered ([holdAfterResync]).
+///
 /// A held call is moved as it is. The connection offers sendrecv - the hold
 /// is the server's, asked for apart from it - so the move takes the call off
 /// hold on the far end, as the merge would a moment later; when no room takes
@@ -108,6 +125,10 @@ class RoomCodecs {
   /// The reason a request fails with when a call stays off the codecs.
   static const notMixable = 'codec_not_mixable';
 
+  /// The reason a request fails with when the answer to a call's move did not
+  /// come and its offer was taken back.
+  static const notAnswered = 'codec_move_not_answered';
+
   /// The codecs the mixer speaks: a call on any of them can be put in a room
   /// as it is.
   final Set<RTPCodec> codecs;
@@ -129,6 +150,24 @@ class RoomCodecs {
 
   /// The calls whose outstanding offer is a move's.
   final Set<String> _offered = {};
+
+  /// The calls whose move's offer the server acknowledged and that wait for
+  /// its answer.
+  final Set<String> _acknowledged = {};
+
+  /// The calls whose move's offer is to be taken back.
+  final Set<String> _takenBack = {};
+
+  /// The calls whose take-back an answer made needless before it ran.
+  final Set<String> _takeBackSkipped = {};
+
+  /// Taken-back calls among those tried: a request failing for them failed
+  /// for a lost answer, not for a codec.
+  final Set<String> _unanswered = {};
+
+  /// Held calls to be held again once the offer that resyncs them is
+  /// answered.
+  final Set<String> _holdAfterResync = {};
 
   /// The calls tried for the requests being asked again.
   final Set<String> _tried = {};
@@ -207,7 +246,12 @@ class RoomCodecs {
     _deadline?.cancel();
     _deadline = _createTimer(timeout, () {
       _logger.warning('${_awaited.keys} not answered in time, giving the move up');
+      _deadline = null;
+      // Every acknowledged offer still here is unanswered, this move's or one
+      // a refusal gave up before: an answer takes its call out.
+      final unanswered = List.of(_acknowledged);
       _giveUp();
+      unanswered.forEach(_takeBack);
     });
     for (final callId in off.keys) {
       _onCommand(RenegotiateForRoom(callId));
@@ -226,8 +270,39 @@ class RoomCodecs {
     if (moves(callId)) _offered.add(callId);
   }
 
+  /// The server acknowledged an offer of [callId] with `updating`: its answer
+  /// comes later. One of a move already given up is taken back at once.
+  void acknowledged(String callId) {
+    if (!_offered.contains(callId)) return;
+    if (moves(callId)) {
+      _acknowledged.add(callId);
+    } else {
+      _takeBack(callId);
+    }
+  }
+
+  /// Whether the offer of [callId] is to be taken back now - once: rolled
+  /// back, the call no longer updating, and both ends brought back to one
+  /// description, since the server may have applied the answer that was lost.
+  bool takesBack(String callId) => _takenBack.remove(callId);
+
+  /// Whether a take-back of [callId] asked for was made needless by an answer
+  /// applied before it ran - once.
+  bool takeBackSkipped(String callId) => _takeBackSkipped.remove(callId);
+
+  /// [callId], taken back while held, is to be held again once the offer that
+  /// resyncs it is answered: that offer is sendrecv and lifts the hold on the
+  /// far end, as the move did.
+  void holdAfterResync(String callId) => _holdAfterResync.add(callId);
+
+  /// The reason a request fails with for [callIds] still off the codecs.
+  String offReason(Iterable<String> callIds) => callIds.any(_unanswered.contains) ? notAnswered : notMixable;
+
   /// An answer to an offer of [callId] is applied.
   void answerApplied(String callId) {
+    _acknowledged.remove(callId);
+    if (_takenBack.remove(callId)) _takeBackSkipped.add(callId);
+    if (_holdAfterResync.remove(callId)) _onCommand(HoldAgain(callId));
     if (!_offered.remove(callId)) return;
     final held = _awaited.remove(callId);
     if (held == null) return;
@@ -247,6 +322,7 @@ class RoomCodecs {
     if (!refusals.contains(code) && moves(callId)) return RoomOfferError.asUsual;
     _logger.warning('the move of $callId failed with $code');
     _offered.remove(callId);
+    _acknowledged.remove(callId);
     _giveUp();
     return RoomOfferError.rollBack;
   }
@@ -255,6 +331,11 @@ class RoomCodecs {
   /// asked again without it.
   void callRemoved(String callId) {
     _offered.remove(callId);
+    _acknowledged.remove(callId);
+    _takenBack.remove(callId);
+    _takeBackSkipped.remove(callId);
+    _unanswered.remove(callId);
+    _holdAfterResync.remove(callId);
     _tried.remove(callId);
     _offHoldOnFarEnd.remove(callId);
     final awaited = _awaited.remove(callId) != null;
@@ -271,11 +352,21 @@ class RoomCodecs {
       }
     }
     _tried.removeAll(callIds);
+    _unanswered.removeAll(callIds);
     _offHoldOnFarEnd.removeAll(callIds);
   }
 
   /// Stops the deadline for good; for the owner's own disposal.
   void dispose() => _deadline?.cancel();
+
+  void _takeBack(String callId) {
+    _logger.warning('the answer to the move of $callId did not come, taking its offer back');
+    _offered.remove(callId);
+    _acknowledged.remove(callId);
+    _takenBack.add(callId);
+    _unanswered.add(callId);
+    _onCommand(TakeBackForRoom(callId));
+  }
 
   void _giveUp() {
     if (!isMoving) return;
@@ -284,8 +375,12 @@ class RoomCodecs {
   }
 
   void _over() {
-    _deadline?.cancel();
-    _deadline = null;
+    // The deadline stays while an acknowledged offer waits for its answer:
+    // a move a refusal gave up has no other way to take it back.
+    if (_acknowledged.isEmpty) {
+      _deadline?.cancel();
+      _deadline = null;
+    }
     final waiting = List.of(_waiting);
     _waiting.clear();
     for (final request in waiting) {

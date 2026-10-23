@@ -260,6 +260,111 @@ void main() {
     expect(asked, ['merge']);
   });
 
+  group('an acknowledged offer whose answer does not come', () {
+    List<String> takenBack() => [
+      for (final c in commands)
+        if (c is TakeBackForRoom) c.callId,
+    ];
+
+    test('is taken back when the move is given up, once', () {
+      fakeAsync((async) {
+        final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
+        codecs.check({'a': (codec: 'g722', held: false), 'b': (codec: 'g722', held: false)}, request: request('merge'));
+        codecs.offerSent('a');
+        codecs.offerSent('b');
+        codecs.acknowledged('a');
+
+        async.elapse(timeout);
+
+        expect(takenBack(), ['a'], reason: 'b was never acknowledged: its error may still come');
+        expect(codecs.takesBack('a'), isTrue);
+        expect(codecs.takesBack('a'), isFalse);
+        codecs.dispose();
+      });
+    });
+
+    test('is taken back at once when it is acknowledged after the move was given up', () {
+      fakeAsync((async) {
+        final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
+        codecs.check({'a': (codec: 'g722', held: false)}, request: request('merge'));
+        codecs.offerSent('a');
+        async.elapse(timeout);
+        expect(takenBack(), isEmpty);
+
+        codecs.acknowledged('a');
+
+        expect(takenBack(), ['a']);
+        codecs.dispose();
+      });
+    });
+
+    test('is still taken back when a refusal of another call gave the move up', () {
+      fakeAsync((async) {
+        final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
+        codecs.check({'a': (codec: 'g722', held: false), 'b': (codec: 'g722', held: false)}, request: request('merge'));
+        codecs.offerSent('a');
+        codecs.offerSent('b');
+        codecs.acknowledged('a');
+        expect(codecs.offerFailed('b', 488), RoomOfferError.rollBack);
+        expect(takenBack(), isEmpty, reason: 'a may still be answered');
+
+        async.elapse(timeout);
+
+        expect(takenBack(), ['a']);
+        codecs.dispose();
+      });
+    });
+
+    test('a take-back an answer made needless is skipped, once', () {
+      fakeAsync((async) {
+        final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
+        codecs.check({'a': (codec: 'g722', held: false)}, request: request('merge'));
+        codecs.offerSent('a');
+        async.elapse(timeout);
+        codecs.acknowledged('a');
+
+        codecs.answerApplied('a');
+
+        expect(codecs.takesBack('a'), isFalse);
+        expect(codecs.takeBackSkipped('a'), isTrue);
+        expect(codecs.takeBackSkipped('a'), isFalse);
+        codecs.dispose();
+      });
+    });
+
+    test('a held call taken back is held again once its resync is answered', () {
+      codecs.holdAfterResync('a');
+      expect(heldAgain(), isEmpty);
+
+      codecs.answerApplied('a');
+
+      expect(heldAgain(), ['a']);
+    });
+
+    test('a request failing for it says the answer was lost', () {
+      fakeAsync((async) {
+        final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
+        codecs.check({'a': (codec: 'g722', held: false), 'b': (codec: 'pcmu', held: false)}, request: request('merge'));
+        codecs.offerSent('a');
+        codecs.acknowledged('a');
+        async.elapse(timeout);
+
+        expect(codecs.offReason(['a', 'b']), RoomCodecs.notAnswered);
+        expect(codecs.offReason(['b']), RoomCodecs.notMixable);
+        codecs.dispose();
+      });
+    });
+
+    test('is not taken back once its answer is applied', () {
+      move({'a': false});
+      codecs.acknowledged('a');
+      codecs.answerApplied('a');
+
+      expect(takenBack(), isEmpty);
+      expect(codecs.takesBack('a'), isFalse);
+    });
+  });
+
   test('answers that do not come give the move up once, after the timeout', () {
     fakeAsync((async) {
       final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);

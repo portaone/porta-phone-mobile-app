@@ -385,6 +385,129 @@ void main() {
       expect(a.localDescriptions.where((it) => it.type == 'rollback'), isEmpty);
     });
 
+    group('an answer to the move that never comes', () {
+      void Function()? overdue;
+
+      setUp(() async {
+        await h.close();
+        overdue = null;
+        h = CallBlocHarness(
+          lines: 3,
+          capabilities: CallCapabilitiesConfig(isConferenceEnabled: true),
+          roomCodecMoveTimer: (duration, callback) {
+            // A cancelled deadline does not fire: the test runs it by hand,
+            // only while it is still set.
+            final timer = Timer(const Duration(days: 1), () {});
+            overdue = () {
+              if (timer.isActive) callback();
+            };
+            return timer;
+          },
+        );
+        h.seedSignalingReady();
+      });
+
+      /// The move of a: its offer acknowledged with `updating`, its answer lost.
+      Future<FakePeerConnection> moveLost({bool held = false}) async {
+        final a = seedCallOn('a', 0, _g722, held: held);
+        seedCallOn('b', 1, _pcmu);
+        h.bloc.add(const CallControlEvent.merged(['a', 'b']));
+        final update = await updateOf('a');
+        a.signalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+        a.nativeSignalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+        h.signaling.emit(UpdatingEvent(transaction: update.transaction, line: 0, callId: 'a'));
+        await h.settle(() => h.bloc.state.retrieveActiveCall('a')!.updating);
+        return a;
+      }
+
+      test('rolls the offer back and lets the call be used again', () async {
+        final a = await moveLost();
+
+        overdue!();
+        await h.settle(() => !h.bloc.state.retrieveActiveCall('a')!.updating);
+
+        expect(a.localDescriptions.map((it) => it.type), contains('rollback'));
+        expect(h.bloc.state.retrieveActiveCall('a')!.updating, isFalse, reason: 'hold and keypad are usable');
+      });
+
+      test('brings both ends back to one description with every codec', () async {
+        await moveLost();
+        final before = h.signaling.requests.whereType<UpdateRequest>().length;
+
+        overdue!();
+        await h.settle(() => h.signaling.requests.whereType<UpdateRequest>().length > before);
+
+        expect(h.signaling.requests.whereType<UpdateRequest>().length, greaterThan(before));
+        final resync = h.signaling.requests.whereType<UpdateRequest>().last;
+        expect(resync.callId, 'a');
+        expect(_audioLine(resync.jsep['sdp'] as String), contains(' 9 '), reason: 'not the move\'s codecs alone');
+      });
+
+      test('a held call is resynced too, then held again once that is answered', () async {
+        final a = await moveLost(held: true);
+        final before = h.signaling.requests.whereType<UpdateRequest>().length;
+
+        overdue!();
+        await h.settle(() => h.signaling.requests.whereType<UpdateRequest>().length > before);
+        expect(h.signaling.requests.whereType<UpdateRequest>().length, greaterThan(before));
+        expect(h.signaling.requests.whereType<HoldRequest>(), isEmpty, reason: 'not before the resync is answered');
+        expect(h.bloc.state.retrieveActiveCall('a')!.updating, isFalse);
+
+        final resync = h.signaling.requests.whereType<UpdateRequest>().last;
+        a.signalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+        a.nativeSignalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+        await answer(a, resync, _g722);
+        await h.settle(() => h.signaling.requests.whereType<HoldRequest>().any((it) => it.callId == 'a'));
+
+        expect(h.signaling.requests.whereType<HoldRequest>().where((it) => it.callId == 'a'), hasLength(1));
+      });
+
+      test('one acknowledged when a refusal of another call gave the move up is still taken back', () async {
+        final a = seedCallOn('a', 0, _g722);
+        seedCallOn('b', 1, _g722);
+        h.bloc.add(const CallControlEvent.merged(['a', 'b']));
+        final updateA = await updateOf('a');
+        a.signalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+        a.nativeSignalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
+        h.signaling.emit(UpdatingEvent(transaction: updateA.transaction, line: 0, callId: 'a'));
+        final updateB = await updateOf('b');
+        h.signaling.emit(
+          CallErrorEvent(transaction: updateB.transaction, line: 1, callId: 'b', code: 488, reason: 'Not Acceptable'),
+        );
+        await h.settle(() => h.notifications.isNotEmpty);
+        expect(h.bloc.state.retrieveActiveCall('a')!.updating, isTrue, reason: 'a may still be answered');
+
+        overdue!();
+        await h.settle(() => !h.bloc.state.retrieveActiveCall('a')!.updating);
+
+        expect(a.localDescriptions.map((it) => it.type), contains('rollback'));
+      });
+
+      test('a merge that fails for the lost answer says so, not that the codec is not mixed', () async {
+        await moveLost();
+
+        overdue!();
+        await h.settle(() => h.notifications.isNotEmpty);
+
+        expect(
+          h.notifications.whereType<ConferenceFailedNotification>().map((it) => it.reason),
+          contains(RoomCodecs.notAnswered),
+        );
+      });
+
+      test('a late answer after that is not applied over the rollback', () async {
+        final a = await moveLost();
+        overdue!();
+        await h.settle(() => a.localDescriptions.any((it) => it.type == 'rollback'));
+        final applied = a.remoteDescriptions.length;
+
+        h.signaling.emit(AcceptedEvent(line: 0, callId: 'a', jsep: {'type': 'answer', 'sdp': _pcmu}));
+        await pumpEventQueue();
+
+        expect(a.remoteDescriptions.length, applied);
+      });
+    });
+
     test('an offer kept from before, with every codec, is withdrawn for the move\'s own', () async {
       final a = seedCallOn('a', 0, _g722);
       seedCallOn('b', 1, _pcmu);
