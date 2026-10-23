@@ -25,20 +25,13 @@ abstract class LocalPushRepository {
 /// This class is used to handle local notifications user Flutter Local Pushs plugin
 class LocalPushRepositoryFLNImpl implements LocalPushRepository {
   @override
-  Stream<AppLocalPushAction> get messagingActions {
-    return LocalPushsBroker.messagingActions.map((action) {
-      final payload = action.payload;
-      return AppLocalPushAction(
-        id: action.id ?? -1,
-        payload: payload != null ? json.decode(payload) : {},
-        type: LocalPushActionType.tap,
-      );
-    });
-  }
+  Stream<AppLocalPushAction> get messagingActions => _actionsOf(LocalPushsBroker.messagingActions);
 
   @override
-  Stream<AppLocalPushAction> get systemNotificationsActions {
-    return LocalPushsBroker.systemNotificationsActions.map((action) {
+  Stream<AppLocalPushAction> get systemNotificationsActions => _actionsOf(LocalPushsBroker.systemNotificationsActions);
+
+  Stream<AppLocalPushAction> _actionsOf(Stream<NotificationResponse> responses) {
+    return responses.map((action) {
       final payload = action.payload;
       return AppLocalPushAction(
         id: action.id ?? -1,

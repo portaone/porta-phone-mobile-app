@@ -6,6 +6,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:pub_semver/pub_semver.dart';
+import 'package:theme_schema/theme_schema.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/router/main_shell_services.dart';
@@ -43,6 +44,8 @@ class _SystemNotificationsLocalRepository extends Mock implements SystemNotifica
 class _SystemNotificationsRemoteRepository extends Mock implements SystemNotificationsRemoteRepository {}
 
 class _ContactsRepository extends Mock implements ContactsRepository {}
+
+class _VoicemailRepository extends Mock implements VoicemailRepository {}
 
 final _userInfo = UserInfo(
   numbers: Numbers(main: '1000', additional: []),
@@ -252,6 +255,51 @@ void main() {
     await tester.pump(Duration(seconds: syncSeconds * 2));
     verify(() => remote.getHistory(limit: any(named: 'limit'))).called(greaterThan(0));
     verifyNever(() => remote.markSystemNotificationAsSeen(any()));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('shell polls voicemail through its owner, once', (tester) async {
+    final systemInfo = systemInfoWithSupported([kVoicemailFeatureFlag]);
+    final appConfig = createMockAppConfig();
+    final settings = MockAppConfigSettings();
+    when(() => appConfig.settingsConfig).thenReturn(settings);
+    when(() => settings.settingsSections).thenReturn(const [
+      AppConfigSettingsSection(
+        enabled: true,
+        titleL10n: 'section',
+        items: [AppConfigSettingsItem(enabled: true, type: 'voicemail', titleL10n: 'voicemail', icon: '0xe0b7')],
+      ),
+    ]);
+    final snapshot = MockRemoteConfigSnapshot();
+    when(() => snapshot.getBool(any())).thenReturn(null);
+    final featureAccess = FeatureAccess.create(
+      appConfig,
+      [createMockTermsResource()],
+      CoreSupportFactory.create(systemInfo),
+      systemInfo,
+      FeatureOverridesFactory.create(snapshot),
+    );
+    expect(featureAccess.voicemailAvailable, isTrue);
+    final voicemail = _VoicemailRepository();
+    when(() => voicemail.isActive).thenReturn(true);
+    when(() => voicemail.refresh()).thenAnswer((_) async {});
+
+    final (connectivity, _) = await _pumpShell(
+      tester,
+      featureAccess: featureAccess,
+      extraProviders: [Provider<VoicemailRepository>.value(value: voicemail)],
+    );
+
+    // One read on the leading refresh: the owner's registration is the only
+    // polling one, so the repository is not also polled directly. This does
+    // not cover the connectivity-recovery refresh, which reads the repository
+    // on its own after a debounce.
+    connectivity.setConnected(true);
+    await tester.pump();
+    verify(() => voicemail.refresh()).called(1);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
