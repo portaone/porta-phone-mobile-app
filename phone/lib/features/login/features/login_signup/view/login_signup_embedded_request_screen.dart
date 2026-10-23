@@ -86,7 +86,7 @@ class _LoginSignupEmbeddedRequestScreenState extends State<LoginSignupEmbeddedRe
       listener: _handleEmbeddedErrorState,
       child: PopScope(
         canPop: !_canGoBack,
-        onPopInvokedWithResult: (_, _) => _webViewController.goBack(),
+        onPopInvokedWithResult: (_, _) => _webViewController.goBackInPage(),
         child: WebViewContainer(
           initialUri: widget.initialUrl,
           webViewController: _webViewController,
@@ -113,13 +113,13 @@ class _LoginSignupEmbeddedRequestScreenState extends State<LoginSignupEmbeddedRe
     return (context, error, controller) => EmbeddedRequestErrorDialog(
       title: error.titleL10n(context),
       error: error.messageL10n(context),
-      onRetry: () => _webViewController.reload(),
+      onRetry: _webViewController.reloadPage,
     );
   }
 
   /// Updates the `_canGoBack` state by checking if the WebView can navigate back.
   void _updateCanGoBack() async {
-    final canGoBack = await _webViewController.canGoBack();
+    final canGoBack = await _webViewController.canGoBackInPage();
     if (mounted) {
       setState(() {
         _canGoBack = canGoBack;
@@ -197,11 +197,11 @@ class _LoginSignupEmbeddedRequestScreenState extends State<LoginSignupEmbeddedRe
 
     if (!mounted) return;
 
-    final canGoBack = await _webViewController.canGoBack();
+    final canGoBack = await _webViewController.canGoBackInPage();
     if (canGoBack) {
-      _webViewController.goBack();
+      _webViewController.goBackInPage();
     } else {
-      _webViewController.reload();
+      _webViewController.reloadPage();
     }
   }
 
