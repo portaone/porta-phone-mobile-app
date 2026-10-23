@@ -10,12 +10,23 @@ securely transmit user data to the app for authentication.
 
 An example HTML file is available here: [custom_signup.html](../../assets/themes/custom_signup.html)
 
+A page sends by posting to its parent window, which the app takes on a phone and in a browser
+alike; see [Supporting a Phone and a Browser](#supporting-a-phone-and-a-browser).
+
 ## Table of Contents
 
 - [Communication Protocol](#communication-protocol)
     - [JavaScript Channel](#javascript-channel)
     - [From Flutter to Web: Page Initialization](#from-flutter-to-web-page-initialization)
     - [From Web to Flutter: Sending User Data](#from-web-to-flutter-sending-user-data)
+- [Supporting a Phone and a Browser](#supporting-a-phone-and-a-browser)
+    - [How to send](#how-to-send)
+    - [App versions without the listener](#app-versions-without-the-listener)
+    - [Which page works where](#which-page-works-where)
+    - [What else differs](#what-else-differs)
+    - [Template](#template)
+    - [Checklist](#checklist)
+- [Migrating an Existing Page](#migrating-an-existing-page)
 - [Example Implementation](#example-implementation)
 - [Flutter-Side Handling](#flutter-side-handling)
 - [Integration](#integration)
@@ -29,11 +40,10 @@ JavaScript channel.
 
 ### JavaScript Channel
 
-All communication is facilitated through the `WebtritLoginChannel` object, which is injected into
-the `WebView`'s
-JavaScript context by the Flutter app. This channel exposes a `postMessage()` method for sending
-data from the web page
-to the app.
+On a phone the Flutter app injects a `WebtritLoginChannel` object into the `WebView`'s JavaScript
+context. In a browser there is none. A page does not call it: it posts to its parent window under
+the channel's name, and the app hands that to the channel on a phone and takes it directly in a
+browser (see [Supporting a Phone and a Browser](#supporting-a-phone-and-a-browser)).
 
 ### From Flutter to Web: Page Initialization
 
@@ -78,9 +88,8 @@ final script = '''
 
 When the user completes an action (e.g., submitting a form), the web page must gather the data and
 send it to the
-Flutter app by calling `WebtritLoginChannel.postMessage()`. The message must be a stringified JSON
-object with a
-specific structure.
+Flutter app with `window.parent.postMessage({ channel: "WebtritLoginChannel", message }, "*")`.
+The `message` must be a stringified JSON object with a specific structure.
 
 **JSON Payload Structure:**
 
@@ -106,11 +115,168 @@ to `core-url/tenant/{tenant_id}/api/v1/user`.
 
 ---
 
+## Supporting a Phone and a Browser
+
+The same page is opened in two places: the app's `WebView` on iOS and Android, and a browser when
+the app runs on the web (the configurator's Realtime preview is one). In a browser the `WebView` is
+a plain iframe, the page usually comes from another origin than the app, and there is no
+`WebtritLoginChannel` object in it. The page does not need to know which place it is in: it sends
+one way, and the app takes it in both.
+
+### How to send
+
+```javascript
+window.parent.postMessage({ channel: "WebtritLoginChannel", message: message }, "*");
+```
+
+`message` is the string the channel takes: `JSON.stringify({ event: "signup", data: {...} })`.
+
+- **In a browser** the page is an iframe and `window.parent` is the app's window. The app takes
+  messages posted by its own iframe, from the origin the page was opened at, under the
+  `WebtritLoginChannel` name.
+- **On a phone** the page is the top window, so `window.parent` is the page itself. As soon as the
+  page has finished loading, the app adds a listener to it that hands such messages to
+  `WebtritLoginChannel`.
+
+Either way `message` reaches the same handler and the sign-up goes on the same way.
+
+**Who can frame the page.** In a browser the page posts to whatever window holds it, and the
+`"*"` above does not narrow that: the page cannot know the app's origin in advance, since the
+configurator and any other host serve the app from their own. So the page must decide who may hold
+it. Serve it with a `Content-Security-Policy: frame-ancestors` header that names the origins
+allowed to embed it (the configurator's among them); a site not on the list then cannot frame the
+page and read what it sends. On a phone this does not apply: the page is not framed.
+
+### App versions without the listener
+
+An app built before the listener was added does not forward on a phone: there a page that posts to
+its parent sends into nothing. Such builds only call the channel object directly, which in turn
+does not exist in a browser. A page of your own that must work with them as well as in a browser
+uses both, until those builds are no longer in use:
+
+```javascript
+if (window.WebtritLoginChannel) {
+  WebtritLoginChannel.postMessage(message); // a phone, any app version
+} else {
+  window.parent.postMessage({ channel: "WebtritLoginChannel", message: message }, "*"); // a browser
+}
+```
+
+This is for compatibility only. A page bundled with the app, such as
+[custom_signup.html](../../assets/themes/custom_signup.html), always runs with the listener and
+posts to its parent alone.
+
+### Which page works where
+
+| How the page sends | Phone, app without the listener | Phone, app with the listener | Browser |
+|---|---|---|---|
+| `window.parent.postMessage({ channel, message }, "*")` | fails: the message goes nowhere | works | works |
+| `WebtritLoginChannel.postMessage(message)` | works | works | fails: `WebtritLoginChannel is not defined` |
+| Both, as in [App versions without the listener](#app-versions-without-the-listener) | works | works | works |
+
+### What else differs
+
+| | Phone (`WebView`) | Browser (iframe) |
+|---|---|---|
+| `initializePage({ locale })` | called by the app after load | never called |
+| Locale | from `initializePage` | from the `localeName` query parameter the app adds to the address |
+| `onMediaQueryReady()` (safe-area insets) | called by the app | never called |
+
+### Template
+
+```javascript
+// Called by the app on a phone.
+window.initializePage = function (initData) {
+  const locale = (initData && initData.locale) || "en";
+  // apply translations for `locale`, prefill fields from `initData`
+};
+
+// In a browser nobody calls initializePage; the locale is in the address.
+const localeName = new URLSearchParams(location.search).get("localeName");
+if (localeName) {
+  window.initializePage({ locale: localeName.split(/[-_]/)[0] });
+}
+
+// On submit:
+const message = JSON.stringify({ event: "signup", data: { email: "user@example.com" } });
+window.parent.postMessage({ channel: "WebtritLoginChannel", message: message }, "*");
+```
+
+### Checklist
+
+- The page sends with `window.parent.postMessage`; it calls `WebtritLoginChannel` only for
+  [app versions without the listener](#app-versions-without-the-listener).
+- `message` is a string (`JSON.stringify(...)`), not an object.
+- The channel name is exactly `WebtritLoginChannel`; any other name is ignored.
+- The page sends after it has loaded, on a user action: on a phone the listener is added once the
+  page has finished loading.
+- The page sends from the origin it was opened at: in a browser only that origin is listened to.
+- The page is served with `Content-Security-Policy: frame-ancestors` listing who may embed it.
+- The page translates itself from `localeName` when `initializePage` is never called.
+- The page looks right with no safe-area insets, since `onMediaQueryReady` is never called in a
+  browser.
+
+---
+
+## Migrating an Existing Page
+
+A page written before browsers were supported calls `WebtritLoginChannel.postMessage()` directly
+and relies on `initializePage()`. It keeps working on a phone; in a browser it is drawn but cannot
+sign anybody in (see [Which page works where](#which-page-works-where)). To make it work in both:
+
+1. **Find every direct call.** Search the page, and any script it loads, for
+   `WebtritLoginChannel`. Each `WebtritLoginChannel.postMessage(...)` is a place to change.
+
+2. **Post to the parent window instead.** Keep the message exactly as it was, the same string
+   built with `JSON.stringify`; only the way it is sent changes. Remove any
+   `console.error("WebtritLoginChannel not found")` branch.
+
+   ```javascript
+   // Before
+   WebtritLoginChannel.postMessage(JSON.stringify({ event: "signup", data: data }));
+
+   // After
+   window.parent.postMessage(
+     { channel: "WebtritLoginChannel", message: JSON.stringify({ event: "signup", data: data }) },
+     "*",
+   );
+   ```
+
+   If the page is also opened by app versions without the listener, send both ways instead, as in
+   [App versions without the listener](#app-versions-without-the-listener).
+
+3. **Take the locale from the address too.** Keep `window.initializePage` as it is, and call it
+   yourself when the app has put the locale in the address, which is what happens in a browser:
+
+   ```javascript
+   const localeName = new URLSearchParams(location.search).get("localeName");
+   if (localeName) {
+     window.initializePage({ locale: localeName.split(/[-_]/)[0] });
+   }
+   ```
+
+   If `initializePage` was a plain `function initializePage(...)`, it still works; assigning it to
+   `window.initializePage` only makes it explicit that the app calls it.
+
+4. **Do not depend on what only a phone sends.** `onMediaQueryReady()` (safe-area insets) is never
+   called in a browser: give the layout sensible defaults that the insets only adjust.
+
+5. **Stay on one origin, and name who may embed the page.** In a browser the app listens only to
+   the origin the page was opened at, so a page that redirects to another site sends from the first
+   one. Serve the page with `Content-Security-Policy: frame-ancestors` listing the configurator's
+   origin and any other host of the app (see [How to send](#how-to-send)).
+
+6. **Check it in both places.** On a phone, sign in through the page as before. In a browser, open
+   the theme in the configurator, choose the page as the embedded login and sign in through the
+   Realtime preview; the browser console must show no `WebtritLoginChannel is not defined`.
+
+---
+
 ## Example Implementation
 
 Below is a minimal HTML structure demonstrating how to collect an email and send it to the Flutter
-app. This example
-also includes the `initializePage` function for handling data from Flutter.
+app. It works on a phone and in a browser: it posts to its parent window and takes its locale from
+`initializePage` or, in a browser, from the address.
 
 ```html
 <!DOCTYPE html>
@@ -151,14 +317,10 @@ also includes the `initializePage` function for handling data from Flutter.
         }
       };
   
-      if (window.WebtritLoginChannel) {
-        WebtritLoginChannel.postMessage(JSON.stringify(payload));
-      } else {
-        console.error("WebtritLoginChannel not found.");
-      }
+      window.parent.postMessage({ channel: "WebtritLoginChannel", message: JSON.stringify(payload) }, "*");
     }
   
-    function initializePage(initData) {
+    window.initializePage = function (initData) {
       const { locale, prefillEmail } = initData || {};
       if (locale) {
         // apply translations based on locale
@@ -166,6 +328,11 @@ also includes the `initializePage` function for handling data from Flutter.
       if (prefillEmail) {
         document.getElementById("email").value = prefillEmail;
       }
+    };
+
+    const localeName = new URLSearchParams(location.search).get("localeName");
+    if (localeName) {
+      window.initializePage({ locale: localeName.split(/[-_]/)[0] });
     }
 </script>
 </body>
@@ -180,9 +347,11 @@ When the Flutter app receives a message from the web page via `postMessage()`, i
 following steps:
 
 1. **Receiving the Message**
-   The Flutter `WebView` has a registered JavaScript channel named `WebtritLoginChannel`. Its
-   message handler is
-   triggered when `postMessage()` is called from JavaScript.
+   On a phone the Flutter `WebView` has a registered JavaScript channel named
+   `WebtritLoginChannel`, and an injected listener also hands it what the page posts to its own
+   window. In a browser the app listens for `message` events on its window instead and takes only
+   those posted by its own iframe, from the page's origin, with `channel: "WebtritLoginChannel"`.
+   Either way the `message` goes to the same handler.
 
 2. **Parsing the Data**
    The incoming message (a JSON string) is parsed into a Dart `Map`. The app verifies the `event`
