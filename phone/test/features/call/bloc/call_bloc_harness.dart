@@ -57,6 +57,7 @@ class CallBlocHarness {
     FakePeerConnectionFactory? peerConnectionFactory,
     ContactResolver? contactResolver,
     int? lines,
+    OutgoingFromNumberResolver? resolveOutgoingFromNumber,
   }) : peerFactory = peerConnectionFactory ?? FakePeerConnectionFactory() {
     TestWidgetsFlutterBinding.ensureInitialized();
     installPlatformStubs();
@@ -71,7 +72,7 @@ class CallBlocHarness {
       dialogInfoRepository: _FakeDialogInfoRepository(),
       presenceSettingsRepository: _FakePresenceSettingsRepository(),
       queuedTerminationRequestsRepository: terminationQueue,
-      resolveOutgoingFromNumber: (from, _) => from,
+      resolveOutgoingFromNumber: resolveOutgoingFromNumber ?? (from, _) => from,
       onSessionMissedReported: () async {},
       submitNotification: notifications.add,
       callkeep: callkeep,

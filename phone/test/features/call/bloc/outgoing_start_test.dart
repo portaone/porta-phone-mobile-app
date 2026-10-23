@@ -143,4 +143,30 @@ void main() {
     // refused one stays on hold.
     expect(h.callkeep.held, [(callId: 'b', onHold: true)]);
   });
+
+  test('a call takes the from number the caller ID settings pick for its destination', () async {
+    h = CallBlocHarness(lines: 2, resolveOutgoingFromNumber: (from, destination) => from ?? 'cid-$destination');
+
+    h.bloc.add(const CallControlEvent.started(number: '200', video: false));
+    await h.settle(() => h.callkeep.starts.isNotEmpty);
+
+    final call = _placed(h).single;
+    expect(call.fromNumber, 'cid-200');
+    expect(call.fromReplaces, isNull);
+  });
+
+  test('a pull goes out without a from number, whatever the caller ID settings pick', () async {
+    // The server places a call with a from number as a separate call from that
+    // number and drops its Replaces, so the other party would be rung again
+    // instead of the call being moved to this device.
+    h = CallBlocHarness(lines: 2, resolveOutgoingFromNumber: (from, destination) => from ?? 'cid-$destination');
+    const replaces = 'dialog-call-id;from-tag=local;to-tag=remote';
+
+    h.bloc.add(const CallControlEvent.started(number: '200', video: false, replaces: replaces));
+    await h.settle(() => h.callkeep.starts.isNotEmpty);
+
+    final call = _placed(h).single;
+    expect(call.fromNumber, isNull);
+    expect(call.fromReplaces, replaces);
+  });
 }
