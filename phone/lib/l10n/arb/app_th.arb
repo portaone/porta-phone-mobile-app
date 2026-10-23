@@ -2603,6 +2603,8 @@
   "@settings_encoding_Section_ptime_prefix": {},
   "settings_encoding_Section_rtp_override_audio": "การแทนที่โปรไฟล์เสียง",
   "@settings_encoding_Section_rtp_override_audio": {},
+  "settings_encoding_Section_rtp_override_conference": "แทนที่โปรไฟล์เสียงของการประชุม",
+  "@settings_encoding_Section_rtp_override_conference": {},
   "settings_encoding_Section_rtp_override_title": "เปิด/ปิดและจัดลำดับโปรไฟล์ RTP ใหม่",
   "@settings_encoding_Section_rtp_override_title": {},
   "settings_encoding_Section_rtp_override_tooltip": "สามารถใช้เพื่อกำหนดลำดับความสำคัญของโปรไฟล์ rtp เสียงและวิดีโอใหม่ หรือยกเว้นบางโปรไฟล์จากรายการเจรจา SDP ซึ่งสามารถใช้เพื่อบังคับใช้โคเดกเฉพาะ หรือยกเว้นโคเดกบางตัวหากอุปกรณ์ เครือข่าย หรือระบบปลายทางรองรับได้ไม่ดี",

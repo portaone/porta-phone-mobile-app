@@ -51,6 +51,9 @@ class CallBlocHarness {
     ManualOfferDeadline? offerDeadline,
     Timer Function(Duration, void Function())? renegotiationReplayTimer,
     Future<void> Function(Duration)? renegotiationUpdatingDelay,
+    Timer Function(Duration, void Function())? roomCodecMoveTimer,
+    Set<RTPCodec> conferenceAudioCodecs = EncodingConfig.defaultConferenceAudioCodecs,
+    List<Enableble<RTPCodecProfile>>? Function()? conferenceAudioProfiles,
     FakePeerConnectionFactory? peerConnectionFactory,
     ContactResolver? contactResolver,
     int? lines,
@@ -87,6 +90,9 @@ class CallBlocHarness {
       roomOfferDeadlineTimer: offerDeadline?.createTimer,
       renegotiationReplayTimer: renegotiationReplayTimer,
       renegotiationUpdatingDelay: renegotiationUpdatingDelay,
+      roomCodecMoveTimer: roomCodecMoveTimer,
+      conferenceAudioCodecs: conferenceAudioCodecs,
+      conferenceAudioProfiles: conferenceAudioProfiles,
     );
     if (lines != null) {
       // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
@@ -121,6 +127,8 @@ class CallBlocHarness {
     bool updating = false,
     CallDirection direction = CallDirection.outgoing,
     String number = '100',
+    String? offerSdp,
+    String? answerSdp,
   }) {
     // The microphone comes from the one builder, so a seeded call holds the
     // same track object the room and every other call hold - as in production.
@@ -132,7 +140,12 @@ class CallBlocHarness {
     // Described: this stands for a call that is up, and on a real connection
     // that means the remote description has been set and the receiver has its
     // track.
-    final peer = FakePeerConnection(audioTrack: localStream.getAudioTracks().single, remoteDescribed: true);
+    final peer = FakePeerConnection(
+      audioTrack: localStream.getAudioTracks().single,
+      remoteDescribed: true,
+      offerSdp: offerSdp,
+      answerSdp: answerSdp,
+    );
     final call = ActiveCall(
       direction: direction,
       line: line,
@@ -489,8 +502,10 @@ class FakeCallkeep extends Fake implements Callkeep {
 /// A peer connection that records what it was asked and answers every
 /// negotiation step with a placeholder description.
 class FakePeerConnection extends Fake implements RTCPeerConnection {
-  FakePeerConnection({MediaStreamTrack? audioTrack, bool remoteDescribed = false})
-    : _remoteDescribed = remoteDescribed {
+  FakePeerConnection({MediaStreamTrack? audioTrack, bool remoteDescribed = false, String? offerSdp, String? answerSdp})
+    : offerSdp = offerSdp ?? _minimalSdp,
+      answerSdp = answerSdp ?? _minimalSdp,
+      _remoteDescribed = remoteDescribed {
     if (audioTrack != null) {
       final sender = FakeRtpSender(audioTrack);
       _senders.add(sender);
@@ -523,8 +538,19 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   Future<RTCSessionDescription?> getLocalDescription() async =>
       localDescriptions.isEmpty ? null : localDescriptions.last;
   @override
+  Future<RTCSessionDescription?> getRemoteDescription() async =>
+      remoteDescriptions.isEmpty ? null : remoteDescriptions.last;
+  @override
   Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async =>
-      RTCSessionDescription('v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n', 'offer');
+      RTCSessionDescription(offerSdp, 'offer');
+
+  /// What [createOffer] returns.
+  final String offerSdp;
+
+  /// What [createAnswer] returns.
+  final String answerSdp;
+
+  static const _minimalSdp = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n';
   int closes = 0;
   final List<FakeRtpSender> _senders = [];
   final List<MediaStreamTrack> addedTracks = [];
@@ -630,11 +656,16 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
 
   @override
   Future<RTCSessionDescription> createAnswer([Map<String, dynamic>? constraints]) async =>
-      RTCSessionDescription('v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n', 'answer');
+      RTCSessionDescription(answerSdp, 'answer');
 
   @override
   Future<void> setLocalDescription(RTCSessionDescription description) async {
     localDescriptions.add(description);
+    // A rollback takes the connection back to stable, as on a real one.
+    if (description.type == 'rollback') {
+      nativeSignalingStateValue = null;
+      signalingStateValue = RTCSignalingState.RTCSignalingStateStable;
+    }
   }
 
   @override
@@ -793,12 +824,16 @@ class FakeUserMediaBuilder extends Fake implements UserMediaBuilder {
 class FakePeerConnectionFactory implements PeerConnectionFactory {
   final List<FakePeerConnection> created = [];
 
+  /// The offer every connection made from now on creates; null for the
+  /// connection's own minimal one.
+  String? offerSdp;
+
   @override
   Future<RTCPeerConnection> create([
     Map<String, dynamic> configuration = const {},
     Map<String, dynamic> constraints = const {},
   ]) async {
-    final peerConnection = FakePeerConnection();
+    final peerConnection = FakePeerConnection(offerSdp: offerSdp);
     created.add(peerConnection);
     return peerConnection;
   }

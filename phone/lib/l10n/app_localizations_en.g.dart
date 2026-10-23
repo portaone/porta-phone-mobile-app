@@ -3009,6 +3009,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_encoding_Section_rtp_override_audio => 'Audio profiles override';
 
   @override
+  String get settings_encoding_Section_rtp_override_conference => 'Conference audio profiles override';
+
+  @override
   String get settings_encoding_Section_rtp_override_title => 'Enable/disable and reorder RTP profiles';
 
   @override

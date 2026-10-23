@@ -3039,6 +3039,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_encoding_Section_rtp_override_audio => 'Ridefinire i profili audio';
 
   @override
+  String get settings_encoding_Section_rtp_override_conference => 'Ridefinire i profili audio della conferenza';
+
+  @override
   String get settings_encoding_Section_rtp_override_title => 'Estrazione e riordino dei profili RTP';
 
   @override

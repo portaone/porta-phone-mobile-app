@@ -2600,6 +2600,8 @@
   "@settings_encoding_Section_ptime_prefix": {},
   "settings_encoding_Section_rtp_override_audio": "Ridefinire i profili audio",
   "@settings_encoding_Section_rtp_override_audio": {},
+  "settings_encoding_Section_rtp_override_conference": "Ridefinire i profili audio della conferenza",
+  "@settings_encoding_Section_rtp_override_conference": {},
   "settings_encoding_Section_rtp_override_title": "Estrazione e riordino dei profili RTP",
   "@settings_encoding_Section_rtp_override_title": {},
   "settings_encoding_Section_rtp_override_tooltip": "Può essere utilizzato per sovrascrivere l'ordine di priorità dei profili audio e video rtp o escludere alcuni profili dall'elenco di negoziazione SDP, può essere utilizzato per forzare l'utilizzo di codec specifici o escludere alcuni codec se sono scarsamente supportati dal dispositivo, dalla rete o dal sistema remoto",

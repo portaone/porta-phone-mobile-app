@@ -2600,6 +2600,8 @@
   "@settings_encoding_Section_ptime_prefix": {},
   "settings_encoding_Section_rtp_override_audio": "Перевизначення аудіо профілів",
   "@settings_encoding_Section_rtp_override_audio": {},
+  "settings_encoding_Section_rtp_override_conference": "Перевизначення аудіо профілів конференції",
+  "@settings_encoding_Section_rtp_override_conference": {},
   "settings_encoding_Section_rtp_override_title": "Пріоритизація та вилучення профілів RTP",
   "@settings_encoding_Section_rtp_override_title": {},
   "settings_encoding_Section_rtp_override_tooltip": "Можна використовувати для зміни порядку пріоритету профілів аудіо та відео rtp або виключення деяких профілів зі списку узгодження SDP, це можна використовувати для примусового використання певних кодеків або виключення деяких кодеків, якщо вони погано підтримуються пристроєм, мережею чи віддаленою системою",

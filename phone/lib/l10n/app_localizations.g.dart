@@ -5461,6 +5461,12 @@ abstract class AppLocalizations {
   /// **'Audio profiles override'**
   String get settings_encoding_Section_rtp_override_audio;
 
+  /// No description provided for @settings_encoding_Section_rtp_override_conference.
+  ///
+  /// In en, this message translates to:
+  /// **'Conference audio profiles override'**
+  String get settings_encoding_Section_rtp_override_conference;
+
   /// No description provided for @settings_encoding_Section_rtp_override_title.
   ///
   /// In en, this message translates to:

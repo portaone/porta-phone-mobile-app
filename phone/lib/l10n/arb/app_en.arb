@@ -2772,6 +2772,8 @@
   "@settings_encoding_Section_ptime_prefix": {},
   "settings_encoding_Section_rtp_override_audio": "Audio profiles override",
   "@settings_encoding_Section_rtp_override_audio": {},
+  "settings_encoding_Section_rtp_override_conference": "Conference audio profiles override",
+  "@settings_encoding_Section_rtp_override_conference": {},
   "settings_encoding_Section_rtp_override_title": "Enable/disable and reorder RTP profiles",
   "@settings_encoding_Section_rtp_override_title": {},
   "settings_encoding_Section_rtp_override_tooltip": "Can be used to override the audio and video rtp profiles priority order or exclude some profiles from the SDP negotiation list. This can be used to force the usage of specific codecs or exclude some codecs if they are poorly supported by the device, the network or the remote system",

@@ -1348,6 +1348,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_encoding_Section_ptime_prefix,
       'settings_encoding_Section_rtp_override_audio' =>
         settings_encoding_Section_rtp_override_audio,
+      'settings_encoding_Section_rtp_override_conference' =>
+        settings_encoding_Section_rtp_override_conference,
       'settings_encoding_Section_rtp_override_title' =>
         settings_encoding_Section_rtp_override_title,
       'settings_encoding_Section_rtp_override_tooltip' =>

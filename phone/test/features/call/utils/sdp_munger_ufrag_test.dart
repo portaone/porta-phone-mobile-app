@@ -141,4 +141,32 @@ void main() {
       });
     }
   });
+
+  group('ModifyWithEncodingSettings.settings', () {
+    test('are the custom settings, conference profiles included, when the person chose them', () {
+      final presetRepo = _MockEncodingPresetRepository();
+      final settingsRepo = _MockEncodingSettingsRepository();
+      final custom = EncodingSettings(conferenceAudioProfiles: EncodingSettings.defaultConferenceAudioProfilesOrder);
+      when(() => presetRepo.getEncodingPreset()).thenReturn(EncodingPreset.custom);
+      when(() => settingsRepo.getEncodingSettings()).thenReturn(custom);
+
+      final munger = ModifyWithEncodingSettings(
+        settingsRepo,
+        const EncodingConfig(bypassConfig: false, configurationAllowed: true, defaultPresetOverride: _override),
+        presetRepo,
+      );
+
+      expect(munger.settings?.conferenceAudioProfiles, EncodingSettings.defaultConferenceAudioProfilesOrder);
+    });
+
+    test('are none where the deployment bypasses them', () {
+      final munger = ModifyWithEncodingSettings(
+        _MockEncodingSettingsRepository(),
+        const EncodingConfig(bypassConfig: true, configurationAllowed: true, defaultPresetOverride: _override),
+        _MockEncodingPresetRepository(),
+      );
+
+      expect(munger.settings, isNull);
+    });
+  });
 }
