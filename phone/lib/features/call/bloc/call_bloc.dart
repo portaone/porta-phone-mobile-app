@@ -2507,6 +2507,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     switch (command) {
       case RenegotiateForRoom(:final callId):
         add(_CallMutationEvent.renegotiate(callId, state.retrieveActiveCall(callId)?.line));
+      case TakeBackForRoom(:final callId):
+        add(_CallMutationEvent.renegotiate(callId, state.retrieveActiveCall(callId)?.line));
       case HoldAgain(:final callId):
         // A call the person resumed meanwhile is left alone.
         if (state.retrieveActiveCall(callId)?.held ?? false) add(_CallMutationEvent.performSetHeld(callId, true));
@@ -3990,6 +3992,30 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final cachedSigState = pc.signalingState;
     var sigState = (cachedSigState == null || pendingOffer != null) ? await pc.getSignalingState() : cachedSigState;
     _logger.info('__onMutationRenegotiate: sigState=$sigState (cache=$cachedSigState)');
+    if (_roomCodecs.takesBack(e.callId)) {
+      // The answer to the move's offer never came. Waiting on stays updating
+      // for good; rolled back, the call is usable again, and since the server
+      // may have applied the answer that was lost, the two ends are brought
+      // back to one description: a held call through its hold, which the move
+      // may have lifted on the far end, any other through a fresh offer.
+      _logger.warning('__onMutationRenegotiate: taking back the move\'s offer of ${e.callId}, its answer did not come');
+      if (await pc.getSignalingState() == RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
+        try {
+          await pc.setLocalDescription(RTCSessionDescription('', 'rollback'));
+        } catch (er) {
+          _logger.warning('__onMutationRenegotiate: rolling back the move\'s offer of ${e.callId} failed: $er');
+        }
+      }
+      _renegotiationCoordinator.offerCompleted(e.callId);
+      _renegotiationCoordinator.updatingSettled(e.callId);
+      emit(state.copyWithMappedActiveCall(e.callId, (call) => call.copyWith(updating: false)));
+      if (state.retrieveActiveCall(e.callId)?.held ?? false) {
+        add(_CallMutationEvent.performSetHeld(e.callId, true));
+        return;
+      }
+      pendingOffer = null;
+      sigState = await pc.getSignalingState();
+    }
     if (pendingOffer != null && _roomCodecs.withdrawsKeptOffer(e.callId)) {
       _logger.info(
         '__onMutationRenegotiate: withdrawing the offer kept for ${e.callId} to move it to the conference codecs',
@@ -4146,6 +4172,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         // accepted event, so the offer stays kept until then.
         _renegotiationCoordinator.awaitAnswer(e.callId, offerCandidate);
         emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: true)));
+        _roomCodecs.acknowledged(e.callId);
       } else if (result is CallErrorEvent) {
         _logger.warning(
           '__onCallSignalingEventCallError: received CallErrorEvent for update request: code=${result.code} reason="${result.reason}"',

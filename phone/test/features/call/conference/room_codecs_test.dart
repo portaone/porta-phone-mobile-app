@@ -260,6 +260,54 @@ void main() {
     expect(asked, ['merge']);
   });
 
+  group('an acknowledged offer whose answer does not come', () {
+    List<String> takenBack() => [
+      for (final c in commands)
+        if (c is TakeBackForRoom) c.callId,
+    ];
+
+    test('is taken back when the move is given up, once', () {
+      fakeAsync((async) {
+        final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
+        codecs.check({'a': (codec: 'g722', held: false), 'b': (codec: 'g722', held: false)}, request: request('merge'));
+        codecs.offerSent('a');
+        codecs.offerSent('b');
+        codecs.acknowledged('a');
+
+        async.elapse(timeout);
+
+        expect(takenBack(), ['a'], reason: 'b was never acknowledged: its error may still come');
+        expect(codecs.takesBack('a'), isTrue);
+        expect(codecs.takesBack('a'), isFalse);
+        codecs.dispose();
+      });
+    });
+
+    test('is taken back at once when it is acknowledged after the move was given up', () {
+      fakeAsync((async) {
+        final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
+        codecs.check({'a': (codec: 'g722', held: false)}, request: request('merge'));
+        codecs.offerSent('a');
+        async.elapse(timeout);
+        expect(takenBack(), isEmpty);
+
+        codecs.acknowledged('a');
+
+        expect(takenBack(), ['a']);
+        codecs.dispose();
+      });
+    });
+
+    test('is not taken back once its answer is applied', () {
+      move({'a': false});
+      codecs.acknowledged('a');
+      codecs.answerApplied('a');
+
+      expect(takenBack(), isEmpty);
+      expect(codecs.takesBack('a'), isFalse);
+    });
+  });
+
   test('answers that do not come give the move up once, after the timeout', () {
     fakeAsync((async) {
       final codecs = RoomCodecs(onCommand: onCommand, timeout: timeout);
