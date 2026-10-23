@@ -15,7 +15,7 @@ class LocalPushsBroker {
   /// One channel per value of the `source` key the app puts in the payload of
   /// every local push it shows.
   static final _channels = {
-    for (final source in [kLocalPushSourceMessaging, kLocalPushSourceSystemNotification])
+    for (final source in [kLocalPushSourceMessaging, kLocalPushSourceSystemNotification, kLocalPushSourceVoicemail])
       source: PushChannel<NotificationResponse>.buffered(),
   };
 
@@ -29,6 +29,11 @@ class LocalPushsBroker {
   /// The stream is broadcasted so it can be listened by multiple components
   static Stream<NotificationResponse> get systemNotificationsActions =>
       _channels[kLocalPushSourceSystemNotification]!.stream;
+
+  /// Stream of voicemail local notification actions
+  /// e.g tap dismiss etc.
+  /// The stream is broadcasted so it can be listened by multiple components
+  static Stream<NotificationResponse> get voicemailActions => _channels[kLocalPushSourceVoicemail]!.stream;
 
   /// Handles the local notification action
   /// and routes it to the apropriate stream

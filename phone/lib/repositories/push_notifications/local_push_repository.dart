@@ -11,6 +11,9 @@ abstract class LocalPushRepository {
   /// Stream of system notification actions that were tapped or dismissed
   Stream<AppLocalPushAction> get systemNotificationsActions;
 
+  /// Stream of voicemail notification actions that were tapped or dismissed
+  Stream<AppLocalPushAction> get voicemailActions;
+
   /// Display a local push notification
   Future<void> displayPush(AppLocalPush notification);
 
@@ -29,6 +32,9 @@ class LocalPushRepositoryFLNImpl implements LocalPushRepository {
 
   @override
   Stream<AppLocalPushAction> get systemNotificationsActions => _actionsOf(LocalPushsBroker.systemNotificationsActions);
+
+  @override
+  Stream<AppLocalPushAction> get voicemailActions => _actionsOf(LocalPushsBroker.voicemailActions);
 
   Stream<AppLocalPushAction> _actionsOf(Stream<NotificationResponse> responses) {
     return responses.map((action) {

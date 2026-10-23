@@ -614,6 +614,12 @@ const voicemailSettingsRoute = SettingsRouterPageRoute(
   children: [SettingsScreenPageRoute(), VoicemailScreenPageRoute()],
 );
 
+/// Where the mailbox is in this deployment: its own tab when the bottom menu
+/// has one, otherwise the screen under settings.
+PageRouteInfo<dynamic> voicemailRouteOf(BottomMenuConfig config) {
+  return config.getTabEnabled<VoicemailBottomMenuTab>() != null ? voicemailTabRoute : voicemailSettingsRoute;
+}
+
 Object _onNavigationLoggerMessage(String callbackName, NavigationResolver resolver) {
   return () =>
       '$callbackName: ${resolver.route.name} (${resolver.route.fullPath}) isReevaluating=${resolver.isReevaluating}';

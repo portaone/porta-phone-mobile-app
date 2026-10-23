@@ -15,7 +15,10 @@ class _PollingService extends Mock implements PollingService {}
 class _FakePollingRegistration extends Fake implements PollingRegistration {}
 
 void main() {
-  setUpAll(() => registerFallbackValue(_FakePollingRegistration()));
+  setUpAll(() {
+    registerFallbackValue(_FakePollingRegistration());
+    registerFallbackValue(Duration.zero);
+  });
 
   late _VoicemailRepository repository;
 
@@ -75,6 +78,33 @@ void main() {
       await sync.dispose();
       verify(() => task.unregister()).called(1);
       expect(worker.isActive, isFalse);
+    });
+
+    test('turns a new-message request into one deferred read', () async {
+      when(() => task.isRegistered).thenReturn(true);
+      final sync = VoicemailSync(
+        worker: VoicemailSyncWorker(repository),
+        pollingService: pollingService,
+        interval: const Duration(seconds: 300),
+      );
+      addTearDown(sync.dispose);
+
+      sync.requestRefresh();
+
+      verify(() => task.invalidate(after: const Duration(seconds: 1))).called(1);
+    });
+
+    test('ignores a request that comes after disposal', () async {
+      final sync = VoicemailSync(
+        worker: VoicemailSyncWorker(repository),
+        pollingService: pollingService,
+        interval: const Duration(seconds: 300),
+      );
+
+      await sync.dispose();
+
+      expect(sync.requestRefresh, returnsNormally);
+      verifyNever(() => task.invalidate(after: any(named: 'after')));
     });
   });
 }

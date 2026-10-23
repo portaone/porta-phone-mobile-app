@@ -12,6 +12,12 @@ abstract class RemotePushRepository {
 
   /// Stream of system notifications that were received while the app was in the foreground
   Stream<SystemNotificationPush> get systemNotificationsForegroundPushs;
+
+  /// Stream of voicemail notifications that were tapped and opened the app from a background or terminated state
+  Stream<VoicemailPush> get voicemailOpenedPushs;
+
+  /// Stream of voicemail notifications that were received while the app was in the foreground
+  Stream<VoicemailPush> get voicemailForegroundPushs;
 }
 
 /// This class is used to handle remote notifications from global context broker
@@ -28,4 +34,10 @@ class RemotePushRepositoryBrokerImpl implements RemotePushRepository {
   @override
   Stream<SystemNotificationPush> get systemNotificationsForegroundPushs =>
       RemotePushBroker.systemNotificationsForegroundPushs;
+
+  @override
+  Stream<VoicemailPush> get voicemailOpenedPushs => RemotePushBroker.voicemailOpenedPushs;
+
+  @override
+  Stream<VoicemailPush> get voicemailForegroundPushs => RemotePushBroker.voicemailForegroundPushs;
 }

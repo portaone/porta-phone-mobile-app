@@ -24,6 +24,9 @@ sealed class AppRemotePush {
     if (data.containsKey('notification_id')) {
       return SystemNotificationPush.fromFCM(message);
     }
+    if (data.containsKey('voicemail_id')) {
+      return VoicemailPush.fromFCM(message);
+    }
     return UnknownPush.fromFCM(message);
   }
 }
@@ -137,6 +140,33 @@ final class SystemNotificationPush extends AppRemotePush {
   @override
   String toString() {
     return 'SystemNotificationPush{id: $id, title: $title, body: $body}';
+  }
+}
+
+/// A new message in the mailbox: Core sends it when the PBX reports that
+/// messages are waiting and the mailbox holds one the person was not told of.
+final class VoicemailPush extends AppRemotePush {
+  VoicemailPush(super.id, this.voicemailId, {super.title, super.body, this.voicemailType});
+
+  /// The id of the message in the mailbox, as the voicemail endpoints name it.
+  final String voicemailId;
+
+  /// `voice` or `fax`.
+  final String? voicemailType;
+
+  factory VoicemailPush.fromFCM(RemoteMessage message) {
+    return VoicemailPush(
+      message.messageId ?? '_',
+      message.data['voicemail_id'].toString(),
+      title: message.notification?.title,
+      body: message.notification?.body,
+      voicemailType: message.data['voicemail_type'],
+    );
+  }
+
+  @override
+  String toString() {
+    return 'VoicemailPush{id: $id, title: $title, body: $body, voicemailId: $voicemailId, voicemailType: $voicemailType}';
   }
 }
 

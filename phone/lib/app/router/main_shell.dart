@@ -208,16 +208,18 @@ class _MainShellState extends State<MainShell> {
                       child: CallShell(
                         child: MessagingShell(
                           child: SystemNotificationsShell(
-                            // Per session on purpose: a fresh login checks for an
-                            // update (and may prompt) anew.
-                            child: AppUpdateCheck(
-                              child: StartupConfigRefresh(
-                                signalingModule: _signalingModule,
-                                sessionEnded: _ended.future,
-                                child: AutoRouter(
-                                  navigatorObservers: () => [
-                                    MainShellNavigatorObserver(context.read<MainShellRouteStateRepository>()),
-                                  ],
+                            child: VoicemailPushShell(
+                              // Per session on purpose: a fresh login checks for an
+                              // update (and may prompt) anew.
+                              child: AppUpdateCheck(
+                                child: StartupConfigRefresh(
+                                  signalingModule: _signalingModule,
+                                  sessionEnded: _ended.future,
+                                  child: AutoRouter(
+                                    navigatorObservers: () => [
+                                      MainShellNavigatorObserver(context.read<MainShellRouteStateRepository>()),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),

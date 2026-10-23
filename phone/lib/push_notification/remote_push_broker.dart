@@ -20,6 +20,14 @@ class RemotePushBroker {
   // System remote push that received while the app was in foreground
   static final _snForeground = PushChannel<SystemNotificationPush>.buffered();
 
+  // Voicemail remote push that open app
+  static final _vmOpened = PushChannel<VoicemailPush>.buffered();
+
+  // Voicemail remote push that received while the app was in foreground. It only says to
+  // show the push and read the mailbox now; replayed into a later session it would announce
+  // a message that session has already read.
+  static final _vmForeground = PushChannel<VoicemailPush>.unbuffered();
+
   static final _pendingCallForeground = PushChannel<PendingCallPush>.buffered();
 
   /// Stream of messaging remote push that opens app
@@ -46,6 +54,18 @@ class RemotePushBroker {
   /// The stream is broadcasted so it can be listened by multiple components
   static Stream<SystemNotificationPush> get systemNotificationsForegroundPushs => _snForeground.stream;
 
+  /// Stream of voicemail remote push that opens app
+  /// while the app was in background or terminated state when the notification is tapped
+  ///
+  /// The stream is broadcasted so it can be listened by multiple components
+  static Stream<VoicemailPush> get voicemailOpenedPushs => _vmOpened.stream;
+
+  /// Stream of voicemail remote push that received
+  /// while the app was in foreground state
+  ///
+  /// The stream is broadcasted so it can be listened by multiple components
+  static Stream<VoicemailPush> get voicemailForegroundPushs => _vmForeground.stream;
+
   /// Stream of pending call push that was received while the app was in foreground.
   ///
   /// Signals that there is an incoming call waiting on the server.
@@ -58,6 +78,7 @@ class RemotePushBroker {
   static void handleOpenedPush(AppRemotePush notification) {
     if (notification is MessagePush) _msgOpened.add(notification);
     if (notification is SystemNotificationPush) _snOpened.add(notification);
+    if (notification is VoicemailPush) _vmOpened.add(notification);
   }
 
   /// Handles the remote notification that received while the app was in foreground
@@ -65,6 +86,7 @@ class RemotePushBroker {
   static void handleForegroundPush(AppRemotePush notification) {
     if (notification is MessagePush) _msgForeground.add(notification);
     if (notification is SystemNotificationPush) _snForeground.add(notification);
+    if (notification is VoicemailPush) _vmForeground.add(notification);
     if (notification is PendingCallPush) _pendingCallForeground.add(notification);
   }
 }
