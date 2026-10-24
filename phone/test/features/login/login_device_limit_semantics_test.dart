@@ -62,8 +62,18 @@ void main() {
           token: 'pending-login-token',
           tenantId: 'tenant-1',
           sessions: [
-            ActiveSession(id: 'session-1', current: false, appType: AppType.android, userAgent: 'Pixel 9'),
-            ActiveSession(id: 'session-2', current: false, appType: AppType.ios, userAgent: 'iPhone 12 mini'),
+            ActiveSession(
+              id: 'session-1',
+              current: false,
+              appType: AppType.android,
+              userAgent: 'PortaPhone/1.0.0+1 (Pixel 9; Android: 15)',
+            ),
+            ActiveSession(
+              id: 'session-2',
+              current: false,
+              appType: AppType.ios,
+              userAgent: 'PortaPhone/1.0.0+1 (iPhone 12 mini; iOS: 26)',
+            ),
           ],
         ),
       ),
@@ -97,7 +107,7 @@ void main() {
   Finder signOutOf(String device) {
     return find.descendant(
       of: find.ancestor(of: find.text(device), matching: find.byType(SessionTile)),
-      matching: find.widgetWithText(TextButton, 'Sign out'),
+      matching: find.byType(IconButton),
     );
   }
 
@@ -108,8 +118,8 @@ void main() {
 
     expect(find.bySemanticsIdentifier(loginDeviceLimitScreenId), findsOneWidget);
     expect(find.textContaining('Sign out one of them to continue on this device'), findsOneWidget);
-    expect(find.text('Android app'), findsOneWidget);
-    expect(find.text('iOS app'), findsOneWidget);
+    expect(find.text('Pixel 9'), findsOneWidget);
+    expect(find.text('iPhone 12 mini'), findsOneWidget);
 
     handle.dispose();
   });

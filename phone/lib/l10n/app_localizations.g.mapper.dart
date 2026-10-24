@@ -1138,6 +1138,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'sessions_SnackBar_autoTerminateNotSupported' =>
         sessions_SnackBar_autoTerminateNotSupported,
       'sessions_SnackBar_revokeFailed' => sessions_SnackBar_revokeFailed,
+      'sessions_Tile_activeNow' => sessions_Tile_activeNow,
       'sessions_Tile_currentSession' => sessions_Tile_currentSession,
       'sessions_Tile_revokeTooltip' => sessions_Tile_revokeTooltip,
       'settings_AboutText_ApplicationEmbeddedLinks' =>
@@ -2410,14 +2411,16 @@ extension AppLocalizationsExtension on AppLocalizations {
           'sessions_AutoTerminateOther_range requires 1 arguments',
         ),
       },
-      'sessions_Tile_created' => switch (args) {
-        [final String time] => sessions_Tile_created(time),
-        _ => throw ArgumentError('sessions_Tile_created requires 1 arguments'),
-      },
-      'sessions_Tile_lastActivity' => switch (args) {
-        [final String time] => sessions_Tile_lastActivity(time),
+      'sessions_Section_otherDevices' => switch (args) {
+        [final int count] => sessions_Section_otherDevices(count),
         _ => throw ArgumentError(
-          'sessions_Tile_lastActivity requires 1 arguments',
+          'sessions_Section_otherDevices requires 1 arguments',
+        ),
+      },
+      'sessions_Tile_appVersion' => switch (args) {
+        [final String version] => sessions_Tile_appVersion(version),
+        _ => throw ArgumentError(
+          'sessions_Tile_appVersion requires 1 arguments',
         ),
       },
       'socketError_defaultDescription' => switch (args) {

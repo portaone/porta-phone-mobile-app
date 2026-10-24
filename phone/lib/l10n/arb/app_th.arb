@@ -2349,26 +2349,28 @@
   "@sessions_SnackBar_autoTerminateLimitChanged": {},
   "sessions_SnackBar_autoTerminateNotSupported": "การเลือกเวลาสิ้นสุดเซสชันที่ไม่ได้ใช้งานไม่สามารถใช้ได้อีกต่อไป",
   "@sessions_SnackBar_autoTerminateNotSupported": {},
+  "sessions_Section_otherDevices": "อุปกรณ์อื่น ๆ · {count}",
+  "@sessions_Section_otherDevices": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sessions_SnackBar_revokeFailed": "ไม่สามารถออกจากระบบเซสชันได้",
   "@sessions_SnackBar_revokeFailed": {},
-  "sessions_Tile_created": "ลงชื่อเข้าใช้ {time}",
-  "@sessions_Tile_created": {
+  "sessions_Tile_activeNow": "ใช้งานอยู่",
+  "@sessions_Tile_activeNow": {},
+  "sessions_Tile_appVersion": "แอป {version}",
+  "@sessions_Tile_appVersion": {
     "placeholders": {
-      "time": {
+      "version": {
         "type": "String"
       }
     }
   },
   "sessions_Tile_currentSession": "อุปกรณ์นี้",
   "@sessions_Tile_currentSession": {},
-  "sessions_Tile_lastActivity": "ใช้ล่าสุด {time}",
-  "@sessions_Tile_lastActivity": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
   "sessions_Tile_revokeTooltip": "ออกจากระบบ",
   "@sessions_Tile_revokeTooltip": {},
   "settings_AboutText_ApplicationEmbeddedLinks": "ลิงก์ที่ฝังในแอปพลิเคชัน",

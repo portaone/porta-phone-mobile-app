@@ -16,11 +16,11 @@ class SessionsState extends Equatable {
   /// end them or has not been asked yet.
   final SessionAutoTerminate? autoTerminate;
 
-  late final ActiveSession currentSession = sessions.firstWhere((session) => session.current);
+  /// The session this device is signed in with; null when the core lists none
+  /// as current, as after this device was signed out from another one.
+  late final ActiveSession? currentSession = sessions.firstWhereOrNull((session) => session.current);
 
   late final List<ActiveSession> otherSessions = sessions.where((session) => !session.current).toList();
-
-  late final List<ActiveSession> sessionsStartedFromCurrent = [currentSession, ...otherSessions];
 
   /// True while the list is being fetched.
   final bool loading;

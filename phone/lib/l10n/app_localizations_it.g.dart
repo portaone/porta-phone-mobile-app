@@ -2661,20 +2661,23 @@ class AppLocalizationsIt extends AppLocalizations {
       'La scelta di quando terminano le sessioni inattive non è più disponibile';
 
   @override
+  String sessions_Section_otherDevices(int count) {
+    return 'Altri dispositivi · $count';
+  }
+
+  @override
   String get sessions_SnackBar_revokeFailed => 'Impossibile disconnettere la sessione';
 
   @override
-  String sessions_Tile_created(String time) {
-    return 'Accesso il $time';
+  String get sessions_Tile_activeNow => 'Attivo ora';
+
+  @override
+  String sessions_Tile_appVersion(String version) {
+    return 'App $version';
   }
 
   @override
   String get sessions_Tile_currentSession => 'Questo dispositivo';
-
-  @override
-  String sessions_Tile_lastActivity(String time) {
-    return 'Ultimo utilizzo $time';
-  }
 
   @override
   String get sessions_Tile_revokeTooltip => 'Disconnetti';

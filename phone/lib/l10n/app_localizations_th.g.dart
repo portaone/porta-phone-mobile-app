@@ -2617,20 +2617,23 @@ class AppLocalizationsTh extends AppLocalizations {
       'การเลือกเวลาสิ้นสุดเซสชันที่ไม่ได้ใช้งานไม่สามารถใช้ได้อีกต่อไป';
 
   @override
+  String sessions_Section_otherDevices(int count) {
+    return 'อุปกรณ์อื่น ๆ · $count';
+  }
+
+  @override
   String get sessions_SnackBar_revokeFailed => 'ไม่สามารถออกจากระบบเซสชันได้';
 
   @override
-  String sessions_Tile_created(String time) {
-    return 'ลงชื่อเข้าใช้ $time';
+  String get sessions_Tile_activeNow => 'ใช้งานอยู่';
+
+  @override
+  String sessions_Tile_appVersion(String version) {
+    return 'แอป $version';
   }
 
   @override
   String get sessions_Tile_currentSession => 'อุปกรณ์นี้';
-
-  @override
-  String sessions_Tile_lastActivity(String time) {
-    return 'ใช้ล่าสุด $time';
-  }
 
   @override
   String get sessions_Tile_revokeTooltip => 'ออกจากระบบ';

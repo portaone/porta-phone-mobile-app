@@ -68,13 +68,18 @@ class LoginDeviceLimitBody extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(kInset, kInset, kInset, kInset / 2),
                 child: Text(context.l10n.login_Text_deviceLimitDescription),
               ),
-              for (final session in sessions)
-                SessionTile(
-                  session: session,
-                  dateFormat: dateFormat,
-                  revoking: state.pendingLoginRevokingSessionId == session.id,
-                  onRevoke: (session) => _onRevoke(context, session),
-                ),
+              SessionTiles(
+                children: [
+                  for (final (index, session) in sessions.indexed)
+                    SessionTile(
+                      session: session,
+                      index: index,
+                      dateFormat: dateFormat,
+                      revoking: state.pendingLoginRevokingSessionId == session.id,
+                      onRevoke: (session) => _onRevoke(context, session),
+                    ),
+                ],
+              ),
             ],
           );
         },

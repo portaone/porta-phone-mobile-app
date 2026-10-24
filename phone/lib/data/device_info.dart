@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'package:device_display_name/device_display_name.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:logging/logging.dart';
 
@@ -15,6 +16,13 @@ abstract class DeviceInfo {
 
   String get model;
 
+  /// The name a person knows the device by ("OPPO Reno4 Pro 5G", "iPhone 15
+  /// Pro"), as the maker writes it; null where the platform gives none (web,
+  /// desktop, a failed read). The user's own name for the device is never
+  /// read: it can carry a person's name, and the User-Agent built from this
+  /// is stored and logged by the backend.
+  String? get displayName;
+
   String get systemName;
 
   String get systemVersion;
@@ -25,6 +33,10 @@ abstract class DeviceInfo {
 class DeviceInfoFactory {
   static Future<DeviceInfo> init() async {
     final deviceInfoPlugin = DeviceInfoPlugin();
+    // Started before the platform read below and awaited after it: both go to
+    // the platform, and one round trip instead of two matters in the isolate
+    // that handles an incoming-call push.
+    final displayName = _readDisplayName();
     late final Map<String, dynamic> deviceData;
     try {
       if (kIsWeb) {
@@ -45,7 +57,12 @@ class DeviceInfoFactory {
     } on PlatformException {
       deviceData = {'error': 'failed to get platform version'};
     }
-    return _DeviceInfoImpl(deviceData);
+    return _DeviceInfoImpl(deviceData, displayName: await displayName);
+  }
+
+  static Future<String?> _readDisplayName() async {
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return null;
+    return (await const PlatformDeviceDisplayName().read())?.fullName;
   }
 }
 
@@ -53,11 +70,15 @@ class _DeviceInfoImpl implements DeviceInfo {
   @override
   final Map<String, dynamic> data;
 
-  _DeviceInfoImpl(this.data) {
+  _DeviceInfoImpl(this.data, {this.displayName}) {
     for (final entry in data.entries) {
       _logger.finest(() => '${entry.key}: ${entry.value}');
     }
+    _logger.finest(() => 'displayName: $displayName');
   }
+
+  @override
+  final String? displayName;
 
   @override
   String get manufacturer => data['manufacturer'] ?? 'unknown';

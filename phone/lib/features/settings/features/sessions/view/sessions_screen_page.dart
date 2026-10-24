@@ -35,6 +35,7 @@ class _SessionsScreenPageState extends State<SessionsScreenPage> {
     );
     return SessionsScreen(
       dateFormat: context.read<AppTime>().formatDateTime(true),
+      appVersion: context.read<AppInfo>().version,
       autoTerminateSelectable: autoTerminateSelectable,
       autoTerminateSnackBar: _autoTerminateSnackBar,
     );

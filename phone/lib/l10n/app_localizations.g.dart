@@ -4765,29 +4765,35 @@ abstract class AppLocalizations {
   /// **'Choosing when inactive sessions end is no longer available'**
   String get sessions_SnackBar_autoTerminateNotSupported;
 
+  /// Heading over the devices other than this one on the Active sessions screen, with how many there are.
+  ///
+  /// In en, this message translates to:
+  /// **'Other devices · {count}'**
+  String sessions_Section_otherDevices(int count);
+
   /// No description provided for @sessions_SnackBar_revokeFailed.
   ///
   /// In en, this message translates to:
   /// **'Could not sign out the session'**
   String get sessions_SnackBar_revokeFailed;
 
-  /// Session row detail with the formatted date and time the session was created.
+  /// Session row detail for a device seen within the last few minutes, in place of how long ago.
   ///
   /// In en, this message translates to:
-  /// **'Signed in {time}'**
-  String sessions_Tile_created(String time);
+  /// **'Active now'**
+  String get sessions_Tile_activeNow;
 
-  /// Badge marking the session the app itself is signed in with, which cannot be revoked here.
+  /// Session row detail with the app version the session was created from; shown only when it is not the version of this app.
+  ///
+  /// In en, this message translates to:
+  /// **'App {version}'**
+  String sessions_Tile_appVersion(String version);
+
+  /// Heading over the row of the session the app itself is signed in with, which cannot be revoked here; the other rows sit under sessions_Section_otherDevices.
   ///
   /// In en, this message translates to:
   /// **'This device'**
   String get sessions_Tile_currentSession;
-
-  /// Session row detail with the formatted date and time of the last recorded activity.
-  ///
-  /// In en, this message translates to:
-  /// **'Last used {time}'**
-  String sessions_Tile_lastActivity(String time);
 
   /// No description provided for @sessions_Tile_revokeTooltip.
   ///
