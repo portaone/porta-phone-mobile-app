@@ -171,7 +171,7 @@ const nullableProperties = <String, List<String>>{
     'titleTextStyle',
   ],
   'EmbeddedPageConfig': ['appBarBlurredSurface', 'appBarStyle', 'background'],
-  'EmbeddedResource': ['reconnectStrategy'],
+  'EmbeddedResource': ['reconnectStrategy', 'resultStrategy'],
   'EncodingDefaultPresetOverride': [
     'audioBitrate',
     'maxptime',

@@ -693,11 +693,24 @@ abstract final class EmbeddedMapper {
         id: resource.id,
         uri: Uri.parse(resource.uri),
         reconnectStrategy: reconnectStrategy,
+        resultStrategy: resultStrategy(resource.resultStrategy),
         payload: resource.payload.map((it) => EmbeddedPayloadData.values.byName(it)).toList(),
       );
     }).toList();
 
     return EmbeddedConfig(List.unmodifiable(embeddedDataList));
+  }
+
+  /// Unset - a configuration made before the setting existed, or a value this build does not
+  /// know - is [ResultStrategy.historyBack], what such pages have always been given.
+  static ResultStrategy resultStrategy(ResultStrategyConfig? config) {
+    return switch (config) {
+      null || ResultStrategyConfig.historyBack => ResultStrategy.historyBack,
+      ResultStrategyConfig.notify => ResultStrategy.notify,
+      ResultStrategyConfig.restart => ResultStrategy.restart,
+      ResultStrategyConfig.reload => ResultStrategy.reload,
+      ResultStrategyConfig.none => ResultStrategy.none,
+    };
   }
 }
 
