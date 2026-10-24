@@ -6,6 +6,7 @@ import '../../schema/union_assembly.dart';
 
 import 'embedded_resource_type.dart';
 import 'metadata.dart';
+import 'result_strategy_config.dart';
 
 part 'embedded_resource.freezed.dart';
 
@@ -22,6 +23,7 @@ part 'embedded_resource.g.dart';
 /// - [payload]: An optional list of strings that can be used to pass additional data to the embedded resource, such as parameters or identifiers.
 /// - [enableConsoleLogCapture]: A boolean flag that enables capturing `console.*` logs from inside the WebView, useful for debugging or logging purposes. The default is `false`.
 /// - [reconnectStrategy]: An optional string that defines the strategy to apply when the network reconnects.
+/// - [resultStrategy]: What the app does with the page when a request it posted to the app ends without success.
 @freezed
 @JsonSerializable(explicitToJson: true, createJsonSchema: true)
 class EmbeddedResource with _$EmbeddedResource {
@@ -42,6 +44,9 @@ class EmbeddedResource with _$EmbeddedResource {
 
     /// Strategy to apply when network reconnects
     this.reconnectStrategy,
+
+    /// What to do with the page when a request it posted to the app ends without success
+    this.resultStrategy,
   });
 
   /// Unique identifier for this resource.
@@ -79,6 +84,14 @@ class EmbeddedResource with _$EmbeddedResource {
   /// Strategy applied when network reconnects.
   @override
   final String? reconnectStrategy;
+
+  /// What the app does with the page when a request it posted to the app ends without success.
+  ///
+  /// Unset, or a value this build does not know, leaves the choice to the app (see
+  /// [ResultStrategyConfig]), so a configuration written for a newer build still loads.
+  @override
+  @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
+  final ResultStrategyConfig? resultStrategy;
 
   /// Safely parses `resource` to a `uri`, returning `null` if invalid.
   Uri? get uriOrNull => Uri.tryParse(uri);

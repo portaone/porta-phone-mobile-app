@@ -17,11 +17,35 @@ enum ReconnectStrategy {
   hardReload,
 }
 
+/// What the app does with an embedded page when a request the page posted to it ends without
+/// success - a signup on the login channel that ends without a session, for one.
+///
+/// The page put itself into a waiting state when it posted and cannot learn the outcome by itself.
+enum ResultStrategy {
+  /// Back in the page's own history, or a reload when it has none - what the error dialog's
+  /// Back button has always done, so pages that know nothing of this setting keep working.
+  historyBack,
+
+  /// Calls `window.onWebTritResult(result)` and leaves the rest to the page; a page
+  /// without that function gets [historyBack].
+  notify,
+
+  /// Loads the page again from its address, with a fresh history.
+  restart,
+
+  /// Reloads the current page.
+  reload,
+
+  /// Leaves the page as it is.
+  none,
+}
+
 class EmbeddedData extends Equatable {
   EmbeddedData({
     required this.id,
     required this.uri,
     required this.reconnectStrategy,
+    this.resultStrategy = ResultStrategy.historyBack,
     this.titleL10n,
     List<EmbeddedPayloadData> payload = const [],
     this.enableConsoleLogCapture = false,
@@ -46,6 +70,9 @@ class EmbeddedData extends Equatable {
   /// The strategy to apply when the network reconnects.
   final ReconnectStrategy reconnectStrategy;
 
+  /// What to do with the page when a request it posted to the app ends without success.
+  final ResultStrategy resultStrategy;
+
   /// The key to use to look up the localized title.
   final String? titleL10n;
 
@@ -55,5 +82,14 @@ class EmbeddedData extends Equatable {
   Map<String, dynamic> get attributes => _attributes;
 
   @override
-  List<Object?> get props => [id, uri, _payload, enableConsoleLogCapture, reconnectStrategy, titleL10n, _attributes];
+  List<Object?> get props => [
+    id,
+    uri,
+    _payload,
+    enableConsoleLogCapture,
+    reconnectStrategy,
+    resultStrategy,
+    titleL10n,
+    _attributes,
+  ];
 }
