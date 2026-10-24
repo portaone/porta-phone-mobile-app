@@ -22,6 +22,7 @@ class LoginState with _$LoginState {
     this.embeddedExtras,
     this.embeddedCallbackData,
     this.embeddedRequestError,
+    this.embeddedSignupFailure,
     this.coreUrlInput = const UrlInput.pure(),
     this.coreUrlAssignError,
     this.otpSigninUserRefInput = const UserRefInput.pure(),
@@ -79,6 +80,11 @@ class LoginState with _$LoginState {
 
   @override
   final Object? embeddedRequestError;
+
+  /// The last signup of the embedded page that ended without a session, until the page asks
+  /// again. The page waits for an answer it cannot get by itself; the screen answers it from this.
+  @override
+  final EmbeddedSignupFailure? embeddedSignupFailure;
 
   @override
   final UrlInput coreUrlInput;
