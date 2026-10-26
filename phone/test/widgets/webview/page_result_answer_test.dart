@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/models/models.dart';
@@ -108,6 +109,66 @@ void main() {
       await answer.uncovered();
 
       expect(page.calls, isEmpty);
+    });
+  });
+
+  group('a page that posts the same request again as soon as it is brought back', () {
+    late DateTime now;
+    final ticking = Clock(() => now);
+
+    setUp(() => now = DateTime(2026, 10, 25, 12));
+
+    test('is not moved again for the result that follows at once', () {
+      return withClock(ticking, () async {
+        final page = _Page();
+        final answer = PageResultAnswer(strategy: ResultStrategy.historyBack, page: page);
+
+        await answer.ended(_refused, covered: false);
+        now = now.add(const Duration(seconds: 2));
+        await answer.ended(_refused, covered: false);
+
+        expect(page.calls, ['reload']);
+      });
+    });
+
+    test('is moved again for a result that comes after the window', () {
+      return withClock(ticking, () async {
+        final page = _Page(history: true);
+        final answer = PageResultAnswer(strategy: ResultStrategy.historyBack, page: page);
+
+        await answer.ended(_refused, covered: false);
+        now = now.add(PageResultAnswer.repostWindow);
+        await answer.ended(_refused, covered: false);
+
+        expect(page.calls, ['goBack', 'goBack']);
+      });
+    });
+
+    test('is moved again for the next result once one was left unanswered', () {
+      return withClock(ticking, () async {
+        final page = _Page();
+        final answer = PageResultAnswer(strategy: ResultStrategy.reload, page: page);
+
+        await answer.ended(_refused, covered: false);
+        now = now.add(const Duration(seconds: 1));
+        await answer.ended(_refused, covered: false);
+        now = now.add(const Duration(seconds: 1));
+        await answer.ended(_refused, covered: false);
+
+        expect(page.calls, ['reload', 'reload']);
+      });
+    });
+
+    test('is told every result: telling does not move it', () {
+      return withClock(ticking, () async {
+        final page = _Page(takesResult: true);
+        final answer = PageResultAnswer(strategy: ResultStrategy.notify, page: page);
+
+        await answer.ended(_refused, covered: false);
+        await answer.ended(_refused, covered: false);
+
+        expect(page.calls, hasLength(2));
+      });
     });
   });
 

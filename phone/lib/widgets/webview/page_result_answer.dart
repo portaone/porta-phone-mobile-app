@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clock/clock.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:logging/logging.dart';
 
@@ -35,15 +36,26 @@ abstract interface class ResultPage {
 /// page is answered while it is in front of the user, and a page that posts again on its own does
 /// not do it behind that screen.
 ///
+/// A page brought back by a reload may post the same request again by itself - a step that
+/// submits when shown - and end the same way at once. Such a result is not answered by moving the
+/// page again, or page and app would go round for as long as the backend refuses; the page is left
+/// waiting instead.
+///
 /// Which requests end this way, and when a screen covers the page, is up to the screen that
 /// shows the page and routes its requests.
 class PageResultAnswer {
   PageResultAnswer({required this.strategy, required this.page});
 
+  /// How soon after the page was moved a result counts as one of a request the page posted by
+  /// itself as it came back.
+  static const repostWindow = Duration(seconds: 5);
+
   final ResultStrategy strategy;
   final ResultPage page;
 
   PageResult? _held;
+
+  DateTime? _movedAt;
 
   /// A request of the page ended with [result]; [covered] is whether a screen of the app is over
   /// the page right now.
@@ -73,9 +85,9 @@ class PageResultAnswer {
       case ResultStrategy.none:
         return;
       case ResultStrategy.reload:
-        return page.reload();
+        return _move(page.reload);
       case ResultStrategy.restart:
-        return page.restart();
+        return _move(page.restart);
       case ResultStrategy.notify:
         if (await page.takesResults()) return page.sendResult(result);
         return _historyBack();
@@ -84,12 +96,18 @@ class PageResultAnswer {
     }
   }
 
-  Future<void> _historyBack() async {
-    if (await page.canGoBack()) {
-      await page.goBack();
-    } else {
-      await page.reload();
+  Future<void> _historyBack() async => _move(await page.canGoBack() ? page.goBack : page.reload);
+
+  Future<void> _move(Future<void> Function() move) async {
+    final now = clock.now();
+    final movedAt = _movedAt;
+    if (movedAt != null && now.difference(movedAt) < repostWindow) {
+      _movedAt = null;
+      _logger.warning('The page posted again as soon as it was brought back; it is left as it is');
+      return;
     }
+    _movedAt = now;
+    await move();
   }
 }
 
