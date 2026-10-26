@@ -252,6 +252,18 @@ calls from the server's accepted-call list (`_RestoreAcceptedCall`). Restored ca
 normal answer/start flow and enter `incomingRestoringMedia` or `outgoingRestoringMedia` directly.
 Media is re-established via ICE restart (renegotiationNeeded → `UpdateRequest`), not by
 replaying the original offer/answer exchange.
+Only one restored call stays live, as CallKit keeps one: the handshake plan (`HandshakeProcessor`)
+reads from each line's hold and resume events whether the call is held on the server, restores the
+held calls first and marks every restore but the last held. A held restore is offered with its
+microphone transceiver `inactive` and without `OfferToReceiveAudio` (asked to receive, libwebrtc
+adds a second, `recvonly` audio line), so its `update` keeps it on hold on the server - a `sendrecv`
+offer would take it off hold there while the gateway still counts it held and answers a later hold
+without sending one. How a call is held by its offer is one extension, `RTCPeerConnectionOfferHold`
+(`lib/extensions/rtc_peer_connection_extension.dart`): CallKit is told of the hold and
+`__onMutationPerformSetHeld` sends nothing while `heldByOffer()`. A resume gives the microphone back
+first (`resumeFromOfferHold()`, which renegotiates the call) and sends the unhold only once that
+offer is answered (`_unholdAfterOffer`): the gateway refuses an update during the re-INVITE of an
+unhold, and the app would retry it seconds later.
 
 **ICE restart over a lost signaling connection** — `RenegotiationCoordinator`
 (`features/call/utils/renegotiation_coordinator.dart`) owns the per-call restart and retry

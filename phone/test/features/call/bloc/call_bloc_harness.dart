@@ -542,8 +542,13 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   Future<RTCSessionDescription?> getRemoteDescription() async =>
       remoteDescriptions.isEmpty ? null : remoteDescriptions.last;
   @override
-  Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async =>
-      RTCSessionDescription(offerSdp, 'offer');
+  Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async {
+    offerConstraints.add(constraints);
+    return RTCSessionDescription(offerSdp, 'offer');
+  }
+
+  /// The constraints of every [createOffer], in order.
+  final List<Map<String, dynamic>?> offerConstraints = [];
 
   /// What [createOffer] returns.
   final String offerSdp;
@@ -687,10 +692,19 @@ class FakeRtpTransceiver extends Fake implements RTCRtpTransceiver {
   @override
   String get mid => '0';
 
-  /// An established call sends and receives on every transceiver; the bloc
-  /// only logs these after applying an answer.
+  /// An established call sends and receives on every transceiver until the
+  /// bloc turns one; [directions] keeps every turn.
+  TransceiverDirection direction = TransceiverDirection.SendRecv;
+  final List<TransceiverDirection> directions = [];
+
   @override
-  Future<TransceiverDirection> getDirection() async => TransceiverDirection.SendRecv;
+  Future<TransceiverDirection> getDirection() async => direction;
+
+  @override
+  Future<void> setDirection(TransceiverDirection direction) async {
+    this.direction = direction;
+    directions.add(direction);
+  }
 
   @override
   Future<TransceiverDirection> getCurrentDirection() async => TransceiverDirection.SendRecv;
