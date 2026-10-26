@@ -181,6 +181,7 @@ posts to its parent alone.
 | `initializePage({ locale })` | called by the app after load | never called |
 | Locale | from `initializePage` | from the `localeName` query parameter the app adds to the address |
 | `onMediaQueryReady()` (safe-area insets) | called by the app | never called |
+| `onWebTritResult(result)` (`resultStrategy: notify`) | called by the app | never called: the page gets the default `historyBack` |
 
 ### Template
 
@@ -368,6 +369,37 @@ following steps:
    After processing the API response, the app navigates the user from the custom login `WebView` to
    the appropriate
    native screen, such as an OTP verification page or a success screen.
+
+   When the signup ends **without a session** - the account is on as many devices as it is allowed,
+   it ran out of new devices for the period, the request failed, or the backend does not support
+   this build - the page is still waiting with whatever "loading" state it set when it posted. The
+   app brings it back as the resource's `resultStrategy` says
+   ([Request Results](application_embedded_config.md#request-results)); by default it goes back in
+   the page's own history, or reloads the page when it has none. When the device limit screen or
+   the error dialog opens over the page, that happens after the user leaves it.
+
+   A page that would rather handle the result itself - and keep what the user typed - sets
+   `"resultStrategy": "notify"` on its resource and defines `window.onWebTritResult`. For a signup
+   it is called with:
+
+   ```json
+   { "channel": "WebtritLoginChannel", "event": "signup", "ok": false, "reason": "device_limit" }
+   ```
+
+   | `reason`              | When                                                              |
+   |-----------------------|-------------------------------------------------------------------|
+   | `device_limit`        | the account or its customer is on as many devices as it is allowed |
+   | `device_switch_limit` | the account ran out of new devices for the period                 |
+   | `request_failed`      | an error answer, no connection, or an answer the app cannot use   |
+   | `unsupported_backend` | the backend does not support this build                           |
+
+   These are all the reasons the app sends today; a page should treat an unknown `reason` as
+   `request_failed`. A page with `notify` that does not define the function is treated as the
+   default.
+
+   While the device limit screen holds the login a signup ended in, the app ignores another
+   `signup` from the page: a page that posts again while that screen is up does not start a second
+   login.
 
 ---
 

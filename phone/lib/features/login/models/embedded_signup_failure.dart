@@ -1,3 +1,5 @@
+import 'package:webtrit_phone/models/models.dart';
+
 /// Why a signup that an embedded page asked for ended without a session.
 enum EmbeddedSignupFailureReason {
   /// Refused because the account or its customer is on as many devices as it is allowed.
@@ -27,7 +29,16 @@ enum EmbeddedSignupFailureReason {
 class EmbeddedSignupFailure {
   EmbeddedSignupFailure(this.reason);
 
+  /// The channel the page posts its signup on.
+  static const channel = 'WebtritLoginChannel';
+
+  /// The event the page posts its signup as.
+  static const event = 'signup';
+
   final EmbeddedSignupFailureReason reason;
+
+  /// What the page is answered with (`docs/reference/custom_login.md`).
+  PageResult get result => PageResult(channel: channel, event: event, ok: false, reason: reason.code);
 
   @override
   String toString() => 'EmbeddedSignupFailure(${reason.name})';

@@ -39,58 +39,53 @@ class EmbeddedRequestErrorDialog extends StatelessWidget {
           )
         : null;
 
-    // canPop: true — allows the system back button to bubble up to the parent PopScope.
+    // The system back key closes this the way it closes any route - nothing here intercepts it -
+    // and only the back button of the app bar calls [onBack].
     //
     // This widget is used in two modes:
     //   Mode A (inline errorBuilder): embedded inside EmbeddedScreen or LoginSignupEmbeddedRequestScreen
-    //     as a WebView replacement. The parent PopScope correctly handles back navigation
-    //     (e.g. goBack in WebView or exit the screen). canPop: false here would wrongly block it.
-    //   Mode B (pushed route via BlocListener): pushed on top of LoginSignupEmbeddedRequestScreen.
-    //     onBack is non-null when the error allows going back (RequestFailure). The
-    //     onPopInvokedWithResult callback ensures onBack() is called on system back, so that
-    //     _errorDialogShown is properly reset in the parent screen.
-    return PopScope(
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) onBack?.call();
-      },
-      child: Scaffold(
-        appBar: appBar,
-        body: SemanticId(
-          identifier: loginSignupEmbeddedErrorScreenId,
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (logo?.picture != null) logo!.picture!.svg(),
-                  Text(
-                    title,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
+    //     as a WebView replacement, where the parent PopScope handles back navigation.
+    //   Mode B (pushed route): pushed on top of LoginSignupEmbeddedRequestScreen, which learns that
+    //     the route is gone from the future of the push, however it was closed. Calling [onBack]
+    //     after a pop the system already made would pop a second time, while the navigator is
+    //     still busy with the first one.
+    return Scaffold(
+      appBar: appBar,
+      body: SemanticId(
+        identifier: loginSignupEmbeddedErrorScreenId,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (logo?.picture != null) logo!.picture!.svg(),
+                Text(
+                  title,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    error,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                    textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  error,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
-                  const SizedBox(height: kInset),
-                  SemanticAction(
-                    identifier: loginSignupEmbeddedRetryButtonId,
-                    child: ElevatedButton.icon(
-                      onPressed: onRetry,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(context.l10n.common_noInternetConnection_retryButton),
-                    ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: kInset),
+                SemanticAction(
+                  identifier: loginSignupEmbeddedRetryButtonId,
+                  child: ElevatedButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh),
+                    label: Text(context.l10n.common_noInternetConnection_retryButton),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
