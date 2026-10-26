@@ -4377,6 +4377,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final displayName = activeCall.displayName;
     final video = activeCall.video;
 
+    // CallKit keeps one call live: a call answered or started beside a live
+    // one that is not on hold makes the system end that one (performEndCall).
+    // The calls restored before this one are held first.
+    await Future.forEach(state.otherCallIdsToHold(event.callId), (String callId) async {
+      await callkeep.setHeld(callId, onHold: true);
+    });
+
     if (direction == CallDirection.incoming) {
       final reportError = await callkeep.reportNewIncomingCall(
         event.callId,
