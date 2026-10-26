@@ -49,9 +49,7 @@ class EmbeddedData extends Equatable {
     this.titleL10n,
     List<EmbeddedPayloadData> payload = const [],
     this.enableConsoleLogCapture = false,
-    Map<String, dynamic> attributes = const {},
-  }) : _payload = List.unmodifiable(payload),
-       _attributes = Map.unmodifiable(attributes);
+  }) : _payload = List.unmodifiable(payload);
 
   /// The URI representing either a local asset file path or a remote URL.
   final String id;
@@ -76,20 +74,6 @@ class EmbeddedData extends Equatable {
   /// The key to use to look up the localized title.
   final String? titleL10n;
 
-  final Map<String, dynamic> _attributes;
-
-  /// Attributes
-  Map<String, dynamic> get attributes => _attributes;
-
   @override
-  List<Object?> get props => [
-    id,
-    uri,
-    _payload,
-    enableConsoleLogCapture,
-    reconnectStrategy,
-    resultStrategy,
-    titleL10n,
-    _attributes,
-  ];
+  List<Object?> get props => [id, uri, _payload, enableConsoleLogCapture, reconnectStrategy, resultStrategy, titleL10n];
 }

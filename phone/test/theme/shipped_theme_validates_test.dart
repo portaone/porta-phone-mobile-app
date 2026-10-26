@@ -55,6 +55,16 @@ void main() {
       }
     });
 
+    test('an entry written while EmbeddedResource still had attributes', () {
+      // A configuration from before the field was removed still carries it, the
+      // launch page's `{"launch": true}` among them.
+      expectValid(JsonSchema.create(EmbeddedResource.jsonSchema), {
+        'id': 'login',
+        'uri': 'https://example.com/login',
+        'attributes': {'launch': true},
+      }, 'an entry with attributes');
+    });
+
     test('the theme fragments against the types they are read as', () {
       // Each of these is a part of ThemeSettings rather than a whole one, which
       // is what `$defs` is for: the fragment is addressable as its own schema.

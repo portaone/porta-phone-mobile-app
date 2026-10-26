@@ -12,12 +12,11 @@ part 'embedded_resource.freezed.dart';
 
 part 'embedded_resource.g.dart';
 
-/// Represents an embedded resource, which includes a URI, type, attributes, toolbar, and metadata.
+/// Represents an embedded resource, which includes a URI, type, toolbar, and metadata.
 ///
 /// - [id]: A unique identifier for the resource, necessary for linking the resource to other features or components.
 /// - [uri]: A required URI that points to the embedded resource, enabling navigation to it.
 /// - [type]: The type of the resource, which helps determine how the resource is handled or displayed (e.g., web, file, etc.). The default is `EmbeddedResourceType.unknown`.
-/// - [attributes]: Optional attributes that can store additional information related to the resource, such as configuration or metadata.
 /// - [toolbar]: Optional toolbar configuration for the resource, including title and visibility. The default is an empty configuration.
 /// - [metadata]: Optional metadata associated with the resource, which can store custom data relevant to the resource's context.
 /// - [payload]: An optional list of strings that can be used to pass additional data to the embedded resource, such as parameters or identifiers.
@@ -32,7 +31,6 @@ class EmbeddedResource with _$EmbeddedResource {
     required this.id,
     required this.uri,
     this.type = EmbeddedResourceType.unknown,
-    this.attributes = const {},
     this.toolbar = const ToolbarConfig(),
     this.metadata = const Metadata(),
 
@@ -60,10 +58,6 @@ class EmbeddedResource with _$EmbeddedResource {
   /// The type of the resource (e.g., web, file, etc.).
   @override
   final EmbeddedResourceType type;
-
-  /// Optional key–value attributes associated with the resource.
-  @override
-  final Map<String, dynamic> attributes;
 
   /// Toolbar configuration for the resource.
   @override
