@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:stream_transform/stream_transform.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1057,10 +1058,19 @@ class HardReloadRecoveryStrategy extends SoftReloadRecoveryStrategy {
 /// page is held until that screen is gone: the page is answered while it is in front of the user,
 /// and a page that posts again on its own does not do it behind that screen.
 ///
+/// A page brought back by a reload may post the same request again by itself - a step that
+/// submits when shown - and end the same way at once. Such a result is not answered by moving the
+/// page again, or page and app would go round for as long as the backend refuses; the page is left
+/// waiting instead.
+///
 /// The screen that routes the page's requests tells the strategy how each one ended ([ended],
 /// [uncovered], [drop]); the [WebViewContainer] it is given to attaches it to the page.
 abstract class PageResultStrategy {
   PageResultStrategy();
+
+  /// How soon after the page was moved a result counts as one of a request the page posted by
+  /// itself as it came back.
+  static const repostWindow = Duration(seconds: 5);
 
   /// Creates a [PageResultStrategy] for the specified [ResultStrategy].
   factory PageResultStrategy.create(ResultStrategy type) {
@@ -1081,6 +1091,8 @@ abstract class PageResultStrategy {
   WebViewController? _controller;
 
   PageResult? _held;
+
+  DateTime? _movedAt;
 
   /// A request of the page ended with [result]; [covered] is whether a screen of the app is over
   /// the page right now.
@@ -1123,6 +1135,19 @@ abstract class PageResultStrategy {
 
   /// Brings the page in [controller] back for [result].
   Future<void> _bringBack(WebViewController controller, PageResult result);
+
+  /// Moves the page with [move], unless it was moved for a result just before.
+  Future<void> _move(Future<void> Function() move) async {
+    final now = clock.now();
+    final movedAt = _movedAt;
+    if (movedAt != null && now.difference(movedAt) < repostWindow) {
+      _movedAt = null;
+      _logger.warning('The page posted again as soon as it was brought back; it is left as it is');
+      return;
+    }
+    _movedAt = now;
+    await move();
+  }
 }
 
 /// Steps back in the page's history, or reloads it when it has none - what the error dialog's
@@ -1132,13 +1157,8 @@ class HistoryBackPageResultStrategy extends PageResultStrategy {
   ResultStrategy get strategy => ResultStrategy.historyBack;
 
   @override
-  Future<void> _bringBack(WebViewController controller, PageResult result) async {
-    if (await controller.canGoBackInPage()) {
-      await controller.goBackInPage();
-    } else {
-      await controller.reloadPage();
-    }
-  }
+  Future<void> _bringBack(WebViewController controller, PageResult result) async =>
+      _move(await controller.canGoBackInPage() ? controller.goBackInPage : controller.reloadPage);
 }
 
 /// Tells the page the result through `window.onWebTritResult` and leaves the rest to it; a page
@@ -1175,7 +1195,7 @@ class RestartPageResultStrategy extends PageResultStrategy {
   ResultStrategy get strategy => ResultStrategy.restart;
 
   @override
-  Future<void> _bringBack(WebViewController controller, PageResult result) => controller.restartPage();
+  Future<void> _bringBack(WebViewController controller, PageResult result) => _move(controller.restartPage);
 }
 
 /// Reloads the current page.
@@ -1184,7 +1204,7 @@ class ReloadPageResultStrategy extends PageResultStrategy {
   ResultStrategy get strategy => ResultStrategy.reload;
 
   @override
-  Future<void> _bringBack(WebViewController controller, PageResult result) => controller.reloadPage();
+  Future<void> _bringBack(WebViewController controller, PageResult result) => _move(controller.reloadPage);
 }
 
 /// Leaves the page as it is.
