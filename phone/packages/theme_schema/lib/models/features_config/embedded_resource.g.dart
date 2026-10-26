@@ -14,7 +14,6 @@ EmbeddedResource _$EmbeddedResourceFromJson(
   type:
       $enumDecodeNullable(_$EmbeddedResourceTypeEnumMap, json['type']) ??
       EmbeddedResourceType.unknown,
-  attributes: json['attributes'] as Map<String, dynamic>? ?? const {},
   toolbar: json['toolbar'] == null
       ? const ToolbarConfig()
       : ToolbarConfig.fromJson(json['toolbar'] as Map<String, dynamic>),
@@ -38,7 +37,6 @@ Map<String, dynamic> _$EmbeddedResourceToJson(EmbeddedResource instance) =>
       'id': instance.id,
       'uri': instance.uri,
       'type': _$EmbeddedResourceTypeEnumMap[instance.type]!,
-      'attributes': instance.attributes,
       'toolbar': instance.toolbar.toJson(),
       'metadata': instance.metadata.toJson(),
       'payload': instance.payload,
@@ -62,13 +60,6 @@ const _$EmbeddedResourceJsonSchema = {
     'type': {
       'type': 'object',
       'description': 'The type of the resource (e.g., web, file, etc.).',
-    },
-    'attributes': {
-      'type': 'object',
-      'additionalProperties': {'type': 'object'},
-      'description':
-          'Optional key–value attributes associated with the resource.',
-      'default': {},
     },
     'toolbar': {
       r'$ref': r'#/$defs/ToolbarConfig',

@@ -46,7 +46,6 @@ EmbeddedResource createMockTermsResource() {
   when(() => resource.reconnectStrategy).thenReturn(null);
   when(() => resource.toolbar).thenReturn(toolbar);
   when(() => resource.payload).thenReturn([]);
-  when(() => resource.attributes).thenReturn({});
   when(() => resource.enableConsoleLogCapture).thenReturn(false);
 
   return resource;
