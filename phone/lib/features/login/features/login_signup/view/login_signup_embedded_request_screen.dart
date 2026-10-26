@@ -23,6 +23,7 @@ class LoginSignupEmbeddedRequestScreen extends StatefulWidget {
     required this.deviceInfoData,
     required this.connectivityRecoveryStrategyBuilder,
     required this.pageInjectionStrategyBuilder,
+    this.resultStrategy = ResultStrategy.historyBack,
   });
 
   final Uri initialUrl;
@@ -35,6 +36,9 @@ class LoginSignupEmbeddedRequestScreen extends StatefulWidget {
 
   /// Builder for creating the connectivity recovery strategy.
   final ConnectivityRecoveryStrategyBuilder connectivityRecoveryStrategyBuilder;
+
+  /// What to do with the page when a signup it posted ends without a session.
+  final ResultStrategy resultStrategy;
 
   @override
   State<LoginSignupEmbeddedRequestScreen> createState() => _LoginSignupEmbeddedRequestScreenState();
@@ -56,11 +60,14 @@ class _LoginSignupEmbeddedRequestScreenState extends State<LoginSignupEmbeddedRe
   /// Acts as a guard during error state transitions or repeated error emissions from the same source.
   bool _errorDialogShown = false;
 
+  late final PageResultAnswer _resultAnswer;
+
   LoginCubit get _loginCubit => context.read<LoginCubit>();
 
   @override
   void initState() {
     _connectivityRecoveryStrategy = widget.connectivityRecoveryStrategyBuilder();
+    _resultAnswer = PageResultAnswer(strategy: widget.resultStrategy, page: WebViewResultPage(_webViewController));
 
     // TODO: Add to embedded configuration possibly disable media query injection and/or device info injection.
     _pageInjectionStrategies = PageInjectionBuilders.resolve(
@@ -71,7 +78,10 @@ class _LoginSignupEmbeddedRequestScreenState extends State<LoginSignupEmbeddedRe
 
     _jSChannelStrategies = JSChannelBuilders.resolve(
       custom: [
-        JSChannelStrategy.route(name: 'WebtritLoginChannel', routes: {'signup': _onJSMessageReceived}),
+        JSChannelStrategy.route(
+          name: EmbeddedSignupEnd.channel,
+          routes: {EmbeddedSignupEnd.event: _onJSMessageReceived},
+        ),
       ],
     );
 
@@ -80,10 +90,22 @@ class _LoginSignupEmbeddedRequestScreenState extends State<LoginSignupEmbeddedRe
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<LoginCubit, LoginState>(
-      listenWhen: (LoginState previous, LoginState current) =>
-          previous.embeddedRequestError != current.embeddedRequestError,
-      listener: _handleEmbeddedErrorState,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<LoginCubit, LoginState>(
+          listenWhen: (LoginState previous, LoginState current) =>
+              previous.embeddedRequestError != current.embeddedRequestError,
+          listener: _handleEmbeddedErrorState,
+        ),
+        BlocListener<LoginCubit, LoginState>(
+          listenWhen: (previous, current) => previous.embeddedSignupEnd != current.embeddedSignupEnd,
+          listener: _onSignupEndChanged,
+        ),
+        BlocListener<LoginCubit, LoginState>(
+          listenWhen: (previous, current) => previous.pendingLogin != null && current.pendingLogin == null,
+          listener: _onDeviceLimitScreenLeft,
+        ),
+      ],
       child: PopScope(
         canPop: !_canGoBack,
         onPopInvokedWithResult: (_, _) => _webViewController.goBackInPage(),
@@ -100,6 +122,30 @@ class _LoginSignupEmbeddedRequestScreenState extends State<LoginSignupEmbeddedRe
         ),
       ),
     );
+  }
+
+  /// A signup of the page ended without a session, or a new one started.
+  ///
+  /// The device limit screen and the error dialog cover the page; the answer then waits for
+  /// them to go, so the page is answered in front of the user.
+  void _onSignupEndChanged(BuildContext context, LoginState state) {
+    final end = state.embeddedSignupEnd;
+    if (end == null) {
+      _resultAnswer.drop();
+      return;
+    }
+    final covered = state.pendingLogin != null || state.embeddedRequestError != null;
+    _resultAnswer.ended(end.result, covered: covered);
+  }
+
+  /// The device limit screen was left: without a login the page is answered; with one the app
+  /// is leaving the page anyway.
+  void _onDeviceLimitScreenLeft(BuildContext context, LoginState state) {
+    if (state.token == null) {
+      _resultAnswer.uncovered();
+    } else {
+      _resultAnswer.drop();
+    }
   }
 
   /// Returns a WebView error builder that shows a native error dialog,
@@ -129,9 +175,8 @@ class _LoginSignupEmbeddedRequestScreenState extends State<LoginSignupEmbeddedRe
 
   /// Handles the embedded error state by checking if an error is present
   void _handleEmbeddedErrorState(BuildContext context, LoginState state) {
-    // Reset the guard when the error is cleared (e.g. before a new loginCustomSignupRequest attempt).
-    // This ensures the dialog is shown again if the system back button dismissed the previous one
-    // without going through the explicit Retry or Back buttons (which reset _errorDialogShown themselves).
+    // Reset the guard when the error is cleared (before a new loginCustomSignupRequest attempt, or
+    // when the dialog is closed), so the next failure shows the dialog again.
     if (state.embeddedRequestError == null) {
       _errorDialogShown = false;
       return;
@@ -167,42 +212,44 @@ class _LoginSignupEmbeddedRequestScreenState extends State<LoginSignupEmbeddedRe
         ? (error.error?.message ?? error.toString())
         : context.l10n.common_noInternetConnection_message;
 
-    context.router.pushWidget(
-      EmbeddedRequestErrorDialog(
-        title: title,
-        error: message,
-        onRetry: () => _onEmbeddedErrorRetry(extras, callbackData),
-        onBack: isRequestFailure ? _onEmbeddedErrorBack : null,
-      ),
-      transitionBuilder: TransitionsBuilders.slideBottom,
-    );
+    context.router
+        .pushWidget(
+          EmbeddedRequestErrorDialog(
+            title: title,
+            error: message,
+            onRetry: () => _onEmbeddedErrorRetry(extras, callbackData),
+            onBack: isRequestFailure ? _onEmbeddedErrorBack : null,
+          ),
+          transitionBuilder: TransitionsBuilders.slideBottom,
+        )
+        .then((_) => _onEmbeddedErrorDialogClosed(error));
+  }
+
+  /// The dialog for [error] is gone - by its Back button or by the system Back key. Unless a
+  /// retry has already replaced the error, the page is answered now that it shows again.
+  void _onEmbeddedErrorDialogClosed(Object error) {
+    if (!mounted || !identical(_loginCubit.state.embeddedRequestError, error)) return;
+
+    _errorDialogShown = false;
+    _loginCubit.clearEmbeddedRequestError();
+    _resultAnswer.uncovered();
   }
 
   /// Handles retry action from the embedded error dialog.
   /// Triggers a new embedded login request using previously cached data.
   Future<void> _onEmbeddedErrorRetry(Map<String, dynamic>? extras, Map<String, dynamic>? callbackData) async {
+    // The page is still waiting, now for the retry; the end it was waiting for is not its answer.
+    _resultAnswer.drop();
     context.router.pop();
     _errorDialogShown = false;
 
     await _loginCubit.loginCustomSignupRequest(extras, callbackData);
   }
 
-  /// Handles back action from the embedded error dialog.
-  /// Tries to navigate back in the WebView, and reloads if no history available.
-  Future<void> _onEmbeddedErrorBack() async {
+  /// Handles back action from the embedded error dialog; the page is answered once the dialog
+  /// is gone ([_onEmbeddedErrorDialogClosed]), the same as after the system Back key.
+  void _onEmbeddedErrorBack() {
     context.router.pop();
-    _errorDialogShown = false;
-
-    _loginCubit.clearEmbeddedRequestError();
-
-    if (!mounted) return;
-
-    final canGoBack = await _webViewController.canGoBackInPage();
-    if (canGoBack) {
-      _webViewController.goBackInPage();
-    } else {
-      _webViewController.reloadPage();
-    }
   }
 
   void _onJSMessageReceived(WebViewController _, JsonJsEvent e) {

@@ -48,6 +48,7 @@ class LoginSignupEmbeddedRequestScreenPage extends StatelessWidget {
                   deviceInfoData: context.read<AppMetadataProvider>().logLabels,
                   pageInjectionStrategyBuilder: _createInjectionStrategy(locale),
                   connectivityRecoveryStrategyBuilder: () => _createConnectivityRecoveryStrategy(context, embeddedData),
+                  resultStrategy: embeddedData.resultStrategy,
                 )
               : LoginSignupEmbeddedRequestScreen(
                   initialUrl: Uri.dataFromString(content, mimeType: 'text/html', encoding: Encoding.getByName('utf-8')),
@@ -56,6 +57,7 @@ class LoginSignupEmbeddedRequestScreenPage extends StatelessWidget {
                   deviceInfoData: context.read<AppMetadataProvider>().logLabels,
                   pageInjectionStrategyBuilder: _createInjectionStrategy(locale),
                   connectivityRecoveryStrategyBuilder: () => _createConnectivityRecoveryStrategy(context, embeddedData),
+                  resultStrategy: embeddedData.resultStrategy,
                 );
         } else {
           return const Center(child: Text('Unexpected error occurred.'));

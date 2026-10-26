@@ -55,6 +55,13 @@ extension WebViewPageNavigation on WebViewController {
     final address = _openedAddresses[this];
     if (address != null) await loadRequest(address);
   }
+
+  /// Opens the address the [WebViewContainer] opened, as a new page: unlike [reloadPage], the
+  /// state a page keeps in its history entry (`history.state`) does not come back with it.
+  Future<void> restartPage() async {
+    final address = _openedAddresses[this];
+    if (address != null) await loadRequest(address);
+  }
 }
 
 class WebViewContainer extends StatefulWidget {
