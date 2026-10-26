@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -120,6 +121,62 @@ void main() {
       await strategy.onUncovered();
 
       expect(calls, isEmpty);
+    });
+  });
+
+  group('a page that posts the same request again as soon as it is brought back', () {
+    late DateTime now;
+    final ticking = Clock(() => now);
+
+    setUp(() => now = DateTime(2026, 10, 25, 12));
+
+    test('is not moved again for the result that follows at once', () {
+      return withClock(ticking, () async {
+        final strategy = attached(ResultStrategy.historyBack, page());
+
+        await strategy.onResult(_refused, covered: false);
+        now = now.add(const Duration(seconds: 2));
+        await strategy.onResult(_refused, covered: false);
+
+        expect(calls, ['reload']);
+      });
+    });
+
+    test('is moved again for a result that comes after the window', () {
+      return withClock(ticking, () async {
+        final strategy = attached(ResultStrategy.historyBack, page(history: true));
+
+        await strategy.onResult(_refused, covered: false);
+        now = now.add(PageResultStrategy.repostWindow);
+        await strategy.onResult(_refused, covered: false);
+
+        expect(calls, ['goBack', 'goBack']);
+      });
+    });
+
+    test('is moved again for the next result once one was left unanswered', () {
+      return withClock(ticking, () async {
+        final strategy = attached(ResultStrategy.reload, page());
+
+        await strategy.onResult(_refused, covered: false);
+        now = now.add(const Duration(seconds: 1));
+        await strategy.onResult(_refused, covered: false);
+        now = now.add(const Duration(seconds: 1));
+        await strategy.onResult(_refused, covered: false);
+
+        expect(calls, ['reload', 'reload']);
+      });
+    });
+
+    test('is told every result: telling does not move it', () {
+      return withClock(ticking, () async {
+        final strategy = attached(ResultStrategy.notify, page(takesResults: true));
+
+        await strategy.onResult(_refused, covered: false);
+        await strategy.onResult(_refused, covered: false);
+
+        expect(calls, hasLength(2));
+      });
     });
   });
 

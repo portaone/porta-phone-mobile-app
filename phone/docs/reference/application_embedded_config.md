@@ -267,7 +267,8 @@ that screen, so it is answered while it is in front of the user.
 **Strategies:**
 
 - `historyBack` (default, also for a value the app does not know): back in the page's own history,
-  or a reload when it has none. A page that knows nothing of this setting keeps working.
+  or a reload when it has none. A page that knows nothing of this setting keeps working. The
+  reload has the caveat of `reload`.
 - `notify`: calls `window.onWebTritResult(result)` and leaves the rest to the page - it keeps
   what the user typed. A page without that function gets `historyBack`.
 - `restart`: loads the page again from its `uri`, with a fresh history.
@@ -298,6 +299,11 @@ window.onWebTritResult = function (result) {
 
 A page should ignore a result for a `channel` and `event` it does not know, and treat an unknown
 `reason` as a failure.
+
+A request that ends within 5 seconds after the app moved the page for the one before it - a page
+that posts again by itself as soon as it is shown - is not answered by moving the page again: the
+page is left as it is, still waiting, instead of being reloaded for as long as the backend refuses.
+Telling the page (`notify`) is not held back.
 
 **Requests answered today:**
 
