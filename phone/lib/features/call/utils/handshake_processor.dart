@@ -58,6 +58,7 @@ final class RestoreCallAction extends HandshakeAction {
     required this.acceptedTime,
     this.incomingCallEvent,
     this.mediaState,
+    this.held = false,
   });
 
   final int line;
@@ -66,9 +67,24 @@ final class RestoreCallAction extends HandshakeAction {
   final DateTime acceptedTime;
   final IncomingCallEvent? incomingCallEvent;
 
+  /// The call is on hold on the server: its newest hold event is a hold.
+  final bool held;
+
   /// The remote side's latest media state, when the log carries one: the
   /// caller may have turned the camera off while nobody here was listening.
   final MediaStatePeerMessageEvent? mediaState;
+
+  /// The same restore, of a call that is to come back on hold. Every field is
+  /// passed on: a field added here has to be added there too.
+  RestoreCallAction asHeld() => RestoreCallAction(
+    line: line,
+    callId: callId,
+    acceptedEvent: acceptedEvent,
+    acceptedTime: acceptedTime,
+    incomingCallEvent: incomingCallEvent,
+    mediaState: mediaState,
+    held: true,
+  );
 }
 
 /// Deliver an unanswered [IncomingCallEvent] to the BLoC signaling handler.
@@ -240,6 +256,16 @@ final class RejoinConferenceAction extends HandshakeAction {
 /// the processor exits early to match the original `return` semantics, while
 /// preserving any already-collected queued actions.
 class HandshakeProcessor {
+  /// The restores in the order they run, as the calls are to come back. Only
+  /// the last comes back live: each restore holds the calls restored before
+  /// it. The held ones go first, and every one but the last is restored held
+  /// from the start - offered held - rather than held once its media is up,
+  /// which the gateway refuses while that call's own re-INVITE is in flight.
+  static List<RestoreCallAction> _ordered(List<RestoreCallAction> restores) {
+    final ordered = [...restores.where((r) => r.held), ...restores.where((r) => !r.held)];
+    return [for (final (i, r) in ordered.indexed) i < ordered.length - 1 && !r.held ? r.asHeld() : r];
+  }
+
   HandshakeProcessor({required this.queuedTerminationRequestsRepository});
 
   final QueuedTerminationRequestsRepository queuedTerminationRequestsRepository;
@@ -274,16 +300,20 @@ class HandshakeProcessor {
       guestLine,
     ].whereType<Line>().where((line) => !queuedTerminationCallIds.contains(line.callId)).toList();
 
+    final restores = <RestoreCallAction>[];
     for (final line in allLines) {
       final log = _LineLog(line);
 
       final teardown = _teardownAction(log, lineConnections, activeCallIds);
-      if (teardown != null) return [...actions, teardown];
+      if (teardown != null) return [...actions, ..._ordered(restores), teardown];
 
       final restore = _restoreAction(log, activeCallIds);
       if (restore != null) {
-        _logger.info('process: call ${log.callId} is accepted on the server and not in the bloc, restoring it');
-        actions.add(restore);
+        _logger.info(
+          'process: call ${log.callId} is accepted on the server and not in the bloc, restoring it '
+          '(held=${restore.held})',
+        );
+        restores.add(restore);
         continue;
       }
       var planned = false;
@@ -333,6 +363,8 @@ class HandshakeProcessor {
         );
       }
     }
+
+    actions.addAll(_ordered(restores));
 
     actions.addAll(_orphanedConnectionActions(connections, allLines, activeCallIds));
 
@@ -448,6 +480,7 @@ class HandshakeProcessor {
       acceptedTime: DateTime.fromMillisecondsSinceEpoch(accepted.timestamp),
       incomingCallEvent: earliest is IncomingCallEvent ? earliest : null,
       mediaState: log.mediaState,
+      held: log.held,
     );
   }
 
@@ -511,6 +544,11 @@ class _LineLog {
 
   /// The remote side's media state that stands: the newest one.
   late final mediaState = _events.map((log) => log.callEvent).whereType<MediaStatePeerMessageEvent>().firstOrNull;
+
+  /// On hold on the server: the newest of its hold and resume events is a hold.
+  late final bool held =
+      _events.map((log) => log.callEvent).where((e) => e is HoldingEvent || e is ResumingEvent).firstOrNull
+          is HoldingEvent;
 
   /// The server has ended the call: its latest event is a final hangup or a
   /// missed call.
