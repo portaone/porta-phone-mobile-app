@@ -93,7 +93,8 @@ class SessionTile extends StatelessWidget {
       ?device?.osLabel,
       if (session.lastActivityLocation ?? session.location case final location?) location.toUpperCase(),
     ];
-    final seenAt = session.lastActivityAt ?? session.createdAt;
+    // Core sends UTC; the date is read on the phone's clock.
+    final seenAt = (session.lastActivityAt ?? session.createdAt)?.toLocal();
     final detailStyle = textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant);
     final appVersion = _foreignAppVersion(device);
 

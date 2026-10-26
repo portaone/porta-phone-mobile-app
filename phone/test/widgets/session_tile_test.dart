@@ -83,6 +83,13 @@ void main() {
     expect(find.text('2026-08-12 18:30'), findsOneWidget);
   });
 
+  testWidgets('shows the date Core sends in UTC on the phone\'s clock', (tester) async {
+    final at = DateTime.utc(2026, 10, 22, 13, 25);
+    await tester.pumpWidget(wrap(ActiveSession(id: 'a', current: false, appType: AppType.android, lastActivityAt: at)));
+
+    expect(find.text(dateFormat.format(at.toLocal())), findsOneWidget);
+  });
+
   testWidgets('the current device is seen like the others and offers no sign-out', (tester) async {
     await tester.pumpWidget(
       wrap(
