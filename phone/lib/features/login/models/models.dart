@@ -1,5 +1,6 @@
 export 'code_input.dart';
 export 'email_input.dart';
+export 'embedded_signup_failure.dart';
 export 'notifications.dart';
 export 'login_error_notification.dart';
 export 'login_mode.dart';

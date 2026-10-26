@@ -15,6 +15,7 @@ const enumProperties = <String, Map<String, EnumProperty>>{
     'layout': EnumProperty(<String>['tabbed', 'unified'], 'tabbed'),
   },
   'EmbeddedResource': {
+    'resultStrategy': EnumProperty(<String>['historyBack', 'notify', 'restart', 'reload', 'none'], null),
     'type': EnumProperty(<String>['terms', 'unknown'], 'unknown'),
   },
   'ImageRenderSpec': {

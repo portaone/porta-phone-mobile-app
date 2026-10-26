@@ -26,6 +26,11 @@ EmbeddedResource _$EmbeddedResourceFromJson(
       const [],
   enableConsoleLogCapture: json['enableConsoleLogCapture'] as bool? ?? false,
   reconnectStrategy: json['reconnectStrategy'] as String?,
+  resultStrategy: $enumDecodeNullable(
+    _$ResultStrategyConfigEnumMap,
+    json['resultStrategy'],
+    unknownValue: JsonKey.nullForUndefinedEnumValue,
+  ),
 );
 
 Map<String, dynamic> _$EmbeddedResourceToJson(EmbeddedResource instance) =>
@@ -39,6 +44,7 @@ Map<String, dynamic> _$EmbeddedResourceToJson(EmbeddedResource instance) =>
       'payload': instance.payload,
       'enableConsoleLogCapture': instance.enableConsoleLogCapture,
       'reconnectStrategy': instance.reconnectStrategy,
+      'resultStrategy': _$ResultStrategyConfigEnumMap[instance.resultStrategy],
     };
 
 const _$EmbeddedResourceJsonSchema = {
@@ -88,6 +94,11 @@ const _$EmbeddedResourceJsonSchema = {
       'type': 'string',
       'description': 'Strategy applied when network reconnects.',
     },
+    'resultStrategy': {
+      'type': 'object',
+      'description':
+          'What the app does with the page when a request it posted to the app ends without success.\n\nUnset, or a value this build does not know, leaves the choice to the app (see\n[ResultStrategyConfig]), so a configuration written for a newer build still loads.',
+    },
   },
   'required': ['id', 'uri'],
   r'$defs': {
@@ -123,6 +134,14 @@ const _$EmbeddedResourceJsonSchema = {
 const _$EmbeddedResourceTypeEnumMap = {
   EmbeddedResourceType.terms: 'terms',
   EmbeddedResourceType.unknown: 'unknown',
+};
+
+const _$ResultStrategyConfigEnumMap = {
+  ResultStrategyConfig.historyBack: 'historyBack',
+  ResultStrategyConfig.notify: 'notify',
+  ResultStrategyConfig.restart: 'restart',
+  ResultStrategyConfig.reload: 'reload',
+  ResultStrategyConfig.none: 'none',
 };
 
 ToolbarConfig _$ToolbarConfigFromJson(Map<String, dynamic> json) =>

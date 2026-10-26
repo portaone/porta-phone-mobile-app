@@ -24,6 +24,7 @@ They can be launched as a bottom menu tab, a settings item, or as part of a cust
     - [Reload Channel](#reload-channel)
 - [Advanced Features](#advanced-features)
     - [Connectivity Recovery](#connectivity-recovery)
+    - [Request Results](#request-results)
     - [External Navigation Protocol](#external-navigation-protocol)
 - [Best Practices](#best-practices)
 
@@ -45,6 +46,7 @@ payloads, connectivity, and native UI elements like the toolbar.
 | `payload`                 | `List<string>?` | A list of data keys to be injected into the page (see [Payload Injection](#payload-injection)).        |
 | `toolbar`                 | `object?`       | Configuration for the native toolbar displayed above the `WebView`.                                    |
 | `reconnectStrategy`       | `string?`       | The strategy for handling network interruptions (see [Connectivity Recovery](#connectivity-recovery)). |
+| `resultStrategy`          | `string?`       | What the app does with the page when a request it posted ends without success (see [Request Results](#request-results)). |
 | `enableConsoleLogCapture` | `bool?`         | If `true`, captures `console.*` messages from the web page.                                            |
 
 ### Example
@@ -94,6 +96,7 @@ The web page must implement these global functions to receive data from the app.
 | `onPayloadDataReady` | Business-level data like tokens and user ID. |
 | `onMediaQueryReady`  | Device screen metrics and theme info.        |
 | `onDeviceInfoReady`  | Application and device identification data.  |
+| `onWebTritResult`    | The outcome of a request the page posted, when its resource has `resultStrategy: notify` (see [Request Results](#request-results)). |
 
 ### Injection Order & Timing
 
@@ -251,6 +254,62 @@ To set a strategy, add it to the resource definition:
   "reconnectStrategy": "notifyOnly"
 }
 ```
+
+### Request Results
+
+Some events a page posts on a channel are requests: the page puts itself into a waiting state - a
+spinner, a disabled form - and the app does the work. When the request succeeds the app usually
+leaves the page; when it ends without success the page cannot learn that by itself, so the app
+brings it back as the resource's `resultStrategy` says. If a screen of the app opens over the page
+for that outcome (a dialog, the device limit screen), the page is answered after the user leaves
+that screen, so it is answered while it is in front of the user.
+
+**Strategies:**
+
+- `historyBack` (default, also for a value the app does not know): back in the page's own history,
+  or a reload when it has none. A page that knows nothing of this setting keeps working. The
+  reload has the caveat of `reload`.
+- `notify`: calls `window.onWebTritResult(result)` and leaves the rest to the page - it keeps
+  what the user typed. A page without that function gets `historyBack`.
+- `restart`: loads the page again from its `uri`, with a fresh history.
+- `reload`: reloads the current page. A single-page app that submits again when a step is shown
+  (from `history.state`, which survives a reload) would post the same request again: use it only
+  for pages without such a step.
+- `none`: leaves the page as it is.
+
+```json
+{
+  "id": "login_page",
+  "uri": "...",
+  "resultStrategy": "notify"
+}
+```
+
+**The result** has the same shape for every request; `channel` and `event` name the request it
+answers, and the `reason` values belong to that request's contract:
+
+```javascript
+window.onWebTritResult = function (result) {
+  // { "channel": "WebtritLoginChannel", "event": "signup", "ok": false, "reason": "device_limit" }
+  if (result.channel === "WebtritLoginChannel" && result.event === "signup") {
+    setLoading(false); // clear the page's own waiting state, show a message, stay on the form
+  }
+};
+```
+
+A page should ignore a result for a `channel` and `event` it does not know, and treat an unknown
+`reason` as a failure.
+
+A request that ends within 5 seconds after the app moved the page for the one before it - a page
+that posts again by itself as soon as it is shown - is not answered by moving the page again: the
+page is left as it is, still waiting, instead of being reloaded for as long as the backend refuses.
+Telling the page (`notify`) is not held back.
+
+**Requests answered today:**
+
+| Channel               | Event    | Reasons                                                                       | Contract                                                         |
+|-----------------------|----------|-------------------------------------------------------------------------------|------------------------------------------------------------------|
+| `WebtritLoginChannel` | `signup` | `device_limit`, `device_switch_limit`, `request_failed`, `unsupported_backend` | [Custom Login](custom_login.md#flutter-side-handling)            |
 
 ### External Navigation Protocol
 

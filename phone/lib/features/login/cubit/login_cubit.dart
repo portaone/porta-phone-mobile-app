@@ -438,12 +438,19 @@ class LoginCubit extends Cubit<LoginState> {
     Map<String, dynamic>? extras,
     Map<String, dynamic>? embeddedCallbackData,
   ) async {
+    // A page may post its signup again on its own, as a step that submits when it is shown does
+    // after a reload. One while the device limit screen holds the login the last one ended in
+    // would start a second login under the first; one while a signup is out is ignored the same
+    // way, as the password sign-in does.
+    if (state.processing || state.pendingLogin != null) return;
+
     emit(
       state.copyWith(
         processing: true,
         embeddedExtras: extras,
         embeddedCallbackData: embeddedCallbackData,
         embeddedRequestError: null,
+        embeddedSignupFailure: null,
       ),
     );
 
@@ -460,7 +467,12 @@ class LoginCubit extends Cubit<LoginState> {
         if (systemInfo == null) {
           // The backend and this build do not fit, and the user has been told:
           // there is no session to enter, whatever the request came to.
-          emit(state.copyWith(processing: false));
+          emit(
+            state.copyWith(
+              processing: false,
+              embeddedSignupFailure: EmbeddedSignupFailure(EmbeddedSignupFailureReason.unsupportedBackend),
+            ),
+          );
           return;
         }
         emit(state.copyWith(systemInfo: systemInfo, processing: false));
@@ -483,6 +495,7 @@ class LoginCubit extends Cubit<LoginState> {
         state.copyWith(
           processing: false,
           embeddedRequestError: _isDeviceLimitRefusal(e) ? null : e,
+          embeddedSignupFailure: EmbeddedSignupFailure(_embeddedSignupFailureReason(e)),
           // The call the page asked for waits with the login it belongs to.
           pendingLoginCallbackData: e is LoginDeviceLimitReached && state.pendingLogin != null
               ? embeddedCallbackData
@@ -711,6 +724,14 @@ class LoginCubit extends Cubit<LoginState> {
         pendingLoginCallbackData: null,
       ),
     );
+  }
+
+  EmbeddedSignupFailureReason _embeddedSignupFailureReason(Object error) {
+    return switch (error) {
+      LoginDeviceLimitReached() => EmbeddedSignupFailureReason.deviceLimit,
+      DeviceSwitchLimitReachedException() => EmbeddedSignupFailureReason.deviceSwitchLimit,
+      _ => EmbeddedSignupFailureReason.failed,
+    };
   }
 
   /// Whether the login was refused for a device limit.

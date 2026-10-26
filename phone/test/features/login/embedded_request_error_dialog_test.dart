@@ -58,4 +58,40 @@ void main() {
 
     handle.dispose();
   });
+
+  testWidgets('the system back key closes it once, without the back button\'s action', (tester) async {
+    var wentBack = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => EmbeddedRequestErrorDialog(
+                  title: 'Something went wrong',
+                  error: 'The request failed',
+                  onRetry: () {},
+                  onBack: () => wentBack++,
+                ),
+              ),
+            ),
+            child: const Text('page under it'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('page under it'));
+    await tester.pumpAndSettle();
+    expect(find.byType(EmbeddedRequestErrorDialog), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(EmbeddedRequestErrorDialog), findsNothing);
+    expect(find.text('page under it'), findsOneWidget);
+    expect(wentBack, 0);
+  });
 }

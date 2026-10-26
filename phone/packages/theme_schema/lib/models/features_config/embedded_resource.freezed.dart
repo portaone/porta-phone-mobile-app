@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EmbeddedResource {
 
- String get id; String get uri; EmbeddedResourceType get type; Map<String, dynamic> get attributes; ToolbarConfig get toolbar; Metadata get metadata; List<String> get payload; bool get enableConsoleLogCapture; String? get reconnectStrategy;
+ String get id; String get uri; EmbeddedResourceType get type; Map<String, dynamic> get attributes; ToolbarConfig get toolbar; Metadata get metadata; List<String> get payload; bool get enableConsoleLogCapture; String? get reconnectStrategy; ResultStrategyConfig? get resultStrategy;
 /// Create a copy of EmbeddedResource
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +26,16 @@ $EmbeddedResourceCopyWith<EmbeddedResource> get copyWith => _$EmbeddedResourceCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedResource&&(identical(other.id, id) || other.id == id)&&(identical(other.uri, uri) || other.uri == uri)&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.attributes, attributes)&&(identical(other.toolbar, toolbar) || other.toolbar == toolbar)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&const DeepCollectionEquality().equals(other.payload, payload)&&(identical(other.enableConsoleLogCapture, enableConsoleLogCapture) || other.enableConsoleLogCapture == enableConsoleLogCapture)&&(identical(other.reconnectStrategy, reconnectStrategy) || other.reconnectStrategy == reconnectStrategy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedResource&&(identical(other.id, id) || other.id == id)&&(identical(other.uri, uri) || other.uri == uri)&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.attributes, attributes)&&(identical(other.toolbar, toolbar) || other.toolbar == toolbar)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&const DeepCollectionEquality().equals(other.payload, payload)&&(identical(other.enableConsoleLogCapture, enableConsoleLogCapture) || other.enableConsoleLogCapture == enableConsoleLogCapture)&&(identical(other.reconnectStrategy, reconnectStrategy) || other.reconnectStrategy == reconnectStrategy)&&(identical(other.resultStrategy, resultStrategy) || other.resultStrategy == resultStrategy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,uri,type,const DeepCollectionEquality().hash(attributes),toolbar,metadata,const DeepCollectionEquality().hash(payload),enableConsoleLogCapture,reconnectStrategy);
+int get hashCode => Object.hash(runtimeType,id,uri,type,const DeepCollectionEquality().hash(attributes),toolbar,metadata,const DeepCollectionEquality().hash(payload),enableConsoleLogCapture,reconnectStrategy,resultStrategy);
 
 @override
 String toString() {
-  return 'EmbeddedResource(id: $id, uri: $uri, type: $type, attributes: $attributes, toolbar: $toolbar, metadata: $metadata, payload: $payload, enableConsoleLogCapture: $enableConsoleLogCapture, reconnectStrategy: $reconnectStrategy)';
+  return 'EmbeddedResource(id: $id, uri: $uri, type: $type, attributes: $attributes, toolbar: $toolbar, metadata: $metadata, payload: $payload, enableConsoleLogCapture: $enableConsoleLogCapture, reconnectStrategy: $reconnectStrategy, resultStrategy: $resultStrategy)';
 }
 
 
@@ -46,7 +46,7 @@ abstract mixin class $EmbeddedResourceCopyWith<$Res>  {
   factory $EmbeddedResourceCopyWith(EmbeddedResource value, $Res Function(EmbeddedResource) _then) = _$EmbeddedResourceCopyWithImpl;
 @useResult
 $Res call({
- String id, String uri, EmbeddedResourceType type, Map<String, dynamic> attributes, ToolbarConfig toolbar, Metadata metadata, List<String> payload, bool enableConsoleLogCapture, String? reconnectStrategy
+ String id, String uri, EmbeddedResourceType type, Map<String, dynamic> attributes, ToolbarConfig toolbar, Metadata metadata, List<String> payload, bool enableConsoleLogCapture, String? reconnectStrategy, ResultStrategyConfig? resultStrategy
 });
 
 
@@ -63,7 +63,7 @@ class _$EmbeddedResourceCopyWithImpl<$Res>
 
 /// Create a copy of EmbeddedResource
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? uri = null,Object? type = null,Object? attributes = null,Object? toolbar = null,Object? metadata = null,Object? payload = null,Object? enableConsoleLogCapture = null,Object? reconnectStrategy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? uri = null,Object? type = null,Object? attributes = null,Object? toolbar = null,Object? metadata = null,Object? payload = null,Object? enableConsoleLogCapture = null,Object? reconnectStrategy = freezed,Object? resultStrategy = freezed,}) {
   return _then(EmbeddedResource(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,uri: null == uri ? _self.uri : uri // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,8 @@ as ToolbarConfig,metadata: null == metadata ? _self.metadata : metadata // ignor
 as Metadata,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
 as List<String>,enableConsoleLogCapture: null == enableConsoleLogCapture ? _self.enableConsoleLogCapture : enableConsoleLogCapture // ignore: cast_nullable_to_non_nullable
 as bool,reconnectStrategy: freezed == reconnectStrategy ? _self.reconnectStrategy : reconnectStrategy // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,resultStrategy: freezed == resultStrategy ? _self.resultStrategy : resultStrategy // ignore: cast_nullable_to_non_nullable
+as ResultStrategyConfig?,
   ));
 }
 

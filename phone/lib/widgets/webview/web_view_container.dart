@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:stream_transform/stream_transform.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -31,6 +32,11 @@ final _logger = Logger('WebViewContainer');
 /// locale it added; what a browser web view opens again in place of a reload.
 final _openedAddresses = Expando<Uri>('WebViewContainer opened address');
 
+/// Records [address] as the one a [WebViewContainer] opened in [controller].
+@visibleForTesting
+void rememberOpenedAddressForTesting(WebViewController controller, Uri address) =>
+    _openedAddresses[controller] = address;
+
 /// Page navigation that holds on every platform.
 ///
 /// A browser web view is a plain iframe: it keeps no history it can be asked
@@ -55,6 +61,13 @@ extension WebViewPageNavigation on WebViewController {
     final address = _openedAddresses[this];
     if (address != null) await loadRequest(address);
   }
+
+  /// Opens the address the [WebViewContainer] opened, as a new page: unlike [reloadPage], the
+  /// state a page keeps in its history entry (`history.state`) does not come back with it.
+  Future<void> restartPage() async {
+    final address = _openedAddresses[this];
+    if (address != null) await loadRequest(address);
+  }
 }
 
 class WebViewContainer extends StatefulWidget {
@@ -72,6 +85,7 @@ class WebViewContainer extends StatefulWidget {
     this.onPageLoadedFailed,
     this.onUrlChange,
     this.connectivityRecoveryStrategy,
+    this.pageResultStrategy,
     this.pageInjectionStrategies = const [],
     this.jSChannelStrategies = const [],
   });
@@ -92,6 +106,9 @@ class WebViewContainer extends StatefulWidget {
 
   /// Strategy for handling connectivity recovery and retrying page loads.
   final ConnectivityRecoveryStrategy? connectivityRecoveryStrategy;
+
+  /// What to do with the page when a request it posted to the app ends without success.
+  final PageResultStrategy? pageResultStrategy;
 
   /// List of strategies for injecting data into the WebView when it is ready.
   final List<PageInjectionStrategy> pageInjectionStrategies;
@@ -265,6 +282,7 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
 
   void _disposeConnectivityStrategy() {
     widget.connectivityRecoveryStrategy?._dispose();
+    widget.pageResultStrategy?._dispose();
   }
 
   void _disposeInjectionStrategies() {
@@ -313,6 +331,8 @@ class _WebViewContainerState extends State<WebViewContainer> with WidgetStateMix
     // web view reports none: it would take every page for unloaded and retry
     // it on every network change, wiping what the user had typed.
     if (!kIsWeb) widget.connectivityRecoveryStrategy?._startMonitoring(_webViewController);
+
+    widget.pageResultStrategy?._attach(_webViewController);
   }
 
   void _onUrlChange(UrlChange change) {
@@ -1028,6 +1048,172 @@ class HardReloadRecoveryStrategy extends SoftReloadRecoveryStrategy {
   Future<void> _onRetryAttempt() {
     return _controller.loadRequest(initialUri);
   }
+}
+
+/// What the app does with an embedded page when a request the page posted to the app ends
+/// without success - the [ResultStrategy] of its resource.
+///
+/// The page put itself into a waiting state when it posted and cannot learn the outcome by
+/// itself, so the app answers it once. A result that comes while a screen of the app covers the
+/// page is held until that screen is gone: the page is answered while it is in front of the user,
+/// and a page that posts again on its own does not do it behind that screen.
+///
+/// A page brought back by a reload may post the same request again by itself - a step that
+/// submits when shown - and end the same way at once. Such a result is not answered by moving the
+/// page again, or page and app would go round for as long as the backend refuses; the page is left
+/// waiting instead.
+///
+/// The screen that routes the page's requests tells the strategy how each one ended ([onResult],
+/// [onUncovered], [cancelHeld]); the [WebViewContainer] it is given to attaches it to the page.
+abstract class PageResultStrategy {
+  PageResultStrategy();
+
+  /// How soon after the page was moved a result counts as one of a request the page posted by
+  /// itself as it came back.
+  static const repostWindow = Duration(seconds: 5);
+
+  /// Creates a [PageResultStrategy] for the specified [ResultStrategy].
+  factory PageResultStrategy.create(ResultStrategy type) {
+    _logger.fine('Creating page result strategy: $type');
+
+    return switch (type) {
+      ResultStrategy.historyBack => HistoryBackPageResultStrategy(),
+      ResultStrategy.notify => NotifyPageResultStrategy(),
+      ResultStrategy.restart => RestartPageResultStrategy(),
+      ResultStrategy.reload => ReloadPageResultStrategy(),
+      ResultStrategy.none => NonePageResultStrategy(),
+    };
+  }
+
+  /// The strategy type for this result strategy.
+  ResultStrategy get strategy;
+
+  WebViewController? _controller;
+
+  PageResult? _held;
+
+  DateTime? _movedAt;
+
+  /// A request of the page ended with [result]; [covered] is whether a screen of the app is over
+  /// the page right now.
+  Future<void> onResult(PageResult result, {required bool covered}) async {
+    if (covered) {
+      _held = result;
+      return;
+    }
+    _held = null;
+    await _answer(result);
+  }
+
+  /// The screen that covered the page is gone; a result held for it is answered now.
+  Future<void> onUncovered() async {
+    final result = _held;
+    _held = null;
+    if (result != null) await _answer(result);
+  }
+
+  /// The page is no longer waiting for the held result - a new request started, or the app is
+  /// leaving the page - so it is not answered.
+  void cancelHeld() => _held = null;
+
+  void _attach(WebViewController controller) => _controller = controller;
+
+  void _dispose() {
+    _controller = null;
+    _held = null;
+  }
+
+  @visibleForTesting
+  void attachForTesting(WebViewController controller) => _attach(controller);
+
+  Future<void> _answer(PageResult result) async {
+    final controller = _controller;
+    if (controller == null) return;
+    _logger.info('Answering the page for $result with ${strategy.name}');
+    await _bringBack(controller, result);
+  }
+
+  /// Brings the page in [controller] back for [result].
+  Future<void> _bringBack(WebViewController controller, PageResult result);
+
+  /// Moves the page with [move], unless it was moved for a result just before.
+  Future<void> _move(Future<void> Function() move) async {
+    final now = clock.now();
+    final movedAt = _movedAt;
+    if (movedAt != null && now.difference(movedAt) < repostWindow) {
+      _movedAt = null;
+      _logger.warning('The page posted again as soon as it was brought back; it is left as it is');
+      return;
+    }
+    _movedAt = now;
+    await move();
+  }
+}
+
+/// Steps back in the page's history, or reloads it when it has none - what the error dialog's
+/// Back button has always done, so a page that knows nothing of the setting keeps working.
+class HistoryBackPageResultStrategy extends PageResultStrategy {
+  @override
+  ResultStrategy get strategy => ResultStrategy.historyBack;
+
+  @override
+  Future<void> _bringBack(WebViewController controller, PageResult result) async =>
+      _move(await controller.canGoBackInPage() ? controller.goBackInPage : controller.reloadPage);
+}
+
+/// Tells the page the result through `window.onWebTritResult` and leaves the rest to it; a page
+/// without that function is stepped back as by [HistoryBackPageResultStrategy].
+class NotifyPageResultStrategy extends HistoryBackPageResultStrategy {
+  /// The function on `window` a page defines to take results.
+  static const callbackFunction = 'onWebTritResult';
+
+  @override
+  ResultStrategy get strategy => ResultStrategy.notify;
+
+  @override
+  Future<void> _bringBack(WebViewController controller, PageResult result) async {
+    if (await _takesResults(controller)) {
+      return controller.runJavaScript('window.$callbackFunction(${jsonEncode(result.toJson())})');
+    }
+    return super._bringBack(controller, result);
+  }
+
+  Future<bool> _takesResults(WebViewController controller) async {
+    try {
+      final defined = await controller.runJavaScriptReturningResult("typeof window.$callbackFunction === 'function'");
+      return defined == true || defined.toString() == 'true';
+    } catch (_) {
+      // A browser web view cannot run scripts in the page's frame: the page cannot be told.
+      return false;
+    }
+  }
+}
+
+/// Opens the page again from its address, with a fresh history.
+class RestartPageResultStrategy extends PageResultStrategy {
+  @override
+  ResultStrategy get strategy => ResultStrategy.restart;
+
+  @override
+  Future<void> _bringBack(WebViewController controller, PageResult result) => _move(controller.restartPage);
+}
+
+/// Reloads the current page.
+class ReloadPageResultStrategy extends PageResultStrategy {
+  @override
+  ResultStrategy get strategy => ResultStrategy.reload;
+
+  @override
+  Future<void> _bringBack(WebViewController controller, PageResult result) => _move(controller.reloadPage);
+}
+
+/// Leaves the page as it is.
+class NonePageResultStrategy extends PageResultStrategy {
+  @override
+  ResultStrategy get strategy => ResultStrategy.none;
+
+  @override
+  Future<void> _bringBack(WebViewController controller, PageResult result) async {}
 }
 
 /// A strategy wrapper for handling JavaScript channels in [WebViewController].
