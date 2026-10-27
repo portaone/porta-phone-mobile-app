@@ -25,12 +25,12 @@ registry tell the two builds apart by the build number.
 
 ## The steps
 
-On `release/X.Y.Z`:
+On `release/vX.Y.Z`:
 
 1. Cherry-pick the fix from `master`. Take the commit that is already merged there - a patch is
    never the first place a fix lands, because then it would be missing from the next release.
 2. Raise `app_version` to `X.Y.Z+N`.
-3. Push the change for review to `release/X.Y.Z` and submit it.
+3. Push the change for review to `release/vX.Y.Z` and submit it.
 4. **Tag the merged commit `X.Y.Z+N` by hand**, annotated, and push the tag.
 5. Pin `X.Y.Z+N` in the configurator and leave the `X.Y.Z` registration as it is (the
    configurator backend's `docs/reference/api/phone-versions.md`, "Pinning a patch build").

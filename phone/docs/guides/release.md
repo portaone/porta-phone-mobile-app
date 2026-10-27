@@ -5,7 +5,7 @@ to a version already cut is in [Patching a released version](hotfix_builds.md); 
 store uploads are in [Build](build.md); how callkeep is declared on `master` and on release
 branches is in [The callkeep dependency](../reference/callkeep_dependency.md). The push form used
 below is in [Pushing to Gerrit](../../../docs/gerrit_push.md).
-Last reviewed: 2026-10-15.
+Last reviewed: 2026-10-27.
 
 ## The steps
 
@@ -21,8 +21,12 @@ One release ticket covers the whole release: every release commit and its topic 
 2. **Cut the branch** at the merge commit of those bumps on `master`:
 
    ```sh
-   git push --no-verify origin <merge commit>:refs/heads/release/X.Y.Z
+   git push --no-verify origin <merge commit>:refs/heads/release/vX.Y.Z
    ```
+
+   The branch is named `release/vX.Y.Z`, with a `v`, as the release checklist asks, from
+   1.19.0 on; the branches cut before it keep their names (`release/1.18.0`). The tag below has
+   no `v`, because it must equal `app_version`.
 
 3. **Tag the same commit**, annotated:
 

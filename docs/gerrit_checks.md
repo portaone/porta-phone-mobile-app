@@ -81,7 +81,7 @@ patchset, so a branch cut before `.jenkins/` and `Dockerfile` existed fails ever
 the code. `release/1.16.6` is such a branch. Check before pushing to a release branch:
 
 ```sh
-git ls-tree --name-only origin/release/X.Y.Z | grep -E '^(Dockerfile|\.jenkins)$'
+git ls-tree --name-only origin/release/vX.Y.Z | grep -E '^(Dockerfile|\.jenkins)$'
 ```
 
 The way out is to bring the CI over in a commit of its own (the `Dockerfile` pins the Flutter of

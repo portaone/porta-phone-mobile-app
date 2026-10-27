@@ -6,7 +6,7 @@ description: Pushes a change, a chain, a new patchset or a release tag to Gerrit
 # Pushing to Gerrit
 
 **When:** commits above the target branch should reach Gerrit - a new change, a chain, a new
-patchset after an amend, a push to `release/X.Y.Z`, or a release tag.
+patchset after an amend, a push to `release/vX.Y.Z`, or a release tag.
 
 ## Steps
 
@@ -20,11 +20,11 @@ patchset after an amend, a push to `release/X.Y.Z`, or a release tag.
    ```
 
    Only the ticket of the task in hand may appear. On a release branch pass the range
-   `origin/release/X.Y.Z..HEAD` to all three.
+   `origin/release/vX.Y.Z..HEAD` to all three.
 2. Dry run - it pushes nothing:
 
    ```sh
-   bash scripts/gerrit-push.sh --dry-run [--target release/X.Y.Z] [--topic WT-1234]
+   bash scripts/gerrit-push.sh --dry-run [--target release/vX.Y.Z] [--topic WT-1234]
    ```
 
 3. Show the person who asked the commit list, `Target:` and `Topic:` (the topic defaults to the
@@ -51,8 +51,8 @@ patchset after an amend, a push to `release/X.Y.Z`, or a release tag.
 
 ## Tags and release branches
 
-- Release branch: `--target release/X.Y.Z`. First check the
-  branch has the CI: `git ls-tree --name-only origin/release/X.Y.Z | grep -E '^(Dockerfile|\.jenkins)$'`.
+- Release branch: `--target release/vX.Y.Z`. First check the
+  branch has the CI: `git ls-tree --name-only origin/release/vX.Y.Z | grep -E '^(Dockerfile|\.jenkins)$'`.
 - Branch cut and tag: the commands are in [Release](../../../phone/docs/guides/release.md#the-steps)
   and [Patching a released version](../../../phone/docs/guides/hotfix_builds.md#the-steps).
   A tag goes with `git push --no-verify origin refs/tags/X.Y.Z+N`, then

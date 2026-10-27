@@ -1,6 +1,6 @@
 ---
 name: release-cut
-description: Prepare an app release X.Y.Z+0 or a patch build X.Y.Z+N - the callkeep version bump, the app_version bump, the release/X.Y.Z branch and the annotated tag - and show the push commands for the release owner. Load when a request says cut a release, release branch, release/X.Y.Z, tag a version, patch build, hotfix, +N, app_version or bump callkeep.
+description: Prepare an app release X.Y.Z+0 or a patch build X.Y.Z+N - the callkeep version bump, the app_version bump, the release/vX.Y.Z branch and the annotated tag - and show the push commands for the release owner. Load when a request says cut a release, release branch, release/vX.Y.Z, tag a version, patch build, hotfix, +N, app_version or bump callkeep.
 ---
 
 # Release cut
@@ -34,7 +34,7 @@ and print the exact commands; run a push only when explicitly asked to run that 
 8. Print, for the release owner, the branch, tag and checks:
 
    ```sh
-   git push --no-verify origin <commit>:refs/heads/release/X.Y.Z
+   git push --no-verify origin <commit>:refs/heads/release/vX.Y.Z
    git tag -a X.Y.Z+0 <commit> -m 'Release X.Y.Z'
    git push --no-verify origin refs/tags/X.Y.Z+0
    git ls-remote --tags origin | grep -F 'X.Y.Z+0'
@@ -45,10 +45,10 @@ and print the exact commands; run a push only when explicitly asked to run that 
 
 1. The fix is merged on `master` first; take that merged commit.
 2. Check the branch can be verified:
-   `git ls-tree --name-only origin/release/X.Y.Z | grep -E '^(Dockerfile|\.jenkins)$'` prints both.
-3. Branch off `origin/release/X.Y.Z`, `git cherry-pick -x <master commit>`, and raise
+   `git ls-tree --name-only origin/release/vX.Y.Z | grep -E '^(Dockerfile|\.jenkins)$'` prints both.
+3. Branch off `origin/release/vX.Y.Z`, `git cherry-pick -x <master commit>`, and raise
    `app_version` in `phone/pubspec.yaml` to `X.Y.Z+N` (only `+N` moves).
-4. Show the push: `scripts/gerrit-push.sh --dry-run --target release/X.Y.Z`; push only when asked.
+4. Show the push: `scripts/gerrit-push.sh --dry-run --target release/vX.Y.Z`; push only when asked.
 5. After the merge, check `app_version` on the merged commit as above, then print for the
    release owner the annotated tag `X.Y.Z+N` on it, its `--no-verify` push and the `ls-remote` check.
 6. Pinning `X.Y.Z+N` in the configurator follows [hotfix_builds.md](../../../phone/docs/guides/hotfix_builds.md).

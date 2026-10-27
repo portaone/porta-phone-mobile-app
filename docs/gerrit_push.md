@@ -21,7 +21,7 @@ lefthook run pre-push > /tmp/pre-push.log 2>&1; gate=$?
 ```
 
 - `%wip` keeps the change a draft; `topic=` holds the changes of one ticket together. For a
-  release branch the target is `refs/for/release/X.Y.Z`.
+  release branch the target is `refs/for/release/vX.Y.Z`.
 - `--no-verify` here only avoids running the gate twice. If anything changed after the gate
   (reword, amend, rebase), run the gate again.
 - Keep the gate output whole in the file and filter the file. Truncating it with `tail` cuts off
