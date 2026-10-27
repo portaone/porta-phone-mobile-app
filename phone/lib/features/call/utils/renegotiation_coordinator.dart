@@ -23,6 +23,16 @@ class Renegotiate extends RenegotiationCommand {
   final int? lineId;
 }
 
+/// A fresh local offer for a pulled call whose negotiations have settled.
+///
+/// [attempt] identifies the arming that produced the command: a later arming,
+/// a hold or the call's removal makes it stale before it is acted on.
+class ResumePulledCall extends RenegotiationCommand {
+  const ResumePulledCall(super.callId, this.attempt);
+
+  final Object attempt;
+}
+
 typedef RenegotiationCommandHandler = void Function(RenegotiationCommand command);
 
 /// Owns the timing and session-bound triggers for per-call renegotiation.
@@ -41,17 +51,27 @@ class RenegotiationCoordinator {
     this.maxReplayAttempts = 2,
     this.maxReplayBackoff = const Duration(seconds: 30),
     this.maxUpdatingDeferrals = 10,
+    Timer Function(Duration, void Function())? createPullResumeTimer,
+    this.pullResumeSettle = const Duration(milliseconds: 1500),
+    this.maxPullResumes = 3,
+    this.pullResumeWindow = const Duration(seconds: 30),
+    this.maxPullResumeDeferrals = 20,
+    Random? random,
   }) : _onCommand = onCommand,
        _iceRestarts = DebounceMap<String>(iceRestartDelay),
        _updatingRetryDelay = updatingRetryDelay,
        _delay = delay ?? Future<void>.delayed,
-       _createTimer = createTimer ?? Timer.new;
+       _createTimer = createTimer ?? Timer.new,
+       _createPullResumeTimer = createPullResumeTimer ?? Timer.new,
+       _random = random ?? Random();
 
   final RenegotiationCommandHandler _onCommand;
   final DebounceMap<String> _iceRestarts;
   final Duration _updatingRetryDelay;
   final Future<void> Function(Duration) _delay;
   final Timer Function(Duration, void Function()) _createTimer;
+  final Timer Function(Duration, void Function()) _createPullResumeTimer;
+  final Random _random;
 
   /// Replays sent quickly, at the delay the failure asks for, while
   /// signaling stays connected. Later ones back off.
@@ -64,6 +84,21 @@ class RenegotiationCoordinator {
   /// is updating before that flag is taken as stale.
   final int maxUpdatingDeferrals;
 
+  /// How long a pulled call's negotiations must stay quiet before its resume
+  /// offer is sent. A settling time, not a proof that the server is done.
+  final Duration pullResumeSettle;
+
+  /// The most resume offers one pulled call sends, retries included.
+  final int maxPullResumes;
+
+  /// How long after the pull a server offer may still arm another resume.
+  /// A resume already armed when it passes still goes out.
+  final Duration pullResumeWindow;
+
+  /// How many times in a row the resume may be put off because the call was
+  /// not ready for it, about half a minute of settling times.
+  final int maxPullResumeDeferrals;
+
   final Map<String, RTCSessionDescription> _pendingOffers = {};
 
   /// Calls whose kept offer was acknowledged with an interim `updating` and
@@ -73,6 +108,7 @@ class RenegotiationCoordinator {
   final Map<String, int> _replayAttempts = {};
   final Map<String, Timer> _replayTimers = {};
   final Map<String, int> _updatingDeferrals = {};
+  final Map<String, _PullResume> _pullResumes = {};
 
   void networkAvailable(String callId) {
     _iceRestarts.schedule(callId, () => _onCommand(RestartIce(callId)));
@@ -187,9 +223,164 @@ class RenegotiationCoordinator {
     _replayTimers.remove(callId)?.cancel();
   }
 
+  /// Starts the resume of a call that replaced a dialog, on its accept.
+  ///
+  /// PortaSIP can keep playing music to the far end after a successful pull
+  /// although both sides negotiated sendrecv; answering its offers does not
+  /// stop it, a fresh offer of our own does. Later accepts of the same call -
+  /// the answer to that offer among them - do not arm it again.
+  void pullAccepted(String callId) {
+    if (_pullResumes.containsKey(callId)) return;
+    final resume = _pullResumes[callId] = _PullResume();
+    resume.window = _createPullResumeTimer(pullResumeWindow, () => resume.window = null);
+    _armPullResume(callId, pullResumeSettle);
+  }
+
+  /// Holds the resume back from the moment a server offer arrives until it is
+  /// answered or left: the offer can wait in the event queue for a while, and
+  /// a resume sent meanwhile would collide with it.
+  void pullServerOfferReceived(String callId) {
+    final resume = _pullResumes[callId];
+    if (resume == null || resume.closed) return;
+    resume.serverOffers++;
+    resume.settle?.cancel();
+    resume.settle = null;
+    resume.attempt = null;
+  }
+
+  /// Re-arms the resume after an answered server offer: the offer may have
+  /// started the music again, and our offer waits until such offers settle.
+  ///
+  /// An offer that holds the call ([sendRecv] false), the far end's hold or a
+  /// transfer, puts a pending resume off instead: a sendrecv offer of ours
+  /// would only run into it. Its later sendrecv offer arms the resume again.
+  void pullServerOfferAnswered(String callId, {bool sendRecv = true}) {
+    final resume = _pullResumes[callId];
+    if (resume == null || resume.closed) return;
+    if (resume.serverOffers > 0) resume.serverOffers--;
+    if (!sendRecv) {
+      resume.settle?.cancel();
+      resume.settle = null;
+      resume.attempt = null;
+      return;
+    }
+    if (resume.window == null || resume.sent >= maxPullResumes) return;
+    resume.deferrals = 0;
+    _armPullResume(callId, pullResumeSettle);
+  }
+
+  /// A server offer that was not answered no longer holds the resume back.
+  void pullServerOfferLeft(String callId) {
+    final resume = _pullResumes[callId];
+    if (resume == null || resume.closed) return;
+    if (resume.serverOffers > 0) resume.serverOffers--;
+    if (resume.window == null || resume.sent >= maxPullResumes) return;
+    _armPullResume(callId, pullResumeSettle);
+  }
+
+  /// Puts the resume off by one settling time when the call was not ready for
+  /// it: an unfinished negotiation or an update in progress.
+  void pullResumeDeferred(String callId) {
+    final resume = _pullResumes[callId];
+    if (resume == null || resume.closed) return;
+    if (++resume.deferrals > maxPullResumeDeferrals) {
+      _closePullResume(callId);
+      return;
+    }
+    _armPullResume(callId, pullResumeSettle);
+  }
+
+  bool isPullResumeCurrent(String callId, Object attempt) {
+    final resume = _pullResumes[callId];
+    return resume != null && !resume.closed && identical(resume.attempt, attempt);
+  }
+
+  /// Records that the [attempt]'s offer is going out; it can no longer be
+  /// started again from a stale command.
+  void pullResumeSent(String callId, Object attempt) {
+    if (!isPullResumeCurrent(callId, attempt)) return;
+    final resume = _pullResumes[callId]!;
+    resume.attempt = null;
+    resume.sent++;
+    resume.deferrals = 0;
+  }
+
+  /// Settles a resume offer the server turned down.
+  ///
+  /// A 491 is a collision with a transaction of the other side; RFC 3261
+  /// 14.1 asks to try again after a random 2.1-4 s, as the owner of the
+  /// Call-ID. Any other refusal would only be repeated, so the resume ends.
+  void pullResumeRejected(String callId, int code) {
+    final resume = _pullResumes[callId];
+    if (resume == null || resume.closed) return;
+    if (code != 491 || resume.sent >= maxPullResumes) {
+      _closePullResume(callId);
+      return;
+    }
+    _armPullResume(callId, Duration(milliseconds: 2100 + _random.nextInt(1901)));
+  }
+
+  /// Settles a resume offer that got no reply: signaling was lost or the
+  /// server did not answer in time. It is tried again after one settling time
+  /// while the bound of resumes allows.
+  void pullResumeInterrupted(String callId) {
+    final resume = _pullResumes[callId];
+    if (resume == null || resume.closed) return;
+    if (resume.sent >= maxPullResumes) {
+      _closePullResume(callId);
+      return;
+    }
+    _armPullResume(callId, pullResumeSettle);
+  }
+
+  /// A deliberate hold, or a resume that failed for good: no automatic
+  /// resume of this call is sent any more.
+  void cancelPullResume(String callId) => _closePullResume(callId);
+
+  /// Completes when the call is being ended, so that a wait for the answer to
+  /// its resume offer does not hold the end back.
+  Future<void> pullCallEnding(String callId) => (_pullResumes[callId]?.ending.future) ?? Completer<void>().future;
+
+  /// The call is being ended: the answer to its resume offer is not needed.
+  void callEnding(String callId) {
+    final resume = _pullResumes[callId];
+    if (resume == null) return;
+    _closePullResume(callId);
+    if (!resume.ending.isCompleted) resume.ending.complete();
+  }
+
+  void _armPullResume(String callId, Duration delay) {
+    final resume = _pullResumes[callId]!;
+    resume.settle?.cancel();
+    resume.settle = null;
+    // Answering the server offer that holds it back arms it again.
+    if (resume.serverOffers > 0) {
+      resume.attempt = null;
+      return;
+    }
+    final attempt = resume.attempt = Object();
+    resume.settle = _createPullResumeTimer(delay, () {
+      resume.settle = null;
+      if (identical(resume.attempt, attempt) && !resume.closed) _onCommand(ResumePulledCall(callId, attempt));
+    });
+  }
+
+  void _closePullResume(String callId) {
+    final resume = _pullResumes[callId];
+    if (resume == null) return;
+    resume.closed = true;
+    resume.attempt = null;
+    resume.settle?.cancel();
+    resume.settle = null;
+    resume.window?.cancel();
+    resume.window = null;
+  }
+
   void callRemoved(String callId) {
     _iceRestarts.cancel(callId);
     _updatingDeferrals.remove(callId);
+    callEnding(callId);
+    _pullResumes.remove(callId);
     offerCompleted(callId);
   }
 
@@ -203,5 +394,22 @@ class RenegotiationCoordinator {
     _awaitingAnswer.clear();
     _replayAttempts.clear();
     _updatingDeferrals.clear();
+    for (final callId in _pullResumes.keys.toList()) {
+      callEnding(callId);
+    }
+    _pullResumes.clear();
   }
+}
+
+class _PullResume {
+  Timer? settle;
+  Timer? window;
+  Object? attempt;
+  int sent = 0;
+  int deferrals = 0;
+
+  /// Server offers that have arrived and are not answered yet.
+  int serverOffers = 0;
+  bool closed = false;
+  final Completer<void> ending = Completer<void>();
 }

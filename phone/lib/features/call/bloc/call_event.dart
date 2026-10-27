@@ -1535,6 +1535,8 @@ sealed class _CallMutationEvent extends CallEvent {
 
   // _PeerConnectionEvent redirects
   const factory _CallMutationEvent.renegotiate(String callId, int? lineId) = _CallMutationEventRenegotiate;
+
+  const factory _CallMutationEvent.resumeAfterPull(String callId, Object attempt) = _CallMutationEventResumeAfterPull;
   const factory _CallMutationEvent.trickleIce(String callId, RTCIceCandidate candidate) = _CallMutationEventTrickleIce;
   const factory _CallMutationEvent.iceGatheringComplete(String callId) = _CallMutationEventIceGatheringComplete;
   const factory _CallMutationEvent.iceConnectionFailed(String callId) = _CallMutationEventIceConnectionFailed;
@@ -1873,6 +1875,14 @@ class _CallMutationEventSignalingCallUpdating extends _CallMutationEvent {
 }
 
 // ── peer connection / ICE variants ───────────────────────────────────────────
+
+class _CallMutationEventResumeAfterPull extends _CallMutationEvent {
+  const _CallMutationEventResumeAfterPull(this.callId, this.attempt);
+  final String callId;
+  final Object attempt;
+  @override
+  List<Object?> get props => [callId, attempt];
+}
 
 class _CallMutationEventRenegotiate extends _CallMutationEvent {
   const _CallMutationEventRenegotiate(this.callId, this.lineId);
