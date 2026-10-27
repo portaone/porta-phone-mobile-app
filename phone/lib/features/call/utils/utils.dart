@@ -13,6 +13,7 @@ export 'outgoing_ringback_controller.dart';
 export 'peer_connection_factory.dart';
 export 'call_peer_connection_manager.dart';
 export 'peer_connection_policy_applier.dart';
+export 'pulled_call_resumer.dart';
 export 'remote_frame_probe.dart';
 export 'renegotiation_coordinator.dart';
 export 'rtp_traffic_monitor.dart';

@@ -222,6 +222,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     CallMediaManager? mediaManager,
     Timer Function(Duration, void Function())? roomOfferDeadlineTimer,
     Timer Function(Duration, void Function())? renegotiationReplayTimer,
+    Timer Function(Duration, void Function())? pullResumeTimer,
     Future<void> Function(Duration)? renegotiationUpdatingDelay,
     Timer Function(Duration, void Function())? roomCodecMoveTimer,
     Set<RTPCodec> conferenceAudioCodecs = EncodingConfig.defaultConferenceAudioCodecs,
@@ -242,9 +243,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       onCommand: _executeRenegotiationCommand,
       createTimer: renegotiationReplayTimer,
       delay: renegotiationUpdatingDelay,
+      createPullResumeTimer: pullResumeTimer,
     );
     _signalingModule = signalingModule;
     _callPeerConnectionManager = callPeerConnectionManager;
+    _pulledCallResumer = PulledCallResumer(
+      coordinator: _renegotiationCoordinator,
+      signaling: signalingModule,
+      peerConnection: callPeerConnectionManager.retrieve,
+      readCall: _pulledCallView,
+      prepareOffer: _prepareResumeOffer,
+    );
     _handshakeProcessor = HandshakeProcessor(queuedTerminationRequestsRepository: queuedTerminationRequestsRepository);
     _conferencePeerConnection = ConferencePeerConnection(
       factory: callPeerConnectionManager.factory,
@@ -292,7 +301,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         case SignalingHandshakeReceived(:final handshake):
           _handleHandshakeReceived(handshake);
         case SignalingProtocolEvent(:final event):
-          if (event.toCallEvent(activeCalls: state.activeCalls) case final callEvent?) add(callEvent);
+          if (event.toCallEvent(activeCalls: state.activeCalls) case final callEvent?) {
+            // On arrival, not in the handler: the offer may queue behind other events.
+            if (callEvent is _CallSignalingEventCallUpdating) {
+              _renegotiationCoordinator.pullServerOfferReceived(callEvent.callId);
+            }
+            add(callEvent);
+          }
       }
     });
 
@@ -1559,6 +1574,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     for (final request in queuedTerminationRequestsRepository.getAll.values) {
       if (request.callId == event.callId) queuedTerminationRequestsRepository.remove(request);
     }
+    _renegotiationCoordinator.callEnding(event.callId);
     add(
       _CallMutationEvent.signalingHangup(
         callId: event.callId,
@@ -1580,6 +1596,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (accepted) {
         _logger.info('__onCallSignalingEventCallUpdating: update of call ${event.callId} passed on to be answered');
       } else {
+        _renegotiationCoordinator.pullServerOfferLeft(event.callId);
         _logger.warning('__onCallSignalingEventCallUpdating: update of call ${event.callId} dropped');
       }
     }
@@ -1990,10 +2007,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // they used, and nothing about it needs telling them.
     _recordLinkedCallFailure(event.callId, LinkedCallFailure.cancelled, emit);
 
+    _renegotiationCoordinator.callEnding(event.callId);
     add(_CallMutationEvent.controlEnd(event.callId));
   }
 
   Future<void> __onCallControlEventSetHeld(_CallControlEventSetHeld event, Emitter<CallState> emit) async {
+    if (event.onHold) _renegotiationCoordinator.cancelPullResume(event.callId);
     add(_CallMutationEvent.controlSetHeld(event.callId, event.onHold));
   }
 
@@ -2396,10 +2415,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
 
     event.fulfill();
+    _renegotiationCoordinator.callEnding(event.callId);
     add(_CallMutationEvent.performEnd(event.callId));
   }
 
   Future<void> __onCallPerformEventSetHeld(_CallPerformEventSetHeld event, Emitter<CallState> emit) async {
+    if (event.onHold) _renegotiationCoordinator.cancelPullResume(event.callId);
     event.fulfill();
     add(_CallMutationEvent.performSetHeld(event.callId, event.onHold));
   }
@@ -2460,6 +2481,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _CallMutationEventSignalingHangup() => __onMutationSignalingHangup(event, emit),
       _CallMutationEventSignalingCallUpdating() => __onMutationSignalingCallUpdating(event, emit),
       _CallMutationEventRenegotiate() => __onMutationRenegotiate(event, emit),
+      _CallMutationEventResumeAfterPull() => __onMutationResumeAfterPull(event, emit),
       _CallMutationEventTrickleIce() => __onMutationTrickleIce(event, emit),
       _CallMutationEventIceGatheringComplete() => __onMutationIceGatheringComplete(event, emit),
       _CallMutationEventIceConnectionFailed() => __onMutationIceConnectionFailed(event, emit),
@@ -3691,6 +3713,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     if (!initialAccept && _offerHolds.takeUnhold(event.callId)) {
       add(_CallMutationEvent.performSetHeld(event.callId, false));
     }
+    // Armed before the answer is applied: none of the ways that step can bail
+    // out may leave a pull without its resume.
+    if (call.fromReplaces != null) _renegotiationCoordinator.pullAccepted(event.callId);
 
     // Queued, so the join runs after this answer has been applied to the
     // call's connection, and in turn with any merge the person asked for.
@@ -3834,8 +3859,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       answered = await _answerCallUpdate(event, emit);
     } finally {
       if (answered) {
+        _renegotiationCoordinator.pullServerOfferAnswered(
+          event.callId,
+          sendRecv: PulledCallResumer.offersSendRecv(event.jsep?.sdp),
+        );
         _logger.info('__onMutationSignalingCallUpdating: answer to the update of call ${event.callId} sent');
       } else {
+        _renegotiationCoordinator.pullServerOfferLeft(event.callId);
         _logger.warning('__onMutationSignalingCallUpdating: update of call ${event.callId} left unanswered');
       }
     }
@@ -6365,7 +6395,42 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         add(_IceRestartTriggered(callId));
       case Renegotiate(:final callId, :final lineId):
         add(_CallMutationEvent.renegotiate(callId, lineId));
+      case ResumePulledCall(:final callId, :final attempt):
+        add(_CallMutationEvent.resumeAfterPull(callId, attempt));
     }
+  }
+
+  /// The pulled call's resume offer and its outcome; see [PulledCallResumer].
+  late final PulledCallResumer _pulledCallResumer;
+
+  PulledCallView? _pulledCallView(String callId) {
+    final call = state.retrieveActiveCall(callId);
+    if (call == null) return null;
+    return (
+      signalingReady: _signalingModule.isConnected && state.isSignalingEstablished,
+      pulled: call.fromReplaces != null,
+      connected: call.processingStatus == CallProcessingStatus.connected,
+      hungUp: call.wasHungUp,
+      held: call.held,
+      conferenced: state.isConferenced(callId) || _roomCodecs.moves(callId),
+      updating: call.updating,
+      line: call.line == _kUndefinedLine ? null : call.line,
+      video: call.video,
+    );
+  }
+
+  void _prepareResumeOffer(String callId, RTCSessionDescription offer) {
+    sdpMunger?.apply(offer);
+    _keepConferenceCodecs(callId, offer);
+  }
+
+  Future<void> __onMutationResumeAfterPull(_CallMutationEventResumeAfterPull e, Emitter<CallState> emit) {
+    return _pulledCallResumer.run(
+      e.callId,
+      e.attempt,
+      setUpdating: (updating) =>
+          emit(state.copyWithMappedActiveCall(e.callId, (call) => call.copyWith(updating: updating))),
+    );
   }
 
   void _removeActiveCall(String callId, Emitter<CallState> emit) {

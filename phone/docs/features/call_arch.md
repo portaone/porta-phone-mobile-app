@@ -185,6 +185,54 @@ tone sounds where it arguably should not. The candidate rule is to let a 183
 seen for a call make it cautious for the rest of the setup, so a later 180
 keeps waiting instead of starting immediately.
 
+## Resuming media after Call Pull
+
+A pulled call can be connected with sendrecv SDP while PortaSIP still plays
+music to the far end. Answering the server's offers does not stop it; one fresh
+local offer does. `RenegotiationCoordinator` decides when that resume is due for
+calls carrying `fromReplaces`, next to the other renegotiation timers.
+`PulledCallResumer` sends it: it reads the call through a narrow view, makes and
+installs the offer, sends it and reports the outcome back to the coordinator. The
+bloc only queues the `ResumePulledCall` command as a mutation and tells the
+coordinator about accepts, answered server offers, holds and ends; the general
+renegotiation path is not involved.
+
+This is a client-side workaround. The proper fix belongs in PortaSIP
+(SIP-15507), which should stop the music once the pull completes; when it does,
+the pull resume can be removed.
+
+- The pull's first accept arms it, before its answer is applied, each answered
+  sendrecv server offer re-arms it, and it fires once negotiations stay quiet
+  for 1500 ms. A server offer that holds the call (sendonly or inactive audio)
+  puts a pending resume off until a sendrecv one arrives. From the moment a
+  server offer arrives - in the signaling listener, before it waits its turn in
+  the event queue - until it is answered or left unanswered, no resume is armed:
+  one sent meanwhile would collide with it. Later accepts of the same
+  call - the answer to the resume among them - do not arm it again.
+- At send time the call must still be connected, outside a conference, not held,
+  with live signaling and a stable peer connection; an update in progress or an
+  unfinished negotiation defers it by another settling time, about half a
+  minute of deferrals at most. A call being moved to the conference codecs is
+  left alone. The offer keeps receiving video when the connection already
+  does, as a soft-mute pull of a video call. An attempt token,
+  checked after every native await, drops work a newer arming replaced.
+- A 491 on the resume is sent again after a random 2.1-4 s (RFC 3261 14.1);
+  other refusals end it and the call stays up, with the offer rolled back.
+  A signaling loss or a missing reply rolls it back too and tries again after
+  a settling time; the general replay of kept offers is not used, as it has no
+  bound and ends the call on a failure.
+- A server offer up to 30 s after the pull may arm another resume, so a late
+  offer that brings the music back is answered too; a resume armed before the
+  30 s pass still goes out. One pulled call sends at
+  most three resume offers, retries included.
+- A deliberate hold cancels a resume that is not sent yet. A hold requested
+  after it was sent waits for its answer, since a new INVITE must not start
+  before the previous one completes. Ending the call - by the user, CallKeep or
+  the server's hangup - releases the wait at once, so the end is not held behind
+  the answer.
+
+The settling time is a heuristic, not a SIP deadline.
+
 ## Isolates
 
 Two background isolate managers handle calls when the app is not in the foreground.

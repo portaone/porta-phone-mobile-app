@@ -50,6 +50,7 @@ class CallBlocHarness {
     CallMediaManager Function(Callkeep callkeep)? mediaManager,
     ManualOfferDeadline? offerDeadline,
     Timer Function(Duration, void Function())? renegotiationReplayTimer,
+    Timer Function(Duration, void Function())? pullResumeTimer,
     Future<void> Function(Duration)? renegotiationUpdatingDelay,
     Timer Function(Duration, void Function())? roomCodecMoveTimer,
     Set<RTPCodec> conferenceAudioCodecs = EncodingConfig.defaultConferenceAudioCodecs,
@@ -90,6 +91,7 @@ class CallBlocHarness {
       connectivityService: _FakeConnectivityService(),
       roomOfferDeadlineTimer: offerDeadline?.createTimer,
       renegotiationReplayTimer: renegotiationReplayTimer,
+      pullResumeTimer: pullResumeTimer,
       renegotiationUpdatingDelay: renegotiationUpdatingDelay,
       roomCodecMoveTimer: roomCodecMoveTimer,
       conferenceAudioCodecs: conferenceAudioCodecs,
@@ -130,6 +132,7 @@ class CallBlocHarness {
     String number = '100',
     String? offerSdp,
     String? answerSdp,
+    String? fromReplaces,
   }) {
     // The microphone comes from the one builder, so a seeded call holds the
     // same track object the room and every other call hold - as in production.
@@ -158,6 +161,7 @@ class CallBlocHarness {
       updating: updating,
       processingStatus: CallProcessingStatus.connected,
       acceptedTime: DateTime(2026),
+      fromReplaces: fromReplaces,
       localStream: localStream,
       remoteStream: remoteStream,
     );
@@ -544,11 +548,15 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   @override
   Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async {
     offerConstraints.add(constraints);
+    await offerGate?.future;
     return RTCSessionDescription(offerSdp, 'offer');
   }
 
   /// The constraints of every [createOffer], in order.
   final List<Map<String, dynamic>?> offerConstraints = [];
+
+  /// Holds offer creation so a test can end or hold the call while it awaits native SDP.
+  Completer<void>? offerGate;
 
   /// What [createOffer] returns.
   final String offerSdp;

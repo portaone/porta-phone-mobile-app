@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -218,6 +219,282 @@ void main() {
       async.elapse(const Duration(minutes: 1));
 
       expect(commands, isEmpty);
+    });
+  });
+
+  group('pull resume', () {
+    test('sends one command after the settling time, debounced by server offers', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        async.elapse(const Duration(milliseconds: 1000));
+        coordinator.pullServerOfferAnswered('a');
+        async.elapse(const Duration(milliseconds: 1000));
+        expect(commands, isEmpty);
+
+        async.elapse(const Duration(milliseconds: 500));
+        expect(commands.single, isA<ResumePulledCall>().having((command) => command.callId, 'callId', 'a'));
+      });
+    });
+
+    test('a server offer that has arrived holds the resume back until it is answered', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        async.elapse(const Duration(seconds: 1));
+        coordinator.pullServerOfferReceived('a');
+        async.elapse(const Duration(seconds: 5));
+        coordinator.pullResumeDeferred('a');
+        async.elapse(const Duration(seconds: 5));
+        expect(commands, isEmpty);
+
+        coordinator.pullServerOfferAnswered('a');
+        async.elapse(const Duration(milliseconds: 2500));
+        expect(commands.single, isA<ResumePulledCall>());
+      });
+    });
+
+    test('a resume command already handed out is stale once a server offer arrives', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        async.elapse(const Duration(seconds: 3));
+        final command = commands.single as ResumePulledCall;
+        coordinator.pullServerOfferReceived('a');
+
+        expect(coordinator.isPullResumeCurrent('a', command.attempt), isFalse);
+      });
+    });
+
+    test('a server offer left unanswered lets the resume go on', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        coordinator.pullServerOfferReceived('a');
+        coordinator.pullServerOfferReceived('a');
+        coordinator.pullServerOfferAnswered('a');
+        async.elapse(const Duration(seconds: 5));
+        expect(commands, isEmpty);
+
+        coordinator.pullServerOfferLeft('a');
+        async.elapse(const Duration(milliseconds: 2500));
+        expect(commands.single, isA<ResumePulledCall>());
+      });
+    });
+
+    test('a later accept of the same call does not arm it again', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        async.elapse(const Duration(seconds: 2));
+        final command = commands.single as ResumePulledCall;
+        coordinator.pullResumeSent('a', command.attempt);
+        coordinator.pullAccepted('a');
+        async.elapse(const Duration(seconds: 5));
+
+        expect(commands, hasLength(1));
+      });
+    });
+
+    test('a newer arming makes the earlier command stale', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        async.elapse(const Duration(seconds: 2));
+        final first = commands.single as ResumePulledCall;
+        coordinator.pullResumeDeferred('a');
+
+        expect(coordinator.isPullResumeCurrent('a', first.attempt), isFalse);
+        async.elapse(const Duration(seconds: 2));
+        expect(coordinator.isPullResumeCurrent('a', (commands.last as ResumePulledCall).attempt), isTrue);
+      });
+    });
+
+    test('a 491 is retried after 2.1-4 s, other refusals end the resume', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add, random: Random(7));
+
+        coordinator.pullAccepted('a');
+        async.elapse(const Duration(seconds: 2));
+        coordinator.pullResumeSent('a', (commands.last as ResumePulledCall).attempt);
+        coordinator.pullResumeRejected('a', 491);
+        async.elapse(const Duration(milliseconds: 2099));
+        expect(commands, hasLength(1));
+        async.elapse(const Duration(milliseconds: 1901));
+        expect(commands, hasLength(2));
+
+        coordinator.pullResumeSent('a', (commands.last as ResumePulledCall).attempt);
+        coordinator.pullResumeRejected('a', 488);
+        coordinator.pullServerOfferAnswered('a');
+        async.elapse(const Duration(seconds: 10));
+        expect(commands, hasLength(2));
+      });
+    });
+
+    test('stops arming after the bound of resumes', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add, maxPullResumes: 2);
+
+        coordinator.pullAccepted('a');
+        for (var i = 0; i < 4; i++) {
+          async.elapse(const Duration(seconds: 5));
+          final last = commands.lastOrNull;
+          if (last is ResumePulledCall && coordinator.isPullResumeCurrent('a', last.attempt)) {
+            coordinator.pullResumeSent('a', last.attempt);
+          }
+          coordinator.pullServerOfferAnswered('a');
+        }
+
+        expect(commands, hasLength(2));
+      });
+    });
+
+    test('server offers no longer arm it once the window after the pull has passed', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        async.elapse(const Duration(seconds: 2));
+        coordinator.pullResumeSent('a', (commands.last as ResumePulledCall).attempt);
+        async.elapse(const Duration(seconds: 30));
+        coordinator.pullServerOfferAnswered('a');
+        async.elapse(const Duration(seconds: 5));
+
+        expect(commands, hasLength(1));
+      });
+    });
+
+    test('a resume armed near the end of the window still goes out', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        async.elapse(const Duration(seconds: 2));
+        coordinator.pullResumeSent('a', (commands.last as ResumePulledCall).attempt);
+        async.elapse(const Duration(seconds: 27));
+        coordinator.pullServerOfferAnswered('a');
+        async.elapse(const Duration(seconds: 2));
+
+        expect(commands, hasLength(2));
+        expect(coordinator.isPullResumeCurrent('a', (commands.last as ResumePulledCall).attempt), isTrue);
+      });
+    });
+
+    test('a server offer that holds the call puts the resume off until a sendrecv one', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        coordinator.pullServerOfferAnswered('a', sendRecv: false);
+        async.elapse(const Duration(seconds: 5));
+        expect(commands, isEmpty);
+
+        coordinator.pullServerOfferAnswered('a');
+        async.elapse(const Duration(seconds: 2));
+        expect(commands.single, isA<ResumePulledCall>());
+      });
+    });
+
+    test('the resume ends after the bound of deferrals', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add, maxPullResumeDeferrals: 2);
+
+        coordinator.pullAccepted('a');
+        for (var i = 0; i < 3; i++) {
+          async.elapse(const Duration(seconds: 2));
+          coordinator.pullResumeDeferred('a');
+        }
+        async.elapse(const Duration(seconds: 5));
+
+        expect(commands, hasLength(3));
+        expect(coordinator.isPullResumeCurrent('a', (commands.last as ResumePulledCall).attempt), isFalse);
+      });
+    });
+
+    test('an offer left without a reply is tried again within the bound of resumes', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add, maxPullResumes: 2);
+
+        coordinator.pullAccepted('a');
+        for (var i = 0; i < 3; i++) {
+          async.elapse(const Duration(seconds: 2));
+          final last = commands.last as ResumePulledCall;
+          if (coordinator.isPullResumeCurrent('a', last.attempt)) coordinator.pullResumeSent('a', last.attempt);
+          coordinator.pullResumeInterrupted('a');
+        }
+
+        expect(commands, hasLength(2));
+      });
+    });
+
+    test('a hold cancels the armed resume', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+        coordinator.pullAccepted('a');
+        coordinator.cancelPullResume('a');
+        coordinator.pullServerOfferAnswered('a');
+        async.elapse(const Duration(seconds: 5));
+
+        expect(commands, isEmpty);
+      });
+    });
+
+    test('ending the call completes the wait for its resume answer and cancels it', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+        var ending = false;
+
+        coordinator.pullAccepted('a');
+        coordinator.pullCallEnding('a').then((_) => ending = true);
+        coordinator.callEnding('a');
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 5));
+
+        expect(ending, isTrue);
+        expect(commands, isEmpty);
+      });
+    });
+
+    test('removal and dispose cancel the resume and release its waits', () {
+      fakeAsync((async) {
+        final commands = <RenegotiationCommand>[];
+        final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+        final released = <String>[];
+
+        coordinator.pullAccepted('a');
+        coordinator.pullAccepted('b');
+        coordinator.pullCallEnding('a').then((_) => released.add('a'));
+        coordinator.pullCallEnding('b').then((_) => released.add('b'));
+        coordinator.callRemoved('a');
+        coordinator.dispose();
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 5));
+
+        expect(released, ['a', 'b']);
+        expect(commands, isEmpty);
+      });
     });
   });
 }
