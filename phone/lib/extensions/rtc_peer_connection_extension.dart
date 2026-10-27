@@ -58,3 +58,40 @@ extension RTCRtpSenderMicrophone on RTCRtpSender {
     if (track == null) await replaceTrack(microphone);
   }
 }
+
+/// A call held by its own offer: the transceiver that carries the microphone
+/// is inactive, so every offer of the connection says the call is on hold.
+///
+/// After a cold restart a call the server holds is restored this way. Its
+/// restore offer goes on to the far end as a re-INVITE: offered `sendrecv` it
+/// would take the call off hold on the server, while the gateway still counts
+/// it held and answers a later hold without sending one. Offered held, the
+/// call stays held everywhere, and a hold asked for meanwhile has nothing to
+/// send. A resume gives the microphone back, which renegotiates the call.
+extension RTCPeerConnectionOfferHold on RTCPeerConnection {
+  /// Holds the call by its offer: the next offer has the microphone inactive.
+  /// The other transceivers keep the directions the connection was built with.
+  Future<void> holdByOffer() async => (await _microphoneTransceiver())?.setDirection(TransceiverDirection.Inactive);
+
+  /// Whether the call is held by its offer and not resumed since.
+  ///
+  /// An offer of such a call must not ask to receive audio: libwebrtc would
+  /// answer that with a second, `recvonly` audio transceiver, and the gateway
+  /// takes its codec from that line once it is rejected.
+  Future<bool> heldByOffer() async {
+    final transceiver = await _microphoneTransceiver();
+    return transceiver != null && await transceiver.getDirection() == TransceiverDirection.Inactive;
+  }
+
+  /// Gives the microphone back to a call held by its offer; nothing for any
+  /// other call. Whether it did.
+  Future<bool> resumeFromOfferHold() async {
+    final transceiver = await _microphoneTransceiver();
+    if (transceiver == null || await transceiver.getDirection() != TransceiverDirection.Inactive) return false;
+    await transceiver.setDirection(TransceiverDirection.SendRecv);
+    return true;
+  }
+
+  Future<RTCRtpTransceiver?> _microphoneTransceiver() async =>
+      (await getTransceivers()).firstWhereOrNull((transceiver) => transceiver.sender.track?.kind == 'audio');
+}

@@ -131,6 +131,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   StreamSubscription<void>? _foregroundCallPushSubscription;
   late final RenegotiationCoordinator _renegotiationCoordinator;
 
+  final _offerHolds = OfferHolds();
+
   /// Auto-hides the slowlink network-quality indicator once events stop, and
   /// drives the brief "recovered" confirmation. Keyed by callId; rescheduling
   /// the same key resets the countdown, so a steady stream of slowlink events
@@ -863,6 +865,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // Before the teardown, which may throw: a replay or ICE restart left armed
     // would otherwise fire for a call that is gone.
     _renegotiationCoordinator.callRemoved(event.callId);
+    _offerHolds.callRemoved(event.callId);
     _slowlinkDebounce.cancel(event.callId);
     _slowlinkHits.remove(event.callId);
     await _ringback.stop(event.callId);
@@ -2938,6 +2941,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     try {
       final activeCall = state.retrieveActiveCall(event.callId);
       if (activeCall == null) return;
+      final peerConnection = await _callPeerConnectionManager.retrieve(event.callId, allowWaiting: false);
+      final heldByOffer = await peerConnection?.heldByOffer() ?? false;
+      switch (_offerHolds.onSetHeld(event.callId, onHold: event.onHold, heldByOffer: heldByOffer)) {
+        case OfferHoldStep.resumeFirst:
+          _logger.info('__onMutationPerformSetHeld: ${event.callId} resumes its offer first, the unhold once answered');
+          await _resumeFromOfferHold(event.callId);
+          return;
+        case OfferHoldStep.nothing:
+          _logger.info('__onMutationPerformSetHeld: ${event.callId} is held by its offer, nothing to send');
+          emit(state.copyWithMappedActiveCall(event.callId, (call) => call.copyWith(held: true)));
+          return;
+        case OfferHoldStep.send:
+          break;
+      }
       final transaction = WebtritSignalingClient.generateTransactionId();
       final request = event.onHold
           ? HoldRequest(
@@ -3003,6 +3020,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // next tap asking for the same conversation is a fresh request rather
       // than a repeat of one in flight.
       _conversationSwitchInFlight = null;
+    }
+  }
+
+  /// A resume of a call held by its offer gives it the microphone back; a
+  /// failure here leaves the call up, resumed on the server.
+  Future<void> _resumeFromOfferHold(String callId) async {
+    try {
+      final peerConnection = await _callPeerConnectionManager.retrieve(callId, allowWaiting: false);
+      if (await peerConnection?.resumeFromOfferHold() ?? false) _logger.info('_resumeFromOfferHold: $callId');
+    } catch (e, stackTrace) {
+      callErrorReporter.handle(e, stackTrace, '_resumeFromOfferHold error');
     }
   }
 
@@ -3660,6 +3688,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
 
     emit(state.copyWithMappedActiveCall(event.callId, (_) => call!));
+    if (!initialAccept && _offerHolds.takeUnhold(event.callId)) {
+      add(_CallMutationEvent.performSetHeld(event.callId, false));
+    }
 
     // Queued, so the join runs after this answer has been applied to the
     // call's connection, and in turn with any merge the person asked for.
@@ -4055,7 +4086,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final offerCandidate = canReplayPendingOffer
         ? pendingOffer
         : await pc.createOffer(<String, dynamic>{
-            'mandatory': <String, dynamic>{'OfferToReceiveAudio': true, 'OfferToReceiveVideo': renegotiateHasVideo},
+            'mandatory': <String, dynamic>{
+              'OfferToReceiveAudio': !await pc.heldByOffer(),
+              'OfferToReceiveVideo': renegotiateHasVideo,
+            },
             'optional': <dynamic>[],
           });
 
@@ -4452,10 +4486,21 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       await _onVideoStreamReady(event.callId);
       localStream = null;
 
+      if (event.held) {
+        await peerConnection.holdByOffer();
+        emit(state.copyWithMappedActiveCall(event.callId, (c) => c.copyWith(held: true)));
+      }
+
       _callPeerConnectionManager.complete(event.callId, peerConnection);
       peerConnection = null;
 
       add(_PeerConnectionEvent.renegotiationNeeded(event.callId, event.line));
+
+      // In CallKit as well; held by its offer, the call sends no hold for it.
+      if (event.held) {
+        final error = await callkeep.setHeld(event.callId, onHold: true);
+        if (error != null) _logger.warning('__onMutationRestoreCall: CallKit hold of ${event.callId} failed: $error');
+      }
     } catch (e, stackTrace) {
       localStream?.getTracks().forEach((t) => t.stop());
       await _releaseLocalStream(localStream);
@@ -4932,6 +4977,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         acceptedTime: event.acceptedTime,
         incomingCallEvent: event.incomingCallEvent,
         acceptedEvent: event.acceptedEvent,
+        held: event.held,
       ),
     );
   }
@@ -6325,6 +6371,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   void _removeActiveCall(String callId, Emitter<CallState> emit) {
     _renegotiationCoordinator.callRemoved(callId);
     _roomCodecs.callRemoved(callId);
+    _offerHolds.callRemoved(callId);
     emit(state.copyWithPopActiveCall(callId));
   }
 
