@@ -21,7 +21,7 @@ One release ticket covers the whole release: every release commit and its topic 
 2. **Cut the branch** at the merge commit of those bumps on `master`:
 
    ```sh
-   git push --no-verify origin <merge commit>:refs/heads/release/X.Y.Z
+   git push --no-verify origin <merge commit>:refs/heads/release/vX.Y.Z
    ```
 
 3. **Tag the same commit**, annotated:

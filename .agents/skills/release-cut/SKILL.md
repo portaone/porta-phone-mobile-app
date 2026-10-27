@@ -34,7 +34,7 @@ and print the exact commands; run a push only when explicitly asked to run that 
 8. Print, for the release owner, the branch, tag and checks:
 
    ```sh
-   git push --no-verify origin <commit>:refs/heads/release/X.Y.Z
+   git push --no-verify origin <commit>:refs/heads/release/vX.Y.Z
    git tag -a X.Y.Z+0 <commit> -m 'Release X.Y.Z'
    git push --no-verify origin refs/tags/X.Y.Z+0
    git ls-remote --tags origin | grep -F 'X.Y.Z+0'
