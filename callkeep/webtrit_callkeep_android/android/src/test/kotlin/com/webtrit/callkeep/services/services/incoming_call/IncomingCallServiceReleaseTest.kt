@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.webtrit.callkeep.PEndCallReasonEnum
 import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.PendingBroadcastQueue
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.toPCallkeepIncomingCallData
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
@@ -66,8 +67,9 @@ class IncomingCallServiceReleaseTest {
     private fun release(
         callId: String,
         reason: IncomingCallRelease,
+        endedBy: CallEndedBy? = null,
     ) {
-        IncomingCallService.release(context, callId, reason)
+        IncomingCallService.release(context, callId, reason, endedBy)
         ShadowLooper.idleMainLooper(5, TimeUnit.SECONDS)
     }
 
@@ -76,6 +78,7 @@ class IncomingCallServiceReleaseTest {
     /** The push session's side of the bridge: records what it was told about each call. */
     private class RecordingCommunicator : FlutterIsolateCommunicator {
         val endCallIds = mutableListOf<String>()
+        val endedBys = mutableListOf<CallEndedBy>()
         val handoffCallIds = mutableListOf<String>()
 
         override fun performAnswer(
@@ -86,10 +89,12 @@ class IncomingCallServiceReleaseTest {
 
         override fun performEndCall(
             callId: String,
+            endedBy: CallEndedBy,
             onSuccess: () -> Unit,
             onFailure: (Throwable) -> Unit,
         ) {
             endCallIds += callId
+            endedBys += endedBy
             onSuccess()
         }
 
@@ -163,6 +168,35 @@ class IncomingCallServiceReleaseTest {
         assertEquals(listOf("A"), session.endCallIds)
         assertTrue(session.handoffCallIds.isEmpty())
         assertFalse("the session ends the call on the server and finishes; only then does the service stop", stopped())
+    }
+
+    @Test
+    fun `the initiator a release names reaches the session's performEndCall`() {
+        show("A")
+        val session = RecordingCommunicator().also { service.getCallLifecycleHandler().flutterApi = it }
+
+        release("A", IncomingCallRelease.IC_RELEASE_ENDED, CallEndedBy.USER)
+
+        assertEquals(listOf(CallEndedBy.USER), session.endedBys)
+    }
+
+    @Test
+    fun `a release that names no initiator reaches the session as the system's end`() {
+        show("A")
+        val session = RecordingCommunicator().also { service.getCallLifecycleHandler().flutterApi = it }
+
+        release("A", IncomingCallRelease.IC_RELEASE_ENDED)
+
+        assertEquals(listOf(CallEndedBy.SYSTEM), session.endedBys)
+    }
+
+    @Test
+    fun `the release extras carry the initiator both ways`() {
+        CallEndedBy.entries.forEach { endedBy ->
+            assertEquals(endedBy, IncomingCallService.releaseEndedBy(IncomingCallService.releaseExtras("A", endedBy)))
+        }
+        assertEquals(CallEndedBy.SYSTEM, IncomingCallService.releaseEndedBy(IncomingCallService.releaseExtras("A", null)))
+        assertEquals(CallEndedBy.SYSTEM, IncomingCallService.releaseEndedBy(null))
     }
 
     @Test

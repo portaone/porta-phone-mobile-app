@@ -12,6 +12,7 @@ import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.PermissionsHelper
 import com.webtrit.callkeep.common.parcelableArrayList
 import com.webtrit.callkeep.common.startForegroundServiceOrFallback
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.NotificationAction
 import com.webtrit.callkeep.notifications.ActiveCallNotificationBuilder
@@ -102,7 +103,8 @@ class ActiveCallService : Service() {
         // The Decline PendingIntent carries the tapped call's bundle in its extras. When the tap
         // creates a fresh service instance (process death cleared callsMetadata), that is the
         // only way left to hang up the specific call instead of tearing everything down.
-        val call = callsMetadata.firstOrNull() ?: intentMetadata
+        // The hang-up button is a person ending the call on this device.
+        val call = (callsMetadata.firstOrNull() ?: intentMetadata)?.copy(endedBy = CallEndedBy.USER)
         if (call != null) {
             // One notification stands for a whole group, so its hang-up ends every member, the
             // way the standalone backend's notification does; a call outside a group ends alone.
@@ -110,7 +112,8 @@ class ActiveCallService : Service() {
             if (members.size >= 2) {
                 Log.i(TAG, "hungUpCall: ${call.callId} is grouped, hanging up $members")
                 members.forEach { id ->
-                    CallkeepCore.instance.startHungUpCall(callsMetadata.firstOrNull { it.callId == id } ?: CallMetadata(callId = id))
+                    val member = callsMetadata.firstOrNull { it.callId == id } ?: CallMetadata(callId = id)
+                    CallkeepCore.instance.startHungUpCall(member.copy(endedBy = CallEndedBy.USER))
                 }
             } else {
                 CallkeepCore.instance.startHungUpCall(call)

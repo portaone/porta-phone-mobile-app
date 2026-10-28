@@ -232,6 +232,27 @@ void main() {
       expect(await WebtritCallkeepPlatform.instance.endCall('call-1'), CallkeepCallRequestError.internal);
     });
 
+    test('endCall tells native who asks for the end, the app by default', () async {
+      final sent = <List<Object?>>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler(
+        '$_prefix.PHostApi.endCall',
+        (message) async {
+          sent.add(_codec.decodeMessage(message) as List<Object?>);
+          return _codec.encodeMessage([null]);
+        },
+      );
+
+      await WebtritCallkeepPlatform.instance.endCall('call-1');
+      await WebtritCallkeepPlatform.instance.endCall('call-2', endedBy: CallkeepEndedBy.user);
+      await WebtritCallkeepPlatform.instance.endCall('call-3', endedBy: CallkeepEndedBy.system);
+
+      expect(sent, [
+        ['call-1', PEndedByEnum.app],
+        ['call-2', PEndedByEnum.user],
+        ['call-3', PEndedByEnum.system],
+      ]);
+    });
+
     test('setHeld returns null when successful', () async {
       _mockValue('$_prefix.PHostApi.setHeld', null);
       expect(await WebtritCallkeepPlatform.instance.setHeld('call-1', true), isNull);

@@ -31,6 +31,13 @@ The central data class describing a single call. Passed across process boundarie
 `ConnectionStateChanged` events: the live state the main process mirrors into
 its shadow state. It is null on all other events.
 
+`endedBy: CallEndedBy?` (`models/CallEndedBy.kt`: USER/APP/SYSTEM) is the transient payload
+of an end: on a request (`endCall`, a notification's Decline) it says who asks, and on the
+`HungUp` / `DeclineCall` event a connection dispatches it says who ended the call, for the
+`performEndCall` of the app and of the push session. It is stored in the bundle by name and
+merged like the other nullable fields; null means nobody said, which the readers treat as
+SYSTEM. It becomes `PEndedByEnum` only at the Pigeon boundary.
+
 `CallConnectionState` is a local domain enum (`models/CallConnectionState.kt`:
 INITIALIZING/NEW/RINGING/DIALING/ACTIVE/HOLDING/DISCONNECTED). The Telecom adapter maps
 framework constants via `telecomConnectionState(Int)`. The shared enum is

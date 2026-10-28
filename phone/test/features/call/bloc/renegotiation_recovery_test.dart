@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:signaling/signaling.dart';
 import 'package:signaling_service_platform_interface/signaling_service_platform_interface.dart';
+import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'call_bloc_harness.dart';
 
@@ -396,7 +397,7 @@ void main() {
 
     expect(h.signaling.requests.whereType<UpdateRequest>(), hasLength(1));
     h.signaling.failure = null;
-    await h.bloc.performEndCall('call');
+    await h.bloc.performEndCall('call', CallkeepEndedBy.user);
     await pumpEventQueue();
     expect(h.bloc.state.activeCalls, isEmpty);
 

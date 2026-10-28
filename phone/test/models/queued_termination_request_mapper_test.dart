@@ -19,6 +19,30 @@ void main() {
       expect(decoded[request.key]?.line, 7);
     });
 
+    test('roundtrips a decline by the user', () {
+      const declined = QueuedTerminationRequest(
+        type: QueuedTerminationRequestType.decline,
+        callId: 'call-43',
+        line: 1,
+        declinedByUser: true,
+      );
+
+      final decoded = QueuedTerminationRequestJsonMapper.fromJson(
+        QueuedTerminationRequestJsonMapper.toJson({declined.key: declined}),
+      );
+
+      expect(decoded[declined.key]?.declinedByUser, isTrue);
+      expect(decoded[request.key], isNull);
+    });
+
+    test('a record written before declinedByUser existed reads as a decline not by the user', () {
+      final decoded = QueuedTerminationRequestJsonMapper.fromMap({
+        'decline:call-42': {'type': 'decline', 'callId': 'call-42', 'line': 7},
+      });
+
+      expect(decoded['decline:call-42']?.declinedByUser, isFalse);
+    });
+
     test('fromJson returns empty map for invalid json input', () {
       expect(QueuedTerminationRequestJsonMapper.fromJson('{bad-json'), isEmpty);
     });

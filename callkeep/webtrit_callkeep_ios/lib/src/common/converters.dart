@@ -103,6 +103,36 @@ extension CallkeepEndCallReasonConverter on CallkeepEndCallReason {
         // iOS has no push->foreground ghost-call path; the never-presented flag is Android-only.
         // Collapse to remoteEnded so no iOS pigeon/CallKit change is needed.
         return PEndCallReasonEnum.remoteEnded;
+      case CallkeepEndCallReason.declinedByUser:
+        // CallKit has no reason for a decline on this device: the user's own decline ended the
+        // call in CallKit already. Collapsed like missedWhileConnecting, no iOS Pigeon change.
+        return PEndCallReasonEnum.remoteEnded;
+    }
+  }
+}
+
+extension PEndedByEnumConverter on PEndedByEnum {
+  CallkeepEndedBy toCallkeep() {
+    switch (this) {
+      case PEndedByEnum.user:
+        return CallkeepEndedBy.user;
+      case PEndedByEnum.app:
+        return CallkeepEndedBy.app;
+      case PEndedByEnum.system:
+        return CallkeepEndedBy.system;
+    }
+  }
+}
+
+extension CallkeepEndedByConverter on CallkeepEndedBy {
+  PEndedByEnum toPigeon() {
+    switch (this) {
+      case CallkeepEndedBy.user:
+        return PEndedByEnum.user;
+      case CallkeepEndedBy.app:
+        return PEndedByEnum.app;
+      case CallkeepEndedBy.system:
+        return PEndedByEnum.system;
     }
   }
 }

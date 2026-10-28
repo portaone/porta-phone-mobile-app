@@ -42,8 +42,10 @@ abstract class CallkeepDelegate {
   /// Perform answer call
   Future<bool> performAnswerCall(String callId);
 
-  /// Perform end call
-  Future<bool> performEndCall(String callId);
+  /// Perform end call. [endedBy] says who ended it: the user on this device (the system call
+  /// UI, the notification, or an `endCall` the app made with [CallkeepEndedBy.user]), the app
+  /// on its own, or the platform.
+  Future<bool> performEndCall(String callId, CallkeepEndedBy endedBy);
 
   /// Perform reject call
   Future<bool> performSetHeld(String callId, bool onHold);

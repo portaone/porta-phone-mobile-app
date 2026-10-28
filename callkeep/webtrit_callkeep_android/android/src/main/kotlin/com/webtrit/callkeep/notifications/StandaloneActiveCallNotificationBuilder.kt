@@ -12,6 +12,7 @@ import com.webtrit.callkeep.common.CallDataConst
 import com.webtrit.callkeep.common.ContextHolder.context
 import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.managers.NotificationChannelManager.ACTIVE_CALL_SERVICE_NOTIFICATION_CHANNEL_ID
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.StandaloneCallService
 import com.webtrit.callkeep.services.services.connection.StandaloneServiceAction
@@ -51,7 +52,8 @@ internal class StandaloneActiveCallNotificationBuilder : NotificationBuilder() {
         val intent =
             Intent(context, StandaloneCallService::class.java).apply {
                 action = StandaloneServiceAction.HungUpCall.action
-                putExtras(metadata.toBundle())
+                // The button is a person ending the call on this device.
+                putExtras(metadata.copy(endedBy = CallEndedBy.USER).toBundle())
             }
         return PendingIntent.getService(
             context,

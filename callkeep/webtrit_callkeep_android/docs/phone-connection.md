@@ -87,6 +87,21 @@ Called by Telecom when the call ends (hang-up from either side).
 - Dispatches `HungUp` broadcast to main process.
 - Calls `destroy()`.
 
+### Who ended the call (`endedBy`)
+
+`onDisconnect()` puts the initiator into the metadata of the event it dispatches and of the
+`IC_RELEASE_ENDED` it sends the incoming-call service, so neither the app nor the push session
+has to guess a decline from the call's absence:
+
+- `hungUp(requestedBy)` / `declineCall(requestedBy)` remember who asked (`endRequestedBy`)
+  before they disconnect; the dispatcher passes the request's `endedBy`, APP when it has none.
+  The notification's Decline asks as USER, `endCall` with what the app passed.
+- Without a request the cause decides: REJECTED (`onReject()`, the system call UI) is USER;
+  CANCELED (the ring timeout) is SYSTEM; no cause at all is Telecom calling `onDisconnect()`
+  itself, which it does for a hang-up from a headset, a Bluetooth device or the system UI, so
+  USER; REMOTE is APP (a decline the app sent through the backend); anything else is SYSTEM.
+- A re-dispatch for an already disconnected connection repeats the value it chose.
+
 ### `onHold()` / `onUnhold()`
 
 - Updates state to `STATE_HOLDING` / `STATE_ACTIVE`.

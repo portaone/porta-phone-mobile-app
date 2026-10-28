@@ -106,6 +106,29 @@ void main() {
       expect(delegate.answerCallIds, isEmpty);
     });
 
+    testWidgets('performEndCall says who asked for the end: the app by default, the user when told', (
+      WidgetTester _,
+    ) async {
+      for (final endedBy in [null, CallkeepEndedBy.user]) {
+        final id = nextTestId();
+        await callkeep.reportNewIncomingCall(id, kTestHandle1, displayName: 'Erin');
+
+        final latch = Completer<void>();
+        delegate.onPerformEndCall = (cid) {
+          if (cid == id && !latch.isCompleted) latch.complete();
+        };
+
+        if (endedBy == null) {
+          await callkeep.endCall(id);
+        } else {
+          await callkeep.endCall(id, endedBy: endedBy);
+        }
+
+        await waitFor(latch.future, label: 'performEndCall with its initiator');
+        expect(delegate.endedByOf[id], endedBy ?? CallkeepEndedBy.app);
+      }
+    });
+
     testWidgets('endCall fires performEndCall and not performAnswerCall', (WidgetTester _) async {
       final id = nextTestId();
       await callkeep.reportNewIncomingCall(id, kTestHandle1, displayName: 'Dave');

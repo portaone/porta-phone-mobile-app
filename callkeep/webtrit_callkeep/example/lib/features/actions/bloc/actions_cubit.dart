@@ -512,9 +512,9 @@ class ActionsCubit extends Cubit<ActionsState> implements CallkeepDelegate, Call
   }
 
   @override
-  Future<bool> performEndCall(String callId) async {
+  Future<bool> performEndCall(String callId, CallkeepEndedBy endedBy) async {
     // Remove the line when the native side ends the call.
-    emit(_removeLine(state, callId).log(LogEntry.event('[cb] performEndCall id=$callId')));
+    emit(_removeLine(state, callId).log(LogEntry.event('[cb] performEndCall id=$callId endedBy=${endedBy.name}')));
     await _syncConnections();
     return true;
   }

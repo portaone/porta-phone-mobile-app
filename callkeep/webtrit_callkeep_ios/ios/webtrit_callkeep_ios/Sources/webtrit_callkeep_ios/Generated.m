@@ -168,6 +168,19 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
 }
 @end
 
+/// Who ended a call: the user on this device (the system call UI, the notification, or an
+/// end the app asked for on the user's behalf), the app on its own, or the platform (a ring
+/// timeout, a refused connection) - the last one also when the initiator is not known.
+@implementation WTPEndedByEnumBox
+- (instancetype)initWithValue:(WTPEndedByEnum)value {
+  self = [super init];
+  if (self) {
+    _value = value;
+  }
+  return self;
+}
+@end
+
 @interface WTPIOSOptions ()
 + (WTPIOSOptions *)fromList:(NSArray<id> *)list;
 + (nullable WTPIOSOptions *)nullableFromList:(NSArray<id> *)list;
@@ -594,19 +607,23 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
       NSNumber *enumAsNumber = [self readValue];
       return enumAsNumber == nil ? nil : [[WTPCallRequestErrorEnumBox alloc] initWithValue:[enumAsNumber integerValue]];
     }
-    case 134:
-      return [WTPIOSOptions fromList:[self readValue]];
+    case 134: {
+      NSNumber *enumAsNumber = [self readValue];
+      return enumAsNumber == nil ? nil : [[WTPEndedByEnumBox alloc] initWithValue:[enumAsNumber integerValue]];
+    }
     case 135:
-      return [WTPAndroidOptions fromList:[self readValue]];
+      return [WTPIOSOptions fromList:[self readValue]];
     case 136:
-      return [WTPOptions fromList:[self readValue]];
+      return [WTPAndroidOptions fromList:[self readValue]];
     case 137:
-      return [WTPHandle fromList:[self readValue]];
+      return [WTPOptions fromList:[self readValue]];
     case 138:
-      return [WTPEndCallReason fromList:[self readValue]];
+      return [WTPHandle fromList:[self readValue]];
     case 139:
-      return [WTPIncomingCallError fromList:[self readValue]];
+      return [WTPEndCallReason fromList:[self readValue]];
     case 140:
+      return [WTPIncomingCallError fromList:[self readValue]];
+    case 141:
       return [WTPCallRequestError fromList:[self readValue]];
     default:
       return [super readValueOfType:type];
@@ -638,26 +655,30 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
     WTPCallRequestErrorEnumBox *box = (WTPCallRequestErrorEnumBox *)value;
     [self writeByte:133];
     [self writeValue:(value == nil ? [NSNull null] : [NSNumber numberWithInteger:box.value])];
-  } else if ([value isKindOfClass:[WTPIOSOptions class]]) {
+  } else if ([value isKindOfClass:[WTPEndedByEnumBox class]]) {
+    WTPEndedByEnumBox *box = (WTPEndedByEnumBox *)value;
     [self writeByte:134];
-    [self writeValue:[value toList]];
-  } else if ([value isKindOfClass:[WTPAndroidOptions class]]) {
+    [self writeValue:(value == nil ? [NSNull null] : [NSNumber numberWithInteger:box.value])];
+  } else if ([value isKindOfClass:[WTPIOSOptions class]]) {
     [self writeByte:135];
     [self writeValue:[value toList]];
-  } else if ([value isKindOfClass:[WTPOptions class]]) {
+  } else if ([value isKindOfClass:[WTPAndroidOptions class]]) {
     [self writeByte:136];
     [self writeValue:[value toList]];
-  } else if ([value isKindOfClass:[WTPHandle class]]) {
+  } else if ([value isKindOfClass:[WTPOptions class]]) {
     [self writeByte:137];
     [self writeValue:[value toList]];
-  } else if ([value isKindOfClass:[WTPEndCallReason class]]) {
+  } else if ([value isKindOfClass:[WTPHandle class]]) {
     [self writeByte:138];
     [self writeValue:[value toList]];
-  } else if ([value isKindOfClass:[WTPIncomingCallError class]]) {
+  } else if ([value isKindOfClass:[WTPEndCallReason class]]) {
     [self writeByte:139];
     [self writeValue:[value toList]];
-  } else if ([value isKindOfClass:[WTPCallRequestError class]]) {
+  } else if ([value isKindOfClass:[WTPIncomingCallError class]]) {
     [self writeByte:140];
+    [self writeValue:[value toList]];
+  } else if ([value isKindOfClass:[WTPCallRequestError class]]) {
+    [self writeByte:141];
     [self writeValue:[value toList]];
   } else {
     [super writeValue:value];
@@ -947,11 +968,13 @@ void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger, NSObj
         binaryMessenger:binaryMessenger
         codec:WTGetGeneratedCodec()];
     if (api) {
-      NSCAssert([api respondsToSelector:@selector(endCall:completion:)], @"WTPHostApi api (%@) doesn't respond to @selector(endCall:completion:)", api);
+      NSCAssert([api respondsToSelector:@selector(endCall:endedBy:completion:)], @"WTPHostApi api (%@) doesn't respond to @selector(endCall:endedBy:completion:)", api);
       [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
         NSArray<id> *args = message;
         NSString *arg_uuidString = GetNullableObjectAtIndex(args, 0);
-        [api endCall:arg_uuidString completion:^(WTPCallRequestError *_Nullable output, FlutterError *_Nullable error) {
+        WTPEndedByEnumBox *boxedWTPEndedByEnum = GetNullableObjectAtIndex(args, 1);
+        WTPEndedByEnum arg_endedBy = boxedWTPEndedByEnum.value;
+        [api endCall:arg_uuidString endedBy:arg_endedBy completion:^(WTPCallRequestError *_Nullable output, FlutterError *_Nullable error) {
           callback(wrapResult(output, error));
         }];
       }];
@@ -1174,14 +1197,14 @@ void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger, NSObj
     }
   }];
 }
-- (void)performEndCall:(NSString *)arg_uuidString completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion {
+- (void)performEndCall:(NSString *)arg_uuidString endedBy:(WTPEndedByEnum)arg_endedBy completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion {
   NSString *channelName = [NSString stringWithFormat:@"%@%@", @"dev.flutter.pigeon.webtrit_callkeep_ios.PDelegateFlutterApi.performEndCall", _messageChannelSuffix];
   FlutterBasicMessageChannel *channel =
     [FlutterBasicMessageChannel
       messageChannelWithName:channelName
       binaryMessenger:self.binaryMessenger
       codec:WTGetGeneratedCodec()];
-  [channel sendMessage:@[arg_uuidString ?: [NSNull null]] reply:^(NSArray<id> *reply) {
+  [channel sendMessage:@[arg_uuidString ?: [NSNull null], [[WTPEndedByEnumBox alloc] initWithValue:arg_endedBy]] reply:^(NSArray<id> *reply) {
     if (reply != nil) {
       if (reply.count > 1) {
         completion(nil, [FlutterError errorWithCode:reply[0] message:reply[1] details:reply[2]]);

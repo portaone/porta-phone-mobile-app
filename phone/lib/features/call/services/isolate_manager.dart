@@ -80,6 +80,12 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   /// releasing it again on close would decline a connection that is already gone.
   bool _reportedOwnEnd = false;
 
+  /// The session's own calls a person ended on this device (performEndCall with
+  /// [CallkeepEndedBy.user]: the notification's Decline or the system call UI). Their end is
+  /// reported as a decline by the user, not as a call the app never saw; an end by the ring
+  /// timeout or by Telecom is not the user's and is not kept here.
+  final Set<String> _declinedByUser = {};
+
   /// The callId of the call answered via the push notification.
   ///
   /// Set in [performAnswerCall] only when a network connection is confirmed.
@@ -163,7 +169,8 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   // ---------------------------------------------------------------------------
 
   @override
-  void performEndCall(String callId) async {
+  void performEndCall(String callId, CallkeepEndedBy endedBy) async {
+    if (endedBy == CallkeepEndedBy.user && _isOwnCall(callId)) _declinedByUser.add(callId);
     try {
       await _sendRequest(callId, (line, id, tx) => DeclineRequest(transaction: tx, line: line, callId: id));
     } catch (e) {
@@ -379,8 +386,12 @@ class PushNotificationIsolateManager implements CallkeepBackgroundServiceDelegat
   /// starts. The session ends once the record is done; the plugin then stops the service.
   void _endOwnCall(HangupEvent event, NewCall call) {
     _reportedOwnEnd = true;
+    final reason = _declinedByUser.contains(event.callId)
+        ? CallkeepEndCallReason.declinedByUser
+        : CallkeepEndCallReason.missedWhileConnecting;
+    logger.info('_endOwnCall: ${event.callId} reported as ${reason.name}');
     _track(() async {
-      await _reportEndCall(event.callId, CallkeepEndCallReason.missedWhileConnecting);
+      await _reportEndCall(event.callId, reason);
       await _recordMissed(event, call);
     }());
     _complete();

@@ -90,6 +90,7 @@ enum PEndCallReasonEnum {
   declinedElsewhere,
   missed,
   missedWhileConnecting,
+  declinedByUser,
 }
 
 // TODO: See https://github.com/flutter/flutter/issues/87307
@@ -228,6 +229,11 @@ enum PCallkeepDisconnectCauseType {
   answeredElsewhere,
   callPulled,
 }
+
+/// Who ended a call: the user on this device (the system call UI, the notification, or an
+/// end the app asked for on the user's behalf), the app on its own, or the platform (a ring
+/// timeout, a refused connection) - the last one also when the initiator is not known.
+enum PEndedByEnum { user, app, system }
 
 class PCallkeepDisconnectCause {
   late PCallkeepDisconnectCauseType type;
@@ -441,9 +447,9 @@ abstract class PHostApi {
   @async
   PCallRequestError? answerCall(String callId);
 
-  @ObjCSelector('endCall:')
+  @ObjCSelector('endCall:endedBy:')
   @async
-  PCallRequestError? endCall(String callId);
+  PCallRequestError? endCall(String callId, PEndedByEnum endedBy);
 
   @ObjCSelector('setHeld:onHold:')
   @async
@@ -514,9 +520,9 @@ abstract class PDelegateFlutterApi {
   @async
   bool performAnswerCall(String callId);
 
-  @ObjCSelector('performEndCall:')
+  @ObjCSelector('performEndCall:endedBy:')
   @async
-  bool performEndCall(String callId);
+  bool performEndCall(String callId, PEndedByEnum endedBy);
 
   @ObjCSelector('performSetHeld:onHold:')
   @async
@@ -562,8 +568,10 @@ abstract class PDelegateBackgroundServiceFlutterApi {
   /// the user declined from the notification, or Telecom ended the call). The session
   /// declines it on the server, records it and finishes; the service stops on its future.
   /// Not sent for an end the app reported itself - that arrives as [performHandoff].
+  /// [endedBy] is the user for the notification's Decline or the system call UI, the system
+  /// for a ring timeout or a connection Telecom refused.
   @async
-  void performEndCall(String callId);
+  void performEndCall(String callId, PEndedByEnum endedBy);
 
   /// Callkeep no longer needs this session for [callId]: the app holds the call
   /// now, or it ended through another handler. The session finishes the work it

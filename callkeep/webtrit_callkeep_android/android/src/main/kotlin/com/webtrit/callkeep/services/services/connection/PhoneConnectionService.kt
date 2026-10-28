@@ -23,6 +23,7 @@ import com.webtrit.callkeep.common.ContextHolder
 import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.TelephonyUtils
 import com.webtrit.callkeep.models.CallConnectionState
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallGroup
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailureMetadata
@@ -472,7 +473,7 @@ class PhoneConnectionService : ConnectionService() {
         Log.i(TAG, "handleTearDownConnections: hanging up all connections and cleaning up")
         val connections = connectionManager.getConnections()
         connections.forEach { connection ->
-            runCatching { connection.hungUp() }
+            runCatching { connection.hungUp(CallEndedBy.APP) }
                 .onFailure { e -> Log.e(TAG, "handleTearDownConnections: hungUp failed for ${connection.callId}", e) }
         }
         connectionManager.cleanConnections()
@@ -481,7 +482,7 @@ class PhoneConnectionService : ConnectionService() {
 
     private fun handleCancelIncomingCall(callId: String) {
         Log.i(TAG, "Cancelling incoming registration: callId=$callId")
-        connectionManager.cancelIncomingCall(callId)?.hungUp()
+        connectionManager.cancelIncomingCall(callId)?.hungUp(CallEndedBy.APP)
         phoneConnectionServiceDispatcher.dispatchLifecycle(ConnectionLifecycleAction.ConnectionChanged)
     }
 
@@ -737,7 +738,7 @@ class PhoneConnectionService : ConnectionService() {
             // of a group is never that call: the group is what Telecom holds for the new one.
             connectionManager.getActiveConnection()?.takeUnless { it.isGrouped }?.let {
                 Log.i(TAG, "onOutgoingCall, hung up previous call: $it")
-                it.hungUp()
+                it.hungUp(CallEndedBy.APP)
             }
 
             telephonyUtils.placeOutgoingCall(uri, metadata)
@@ -845,7 +846,8 @@ class PhoneConnectionService : ConnectionService() {
                 // or the system restricts service launches (e.g., background start limitations).
                 //
                 // To avoid the call hanging indefinitely, we proactively finish the call
-                // as "HungUp" to ensure consistent call termination on the UI side.
+                // as "HungUp" to ensure consistent call termination on the UI side. A request's
+                // initiator is kept: the end Flutter gets is the one that request asked for.
                 reportDispatcher.dispatch(context, CallLifecycleEvent.HungUp, metadata?.toBundle())
                 Log.d(TAG, "Failed to start service with action: ${action.name}, error: $e")
             }

@@ -133,8 +133,8 @@ class WebtritCallkeepAndroid extends WebtritCallkeepPlatform {
   }
 
   @override
-  Future<CallkeepCallRequestError?> endCall(String callId) {
-    return _api.endCall(callId).then((value) => value?.value.toCallkeep());
+  Future<CallkeepCallRequestError?> endCall(String callId, {CallkeepEndedBy endedBy = CallkeepEndedBy.app}) {
+    return _api.endCall(callId, endedBy.toPigeon()).then((value) => value?.value.toCallkeep());
   }
 
   @override
@@ -427,8 +427,8 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
   }
 
   @override
-  Future<bool> performEndCall(String callId) {
-    return _delegate.performEndCall(callId);
+  Future<bool> performEndCall(String callId, PEndedByEnum endedBy) {
+    return _delegate.performEndCall(callId, endedBy.toCallkeep());
   }
 
   @override
@@ -505,8 +505,8 @@ class _CallkeepBackgroundServiceDelegateRelay implements PDelegateBackgroundServ
   final CallkeepBackgroundServiceDelegate _delegate;
 
   @override
-  Future<void> performEndCall(String callId) async {
-    return _delegate.performEndCall(callId);
+  Future<void> performEndCall(String callId, PEndedByEnum endedBy) async {
+    return _delegate.performEndCall(callId, endedBy.toCallkeep());
   }
 
   @override
