@@ -87,6 +87,11 @@ enum PCallRequestErrorEnum {
   callIsGrouped,
 }
 
+/// Who ended a call: the user on this device (the system call UI, the notification, or an
+/// end the app asked for on the user's behalf), the app on its own, or the platform (a ring
+/// timeout, a refused connection) - the last one also when the initiator is not known.
+enum PEndedByEnum { user, app, system }
+
 // TODO: See https://github.com/flutter/flutter/issues/87307
 class PCallRequestError {
   late PCallRequestErrorEnum value;
@@ -155,9 +160,9 @@ abstract class PHostApi {
   @async
   PCallRequestError? answerCall(String uuidString);
 
-  @ObjCSelector('endCall:')
+  @ObjCSelector('endCall:endedBy:')
   @async
-  PCallRequestError? endCall(String uuidString);
+  PCallRequestError? endCall(String uuidString, PEndedByEnum endedBy);
 
   @ObjCSelector('setHeld:onHold:')
   @async
@@ -209,9 +214,9 @@ abstract class PDelegateFlutterApi {
   @async
   bool performAnswerCall(String uuidString);
 
-  @ObjCSelector('performEndCall:')
+  @ObjCSelector('performEndCall:endedBy:')
   @async
-  bool performEndCall(String uuidString);
+  bool performEndCall(String uuidString, PEndedByEnum endedBy);
 
   @ObjCSelector('performSetHeld:onHold:')
   @async

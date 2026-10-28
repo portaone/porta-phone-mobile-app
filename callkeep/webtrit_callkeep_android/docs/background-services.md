@@ -51,10 +51,11 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
   (`IC_RELEASE_HANDED_OVER` / `IC_RELEASE_ENDED`), not via `onStartCommand`: the
   receiver only lives while the service is alive, so a release arriving after the service
   stopped goes nowhere instead of restarting it.
-- Every release names its call (`callId` extra), and the service acts only on a release for
-  the call it shows. The release is sent on the end of any call - an outgoing or active one,
-  or a second incoming call Telecom refused while this one rings - so acting on another
-  call's release would tear down a call that is still ringing. A release can also come before
+- Every release names its call (`callId` extra) and, when the sender knows it, who ended it
+  (`IC_RELEASE_ENDED_BY`, a `CallEndedBy` name; absent reads as SYSTEM). The service acts only
+  on a release for the call it shows. The release is sent on the end of any call - an
+  outgoing or active one, or a second incoming call Telecom refused while this one rings - so
+  acting on another call's release would tear down a call that is still ringing. A release can also come before
   the service knows its call: one posted while the service is not running waits in
   `PendingBroadcastQueue` under its call id, and one received before `IC_INITIALIZE` is kept
   by the service per call id. `handleLaunch` acts only on the release for the call it
@@ -68,7 +69,9 @@ Spawned when an FCM push notification (or SMS trigger) announces an incoming cal
   future that resolves only when that work is done.
 - A release ends the ringing phase (wake lock, silent notification) and tells the session what
   happened, nothing more: `IC_RELEASE_ENDED` for an end nobody reported yet becomes
-  `performEndCall` (the session ends the call on the server, records it and finishes);
+  `performEndCall(callId, endedBy)` with the release's initiator (the session ends the call on
+  the server, records it and finishes); the notification's Decline reaches it as USER, through
+  `CallLifecycleHandler.reportDeclineToConnectionService` and the connection's end;
   `IC_RELEASE_HANDED_OVER`, or an end the app reported itself, becomes `performHandoff` (the
   call is no longer the session's concern; it finishes). A session that cannot be reached has
   nothing to finish and the service stops at once. From the release the session has

@@ -151,8 +151,8 @@ class TestsCubit extends Cubit<TestsState> implements CallkeepDelegate, Callkeep
   }
 
   @override
-  Future<bool> performEndCall(String callId) {
-    emit(state.log(LogEntry.event('[cb] performEndCall id=$callId')));
+  Future<bool> performEndCall(String callId, CallkeepEndedBy endedBy) {
+    emit(state.log(LogEntry.event('[cb] performEndCall id=$callId endedBy=${endedBy.name}')));
     return Future.value(true);
   }
 

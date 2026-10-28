@@ -23,6 +23,7 @@ import com.webtrit.callkeep.models.AudioDevice
 import com.webtrit.callkeep.models.AudioDeviceType
 import com.webtrit.callkeep.models.CallConnection
 import com.webtrit.callkeep.models.CallConnectionState
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallGroup
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailureMetadata
@@ -572,10 +573,10 @@ class StandaloneCallService : Service() {
     }
 
     private fun handleDeclineCall(metadata: CallMetadata) {
-        Log.i(TAG, "handleDeclineCall: callId=${metadata.callId}")
+        Log.i(TAG, "handleDeclineCall: callId=${metadata.callId}, endedBy=${metadata.endedBy}")
         stopRingtoneUnlessOtherCallRinging(metadata.callId)
         endCall(metadata)
-        core.notifyConnectionEvent(CallLifecycleEvent.HungUp, metadata.toBundle())
+        core.notifyConnectionEvent(CallLifecycleEvent.HungUp, metadata.withRequestedEnd().toBundle())
     }
 
     private fun handleCancelIncomingCall(callId: String) {
@@ -586,11 +587,18 @@ class StandaloneCallService : Service() {
     }
 
     private fun handleHungUpCall(metadata: CallMetadata) {
-        Log.i(TAG, "handleHungUpCall: callId=${metadata.callId}")
+        Log.i(TAG, "handleHungUpCall: callId=${metadata.callId}, endedBy=${metadata.endedBy}")
         stopRingtoneUnlessOtherCallRinging(metadata.callId)
         endCall(metadata)
-        core.notifyConnectionEvent(CallLifecycleEvent.HungUp, metadata.toBundle())
+        core.notifyConnectionEvent(CallLifecycleEvent.HungUp, metadata.withRequestedEnd().toBundle())
     }
+
+    /**
+     * The end event of a requested end names who asked, as a Telecom connection does: the
+     * notification's buttons say the user, an end the app asked for carries its own value, and
+     * a request with none comes from callkeep on the app's behalf (a release, a cancellation).
+     */
+    private fun CallMetadata.withRequestedEnd(): CallMetadata = copy(endedBy = endedBy ?: CallEndedBy.APP)
 
     /**
      * Stop the shared ringtone / call-waiting tone only when no OTHER call is still ringing.
@@ -674,8 +682,9 @@ class StandaloneCallService : Service() {
     private fun handleHungUpCallGroup(callIds: List<String>) {
         Log.i(TAG, "handleHungUpCallGroup: callIds=$callIds")
         callIds.forEach { callId ->
+            // Reached only from the grouped notification's button: the user ends every leg.
             val meta = connections[callId]?.metadata ?: CallMetadata(callId = callId)
-            handleHungUpCall(meta)
+            handleHungUpCall(meta.copy(endedBy = CallEndedBy.USER))
         }
     }
 
@@ -741,7 +750,7 @@ class StandaloneCallService : Service() {
         ringtoneManager.stopCallWaitingTone()
         connections.keys.toList().forEach { callId ->
             val meta = connections[callId]?.metadata ?: CallMetadata(callId = callId)
-            core.notifyConnectionEvent(CallLifecycleEvent.HungUp, meta.toBundle())
+            core.notifyConnectionEvent(CallLifecycleEvent.HungUp, meta.copy(endedBy = CallEndedBy.APP).toBundle())
         }
         connections.values.forEach { it.transitionTo(CallConnectionState.DISCONNECTED) }
         connections.clear()

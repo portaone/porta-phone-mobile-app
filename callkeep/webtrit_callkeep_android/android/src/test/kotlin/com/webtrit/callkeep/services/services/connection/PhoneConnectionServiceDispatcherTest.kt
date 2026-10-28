@@ -3,6 +3,7 @@ package com.webtrit.callkeep.services.services.connection
 import android.content.Context
 import android.os.Build
 import com.webtrit.callkeep.common.ContextHolder
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.broadcaster.ConnectionEvent
@@ -80,7 +81,32 @@ class PhoneConnectionServiceDispatcherTest {
 
         dispatcher.dispatch(ServiceAction.HungUpCall, CallMetadata(callId = "call-1"))
 
-        verify(conn).hungUp()
+        verify(conn).hungUp(CallEndedBy.APP)
+    }
+
+    @Test
+    fun `dispatch HungUpCall passes the requested initiator to the connection`() {
+        val conn = spy(createRingingConnection())
+        connectionManager.addConnection("call-1", conn)
+
+        dispatcher.dispatch(ServiceAction.HungUpCall, CallMetadata(callId = "call-1", endedBy = CallEndedBy.USER))
+
+        verify(conn).hungUp(CallEndedBy.USER)
+    }
+
+    @Test
+    fun `ConnectionNotFound keeps the request's initiator`() {
+        val metadata = mutableListOf<CallMetadata?>()
+        val recording =
+            PhoneConnectionServiceDispatcher(
+                connectionManager,
+                { event, data -> if (event == CallLifecycleEvent.ConnectionNotFound) metadata.add(data) },
+                proximitySensorManager,
+            )
+
+        recording.dispatch(ServiceAction.HungUpCall, CallMetadata(callId = "gone", endedBy = CallEndedBy.USER))
+
+        assertEquals(CallEndedBy.USER, metadata.single()?.endedBy)
     }
 
     @Test
@@ -101,7 +127,17 @@ class PhoneConnectionServiceDispatcherTest {
 
         dispatcher.dispatch(ServiceAction.DeclineCall, CallMetadata(callId = "call-1"))
 
-        verify(conn).declineCall()
+        verify(conn).declineCall(CallEndedBy.APP)
+    }
+
+    @Test
+    fun `dispatch DeclineCall from the notification passes the user to the connection`() {
+        val conn = spy(createRingingConnection())
+        connectionManager.addConnection("call-1", conn)
+
+        dispatcher.dispatch(ServiceAction.DeclineCall, CallMetadata(callId = "call-1", endedBy = CallEndedBy.USER))
+
+        verify(conn).declineCall(CallEndedBy.USER)
     }
 
     @Test
@@ -174,8 +210,8 @@ class PhoneConnectionServiceDispatcherTest {
 
         dispatcher.dispatch(ServiceAction.TearDown, null)
 
-        verify(conn1, org.mockito.Mockito.never()).hungUp()
-        verify(conn2, org.mockito.Mockito.never()).hungUp()
+        verify(conn1, org.mockito.Mockito.never()).hungUp(anyEndedBy())
+        verify(conn2, org.mockito.Mockito.never()).hungUp(anyEndedBy())
     }
 
     @Test
@@ -213,7 +249,7 @@ class PhoneConnectionServiceDispatcherTest {
 
         dispatcher.dispatchLifecycle(ConnectionLifecycleAction.ServiceDestroyed)
 
-        verify(conn).hungUp()
+        verify(conn).hungUp(CallEndedBy.SYSTEM)
     }
 
     @Test
@@ -221,4 +257,8 @@ class PhoneConnectionServiceDispatcherTest {
         dispatcher.dispatchLifecycle(ConnectionLifecycleAction.ServiceDestroyed)
         // must not throw
     }
+
+    // Mockito's any() returns null, which a Kotlin non-null parameter rejects; the fallback is
+    // never used, only the matcher it registers.
+    private fun anyEndedBy(): CallEndedBy = org.mockito.ArgumentMatchers.any(CallEndedBy::class.java) ?: CallEndedBy.APP
 }

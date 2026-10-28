@@ -43,7 +43,8 @@ example/integration_test/              # the public API on a real device
   the whole membership, an empty one does nothing
 - `statusStream` / `currentStatus` - `CallkeepStatus` enum stream (uninitialized, configuring, active, terminating)
 - `setDelegate(CallkeepDelegate?)` / `setPushRegistryDelegate(PushRegistryDelegate?)` - event callbacks
-- `reportEndCall` with `missedWhileConnecting` remembers the end of a call the app never held;
+- `reportEndCall` with `missedWhileConnecting` remembers the end of a call the app never held
+  (with `declinedByUser`, a decline on this device, the same for now);
   `wasEndedBeforePresented(callId)` answers it, and the delegate wrapper drops a later
   `didPresentIncomingCall` of that call (`test/ends_reported_unseen_test.dart`)
 

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:signaling/signaling.dart';
 import 'package:signaling_service_platform_interface/signaling_service_platform_interface.dart';
+import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'call_bloc_harness.dart';
 
@@ -44,7 +45,7 @@ void main() {
       if (established) h.seedEstablishedCall('call');
       h.signaling.emitHandshake(_ringing(callId: 'call'));
       await pumpEventQueue();
-      await h.bloc.performEndCall('call');
+      await h.bloc.performEndCall('call', CallkeepEndedBy.user);
       await pumpEventQueue();
       expect(h.bloc.state.activeCalls, isEmpty);
       final initial = h.signaling.requests.where((r) => r is DeclineRequest || r is HangupRequest).toList();

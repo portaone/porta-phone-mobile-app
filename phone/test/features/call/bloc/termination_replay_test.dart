@@ -65,7 +65,7 @@ void main() {
       h.signaling.emitHandshake(_ringing(callId: 'call'));
       await connections.entered.future.timeout(const Duration(seconds: 2));
 
-      unawaited(h.bloc.performEndCall('call'));
+      unawaited(h.bloc.performEndCall('call', CallkeepEndedBy.user));
       await pumpEventQueue();
       expect(h.bloc.state.activeCalls, isEmpty);
       expect(h.terminationQueue.requests['call']?.line, isNull);

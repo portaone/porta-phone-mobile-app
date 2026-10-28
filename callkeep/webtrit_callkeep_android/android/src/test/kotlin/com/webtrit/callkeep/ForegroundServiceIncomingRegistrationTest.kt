@@ -305,7 +305,7 @@ class ForegroundServiceIncomingRegistrationTest {
     fun `an endCall from the app before Telecom answered succeeds the registration`() {
         val waiting = report("ended")
 
-        scope.launch { service.endCall("ended") }
+        scope.launch { service.endCall("ended", PEndedByEnum.APP) }
         idle()
 
         assertNull(waiting.result())

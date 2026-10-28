@@ -132,11 +132,11 @@ Use these methods to notify the platform about call state changes.
 | `reportConnectingOutgoingCall(callId, handle, ...)` | Mark outgoing call as connecting |
 | `reportConnectedOutgoingCall(callId, handle, ...)` | Mark outgoing call as connected |
 | `reportUpdateCall(callId, ...)` | Update call metadata (display name, video, etc.) |
-| `reportEndCall(callId, reason)` | Notify platform the call ended. With `missedWhileConnecting` (a call the app never held) the fact is kept in `Callkeep` too, ahead of the platform |
+| `reportEndCall(callId, reason)` | Notify platform the call ended. With `missedWhileConnecting` (a call the app never held) or `declinedByUser` (the user declined it on this device) the fact is kept in `Callkeep` too, ahead of the platform |
 | `wasEndedBeforePresented(callId)` | Whether the app reported the end of a call it never held and nothing reopened the id since; a presentation of that call is not handed to the delegate, and the app asks this before applying one it received earlier |
 | `startCall(callId, handle, ...)` | Initiate an outgoing call |
 | `answerCall(callId)` | Answer a call programmatically |
-| `endCall(callId)` | End a call |
+| `endCall(callId, endedBy)` | End a call. `endedBy` is who asks: `app` (the default) or `user` when the app ends it on the user's word; the `performEndCall` that follows carries it back |
 | `setHeld(callId, onHold)` | Put call on hold or resume |
 | `setMuted(callId, muted)` | Mute or unmute |
 | `setSpeaker(callId, on)` | Toggle speaker |
@@ -152,7 +152,7 @@ Implement `CallkeepDelegate` and pass it to `setDelegate` to receive platform ev
 | --- | --- |
 | `didPresentIncomingCall(handle, displayName, video, callId, error)` | The platform shows an incoming call this delegate has not been handed yet: iOS after CallKit registered the push call (or an error), Android a replay of a ringing Telecom connection on attach |
 | `performAnswerCall(callId)` | User answered from system UI |
-| `performEndCall(callId)` | User ended from system UI or system terminated the call |
+| `performEndCall(callId, endedBy)` | The call was ended. `endedBy` says by whom: `user` (the system call UI, the notification's Decline, an `endCall` with `user`), `app` (an `endCall` the app made on its own, a teardown) or `system` (a ring timeout, a connection the platform refused, or not known) |
 | `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | User initiated outgoing call from system UI (e.g. Siri) |
 | `continueStartCallIntent(handle, displayName, video)` | System confirmed outgoing call intent (iOS only) |
 | `performSetHeld(callId, onHold)` | User toggled hold from system UI |

@@ -10,6 +10,7 @@ import com.webtrit.callkeep.PCallkeepConnectionState
 import com.webtrit.callkeep.PCallkeepDisconnectCause
 import com.webtrit.callkeep.PCallkeepDisconnectCauseType
 import com.webtrit.callkeep.PCallkeepIncomingCallData
+import com.webtrit.callkeep.PEndedByEnum
 import com.webtrit.callkeep.PHandle
 import com.webtrit.callkeep.PHandleTypeEnum
 import com.webtrit.callkeep.services.services.connection.PhoneConnection
@@ -75,3 +76,17 @@ fun CallMetadata.toPCallkeepIncomingCallData(): PCallkeepIncomingCallData =
         displayName = displayName,
         hasVideo = hasVideo ?: false,
     )
+
+fun CallEndedBy.toPEndedBy(): PEndedByEnum =
+    when (this) {
+        CallEndedBy.USER -> PEndedByEnum.USER
+        CallEndedBy.APP -> PEndedByEnum.APP
+        CallEndedBy.SYSTEM -> PEndedByEnum.SYSTEM
+    }
+
+fun PEndedByEnum.toCallEndedBy(): CallEndedBy =
+    when (this) {
+        PEndedByEnum.USER -> CallEndedBy.USER
+        PEndedByEnum.APP -> CallEndedBy.APP
+        PEndedByEnum.SYSTEM -> CallEndedBy.SYSTEM
+    }

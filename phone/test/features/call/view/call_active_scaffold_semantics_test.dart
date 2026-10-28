@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mocktail/mocktail.dart';
+import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
@@ -55,7 +56,7 @@ void main() {
       // Reachable is not the same as working: activate it the way assistive
       // technology does and see the call actually end.
       await tapViaSemantics(tester, hangupControl);
-      verify(() => callBloc.add(const CallControlEvent.ended('video'))).called(1);
+      verify(() => callBloc.add(const CallControlEvent.ended('video', endedBy: CallkeepEndedBy.user))).called(1);
       await teardownCallScaffold(tester);
       semantics.dispose();
     });

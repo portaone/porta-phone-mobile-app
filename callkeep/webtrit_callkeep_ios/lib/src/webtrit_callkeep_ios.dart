@@ -174,8 +174,10 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
   }
 
   @override
-  Future<CallkeepCallRequestError?> endCall(String callId) async {
-    return _api.endCall(_uuidToCallIdMapping.put(callId: callId)).then((value) => value?.value.toCallkeep());
+  Future<CallkeepCallRequestError?> endCall(String callId, {CallkeepEndedBy endedBy = CallkeepEndedBy.app}) async {
+    return _api
+        .endCall(_uuidToCallIdMapping.put(callId: callId), endedBy.toPigeon())
+        .then((value) => value?.value.toCallkeep());
   }
 
   @override
@@ -272,10 +274,10 @@ class _CallkeepDelegateRelay implements PDelegateFlutterApi {
   }
 
   @override
-  Future<bool> performEndCall(String uuid) async {
+  Future<bool> performEndCall(String uuid, PEndedByEnum endedBy) async {
     _callkeepActionHistory.add(uuid: uuid, action: _CallkeepAction.performEndCall());
     final callId = _uuidToCallIdMapping.getCallId(uuid: uuid);
-    final result = await _delegate.performEndCall(callId);
+    final result = await _delegate.performEndCall(callId, endedBy.toCallkeep());
     if (result) {
       _uuidToCallIdMapping.delete(uuid: uuid);
       _callGroups.callEnded(callId);

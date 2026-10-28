@@ -80,7 +80,7 @@ void main() {
     await connections.entered.future.timeout(const Duration(seconds: 2));
 
     // Native end before the offer arrives removes the pre-offer push state.
-    unawaited(h.bloc.performEndCall('push-call'));
+    unawaited(h.bloc.performEndCall('push-call', CallkeepEndedBy.user));
     await pumpEventQueue();
     expect(h.bloc.state.activeCalls, isEmpty);
 

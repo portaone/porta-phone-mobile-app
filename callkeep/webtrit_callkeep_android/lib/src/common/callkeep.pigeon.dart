@@ -157,7 +157,8 @@ enum PEndCallReasonEnum {
   answeredElsewhere,
   declinedElsewhere,
   missed,
-  missedWhileConnecting;
+  missedWhileConnecting,
+  declinedByUser;
 }
 
 enum PAudioDeviceType {
@@ -279,6 +280,15 @@ enum PCallkeepDisconnectCauseType {
   connectionManagerNotSupported,
   answeredElsewhere,
   callPulled;
+}
+
+/// Who ended a call: the user on this device (the system call UI, the notification, or an
+/// end the app asked for on the user's behalf), the app on its own, or the platform (a ring
+/// timeout, a refused connection) - the last one also when the initiator is not known.
+enum PEndedByEnum {
+  user,
+  app,
+  system;
 }
 
 class PIOSOptions {
@@ -1065,44 +1075,47 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is PCallkeepDisconnectCauseType) {
       buffer.putUint8(142);
       writeValue(buffer, value.index);
-    }    else if (value is PIOSOptions) {
+    }    else if (value is PEndedByEnum) {
       buffer.putUint8(143);
-      writeValue(buffer, value.encode());
-    }    else if (value is PAndroidOptions) {
+      writeValue(buffer, value.index);
+    }    else if (value is PIOSOptions) {
       buffer.putUint8(144);
       writeValue(buffer, value.encode());
-    }    else if (value is POptions) {
+    }    else if (value is PAndroidOptions) {
       buffer.putUint8(145);
       writeValue(buffer, value.encode());
-    }    else if (value is PAudioDevice) {
+    }    else if (value is POptions) {
       buffer.putUint8(146);
       writeValue(buffer, value.encode());
-    }    else if (value is PPermissionResult) {
+    }    else if (value is PAudioDevice) {
       buffer.putUint8(147);
       writeValue(buffer, value.encode());
-    }    else if (value is PHandle) {
+    }    else if (value is PPermissionResult) {
       buffer.putUint8(148);
       writeValue(buffer, value.encode());
-    }    else if (value is PEndCallReason) {
+    }    else if (value is PHandle) {
       buffer.putUint8(149);
       writeValue(buffer, value.encode());
-    }    else if (value is PIncomingCallError) {
+    }    else if (value is PEndCallReason) {
       buffer.putUint8(150);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallRequestError) {
+    }    else if (value is PIncomingCallError) {
       buffer.putUint8(151);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallkeepIncomingCallData) {
+    }    else if (value is PCallRequestError) {
       buffer.putUint8(152);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallkeepServiceStatus) {
+    }    else if (value is PCallkeepIncomingCallData) {
       buffer.putUint8(153);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallkeepDisconnectCause) {
+    }    else if (value is PCallkeepServiceStatus) {
       buffer.putUint8(154);
       writeValue(buffer, value.encode());
-    }    else if (value is PCallkeepConnection) {
+    }    else if (value is PCallkeepDisconnectCause) {
       buffer.putUint8(155);
+      writeValue(buffer, value.encode());
+    }    else if (value is PCallkeepConnection) {
+      buffer.putUint8(156);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -1155,30 +1168,33 @@ class _PigeonCodec extends StandardMessageCodec {
         final value = readValue(buffer) as int?;
         return value == null ? null : PCallkeepDisconnectCauseType.values[value];
       case 143:
-        return PIOSOptions.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PEndedByEnum.values[value];
       case 144:
-        return PAndroidOptions.decode(readValue(buffer)!);
+        return PIOSOptions.decode(readValue(buffer)!);
       case 145:
-        return POptions.decode(readValue(buffer)!);
+        return PAndroidOptions.decode(readValue(buffer)!);
       case 146:
-        return PAudioDevice.decode(readValue(buffer)!);
+        return POptions.decode(readValue(buffer)!);
       case 147:
-        return PPermissionResult.decode(readValue(buffer)!);
+        return PAudioDevice.decode(readValue(buffer)!);
       case 148:
-        return PHandle.decode(readValue(buffer)!);
+        return PPermissionResult.decode(readValue(buffer)!);
       case 149:
-        return PEndCallReason.decode(readValue(buffer)!);
+        return PHandle.decode(readValue(buffer)!);
       case 150:
-        return PIncomingCallError.decode(readValue(buffer)!);
+        return PEndCallReason.decode(readValue(buffer)!);
       case 151:
-        return PCallRequestError.decode(readValue(buffer)!);
+        return PIncomingCallError.decode(readValue(buffer)!);
       case 152:
-        return PCallkeepIncomingCallData.decode(readValue(buffer)!);
+        return PCallRequestError.decode(readValue(buffer)!);
       case 153:
-        return PCallkeepServiceStatus.decode(readValue(buffer)!);
+        return PCallkeepIncomingCallData.decode(readValue(buffer)!);
       case 154:
-        return PCallkeepDisconnectCause.decode(readValue(buffer)!);
+        return PCallkeepServiceStatus.decode(readValue(buffer)!);
       case 155:
+        return PCallkeepDisconnectCause.decode(readValue(buffer)!);
+      case 156:
         return PCallkeepConnection.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -2003,14 +2019,14 @@ class PHostApi {
     return pigeonVar_replyValue as PCallRequestError?;
   }
 
-  Future<PCallRequestError?> endCall(String callId) async {
+  Future<PCallRequestError?> endCall(String callId, PEndedByEnum endedBy) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.endCall$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, endedBy]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
@@ -2279,7 +2295,7 @@ abstract class PDelegateFlutterApi {
 
   Future<bool> performAnswerCall(String callId);
 
-  Future<bool> performEndCall(String callId);
+  Future<bool> performEndCall(String callId, PEndedByEnum endedBy);
 
   Future<bool> performSetHeld(String callId, bool onHold);
 
@@ -2383,8 +2399,9 @@ abstract class PDelegateFlutterApi {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
           final String arg_callId = args[0]! as String;
+          final PEndedByEnum arg_endedBy = args[1]! as PEndedByEnum;
           try {
-            final bool output = await api.performEndCall(arg_callId);
+            final bool output = await api.performEndCall(arg_callId, arg_endedBy);
             return wrapResponse(result: output);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
@@ -2580,7 +2597,9 @@ abstract class PDelegateBackgroundServiceFlutterApi {
   /// the user declined from the notification, or Telecom ended the call). The session
   /// declines it on the server, records it and finishes; the service stops on its future.
   /// Not sent for an end the app reported itself - that arrives as [performHandoff].
-  Future<void> performEndCall(String callId);
+  /// [endedBy] is the user for the notification's Decline or the system call UI, the system
+  /// for a ring timeout or a connection Telecom refused.
+  Future<void> performEndCall(String callId, PEndedByEnum endedBy);
 
   /// Callkeep no longer needs this session for [callId]: the app holds the call
   /// now, or it ended through another handler. The session finishes the work it
@@ -2624,8 +2643,9 @@ abstract class PDelegateBackgroundServiceFlutterApi {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
           final String arg_callId = args[0]! as String;
+          final PEndedByEnum arg_endedBy = args[1]! as PEndedByEnum;
           try {
-            await api.performEndCall(arg_callId);
+            await api.performEndCall(arg_callId, arg_endedBy);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

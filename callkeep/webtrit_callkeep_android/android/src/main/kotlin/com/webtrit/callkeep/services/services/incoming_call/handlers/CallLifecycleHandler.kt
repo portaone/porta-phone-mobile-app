@@ -6,6 +6,7 @@ import android.util.Log
 import com.webtrit.callkeep.PCallkeepIncomingCallData
 import com.webtrit.callkeep.PEndCallReason
 import com.webtrit.callkeep.PHostBackgroundPushNotificationIsolateApi
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.services.incoming_call.CallConnectionController
@@ -31,9 +32,11 @@ class CallLifecycleHandler(
         connectionController.answer(metadata)
     }
 
-    // Notify connection service about declining the call
+    // Notify connection service that the user declined the call from the notification. A person
+    // ended it on this device: the connection's end, and through it performEndCall in the app
+    // and the push session, carries that.
     fun reportDeclineToConnectionService(metadata: CallMetadata) {
-        connectionController.decline(metadata)
+        connectionController.decline(metadata.copy(endedBy = CallEndedBy.USER))
     }
 
     // Connection service event for answering the call, synchronized with Flutter if the app is in the background.
@@ -59,12 +62,14 @@ class CallLifecycleHandler(
 
     // Asks the push session to end the call on the server. The session's callback future, not
     // this answer, decides when the service stops: the server's hangup comes back to the session,
-    // which records the call and finishes.
+    // which records the call and finishes. The metadata's endedBy tells the session who ended
+    // the call; without one the end is the platform's.
     fun performEndCall(metadata: CallMetadata) {
         val api = flutterApi
         if (api != null) {
             api.performEndCall(
                 metadata.callId,
+                metadata.endedBy ?: CallEndedBy.SYSTEM,
                 onSuccess = { Log.d(TAG, "performEndCall: the session ends ${metadata.callId} on the server") },
                 onFailure = { Log.w(TAG, "performEndCall: the session could not end ${metadata.callId}: $it") },
             )
@@ -111,29 +116,31 @@ class CallLifecycleHandler(
     }
 
     private fun handleUserDecline(metadata: CallMetadata) {
+        // The user declined: every end that follows from here carries that.
+        val declined = metadata.copy(endedBy = CallEndedBy.USER)
         if (isolateHandler.isReady == true) {
-            performSafeEndCall(metadata.callId, metadata)
+            performSafeEndCall(declined.callId, declined)
         } else {
             flutterApi?.syncPushIsolate(currentCallData, onSuccess = {
-                performSafeEndCall(metadata.callId, metadata)
+                performSafeEndCall(declined.callId, declined)
             }, onFailure = {
                 Log.e(TAG, "Sync before decline failed: $it")
-                connectionController.hangUp(metadata)
-                stopServiceFor(metadata.callId)
+                connectionController.hangUp(declined)
+                stopServiceFor(declined.callId)
             })
         }
     }
 
-    // Event from flutter side, as case signaling declined the call
+    // Event from flutter side, as case signaling declined the call: the app's own end.
     private fun handleServerDecline(metadata: CallMetadata) {
-        connectionController.decline(metadata)
+        connectionController.decline(metadata.copy(endedBy = metadata.endedBy ?: CallEndedBy.APP))
     }
 
     private fun performSafeEndCall(
         callId: String,
         metadata: CallMetadata,
     ) {
-        flutterApi?.performEndCall(callId, onSuccess = {
+        flutterApi?.performEndCall(callId, metadata.endedBy ?: CallEndedBy.USER, onSuccess = {
             Log.d(TAG, "Call end sent via signaling")
         }, onFailure = {
             Log.e(TAG, "Call end signaling failed: $it")

@@ -6,6 +6,7 @@ export 'callkeep_audio_device.dart';
 export 'callkeep_call_request_error.dart';
 export 'callkeep_connection.dart';
 export 'callkeep_end_call_reason.dart';
+export 'callkeep_ended_by.dart';
 export 'callkeep_handle.dart';
 export 'callkeep_incoming_call_error.dart';
 export 'callkeep_lifecycle_event.dart';

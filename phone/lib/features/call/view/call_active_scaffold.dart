@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
+import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
@@ -337,9 +338,9 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     // ended by picking one of its participants. Dropping a single
     // participant is the panel's own control, on that participant's row.
     if (widget.conference.isLeg(widget.focusedCall.callId)) {
-      _callBloc.add(const CallControlEvent.conferenceEnded());
+      _callBloc.add(const CallControlEvent.conferenceEnded(endedBy: CallkeepEndedBy.user));
     } else {
-      _callBloc.add(CallControlEvent.ended(widget.focusedCall.callId));
+      _callBloc.add(CallControlEvent.ended(widget.focusedCall.callId, endedBy: CallkeepEndedBy.user));
     }
     dispatchInteractionDebounce();
   }
@@ -485,7 +486,8 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                       onConferenceSelfMuted: (muted) => _callBloc.add(CallControlEvent.conferenceSelfMuted(muted)),
                       onConferenceParticipantMuted: (callId, muted) =>
                           _callBloc.add(CallControlEvent.conferenceParticipantMuted(callId, muted)),
-                      onConferenceParticipantHangup: (callId) => _callBloc.add(CallControlEvent.ended(callId)),
+                      onConferenceParticipantHangup: (callId) =>
+                          _callBloc.add(CallControlEvent.ended(callId, endedBy: CallkeepEndedBy.user)),
                       addParticipantAvailability: widget.addParticipantAvailability,
                       onAddParticipant: _addParticipant,
                       onAddParticipantCancelled: _cancelAddParticipant,
@@ -543,7 +545,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   void _cancelAddParticipant() {
     final linked = widget.linkedCall;
     if (linked == null || linked.purpose != LinkedCallPurpose.join) return;
-    _callBloc.add(CallControlEvent.ended(linked.callId));
+    _callBloc.add(CallControlEvent.ended(linked.callId, endedBy: CallkeepEndedBy.user));
   }
 
   /// Generates the list of menu items for the call options popup.

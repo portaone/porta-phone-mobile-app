@@ -28,7 +28,9 @@ class BackgroundPushNotificationService {
   ///
   /// Callkeep ends the call in Telecom, keeps the end so that a replay or a late push cannot
   /// present the call again, and does not ask this session to end the call a second time. Use
-  /// [CallkeepEndCallReason.missedWhileConnecting] for a call the app never presented.
+  /// [CallkeepEndCallReason.missedWhileConnecting] for a call the app never presented and
+  /// [CallkeepEndCallReason.declinedByUser] for a call the user declined (a `performEndCall` with
+  /// [CallkeepEndedBy.user]); callkeep keeps both alike.
   ///
   /// Ends the call, not the session: [IncomingCallService] keeps running, so the session can
   /// still record the missed call and show its notification. The session finishes on its own:

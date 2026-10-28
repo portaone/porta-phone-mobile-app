@@ -110,7 +110,10 @@ internal class ForegroundServiceProxy : PHostApi {
 
     override suspend fun answerCall(callId: String): PCallRequestError? = service().answerCall(callId)
 
-    override suspend fun endCall(callId: String): PCallRequestError? = service().endCall(callId)
+    override suspend fun endCall(
+        callId: String,
+        endedBy: PEndedByEnum,
+    ): PCallRequestError? = service().endCall(callId, endedBy)
 
     override suspend fun setHeld(
         callId: String,

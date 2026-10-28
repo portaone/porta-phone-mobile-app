@@ -31,6 +31,10 @@ class RecordingDelegate implements CallkeepDelegate {
   final List<String> startCallIds = [];
   final List<String> answerCallIds = [];
   final List<String> endCallIds = [];
+
+  /// Who ended each call in [endCallIds], as the last performEndCall said.
+  final Map<String, CallkeepEndedBy> endedByOf = {};
+
   final List<({String callId, bool onHold})> holdEvents = [];
   final List<({String callId, bool muted})> muteEvents = [];
   final List<({String callId, String key})> dtmfEvents = [];
@@ -63,7 +67,7 @@ class RecordingDelegate implements CallkeepDelegate {
 
   // injectable overrides — replace the default Future<bool> implementation
   Future<bool> Function(String callId)? performAnswerCallOverride;
-  Future<bool> Function(String callId)? performEndCallOverride;
+  Future<bool> Function(String callId, CallkeepEndedBy endedBy)? performEndCallOverride;
 
   @override
   void continueStartCallIntent(CallkeepHandle handle, String? displayName, bool video) {}
@@ -111,9 +115,10 @@ class RecordingDelegate implements CallkeepDelegate {
   }
 
   @override
-  Future<bool> performEndCall(String callId) {
-    if (performEndCallOverride != null) return performEndCallOverride!(callId);
+  Future<bool> performEndCall(String callId, CallkeepEndedBy endedBy) {
+    if (performEndCallOverride != null) return performEndCallOverride!(callId, endedBy);
     endCallIds.add(callId);
+    endedByOf[callId] = endedBy;
     onPerformEndCall?.call(callId);
     return Future.value(true);
   }
