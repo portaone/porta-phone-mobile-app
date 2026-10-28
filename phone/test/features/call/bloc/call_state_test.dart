@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:signaling/signaling.dart';
+import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -878,10 +879,10 @@ void main() {
   });
 
   group('CallControlEvent.answerEndingOthersPlan', () {
-    test('ends every other call (in given order), then answers the target', () {
+    test('ends every other call (in given order) as the user, then answers the target', () {
       expect(CallControlEvent.answerEndingOthersPlan('incoming', ['held', 'active']), const [
-        CallControlEvent.ended('held'),
-        CallControlEvent.ended('active'),
+        CallControlEvent.ended('held', endedBy: CallkeepEndedBy.user),
+        CallControlEvent.ended('active', endedBy: CallkeepEndedBy.user),
         CallControlEvent.answered('incoming'),
       ]);
     });

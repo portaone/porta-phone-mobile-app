@@ -94,6 +94,15 @@ class ReportCallEndedTest {
     }
 
     @Test
+    fun `a decline by the user is kept like an end the app never presented, for now`() {
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.DECLINED_BY_USER)
+
+        assertTrue(core.wasEndedWithoutFlutterState("c1"))
+        event(CallLifecycleEvent.ReplayIncomingCall, "c1")
+        assertFalse("the replay must not reach the bridge", CallLifecycleEvent.ReplayIncomingCall in delivered)
+    }
+
+    @Test
     fun `an end of a presented call leaves the id free for a new registration`() {
         core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
 

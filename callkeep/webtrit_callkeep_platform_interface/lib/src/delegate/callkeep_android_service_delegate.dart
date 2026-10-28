@@ -1,3 +1,5 @@
+import 'package:webtrit_callkeep_platform_interface/src/models/models.dart';
+
 /// What callkeep tells a push session about the call it presented (Android only).
 ///
 /// The session is the Dart callback a push starts; the plugin keeps the
@@ -13,8 +15,10 @@ abstract class CallkeepBackgroundServiceDelegate {
   /// the user declined from the notification, or Telecom ended the call. The
   /// session declines it on the server, records it and finishes; the service
   /// stops on its future. Not sent for an end the app reported itself - that
-  /// arrives as [performHandoff].
-  void performEndCall(String callId);
+  /// arrives as [performHandoff]. [endedBy] says who ended it: [CallkeepEndedBy.user] for the
+  /// notification's Decline or the system call UI, [CallkeepEndedBy.system] for a ring timeout
+  /// or a connection Telecom refused.
+  void performEndCall(String callId, CallkeepEndedBy endedBy);
 
   /// Callkeep no longer needs this session for [callId]: the app holds the
   /// call now, or it ended through another handler. The session finishes the

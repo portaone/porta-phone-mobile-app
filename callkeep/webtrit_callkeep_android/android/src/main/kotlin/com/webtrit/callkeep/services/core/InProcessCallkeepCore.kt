@@ -20,6 +20,7 @@ import com.webtrit.callkeep.common.Log
 import com.webtrit.callkeep.common.PendingBroadcastQueue
 import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.models.CallConnectionState
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailureMetadata
 import com.webtrit.callkeep.notifications.QueuedCallNotifications
@@ -332,7 +333,7 @@ class InProcessCallkeepCore internal constructor(
         // there would answer with ConnectionNotFound for a call the bridge never had. Its end is
         // recorded as for any call, so a late report of it (the push after the signaling) is not
         // registered again.
-        if (endQueuedCall(callId, neverPresented = reason == PEndCallReasonEnum.MISSED_WHILE_CONNECTING)) return
+        if (endQueuedCall(callId, neverPresented = reason.keepsEndWithoutFlutterState())) return
         // The push session reports from a Pigeon background thread (its reportEndCall is served
         // off the platform thread): on a cold start the main looper is busy for seconds and the
         // caller has already hung up. The facts below are recorded on the calling thread - the
@@ -342,7 +343,7 @@ class InProcessCallkeepCore internal constructor(
         // sees a call that is never to be presented. What lives on the main looper is done there.
         // The app never presented this call, so a replay must not present it either. A call the
         // app did present (a transfer-back reuses one) stays eligible for a new registration.
-        if (reason == PEndCallReasonEnum.MISSED_WHILE_CONNECTING) markEndedWithoutFlutterState(callId)
+        if (reason.keepsEndWithoutFlutterState()) markEndedWithoutFlutterState(callId)
         // Terminated now, ahead of the DeclineCall echo from the backend: a late state replay for
         // this call is already suppressed, and a registration still waiting on it is rejected.
         markTerminated(callId)
@@ -438,7 +439,8 @@ class InProcessCallkeepCore internal constructor(
     ) {
         Log.w(TAG, "Waiting call ${metadata.callId} could not be put through ($why): it ends")
         tracker.markTerminated(metadata.callId)
-        val data = metadata.toBundle()
+        // Nobody asked for this end: it reads as the system's (no initiator).
+        val data = metadata.copy(endedBy = null).toBundle()
         listeners.forEach { it.onConnectionEvent(CallLifecycleEvent.HungUp, data) }
     }
 
@@ -448,7 +450,9 @@ class InProcessCallkeepCore internal constructor(
         declineRingingCalls()
         // Refused beside a live call before, it can ring only once no call is left: answering it
         // ends the live calls too, or the answer would wait for them unseen.
-        if (entry.waitForIdle) getAll().forEach { if (it.callId != callId) startHungUpCall(it) }
+        if (entry.waitForIdle) {
+            getAll().forEach { if (it.callId != callId) startHungUpCall(it.copy(endedBy = CallEndedBy.APP)) }
+        }
         // Nothing may be ringing any more (it ended a moment ago): put the call through now.
         raiseQueuedIfFree()
         return true
@@ -456,7 +460,9 @@ class InProcessCallkeepCore internal constructor(
 
     override fun declineRingingCalls() {
         val ringing = tracker.getRingingCallIds() + incomingRegistrations.snapshot().map { it.callId }
-        ringing.forEach { callId -> startDeclineCall(get(callId) ?: CallMetadata(callId = callId)) }
+        ringing.forEach { callId ->
+            startDeclineCall((get(callId) ?: CallMetadata(callId = callId)).copy(endedBy = CallEndedBy.APP))
+        }
     }
 
     override fun dropQueuedCall(callId: String): Boolean = endQueuedCall(callId, neverPresented = false)
@@ -911,3 +917,11 @@ class InProcessCallkeepCore internal constructor(
             )
     }
 }
+
+/**
+ * Whether an end reported for this reason is kept as the end of a call the app never presented
+ * ([InProcessCallkeepCore.markEndedWithoutFlutterState]). A decline on this device
+ * ([PEndCallReasonEnum.DECLINED_BY_USER]) is kept the same way for now: the app tells it apart from a
+ * call it never held, and what follows from a decline is decided in this one place.
+ */
+internal fun PEndCallReasonEnum.keepsEndWithoutFlutterState(): Boolean = this == PEndCallReasonEnum.MISSED_WHILE_CONNECTING || this == PEndCallReasonEnum.DECLINED_BY_USER

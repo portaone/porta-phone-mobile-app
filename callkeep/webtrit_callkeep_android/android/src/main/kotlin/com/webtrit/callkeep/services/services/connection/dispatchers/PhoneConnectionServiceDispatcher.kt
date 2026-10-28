@@ -3,6 +3,7 @@ package com.webtrit.callkeep.services.services.connection.dispatchers
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.webtrit.callkeep.common.Log
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.services.connection.ConnectionManager
@@ -121,13 +122,15 @@ class PhoneConnectionServiceDispatcher(
         updateSensorsState()
     }
 
+    // A request names who asked for the end (endCall, a notification's Decline); one that does
+    // not comes from callkeep itself on the app's behalf (a release, a queued call put through).
     private fun handleDeclineCall(metadata: CallMetadata) {
-        executeOnConnection(metadata, "DeclineCall", PhoneConnection::declineCall)
+        executeOnConnection(metadata, "DeclineCall") { it.declineCall(metadata.endedBy ?: CallEndedBy.APP) }
         updateSensorsState()
     }
 
     private fun handleHungUpCall(metadata: CallMetadata) {
-        executeOnConnection(metadata, "HungUpCall", PhoneConnection::hungUp)
+        executeOnConnection(metadata, "HungUpCall") { it.hungUp(metadata.endedBy ?: CallEndedBy.APP) }
         updateSensorsState()
     }
 
@@ -230,7 +233,8 @@ class PhoneConnectionServiceDispatcher(
             logger.i("Cleaning up ${connections.size} connections on service destroy")
             connections.forEach { connection ->
                 runCatching {
-                    connection.hungUp()
+                    // Nobody asked for this end: the connection service itself is going away.
+                    connection.hungUp(CallEndedBy.SYSTEM)
                 }.onFailure { e ->
                     logger.e("Failed to hung up connection ${connection.callId}", e)
                 }
@@ -303,6 +307,9 @@ class PhoneConnectionServiceDispatcher(
             // pass the isPending() gate, and create a zombie connection for a call already ended.
             connectionManager.removePending(metadata.callId)
             connectionManager.consumeAnswer(metadata.callId)
+            // The request found no connection to end: the end Flutter gets is still the one it asked
+            // for, so a request's initiator (the user declining on the app's screen) is kept; an
+            // event with none reads as the system's.
             dispatcher(CallLifecycleEvent.ConnectionNotFound, metadata)
         }
     }

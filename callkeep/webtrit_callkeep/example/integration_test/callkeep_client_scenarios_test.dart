@@ -250,7 +250,7 @@ void main() {
       await waitFor(answerLatch.future, label: 'performAnswerCall');
 
       final signalingDone = Completer<void>();
-      delegate.performEndCallOverride = (cid) async {
+      delegate.performEndCallOverride = (cid, _) async {
         // Simulate async signaling work (e.g. sending SIP DECLINE)
         await Future.delayed(const Duration(milliseconds: 400));
         if (!signalingDone.isCompleted) signalingDone.complete();
@@ -291,7 +291,7 @@ void main() {
       await callkeep.answerCall(id);
       await waitFor(answerLatch.future, label: 'performAnswerCall');
 
-      delegate.performEndCallOverride = (_) => Future.value(false);
+      delegate.performEndCallOverride = (_, __) => Future.value(false);
 
       await expectLater(callkeep.endCall(id), completes);
     });

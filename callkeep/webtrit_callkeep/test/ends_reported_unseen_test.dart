@@ -16,7 +16,14 @@ class _FakePlatform extends WebtritCallkeepPlatform with MockPlatformInterfaceMi
   CallkeepIncomingCallError? registrationResult;
   Object? registrationError;
   Completer<void>? registrationGate;
+  final List<(String, CallkeepEndedBy)> endRequests = [];
   var tearDownCount = 0;
+
+  @override
+  Future<CallkeepCallRequestError?> endCall(String callId, {CallkeepEndedBy endedBy = CallkeepEndedBy.app}) async {
+    endRequests.add((callId, endedBy));
+    return null;
+  }
 
   @override
   void setDelegate(CallkeepDelegate? delegate) => this.delegate = delegate;
@@ -48,6 +55,7 @@ class _FakePlatform extends WebtritCallkeepPlatform with MockPlatformInterfaceMi
 class _RecordingDelegate implements CallkeepDelegate {
   final List<String> presented = [];
   final List<String> answered = [];
+  final List<(String, CallkeepEndedBy)> endedCalls = [];
 
   @override
   void didPresentIncomingCall(
@@ -69,7 +77,11 @@ class _RecordingDelegate implements CallkeepDelegate {
   @override
   Future<bool> performStartCall(String callId, CallkeepHandle handle, String? name, bool video) async => false;
   @override
-  Future<bool> performEndCall(String callId) async => false;
+  Future<bool> performEndCall(String callId, CallkeepEndedBy endedBy) async {
+    endedCalls.add((callId, endedBy));
+    return false;
+  }
+
   @override
   Future<bool> performSetHeld(String callId, bool onHold) async => false;
   @override
@@ -145,11 +157,41 @@ void main() {
       expect(callkeep.wasEndedBeforePresented('x'), isFalse);
     });
 
+    test('a decline by the user is kept the same way, for now', () async {
+      await callkeep.reportEndCall('x', '', CallkeepEndCallReason.declinedByUser);
+
+      platform.present('x');
+
+      expect(delegate.presented, isEmpty);
+      expect(callkeep.wasEndedBeforePresented('x'), isTrue);
+      expect(platform.ended, [('x', CallkeepEndCallReason.declinedByUser)]);
+    });
+
     test('every other delegate call is forwarded untouched', () async {
       await reportUnseenEnd('x');
 
       expect(await platform.delegate!.performAnswerCall('x'), isTrue);
       expect(delegate.answered, ['x']);
+      expect(await platform.delegate!.performEndCall('x', CallkeepEndedBy.user), isFalse);
+      expect(delegate.endedCalls, [('x', CallkeepEndedBy.user)], reason: 'who ended the call reaches the delegate');
+    });
+  });
+
+  group('who ends a call', () {
+    test('endCall asks the platform for the end as the app by default, as the user when told', () async {
+      await callkeep.endCall('a');
+      await callkeep.endCall('b', endedBy: CallkeepEndedBy.user);
+
+      expect(platform.endRequests, [('a', CallkeepEndedBy.app), ('b', CallkeepEndedBy.user)]);
+    });
+  });
+
+  group('reasons that keep an end without the app state', () {
+    test('are exactly missedWhileConnecting and declinedByUser', () {
+      expect(CallkeepEndCallReason.values.where((reason) => reason.keepsEndWithoutAppState), [
+        CallkeepEndCallReason.missedWhileConnecting,
+        CallkeepEndCallReason.declinedByUser,
+      ]);
     });
   });
 

@@ -51,8 +51,8 @@ class _FakeCallkeepDelegate implements CallkeepDelegate {
   }
 
   @override
-  Future<bool> performEndCall(String callId) async {
-    _record('performEndCall', [callId]);
+  Future<bool> performEndCall(String callId, CallkeepEndedBy endedBy) async {
+    _record('performEndCall', [callId, endedBy]);
     return false;
   }
 
@@ -126,6 +126,7 @@ class _FakePushRegistryDelegate implements PushRegistryDelegate {
 
 class _FakeBackgroundServiceDelegate implements CallkeepBackgroundServiceDelegate {
   final Map<String, List<String>> calls = {};
+  final Map<String, CallkeepEndedBy> endedBy = {};
 
   @override
   Future<void> performAnswerCall(String callId) async {
@@ -133,8 +134,9 @@ class _FakeBackgroundServiceDelegate implements CallkeepBackgroundServiceDelegat
   }
 
   @override
-  Future<void> performEndCall(String callId) async {
+  Future<void> performEndCall(String callId, CallkeepEndedBy endedBy) async {
     (calls['performEndCall'] ??= []).add(callId);
+    this.endedBy[callId] = endedBy;
   }
 
   @override
@@ -243,11 +245,22 @@ void main() {
     });
 
     test('performEndCall forwards callId and returns false', () async {
-      final replyData = await _send('$_prefix.PDelegateFlutterApi.performEndCall', ['call-77']);
+      final replyData = await _send('$_prefix.PDelegateFlutterApi.performEndCall', ['call-77', PEndedByEnum.user]);
       expect(fake.calls['performEndCall']![0][0], 'call-77');
       final reply = _codec.decodeMessage(replyData) as List<Object?>;
       expect(reply[0], false);
     });
+
+    for (final (pigeon, expected) in [
+      (PEndedByEnum.user, CallkeepEndedBy.user),
+      (PEndedByEnum.app, CallkeepEndedBy.app),
+      (PEndedByEnum.system, CallkeepEndedBy.system),
+    ]) {
+      test('performEndCall hands the delegate who ended the call (${pigeon.name})', () async {
+        await _send('$_prefix.PDelegateFlutterApi.performEndCall', ['call-78', pigeon]);
+        expect(fake.calls['performEndCall']![0], ['call-78', expected]);
+      });
+    }
 
     test('performSetHeld forwards callId and onHold=true', () async {
       await _send('$_prefix.PDelegateFlutterApi.performSetHeld', ['call-1', true]);
@@ -386,9 +399,11 @@ void main() {
       expect(fake.calls['performAnswerCall'], contains('call-bg-1'));
     });
 
-    test('performEndCall forwards callId', () async {
-      await _send('$_prefix.PDelegateBackgroundServiceFlutterApi.performEndCall', ['call-bg-2']);
-      expect(fake.calls['performEndCall'], contains('call-bg-2'));
+    test('performEndCall forwards callId and who ended the call', () async {
+      await _send('$_prefix.PDelegateBackgroundServiceFlutterApi.performEndCall', ['call-bg-2', PEndedByEnum.user]);
+      await _send('$_prefix.PDelegateBackgroundServiceFlutterApi.performEndCall', ['call-bg-4', PEndedByEnum.system]);
+      expect(fake.calls['performEndCall'], ['call-bg-2', 'call-bg-4']);
+      expect(fake.endedBy, {'call-bg-2': CallkeepEndedBy.user, 'call-bg-4': CallkeepEndedBy.system});
     });
 
     test('performHandoff forwards callId', () async {

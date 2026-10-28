@@ -33,7 +33,7 @@ class QueuedTerminationRequestJsonMapper {
   }
 
   static Map<String, dynamic> requestToMap(QueuedTerminationRequest data) {
-    return {'type': data.type.name, 'callId': data.callId, 'line': data.line};
+    return {'type': data.type.name, 'callId': data.callId, 'line': data.line, 'declinedByUser': data.declinedByUser};
   }
 
   static QueuedTerminationRequest? requestFromMap(Map<dynamic, dynamic> map) {
@@ -50,7 +50,9 @@ class QueuedTerminationRequestJsonMapper {
 
     try {
       final type = QueuedTerminationRequestType.values.byName(typeName);
-      return QueuedTerminationRequest(type: type, callId: callId, line: line);
+      // Records written before the flag existed read as a decline not by the user.
+      final declinedByUser = map['declinedByUser'] == true;
+      return QueuedTerminationRequest(type: type, callId: callId, line: line, declinedByUser: declinedByUser);
     } catch (_) {
       return null;
     }

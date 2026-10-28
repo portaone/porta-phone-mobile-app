@@ -15,6 +15,7 @@ import com.webtrit.callkeep.common.Platform
 import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.managers.NotificationChannelManager.INCOMING_CALL_NOTIFICATION_CHANNEL_ID
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.connection.StandaloneCallService
 import com.webtrit.callkeep.services.services.connection.StandaloneServiceAction
@@ -100,7 +101,8 @@ internal class StandaloneIncomingCallNotificationBuilder : NotificationBuilder()
             requireNotNull(callMetaData) { "Call metadata must be set before building the notification." }
 
         val answerIntent = createAnswerActionIntent(meta)
-        val declineIntent = createActionIntent(meta, StandaloneServiceAction.DeclineCall)
+        // Decline is a person ending the call on this device; Answer carries no initiator.
+        val declineIntent = createActionIntent(meta.copy(endedBy = CallEndedBy.USER), StandaloneServiceAction.DeclineCall)
 
         val content = incomingCallContent(meta)
 

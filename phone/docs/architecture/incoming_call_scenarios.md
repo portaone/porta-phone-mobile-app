@@ -311,7 +311,9 @@ service up through it. On a Samsung M32 cold start that gap between the Activity
 its delegate was 8.8 s; a caller hanging up inside it used to come back as a ghost call.
 
 The last stretch of that gap is covered on the Dart side, in callkeep: a hangup `CallBloc` hears
-for a call it does not hold is reported as `missedWhileConnecting`, and `Callkeep` records that
+for a call it does not hold is reported as `missedWhileConnecting` (or `declinedByUser` when it
+answers a decline the user made on this device - the platform's `performEndCall` said
+`CallkeepEndedBy.user` - which callkeep keeps the same way for now), and `Callkeep` records that
 id before the report crosses to the platform (on the M32 the replay got through the main looper
 3 s before it). The delegate callkeep hands the platform drops `didPresentIncomingCall` for a
 recorded id, and the bloc asks `Callkeep.wasEndedBeforePresented` after its contact lookup

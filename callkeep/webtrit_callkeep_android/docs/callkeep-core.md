@@ -87,7 +87,7 @@ events. `ForegroundService.onConnectionEvent` still handles the other call and U
 | `clear()`                                                      | end of `tearDown`; `cleanConnections`                                                                                          | Full per-session reset                                                                                                              |
 | `markDirectNotified` / `consumeDirectNotified`                 | `tearDown` / HungUp handler                                                                                                    | Stale-broadcast suppression                                                                                                         |
 | `markEndCallDispatched(id)`                                    | `endCall`; `reportCallEnded`; the incoming-call service on `IC_RELEASE_ENDED`                                                  | performEndCall dedup; true = first mark                                                                                             |
-| `markEndedWithoutFlutterState` / `wasEndedWithoutFlutterState` | `reportCallEnded(MISSED_WHILE_CONNECTING)` / `reportNewIncomingCall`                                                           | Sticky ghost-re-presentation guard                                                                                                  |
+| `markEndedWithoutFlutterState` / `wasEndedWithoutFlutterState` | `reportCallEnded(MISSED_WHILE_CONNECTING, DECLINED_BY_USER)` / `reportNewIncomingCall`                                         | Sticky ghost-re-presentation guard                                                                                                  |
 
 `clearAndMarkEndCallDispatched` is the one sanctioned main-process touch of
 `ConnectionManager.instance`: it drops the `pendingCallIds` reservation that
@@ -297,7 +297,7 @@ it back in `IncomingCallQueue`:
 - **Ending a waiting call.** `reportCallEnded`, `ForegroundService.endCall`, and
   `startDeclineCall` / `startHungUpCall` (the push session's end or release of a call) take it
   out of the queue without touching the backend, where it never was. It leaves the facts any
-  ended call leaves - terminated, its end dispatched, and for `MISSED_WHILE_CONNECTING` never to be
+  ended call leaves - terminated, its end dispatched, and for `MISSED_WHILE_CONNECTING` (or `DECLINED_BY_USER`) never to be
   registered again - so a late report of it (the push after the signaling) does not ring it.
 - **User actions.** `answerQueuedCall(callId)` marks the call to be answered and declines the
   ringing calls (`startDeclineCall`, the path of a ringing notification's own Decline button, so
@@ -365,8 +365,9 @@ reason to end one.
 ### Reporting a call ended
 
 `reportCallEnded(metadata, reason)` is the app telling the core that a call is over: the remote
-party hung up, nobody answered, or the app never got to present it
-(`MISSED_WHILE_CONNECTING`). It is one fact whoever reports it - the foreground bridge
+party hung up, nobody answered, the app never got to present it (`MISSED_WHILE_CONNECTING`), or
+the user declined it on this device (`DECLINED_BY_USER`; kept like `MISSED_WHILE_CONNECTING` for now,
+both through `keepsEndWithoutFlutterState`). It is one fact whoever reports it - the foreground bridge
 (`PHostApi.reportEndCall`), the push session (`PHostBackgroundPushNotificationIsolateApi.reportEndCall`)
 or a hosted engine (`ExternalEngineCallApi`) - and the core does the same four things at once:
 
@@ -381,7 +382,8 @@ or a hosted engine (`ExternalEngineCallApi`) - and the core does the same four t
 4. leaves a pending release (`PendingBroadcastQueue`) when no incoming-call service is running,
    so one started for this call afterwards ends it without showing it; a running service takes
    the `IC_RELEASE_ENDED` through its receiver instead;
-5. ends the call in the backend (`startDeclineCall`).
+5. ends the call in the backend (`startDeclineCall`; an end request without `endedBy` is the
+   app's, so the connection reports APP).
 
 It ends the call, not the session that reported it: the incoming-call service keeps running for
 whatever that session still has to do. A presented call keeps its id free for a

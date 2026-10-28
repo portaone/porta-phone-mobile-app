@@ -26,6 +26,7 @@ import com.webtrit.callkeep.common.PermissionsHelper
 import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.common.registerReceiverCompat
 import com.webtrit.callkeep.common.sendInternalBroadcast
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.NotificationAction
 import com.webtrit.callkeep.models.toPCallkeepIncomingCallData
@@ -111,7 +112,7 @@ class IncomingCallService :
                     Log.e(TAG, "release $reason without a callId ignored")
                     return
                 }
-                onReleaseRequested(callId, reason)
+                onReleaseRequested(callId, reason, releaseEndedBy(intent.extras))
             }
         }
 
@@ -492,6 +493,7 @@ class IncomingCallService :
     private fun onReleaseRequested(
         callId: String,
         reason: IncomingCallRelease,
+        endedBy: CallEndedBy,
     ) {
         when {
             shownCallId == null -> {
@@ -504,7 +506,7 @@ class IncomingCallService :
             }
 
             else -> {
-                handleRelease(reason)
+                handleRelease(reason, endedBy)
             }
         }
     }
@@ -554,8 +556,12 @@ class IncomingCallService :
      * an end nobody reported yet), or that the call is no longer its concern
      * ([IncomingCallRelease.IC_RELEASE_HANDED_OVER], or an end the app reported itself). A
      * session that cannot be reached has nothing to finish, and the service stops at once.
+     * [endedBy] is who ended the call, for the session's performEndCall.
      */
-    private fun handleRelease(reason: IncomingCallRelease): Int {
+    private fun handleRelease(
+        reason: IncomingCallRelease,
+        endedBy: CallEndedBy,
+    ): Int {
         if (isReleased) {
             Log.w(TAG, "handleRelease: already released, ignoring duplicate invocation")
             return START_NOT_STICKY
@@ -580,7 +586,7 @@ class IncomingCallService :
             }
 
             else -> {
-                callLifecycleHandler.performEndCall(CallMetadata(callId = callId))
+                callLifecycleHandler.performEndCall(CallMetadata(callId = callId, endedBy = endedBy))
             }
         }
         return START_NOT_STICKY
@@ -728,6 +734,7 @@ class IncomingCallService :
             context: Context,
             callId: String,
             type: IncomingCallRelease,
+            endedBy: CallEndedBy? = null,
         ) {
             // Deliver via broadcast instead of startService().
             // releaseReceiver is registered in onCreate() and unregistered in onDestroy(),
@@ -740,7 +747,7 @@ class IncomingCallService :
             // delivered only to this app.
             context.sendInternalBroadcast(
                 type.name,
-                Bundle().apply { putString(CallDataConst.CALL_ID, callId) },
+                releaseExtras(callId, endedBy),
                 permission = releaseBroadcastPermission(context),
             )
             Log.d(TAG, "Release action $type for $callId initiated via broadcast.")
@@ -758,6 +765,22 @@ class IncomingCallService :
         }
 
         internal const val IC_ACTIVE_CALL_VISIBLE = "IC_ACTIVE_CALL_VISIBLE"
+
+        /** Who ended the released call, by [CallEndedBy.name]; absent when the sender did not know. */
+        internal const val EXTRA_ENDED_BY = "IC_RELEASE_ENDED_BY"
+
+        /** The extras of a release broadcast: the call it names and, when known, who ended it. */
+        internal fun releaseExtras(
+            callId: String,
+            endedBy: CallEndedBy?,
+        ): Bundle =
+            Bundle().apply {
+                putString(CallDataConst.CALL_ID, callId)
+                endedBy?.let { putString(EXTRA_ENDED_BY, it.name) }
+            }
+
+        /** Who ended the call a release names; a release that does not say is the platform's. */
+        internal fun releaseEndedBy(extras: Bundle?): CallEndedBy = CallEndedBy.fromNameOrSystem(extras?.getString(EXTRA_ENDED_BY))
     }
 }
 

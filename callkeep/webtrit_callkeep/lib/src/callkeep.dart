@@ -62,9 +62,11 @@ class Callkeep {
   /// the delegate is never handed the call (see [setDelegate]) and the app can ask before it
   /// applies a presentation it already received (see [wasEndedBeforePresented]).
   ///
-  /// Only ends reported with [CallkeepEndCallReason.missedWhileConnecting] are kept: the end
-  /// of a call the app held is its own knowledge, and that call's id stays free for a transfer
-  /// back, as the platforms keep it. The map is bounded; the oldest report is forgotten first.
+  /// Only ends reported with a reason that keeps the end without the app's state
+  /// ([CallkeepEndCallReasonKeep.keepsEndWithoutAppState]: [CallkeepEndCallReason.missedWhileConnecting]
+  /// or [CallkeepEndCallReason.declinedByUser]) are kept: the end of a call the app held is its own
+  /// knowledge, and that call's id stays free for a transfer back, as the platforms keep it. The map is
+  /// bounded; the oldest report is forgotten first.
   final Map<String, int> _endsReportedUnseen = <String, int>{};
   int _endReportVersion = 0;
   static const _kEndsReportedUnseenLimit = 32;
@@ -72,7 +74,8 @@ class Callkeep {
   /// Whether the app reported the end of [callId] before it ever held that call, and nothing
   /// has reopened the id since.
   ///
-  /// True after `reportEndCall(callId, ..., missedWhileConnecting)` until
+  /// True after `reportEndCall(callId, ..., missedWhileConnecting)` or
+  /// `reportEndCall(callId, ..., declinedByUser)` until
   /// [reportNewIncomingCall] registers [callId] anew (returns null with no newer such report
   /// made meanwhile), [tearDown] runs, or 32 newer such reports push the entry out. A local,
   /// bounded fact of this [Callkeep] instance: false does not mean the call is alive, and the
@@ -186,11 +189,13 @@ class Callkeep {
   /// Returns [Future] that completes when the operation is done.
   ///
   /// With [CallkeepEndCallReason.missedWhileConnecting] - the end of a call the app never held,
-  /// learnt from signaling - the fact is kept here before the platform hears of it, so a
-  /// presentation of that call the platform still has in flight is dropped
-  /// ([wasEndedBeforePresented]).
+  /// learnt from signaling - or [CallkeepEndCallReason.declinedByUser], the fact is kept here
+  /// before the platform hears of it, so a presentation of that call the platform still has in
+  /// flight is dropped ([wasEndedBeforePresented]).
   Future<void> reportEndCall(String callId, String displayName, CallkeepEndCallReason reason) {
-    if (reason == CallkeepEndCallReason.missedWhileConnecting) _recordEndReportedUnseen(callId);
+    // A decline by the user is kept like a call never held, as the platforms do: what follows from a
+    // decline is not decided yet, and until it is the two keep one behaviour.
+    if (reason.keepsEndWithoutAppState) _recordEndReportedUnseen(callId);
     return platform.reportEndCall(callId, displayName, reason);
   }
 
@@ -213,9 +218,13 @@ class Callkeep {
   }
 
   /// End a call with the given [callId].
+  ///
+  /// [endedBy] says who asks: [CallkeepEndedBy.app] (the default) when the app ends the call on
+  /// its own, [CallkeepEndedBy.user] when it does so because the user asked (a tap on the app's
+  /// own call screen). The [CallkeepDelegate.performEndCall] that follows carries it back.
   /// Returns [CallkeepCallRequestError] if there is an error.
-  Future<CallkeepCallRequestError?> endCall(String callId) {
-    return platform.endCall(callId);
+  Future<CallkeepCallRequestError?> endCall(String callId, {CallkeepEndedBy endedBy = CallkeepEndedBy.app}) {
+    return platform.endCall(callId, endedBy: endedBy);
   }
 
   /// Set the call on hold with the given [callId] and [onHold] flag.
@@ -322,7 +331,7 @@ class _EndAwareDelegate implements CallkeepDelegate {
   Future<bool> performAnswerCall(String callId) => _delegate.performAnswerCall(callId);
 
   @override
-  Future<bool> performEndCall(String callId) => _delegate.performEndCall(callId);
+  Future<bool> performEndCall(String callId, CallkeepEndedBy endedBy) => _delegate.performEndCall(callId, endedBy);
 
   @override
   Future<bool> performSetHeld(String callId, bool onHold) => _delegate.performSetHeld(callId, onHold);

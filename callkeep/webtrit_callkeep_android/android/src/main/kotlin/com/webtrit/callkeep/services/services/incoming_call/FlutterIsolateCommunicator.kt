@@ -5,6 +5,8 @@ import com.webtrit.callkeep.PCallkeepIncomingCallData
 import com.webtrit.callkeep.PDelegateBackgroundRegisterFlutterApi
 import com.webtrit.callkeep.PDelegateBackgroundServiceFlutterApi
 import com.webtrit.callkeep.common.syncPushIsolate
+import com.webtrit.callkeep.models.CallEndedBy
+import com.webtrit.callkeep.models.toPEndedBy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -19,6 +21,7 @@ interface FlutterIsolateCommunicator {
 
     fun performEndCall(
         callId: String,
+        endedBy: CallEndedBy,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit,
     )
@@ -59,11 +62,12 @@ class DefaultFlutterIsolateCommunicator(
 
     override fun performEndCall(
         callId: String,
+        endedBy: CallEndedBy,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit,
     ) {
         val api = serviceApi ?: return onFailure(IllegalStateException("Service API unavailable"))
-        relay(onSuccess, onFailure) { api.performEndCall(callId) }
+        relay(onSuccess, onFailure) { api.performEndCall(callId, endedBy.toPEndedBy()) }
     }
 
     override fun performHandoff(

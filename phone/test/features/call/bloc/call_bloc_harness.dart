@@ -372,9 +372,15 @@ class FakeCallkeep extends Fake implements Callkeep {
 
   final List<String> ended = [];
 
+  /// The reason of every end report, in order.
+  final List<({String callId, CallkeepEndCallReason reason})> endReasons = [];
+
   /// What the OS was told about each call's microphone, in order.
   final List<({String callId, bool muted})> muted = [];
   final List<String> endCalls = [];
+
+  /// Every end the bloc asked the platform for, with who it said asked, in order.
+  final List<({String callId, CallkeepEndedBy endedBy})> endRequests = [];
   final List<({String callId, bool onHold})> held = [];
   final List<({String groupId, List<String> callIds})> groups = [];
   final List<List<String>> ungroups = [];
@@ -400,8 +406,9 @@ class FakeCallkeep extends Fake implements Callkeep {
 
   @override
   Future<void> reportEndCall(String callId, String displayName, CallkeepEndCallReason reason) async {
-    if (reason == CallkeepEndCallReason.missedWhileConnecting) endedUnseen.add(callId);
+    if (reason.keepsEndWithoutAppState) endedUnseen.add(callId);
     ended.add(callId);
+    endReasons.add((callId: callId, reason: reason));
     await endReportGate?.future;
     if (endReportError != null) throw endReportError!;
   }
@@ -475,8 +482,9 @@ class FakeCallkeep extends Fake implements Callkeep {
   Future<void> reportConnectedOutgoingCall(String callId) async {}
 
   @override
-  Future<CallkeepCallRequestError?> endCall(String callId) async {
+  Future<CallkeepCallRequestError?> endCall(String callId, {CallkeepEndedBy endedBy = CallkeepEndedBy.app}) async {
     endCalls.add(callId);
+    endRequests.add((callId: callId, endedBy: endedBy));
     return null;
   }
 
@@ -895,8 +903,11 @@ class _FakePresenceSettingsRepository extends Fake implements PresenceSettingsRe
 class FakeQueuedTerminationRequestsRepository extends Fake implements QueuedTerminationRequestsRepository {
   final Map<String, QueuedTerminationRequest> requests = {};
 
+  /// Keyed by [QueuedTerminationRequest.key], as the real repository answers; [requests] is
+  /// kept by call id for the tests' convenience.
   @override
-  Map<String, QueuedTerminationRequest> get getAll => Map.unmodifiable(requests);
+  Map<String, QueuedTerminationRequest> get getAll =>
+      Map.unmodifiable({for (final request in requests.values) request.key: request});
 
   @override
   void put(QueuedTerminationRequest request) => requests[request.callId] = request;

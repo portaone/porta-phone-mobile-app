@@ -684,9 +684,10 @@ sealed class CallControlEvent extends CallEvent {
   // from [CallState.otherCallIds]), keeping the multi-step semantics
   // unit-testable without a full [CallBloc].
 
-  /// "End & Answer" plan: end every other call, then answer [callId].
+  /// "End & Answer" plan: end every other call, then answer [callId]. The user chose to end the
+  /// others by answering this way, so their ends are the user's.
   static List<CallControlEvent> answerEndingOthersPlan(String callId, List<String> otherCallIds) => [
-    for (final otherCallId in otherCallIds) CallControlEvent.ended(otherCallId),
+    for (final otherCallId in otherCallIds) CallControlEvent.ended(otherCallId, endedBy: CallkeepEndedBy.user),
     CallControlEvent.answered(callId),
   ];
 
@@ -756,7 +757,10 @@ sealed class CallControlEvent extends CallEvent {
   /// calls on hold, as a single intent (the Resume button on a held focus).
   const factory CallControlEvent.resumedHoldingOthers(String callId) = _CallControlEventResumedHoldingOthers;
 
-  const factory CallControlEvent.ended(String callId) = _CallControlEventEnded;
+  /// [endedBy]: who asks for the end - [CallkeepEndedBy.user] for a control the user pressed,
+  /// [CallkeepEndedBy.app] (the default) when the app ends the call on its own. It is handed to
+  /// `callkeep.endCall` and comes back with the platform's `performEndCall`.
+  const factory CallControlEvent.ended(String callId, {CallkeepEndedBy endedBy}) = _CallControlEventEnded;
 
   const factory CallControlEvent.setHeld(String callId, bool onHold) = _CallControlEventSetHeld;
 
@@ -805,7 +809,9 @@ sealed class CallControlEvent extends CallEvent {
   const factory CallControlEvent.conferenceSelfMuted(bool muted) = _CallControlEventConferenceSelfMuted;
 
   /// Ends the conference and hangs up every leg.
-  const factory CallControlEvent.conferenceEnded() = _CallControlEventConferenceEnded;
+  /// [endedBy]: who ends the room - the user's hang-up on the call screen passes
+  /// [CallkeepEndedBy.user]; each leg's end carries it.
+  const factory CallControlEvent.conferenceEnded({CallkeepEndedBy endedBy}) = _CallControlEventConferenceEnded;
 
   /// Calls [number] on behalf of [anchorCallId] to consult them before an
   /// attended transfer: the anchor is held, and given back if the
@@ -919,12 +925,13 @@ class _CallControlEventResumedHoldingOthers extends CallControlEvent {
 }
 
 class _CallControlEventEnded extends CallControlEvent {
-  const _CallControlEventEnded(this.callId);
+  const _CallControlEventEnded(this.callId, {this.endedBy = CallkeepEndedBy.app});
 
   final String callId;
+  final CallkeepEndedBy endedBy;
 
   @override
-  List<Object?> get props => [callId];
+  List<Object?> get props => [callId, endedBy];
 }
 
 class _CallControlEventSetHeld extends CallControlEvent {
@@ -1078,10 +1085,12 @@ class _CallControlEventConferenceSelfMuted extends CallControlEvent {
 }
 
 class _CallControlEventConferenceEnded extends CallControlEvent {
-  const _CallControlEventConferenceEnded();
+  const _CallControlEventConferenceEnded({this.endedBy = CallkeepEndedBy.app});
+
+  final CallkeepEndedBy endedBy;
 
   @override
-  List<Object?> get props => const [];
+  List<Object?> get props => [endedBy];
 }
 
 class _CallControlEventLinkedCallPickingStarted extends CallControlEvent {
@@ -1166,7 +1175,7 @@ sealed class _CallPerformEvent extends CallEvent {
 
   factory _CallPerformEvent.answered(String callId) = _CallPerformEventAnswered;
 
-  factory _CallPerformEvent.ended(String callId) = _CallPerformEventEnded;
+  factory _CallPerformEvent.ended(String callId, CallkeepEndedBy endedBy) = _CallPerformEventEnded;
 
   factory _CallPerformEvent.setHeld(String callId, bool onHold) = _CallPerformEventSetHeld;
 
@@ -1213,12 +1222,15 @@ class _CallPerformEventAnswered extends _CallPerformEvent {
 }
 
 class _CallPerformEventEnded extends _CallPerformEvent {
-  _CallPerformEventEnded(this.callId);
+  _CallPerformEventEnded(this.callId, this.endedBy);
 
   final String callId;
 
+  /// Who ended the call, as the platform says.
+  final CallkeepEndedBy endedBy;
+
   @override
-  List<Object?> get props => [callId];
+  List<Object?> get props => [callId, endedBy];
 }
 
 class _CallPerformEventSetHeld extends _CallPerformEvent {
@@ -1470,7 +1482,7 @@ sealed class _CallMutationEvent extends CallEvent {
   // _CallPerformEvent redirects
   const factory _CallMutationEvent.performStart(String callId, {required bool video}) = _CallMutationEventPerformStart;
   const factory _CallMutationEvent.performAnswer(String callId) = _CallMutationEventPerformAnswer;
-  const factory _CallMutationEvent.performEnd(String callId) = _CallMutationEventPerformEnd;
+  const factory _CallMutationEvent.performEnd(String callId, CallkeepEndedBy endedBy) = _CallMutationEventPerformEnd;
   const factory _CallMutationEvent.performSetHeld(String callId, bool onHold) = _CallMutationEventPerformSetHeld;
   const factory _CallMutationEvent.performSetMuted(String callId, bool muted) = _CallMutationEventPerformSetMuted;
   const factory _CallMutationEvent.performSendDTMF(String callId, String key) = _CallMutationEventPerformSendDTMF;
@@ -1486,7 +1498,7 @@ sealed class _CallMutationEvent extends CallEvent {
     required String? fromReplaces,
   }) = _CallMutationEventControlStart;
   const factory _CallMutationEvent.controlAnswer(String callId) = _CallMutationEventControlAnswer;
-  const factory _CallMutationEvent.controlEnd(String callId) = _CallMutationEventControlEnd;
+  const factory _CallMutationEvent.controlEnd(String callId, CallkeepEndedBy endedBy) = _CallMutationEventControlEnd;
   const factory _CallMutationEvent.controlSetHeld(String callId, bool onHold) = _CallMutationEventControlSetHeld;
   const factory _CallMutationEvent.controlSetMuted(String callId, bool muted) = _CallMutationEventControlSetMuted;
   const factory _CallMutationEvent.controlSendDTMF(String callId, String key) = _CallMutationEventControlSendDTMF;
@@ -1524,6 +1536,7 @@ sealed class _CallMutationEvent extends CallEvent {
     required int code,
     required String reason,
     required bool wasHeld,
+    bool declinedByUser,
   }) = _CallMutationEventSignalingHangup;
   const factory _CallMutationEvent.signalingCallUpdating({
     required String callId,
@@ -1568,7 +1581,8 @@ sealed class _CallMutationEvent extends CallEvent {
   const factory _CallMutationEvent.controlConferenceMute(String callId, bool muted) =
       _CallMutationEventControlConferenceMute;
   const factory _CallMutationEvent.controlConferenceSelfMute(bool muted) = _CallMutationEventControlConferenceSelfMute;
-  const factory _CallMutationEvent.controlConferenceEnd() = _CallMutationEventControlConferenceEnd;
+  const factory _CallMutationEvent.controlConferenceEnd(CallkeepEndedBy endedBy) =
+      _CallMutationEventControlConferenceEnd;
 
   // linked call: placing a call on behalf of another, and giving that one back
   // when the new call does not come up
@@ -1647,10 +1661,11 @@ class _CallMutationEventPerformAnswer extends _CallMutationEvent {
 }
 
 class _CallMutationEventPerformEnd extends _CallMutationEvent {
-  const _CallMutationEventPerformEnd(this.callId);
+  const _CallMutationEventPerformEnd(this.callId, this.endedBy);
   final String callId;
+  final CallkeepEndedBy endedBy;
   @override
-  List<Object?> get props => [callId];
+  List<Object?> get props => [callId, endedBy];
 }
 
 class _CallMutationEventPerformSetHeld extends _CallMutationEvent {
@@ -1712,10 +1727,11 @@ class _CallMutationEventControlAnswer extends _CallMutationEvent {
 }
 
 class _CallMutationEventControlEnd extends _CallMutationEvent {
-  const _CallMutationEventControlEnd(this.callId);
+  const _CallMutationEventControlEnd(this.callId, this.endedBy);
   final String callId;
+  final CallkeepEndedBy endedBy;
   @override
-  List<Object?> get props => [callId];
+  List<Object?> get props => [callId, endedBy];
 }
 
 class _CallMutationEventControlSetHeld extends _CallMutationEvent {
@@ -1844,17 +1860,21 @@ class _CallMutationEventSignalingHangup extends _CallMutationEvent {
     required this.code,
     required this.reason,
     required this.wasHeld,
+    this.declinedByUser = false,
   });
   final String callId;
   final int code;
   final String reason;
+
+  /// Whether the hangup answers a decline made on this device ([QueuedTerminationRequest.declinedByUser]).
+  final bool declinedByUser;
 
   /// Whether the bloc held the call when the hangup arrived. The mutation runs later and may
   /// find the call gone by then - ended from this side meanwhile - which is not the same as a
   /// call the bloc never held.
   final bool wasHeld;
   @override
-  List<Object?> get props => [callId, code, reason, wasHeld];
+  List<Object?> get props => [callId, code, reason, wasHeld, declinedByUser];
 }
 
 class _CallMutationEventSignalingCallUpdating extends _CallMutationEvent {
@@ -2001,9 +2021,10 @@ class _CallMutationEventControlConferenceSelfMute extends _CallMutationEvent {
 }
 
 class _CallMutationEventControlConferenceEnd extends _CallMutationEvent {
-  const _CallMutationEventControlConferenceEnd();
+  const _CallMutationEventControlConferenceEnd(this.endedBy);
+  final CallkeepEndedBy endedBy;
   @override
-  List<Object?> get props => const [];
+  List<Object?> get props => [endedBy];
 }
 
 class _CallMutationEventConferenceOffer extends _CallMutationEvent {

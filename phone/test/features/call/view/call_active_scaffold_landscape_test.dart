@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
@@ -73,7 +74,7 @@ void main() {
       // Landscape sets the hangup apart in a zone of its own; it is the same
       // intent and must reach the same place.
       await tester.tap(find.byKey(const Key(callActionsHangupId)));
-      verify(() => callBloc.add(const CallControlEvent.conferenceEnded())).called(1);
+      verify(() => callBloc.add(const CallControlEvent.conferenceEnded(endedBy: CallkeepEndedBy.user))).called(1);
       await teardownCallScaffold(tester);
     });
 

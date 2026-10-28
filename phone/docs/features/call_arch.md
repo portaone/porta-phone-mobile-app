@@ -3,7 +3,7 @@
 `CallBloc` (`lib/features/call/bloc/call_bloc.dart`) is the central component of the entire app.
 It implements both `Bloc<CallEvent, CallState>` and `CallkeepDelegate`, making it the single point
 that bridges signaling, native call UI, WebRTC media, and the Flutter UI layer.
-Last reviewed: 2026-10-21.
+Last reviewed: 2026-10-28.
 
 The product/UX view lives in [`call_ux.md`](call_ux.md); incoming-call background scenarios with
 diagrams in [`../architecture/incoming_call_scenarios.md`](../architecture/incoming_call_scenarios.md); merging calls into a
@@ -271,7 +271,9 @@ these futures only after the actual operation finishes, so the native side waits
 creates a placeholder `ActiveCall(status: incomingFromPush)` and later merges the signaling
 offer into it when `IncomingCallEvent` arrives, instead of creating a duplicate entry. The one
 placeholder it refuses is a call it already heard the server hang up while it held no entry for
-it: that hangup is reported to callkeep as `missedWhileConnecting`, callkeep keeps the fact
+it: that hangup is reported to callkeep as `missedWhileConnecting` (`declinedByUser` when the user
+declined the call first - `performEndCall` carried `CallkeepEndedBy.user`, which the queued decline
+keeps as `QueuedTerminationRequest.declinedByUser`; kept the same way for now), callkeep keeps the fact
 (`Callkeep.wasEndedBeforePresented`) and drops the presentation itself when it is still on its
 way; a presentation already received and waiting on contact resolution is checked against it
 after the wait. The bloc holds no such list of its own.

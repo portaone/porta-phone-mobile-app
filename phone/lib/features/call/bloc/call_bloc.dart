@@ -1570,8 +1570,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
 
     // The server confirms a termination this side asked for with a hangup:
-    // the queued request has done its work and is not replayed.
-    for (final request in queuedTerminationRequestsRepository.getAll.values) {
+    // the queued request has done its work and is not replayed. Whether it
+    // was the user's decline is read before it goes: the end reported for a
+    // call already gone from state says so (declinedByUser).
+    final queued = queuedTerminationRequestsRepository.getAll;
+    final declinedByUser = queued.values.any((r) => r.callId == event.callId && r.declinedByUser);
+    for (final request in queued.values) {
       if (request.callId == event.callId) queuedTerminationRequestsRepository.remove(request);
     }
     _renegotiationCoordinator.callEnding(event.callId);
@@ -1581,6 +1585,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         code: event.code,
         reason: event.reason,
         wasHeld: call != null,
+        declinedByUser: declinedByUser,
       ),
     );
   }
@@ -2008,7 +2013,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _recordLinkedCallFailure(event.callId, LinkedCallFailure.cancelled, emit);
 
     _renegotiationCoordinator.callEnding(event.callId);
-    add(_CallMutationEvent.controlEnd(event.callId));
+    add(_CallMutationEvent.controlEnd(event.callId, event.endedBy));
   }
 
   Future<void> __onCallControlEventSetHeld(_CallControlEventSetHeld event, Emitter<CallState> emit) async {
@@ -2088,7 +2093,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _CallControlEventConferenceEnded event,
     Emitter<CallState> emit,
   ) async {
-    add(const _CallMutationEvent.controlConferenceEnd());
+    add(_CallMutationEvent.controlConferenceEnd(event.endedBy));
   }
 
   Future<void> _onCallControlEventCameraSwitched(_CallControlEventCameraSwitched event, Emitter<CallState> emit) async {
@@ -2400,8 +2405,13 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // is recorded for the next handshake, which knows the line and sends it
       // (the server's hangup, when it comes first, clears it). Until then the
       // record keeps a handshake plan from presenting the call again.
-      queuedTerminationRequestsRepository.put(
-        QueuedTerminationRequest(type: QueuedTerminationRequestType.decline, callId: event.callId, line: null),
+      _putTerminationRequest(
+        QueuedTerminationRequest(
+          type: QueuedTerminationRequestType.decline,
+          callId: event.callId,
+          line: null,
+          declinedByUser: event.endedBy == CallkeepEndedBy.user,
+        ),
       );
       add(_ResetStateEvent.completeCall(event.callId));
       return;
@@ -2416,7 +2426,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     event.fulfill();
     _renegotiationCoordinator.callEnding(event.callId);
-    add(_CallMutationEvent.performEnd(event.callId));
+    add(_CallMutationEvent.performEnd(event.callId, event.endedBy));
   }
 
   Future<void> __onCallPerformEventSetHeld(_CallPerformEventSetHeld event, Emitter<CallState> emit) async {
@@ -2913,6 +2923,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
               type: QueuedTerminationRequestType.decline,
               line: activeCall.line,
               callId: activeCall.callId,
+              // The platform says who ended the call: a decline is the user's only when a person
+              // ended it on this device, not when the ring timed out or the app ended it itself.
+              declinedByUser: event.endedBy == CallkeepEndedBy.user,
             ),
             source: '__onMutationPerformEnd',
           ).timeout(Duration(seconds: 1), onTimeout: () {});
@@ -3252,11 +3265,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // 30-second queue timeout.
     _signalingModule.cancelRequestsByCallId(e.callId);
 
-    final error = await callkeep.endCall(e.callId);
+    final error = await callkeep.endCall(e.callId, endedBy: e.endedBy);
     // Handle the case where the local connection is no longer available,
-    // sending the call completion event directly to the signaling.
+    // sending the call completion event directly to the signaling. No platform
+    // end follows, so the one asked for stands in for it, with the same initiator.
     if (error == CallkeepCallRequestError.unknownCallUuid) {
-      add(_CallPerformEvent.ended(e.callId));
+      add(_CallPerformEvent.ended(e.callId, e.endedBy));
     }
     if (error != null) _logger.warning('__onMutationControlEnd error: $error');
   }
@@ -3806,9 +3820,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // Not awaited: the report crosses to the platform through a queue a cold start keeps
       // busy for seconds, this handler runs sequentially, and a hangup of another unknown call
       // queued behind it must be reported - and known to callkeep - without that wait.
+      // A call the user declined that left state before this hangup is not one the app
+      // never held: the report says so (declinedByUser), and callkeep decides what follows from it.
+      final reason = event.declinedByUser
+          ? CallkeepEndCallReason.declinedByUser
+          : CallkeepEndCallReason.missedWhileConnecting;
+      _logger.info('__onMutationSignalingHangup: ${event.callId} not in state, reporting its end as ${reason.name}');
       unawaited(
         callkeep
-            .reportEndCall(event.callId, '', CallkeepEndCallReason.missedWhileConnecting)
+            .reportEndCall(event.callId, '', reason)
             .catchError(
               (Object e, StackTrace st) => _logger.warning('reportEndCall failed for ${event.callId}', e, st),
             ),
@@ -5143,8 +5163,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   }
 
   @override
-  Future<bool> performEndCall(String callId) {
-    return _perform(_CallPerformEvent.ended(callId));
+  Future<bool> performEndCall(String callId, CallkeepEndedBy endedBy) {
+    return _perform(_CallPerformEvent.ended(callId, endedBy));
   }
 
   @override
@@ -5540,7 +5560,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     await _leaveRoom(emit, restoreLegs: false);
     _hangUpRoom('__onMutationControlConferenceEnd');
     for (final callId in legIds) {
-      add(CallControlEvent.ended(callId));
+      add(CallControlEvent.ended(callId, endedBy: e.endedBy));
     }
   }
 
@@ -6242,9 +6262,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// The [source] parameter is used for logging to indicate where the request originated.
   Future<void> _dispatchTerminationRequest({required QueuedTerminationRequest request, required String source}) async {
     /// Put upfront in the repository to ensure it's recorded even if the app is killed before the async operation completes.
-    queuedTerminationRequestsRepository.put(request);
+    final queued = _putTerminationRequest(request);
     try {
-      await _executeTerminationRequest(request);
+      await _executeTerminationRequest(queued);
       // Acknowledged, not yet done: the entry stays until the server's hangup
       // for the call confirms it, so a handshake planned in between still
       // sees the call as one being ended rather than as one to bring back.
@@ -6260,6 +6280,20 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // replayed from the repository by the next handshake.
       _logger.warning('_dispatchTerminationRequest failed, request queued for retry. source=$source', e, s);
     }
+  }
+
+  /// Puts [request] in the queue and returns what was queued. A decline already queued as the
+  /// user's keeps that mark when the same decline is put again by a path that ends the call on
+  /// the app's behalf (a handshake replay, a second end of the same call): who declined first
+  /// is what the server's answer to the decline is reported as.
+  QueuedTerminationRequest _putTerminationRequest(QueuedTerminationRequest request) {
+    final queued = queuedTerminationRequestsRepository.getAll[request.key];
+    final keepsUserDecline = !request.declinedByUser && (queued?.declinedByUser ?? false);
+    final put = keepsUserDecline
+        ? QueuedTerminationRequest(type: request.type, callId: request.callId, line: request.line, declinedByUser: true)
+        : request;
+    queuedTerminationRequestsRepository.put(put);
+    return put;
   }
 
   Future<void> _executeTerminationRequest(QueuedTerminationRequest request) async {

@@ -38,7 +38,7 @@ class _NoOpDelegate implements CallkeepDelegate {
   Future<bool> performAnswerCall(String callId) => Future.value(true);
 
   @override
-  Future<bool> performEndCall(String callId) => Future.value(true);
+  Future<bool> performEndCall(String callId, CallkeepEndedBy endedBy) => Future.value(true);
 
   @override
   Future<bool> performSetHeld(String callId, bool onHold) => Future.value(true);

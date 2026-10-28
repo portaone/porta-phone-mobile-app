@@ -130,9 +130,11 @@ abstract class WebtritCallkeepPlatform extends PlatformInterface {
     throw UnimplementedError('answerCall() has not been implemented.');
   }
 
-  /// End a call with the given [callId].
+  /// End a call with the given [callId]. [endedBy] is who asks for the end: the app on its own
+  /// ([CallkeepEndedBy.app]) or the user through the app ([CallkeepEndedBy.user]); the resulting
+  /// `performEndCall` carries it back.
   /// Returns [CallkeepCallRequestError] if there is an error.
-  Future<CallkeepCallRequestError?> endCall(String callId) {
+  Future<CallkeepCallRequestError?> endCall(String callId, {CallkeepEndedBy endedBy = CallkeepEndedBy.app}) {
     throw UnimplementedError('endCall() has not been implemented.');
   }
 

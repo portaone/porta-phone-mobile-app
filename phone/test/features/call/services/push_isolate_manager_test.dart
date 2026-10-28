@@ -167,6 +167,57 @@ void main() {
       expect(missed.single.$1, 'c1');
     });
 
+    test('its hangup with no decline by the user is reported as missed while connecting', () async {
+      final session = manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+
+      signaling.hangup('c1');
+      await session;
+
+      expect(callkeep.reportedAs['c1'], CallkeepEndCallReason.missedWhileConnecting);
+    });
+
+    test('its hangup after a decline by the user is reported as declined by the user', () async {
+      // The user declined on the notification or the system UI: the platform's performEndCall
+      // says so, and the end the server confirms is that decline, not a call never seen.
+      final session = manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+      manager.performEndCall('c1', CallkeepEndedBy.user);
+      await settle();
+
+      signaling.hangup('c1');
+      await session;
+
+      expect(callkeep.reportedAs['c1'], CallkeepEndCallReason.declinedByUser);
+    });
+
+    test('its hangup after an end by the system (the ring timeout) is not a decline by the user', () async {
+      final session = manager.run(owner);
+      signaling.handshake([(callId: 'c1', caller: '555002')]);
+      manager.performEndCall('c1', CallkeepEndedBy.system);
+      await settle();
+      expect(signaling.executed.single, isA<DeclineRequest>(), reason: 'the server still hears the end');
+
+      signaling.hangup('c1');
+      await session;
+
+      expect(callkeep.reportedAs['c1'], CallkeepEndCallReason.missedWhileConnecting);
+    });
+
+    test('with no metadata, a decline by the user of one call does not mark another', () async {
+      // Without the push's metadata every call on the lines counts as the session's own; the
+      // user's decline belongs to the call it was made for, not to the session.
+      final session = manager.run(null);
+      signaling.handshake([(callId: 'c1', caller: '555002'), (callId: 'c2', caller: '555003')]);
+      manager.performEndCall('c2', CallkeepEndedBy.user);
+      await settle();
+
+      signaling.hangup('c1');
+      await session;
+
+      expect(callkeep.reportedAs['c1'], CallkeepEndCallReason.missedWhileConnecting);
+    });
+
     test('callkeep handing the call off leaves the ringing call to the app', () async {
       final session = manager.run(owner);
       signaling.handshake([(callId: 'c1', caller: '555002')]);
@@ -448,7 +499,7 @@ void main() {
       manager.run(owner);
       signaling.handshake([(callId: 'c2', caller: '555003'), (callId: 'c1', caller: '555002')]);
 
-      manager.performEndCall('c1');
+      manager.performEndCall('c1', CallkeepEndedBy.user);
       await settle();
 
       final decline = signaling.executed.single as DeclineRequest;
@@ -459,7 +510,7 @@ void main() {
       manager.run(owner);
       signaling.handshake([(callId: 'c1', caller: '555002')]);
 
-      manager.performEndCall('c9');
+      manager.performEndCall('c9', CallkeepEndedBy.user);
       await settle();
 
       expect(signaling.executed, isEmpty);
@@ -469,7 +520,7 @@ void main() {
       signaling.connected = false;
       manager.run(owner);
 
-      manager.performEndCall('c1');
+      manager.performEndCall('c1', CallkeepEndedBy.user);
       await settle();
       expect(signaling.executed, isEmpty, reason: 'queued until the session knows the lines');
 
@@ -485,7 +536,7 @@ void main() {
       signaling.connected = false;
       manager.run(owner);
 
-      manager.performEndCall('c9');
+      manager.performEndCall('c9', CallkeepEndedBy.user);
       signaling.connected = true;
       signaling.handshake([(callId: 'c1', caller: '555002')]);
       await settle();
@@ -497,7 +548,7 @@ void main() {
       signaling.connected = false;
       manager.run(owner);
 
-      manager.performEndCall('c9');
+      manager.performEndCall('c9', CallkeepEndedBy.user);
       signaling.connected = true;
       signaling.handshake([(callId: 'c1', caller: '555002')]);
       await settle();
@@ -518,7 +569,7 @@ void main() {
         )..init();
         manager.run(owner);
 
-        manager.performEndCall('c1');
+        manager.performEndCall('c1', CallkeepEndedBy.user);
         async.elapse(const Duration(seconds: 11));
         signaling.connected = true;
         signaling.handshake([(callId: 'c1', caller: '555002')]);
