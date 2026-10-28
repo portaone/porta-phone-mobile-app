@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:http/http.dart';
 import 'package:http/testing.dart';
+import 'package:logging/logging.dart';
 import 'package:test/test.dart';
 
 import 'package:api/api.dart';
@@ -70,6 +73,40 @@ void main() {
       expect(response.ttl, isNull);
       expect(response.expiresAt, isNull);
       expect(response.iceServers.single.urls, ['stun:host:3478']);
+    });
+
+    group('trusted certificates', () {
+      late List<LogRecord> warnings;
+      late StreamSubscription<LogRecord> subscription;
+
+      setUp(() {
+        Logger.root.level = Level.ALL;
+        warnings = [];
+        subscription = Logger('WebtritApiClient').onRecord.listen((record) {
+          if (record.level >= Level.WARNING) warnings.add(record);
+        });
+      });
+
+      tearDown(() => subscription.cancel());
+
+      test('warns that certificates a core still serves are ignored', () async {
+        final apiClient = clientAnswering(
+          200,
+          body: '{"ice_servers": [{"urls": ["turns:host:443"]}], "trusted_certificates": ["pem"]}',
+        );
+
+        final response = await apiClient.getUserIceServers(token);
+
+        expect(response.iceServers.single.urls, ['turns:host:443']);
+        expect(warnings.single.message, contains('ignoring 1 trusted certificate(s)'));
+      });
+
+      test('stays quiet when the core serves none', () async {
+        await clientAnswering(200, body: responseBody).getUserIceServers(token);
+        await clientAnswering(200, body: '{"ice_servers": [], "trusted_certificates": []}').getUserIceServers(token);
+
+        expect(warnings, isEmpty);
+      });
     });
 
     test('throws EndpointNotSupportedException when the core has no such endpoint', () {

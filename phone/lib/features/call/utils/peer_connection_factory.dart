@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import 'package:webtrit_phone/models/models.dart';
@@ -20,15 +17,8 @@ typedef IceServersResolver = Future<IceServersConfig> Function();
 typedef TurnCertificateVerificationResolver = TurnCertificateVerification Function();
 
 /// Renders the deployment's configuration as the map `createPeerConnection`
-/// takes.
-///
-/// [IceServersConfig.trustedCertificates] becomes `trustedCertificates`. The
-/// pinned plugin no longer reads it: libwebrtc hands the platform the TURN
-/// hostname with the chain, so a `turns:` server with a certificate the system
-/// trusts (Let's Encrypt included) is accepted without anchors from the
-/// deployment. The key is still written when the deployment sent certificates,
-/// and left out under [TurnCertificateVerification.disabled], where there is no
-/// verification for anchors to take part in.
+/// takes: the servers, with the certificate policy written on the entries it
+/// applies to.
 Map<String, dynamic> rtcConfigurationFrom(
   IceServersConfig config, {
   TurnCertificateVerification verification = TurnCertificateVerification.verify,
@@ -44,8 +34,6 @@ Map<String, dynamic> rtcConfigurationFrom(
     // nothing, which reads in a log like a connection that gave up more than
     // it did.
     'iceServers': policy == null ? servers : servers.map((server) => _withPolicy(server, policy)).toList(),
-    if (verification != TurnCertificateVerification.disabled && config.trustedCertificates.isNotEmpty)
-      'trustedCertificates': config.trustedCertificates.map((pem) => Uint8List.fromList(utf8.encode(pem))).toList(),
   };
 }
 

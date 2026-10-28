@@ -428,13 +428,12 @@ Embedded web resource tab.
   change the value on their own device. The device's choice wins; where none was made, the value
   above applies, and a later change of it still reaches everyone who never touched the control.
 
-`verify` checks the certificate using whatever trust anchors the deployment serves beside its ICE
-servers, and leaves the media library's own decision in place when it serves none. `disabled` stops
-verifying that connection entirely - **hostname included**, so any certificate for any name is
-accepted. It exists for a deployment whose TURN certificate libwebrtc will not accept and whose
-calls cannot wait for that to be fixed properly; call audio and video stay protected by DTLS-SRTP
-either way. Why the library refuses such a certificate at all, and what the anchors are, is in
-[ice_servers.md](../architecture/ice_servers.md).
+`verify` leaves the media library's own check in place, which accepts a certificate the system
+trusts. `disabled` stops verifying that connection entirely - **hostname included**, so any
+certificate for any name is accepted. It exists for a deployment whose TURN certificate the system
+does not trust - self-signed, or from a private CA - and whose calls cannot wait for that to be
+fixed properly; call audio and video stay protected by DTLS-SRTP either way. How the library judges
+such a certificate is in [ice_servers.md](../architecture/ice_servers.md).
 
 ### Call Pull Video Strategy
 
