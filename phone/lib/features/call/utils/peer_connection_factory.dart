@@ -22,21 +22,13 @@ typedef TurnCertificateVerificationResolver = TurnCertificateVerification Functi
 /// Renders the deployment's configuration as the map `createPeerConnection`
 /// takes.
 ///
-/// [IceServersConfig.trustedCertificates] becomes `trustedCertificates`, which
-/// the plugin installs as an Android `SSLCertificateVerifier` for `turns:`.
-/// libwebrtc otherwise verifies against a root list compiled into itself, and
-/// that list carries no Let's Encrypt root, so a TURN server secured that way
-/// is refused with `unknown_ca` and no relay candidate is ever gathered.
-///
-/// The key is written only when the deployment sent certificates. An empty list
-/// must not reach the plugin: a verifier holding no anchor of its own REPLACES
-/// the library's verdict and would refuse what the built-in list accepts.
-/// [verification] is the other half of the same decision, and the two are
-/// independent mechanisms rather than one scale. Under
-/// [TurnCertificateVerification.disabled] the anchors are left out entirely:
-/// not for tidiness, but because they would be misleading - with the policy set
-/// there is no verification for them to take part in, and a reader of the logs
-/// should not see anchors installed on a connection that checks nothing.
+/// [IceServersConfig.trustedCertificates] becomes `trustedCertificates`. The
+/// pinned plugin no longer reads it: libwebrtc hands the platform the TURN
+/// hostname with the chain, so a `turns:` server with a certificate the system
+/// trusts (Let's Encrypt included) is accepted without anchors from the
+/// deployment. The key is still written when the deployment sent certificates,
+/// and left out under [TurnCertificateVerification.disabled], where there is no
+/// verification for anchors to take part in.
 Map<String, dynamic> rtcConfigurationFrom(
   IceServersConfig config, {
   TurnCertificateVerification verification = TurnCertificateVerification.verify,
