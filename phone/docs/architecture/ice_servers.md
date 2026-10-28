@@ -3,7 +3,7 @@
 Where the STUN/TURN servers used for WebRTC come from, how they are cached, and what happens when
 the deployment offers none.
 
-Last reviewed: 2026-09-25
+Last reviewed: 2026-10-28
 
 ## Why it exists
 
@@ -30,17 +30,16 @@ there and keeps the public STUN server as its fallback.
     {"username": "1788215689:8", "urls": ["turn:host:3478?transport=udp"], "credential": "..."},
     {"username": "1788215689:8", "urls": ["turns:host:443?transport=tcp"], "credential": "..."}
   ],
-  "expires_at": "2026-08-31T22:34:49.607820Z",
-  "trusted_certificates": ["-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"]
+  "expires_at": "2026-08-31T22:34:49.607820Z"
 }
 ```
 
 The TURN credentials expire (twelve hours in the example), so a session that outlives the window has
 to fetch them again.
 
-`trusted_certificates` is optional and absent from almost every response - see
-[Trusting a `turns:` certificate](#trusting-a-turns-certificate) for what it is for and why a
-deployment might serve it.
+A core may also serve `trusted_certificates`, certificates to trust for the TURN server. The app
+ignores the field and logs a warning when it is not empty - see
+[Trusting a `turns:` certificate](#trusting-a-turns-certificate).
 
 ## Pieces
 
@@ -51,7 +50,7 @@ deployment might serve it.
 | `IceServersRepository` | [`../../lib/repositories/ice_servers`](../../lib/repositories/ice_servers) | fetch, cache, renew, and the fallback |
 | `CoreSupport.supportsBundledIceServers` | [`../../lib/utils/core_support.dart`](../../lib/utils/core_support.dart) | the capability flag, read from `core.ice_servers_configured` |
 | `IceServersResolver` | [`../../lib/features/call/utils/peer_connection_factory.dart`](../../lib/features/call/utils/peer_connection_factory.dart) | how a consumer asks for the current configuration |
-| `rtcConfigurationFrom` | the same file | the one place the map handed to `createPeerConnection` is built - servers, anchors and certificate policy together |
+| `rtcConfigurationFrom` | the same file | the one place the map handed to `createPeerConnection` is built - servers and certificate policy together |
 | `TurnCertificateVerification` | [`../../lib/models/ice_settings.dart`](../../lib/models/ice_settings.dart) | `verify` or `disabled`, stored per device |
 | `IceConfig` | [`../../lib/models/feature_access/ice_config.dart`](../../lib/models/feature_access/ice_config.dart) | what the build decided: the default policy, and whether the control is offered at all |
 
@@ -124,49 +123,33 @@ outlive the session, and the cost is one fetch after a cold start.
 
 ## Trusting a `turns:` certificate
 
-A `turns:` server presents a certificate, and **libwebrtc does not consult the platform trust store
-to judge it.** It verifies against a root list compiled into the shared object, and that list holds
-no Let's Encrypt root - measured on `android-150.7871.01.aar`, zero ISRG entries against 62 older
-roots present. A TURN server secured the way the rest of the deployment is secured is therefore
-refused with a fatal `unknown_ca`, no relay candidate is gathered, and nothing reports an error:
-coturn logs a closed socket, the core was never involved, and the app logs nothing at all.
+A `turns:` server presents a certificate, and libwebrtc judges it itself, not through the app's
+`packages/ssl_certificates`: that builds a `dart:io` `SecurityContext` for the Dart VM's TLS stack -
+the REST client and the signaling socket - and has no path to the BoringSSL inside the native
+library.
 
-The app's own `packages/ssl_certificates` cannot help. That builds a `dart:io` `SecurityContext`,
-which reaches the Dart VM's TLS stack - the REST client and the signaling socket - and has no path
-to the BoringSSL inside `libjingle_peerconnection_so.so`. The two are separate TLS clients in one
-process, which is why the API works against a certificate the relay connection refuses.
+libwebrtc first tries a root list compiled into itself. That list holds no Let's Encrypt root, so for
+such a certificate it falls back to the platform trust store. On Android the fallback of WebRTC-SDK
+releases before `150.7871.04` asked the platform without the TURN hostname, which Android refuses
+when the app's network security config has a `domain-config` - and this app's always has one. The
+relay was then refused with a fatal `unknown_ca` and nothing reported an error. From `150.7871.04`
+on, the hostname is passed, so a certificate the system trusts is accepted; the flutter_webrtc
+version in `pubspec.yaml` carries that release.
 
-Two independent mechanisms address it, and neither is a default.
+Measured on that build, Android, a `turns:` server with a Let's Encrypt certificate and no
+certificates served by the core: the chain is validated and a relay is allocated.
 
-**Trust anchors.** Whatever arrives in `trusted_certificates` is installed as an Android
-`SSLCertificateVerifier` for the connection. Verification is kept - the supplied anchors decide in
-place of the compiled-in list. libwebrtc hands the verifier a SINGLE certificate rather than a
-chain, so **the anchor has to be the issuer, not the root**: supply the intermediate that signed the
-server's certificate. Serving them from the backend rather than building them into the app is what
-keeps a CA rotation from needing an application release.
-
-A deployment serves the chain its TURN server presents - with certbot, the `chain.pem` beside the
-certificate coturn is given, rewritten on every renewal. The direct issuer is the anchor that
-decides; a root in the file goes unused, and extra certificates are harmless. A private CA, or a
-chain that is not on the same host, is assembled by hand instead.
-
-An empty list must never reach the plugin, which is why the key is written only when the deployment
-sent something: a verifier holding no anchor of its own replaces the library's verdict and would
-refuse what the built-in list accepts.
-
-**The anchors decide the chain and nothing else.** libwebrtc still checks the hostname afterwards,
-and does it itself - measured: a certificate naming only `turn.example.com`, reached at the server's
-IP address, is refused with `Error(ContinueSSL, -1)` even though the supplied anchor accepted its
-chain and the library logged `Validated certificate chain using custom callback`; the same build
-reaches a relay the moment the address matches the name. So supplying a public CA as an anchor does
-not amount to trusting every certificate that CA has ever issued.
+The app used to forward `trusted_certificates` to an Android verifier inside our flutter_webrtc fork,
+which worked around the missing hostname. The fork no longer has it, and the app no longer reads the
+field. For a TURN server whose certificate the system does not trust - self-signed, or from a
+private CA - the setting left is `disabled` below.
 
 **Certificate policy.** `TurnCertificateVerification`, stored in `IceSettings`:
 
 | Value | Effect |
 |---|---|
 | `verify` | writes no `tlsCertPolicy`, leaving the native default, which already verifies |
-| `disabled` | writes `tlsCertPolicy: insecure_no_check` on every entry, and withholds the anchors |
+| `disabled` | writes `tlsCertPolicy: insecure_no_check` on every `turns:` entry |
 
 There is no third value stating `secure`: the native builder already initialises that field to
 `TLS_CERT_POLICY_SECURE`, so writing it would say nothing `verify` does not.

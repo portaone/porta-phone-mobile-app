@@ -593,6 +593,18 @@ class WebtritApiClient {
       responseOptions: _optionalEndpoint,
     );
 
+    // A core may still serve certificates to trust for its TURN server. The
+    // media library no longer takes them: it verifies against the platform
+    // trust store, so a `turns:` certificate the system does not trust is
+    // refused with nothing else reporting it. Say so where support looks.
+    final trustedCertificates = responseJson['trusted_certificates'];
+    if (trustedCertificates is List && trustedCertificates.isNotEmpty) {
+      _logger.warning(
+        'ice-servers: ignoring ${trustedCertificates.length} trusted certificate(s); a turns: server is '
+        'verified against the platform trust store only',
+      );
+    }
+
     return IceServersResponse.fromJson(responseJson);
   }
 

@@ -278,7 +278,6 @@ void main() {
             },
           ],
           expiresAt: DateTime.utc(2030),
-          trustedCertificates: const ['-----BEGIN CERTIFICATE-----\nanchor\n-----END CERTIFICATE-----'],
         );
         final cubit = NetworkTesterCubit(
           iceChecker: iceChecker,
@@ -287,8 +286,6 @@ void main() {
         );
         await Future<void>.delayed(Duration.zero);
 
-        // The anchors travel with the servers: the diagnostic screen must make
-        // the same trust decision a real call does, or it reports the wrong thing.
         verify(() => iceChecker.gatherCandidates(iceServers: bundled)).called(1);
 
         await gatherController.close();

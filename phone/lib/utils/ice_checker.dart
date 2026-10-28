@@ -7,10 +7,10 @@ import 'package:webtrit_phone/features/call/utils/peer_connection_factory.dart' 
 import 'package:webtrit_phone/models/models.dart';
 
 abstract interface class IceChecker {
-  /// Gathers with the deployment's own configuration, anchors and certificate
-  /// policy included, so the diagnostic screen exercises the same trust
-  /// decision a real call makes. A screen that verified differently from the
-  /// call would answer the one question it exists to answer wrongly.
+  /// Gathers with the deployment's own configuration and certificate policy,
+  /// so the diagnostic screen exercises the same trust decision a real call
+  /// makes. A screen that verified differently from the call would answer the
+  /// one question it exists to answer wrongly.
   Stream<CandidateInfo> gatherCandidates({
     required IceServersConfig iceServers,
     TurnCertificateVerification verification = TurnCertificateVerification.verify,

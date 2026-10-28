@@ -17,8 +17,8 @@ import 'package:webtrit_phone/utils/utils.dart';
 /// renewed inside the session rather than read once at startup.
 abstract interface class IceServersRepository {
   /// The deployment's ICE configuration for a peer connection about to be
-  /// created: servers in the `RTCIceServer` shape flutter_webrtc expects, plus
-  /// any trust anchors the deployment serves for its own TURN certificate.
+  /// created: servers in the `RTCIceServer` shape flutter_webrtc expects, and
+  /// the moment their credentials expire.
   ///
   /// Never throws and never answers an empty server list: when the deployment
   /// offers no configuration, or it cannot be reached in time, the public STUN

@@ -260,7 +260,7 @@ const _$AppConfigJsonSchema = {
         'certificateVerification': {
           'type': 'string',
           'description':
-              "How a `turns:` certificate is verified: `verify` or `disabled`.\n\n`verify` - the default and the only value that changes nothing - checks\nthe certificate using whatever trust anchors the deployment serves beside\nits ICE servers, and leaves the media library's own decision in place when\nit serves none. `disabled` stops verifying that connection ENTIRELY,\nhostname included; it exists for a deployment whose TURN certificate the\nlibrary will not accept and whose calls cannot wait for that to be fixed\nproperly.\n\nA value this build does not recognise reads as `verify`.",
+              "How a `turns:` certificate is verified: `verify` or `disabled`.\n\n`verify` - the default and the only value that changes nothing - leaves\nthe media library's own check in place, which accepts a certificate the\nsystem trusts. `disabled` stops verifying that connection ENTIRELY,\nhostname included; it exists for a deployment whose TURN certificate the\nsystem does not trust - self-signed, or from a private CA - and whose\ncalls cannot wait for that to be fixed properly.\n\nA value this build does not recognise reads as `verify`.",
           'default': 'verify',
         },
         'certificateVerificationConfigurable': {

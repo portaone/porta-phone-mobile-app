@@ -399,13 +399,12 @@ class AppConfigIce with _$AppConfigIce {
 
   /// How a `turns:` certificate is verified: `verify` or `disabled`.
   ///
-  /// `verify` - the default and the only value that changes nothing - checks
-  /// the certificate using whatever trust anchors the deployment serves beside
-  /// its ICE servers, and leaves the media library's own decision in place when
-  /// it serves none. `disabled` stops verifying that connection ENTIRELY,
+  /// `verify` - the default and the only value that changes nothing - leaves
+  /// the media library's own check in place, which accepts a certificate the
+  /// system trusts. `disabled` stops verifying that connection ENTIRELY,
   /// hostname included; it exists for a deployment whose TURN certificate the
-  /// library will not accept and whose calls cannot wait for that to be fixed
-  /// properly.
+  /// system does not trust - self-signed, or from a private CA - and whose
+  /// calls cannot wait for that to be fixed properly.
   ///
   /// A value this build does not recognise reads as `verify`.
   @override

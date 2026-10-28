@@ -56,26 +56,22 @@ enum IceNetworkFilter { ipv4, ipv6 }
 
 /// What the app does about the certificate a `turns:` server presents.
 ///
-/// libwebrtc verifies that certificate against a root list compiled into the
-/// library rather than the platform store, and that list carries no Let's
-/// Encrypt root - so a TURN server secured the way most deployments secure
-/// everything else is refused with `unknown_ca`, no relay candidate is
-/// gathered, and nothing reports an error. [verify] is the cure when the
-/// deployment serves its own trust anchors; [disabled] is the blunt instrument
-/// for when it does not and calls are needed now.
+/// libwebrtc checks that certificate against a root list compiled into the
+/// library, which carries no Let's Encrypt root, and then falls back to the
+/// platform trust store, asking it with the TURN hostname. So [verify] accepts
+/// a certificate the system trusts; [disabled] is the blunt instrument for one
+/// it does not - self-signed, or from a private CA - when calls are needed now.
 ///
 /// Two values rather than three. A third that states `tlsCertPolicy: secure`
 /// would be indistinguishable from [verify]: the native builder already
 /// initialises that field to TLS_CERT_POLICY_SECURE, read out of
 /// `android-150.7871.01.aar`, so writing it says nothing new.
 enum TurnCertificateVerification {
-  /// Verify, using whatever anchors the deployment serves beside its ICE
-  /// servers, and leaving libwebrtc's own decision in place when it serves
-  /// none. The default, and the only value that changes nothing.
+  /// Verify, leaving libwebrtc's own decision in place. The default, and the
+  /// only value that changes nothing.
   ///
-  /// It is not a fallback: where the deployment serves no anchors and its
-  /// certificate is one libwebrtc will not accept, this fails exactly as the
-  /// app does today.
+  /// A certificate that neither the compiled-in list nor the system trusts is
+  /// refused: no relay candidate is gathered, and nothing reports an error.
   verify,
 
   /// Do not verify: `tlsCertPolicy: insecure_no_check`.

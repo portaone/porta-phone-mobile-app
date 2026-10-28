@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$IceServersResponse {
 
- List<IceServer> get iceServers; int? get ttl; DateTime? get expiresAt; List<String> get trustedCertificates;
+ List<IceServer> get iceServers; int? get ttl; DateTime? get expiresAt;
 /// Create a copy of IceServersResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +26,16 @@ $IceServersResponseCopyWith<IceServersResponse> get copyWith => _$IceServersResp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IceServersResponse&&const DeepCollectionEquality().equals(other.iceServers, iceServers)&&(identical(other.ttl, ttl) || other.ttl == ttl)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&const DeepCollectionEquality().equals(other.trustedCertificates, trustedCertificates));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IceServersResponse&&const DeepCollectionEquality().equals(other.iceServers, iceServers)&&(identical(other.ttl, ttl) || other.ttl == ttl)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(iceServers),ttl,expiresAt,const DeepCollectionEquality().hash(trustedCertificates));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(iceServers),ttl,expiresAt);
 
 @override
 String toString() {
-  return 'IceServersResponse(iceServers: $iceServers, ttl: $ttl, expiresAt: $expiresAt, trustedCertificates: $trustedCertificates)';
+  return 'IceServersResponse(iceServers: $iceServers, ttl: $ttl, expiresAt: $expiresAt)';
 }
 
 
@@ -46,7 +46,7 @@ abstract mixin class $IceServersResponseCopyWith<$Res>  {
   factory $IceServersResponseCopyWith(IceServersResponse value, $Res Function(IceServersResponse) _then) = _$IceServersResponseCopyWithImpl;
 @useResult
 $Res call({
- List<IceServer> iceServers, int? ttl, DateTime? expiresAt, List<String> trustedCertificates
+ List<IceServer> iceServers, int? ttl, DateTime? expiresAt
 });
 
 
@@ -63,13 +63,12 @@ class _$IceServersResponseCopyWithImpl<$Res>
 
 /// Create a copy of IceServersResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? iceServers = null,Object? ttl = freezed,Object? expiresAt = freezed,Object? trustedCertificates = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? iceServers = null,Object? ttl = freezed,Object? expiresAt = freezed,}) {
   return _then(IceServersResponse(
 iceServers: null == iceServers ? _self.iceServers : iceServers // ignore: cast_nullable_to_non_nullable
 as List<IceServer>,ttl: freezed == ttl ? _self.ttl : ttl // ignore: cast_nullable_to_non_nullable
 as int?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,trustedCertificates: null == trustedCertificates ? _self.trustedCertificates : trustedCertificates // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as DateTime?,
   ));
 }
 
