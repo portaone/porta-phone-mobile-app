@@ -76,6 +76,18 @@ abstract class CdrsLocalRepository {
 
   /// Wipes all Call Detail Records (CDRs) data from the local database.
   Future<void> wipeData();
+
+  /// Replaces everything stored with [cdrs] after the backend cleared the
+  /// history: in one transaction, so nothing observes the store half done.
+  ///
+  /// The store counts as synced at [syncedAt]. With [archiveHidden] it also
+  /// counts as walked to the beginning, because the backend returns nothing
+  /// from before the clear; a clear that is only inferred leaves the archive
+  /// for the lists to walk, so a wrong guess costs requests rather than
+  /// history. Listeners get [CdrRecordsWiped], then each record, then
+  /// [CdrsInitialSyncCompleted], which releases a list waiting for its first
+  /// sync.
+  Future<void> replaceAfterClear(List<CdrRecord> cdrs, {required DateTime syncedAt, bool archiveHidden = true});
 }
 
 class CdrsLocalRepositoryDriftImpl with CdrDriftMapper implements CdrsLocalRepository {
@@ -161,6 +173,18 @@ class CdrsLocalRepositoryDriftImpl with CdrDriftMapper implements CdrsLocalRepos
   Future<void> wipeData() async {
     await _dao.wipeData();
     _eventBus.add(CdrRecordsWiped());
+  }
+
+  @override
+  Future<void> replaceAfterClear(List<CdrRecord> cdrs, {required DateTime syncedAt, bool archiveHidden = true}) async {
+    await _dao.replaceAfterClear(
+      cdrs.map(cdrToDrift).toList(),
+      syncedAt: syncedAt,
+      walkedTo: archiveHidden ? DateTime.fromMicrosecondsSinceEpoch(0, isUtc: true) : null,
+    );
+    _eventBus.add(CdrRecordsWiped());
+    cdrs.forEach((cdr) => _eventBus.add(CdrRecordUpserted(cdr)));
+    _eventBus.add(CdrsInitialSyncCompleted());
   }
 }
 

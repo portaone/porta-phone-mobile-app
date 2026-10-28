@@ -46,6 +46,21 @@ class CdrsSyncWorker implements PollingWorker {
     : historyWindows = historyWindows ?? configuredCdrsHistoryWindows(),
       assert(pageSize > 0, 'pageSize must be greater than zero');
 
+  /// How far either side of the newest stored record the clear check asks.
+  ///
+  /// A backend whose history was cleared since - from this device or from any
+  /// other of the account - no longer returns that record, and its absence is
+  /// the only way this client learns of a clear made elsewhere. The record is
+  /// usually on the incremental pages already; when it is not, a range around
+  /// it is asked for rather than taking the absence as a clear: the pages can
+  /// stop early, as a backend may serve fewer records per page than asked, and
+  /// a record missing for that reason must not cost the whole history. The
+  /// range runs from the call's connect time to its disconnect time, since a
+  /// backend may filter on either - PortaSwitch filters on the time the call
+  /// was billed, a field the record does not carry - and the margin covers a
+  /// billing time a little off both and bounds rounded to the second.
+  static const clearCheckMargin = Duration(minutes: 1);
+
   final CdrsLocalRepository localRepo;
   final CdrsRemoteRepository remoteRepo;
 
@@ -147,6 +162,7 @@ class CdrsSyncWorker implements PollingWorker {
   }
 
   Future<void> _refreshIncrementalHistory(DateTime lastUpdate) async {
+    final newest = (await localRepo.getHistory(limit: 1)).firstOrNull;
     var page = 1;
     final fetchedCdrs = <CdrRecord>[];
 
@@ -159,6 +175,15 @@ class CdrsSyncWorker implements PollingWorker {
       page++;
     }
 
+    // A cleared history: everything stored here is from before the clear, and
+    // what the pages held - the calls made since - is all there is to keep.
+    // The clear is inferred, so the archive is left for the lists to walk.
+    if (newest != null && await _clearedSince(newest, fetchedCdrs)) {
+      _logger.info('The newest stored CDR is no longer on the backend, dropping the local history');
+      await localRepo.replaceAfterClear(fetchedCdrs.reversed.toList(), syncedAt: clock.now(), archiveHidden: false);
+      return;
+    }
+
     // Persist only after every page has been fetched. If a later request fails,
     // the local last-update anchor must not advance past records that were not
     // fetched yet.
@@ -166,6 +191,22 @@ class CdrsSyncWorker implements PollingWorker {
     // prepending new records, so emit oldest-to-newest to preserve descending
     // chronology in consumers (the API pages are newest-first).
     await localRepo.upsertCdrs(fetchedCdrs.reversed.toList());
+  }
+
+  /// Whether the backend stopped returning [newest]: the history was cleared.
+  ///
+  /// Found among [fetched], it is still there; otherwise the backend is asked
+  /// for the range around it.
+  Future<bool> _clearedSince(CdrRecord newest, List<CdrRecord> fetched) async {
+    if (fetched.any((cdr) => cdr.callId == newest.callId)) return false;
+
+    final page = await remoteRepo.getHistory(
+      timeFrom: newest.connectTime.subtract(clearCheckMargin),
+      timeTo: newest.disconnectTime.add(clearCheckMargin),
+      page: 1,
+      limit: pageSize,
+    );
+    return !page.records.any((cdr) => cdr.callId == newest.callId);
   }
 
   Future<void> _notifyInitialSyncFailed() async {

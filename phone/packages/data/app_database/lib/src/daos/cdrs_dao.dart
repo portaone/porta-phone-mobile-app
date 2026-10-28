@@ -119,6 +119,27 @@ class CdrsDao extends DatabaseAccessor<AppDatabase> with _$CdrsDaoMixin {
     ).insertOnConflictUpdate(CdrSyncCursorData(kind: kind, timestampUsec: time.microsecondsSinceEpoch));
   }
 
+  /// Replaces the whole store with [cdrs] in one transaction: what is left of a
+  /// history the backend cleared.
+  ///
+  /// The sync cursor is set to [syncedAt], so the store counts as synced, and
+  /// the walk watermark to [walkedTo]: when everything older than the clear is
+  /// known to be hidden by the backend there is nothing further back to walk
+  /// to. A null [walkedTo] leaves the archive unwalked.
+  Future<void> replaceAfterClear(
+    List<CdrRecordData> cdrs, {
+    required DateTime syncedAt,
+    required DateTime? walkedTo,
+  }) async {
+    await transaction(() async {
+      await delete(cdrTable).go();
+      await delete(cdrSyncCursorTable).go();
+      await batch((batch) => batch.insertAllOnConflictUpdate(cdrTable, cdrs));
+      await _writeCursor(CdrCursorKindEnum.sync, syncedAt);
+      if (walkedTo != null) await _writeCursor(CdrCursorKindEnum.historyWalk, walkedTo);
+    });
+  }
+
   Future<void> wipeData() async {
     await transaction(() async {
       await delete(cdrTable).go();

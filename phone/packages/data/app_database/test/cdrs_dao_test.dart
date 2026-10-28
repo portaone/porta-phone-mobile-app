@@ -143,4 +143,55 @@ void main() {
       expect((await database.cdrsDao.getHistoryWalkedTo())?.toUtc(), DateTime.utc(2026, 6, 1));
     });
   });
+
+  group('replaceAfterClear', () {
+    CdrRecordData record(String id, int second) => CdrRecordData(
+      callId: id,
+      direction: CallDirectionData.incoming,
+      status: CdrStatusData.accepted,
+      callee: '1000',
+      caller: '2000',
+      connectTimeUsec: 1789550000000000 + second * 1000000,
+      disconnectTimeUsec: 1789550000000000 + (second + 10) * 1000000,
+      disconnectReason: 'Normal call clearing',
+      durationSeconds: 10,
+    );
+
+    test('keeps only the records it is given and sets both cursors', () async {
+      final dao = database.cdrsDao;
+      await dao.upsertCdrs([record('before-1', 1), record('before-2', 2)]);
+      await dao.setSyncCursor(DateTime.utc(2026, 10, 1));
+      await dao.markHistoryWalkedTo(DateTime.utc(2026, 9, 1));
+      final syncedAt = DateTime.utc(2026, 10, 28, 12);
+      final walkedTo = DateTime.utc(1970);
+
+      await dao.replaceAfterClear([record('after', 30)], syncedAt: syncedAt, walkedTo: walkedTo);
+
+      final stored = await dao.getHistory();
+      expect(stored.map((r) => r.callId), ['after']);
+      expect(await dao.getSyncCursor(), syncedAt.toLocal());
+      expect(await dao.getHistoryWalkedTo(), walkedTo.toLocal());
+    });
+
+    test('with nothing to keep it leaves an empty, synced store', () async {
+      final dao = database.cdrsDao;
+      await dao.upsertCdrs([record('before', 1)]);
+
+      await dao.replaceAfterClear(const [], syncedAt: DateTime.utc(2026, 10, 28), walkedTo: DateTime.utc(1970));
+
+      expect(await dao.getHistory(), isEmpty);
+      expect(await dao.getSyncCursor(), isNotNull);
+    });
+
+    test('without a walk watermark it leaves the archive unwalked', () async {
+      final dao = database.cdrsDao;
+      await dao.upsertCdrs([record('before', 1)]);
+      await dao.markHistoryWalkedTo(DateTime.utc(2026, 9, 1));
+
+      await dao.replaceAfterClear(const [], syncedAt: DateTime.utc(2026, 10, 28), walkedTo: null);
+
+      expect(await dao.getHistory(), isEmpty);
+      expect(await dao.getHistoryWalkedTo(), isNull);
+    });
+  });
 }

@@ -212,6 +212,16 @@ class FakeLocalRepository implements CdrsLocalRepository {
     _events.add(CdrRecordsWiped());
   }
 
+  @override
+  Future<void> replaceAfterClear(List<CdrRecord> cdrs, {required DateTime syncedAt, bool archiveHidden = true}) async {
+    stored
+      ..clear()
+      ..addAll(cdrs);
+    _syncCursor = syncedAt;
+    _walkedTo = archiveHidden ? DateTime.fromMicrosecondsSinceEpoch(0, isUtc: true) : null;
+    _events.add(CdrRecordsWiped());
+  }
+
   Future<void> dispose() => _events.close();
 }
 
