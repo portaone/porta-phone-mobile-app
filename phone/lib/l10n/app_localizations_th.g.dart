@@ -2378,9 +2378,26 @@ class AppLocalizationsTh extends AppLocalizations {
   String get presence_settings_statusIcon_title => 'ไอคอนสถานะ:';
 
   @override
+  String get recents_ActionsButton_label => 'การดำเนินการเพิ่มเติม';
+
+  @override
   String recents_BodyCenter_empty(Object filter) {
     return 'ขณะนี้คุณไม่มี$filterสายที่โทรล่าสุด';
   }
+
+  @override
+  String get recents_ClearHistoryAction_label => 'ล้างประวัติการโทร';
+
+  @override
+  String get recents_ClearHistoryDialog_contentAccount =>
+      'การโทรทั้งหมดจะถูกลบออกจากรายการล่าสุดในทุกอุปกรณ์ที่ลงชื่อเข้าใช้บัญชีนี้ การโทรใหม่จะแสดงตามปกติ';
+
+  @override
+  String get recents_ClearHistoryDialog_contentDevice =>
+      'การโทรทั้งหมดจะถูกลบออกจากรายการล่าสุดในอุปกรณ์นี้ การโทรใหม่จะแสดงตามปกติ';
+
+  @override
+  String get recents_ClearHistoryDialog_title => 'ล้างประวัติการโทรหรือไม่?';
 
   @override
   String get recents_DeleteConfirmDialog_content => 'คุณแน่ใจหรือไม่ว่าต้องการลบประวัติการโทรปัจจุบัน?';
@@ -2395,6 +2412,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String recents_snackBar_deleted(String name) {
     return 'ลบ $name แล้ว';
   }
+
+  @override
+  String get recents_snackBar_historyClearFailed => 'ไม่สามารถล้างประวัติการโทรได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง';
+
+  @override
+  String get recents_snackBar_historyClearUnsupported => 'เซิร์ฟเวอร์นี้ไม่รองรับการล้างประวัติการโทร';
+
+  @override
+  String get recents_snackBar_historyCleared => 'ล้างประวัติการโทรแล้ว';
 
   @override
   String get recentsVisibilityFilter_all => 'ทั้งหมด';

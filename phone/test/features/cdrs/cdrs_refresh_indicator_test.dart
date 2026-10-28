@@ -13,16 +13,20 @@ import 'package:webtrit_phone/features/cdrs/cdrs.dart';
 import 'package:webtrit_phone/features/cdrs/widgets/full_recent_cdrs_list.dart';
 import 'package:webtrit_phone/features/cdrs/widgets/missed_recent_cdrs_list.dart';
 import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
+import 'package:webtrit_phone/features/recents/recents.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/theme/theme.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 class MockFullRecentCdrsCubit extends MockCubit<CdrsListState> implements FullRecentCdrsCubit {}
 
 class MockMissedRecentCdrsCubit extends MockCubit<CdrsListState> implements MissedRecentCdrsCubit {}
+
+class MockCdrsHistoryClearCubit extends MockCubit<CdrsHistoryClearState> implements CdrsHistoryClearCubit {}
 
 class MockSessionStatusCubit extends MockCubit<SessionStatusState> implements SessionStatusCubit {}
 
@@ -56,6 +60,7 @@ CdrRecord record(String id, {CdrStatus status = CdrStatus.accepted}) => CdrRecor
 void main() {
   late MockFullRecentCdrsCubit fullCubit;
   late MockMissedRecentCdrsCubit missedCubit;
+  late MockCdrsHistoryClearCubit clearCubit;
   late MockSessionStatusCubit sessionStatusCubit;
   late MockUserInfoCubit userInfoCubit;
   late MockMicrophoneStatusBloc microphoneStatusBloc;
@@ -68,6 +73,7 @@ void main() {
   setUp(() {
     fullCubit = MockFullRecentCdrsCubit();
     missedCubit = MockMissedRecentCdrsCubit();
+    clearCubit = MockCdrsHistoryClearCubit();
     sessionStatusCubit = MockSessionStatusCubit();
     userInfoCubit = MockUserInfoCubit();
     microphoneStatusBloc = MockMicrophoneStatusBloc();
@@ -80,6 +86,7 @@ void main() {
     when(() => missedCubit.refresh()).thenAnswer((_) async {});
     whenListen(fullCubit, const Stream<CdrsListState>.empty(), initialState: const CdrsListState(isLoading: false));
     whenListen(missedCubit, const Stream<CdrsListState>.empty(), initialState: const CdrsListState(isLoading: false));
+    whenListen(clearCubit, const Stream<CdrsHistoryClearState>.empty(), initialState: CdrsHistoryClearState.idle);
     whenListen(sessionStatusCubit, const Stream<SessionStatusState>.empty(), initialState: const SessionStatusState());
     whenListen(userInfoCubit, const Stream<UserInfoState>.empty(), initialState: const UserInfoState());
     whenListen(
@@ -113,6 +120,7 @@ void main() {
             providers: [
               BlocProvider<FullRecentCdrsCubit>.value(value: fullCubit),
               BlocProvider<MissedRecentCdrsCubit>.value(value: missedCubit),
+              BlocProvider<CdrsHistoryClearCubit>.value(value: clearCubit),
               BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
               BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
               BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
@@ -247,5 +255,29 @@ void main() {
     expect(scrollController.position.pixels, greaterThan(scrollController.position.minScrollExtent));
     verify(() => fullCubit.fetchHistory()).called(1);
     verifyNever(() => fullCubit.refresh());
+  });
+
+  testWidgets('the end of the list scrolls out from under the actions button', (tester) async {
+    when(() => fullCubit.fetchHistory()).thenAnswer((_) async {});
+    whenListen(
+      fullCubit,
+      const Stream<CdrsListState>.empty(),
+      initialState: CdrsListState(records: [for (var i = 0; i < 30; i++) record('call-$i')], isLoading: false),
+    );
+    await tester.pumpWidget(app());
+
+    final dynamic fullState = tester.state(find.byType(FullRecentCdrsList));
+    final scrollController = fullState.scrollController as ScrollController;
+    // The extent is an estimate until the rows near the end are laid out.
+    for (var i = 0; i < 3; i++) {
+      scrollController.jumpTo(scrollController.position.maxScrollExtent);
+      await tester.pump();
+    }
+
+    // The row that says older calls are loading is the last one: it is what
+    // has to come clear, and every call above it with it.
+    final listEnd = tester.getRect(find.byType(HistoryFetchIndicator));
+    final button = tester.getRect(find.byType(RecentsActionsFab));
+    expect(listEnd.bottom, lessThanOrEqualTo(button.top));
   });
 }

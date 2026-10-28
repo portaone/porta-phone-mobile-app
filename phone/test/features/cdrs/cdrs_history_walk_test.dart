@@ -87,6 +87,9 @@ class FakeAdapterRemoteRepository implements CdrsRemoteRepository {
   Future<void> Function()? beforeAnswer;
 
   @override
+  Future<void> clearHistory() => throw UnimplementedError('the walk never clears');
+
+  @override
   Future<CdrHistoryPage> getHistory({DateTime? timeFrom, DateTime? timeTo, int? page, int? limit}) async {
     requests.add(HistoryRequest(timeFrom, timeTo, page, limit));
     await beforeAnswer?.call();

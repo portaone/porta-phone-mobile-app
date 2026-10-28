@@ -2419,9 +2419,26 @@ class AppLocalizationsIt extends AppLocalizations {
   String get presence_settings_statusIcon_title => 'Icona di stato:';
 
   @override
+  String get recents_ActionsButton_label => 'Altre azioni';
+
+  @override
   String recents_BodyCenter_empty(Object filter) {
     return 'Attualmente non hai chiamate recenti con $filter.';
   }
+
+  @override
+  String get recents_ClearHistoryAction_label => 'Cancella cronologia chiamate';
+
+  @override
+  String get recents_ClearHistoryDialog_contentAccount =>
+      'Tutte le chiamate verranno rimosse dai Recenti su ogni dispositivo connesso a questo account. Le nuove chiamate appariranno come di consueto.';
+
+  @override
+  String get recents_ClearHistoryDialog_contentDevice =>
+      'Tutte le chiamate verranno rimosse dai Recenti su questo dispositivo. Le nuove chiamate appariranno come di consueto.';
+
+  @override
+  String get recents_ClearHistoryDialog_title => 'Cancellare la cronologia chiamate?';
 
   @override
   String get recents_DeleteConfirmDialog_content => 'Sei sicuro di voler eliminare il registro chiamate attuale?';
@@ -2436,6 +2453,17 @@ class AppLocalizationsIt extends AppLocalizations {
   String recents_snackBar_deleted(String name) {
     return '$name cancellato';
   }
+
+  @override
+  String get recents_snackBar_historyClearFailed =>
+      'Impossibile cancellare la cronologia chiamate. Controlla la connessione e riprova.';
+
+  @override
+  String get recents_snackBar_historyClearUnsupported =>
+      'Questo server non supporta la cancellazione della cronologia chiamate.';
+
+  @override
+  String get recents_snackBar_historyCleared => 'Cronologia chiamate cancellata';
 
   @override
   String get recentsVisibilityFilter_all => 'Tutto';
