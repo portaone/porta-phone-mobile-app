@@ -39,6 +39,9 @@ const enumProperties = <String, Map<String, EnumProperty>>{
   'PageBackgroundImage': {
     'fit': EnumProperty(<String>['fill', 'contain', 'cover', 'fitWidth', 'fitHeight', 'none', 'scaleDown'], 'cover'),
   },
+  'RecentsTabScheme': {
+    'layout': EnumProperty(<String>['tabbed', 'unified'], 'tabbed'),
+  },
   'SupportedThemeMode': {
     'mode': EnumProperty(<String>['system', 'light', 'dark'], 'system'),
   },
