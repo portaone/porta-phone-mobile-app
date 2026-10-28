@@ -123,6 +123,14 @@ void main() {
     );
   }
 
+  testWidgets('a remembered filter the screen does not offer gives way to the first one it does', (tester) async {
+    stateIs(RecentsState(recents: [recent(1)], filter: RecentsVisibilityFilter.missed));
+
+    await tester.pumpWidget(app(filters: const [RecentsVisibilityFilter.all]));
+
+    verify(() => recentsBloc.add(const RecentsFiltered(RecentsVisibilityFilter.all))).called(1);
+  });
+
   testWidgets('a remembered filter the screen offers stays', (tester) async {
     stateIs(RecentsState(recents: [recent(1)], filter: RecentsVisibilityFilter.missed));
 

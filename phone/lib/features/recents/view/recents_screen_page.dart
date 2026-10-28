@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/features/features.dart';
+import 'package:webtrit_phone/models/models.dart';
 
 @RoutePage()
 class RecentsScreenPage extends StatelessWidget {
@@ -22,6 +23,7 @@ class RecentsScreenPage extends StatelessWidget {
       videoEnabled: featureAccess.callConfig.capabilities.isVideoCallEnabled,
       chatsEnabled: featureAccess.messagingConfig.chatsPresent,
       smssEnabled: featureAccess.messagingConfig.smsPresent,
+      layout: featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>()?.layout ?? RecentsLayout.tabbed,
     );
     return widget;
   }

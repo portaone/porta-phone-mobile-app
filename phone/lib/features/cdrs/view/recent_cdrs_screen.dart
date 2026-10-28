@@ -7,6 +7,7 @@ import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/recents/view/recents_screen_styles.dart';
 import 'package:webtrit_phone/features/recents/widgets/recents_actions.dart';
+import 'package:webtrit_phone/features/recents/widgets/recents_unified_header.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
@@ -24,8 +25,12 @@ class RecentCdrsScreen extends StatefulWidget {
     required this.videoEnabled,
     required this.chatsEnabled,
     required this.smssEnabled,
+    this.layout = RecentsLayout.tabbed,
     super.key,
   });
+
+  /// Where the filter and the list's actions sit.
+  final RecentsLayout layout;
 
   final bool transferEnabled;
   final bool videoEnabled;
@@ -49,10 +54,23 @@ class _RecentCdrsScreenState extends State<RecentCdrsScreen> with TickerProvider
   bool scrolledAway = false;
 
   @override
+  void initState() {
+    super.initState();
+    // The unified header names the filter shown, so it is redrawn when the
+    // controller moves.
+    _tabController.addListener(_onTabChanged);
+  }
+
+  @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
+
+  void _onTabChanged() => setState(() {});
+
+  void _showFilter(RecentsVisibilityFilter filter) => _tabController.animateTo(_filters.indexOf(filter));
 
   @override
   Widget build(BuildContext context) {
@@ -61,27 +79,42 @@ class _RecentCdrsScreenState extends State<RecentCdrsScreen> with TickerProvider
     final themeData = Theme.of(context);
     final effectiveStyle = themeData.extension<RecentsScreenStyles>()?.primary;
 
+    final unified = widget.layout == RecentsLayout.unified;
+
     // The bar states its own height; deriving the inset from anything else is
     // how the body ends up sitting eight points below where the bar ends.
     final appBar = MainAppBar(
       title: widget.title,
       context: context,
       flexibleSpace: BlurredSurface.fromStyle(effectiveStyle?.appBarBlurredSurface),
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(kMainAppBarBottomTabHeight),
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: kMainAppBarBottomPaddingGap),
-          child: ExtTabBar(
-            width: mediaQueryData.size.width * 0.75,
-            height: kMainAppBarBottomControlHeight,
-            tabs: [
-              for (final filter in _filters)
-                ExtTab(key: filter.tabKey, identifier: filter.tabId, text: filter.l10n(context)),
-            ],
-            controller: _tabController,
-          ),
-        ),
-      ),
+      bottom: unified
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(RecentsUnifiedHeader.height),
+              child: _CdrsActionsBuilder(
+                builder: (context, actions) => RecentsUnifiedHeader(
+                  filters: _filters,
+                  selected: _filters[_tabController.index],
+                  onSelected: _showFilter,
+                  actions: actions,
+                  inset: themeData.appBarTheme.titleSpacing ?? NavigationToolbar.kMiddleSpacing,
+                ),
+              ),
+            )
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(kMainAppBarBottomTabHeight),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: kMainAppBarBottomPaddingGap),
+                child: ExtTabBar(
+                  width: mediaQueryData.size.width * 0.75,
+                  height: kMainAppBarBottomControlHeight,
+                  tabs: [
+                    for (final filter in _filters)
+                      ExtTab(key: filter.tabKey, identifier: filter.tabId, text: filter.l10n(context)),
+                  ],
+                  controller: _tabController,
+                ),
+              ),
+            ),
     );
 
     return ThemedScaffold(
@@ -91,16 +124,31 @@ class _RecentCdrsScreenState extends State<RecentCdrsScreen> with TickerProvider
       appBarTheme: effectiveStyle?.appBarTheme,
       extendBodyBehindAppBar: true,
       appBar: appBar,
-      floatingActionButton: const _CdrsActionsFab(),
+      // The tabbed header has no room for the actions; the unified one carries
+      // them at the end of its line.
+      floatingActionButton: unified
+          ? null
+          : _CdrsActionsBuilder(
+              builder: (context, actions) =>
+                  RecentsActionsFab(actions: actions, bottomPadding: mediaQueryData.padding.bottom),
+            ),
       // No inset of its own: the body runs behind the bar, and Scaffold
       // already hands it a MediaQuery whose top padding is the bar plus the
       // status bar. A list with no padding of its own takes that figure, and
       // so does the refresh indicator. Computing it here a second time is
       // what let the two disagree - it read kToolbarHeight where MainAppBar
       // is built from kMinInteractiveDimension, eight points apart.
-      body: RecentsActionsFabClearance(
-        child: TabBarView(controller: _tabController, children: [for (final filter in _filters) _listOf(filter)]),
-      ),
+      // Without tabs there is nothing to say that a swipe changes the filter,
+      // so the unified arrangement changes it from the chooser only.
+      body: unified
+          ? TabBarView(
+              controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [for (final filter in _filters) _listOf(filter)],
+            )
+          : RecentsActionsFabClearance(
+              child: TabBarView(controller: _tabController, children: [for (final filter in _filters) _listOf(filter)]),
+            ),
     );
   }
 
@@ -133,13 +181,16 @@ class _RecentCdrsScreenState extends State<RecentCdrsScreen> with TickerProvider
   }
 }
 
-/// The recents actions of the server history, and what the screen says about
-/// how a clear went.
+/// The recents actions of the server history, handed to whichever control the
+/// arrangement opens them from, and what the screen says about how a clear
+/// went.
 ///
 /// Clearing is offered while the full list holds anything: the Missed list is
 /// a part of it, so an empty full list leaves nothing to clear on either tab.
-class _CdrsActionsFab extends StatelessWidget {
-  const _CdrsActionsFab();
+class _CdrsActionsBuilder extends StatelessWidget {
+  const _CdrsActionsBuilder({required this.builder});
+
+  final Widget Function(BuildContext context, RecentsActions actions) builder;
 
   @override
   Widget build(BuildContext context) {
@@ -148,8 +199,9 @@ class _CdrsActionsFab extends StatelessWidget {
     return BlocConsumer<CdrsHistoryClearCubit, CdrsHistoryClearState>(
       listener: _onClearStateChanged,
       builder: (context, state) {
-        return RecentsActionsFab(
-          actions: RecentsActions(
+        return builder(
+          context,
+          RecentsActions(
             canClear: hasRecords && state != CdrsHistoryClearState.clearing,
             clearDescription: context.l10n.recents_ClearHistoryDialog_contentAccount,
             onClearConfirmed: context.read<CdrsHistoryClearCubit>().clear,

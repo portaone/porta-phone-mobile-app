@@ -4393,6 +4393,12 @@ abstract class AppLocalizations {
   /// **'Confirm deleting'**
   String get recents_DeleteConfirmDialog_title;
 
+  /// No description provided for @recents_FilterPicker_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Show calls'**
+  String get recents_FilterPicker_label;
+
   /// No description provided for @recents_HistoryTile_missedCallText.
   ///
   /// In en, this message translates to:

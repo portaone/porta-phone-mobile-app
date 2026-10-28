@@ -1065,6 +1065,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'recents_DeleteConfirmDialog_content' =>
         recents_DeleteConfirmDialog_content,
       'recents_DeleteConfirmDialog_title' => recents_DeleteConfirmDialog_title,
+      'recents_FilterPicker_label' => recents_FilterPicker_label,
       'recents_HistoryTile_missedCallText' =>
         recents_HistoryTile_missedCallText,
       'recents_snackBar_historyClearFailed' =>
