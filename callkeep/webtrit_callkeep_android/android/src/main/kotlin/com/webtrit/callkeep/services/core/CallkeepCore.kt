@@ -254,11 +254,13 @@ interface CallkeepCore {
 
     /**
      * The app reports that [metadata]'s call ended - the remote party hung up, nobody answered,
-     * or the app never got to present it ([PEndCallReasonEnum.MISSED_WHILE_CONNECTING]). The
-     * same fact from every engine: the foreground bridge, the push session and a hosted engine.
+     * the app never got to present it ([PEndCallReasonEnum.MISSED_WHILE_CONNECTING]), or the user
+     * declined it ([PEndCallReasonEnum.DECLINED_BY_USER]). The same fact from every engine: the
+     * foreground bridge, the push session and a hosted engine.
      *
      * The core marks the call terminated at once (a registration still waiting for Telecom is
-     * rejected), remembers a never-presented end so that a replay or a late push cannot present
+     * rejected), remembers a never-presented end - and, for now, a decline by the user the same way - so
+     * that a replay or a late push cannot present
      * the call again, records that the app knows this end so nothing asks it to end the call a
      * second time, and ends the call in the backend. Ends the call only: whatever session
      * reported it keeps running.

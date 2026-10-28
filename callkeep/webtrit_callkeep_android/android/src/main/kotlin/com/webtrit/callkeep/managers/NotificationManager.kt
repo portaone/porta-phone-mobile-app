@@ -2,6 +2,7 @@ package com.webtrit.callkeep.managers
 
 import android.content.Intent
 import com.webtrit.callkeep.common.ContextHolder.context
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.services.active_call.ActiveCallService
 import com.webtrit.callkeep.services.services.incoming_call.IncomingCallRelease
@@ -12,12 +13,16 @@ class NotificationManager {
         IncomingCallService.start(context, callMetaData)
     }
 
-    /** Ends the incoming phase of [callId]; a running incoming-call service showing another call ignores it. */
+    /**
+     * Ends the incoming phase of [callId]; a running incoming-call service showing another call
+     * ignores it. [endedBy] is who ended the call, for the push session's performEndCall.
+     */
     fun cancelIncomingNotification(
         callId: String,
         reason: IncomingCallRelease,
+        endedBy: CallEndedBy? = null,
     ) {
-        IncomingCallService.release(context, callId, reason)
+        IncomingCallService.release(context, callId, reason, endedBy)
     }
 
     fun showActiveCallNotification(

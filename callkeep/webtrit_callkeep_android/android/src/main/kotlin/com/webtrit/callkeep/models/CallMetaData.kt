@@ -50,6 +50,11 @@ data class CallMetadata(
     // so the main process can mirror it. Local type by design (no Pigeon dependency in the model);
     // converted to PCallkeepConnectionState only at the core boundary. Not part of the call identity.
     val connectionState: CallConnectionState? = null,
+    // Transient transition payload, like connectionState: who ended the call. Set on an end
+    // request (endCall, a notification Decline) and on the HungUp/DeclineCall event a
+    // PhoneConnection dispatches, so the main process can hand it to performEndCall. Null means
+    // nobody said; the reader then treats the end as the system's.
+    val endedBy: CallEndedBy? = null,
 ) {
     val number: String? get() = handle?.number
 
@@ -85,6 +90,7 @@ data class CallMetadata(
             createdTime?.let { putLong(CALL_METADATA_CREATED_TIME, it) }
             acceptedTime?.let { putLong(CALL_METADATA_ACCEPTED_TIME, it) }
             connectionState?.let { putString(CALL_METADATA_CONNECTION_STATE, it.name) }
+            endedBy?.let { putString(CALL_METADATA_ENDED_BY, it.name) }
         }
 
     /**
@@ -121,6 +127,7 @@ data class CallMetadata(
             createdTime = other.createdTime ?: createdTime,
             acceptedTime = other.acceptedTime ?: acceptedTime,
             connectionState = other.connectionState ?: connectionState,
+            endedBy = other.endedBy ?: endedBy,
         )
     }
 
@@ -130,6 +137,7 @@ data class CallMetadata(
         private const val CALL_RINGTONE_PATH = "CALL_RINGTONE_PATH"
         private const val CALL_METADATA_EXTRA_SPEAKER_ON_VIDEO = "EXTRA_SPEAKER_ON_VIDEO"
         private const val CALL_METADATA_CONNECTION_STATE = "CALL_METADATA_CONNECTION_STATE"
+        private const val CALL_METADATA_ENDED_BY = "CALL_METADATA_ENDED_BY"
         private const val DEFAULT_CHAR_VALUE = '\u0000'
 
         fun fromBundle(bundle: Bundle): CallMetadata =
@@ -165,6 +173,7 @@ data class CallMetadata(
                     bundle
                         .getStringOrNull(CALL_METADATA_CONNECTION_STATE)
                         ?.let { name -> runCatching { CallConnectionState.valueOf(name) }.getOrNull() },
+                endedBy = CallEndedBy.fromNameOrNull(bundle.getStringOrNull(CALL_METADATA_ENDED_BY)),
             )
         }
 

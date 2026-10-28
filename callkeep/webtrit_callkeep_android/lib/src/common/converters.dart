@@ -113,6 +113,34 @@ extension CallkeepEndCallReasonConverter on CallkeepEndCallReason {
         return PEndCallReasonEnum.missed;
       case CallkeepEndCallReason.missedWhileConnecting:
         return PEndCallReasonEnum.missedWhileConnecting;
+      case CallkeepEndCallReason.declinedByUser:
+        return PEndCallReasonEnum.declinedByUser;
+    }
+  }
+}
+
+extension CallkeepEndedByConverter on CallkeepEndedBy {
+  PEndedByEnum toPigeon() {
+    switch (this) {
+      case CallkeepEndedBy.user:
+        return PEndedByEnum.user;
+      case CallkeepEndedBy.app:
+        return PEndedByEnum.app;
+      case CallkeepEndedBy.system:
+        return PEndedByEnum.system;
+    }
+  }
+}
+
+extension PEndedByEnumConverter on PEndedByEnum {
+  CallkeepEndedBy toCallkeep() {
+    switch (this) {
+      case PEndedByEnum.user:
+        return CallkeepEndedBy.user;
+      case PEndedByEnum.app:
+        return CallkeepEndedBy.app;
+      case PEndedByEnum.system:
+        return CallkeepEndedBy.system;
     }
   }
 }

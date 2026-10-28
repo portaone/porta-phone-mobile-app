@@ -40,6 +40,10 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
   // Mute actions this plugin asked CallKit for, by action UUID; the calls last known muted; and
   // when CallKit last activated the audio session - see performSetMutedCallAction.
   NSMutableSet<NSUUID *> *_ownMuteActionUuids;
+  // End actions this plugin asked CallKit for, by action UUID, with who asked (a WTPEndedByEnum).
+  // CallKit hands the app's own end back as the same performEndCallAction a tap on the CallKit UI
+  // produces; this is how the delegate learns which of the two it was.
+  NSMutableDictionary<NSUUID *, NSNumber *> *_ownEndActionInitiators;
   NSMutableSet<NSUUID *> *_mutedCallUuids;
   CFAbsoluteTime _audioSessionActivatedAt;
   BOOL _callWaitingToneOwnCallsOnly;
@@ -77,6 +81,7 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
     _groupMemberUuids = [NSMutableSet set];
     _groupHoldActionUuids = [NSMutableSet set];
     _ownMuteActionUuids = [NSMutableSet set];
+    _ownEndActionInitiators = [NSMutableDictionary dictionary];
     _mutedCallUuids = [NSMutableSet set];
     _callWaitingToneOwnCallsOnly = YES;
   }
@@ -212,6 +217,8 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
   [_callWaitingTone stop];
   [_ownCallUuids removeAllObjects];
   [_answeringCallUuids removeAllObjects];
+  // An end action still in flight never reaches performEndCallAction once the plugin is done.
+  [_ownEndActionInitiators removeAllObjects];
   // The plugin is done with its calls: no video call of ours is live any more, so the screen
   // it kept awake is released here rather than left to a setUp() that never clears this set.
   [_videoCallUuids removeAllObjects];
@@ -434,19 +441,31 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
 }
 
 - (void)endCall:(NSString *)uuidString
+        endedBy:(WTPEndedByEnum)endedBy
      completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
 #ifdef DEBUG
-  NSLog(@"[Callkeep][endCall] uuidString = %@", uuidString);
+  NSLog(@"[Callkeep][endCall] uuidString = %@ endedBy = %lu", uuidString, (unsigned long)endedBy);
 #endif
   NSUUID *uuid = [[NSUUID alloc] initWithUUIDString:uuidString];
-  NSMutableArray<CXAction *> *actions = [NSMutableArray arrayWithObject:[[CXEndCallAction alloc] initWithCallUUID:uuid]];
+  CXEndCallAction *endAction = [[CXEndCallAction alloc] initWithCallUUID:uuid];
+  _ownEndActionInitiators[endAction.UUID] = @(endedBy);
+  NSMutableArray<CXAction *> *actions = [NSMutableArray arrayWithObject:endAction];
   if (![_groupMemberUuids containsObject:uuid] && ![self isCallOutsideGroup:_groupMemberUuids activeIgnoring:uuid]) {
     // Resumed in the same transaction rather than after the end is seen: in between CallKit has
     // no active call, deactivates the audio session and brings it straight back.
     [actions addObjectsFromArray:[self holdActionsForGroup:_groupMemberUuids onHold:NO]];
   }
 
-  [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:actions] completion:completion];
+  __weak typeof(self) weakSelf = self;
+  [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:actions]
+                         completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+                           typeof(self) strongSelf = weakSelf;
+                           // A refused transaction never reaches performEndCallAction.
+                           if (strongSelf != nil && (error != nil || flutterError != nil)) {
+                             [strongSelf->_ownEndActionInitiators removeObjectForKey:endAction.UUID];
+                           }
+                           completion(error, flutterError);
+                         }];
 }
 
 - (void)setHeld:(NSString *)uuidString
@@ -1075,6 +1094,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
   [_videoCallUuids removeAllObjects];
   [self refreshIdleTimer];
   [_answeringCallUuids removeAllObjects];
+  [_ownEndActionInitiators removeAllObjects];
   [_delegateFlutterApi didReset:^(FlutterError *error) {}];
 }
 
@@ -1123,7 +1143,15 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #ifdef DEBUG
   NSLog(@"[Callkeep][CXProviderDelegate][provider:performEndCallAction:]");
 #endif
+  // An end action this plugin did not request came from the CallKit UI (the end or decline
+  // button, a headset, the lock screen): a person ended the call on this device. The plugin
+  // itself ends calls only through endCall: or by reporting an end, which CallKit does not
+  // turn into an action.
+  NSNumber *ownInitiator = _ownEndActionInitiators[action.UUID];
+  [_ownEndActionInitiators removeObjectForKey:action.UUID];
+  WTPEndedByEnum endedBy = ownInitiator != nil ? (WTPEndedByEnum)ownInitiator.unsignedIntegerValue : WTPEndedByEnumUser;
   [_delegateFlutterApi performEndCall:action.callUUID.UUIDString
+                              endedBy:endedBy
                            completion:^(NSNumber *fulfill, FlutterError *error) {
                              if (error != nil || [fulfill boolValue] != YES) {
                                [action fail];

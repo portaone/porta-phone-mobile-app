@@ -187,7 +187,7 @@ void main() {
     expect(h.bloc.state.activeCalls.map((c) => c.callId), ['call']);
 
     h.signaling.gate = Completer();
-    final ended = h.bloc.performEndCall('call');
+    final ended = h.bloc.performEndCall('call', CallkeepEndedBy.user);
     await pumpEventQueue();
     expect(h.signaling.requests.whereType<DeclineRequest>(), hasLength(1), reason: 'performEnd is at its request');
     expect(h.bloc.state.activeCalls.map((c) => c.callId), ['call'], reason: 'not popped yet');
@@ -201,6 +201,78 @@ void main() {
     expect(h.bloc.state.activeCalls, isEmpty);
     expect(h.callkeep.ended, isEmpty, reason: 'callkeep ended this call itself; nothing to report');
     expect(h.callkeep.endedUnseen, isEmpty, reason: 'the app held this call');
+  });
+
+  test(
+    'a call declined by the user whose server hangup lands after it left is reported as declined by the user',
+    () async {
+      // The user declines; performEnd sends the decline and pops the call before the server's
+      // hangup arrives, so the hangup finds no call in state. That is the app's own decline, not a
+      // call it never saw: the end is reported as declinedByUser, not inferred as missedWhileConnecting.
+      final h = CallBlocHarness();
+      addTearDown(h.close);
+      h.signaling.emitHandshake(_ringing(callId: 'call'));
+      await pumpEventQueue();
+      expect(h.bloc.state.activeCalls.map((c) => c.callId), ['call']);
+
+      await h.bloc.performEndCall('call', CallkeepEndedBy.user);
+      await pumpEventQueue();
+      expect(h.signaling.requests.whereType<DeclineRequest>(), hasLength(1));
+      expect(h.bloc.state.activeCalls, isEmpty, reason: 'popped before the hangup');
+
+      h.signaling.emit(_hangup);
+      await pumpEventQueue();
+
+      expect(h.callkeep.endReasons, [(callId: 'call', reason: CallkeepEndCallReason.declinedByUser)]);
+    },
+  );
+
+  test('a call the app refuses itself is not reported as declined by the user', () async {
+    // The server offers an id callkeep holds as terminated: the app ends that call on its own,
+    // and the platform's performEndCall says so (the app asked for the end). Its end is not the
+    // user's decline.
+    final h = CallBlocHarness();
+    addTearDown(h.close);
+    h.callkeep.incomingRegistrationError = CallkeepIncomingCallError.callIdAlreadyTerminated;
+    h.signaling.emitHandshake(_ringing(callId: 'call'));
+    await pumpEventQueue();
+    expect(h.callkeep.endRequests, [
+      (callId: 'call', endedBy: CallkeepEndedBy.app),
+    ], reason: 'the app ends the refused call itself');
+
+    await h.bloc.performEndCall('call', CallkeepEndedBy.app);
+    await pumpEventQueue();
+    h.signaling.emit(_hangup);
+    await pumpEventQueue();
+
+    expect(h.callkeep.endReasons.map((e) => e.reason), isNot(contains(CallkeepEndCallReason.declinedByUser)));
+  });
+
+  test('a call the plugin ended by its ring timeout (system) is not reported as declined by the user', () async {
+    // Nobody answered and the plugin's ring timeout ended the call: performEndCall reaches the
+    // bloc like a decline does, but the platform says the system ended it.
+    final h = CallBlocHarness();
+    addTearDown(h.close);
+    h.signaling.emitHandshake(_ringing(callId: 'call'));
+    await pumpEventQueue();
+
+    await h.bloc.performEndCall('call', CallkeepEndedBy.system);
+    await pumpEventQueue();
+    expect(h.signaling.requests.whereType<DeclineRequest>(), hasLength(1), reason: 'the server still hears the end');
+    h.signaling.emit(_hangup);
+    await pumpEventQueue();
+
+    expect(h.callkeep.endReasons, [(callId: 'call', reason: CallkeepEndCallReason.missedWhileConnecting)]);
+  });
+
+  test('a hangup of a call never held here is still reported as missed while connecting', () async {
+    final h = CallBlocHarness();
+    addTearDown(h.close);
+
+    h.signaling.emit(_hangup);
+    await pumpEventQueue();
+
+    expect(h.callkeep.endReasons, [(callId: 'call', reason: CallkeepEndCallReason.missedWhileConnecting)]);
   });
 
   test('the same id offered again by the server is live again', () async {

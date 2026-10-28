@@ -140,7 +140,7 @@ void main() {
     expect(h.callkeep.endCalls, [c]);
 
     // The platform's end callback, which the fake does not make itself.
-    await h.bloc.performEndCall(c);
+    await h.bloc.performEndCall(c, CallkeepEndedBy.app);
     await h.settle(() => h.bloc.state.linkedCall == null);
     // The server confirms the hangup with its own code afterwards.
     h.signaling.emit(HangupEvent(line: 1, callId: c, code: 487, reason: 'Request Terminated'));

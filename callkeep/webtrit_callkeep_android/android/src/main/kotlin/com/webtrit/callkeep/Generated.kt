@@ -293,7 +293,8 @@ enum class PEndCallReasonEnum(val raw: Int) {
   ANSWERED_ELSEWHERE(3),
   DECLINED_ELSEWHERE(4),
   MISSED(5),
-  MISSED_WHILE_CONNECTING(6);
+  MISSED_WHILE_CONNECTING(6),
+  DECLINED_BY_USER(7);
 
   companion object {
     fun ofRaw(raw: Int): PEndCallReasonEnum? {
@@ -464,6 +465,23 @@ enum class PCallkeepDisconnectCauseType(val raw: Int) {
 
   companion object {
     fun ofRaw(raw: Int): PCallkeepDisconnectCauseType? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/**
+ * Who ended a call: the user on this device (the system call UI, the notification, or an
+ * end the app asked for on the user's behalf), the app on its own, or the platform (a ring
+ * timeout, a refused connection) - the last one also when the initiator is not known.
+ */
+enum class PEndedByEnum(val raw: Int) {
+  USER(0),
+  APP(1),
+  SYSTEM(2);
+
+  companion object {
+    fun ofRaw(raw: Int): PEndedByEnum? {
       return values().firstOrNull { it.raw == raw }
     }
   }
@@ -1152,66 +1170,71 @@ private open class GeneratedPigeonCodec : StandardMessageCodec() {
         }
       }
       143.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
-          PIOSOptions.fromList(it)
+        return (readValue(buffer) as Long?)?.let {
+          PEndedByEnum.ofRaw(it.toInt())
         }
       }
       144.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PAndroidOptions.fromList(it)
+          PIOSOptions.fromList(it)
         }
       }
       145.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          POptions.fromList(it)
+          PAndroidOptions.fromList(it)
         }
       }
       146.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PAudioDevice.fromList(it)
+          POptions.fromList(it)
         }
       }
       147.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PPermissionResult.fromList(it)
+          PAudioDevice.fromList(it)
         }
       }
       148.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PHandle.fromList(it)
+          PPermissionResult.fromList(it)
         }
       }
       149.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PEndCallReason.fromList(it)
+          PHandle.fromList(it)
         }
       }
       150.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PIncomingCallError.fromList(it)
+          PEndCallReason.fromList(it)
         }
       }
       151.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallRequestError.fromList(it)
+          PIncomingCallError.fromList(it)
         }
       }
       152.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallkeepIncomingCallData.fromList(it)
+          PCallRequestError.fromList(it)
         }
       }
       153.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallkeepServiceStatus.fromList(it)
+          PCallkeepIncomingCallData.fromList(it)
         }
       }
       154.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          PCallkeepDisconnectCause.fromList(it)
+          PCallkeepServiceStatus.fromList(it)
         }
       }
       155.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PCallkeepDisconnectCause.fromList(it)
+        }
+      }
+      156.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PCallkeepConnection.fromList(it)
         }
@@ -1277,56 +1300,60 @@ private open class GeneratedPigeonCodec : StandardMessageCodec() {
         stream.write(142)
         writeValue(stream, value.raw.toLong())
       }
-      is PIOSOptions -> {
+      is PEndedByEnum -> {
         stream.write(143)
-        writeValue(stream, value.toList())
+        writeValue(stream, value.raw.toLong())
       }
-      is PAndroidOptions -> {
+      is PIOSOptions -> {
         stream.write(144)
         writeValue(stream, value.toList())
       }
-      is POptions -> {
+      is PAndroidOptions -> {
         stream.write(145)
         writeValue(stream, value.toList())
       }
-      is PAudioDevice -> {
+      is POptions -> {
         stream.write(146)
         writeValue(stream, value.toList())
       }
-      is PPermissionResult -> {
+      is PAudioDevice -> {
         stream.write(147)
         writeValue(stream, value.toList())
       }
-      is PHandle -> {
+      is PPermissionResult -> {
         stream.write(148)
         writeValue(stream, value.toList())
       }
-      is PEndCallReason -> {
+      is PHandle -> {
         stream.write(149)
         writeValue(stream, value.toList())
       }
-      is PIncomingCallError -> {
+      is PEndCallReason -> {
         stream.write(150)
         writeValue(stream, value.toList())
       }
-      is PCallRequestError -> {
+      is PIncomingCallError -> {
         stream.write(151)
         writeValue(stream, value.toList())
       }
-      is PCallkeepIncomingCallData -> {
+      is PCallRequestError -> {
         stream.write(152)
         writeValue(stream, value.toList())
       }
-      is PCallkeepServiceStatus -> {
+      is PCallkeepIncomingCallData -> {
         stream.write(153)
         writeValue(stream, value.toList())
       }
-      is PCallkeepDisconnectCause -> {
+      is PCallkeepServiceStatus -> {
         stream.write(154)
         writeValue(stream, value.toList())
       }
-      is PCallkeepConnection -> {
+      is PCallkeepDisconnectCause -> {
         stream.write(155)
+        writeValue(stream, value.toList())
+      }
+      is PCallkeepConnection -> {
+        stream.write(156)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -1978,7 +2005,7 @@ interface PHostApi {
   suspend fun reportEndCall(callId: String, displayName: String, reason: PEndCallReason)
   suspend fun startCall(callId: String, handle: PHandle, displayNameOrContactIdentifier: String?, video: Boolean, proximityEnabled: Boolean): PCallRequestError?
   suspend fun answerCall(callId: String): PCallRequestError?
-  suspend fun endCall(callId: String): PCallRequestError?
+  suspend fun endCall(callId: String, endedBy: PEndedByEnum): PCallRequestError?
   suspend fun setHeld(callId: String, onHold: Boolean): PCallRequestError?
   suspend fun setMuted(callId: String, muted: Boolean): PCallRequestError?
   suspend fun setSpeaker(callId: String, enabled: Boolean): PCallRequestError?
@@ -2211,9 +2238,10 @@ interface PHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val callIdArg = args[0] as String
+            val endedByArg = args[1] as PEndedByEnum
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
-                listOf(api.endCall(callIdArg))
+                listOf(api.endCall(callIdArg, endedByArg))
               } catch (exception: Throwable) {
                 GeneratedPigeonUtils.wrapError(exception)
               }
@@ -2545,13 +2573,13 @@ class PDelegateFlutterApi(private val binaryMessenger: BinaryMessenger, private 
       }
     }
   }
-  suspend fun performEndCall(callIdArg: String): Boolean
+  suspend fun performEndCall(callIdArg: String, endedByArg: PEndedByEnum): Boolean
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
     return suspendCancellableCoroutine { continuation ->
       val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateFlutterApi.performEndCall$separatedMessageChannelSuffix"
       val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-      channel.send(listOf(callIdArg)) {
+      channel.send(listOf(callIdArg, endedByArg)) {
         if (it is List<*>) {
           if (it.size > 1) {
             continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))
@@ -2776,14 +2804,16 @@ class PDelegateBackgroundServiceFlutterApi(private val binaryMessenger: BinaryMe
    * the user declined from the notification, or Telecom ended the call). The session
    * declines it on the server, records it and finishes; the service stops on its future.
    * Not sent for an end the app reported itself - that arrives as [performHandoff].
+   * [endedBy] is the user for the notification's Decline or the system call UI, the system
+   * for a ring timeout or a connection Telecom refused.
    */
-  suspend fun performEndCall(callIdArg: String)
+  suspend fun performEndCall(callIdArg: String, endedByArg: PEndedByEnum)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
     return suspendCancellableCoroutine { continuation ->
       val channelName = "dev.flutter.pigeon.webtrit_callkeep_android.PDelegateBackgroundServiceFlutterApi.performEndCall$separatedMessageChannelSuffix"
       val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-      channel.send(listOf(callIdArg)) {
+      channel.send(listOf(callIdArg, endedByArg)) {
         if (it is List<*>) {
           if (it.size > 1) {
             continuation.resumeWithException(FlutterError(it[0] as String, it[1] as String, it[2] as String?))

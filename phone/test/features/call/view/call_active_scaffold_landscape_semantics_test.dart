@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mocktail/mocktail.dart';
+import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
@@ -35,7 +36,7 @@ void main() {
     await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
 
     await tapViaSemantics(tester, find.bySemanticsIdentifier(callActionsHangupId));
-    verify(() => callBloc.add(const CallControlEvent.ended('active'))).called(1);
+    verify(() => callBloc.add(const CallControlEvent.ended('active', endedBy: CallkeepEndedBy.user))).called(1);
 
     handle.dispose();
     await teardownCallScaffold(tester);

@@ -240,6 +240,19 @@ void main() {
     test('missedWhileConnecting maps to PEndCallReasonEnum.missedWhileConnecting', () {
       expect(CallkeepEndCallReason.missedWhileConnecting.toPigeon(), PEndCallReasonEnum.missedWhileConnecting);
     });
+
+    test('declinedByUser maps to PEndCallReasonEnum.declinedByUser', () {
+      expect(CallkeepEndCallReason.declinedByUser.toPigeon(), PEndCallReasonEnum.declinedByUser);
+    });
+  });
+
+  group('CallkeepEndedBy', () {
+    test('every value maps to the Pigeon value of its name and back', () {
+      for (final endedBy in CallkeepEndedBy.values) {
+        expect(endedBy.toPigeon().name, endedBy.name);
+        expect(endedBy.toPigeon().toCallkeep(), endedBy);
+      }
+    });
   });
 
   // ---------------------------------------------------------------------------

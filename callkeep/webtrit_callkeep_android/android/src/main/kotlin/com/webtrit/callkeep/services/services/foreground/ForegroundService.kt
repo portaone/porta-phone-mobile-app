@@ -21,6 +21,7 @@ import com.webtrit.callkeep.PCallkeepConnectionState
 import com.webtrit.callkeep.PDelegateFlutterApi
 import com.webtrit.callkeep.PEndCallReason
 import com.webtrit.callkeep.PEndCallReasonEnum
+import com.webtrit.callkeep.PEndedByEnum
 import com.webtrit.callkeep.PHandle
 import com.webtrit.callkeep.PHostApi
 import com.webtrit.callkeep.PIncomingCallError
@@ -34,6 +35,7 @@ import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.common.TelephonyUtils
 import com.webtrit.callkeep.managers.NotificationChannelManager
 import com.webtrit.callkeep.models.CallConnectionState
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailedCallInfo
 import com.webtrit.callkeep.models.FailureMetadata
@@ -41,8 +43,10 @@ import com.webtrit.callkeep.models.InvalidCallMetadataException
 import com.webtrit.callkeep.models.OutgoingFailureSource
 import com.webtrit.callkeep.models.OutgoingFailureType
 import com.webtrit.callkeep.models.toAudioDevice
+import com.webtrit.callkeep.models.toCallEndedBy
 import com.webtrit.callkeep.models.toCallHandle
 import com.webtrit.callkeep.models.toPAudioDevice
+import com.webtrit.callkeep.models.toPEndedBy
 import com.webtrit.callkeep.models.toPHandle
 import com.webtrit.callkeep.services.broadcaster.CallCommandEvent
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
@@ -547,7 +551,7 @@ class ForegroundService :
         activeCallIds.forEach { callId ->
             core.markDirectNotified(callId)
             core.clearAndMarkEndCallDispatched(callId)
-            notifyFlutter("performEndCall") { performEndCall(callId) }
+            notifyFlutter("performEndCall") { performEndCall(callId, PEndedByEnum.APP) }
         }
 
         // Step 4: Notify Flutter for pending-only calls.
@@ -560,14 +564,14 @@ class ForegroundService :
         unconnectedPending.forEach { callId ->
             core.markDirectNotified(callId)
             core.clearAndMarkEndCallDispatched(callId)
-            notifyFlutter("performEndCall") { performEndCall(callId) }
+            notifyFlutter("performEndCall") { performEndCall(callId, PEndedByEnum.APP) }
         }
 
         // Step 4b: Notify Flutter for waiting calls. They never reached the backend, so no
         // broadcast follows; the marks only keep a late endCall from firing a second time.
         waitingCallIds.forEach { callId ->
             core.clearAndMarkEndCallDispatched(callId)
-            notifyFlutter("performEndCall") { performEndCall(callId) }
+            notifyFlutter("performEndCall") { performEndCall(callId, PEndedByEnum.APP) }
         }
 
         if (activeCallIds.isNotEmpty() || unconnectedPending.isNotEmpty()) {
@@ -722,13 +726,16 @@ class ForegroundService :
         }
     }
 
-    override suspend fun endCall(callId: String): PCallRequestError? {
-        logger.i("endCall $callId.")
+    override suspend fun endCall(
+        callId: String,
+        endedBy: PEndedByEnum,
+    ): PCallRequestError? {
+        logger.i("endCall $callId, endedBy=$endedBy.")
 
         // A waiting call never reached the backend: it leaves the queue, and the app gets the
-        // performEndCall it waits for after endCall, as for any call.
+        // performEndCall it waits for after endCall, as for any call, naming who asked.
         if (core.dropQueuedCall(callId)) {
-            notifyFlutter("performEndCall") { performEndCall(callId) }
+            notifyFlutter("performEndCall") { performEndCall(callId, endedBy) }
             return null
         }
 
@@ -742,7 +749,10 @@ class ForegroundService :
             val isFirstEndCall = core.markEndCallDispatched(callId)
             if (isFirstEndCall) {
                 logger.w("endCall: $callId terminated by Telecom before endCall was dispatched — re-notifying Flutter.")
-                notifyFlutter("performEndCall") { performEndCall(callId) }
+                // The one end Flutter gets for this call answers this request, so it names the
+                // request's initiator: the app falls back to the same initiator on
+                // UNKNOWN_CALL_UUID, and one end must not arrive with two.
+                notifyFlutter("performEndCall") { performEndCall(callId, endedBy) }
             } else {
                 logger.w(
                     "endCall: $callId already terminated and endCall was already dispatched — returning error without re-notifying.",
@@ -751,7 +761,9 @@ class ForegroundService :
             return PCallRequestError(PCallRequestErrorEnum.UNKNOWN_CALL_UUID)
         }
         core.markEndCallDispatched(callId)
-        val metadata = CallMetadata(callId = callId)
+        // The initiator rides with the request to the connection, whose end event carries it
+        // back to handleCSReportDeclineCall and so to performEndCall.
+        val metadata = CallMetadata(callId = callId, endedBy = endedBy.toCallEndedBy())
         core.startHungUpCall(metadata)
         return null
     }
@@ -945,6 +957,9 @@ class ForegroundService :
         extras?.let {
             val callMetaData = CallMetadata.fromBundle(it)
             val callId = callMetaData.callId
+            // The connection names who ended the call; an event that does not (a HungUp
+            // synthesized for a refused or missing connection) is the platform's.
+            val endedBy = (callMetaData.endedBy ?: CallEndedBy.SYSTEM).toPEndedBy()
 
             // Mark terminated and record that performEndCall is being dispatched now,
             // so that a subsequent endCall() call with isTerminated=true does NOT
@@ -956,7 +971,7 @@ class ForegroundService :
             core.clearAndMarkEndCallDispatched(callId)
             syncScreenWakelock()
 
-            notifyFlutter("performEndCall") { performEndCall(callId) }
+            notifyFlutter("performEndCall") { performEndCall(callId, endedBy) }
             notifyFlutter("didDeactivateAudioSession") { didDeactivateAudioSession() }
 
             if (isLastCall(callId)) {

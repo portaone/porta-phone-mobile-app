@@ -27,6 +27,7 @@ import com.webtrit.callkeep.models.AudioDevice
 import com.webtrit.callkeep.models.AudioDeviceType
 import com.webtrit.callkeep.models.CallConnection
 import com.webtrit.callkeep.models.CallConnectionState
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.broadcaster.CallMediaEvent
@@ -86,6 +87,16 @@ class PhoneConnection internal constructor(
     private val notificationManager = NotificationManager()
 
     private var lastKnownState: Int? = null
+
+    /**
+     * Who asked this side to end the call ([hungUp], [declineCall]): the app on its own or on the
+     * user's behalf. Set before the disconnect so [onDisconnect] can tell Flutter who ended the
+     * call; null when the end did not come from a request (Telecom, a headset, a timeout).
+     */
+    private var endRequestedBy: CallEndedBy? = null
+
+    /** Who ended the call, fixed by [onDisconnect]; a re-dispatched end repeats it. */
+    private var endedBy: CallEndedBy? = null
 
     /**
      * The mute Telecom last reported for this call. It is the system's value, not the call's:
@@ -295,17 +306,21 @@ class PhoneConnection internal constructor(
         logger.i("Disconnecting call: $callId")
         super.onDisconnect()
         callConnection.transitionTo(CallConnectionState.DISCONNECTED)
+        val endedBy = endedByFor(endRequestedBy, disconnectCause)
+        this.endedBy = endedBy
+        logger.d("onDisconnect: callId=$callId cause=${disconnectCause?.code} endedBy=$endedBy")
 
         timeout?.cancel()
         notificationManager.cancelIncomingNotification(
             callId,
             if (hasAnswered) IncomingCallRelease.IC_RELEASE_HANDED_OVER else IncomingCallRelease.IC_RELEASE_ENDED,
+            endedBy,
         )
         notificationManager.cancelActiveCallNotification(callId)
         audioManager.stopRingtone()
         audioManager.stopCallWaitingTone()
 
-        dispatcher(eventForDisconnectCause(disconnectCause), metadata)
+        dispatcher(eventForDisconnectCause(disconnectCause), metadata.copy(endedBy = endedBy))
         onDisconnectCallback.invoke(this)
 
         // If we forced MODE_IN_COMMUNICATION in onActiveConnection(), restore NORMAL mode now
@@ -746,16 +761,18 @@ class PhoneConnection internal constructor(
     /**
      * Terminates the connection from the local side before acceptance.
      */
-    fun declineCall() {
-        logger.d("Local decline for callId: $callId")
+    fun declineCall(requestedBy: CallEndedBy = CallEndedBy.APP) {
+        logger.d("Local decline for callId: $callId, requestedBy=$requestedBy")
+        if (state != STATE_DISCONNECTED) endRequestedBy = requestedBy
         terminateWithCause(DisconnectCause(DisconnectCause.REMOTE))
     }
 
     /**
      * Terminates the active connection.
      */
-    fun hungUp() {
-        logger.d("Local hang up for callId: $callId")
+    fun hungUp(requestedBy: CallEndedBy = CallEndedBy.APP) {
+        logger.d("Local hang up for callId: $callId, requestedBy=$requestedBy")
+        if (state != STATE_DISCONNECTED) endRequestedBy = requestedBy
         dispatcher(CallMediaEvent.AudioMuting, metadata.copy(hasMute = isMute))
         terminateWithCause(DisconnectCause(DisconnectCause.LOCAL))
     }
@@ -1087,6 +1104,29 @@ class PhoneConnection internal constructor(
         }
 
     /**
+     * Who ended the call, for the event [onDisconnect] dispatches.
+     *
+     * A request made through [hungUp] or [declineCall] names its initiator. Without one, the
+     * cause tells: Telecom's [onReject] (the system call UI) is the user; [DisconnectCause.CANCELED]
+     * is the ring timeout of [onTimeoutTriggered]; no cause at all is Telecom calling [onDisconnect]
+     * itself, which it does for a hang-up from a headset, a Bluetooth device or the system UI - the
+     * user. Telecom gives no cause either when it tears a self-managed call down on its own (another
+     * call preempting it), which reads as the user too: the platform does not tell the two apart.
+     * Anything else is the platform's. A [DisconnectCause.REMOTE] always comes with a request
+     * ([declineCall]).
+     */
+    private fun endedByFor(
+        requested: CallEndedBy?,
+        cause: DisconnectCause?,
+    ): CallEndedBy =
+        requested ?: when (cause?.code) {
+            null -> CallEndedBy.USER
+            DisconnectCause.REJECTED -> CallEndedBy.USER
+            DisconnectCause.CANCELED -> CallEndedBy.SYSTEM
+            else -> CallEndedBy.SYSTEM
+        }
+
+    /**
      * Terminates the connection with the given [disconnectCause].
      *
      * Uses [state] as the guard: if the connection is not yet [STATE_DISCONNECTED], runs
@@ -1105,7 +1145,7 @@ class PhoneConnection internal constructor(
             onDisconnect()
         } else {
             logger.v("terminateWithCause: already disconnected for callId: $callId, re-dispatching stored cause")
-            dispatcher(eventForDisconnectCause(this.disconnectCause), metadata)
+            dispatcher(eventForDisconnectCause(this.disconnectCause), metadata.copy(endedBy = endedBy))
         }
     }
 

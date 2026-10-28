@@ -1,6 +1,7 @@
 package com.webtrit.callkeep
 
 import com.webtrit.callkeep.common.Log
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.core.CallkeepCore
 
@@ -27,7 +28,7 @@ internal class ExternalEngineCallApi : PHostBackgroundPushNotificationIsolateApi
 
     override suspend fun releaseCall(callId: String) {
         try {
-            CallkeepCore.instance.startDeclineCall(CallMetadata(callId = callId))
+            CallkeepCore.instance.startDeclineCall(CallMetadata(callId = callId, endedBy = CallEndedBy.APP))
         } catch (e: Exception) {
             Log.e(TAG, "releaseCall failed for callId=$callId", e)
             throw e
@@ -36,7 +37,7 @@ internal class ExternalEngineCallApi : PHostBackgroundPushNotificationIsolateApi
 
     override suspend fun endCall(callId: String) {
         try {
-            CallkeepCore.instance.startDeclineCall(CallMetadata(callId = callId))
+            CallkeepCore.instance.startDeclineCall(CallMetadata(callId = callId, endedBy = CallEndedBy.APP))
         } catch (e: Exception) {
             Log.e(TAG, "endCall failed for callId=$callId", e)
             throw e

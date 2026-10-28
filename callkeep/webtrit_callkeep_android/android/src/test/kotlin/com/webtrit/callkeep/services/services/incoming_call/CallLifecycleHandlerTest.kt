@@ -6,6 +6,7 @@ import android.os.Looper
 import com.webtrit.callkeep.PCallkeepIncomingCallData
 import com.webtrit.callkeep.PEndCallReason
 import com.webtrit.callkeep.PEndCallReasonEnum
+import com.webtrit.callkeep.models.CallEndedBy
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.services.incoming_call.handlers.CallLifecycleHandler
@@ -53,6 +54,7 @@ class CallLifecycleHandlerTest {
 
         val events = mutableListOf<String>()
         var lastPerformEndCallId: String? = null
+        var lastPerformEndCallEndedBy: CallEndedBy? = null
         val handoffCallIds = mutableListOf<String>()
 
         override fun performAnswer(
@@ -66,11 +68,13 @@ class CallLifecycleHandlerTest {
 
         override fun performEndCall(
             callId: String,
+            endedBy: CallEndedBy,
             onSuccess: () -> Unit,
             onFailure: (Throwable) -> Unit,
         ) {
             events.add("performEndCall")
             lastPerformEndCallId = callId
+            lastPerformEndCallEndedBy = endedBy
             when (endCallResult) {
                 EndCallResult.SUCCESS -> onSuccess()
                 EndCallResult.FAILURE -> onFailure(RuntimeException("BYE failed"))
@@ -109,6 +113,7 @@ class CallLifecycleHandlerTest {
         var answerCallCount = 0
         var tearDownCallCount = 0
         val declinedCallIds = mutableListOf<String>()
+        val declined = mutableListOf<CallMetadata>()
 
         override fun answer(metadata: CallMetadata) {
             answerCallCount++
@@ -116,6 +121,7 @@ class CallLifecycleHandlerTest {
 
         override fun decline(metadata: CallMetadata) {
             declinedCallIds.add(metadata.callId)
+            declined.add(metadata)
         }
 
         override fun hangUp(metadata: CallMetadata) {}
@@ -175,6 +181,34 @@ class CallLifecycleHandlerTest {
         assertEquals(listOf("performEndCall"), communicator.events)
         assertEquals("call-99 style id must reach the session", "call-1", communicator.lastPerformEndCallId)
         assertTrue("the session's future stops the service, not this answer", stopServiceCalls.isEmpty())
+    }
+
+    @Test
+    fun `performEndCall passes the release's initiator to the session`() {
+        handler.performEndCall(CallMetadata(callId = "call-1", endedBy = CallEndedBy.USER))
+
+        assertEquals(CallEndedBy.USER, communicator.lastPerformEndCallEndedBy)
+    }
+
+    @Test
+    fun `performEndCall without an initiator reports the end as the system's`() {
+        handler.performEndCall(CallMetadata(callId = "call-1"))
+
+        assertEquals(CallEndedBy.SYSTEM, communicator.lastPerformEndCallEndedBy)
+    }
+
+    @Test
+    fun `the notification's Decline reaches the connection service as the user's end`() {
+        handler.reportDeclineToConnectionService(CallMetadata(callId = "call-1"))
+
+        assertEquals(CallEndedBy.USER, fakeController.declined.single().endedBy)
+    }
+
+    @Test
+    fun `a decline the push session asks for is the app's end`() {
+        runBlocking { handler.endCall("call-1") }
+
+        assertEquals(CallEndedBy.APP, fakeController.declined.single().endedBy)
     }
 
     @Test
@@ -320,6 +354,7 @@ class CallLifecycleHandlerTest {
 
                 override fun performEndCall(
                     callId: String,
+                    endedBy: CallEndedBy,
                     onSuccess: () -> Unit,
                     onFailure: (Throwable) -> Unit,
                 ) {}

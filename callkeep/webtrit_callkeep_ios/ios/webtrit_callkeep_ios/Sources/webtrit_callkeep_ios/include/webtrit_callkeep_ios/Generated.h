@@ -93,6 +93,21 @@ typedef NS_ENUM(NSUInteger, WTPCallRequestErrorEnum) {
 - (instancetype)initWithValue:(WTPCallRequestErrorEnum)value;
 @end
 
+/// Who ended a call: the user on this device (the system call UI, the notification, or an
+/// end the app asked for on the user's behalf), the app on its own, or the platform (a ring
+/// timeout, a refused connection) - the last one also when the initiator is not known.
+typedef NS_ENUM(NSUInteger, WTPEndedByEnum) {
+  WTPEndedByEnumUser = 0,
+  WTPEndedByEnumApp = 1,
+  WTPEndedByEnumSystem = 2,
+};
+
+/// Wrapper for WTPEndedByEnum to allow for nullability.
+@interface WTPEndedByEnumBox : NSObject
+@property(nonatomic, assign) WTPEndedByEnum value;
+- (instancetype)initWithValue:(WTPEndedByEnum)value;
+@end
+
 @class WTPIOSOptions;
 @class WTPAndroidOptions;
 @class WTPOptions;
@@ -203,7 +218,7 @@ extern void SetUpWTPHostAndroidServiceApiWithSuffix(id<FlutterBinaryMessenger> b
 - (void)reportEndCall:(NSString *)uuidString displayName:(NSString *)displayName reason:(WTPEndCallReason *)reason completion:(void (^)(FlutterError *_Nullable))completion;
 - (void)startCall:(NSString *)uuidString handle:(WTPHandle *)handle displayNameOrContactIdentifier:(nullable NSString *)displayNameOrContactIdentifier video:(BOOL)video proximityEnabled:(BOOL)proximityEnabled completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
 - (void)answerCall:(NSString *)uuidString completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
-- (void)endCall:(NSString *)uuidString completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
+- (void)endCall:(NSString *)uuidString endedBy:(WTPEndedByEnum)endedBy completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
 - (void)setHeld:(NSString *)uuidString onHold:(BOOL)onHold completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
 - (void)setMuted:(NSString *)uuidString muted:(BOOL)muted completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
 - (void)setSpeaker:(NSString *)uuidString enabled:(BOOL)enabled completion:(void (^)(WTPCallRequestError *_Nullable, FlutterError *_Nullable))completion;
@@ -226,7 +241,7 @@ extern void SetUpWTPHostApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger
 - (void)didPresentIncomingCallHandle:(WTPHandle *)handle displayName:(nullable NSString *)displayName video:(BOOL)video callId:(NSString *)callId uuid:(NSString *)uuidString error:(nullable WTPIncomingCallError *)error completion:(void (^)(FlutterError *_Nullable))completion;
 - (void)performStartCall:(NSString *)uuidString handle:(WTPHandle *)handle displayNameOrContactIdentifier:(nullable NSString *)displayNameOrContactIdentifier video:(BOOL)video completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 - (void)performAnswerCall:(NSString *)uuidString completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
-- (void)performEndCall:(NSString *)uuidString completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
+- (void)performEndCall:(NSString *)uuidString endedBy:(WTPEndedByEnum)endedBy completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 - (void)performSetHeld:(NSString *)uuidString onHold:(BOOL)onHold completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 - (void)performSetMuted:(NSString *)uuidString muted:(BOOL)muted completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 - (void)performSendDTMF:(NSString *)uuidString key:(NSString *)key completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;

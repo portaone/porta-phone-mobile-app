@@ -37,7 +37,7 @@ The primary call-control API. All call lifecycle operations from Dart arrive her
 | `reportEndCall(callId, displayName, reason)`                                         | Force-end call from Dart side                                                                                                                  |
 | `startCall(callId, handle, displayNameOrContactIdentifier, video, proximityEnabled)` | Initiate an outgoing call                                                                                                                      |
 | `answerCall(callId)`                                                                 | Answer incoming call                                                                                                                           |
-| `endCall(callId)`                                                                    | End a call                                                                                                                                     |
+| `endCall(callId, endedBy)`                                                           | End a call; `endedBy` (user or app: who asks) comes back in the `performEndCall` that follows                                                  |
 | `setHeld(callId, onHold)`                                                            | Toggle hold                                                                                                                                    |
 | `setMuted(callId, muted)`                                                            | Toggle mute                                                                                                                                    |
 | `setSpeaker(callId, enabled)`                                                        | Toggle speaker                                                                                                                                 |
@@ -156,7 +156,7 @@ communicator keep a `SupervisorJob` scope on `Dispatchers.Main.immediate` for th
 | `didPresentIncomingCall(handle, displayName, video, callId, error)`       | A ringing connection this delegate has not been handed yet (replay on attach; `error` always null on Android) |
 | `performStartCall(callId, handle, displayNameOrContactIdentifier, video)` | Place this outgoing call                                                                                      |
 | `performAnswerCall(callId)`                                               | Answer this call                                                                                              |
-| `performEndCall(callId)`                                                  | End this call                                                                                                 |
+| `performEndCall(callId, endedBy)`                                         | End this call; `endedBy`: the user, the app, or the system (also when unknown)                                |
 | `performHandoff(callId)`                                                  | Push isolate only: the call is the app's now, or ended elsewhere; finish and return                           |
 | `performSetHeld(callId, onHold)`                                          | Hold or resume this call                                                                                      |
 | `performSetMuted(callId, muted)`                                          | Mute or unmute this call                                                                                      |
@@ -224,6 +224,7 @@ next event waits for the main looper together with it.
 | `PHandle`                  | Call handle: generic, phone number or email                         |
 | `PAudioDevice`             | Audio device descriptor (earpiece, speaker, Bluetooth, etc.)        |
 | `PCallkeepConnectionState` | Telecom state enum: RINGING, DIALING, ACTIVE, HOLDING, DISCONNECTED |
+| `PEndedByEnum`             | Who ended a call: USER, APP, SYSTEM (SYSTEM also when not known)    |
 
 ---
 

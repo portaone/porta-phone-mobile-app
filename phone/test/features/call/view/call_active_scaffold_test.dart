@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:signaling/signaling.dart';
+import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
@@ -243,7 +244,7 @@ void main() {
 
       await pressInMenu(tester, callActionsTransferMenuCancelInviteId);
 
-      verify(() => callBloc.add(const CallControlEvent.ended('c'))).called(1);
+      verify(() => callBloc.add(const CallControlEvent.ended('c', endedBy: CallkeepEndedBy.user))).called(1);
       await teardownCallScaffold(tester);
     });
 
@@ -377,8 +378,8 @@ void main() {
       );
 
       await tester.tap(find.byKey(const Key(callActionsHangupId)));
-      verify(() => callBloc.add(const CallControlEvent.conferenceEnded())).called(1);
-      verifyNever(() => callBloc.add(const CallControlEvent.ended('a')));
+      verify(() => callBloc.add(const CallControlEvent.conferenceEnded(endedBy: CallkeepEndedBy.user))).called(1);
+      verifyNever(() => callBloc.add(const CallControlEvent.ended('a', endedBy: CallkeepEndedBy.user)));
       await teardownCallScaffold(tester);
     });
 
@@ -389,7 +390,7 @@ void main() {
       );
 
       await tester.tap(find.byKey(const Key(callActionsHangupId)));
-      verify(() => callBloc.add(const CallControlEvent.ended('outside'))).called(1);
+      verify(() => callBloc.add(const CallControlEvent.ended('outside', endedBy: CallkeepEndedBy.user))).called(1);
       await teardownCallScaffold(tester);
     });
 
@@ -409,7 +410,7 @@ void main() {
         isButton: true,
       );
       await tester.tap(find.bySemanticsIdentifier(callActionsHangupId));
-      verify(() => callBloc.add(const CallControlEvent.conferenceEnded())).called(1);
+      verify(() => callBloc.add(const CallControlEvent.conferenceEnded(endedBy: CallkeepEndedBy.user))).called(1);
       await teardownCallScaffold(tester);
       semantics.dispose();
     });
@@ -420,7 +421,7 @@ void main() {
       );
 
       await tester.tap(find.bySemanticsIdentifier(numberedId(conferenceParticipantHangupId, 1)));
-      verify(() => callBloc.add(const CallControlEvent.ended('b'))).called(1);
+      verify(() => callBloc.add(const CallControlEvent.ended('b', endedBy: CallkeepEndedBy.user))).called(1);
       await teardownCallScaffold(tester);
     });
 

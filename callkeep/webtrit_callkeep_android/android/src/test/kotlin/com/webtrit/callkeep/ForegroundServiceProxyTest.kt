@@ -82,7 +82,10 @@ class ForegroundServiceProxyTest {
 
         override suspend fun answerCall(callId: String): PCallRequestError? = null
 
-        override suspend fun endCall(callId: String): PCallRequestError? = null
+        override suspend fun endCall(
+            callId: String,
+            endedBy: PEndedByEnum,
+        ): PCallRequestError? = null
 
         override suspend fun setHeld(
             callId: String,

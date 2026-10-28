@@ -88,7 +88,8 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
     final activeIds = _connections.keys.toList();
     for (final callId in activeIds) {
       _terminatedCallIds.add(callId);
-      await _delegate?.performEndCall(callId);
+      // A teardown is the app's own end of every call it still holds.
+      await _delegate?.performEndCall(callId, CallkeepEndedBy.app);
       _delegate?.didDeactivateAudioSession();
     }
     _connections.clear();
@@ -195,12 +196,12 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
   }
 
   @override
-  Future<CallkeepCallRequestError?> endCall(String callId) async {
+  Future<CallkeepCallRequestError?> endCall(String callId, {CallkeepEndedBy endedBy = CallkeepEndedBy.app}) async {
     if (!_connections.containsKey(callId)) {
       return CallkeepCallRequestError.unknownCallUuid;
     }
     _terminatedCallIds.add(callId);
-    await _delegate?.performEndCall(callId);
+    await _delegate?.performEndCall(callId, endedBy);
     _connections.remove(callId);
     // Ended here or reported ended, the call leaves its group either way.
     _forgetGroupOf(callId);
