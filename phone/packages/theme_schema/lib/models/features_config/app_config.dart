@@ -543,6 +543,20 @@ class EncodingDefaultPresetOverride with _$EncodingDefaultPresetOverride {
 // legacy `useCdrs` key, then let the field default apply when neither is present.
 Object? _readRecentsSupportsCallHistory(Map json, String key) => json.containsKey(key) ? json[key] : json['useCdrs'];
 
+/// How the recents section is arranged.
+enum RecentsLayoutScheme {
+  /// The filters as tabs under the title, and the list's actions on a floating
+  /// button at its corner.
+  @JsonValue('tabbed')
+  tabbed,
+
+  /// Laid out like the unified contacts screen: the filter is a chooser on the
+  /// line under the title, and the list's actions open from a round button at
+  /// the other end of that line.
+  @JsonValue('unified')
+  unified,
+}
+
 /// How the contacts section arranges what it shows.
 enum ContactsLayoutScheme {
   /// Each address book is a tab of its own, and favourites are a section
@@ -579,6 +593,7 @@ sealed class BottomMenuTabScheme {
     required String titleL10n,
     required String icon,
     bool supportsCallHistory,
+    RecentsLayoutScheme layout,
     String type,
   }) = RecentsTabScheme;
 
@@ -715,6 +730,7 @@ class RecentsTabScheme extends BottomMenuTabScheme with _$RecentsTabScheme {
     required this.titleL10n,
     required this.icon,
     this.supportsCallHistory = true,
+    this.layout = RecentsLayoutScheme.tabbed,
     this.type = 'recents',
   });
 
@@ -738,6 +754,17 @@ class RecentsTabScheme extends BottomMenuTabScheme with _$RecentsTabScheme {
   @JsonKey(readValue: _readRecentsSupportsCallHistory)
   @override
   final bool supportsCallHistory;
+
+  /// How the section is arranged. A deployment that says nothing keeps the
+  /// arrangement it already has.
+  ///
+  /// Read leniently, as the contacts layout is: a configurator may offer an
+  /// arrangement before an installed app knows how to draw it, and such a
+  /// build falls back to the one it knows rather than fail to read its
+  /// settings.
+  @JsonKey(unknownEnumValue: RecentsLayoutScheme.tabbed)
+  @override
+  final RecentsLayoutScheme layout;
 
   /// The discriminator. Always `recents`.
   @override

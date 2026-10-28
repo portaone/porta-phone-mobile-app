@@ -7,6 +7,7 @@ import '../contacts_layout.dart';
 import '../contacts_list_selection.dart';
 import '../embedded/embedded.dart';
 import '../main_flavor.dart';
+import '../recents_layout.dart';
 
 sealed class BottomMenuTab extends Equatable {
   const BottomMenuTab({
@@ -86,6 +87,7 @@ final class RecentsBottomMenuTab extends BottomMenuTab {
 
   const RecentsBottomMenuTab({
     required this.supportsCallHistory,
+    this.layout = RecentsLayout.tabbed,
     required super.enabled,
     required super.initial,
     required super.titleL10n,
@@ -97,6 +99,10 @@ final class RecentsBottomMenuTab extends BottomMenuTab {
   // (CoreSupport.supportsCallHistory); when true the recents tab uses remote CDRs.
   final bool supportsCallHistory;
 
+  /// Where the filter and the list's actions sit. The same screen draws both,
+  /// so the route does not change with it.
+  final RecentsLayout layout;
+
   @override
   MainFlavor get flavor => MainFlavor.recents;
 
@@ -104,7 +110,7 @@ final class RecentsBottomMenuTab extends BottomMenuTab {
   String get routePath => '${super.routePath}${supportsCallHistory ? '/$cdrsSegment' : ''}';
 
   @override
-  List<Object?> get props => [...super.props, supportsCallHistory];
+  List<Object?> get props => [...super.props, supportsCallHistory, layout];
 }
 
 final class VoicemailBottomMenuTab extends BottomMenuTab {

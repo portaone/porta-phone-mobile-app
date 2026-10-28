@@ -364,6 +364,10 @@ abstract final class BottomMenuMapper {
       RecentsTabScheme() => RecentsBottomMenuTab(
         supportsCallHistory:
             (overrides.isCallHistoryEnabled ?? tab.supportsCallHistory) && coreSupport.supportsCallHistory,
+        layout: switch (tab.layout) {
+          RecentsLayoutScheme.tabbed => RecentsLayout.tabbed,
+          RecentsLayoutScheme.unified => RecentsLayout.unified,
+        },
         enabled: tab.enabled,
         initial: tab.initial,
         titleL10n: tab.titleL10n,
