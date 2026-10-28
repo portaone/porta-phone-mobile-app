@@ -63,6 +63,14 @@ void main() {
     when(() => localRepository.getHistoryWalkedTo()).thenAnswer((_) async => null);
     when(() => localRepository.markHistoryWalkedTo(any())).thenAnswer((_) async {});
     when(() => localRepository.notifyInitialSyncFailed()).thenAnswer((_) async {});
+    when(() => localRepository.getHistory(limit: 1)).thenAnswer((_) async => const []);
+    when(
+      () => localRepository.replaceAfterClear(
+        any(),
+        syncedAt: any(named: 'syncedAt'),
+        archiveHidden: any(named: 'archiveHidden'),
+      ),
+    ).thenAnswer((_) async {});
   });
 
   tearDown(() => worker.dispose());
@@ -321,6 +329,110 @@ void main() {
       await expectLater(worker.refresh(), throwsA(isA<StateError>()));
       expect(worker.isActive, isFalse);
       verifyNever(() => localRepository.getLastUpdate());
+    });
+  });
+
+  group('CdrsSyncWorker.refresh after a history clear', () {
+    // A clear on another device reaches this one only through what the
+    // backend stops returning: the newest stored record comes back while the
+    // history is intact and does not once it was cleared. Missing from the
+    // incremental pages, it is asked for in a range from its connect time to
+    // its disconnect time and a margin either side.
+    final newestStored = _record('newest-stored', 10);
+    final lastUpdate = newestStored.connectTime;
+    final checkFrom = lastUpdate.subtract(CdrsSyncWorker.clearCheckMargin);
+    final checkTo = newestStored.disconnectTime.add(CdrsSyncWorker.clearCheckMargin);
+
+    void answerCheck(List<CdrRecord> records) {
+      when(() => remoteRepository.getHistory(timeFrom: checkFrom, timeTo: checkTo, page: 1, limit: 2))
+          .thenAnswer((_) async => _page(records));
+    }
+
+    void answerIncremental(List<CdrRecord> records) {
+      when(() => remoteRepository.getHistory(timeFrom: lastUpdate, page: 1, limit: 2))
+          .thenAnswer((_) async => _page(records));
+    }
+
+    setUp(() {
+      when(() => localRepository.getLastUpdate()).thenAnswer((_) async => lastUpdate);
+      when(() => localRepository.getHistory(limit: 1)).thenAnswer((_) async => [newestStored]);
+    });
+
+    test('keeps the stored history while the backend still returns the newest record', () async {
+      final newer = _record('newer', 12);
+      answerCheck([newestStored]);
+      answerIncremental([newer]);
+
+      await worker.refresh();
+
+      verifyNever(
+        () => localRepository.replaceAfterClear(
+          any(),
+          syncedAt: any(named: 'syncedAt'),
+          archiveHidden: any(named: 'archiveHidden'),
+        ),
+      );
+      verify(() => localRepository.upsertCdrs([newer])).called(1);
+    });
+
+    test('a newest record found on the incremental pages needs no check', () async {
+      final newer = _record('newer', 12);
+      answerIncremental([newer, newestStored]);
+      when(() => remoteRepository.getHistory(timeFrom: lastUpdate, page: 2, limit: 2))
+          .thenAnswer((_) async => _page(const []));
+
+      await worker.refresh();
+
+      verifyNever(() => remoteRepository.getHistory(timeFrom: checkFrom, timeTo: checkTo, page: 1, limit: 2));
+      verify(() => localRepository.upsertCdrs([newestStored, newer])).called(1);
+    });
+
+    test('a short incremental page alone does not count as a clear', () async {
+      // The pages may stop early - a backend may serve fewer records per page
+      // than asked - so the clear is read from the check, not from them.
+      answerCheck([newestStored]);
+      answerIncremental(const []);
+
+      await worker.refresh();
+
+      verifyNever(
+        () => localRepository.replaceAfterClear(
+          any(),
+          syncedAt: any(named: 'syncedAt'),
+          archiveHidden: any(named: 'archiveHidden'),
+        ),
+      );
+    });
+
+    test('replaces the stored history with the calls made after the clear', () async {
+      final completedAt = DateTime.utc(2026, 1, 2);
+      final afterClear = _record('after-clear', 12);
+      answerCheck(const []);
+      answerIncremental([afterClear]);
+
+      await withClock(Clock.fixed(completedAt), worker.refresh);
+
+      // The clear is inferred, so the archive stays for the lists to walk: a
+      // wrong guess costs requests, not history.
+      verify(() => localRepository.replaceAfterClear([afterClear], syncedAt: completedAt, archiveHidden: false))
+          .called(1);
+      verifyNever(() => localRepository.upsertCdrs(any()));
+    });
+
+    test('a failed cycle drops nothing', () async {
+      final error = Exception('offline');
+      answerCheck(const []);
+      when(() => remoteRepository.getHistory(timeFrom: lastUpdate, page: 1, limit: 2)).thenThrow(error);
+
+      await expectLater(worker.refresh(), throwsA(same(error)));
+
+      verifyNever(
+        () => localRepository.replaceAfterClear(
+          any(),
+          syncedAt: any(named: 'syncedAt'),
+          archiveHidden: any(named: 'archiveHidden'),
+        ),
+      );
     });
   });
 
