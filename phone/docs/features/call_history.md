@@ -86,6 +86,11 @@ beginning, so nobody asks for the hidden archive) and runs one more sync;
 a backend without the route (`EndpointNotSupportedException`) and a failed
 request each get a snack bar of their own and keep the local copy.
 
+Where the recents tab shows the local call log instead (no call history on the
+backend), the same action clears that log on this device only: `RecentsCleared`
+deletes every call log entry, also those older than the 14 days the list shows,
+and the confirmation says "on this device".
+
 `POST /user/history/clear` deletes nothing on the switch. Core remembers when the
 user cleared the history, per user and not per device, and from then on
 `GET /user/history` returns no record that connected earlier, whatever range is
@@ -131,6 +136,7 @@ backend again would clear the calls made in between.
 | The lists against a backend with a default window | `test/features/cdrs/cdrs_history_walk_test.dart` |
 | The sync cycles, a clear seen from another device | `test/features/cdrs/cdrs_sync_worker_test.dart` |
 | Clearing from this device | `test/features/cdrs/cdrs_history_clear_cubit_test.dart`, `test/features/recents/recents_actions_semantics_test.dart` |
+| Clearing the local call log | `test/features/recents/recents_bloc_test.dart`, `packages/data/app_database/test/recents_dao_test.dart` |
 | The watermark itself | `packages/data/app_database/test/cdrs_dao_test.dart`, `test/migrations_test.dart` |
 | Range and pagination on the wire | `packages/api/test/api_client_cdr_history_test.dart`, `test/repository/cdrs_remote_repository_test.dart` |
 | On a device against the local stand | `patrol_test/cdr_history_walk_e2e_test.dart` |

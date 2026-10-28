@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RecentsState {
 
- List<Recent>? get recents; RecentsVisibilityFilter get filter;
+ List<Recent>? get recents; RecentsVisibilityFilter get filter; RecentsClearStatus get clearStatus;
 /// Create a copy of RecentsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,12 +25,12 @@ $RecentsStateCopyWith<RecentsState> get copyWith => _$RecentsStateCopyWithImpl<R
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsState&&const DeepCollectionEquality().equals(other.recents, recents)&&(identical(other.filter, filter) || other.filter == filter));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsState&&const DeepCollectionEquality().equals(other.recents, recents)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.clearStatus, clearStatus) || other.clearStatus == clearStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(recents),filter);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(recents),filter,clearStatus);
 
 
 
@@ -41,7 +41,7 @@ abstract mixin class $RecentsStateCopyWith<$Res>  {
   factory $RecentsStateCopyWith(RecentsState value, $Res Function(RecentsState) _then) = _$RecentsStateCopyWithImpl;
 @useResult
 $Res call({
- List<Recent>? recents, RecentsVisibilityFilter filter
+ List<Recent>? recents, RecentsVisibilityFilter filter, RecentsClearStatus clearStatus
 });
 
 
@@ -58,11 +58,12 @@ class _$RecentsStateCopyWithImpl<$Res>
 
 /// Create a copy of RecentsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? recents = freezed,Object? filter = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? recents = freezed,Object? filter = null,Object? clearStatus = null,}) {
   return _then(RecentsState(
 recents: freezed == recents ? _self.recents : recents // ignore: cast_nullable_to_non_nullable
 as List<Recent>?,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
-as RecentsVisibilityFilter,
+as RecentsVisibilityFilter,clearStatus: null == clearStatus ? _self.clearStatus : clearStatus // ignore: cast_nullable_to_non_nullable
+as RecentsClearStatus,
   ));
 }
 

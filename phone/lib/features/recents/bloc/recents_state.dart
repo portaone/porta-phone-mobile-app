@@ -1,14 +1,20 @@
 part of 'recents_bloc.dart';
 
+/// Where clearing the call log stands; the screen says how it went.
+enum RecentsClearStatus { idle, clearing, cleared, failed }
+
 @freezed
 class RecentsState with _$RecentsState {
-  const RecentsState({this.recents, required this.filter});
+  const RecentsState({this.recents, required this.filter, this.clearStatus = RecentsClearStatus.idle});
 
   @override
   final List<Recent>? recents;
 
   @override
   final RecentsVisibilityFilter filter;
+
+  @override
+  final RecentsClearStatus clearStatus;
 
   List<Recent>? get recentsFiltered {
     return recents?.where((recent) {
@@ -28,6 +34,6 @@ class RecentsState with _$RecentsState {
 
   @override
   String toString() {
-    return 'RecentsState { recents: ${recents?.length ?? 0} items, filter: $filter }';
+    return 'RecentsState { recents: ${recents?.length ?? 0} items, filter: $filter, clearStatus: $clearStatus }';
   }
 }
