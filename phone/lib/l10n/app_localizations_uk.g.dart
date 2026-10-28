@@ -2426,9 +2426,26 @@ class AppLocalizationsUk extends AppLocalizations {
   String get presence_settings_statusIcon_title => 'Іконка статусу:';
 
   @override
+  String get recents_ActionsButton_label => 'Інші дії';
+
+  @override
   String recents_BodyCenter_empty(Object filter) {
     return 'Зараз у вас немає жодних $filter останніх дзвінків.';
   }
+
+  @override
+  String get recents_ClearHistoryAction_label => 'Очистити історію дзвінків';
+
+  @override
+  String get recents_ClearHistoryDialog_contentAccount =>
+      'Усі дзвінки буде прибрано з Останніх на всіх пристроях, де виконано вхід у цей обліковий запис. Нові дзвінки з\'являтимуться як звичайно.';
+
+  @override
+  String get recents_ClearHistoryDialog_contentDevice =>
+      'Усі дзвінки буде прибрано з Останніх на цьому пристрої. Нові дзвінки з\'являтимуться як звичайно.';
+
+  @override
+  String get recents_ClearHistoryDialog_title => 'Очистити історію дзвінків?';
 
   @override
   String get recents_DeleteConfirmDialog_content => 'Ви впевнені, що хочете видалити поточний журнал дзвінків?';
@@ -2443,6 +2460,16 @@ class AppLocalizationsUk extends AppLocalizations {
   String recents_snackBar_deleted(String name) {
     return '$name видалено';
   }
+
+  @override
+  String get recents_snackBar_historyClearFailed =>
+      'Не вдалося очистити історію дзвінків. Перевірте з\'єднання і спробуйте ще раз.';
+
+  @override
+  String get recents_snackBar_historyClearUnsupported => 'Цей сервер не підтримує очищення історії дзвінків.';
+
+  @override
+  String get recents_snackBar_historyCleared => 'Історію дзвінків очищено';
 
   @override
   String get recentsVisibilityFilter_all => 'Всі';

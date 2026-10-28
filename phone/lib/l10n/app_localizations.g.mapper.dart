@@ -1055,11 +1055,23 @@ extension AppLocalizationsExtension on AppLocalizations {
       'presence_settings_statusIcon_none' => presence_settings_statusIcon_none,
       'presence_settings_statusIcon_title' =>
         presence_settings_statusIcon_title,
+      'recents_ActionsButton_label' => recents_ActionsButton_label,
+      'recents_ClearHistoryAction_label' => recents_ClearHistoryAction_label,
+      'recents_ClearHistoryDialog_contentAccount' =>
+        recents_ClearHistoryDialog_contentAccount,
+      'recents_ClearHistoryDialog_contentDevice' =>
+        recents_ClearHistoryDialog_contentDevice,
+      'recents_ClearHistoryDialog_title' => recents_ClearHistoryDialog_title,
       'recents_DeleteConfirmDialog_content' =>
         recents_DeleteConfirmDialog_content,
       'recents_DeleteConfirmDialog_title' => recents_DeleteConfirmDialog_title,
       'recents_HistoryTile_missedCallText' =>
         recents_HistoryTile_missedCallText,
+      'recents_snackBar_historyClearFailed' =>
+        recents_snackBar_historyClearFailed,
+      'recents_snackBar_historyClearUnsupported' =>
+        recents_snackBar_historyClearUnsupported,
+      'recents_snackBar_historyCleared' => recents_snackBar_historyCleared,
       'recentsVisibilityFilter_all' => recentsVisibilityFilter_all,
       'recentsVisibilityFilter_all_preposit' =>
         recentsVisibilityFilter_all_preposit,

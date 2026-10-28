@@ -6,10 +6,12 @@ import 'package:webtrit_phone/app/constants.dart';
 
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/recents/view/recents_screen_styles.dart';
+import 'package:webtrit_phone/features/recents/widgets/recents_actions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import '../cubit/cdrs_history_clear_cubit.dart';
 import '../cubit/full_recent_cdrs_cubit.dart';
 import '../cubit/missed_recent_cdrs_cubit.dart';
 import '../widgets/full_recent_cdrs_list.dart';
@@ -89,13 +91,16 @@ class _RecentCdrsScreenState extends State<RecentCdrsScreen> with TickerProvider
       appBarTheme: effectiveStyle?.appBarTheme,
       extendBodyBehindAppBar: true,
       appBar: appBar,
+      floatingActionButton: const _CdrsActionsFab(),
       // No inset of its own: the body runs behind the bar, and Scaffold
       // already hands it a MediaQuery whose top padding is the bar plus the
       // status bar. A list with no padding of its own takes that figure, and
       // so does the refresh indicator. Computing it here a second time is
       // what let the two disagree - it read kToolbarHeight where MainAppBar
       // is built from kMinInteractiveDimension, eight points apart.
-      body: TabBarView(controller: _tabController, children: [for (final filter in _filters) _listOf(filter)]),
+      body: RecentsActionsFabClearance(
+        child: TabBarView(controller: _tabController, children: [for (final filter in _filters) _listOf(filter)]),
+      ),
     );
   }
 
@@ -125,6 +130,46 @@ class _RecentCdrsScreenState extends State<RecentCdrsScreen> with TickerProvider
     };
 
     return _CdrsRefreshIndicator(onRefresh: refresh, child: list);
+  }
+}
+
+/// The recents actions of the server history, and what the screen says about
+/// how a clear went.
+///
+/// Clearing is offered while the full list holds anything: the Missed list is
+/// a part of it, so an empty full list leaves nothing to clear on either tab.
+class _CdrsActionsFab extends StatelessWidget {
+  const _CdrsActionsFab();
+
+  @override
+  Widget build(BuildContext context) {
+    final hasRecords = context.select<FullRecentCdrsCubit, bool>((cubit) => cubit.state.records.isNotEmpty);
+
+    return BlocConsumer<CdrsHistoryClearCubit, CdrsHistoryClearState>(
+      listener: _onClearStateChanged,
+      builder: (context, state) {
+        return RecentsActionsFab(
+          actions: RecentsActions(
+            canClear: hasRecords && state != CdrsHistoryClearState.clearing,
+            clearDescription: context.l10n.recents_ClearHistoryDialog_contentAccount,
+            onClearConfirmed: context.read<CdrsHistoryClearCubit>().clear,
+          ),
+        );
+      },
+    );
+  }
+
+  void _onClearStateChanged(BuildContext context, CdrsHistoryClearState state) {
+    switch (state) {
+      case CdrsHistoryClearState.cleared:
+        context.showSnackBar(context.l10n.recents_snackBar_historyCleared);
+      case CdrsHistoryClearState.unsupported:
+        context.showErrorSnackBar(context.l10n.recents_snackBar_historyClearUnsupported);
+      case CdrsHistoryClearState.failed:
+        context.showErrorSnackBar(context.l10n.recents_snackBar_historyClearFailed);
+      case CdrsHistoryClearState.idle || CdrsHistoryClearState.clearing:
+        break;
+    }
   }
 }
 

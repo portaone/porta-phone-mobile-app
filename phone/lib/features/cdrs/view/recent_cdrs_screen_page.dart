@@ -31,6 +31,13 @@ class RecentCdrsScreenPage extends StatelessWidget {
           )..init(),
         ),
         BlocProvider(
+          create: (context) => CdrsHistoryClearCubit(
+            context.read<CdrsRemoteRepository>(),
+            context.read<CdrsLocalRepository>(),
+            cdrsSync,
+          ),
+        ),
+        BlocProvider(
           create: (context) => MissedRecentCdrsCubit(
             context.read<CdrsLocalRepository>(),
             context.read<CdrsRemoteRepository>(),

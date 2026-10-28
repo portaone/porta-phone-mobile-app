@@ -73,6 +73,19 @@ per-number lists filter locally on records nobody asked them about.
 
 ## A cleared history
 
+"Clear call history" is an entry of the recents actions menu (`RecentsActions`),
+opened from a floating button at the corner of the list (`RecentsActionsFab`,
+id `recentsActions`; the entry is `recentsClearHistoryAction`). It is kept out
+of the header on purpose: a destructive control there is where a press meant for
+something else lands. The entry can be picked while the full list holds
+anything, on either tab: the Missed calls are part of the history. After a dangerous confirmation
+`CdrsHistoryClearCubit` asks the backend, lets a sync cycle already running end
+(what it fetched before the clear would otherwise land after the drop), replaces
+the local store with nothing (`replaceAfterClear`: synced, walked to the
+beginning, so nobody asks for the hidden archive) and runs one more sync;
+a backend without the route (`EndpointNotSupportedException`) and a failed
+request each get a snack bar of their own and keep the local copy.
+
 `POST /user/history/clear` deletes nothing on the switch. Core remembers when the
 user cleared the history, per user and not per device, and from then on
 `GET /user/history` returns no record that connected earlier, whatever range is
@@ -116,7 +129,8 @@ backend again would clear the calls made in between.
 |---|---|
 | The slice rule itself | `test/services/history_windows_test.dart` |
 | The lists against a backend with a default window | `test/features/cdrs/cdrs_history_walk_test.dart` |
-| The sync cycles | `test/features/cdrs/cdrs_sync_worker_test.dart` |
+| The sync cycles, a clear seen from another device | `test/features/cdrs/cdrs_sync_worker_test.dart` |
+| Clearing from this device | `test/features/cdrs/cdrs_history_clear_cubit_test.dart`, `test/features/recents/recents_actions_semantics_test.dart` |
 | The watermark itself | `packages/data/app_database/test/cdrs_dao_test.dart`, `test/migrations_test.dart` |
 | Range and pagination on the wire | `packages/api/test/api_client_cdr_history_test.dart`, `test/repository/cdrs_remote_repository_test.dart` |
 | On a device against the local stand | `patrol_test/cdr_history_walk_e2e_test.dart` |

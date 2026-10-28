@@ -17,6 +17,13 @@ abstract class CdrsRemoteRepository {
   /// The page carries what the server said about the range it came from, which
   /// is how a caller learns that a range holds more than it asked for.
   Future<CdrHistoryPage> getHistory({DateTime? timeFrom, DateTime? timeTo, int? page, int? limit});
+
+  /// Clears the call history for every device of the account.
+  ///
+  /// The backend keeps the records and stops returning those from before now,
+  /// so a caller has only its local copy left to drop. Throws
+  /// `EndpointNotSupportedException` when the backend cannot clear.
+  Future<void> clearHistory();
 }
 
 class CdrsRemoteRepositoryApiImpl with CdrApiMapper implements CdrsRemoteRepository {
@@ -39,4 +46,7 @@ class CdrsRemoteRepositoryApiImpl with CdrApiMapper implements CdrsRemoteReposit
       itemsTotal: response.pagination?.itemsTotal,
     );
   }
+
+  @override
+  Future<void> clearHistory() => _webtritApiClient.clearCdrHistory(_token);
 }
