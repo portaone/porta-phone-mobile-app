@@ -66,6 +66,13 @@ class RecentsDao extends DatabaseAccessor<AppDatabase> with _$RecentsDaoMixin {
     return (delete(callLogsTable)..where((t) => t.id.equals(id))).go();
   }
 
+  /// Deletes every call log entry, including those older than the window
+  /// [watchLastRecents] shows: they are part of the log too, and would
+  /// otherwise resurface if that window were ever widened.
+  Future<int> deleteAllRecents() {
+    return delete(callLogsTable).go();
+  }
+
   List<RecentData> _rowsToRecent(Iterable<TypedResult> rows) {
     Map<int, RecentData> recents = {};
 

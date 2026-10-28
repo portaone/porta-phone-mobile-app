@@ -63,6 +63,11 @@ class RecentsRepository
     await _appDatabase.recentsDao.deleteRecent(id);
   }
 
+  /// Deletes the whole call log of this device.
+  Future<void> deleteAll() async {
+    await _appDatabase.recentsDao.deleteAllRecents();
+  }
+
   Future<Recent> getRecentByCallId(int id) {
     return _appDatabase.recentsDao.getRecentByCallId(id).then(recentFromDrift);
   }

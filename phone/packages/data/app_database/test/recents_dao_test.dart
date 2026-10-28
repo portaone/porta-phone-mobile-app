@@ -116,4 +116,13 @@ void main() {
       expect(sourceByNumber['6'], ContactSourceTypeEnum.external);
     });
   });
+
+  test('deleteAllRecents removes every entry, also those outside the recents window', () async {
+    await addCallLog('1', DateTime.now());
+    await addCallLog('2', DateTime(2020, 1, 1));
+
+    await database.recentsDao.deleteAllRecents();
+
+    expect(await database.recentsDao.watchLastRecents(allTime).first, isEmpty);
+  });
 }

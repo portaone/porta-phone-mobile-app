@@ -124,6 +124,21 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
     context.router.navigate(CallLogScreenPageRoute(number: number));
   }
 
+  void clearHistory() {
+    context.read<RecentsBloc>().add(const RecentsCleared());
+  }
+
+  void _onClearStatusChanged(BuildContext context, RecentsState state) {
+    switch (state.clearStatus) {
+      case RecentsClearStatus.cleared:
+        context.showSnackBar(context.l10n.recents_snackBar_historyCleared);
+      case RecentsClearStatus.failed:
+        context.showErrorSnackBar(context.l10n.recents_snackBar_historyClearFailed);
+      case RecentsClearStatus.idle || RecentsClearStatus.clearing:
+        break;
+    }
+  }
+
   void delete({required Recent recent}) {
     context.showSnackBar(context.l10n.recents_snackBar_deleted(recent.name));
     context.read<RecentsBloc>().add(RecentsDeleted(recent));
@@ -167,6 +182,21 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
       appBarTheme: effectiveStyle?.appBarTheme,
       extendBodyBehindAppBar: true,
       appBar: appBar,
+      // The whole log, on either tab: the Missed calls are part of it.
+      floatingActionButton: BlocListener<RecentsBloc, RecentsState>(
+        listenWhen: (previous, current) => previous.clearStatus != current.clearStatus,
+        listener: _onClearStatusChanged,
+        child: RecentsActionsFab(
+          actions: RecentsActions(
+            canClear: context.select<RecentsBloc, bool>(
+              (bloc) =>
+                  (bloc.state.recents?.isNotEmpty ?? false) && bloc.state.clearStatus != RecentsClearStatus.clearing,
+            ),
+            clearDescription: context.l10n.recents_ClearHistoryDialog_contentDevice,
+            onClearConfirmed: clearHistory,
+          ),
+        ),
+      ),
       body: BlocBuilder<RecentsBloc, RecentsState>(
         builder: (context, state) {
           final recents = state.recents;
@@ -200,7 +230,7 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                   return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
                     builder: (context, callRoutingState) {
                       return ListView.builder(
-                        padding: EdgeInsets.only(top: topPadding),
+                        padding: EdgeInsets.only(top: topPadding, bottom: RecentsActionsFab.clearance),
                         itemCount: recentsFiltered.length,
                         itemBuilder: (context, index) {
                           final recent = recentsFiltered[index];
