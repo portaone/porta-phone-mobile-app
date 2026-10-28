@@ -2454,6 +2454,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get recents_DeleteConfirmDialog_title => 'Підтвердження видалення';
 
   @override
+  String get recents_FilterPicker_label => 'Показати дзвінки';
+
+  @override
   String get recents_HistoryTile_missedCallText => 'Пропущено';
 
   @override

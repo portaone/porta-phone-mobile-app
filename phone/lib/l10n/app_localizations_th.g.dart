@@ -2406,6 +2406,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get recents_DeleteConfirmDialog_title => 'ยืนยันการลบ';
 
   @override
+  String get recents_FilterPicker_label => 'แสดงการโทร';
+
+  @override
   String get recents_HistoryTile_missedCallText => 'ไม่ได้รับ';
 
   @override

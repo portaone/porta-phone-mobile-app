@@ -230,7 +230,7 @@ Recent calls or history screen.
   history") on a floating button at the corner of the list. This is the arrangement the app had
   before `layout` existed, and the one a config that says nothing keeps.
 - `unified` - the header of the unified contacts screen: the filter is a chooser on the line under
-  the title, and the actions open from a round button at the other end of that line, where contacts
+  the title, and the actions open from a menu button at the other end of that line, where contacts
   has its search.
 
 An unknown `layout` value falls back to `tabbed`, so a configurator may offer an arrangement before

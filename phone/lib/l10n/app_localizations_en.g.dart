@@ -2419,6 +2419,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recents_DeleteConfirmDialog_title => 'Confirm deleting';
 
   @override
+  String get recents_FilterPicker_label => 'Show calls';
+
+  @override
   String get recents_HistoryTile_missedCallText => 'Missed';
 
   @override

@@ -2447,6 +2447,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get recents_DeleteConfirmDialog_title => 'Confermare l\'eliminazione';
 
   @override
+  String get recents_FilterPicker_label => 'Mostra chiamate';
+
+  @override
   String get recents_HistoryTile_missedCallText => 'Chiamata persa';
 
   @override

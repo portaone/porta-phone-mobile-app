@@ -400,6 +400,11 @@ const recentsActionsKey = Key(recentsActionsId);
 const String recentsClearHistoryActionId = 'recentsClearHistoryAction';
 const recentsClearHistoryActionKey = Key(recentsClearHistoryActionId);
 
+/// The filter chooser of the unified recents arrangement, in place of the
+/// tabs; its entries carry the tabs' ids.
+const String recentsFilterPickerId = 'recentsFilterPicker';
+const recentsFilterPickerKey = Key(recentsFilterPickerId);
+
 /// Tabs of the conversations screen; which of them exist depends on what the
 /// backend supports, and both carry the same caption style.
 const String conversationsTabChatId = 'conversationsTabChat';

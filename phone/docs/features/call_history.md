@@ -75,7 +75,10 @@ per-number lists filter locally on records nobody asked them about.
 
 "Clear call history" is an entry of the recents actions menu (`RecentsActions`),
 opened from a floating button at the corner of the list (`RecentsActionsFab`,
-id `recentsActions`; the entry is `recentsClearHistoryAction`). It is kept out
+id `recentsActions`; the entry is `recentsClearHistoryAction`). Under the
+`unified` layout of the recents tab the same menu opens from a menu button at
+the end of the line under the title (`RecentsUnifiedHeader`, same id), and the
+filter is a chooser on that line instead of tabs (`application_config.md`). It is kept out
 of the header on purpose: a destructive control there is where a press meant for
 something else lands. The entry can be picked while the full list holds
 anything, on either tab: the Missed calls are part of the history. After a dangerous confirmation
@@ -136,6 +139,7 @@ backend again would clear the calls made in between.
 | The lists against a backend with a default window | `test/features/cdrs/cdrs_history_walk_test.dart` |
 | The sync cycles, a clear seen from another device | `test/features/cdrs/cdrs_sync_worker_test.dart` |
 | Clearing from this device | `test/features/cdrs/cdrs_history_clear_cubit_test.dart`, `test/features/recents/recents_actions_semantics_test.dart` |
+| The unified header | `test/features/recents/recents_unified_header_semantics_test.dart` |
 | Clearing the local call log | `test/features/recents/recents_bloc_test.dart`, `packages/data/app_database/test/recents_dao_test.dart` |
 | The watermark itself | `packages/data/app_database/test/cdrs_dao_test.dart`, `test/migrations_test.dart` |
 | Range and pagination on the wire | `packages/api/test/api_client_cdr_history_test.dart`, `test/repository/cdrs_remote_repository_test.dart` |

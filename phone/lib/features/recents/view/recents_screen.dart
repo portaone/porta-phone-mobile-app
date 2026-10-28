@@ -28,7 +28,11 @@ class RecentsScreen extends StatefulWidget {
     required this.chatsEnabled,
     required this.smssEnabled,
     this.style,
+    this.layout = RecentsLayout.tabbed,
   });
+
+  /// Where the filter and the list's actions sit.
+  final RecentsLayout layout;
 
   final List<RecentsVisibilityFilter> recentsFilters;
   final bool transferEnabled;
@@ -64,6 +68,10 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
 
     final activeFilter = context.read<RecentsBloc>().state.filter;
     final initialRecentsFiltersIndex = _filters.indexOf(activeFilter);
+    // A filter remembered from a configuration that offered it is not one
+    // this screen can show: the list follows the first tab instead, or it
+    // would be filtered by something no tab or chooser names.
+    if (initialRecentsFiltersIndex == -1) context.read<RecentsBloc>().add(RecentsFiltered(_filters.first));
 
     _tabController = TabController(
       initialIndex: initialRecentsFiltersIndex == -1 ? 0 : initialRecentsFiltersIndex,
@@ -124,21 +132,6 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
     context.router.navigate(CallLogScreenPageRoute(number: number));
   }
 
-  void clearHistory() {
-    context.read<RecentsBloc>().add(const RecentsCleared());
-  }
-
-  void _onClearStatusChanged(BuildContext context, RecentsState state) {
-    switch (state.clearStatus) {
-      case RecentsClearStatus.cleared:
-        context.showSnackBar(context.l10n.recents_snackBar_historyCleared);
-      case RecentsClearStatus.failed:
-        context.showErrorSnackBar(context.l10n.recents_snackBar_historyClearFailed);
-      case RecentsClearStatus.idle || RecentsClearStatus.clearing:
-        break;
-    }
-  }
-
   void delete({required Recent recent}) {
     context.showSnackBar(context.l10n.recents_snackBar_deleted(recent.name));
     context.read<RecentsBloc>().add(RecentsDeleted(recent));
@@ -150,6 +143,7 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
     final effectiveStyle = widget.style ?? themeData.extension<RecentsScreenStyles>()?.primary;
 
     final mediaQueryData = MediaQuery.of(context);
+    final unified = widget.layout == RecentsLayout.unified;
 
     // The bar states its own height; deriving the inset from anything else is
     // how the body ends up sitting eight points below where the bar ends.
@@ -157,21 +151,40 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
       title: widget.title,
       context: context,
       flexibleSpace: BlurredSurface.fromStyle(effectiveStyle?.appBarBlurredSurface),
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(kMainAppBarBottomTabHeight),
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: kMainAppBarBottomPaddingGap),
-          child: ExtTabBar(
-            width: mediaQueryData.size.width * 0.75,
-            height: kMainAppBarBottomControlHeight,
-            tabs: [
-              for (final recentsFilter in _filters)
-                ExtTab(key: recentsFilter.tabKey, identifier: recentsFilter.tabId, text: recentsFilter.l10n(context)),
-            ],
-            controller: _tabController,
-          ),
-        ),
-      ),
+      bottom: unified
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(RecentsUnifiedHeader.height),
+              child: _RecentsActionsBuilder(
+                builder: (context, actions) => RecentsUnifiedHeader(
+                  filters: _filters,
+                  selected: context.select<RecentsBloc, RecentsVisibilityFilter>((bloc) => bloc.state.filter),
+                  // Through the controller, whose listener files the filter,
+                  // so the two arrangements change it the same way.
+                  onSelected: (filter) => _tabController.animateTo(_filters.indexOf(filter)),
+                  actions: actions,
+                  inset: themeData.appBarTheme.titleSpacing ?? NavigationToolbar.kMiddleSpacing,
+                ),
+              ),
+            )
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(kMainAppBarBottomTabHeight),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: kMainAppBarBottomPaddingGap),
+                child: ExtTabBar(
+                  width: mediaQueryData.size.width * 0.75,
+                  height: kMainAppBarBottomControlHeight,
+                  tabs: [
+                    for (final recentsFilter in _filters)
+                      ExtTab(
+                        key: recentsFilter.tabKey,
+                        identifier: recentsFilter.tabId,
+                        text: recentsFilter.l10n(context),
+                      ),
+                  ],
+                  controller: _tabController,
+                ),
+              ),
+            ),
     );
     final topPadding = mediaQueryData.padding.top + appBar.preferredSize.height;
 
@@ -182,21 +195,14 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
       appBarTheme: effectiveStyle?.appBarTheme,
       extendBodyBehindAppBar: true,
       appBar: appBar,
-      // The whole log, on either tab: the Missed calls are part of it.
-      floatingActionButton: BlocListener<RecentsBloc, RecentsState>(
-        listenWhen: (previous, current) => previous.clearStatus != current.clearStatus,
-        listener: _onClearStatusChanged,
-        child: RecentsActionsFab(
-          actions: RecentsActions(
-            canClear: context.select<RecentsBloc, bool>(
-              (bloc) =>
-                  (bloc.state.recents?.isNotEmpty ?? false) && bloc.state.clearStatus != RecentsClearStatus.clearing,
+      // The tabbed header has no room for the actions; the unified one carries
+      // them at the end of its line.
+      floatingActionButton: unified
+          ? null
+          : _RecentsActionsBuilder(
+              builder: (context, actions) =>
+                  RecentsActionsFab(actions: actions, bottomPadding: mediaQueryData.padding.bottom),
             ),
-            clearDescription: context.l10n.recents_ClearHistoryDialog_contentDevice,
-            onClearConfirmed: clearHistory,
-          ),
-        ),
-      ),
       body: BlocBuilder<RecentsBloc, RecentsState>(
         builder: (context, state) {
           final recents = state.recents;
@@ -230,7 +236,10 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                   return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
                     builder: (context, callRoutingState) {
                       return ListView.builder(
-                        padding: EdgeInsets.only(top: topPadding, bottom: RecentsActionsFab.clearance),
+                        padding: EdgeInsets.only(
+                          top: topPadding,
+                          bottom: mediaQueryData.padding.bottom + (unified ? 0 : RecentsActionsFab.clearance),
+                        ),
                         itemCount: recentsFiltered.length,
                         itemBuilder: (context, index) {
                           final recent = recentsFiltered[index];
@@ -326,5 +335,45 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
         },
       ),
     );
+  }
+}
+
+/// The recents actions of the call log, handed to whichever control the
+/// arrangement opens them from, and what the screen says about how a clear
+/// went. The whole log, on either filter: the Missed calls are part of it.
+class _RecentsActionsBuilder extends StatelessWidget {
+  const _RecentsActionsBuilder({required this.builder});
+
+  final Widget Function(BuildContext context, RecentsActions actions) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    final canClear = context.select<RecentsBloc, bool>(
+      (bloc) => (bloc.state.recents?.isNotEmpty ?? false) && bloc.state.clearStatus != RecentsClearStatus.clearing,
+    );
+
+    return BlocListener<RecentsBloc, RecentsState>(
+      listenWhen: (previous, current) => previous.clearStatus != current.clearStatus,
+      listener: _onClearStatusChanged,
+      child: builder(
+        context,
+        RecentsActions(
+          canClear: canClear,
+          clearDescription: context.l10n.recents_ClearHistoryDialog_contentDevice,
+          onClearConfirmed: () => context.read<RecentsBloc>().add(const RecentsCleared()),
+        ),
+      ),
+    );
+  }
+
+  void _onClearStatusChanged(BuildContext context, RecentsState state) {
+    switch (state.clearStatus) {
+      case RecentsClearStatus.cleared:
+        context.showSnackBar(context.l10n.recents_snackBar_historyCleared);
+      case RecentsClearStatus.failed:
+        context.showErrorSnackBar(context.l10n.recents_snackBar_historyClearFailed);
+      case RecentsClearStatus.idle || RecentsClearStatus.clearing:
+        break;
+    }
   }
 }

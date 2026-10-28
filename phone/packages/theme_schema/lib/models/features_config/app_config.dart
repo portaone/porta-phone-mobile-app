@@ -550,7 +550,7 @@ enum RecentsLayoutScheme {
   tabbed,
 
   /// Laid out like the unified contacts screen: the filter is a chooser on the
-  /// line under the title, and the list's actions open from a round button at
+  /// line under the title, and the list's actions open from a menu button at
   /// the other end of that line.
   @JsonValue('unified')
   unified,

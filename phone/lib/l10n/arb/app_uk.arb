@@ -2178,6 +2178,8 @@
   "@recents_DeleteConfirmDialog_content": {},
   "recents_DeleteConfirmDialog_title": "Підтвердження видалення",
   "@recents_DeleteConfirmDialog_title": {},
+  "recents_FilterPicker_label": "Показати дзвінки",
+  "@recents_FilterPicker_label": {},
   "recents_HistoryTile_missedCallText": "Пропущено",
   "@recents_HistoryTile_missedCallText": {},
   "recents_snackBar_deleted": "{name} видалено",
