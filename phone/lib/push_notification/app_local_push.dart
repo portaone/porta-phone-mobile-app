@@ -6,7 +6,11 @@ class AppLocalPush {
   final String body;
   final Map<String, String>? payload;
 
-  AppLocalPush(this.id, this.title, this.body, {this.payload});
+  /// The body is a sentence or two that must be read whole: Android shows it expanded
+  /// instead of cutting it to one line.
+  final bool longBody;
+
+  AppLocalPush(this.id, this.title, this.body, {this.payload, this.longBody = false});
 
   factory AppLocalPush.missedCall(String callId, String title, String callerName) {
     return AppLocalPush(callId.hashCode, title, callerName, payload: {'callId': callId, 'type': 'missed_call'});
@@ -30,6 +34,21 @@ class AppLocalPush {
   /// system notifications, and string hash codes, which the Dart VM keeps
   /// non-negative - and a shared id would silently replace one of them.
   static int voicemailIdOf(String voicemailId) => -1 - (voicemailId.hashCode & 0x3fffffff);
+
+  /// A notification of the app shown in the shade because the app was out of sight (see
+  /// `NotificationDelivery.shade`). The system names the app above it, so the message is the
+  /// body, whole, with no title of its own. Tapping it only opens the app: its source has no
+  /// channel in `LocalPushsBroker`.
+  factory AppLocalPush.notice(String text) {
+    return AppLocalPush(noticeIdOf(text), '', text, payload: {'source': kLocalPushSourceNotice}, longBody: true);
+  }
+
+  /// The id of the notice [text].
+  ///
+  /// Keyed by the text, so the same message again replaces the one already in the shade
+  /// instead of stacking beside it. Below the voicemail range ([voicemailIdOf]) and so apart
+  /// from every other local push, which take non-negative ids.
+  static int noticeIdOf(String text) => -0x40000001 - (text.hashCode & 0x3fffffff);
 
   @override
   String toString() {
