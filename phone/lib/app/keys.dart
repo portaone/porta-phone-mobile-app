@@ -261,7 +261,6 @@ const String loginQrOpenSettingsButtonId = 'loginQrOpenSettingsButton';
 const String loginSignupEmbeddedRetryButtonId = 'loginSignupEmbeddedRetryButton';
 const String otpVerifyResendButtonId = 'otpVerifyResendButton';
 const String passwordObscureToggleId = 'passwordObscureToggle';
-const String permissionsSettingsButtonId = 'permissionsSettingsButton';
 const String presenceSettingsActivityId = 'presenceSettingsActivity';
 const String presenceSettingsActivityInfoId = 'presenceSettingsActivityInfo';
 const String presenceSettingsAvailabilityId = 'presenceSettingsAvailability';

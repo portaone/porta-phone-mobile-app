@@ -16,6 +16,13 @@ import 'package:webtrit_phone/models/models.dart';
 
 enum NotificationScope { login, main, call }
 
+/// Where a notification may reach the user.
+///
+/// [inApp] is the snack bar, seen only while the app is on screen. [shade] is a local
+/// notification in the system shade, seen while the app is in the background or behind the
+/// lock screen - where a snack bar would wait unseen, or be gone before the user comes back.
+enum NotificationDelivery { inApp, shade }
+
 // Base notifications definitions
 @immutable
 sealed class Notification {
@@ -34,6 +41,11 @@ sealed class Notification {
   bool? get persist => null;
 
   List<NotificationScope> scopes() => NotificationScope.values;
+
+  /// The ways this notification may be delivered; the presenter picks one by whether the app
+  /// is on screen (see `AppShell.deliveryOf`). In the app only by default: the shade is for
+  /// what the user must learn even when they are not looking at the app.
+  Set<NotificationDelivery> deliveries() => const {NotificationDelivery.inApp};
 }
 
 @Deprecated.subclass(

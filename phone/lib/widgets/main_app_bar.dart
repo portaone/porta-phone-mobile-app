@@ -191,31 +191,6 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                                         radius: constraints.biggest.shortestSide / 2,
                                         showLoading: true,
                                       ),
-                                      BlocBuilder<MicrophoneStatusBloc, MicrophoneStatusState>(
-                                        builder: (context, microphoneStatusState) {
-                                          return Visibility(
-                                            visible:
-                                                microphoneStatusState.microphonePermissionGranted != null &&
-                                                !microphoneStatusState.microphonePermissionGranted!,
-                                            child: Positioned(
-                                              right: -8,
-                                              top: -2,
-                                              child: Container(
-                                                padding: EdgeInsets.all(3),
-                                                decoration: BoxDecoration(
-                                                  color: Theme.of(context).colorScheme.error,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Icon(
-                                                  Icons.mic_off,
-                                                  color: Theme.of(context).colorScheme.onError,
-                                                  size: 14,
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
                                       BlocBuilder<SessionStatusCubit, SessionStatusState>(
                                         buildWhen: (previous, current) => previous.topIssue != current.topIssue,
                                         builder: (context, sessionState) {

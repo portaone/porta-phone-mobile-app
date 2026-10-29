@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/theme.dart';
@@ -37,6 +38,9 @@ class CallScreen extends StatefulWidget {
 class _CallScreenState extends State<CallScreen> with AutoRouteAwareStateMixin {
   @override
   void didPush() {
+    // A message left from an earlier call waits to be answered and would sit over this
+    // call's accept and decline buttons; it belongs to the call that is over.
+    context.hideCurrentSnackBar();
     context.read<CallBloc>().add(const CallScreenEvent.didPush());
   }
 

@@ -2016,7 +2016,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notifications_errorSnackBar_callUserMedia =>
-      'Nessun accesso al server multimediale, controlla le autorizzazioni dell\'app';
+      'La chiamata non può usare il microfono o la fotocamera. Controlla le autorizzazioni dell\'app';
 
   @override
   String get notifications_errorSnackBar_callWhileOffline =>

@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import 'package:signaling/signaling.dart';
 
@@ -68,8 +67,18 @@ final class SignalingDisconnectNotification extends ErrorNotification {
   }
 }
 
+/// Where a missing microphone or camera is dealt with: the diagnostic screen shows
+/// both with their state and asks for them again, or opens the system settings
+/// once the system will not ask - the user is not thrown out of the app for it.
+const _diagnosticRoute = SettingsRouterPageRoute(children: [DiagnosticScreenPageRoute()]);
+
 final class CallUserMediaErrorNotification extends MessageNotification {
   const CallUserMediaErrorNotification();
+
+  /// A call answered from the lock screen ends here with the app out of sight; without the
+  /// shade the user would only see the call stop.
+  @override
+  Set<NotificationDelivery> deliveries() => const {NotificationDelivery.inApp, NotificationDelivery.shade};
 
   @override
   String l10n(BuildContext context) {
@@ -80,7 +89,7 @@ final class CallUserMediaErrorNotification extends MessageNotification {
   SnackBarAction? action(BuildContext context) {
     return SnackBarAction(
       label: context.l10n.notifications_errorSnackBarAction_callUserMedia,
-      onPressed: () => openAppSettings(),
+      onPressed: () => context.router.push(_diagnosticRoute),
     );
   }
 }
@@ -88,9 +97,13 @@ final class CallUserMediaErrorNotification extends MessageNotification {
 /// Soft notification shown when an incoming video call is answered audio-only
 /// because camera permission was denied. Unlike [CallUserMediaErrorNotification]
 /// (a hard media error), this communicates a graceful fallback and offers a
-/// shortcut to grant the permission in app settings.
+/// shortcut to the diagnostic screen, where the permission is granted.
 final class CallVideoDowngradedNotification extends MessageNotification {
   const CallVideoDowngradedNotification();
+
+  /// Answered from the lock screen as often as from the app, so it may go to the shade too.
+  @override
+  Set<NotificationDelivery> deliveries() => const {NotificationDelivery.inApp, NotificationDelivery.shade};
 
   @override
   String l10n(BuildContext context) {
@@ -101,7 +114,7 @@ final class CallVideoDowngradedNotification extends MessageNotification {
   SnackBarAction? action(BuildContext context) {
     return SnackBarAction(
       label: context.l10n.notifications_messageSnackBarAction_callVideoDowngraded,
-      onPressed: () => openAppSettings(),
+      onPressed: () => context.router.push(_diagnosticRoute),
     );
   }
 }

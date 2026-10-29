@@ -8,7 +8,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
-import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
 import 'package:webtrit_phone/features/recents/recents.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
@@ -27,9 +26,6 @@ class MockCallRoutingCubit extends MockCubit<CallRoutingState?> implements CallR
 class MockSessionStatusCubit extends MockCubit<SessionStatusState> implements SessionStatusCubit {}
 
 class MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCubit {}
-
-class MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
-    implements MicrophoneStatusBloc {}
 
 class MockSmsRepository extends Mock implements SmsRepository {}
 
@@ -51,7 +47,6 @@ void main() {
   late MockSmsRepository smsRepository;
   late MockSessionStatusCubit sessionStatusCubit;
   late MockUserInfoCubit userInfoCubit;
-  late MockMicrophoneStatusBloc microphoneStatusBloc;
 
   setUpAll(() => registerFallbackValue(const RecentsFiltered(RecentsVisibilityFilter.all)));
 
@@ -62,14 +57,8 @@ void main() {
     smsRepository = MockSmsRepository();
     sessionStatusCubit = MockSessionStatusCubit();
     userInfoCubit = MockUserInfoCubit();
-    microphoneStatusBloc = MockMicrophoneStatusBloc();
     whenListen(sessionStatusCubit, const Stream<SessionStatusState>.empty(), initialState: const SessionStatusState());
     whenListen(userInfoCubit, const Stream<UserInfoState>.empty(), initialState: const UserInfoState());
-    whenListen(
-      microphoneStatusBloc,
-      const Stream<MicrophoneStatusState>.empty(),
-      initialState: const MicrophoneStatusState(),
-    );
     when(() => recentsBloc.dateFormat).thenReturn(DateFormat.Hm());
     whenListen(callBloc, const Stream<CallState>.empty(), initialState: const CallState());
     whenListen(callRoutingCubit, const Stream<CallRoutingState?>.empty(), initialState: null);
@@ -100,7 +89,6 @@ void main() {
               BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
               BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
               BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
-              BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
             ],
             child: CallControllerScope(
               controller: CallController(callBloc: callBloc),

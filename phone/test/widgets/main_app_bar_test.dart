@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
-import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -20,9 +19,6 @@ class _MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCub
 
 class _MockSessionStatusCubit extends MockCubit<SessionStatusState> implements SessionStatusCubit {}
 
-class _MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
-    implements MicrophoneStatusBloc {}
-
 /// Semantics nodes on screen that carry [identifier].
 Iterable<SemanticsNode> _stateNode(String identifier) =>
     find.semantics.byPredicate((node) => node.getSemanticsData().identifier == identifier).evaluate();
@@ -30,15 +26,12 @@ Iterable<SemanticsNode> _stateNode(String identifier) =>
 void main() {
   late _MockUserInfoCubit userInfoCubit;
   late _MockSessionStatusCubit sessionStatusCubit;
-  late _MockMicrophoneStatusBloc microphoneStatusBloc;
 
   setUp(() {
     userInfoCubit = _MockUserInfoCubit();
     sessionStatusCubit = _MockSessionStatusCubit();
-    microphoneStatusBloc = _MockMicrophoneStatusBloc();
     when(() => userInfoCubit.state).thenReturn(const UserInfoState());
     when(() => sessionStatusCubit.state).thenReturn(const SessionStatusState());
-    when(() => microphoneStatusBloc.state).thenReturn(const MicrophoneStatusState());
   });
 
   Future<void> pumpBar(WidgetTester tester, {Widget? title}) async {
@@ -55,7 +48,6 @@ void main() {
             providers: [
               BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
               BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
-              BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
             ],
             // Read by the bar's own controls, which it shows only once the
             // session is up.

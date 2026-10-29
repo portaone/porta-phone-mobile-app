@@ -12,7 +12,6 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/features/favorites/favorites.dart';
-import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -35,9 +34,6 @@ class _MockCallRoutingCubit extends MockCubit<CallRoutingState?> implements Call
 
 class _MockSessionStatusCubit extends MockCubit<SessionStatusState> implements SessionStatusCubit {}
 
-class _MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
-    implements MicrophoneStatusBloc {}
-
 /// Room the app shell takes at the bottom of every tab page: its tab bar plus
 /// the system inset underneath it.
 const _shellBarRoom = 80.0;
@@ -49,7 +45,6 @@ void main() {
   late _MockSmsRepository smsRepository;
   late _MockCallRoutingCubit callRoutingCubit;
   late _MockSessionStatusCubit sessionStatusCubit;
-  late _MockMicrophoneStatusBloc microphoneStatusBloc;
 
   List<FavoriteWithContact> favorites(int count) => [
     for (var i = 0; i < count; i++)
@@ -81,14 +76,12 @@ void main() {
     smsRepository = _MockSmsRepository();
     callRoutingCubit = _MockCallRoutingCubit();
     sessionStatusCubit = _MockSessionStatusCubit();
-    microphoneStatusBloc = _MockMicrophoneStatusBloc();
 
     when(() => userInfoCubit.state).thenReturn(const UserInfoState());
     when(() => callBloc.state).thenReturn(const CallState());
     when(() => smsRepository.watchUserSmsNumbers()).thenAnswer((_) => Stream.value(const []));
     when(() => callRoutingCubit.state).thenReturn(null);
     when(() => sessionStatusCubit.state).thenReturn(const SessionStatusState());
-    when(() => microphoneStatusBloc.state).thenReturn(const MicrophoneStatusState());
   });
 
   Future<void> pumpScreen(WidgetTester tester, {int count = 3, Stream<FavoritesState>? updates}) async {
@@ -123,7 +116,6 @@ void main() {
                   BlocProvider<CallBloc>.value(value: callBloc),
                   BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
                   BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
-                  BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
                 ],
                 child: RepositoryProvider<SmsRepository>.value(
                   value: smsRepository,

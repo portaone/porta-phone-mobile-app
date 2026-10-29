@@ -6,7 +6,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/contacts/contacts.dart';
-import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -19,9 +18,6 @@ class _MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {
 class _MockSessionStatusCubit extends MockCubit<SessionStatusState> implements SessionStatusCubit {}
 
 class _MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCubit {}
-
-class _MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
-    implements MicrophoneStatusBloc {}
 
 class _RememberedSourceType implements ActiveContactsListRepository {
   _RememberedSourceType(this._value);
@@ -64,7 +60,6 @@ void main() {
   late _MockCallBloc callBloc;
   late _MockSessionStatusCubit sessionStatusCubit;
   late _MockUserInfoCubit userInfoCubit;
-  late _MockMicrophoneStatusBloc microphoneStatusBloc;
 
   setUp(() {
     listTopInset = null;
@@ -75,8 +70,6 @@ void main() {
     when(() => sessionStatusCubit.state).thenReturn(const SessionStatusState());
     userInfoCubit = _MockUserInfoCubit();
     when(() => userInfoCubit.state).thenReturn(const UserInfoState());
-    microphoneStatusBloc = _MockMicrophoneStatusBloc();
-    when(() => microphoneStatusBloc.state).thenReturn(const MicrophoneStatusState());
   });
 
   Future<void> pumpScreen(
@@ -110,7 +103,6 @@ void main() {
                   BlocProvider<CallBloc>.value(value: callBloc),
                   BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
                   BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
-                  BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
                 ],
                 child: ContactsScreen(
                   sourceTypes: sourceTypes,

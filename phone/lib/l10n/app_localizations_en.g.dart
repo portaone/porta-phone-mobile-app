@@ -1992,7 +1992,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications_errorSnackBar_callMediaTrackSetup => 'Call setup failed, please try again';
 
   @override
-  String get notifications_errorSnackBar_callUserMedia => 'No access to media input, please check app permissions';
+  String get notifications_errorSnackBar_callUserMedia =>
+      'The call cannot use the microphone or camera. Check the app\'s permissions';
 
   @override
   String get notifications_errorSnackBar_callWhileOffline =>

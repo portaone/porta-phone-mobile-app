@@ -77,7 +77,6 @@ void main() {
     resolver = _FakeNavigationResolver();
     router = _FakeStackRouter();
 
-    when(() => appPermissions.isDenied).thenAnswer((_) async => false);
     when(() => appBloc.state).thenReturn(
       AppState(
         status: AppLifecycleStatus.authenticated,

@@ -21,6 +21,8 @@ extension SessionIssueL10n on SessionIssue {
   /// Short title shown where a single line is available (e.g. account row title).
   String title(BuildContext context) {
     switch (id) {
+      case SessionIssueId.microphoneUnavailable:
+        return context.l10n.diagnostic_permission_microphone_title;
       case SessionIssueId.limitedStandaloneCallMode:
         // Same warning as the diagnostic calling-mode row - reuse its strings.
         return context.l10n.diagnostic_callingMode_standalone_title;
@@ -32,6 +34,8 @@ extension SessionIssueL10n on SessionIssue {
   /// One-line caption summarizing the issue (e.g. account row subtitle).
   String caption(BuildContext context) {
     switch (id) {
+      case SessionIssueId.microphoneUnavailable:
+        return context.l10n.settings_missingMicrophoneIndicator_title;
       case SessionIssueId.limitedStandaloneCallMode:
         return context.l10n.diagnostic_callingMode_standalone_caption;
       case SessionIssueId.fullScreenCallsUnavailable:

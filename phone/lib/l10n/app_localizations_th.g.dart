@@ -1981,7 +1981,8 @@ class AppLocalizationsTh extends AppLocalizations {
   String get notifications_errorSnackBar_callMediaTrackSetup => 'การตั้งค่าการโทรล้มเหลว โปรดลองอีกครั้ง';
 
   @override
-  String get notifications_errorSnackBar_callUserMedia => 'ไม่สามารถเข้าถึงอุปกรณ์รับสื่อ โปรดตรวจสอบสิทธิ์ของแอป';
+  String get notifications_errorSnackBar_callUserMedia =>
+      'การโทรไม่สามารถใช้ไมโครโฟนหรือกล้องได้ โปรดตรวจสอบสิทธิ์ของแอป';
 
   @override
   String get notifications_errorSnackBar_callWhileOffline => 'ไม่สามารถเริ่มการโทรได้ กรุณาตรวจสอบสถานะการเชื่อมต่อ';

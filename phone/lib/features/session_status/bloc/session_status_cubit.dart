@@ -7,6 +7,7 @@ import 'package:logging/logging.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/call_status.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -19,8 +20,12 @@ part 'session_status_cubit.freezed.dart';
 final _logger = Logger('SessionStatusCubit');
 
 class SessionStatusCubit extends Cubit<SessionStatusState> {
-  SessionStatusCubit({required PushTokensBloc pushTokensBloc, required CallBloc callBloc})
-    : super(const SessionStatusState()) {
+  SessionStatusCubit({
+    required PushTokensBloc pushTokensBloc,
+    required CallBloc callBloc,
+    required AppPermissions appPermissions,
+  }) : _appPermissions = appPermissions,
+       super(const SessionStatusState()) {
     _lastPushTokensState = pushTokensBloc.state;
     _lastCallState = callBloc.state;
     _pushTokensSubscription = pushTokensBloc.stream.listen(_onPushTokensChanged);
@@ -28,8 +33,10 @@ class SessionStatusCubit extends Cubit<SessionStatusState> {
 
     _emitCombinedStatus();
     _fetchCallDeliveryMode();
-    refreshFullScreenIntentStatus();
+    refreshPermissionIssues();
   }
+
+  final AppPermissions _appPermissions;
 
   late final StreamSubscription<PushTokensState> _pushTokensSubscription;
   late final StreamSubscription<CallState> _callSubscription;
@@ -38,6 +45,9 @@ class SessionStatusCubit extends Cubit<SessionStatusState> {
   CallState? _lastCallState;
   CallkeepAndroidCallDeliveryMode _callDeliveryMode = CallkeepAndroidCallDeliveryMode.unknown;
   CallkeepSpecialPermissionStatus _fullScreenIntentStatus = CallkeepSpecialPermissionStatus.unknown;
+
+  /// Null until the first read, so nothing is reported before the answer is known.
+  bool? _microphoneGranted;
 
   /// Times the hold window of a transient episode (see [_emitDebounced]).
   /// Scheduled once when the episode starts and cancelled by any hard state,
@@ -76,15 +86,27 @@ class SessionStatusCubit extends Cubit<SessionStatusState> {
     }
   }
 
-  /// Re-reads whether an incoming call may take over the lock screen. Unlike the
-  /// call-delivery mode this is a permission granted on a system screen, so it
-  /// changes behind the app's back - callers refresh it when the user is in a
-  /// place where the answer is shown.
-  Future<void> refreshFullScreenIntentStatus() async {
+  /// Re-reads the permissions behind the side issues: the microphone, and whether
+  /// an incoming call may take over the lock screen. Unlike the call-delivery mode
+  /// these are granted on a system screen, so they change behind the app's back -
+  /// callers refresh them when the app comes back to the foreground.
+  Future<void> refreshPermissionIssues() async {
+    await Future.wait([_refreshMicrophoneStatus(), _refreshFullScreenIntentStatus()]);
+    if (isClosed) return;
+    _emitCombinedStatus();
+  }
+
+  Future<void> _refreshMicrophoneStatus() async {
+    try {
+      _microphoneGranted = await _appPermissions.isPermissionGranted(Permission.microphone);
+    } catch (e) {
+      _logger.warning('fetchMicrophoneStatus', e);
+    }
+  }
+
+  Future<void> _refreshFullScreenIntentStatus() async {
     try {
       _fullScreenIntentStatus = await WebtritCallkeepPermissions().getFullScreenIntentPermissionStatus();
-      if (isClosed) return;
-      _emitCombinedStatus();
     } catch (e) {
       _logger.warning('fetchFullScreenIntentStatus', e);
     }
@@ -94,6 +116,10 @@ class SessionStatusCubit extends Cubit<SessionStatusState> {
   /// here to surface a new issue; the UI consumes the list generically.
   List<SessionIssue> _buildIssues() {
     final issues = <SessionIssue>[];
+    // Without the microphone no call can be made or answered with voice.
+    if (_microphoneGranted == false) {
+      issues.add(const SessionIssue(id: SessionIssueId.microphoneUnavailable, severity: SessionIssueSeverity.critical));
+    }
     if (_callDeliveryMode == CallkeepAndroidCallDeliveryMode.standalone) {
       issues.add(
         const SessionIssue(id: SessionIssueId.limitedStandaloneCallMode, severity: SessionIssueSeverity.warning),

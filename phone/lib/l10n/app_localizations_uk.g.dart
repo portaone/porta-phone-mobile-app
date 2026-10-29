@@ -2026,7 +2026,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get notifications_errorSnackBar_callUserMedia =>
-      'Немає доступу до медіа-входу, будь ласка, перевірте дозволи застосунку';
+      'Дзвінок не може використати мікрофон чи камеру. Перевірте дозволи застосунку';
 
   @override
   String get notifications_errorSnackBar_callWhileOffline =>
