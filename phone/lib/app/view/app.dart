@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
+import 'package:provider/provider.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import 'package:webtrit_phone/app/notifications/notifications.dart';
@@ -292,6 +293,10 @@ class _AppState extends State<App> {
                 ..add(const OrientationsChanged(PreferredOrientation.portrait)),
         ),
         BlocProvider<NotificationsBloc>(create: (context) => NotificationsBloc()),
+        Provider<NotificationPresenter>(
+          create: (context) => NotificationPresenter.platform(LocalPushRepositoryFLNImpl()),
+          dispose: (_, presenter) => presenter.dispose(),
+        ),
         BlocProvider<AppBloc>.value(value: appBloc),
       ],
       child: materialApp,

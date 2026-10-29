@@ -66,11 +66,17 @@ class AppShell extends StatelessWidget {
     if (lastNotification == null) return;
 
     final inScope = isNotificationInScope(lastNotification, context.router.isRouteActive);
-
-    if (inScope) {
-      _showNotificationSnackBar(context, lastNotification);
-    }
     context.read<NotificationsBloc>().add(const NotificationsCleared());
+    unawaited(
+      context.read<NotificationPresenter>().present(
+        lastNotification,
+        inScope: inScope,
+        text: lastNotification.l10n(context),
+        showInApp: () {
+          if (context.mounted) _showNotificationSnackBar(context, lastNotification);
+        },
+      ),
+    );
   }
 
   void _showNotificationSnackBar(BuildContext context, Notification notification) {
