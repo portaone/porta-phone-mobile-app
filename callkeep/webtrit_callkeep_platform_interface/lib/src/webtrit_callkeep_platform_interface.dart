@@ -71,8 +71,7 @@ abstract class WebtritCallkeepPlatform extends PlatformInterface {
   /// Report a new incoming call with the given [callId], [handle], [displayName] and [hasVideo] flag.
   /// Returns [CallkeepIncomingCallError] if there is an error.
   ///
-  /// [offeredAt] is when the server offered the call, null when unknown (a call the server's
-  /// state replays rather than offers). A call the app ended before presenting it is refused with
+  /// [offeredAt] is when the server offered the call, null when unknown. A call the app ended before presenting it is refused with
   /// [CallkeepIncomingCallError.callIdAlreadyTerminated], so a replay of it does not ring; a call
   /// offered after that end is a new attempt of the id and is registered.
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(

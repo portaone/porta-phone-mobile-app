@@ -38,7 +38,7 @@ example/integration_test/              # the public API on a real device
 
 - `setUp(CallkeepOptions)` / `tearDown()` - initialize/shutdown native integration
 - `reportNewIncomingCall` / `startCall` / `answerCall` / `endCall` - call lifecycle; `reportNewIncomingCall`
-  takes `offeredAt`, when the server offered the call (null for a handshake replay), which tells a new
+  takes `offeredAt`, when the server offered the call (null when not known), which tells a new
   attempt of an id from a ghost of its ended one
 - `setHeld` / `setMuted` / `sendDTMF` / `setAudioDevice` - in-call controls
 - `setCallGroup(groupId, callIds)` / `unsetCallGroup` - present several calls to the OS as one named group; the list is

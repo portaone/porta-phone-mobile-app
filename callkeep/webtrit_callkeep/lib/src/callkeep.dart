@@ -146,7 +146,8 @@ class Callkeep {
   /// known UUID the same way, so a registration cannot reopen an id behind the old call's back.
   ///
   /// [offeredAt] is when the server offered the call: the moment an event of the signaling socket
-  /// arrived, null for a call a handshake replays. See [WebtritCallkeepPlatform.reportNewIncomingCall].
+  /// arrived, or the server's time of the offer a handshake lists; null when it is not known. See
+  /// [WebtritCallkeepPlatform.reportNewIncomingCall].
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(
     String callId,
     CallkeepHandle handle, {

@@ -3602,7 +3602,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       displayName: displayName,
       hasVideo: video,
       // A call offered after the end of an earlier attempt of the id is a new attempt and is not
-      // refused by it; a handshake replay has no offer time, and a call the app ended stays refused.
+      // refused by it; a call offered before that end, or with no offer time, stays refused.
       offeredAt: event.offeredAt,
     );
 
@@ -4929,7 +4929,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           // media state dispatched after it would run before the mutation that
           // creates the call and find nothing to apply to.
           _logger.info('_handleHandshakeReceived: HandleIncomingCallAction, callId=${action.event.callId}');
-          add(action.event.toCallEvent(offeredAt: null, remoteVideo: action.mediaState?.video));
+          add(action.event.toCallEvent(offeredAt: action.offeredAt, remoteVideo: action.mediaState?.video));
 
         case DeliverOfferAction():
           // The handler is the same as for a live offer: it stores the offer

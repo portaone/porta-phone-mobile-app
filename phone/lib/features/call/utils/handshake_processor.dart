@@ -93,9 +93,14 @@ final class RestoreCallAction extends HandshakeAction {
 /// earliest call log entry is an [IncomingCallEvent], and the call is not yet
 /// tracked in BLoC state.
 final class HandleIncomingCallAction extends HandshakeAction {
-  const HandleIncomingCallAction({required this.event, this.mediaState});
+  const HandleIncomingCallAction({required this.event, required this.offeredAt, this.mediaState});
 
   final IncomingCallEvent event;
+
+  /// When the server offered the call: the server's time of the newest offer in the line's log.
+  /// A call the server offers again under the same id (a blind transfer repeated) is offered
+  /// after the end of its earlier attempt; a line still listing that earlier attempt is not.
+  final DateTime? offeredAt;
 
   /// The remote side's latest media state after the offer, when the log
   /// carries one. A live call would have applied it as it came; a call
@@ -339,8 +344,11 @@ class HandshakeProcessor {
           log.accepted == null &&
           earliest is IncomingCallEvent &&
           !activeCallIds.contains(log.callId)) {
-        _logger.info('process: call ${log.callId} is an unanswered incoming call not in the bloc, handing it over');
-        actions.add(HandleIncomingCallAction(event: earliest, mediaState: log.mediaState));
+        _logger.info(
+          'process: call ${log.callId} is an unanswered incoming call not in the bloc, handing it over '
+          '(offered at ${log.offeredAt?.millisecondsSinceEpoch})',
+        );
+        actions.add(HandleIncomingCallAction(event: earliest, offeredAt: log.offeredAt, mediaState: log.mediaState));
         planned = true;
       }
 
@@ -553,6 +561,12 @@ class _LineLog {
   /// The server has ended the call: its latest event is a final hangup or a
   /// missed call.
   late final bool isTerminated = latest is HangupEvent || latest is MissedCallEvent;
+
+  /// When the server logged the newest incoming call of the line, by its clock.
+  late final DateTime? offeredAt = switch (_events.where((log) => log.callEvent is IncomingCallEvent).firstOrNull) {
+    final log? => DateTime.fromMillisecondsSinceEpoch(log.timestamp, isUtc: true),
+    null => null,
+  };
 
   /// The newest entry that carries the caller's offer.
   late final offer = _events

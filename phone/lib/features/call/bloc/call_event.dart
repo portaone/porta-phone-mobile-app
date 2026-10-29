@@ -318,9 +318,10 @@ class _CallSignalingEventIncoming extends _CallSignalingEvent {
   /// the call is restored from a log rather than heard live; null otherwise.
   final bool? remoteVideo;
 
-  /// When the server offered the call: the moment the signaling socket delivered it. Null for a
-  /// call a handshake lists among the server's lines - a replay, possibly of a call the app already
-  /// ended, offered at a time nobody here knows.
+  /// When the server offered the call: the moment the signaling socket delivered it, or for a call
+  /// a handshake lists among the server's lines the server's time of its offer in the line's log -
+  /// a replay of a call the app already ended keeps the time of that call. Null when the offer
+  /// carries no time (an offer handed to a call the app already holds).
   final DateTime? offeredAt;
 
   @override
