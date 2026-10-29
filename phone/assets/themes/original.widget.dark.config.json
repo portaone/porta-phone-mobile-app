@@ -160,7 +160,7 @@
     }
   },
   "dialog": {
-    "_confirmDialog": {
+    "confirmDialog": {
       "activeButtonColor1": "#A5C6E4",
       "activeButtonColor2": "#FF897D",
       "defaultButtonColor": "#8E918F"

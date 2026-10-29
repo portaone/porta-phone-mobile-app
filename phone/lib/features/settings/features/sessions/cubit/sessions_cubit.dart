@@ -82,7 +82,12 @@ class SessionsCubit extends Cubit<SessionsState> {
   /// each successful one leaves the list on its own - a partial failure still
   /// shows what was actually revoked.
   Future<bool> revokeAllOthers() async {
-    final targets = state.sessions.where((session) => !session.current).map((session) => session.id).toList();
+    // A session whose sign-out is already on its way is left to it rather
+    // than revoked a second time.
+    final targets = state.sessions
+        .where((session) => !session.current && !state.isRevoking(session.id))
+        .map((session) => session.id)
+        .toList();
     emit(state.copyWith(revoking: {...state.revoking, ...targets}));
 
     var allSucceeded = true;

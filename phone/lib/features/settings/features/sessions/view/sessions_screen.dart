@@ -114,14 +114,19 @@ class SessionsScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     child: SemanticAction(
                       identifier: sessionsRevokeAllOthersButtonId,
-                      child: FilledButton.tonalIcon(
+                      // The same red as each device's own sign-out above it:
+                      // the container tone of the error colour is a pale
+                      // wash that reads as disabled next to them.
+                      child: FilledButton.icon(
                         icon: const Icon(Icons.logout),
                         label: Text(l10n.sessions_Button_revokeAllOthers),
-                        onPressed: () => _onRevokeAllOthers(context),
+                        // Not while a sign-out is on its way: the one under
+                        // way would be asked for a second time.
+                        onPressed: state.revoking.isEmpty ? () => _onRevokeAllOthers(context) : null,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
-                          foregroundColor: colorScheme.onErrorContainer,
-                          backgroundColor: colorScheme.errorContainer,
+                          foregroundColor: colorScheme.onError,
+                          backgroundColor: colorScheme.error,
                         ),
                       ),
                     ),

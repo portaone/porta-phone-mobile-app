@@ -38,8 +38,15 @@ class FakeSessionsRepository implements SessionsRepository {
     return SessionList(sessions: sessions, autoTerminate: autoTerminate);
   }
 
+  /// When set, a revoke waits for it before answering.
+  Completer<void>? revokeGate;
+
+  final revoked = <String>[];
+
   @override
   Future<void> revokeSession(String sessionId) async {
+    revoked.add(sessionId);
+    await revokeGate?.future;
     if (revokeFailure case final failure?) throw failure;
   }
 
