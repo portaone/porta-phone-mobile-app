@@ -27,7 +27,7 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
   late final contactsRepository = context.read<ContactsRepository>();
 
   Future<void> onLeaveGroup() async {
-    final askResult = await ConfirmDialog.show(context, title: context.l10n.messaging_GroupInfo_leaveAsk);
+    final askResult = await ConfirmDialog.showDangerous(context, title: context.l10n.messaging_GroupInfo_leaveAsk);
 
     if (!mounted) return;
     if (askResult != true) return;
@@ -36,7 +36,10 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
   }
 
   Future<void> onDeleteGroup() async {
-    final askResult = await ConfirmDialog.show(context, title: context.l10n.messaging_GroupInfo_leaveAndDeleteAsk);
+    final askResult = await ConfirmDialog.showDangerous(
+      context,
+      title: context.l10n.messaging_GroupInfo_leaveAndDeleteAsk,
+    );
 
     if (!mounted) return;
     if (askResult != true) return;
@@ -84,7 +87,7 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
   Future<void> onRemoveUser(String userId) async {
     String askText = context.l10n.messaging_GroupInfo_removeUserAsk;
 
-    final result = await ConfirmDialog.show(context, title: askText);
+    final result = await ConfirmDialog.showDangerous(context, title: askText);
     if (!mounted) return;
     if (result == true) await conversationCubit.removeGroupMember(userId);
   }

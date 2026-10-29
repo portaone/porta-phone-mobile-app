@@ -28,7 +28,7 @@ class _SmsConversationScreenState extends State<SmsConversationScreen> {
   late final userId = messagingBloc.state.userId;
 
   Future<void> onDeleteDialog() async {
-    final askResult = await ConfirmDialog.show(context, title: context.l10n.messaging_DialogInfo_deleteAsk);
+    final askResult = await ConfirmDialog.showDangerous(context, title: context.l10n.messaging_DialogInfo_deleteAsk);
 
     if (!mounted) return;
     if (askResult != true) return;

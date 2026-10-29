@@ -11,6 +11,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/utils/view_params/view_params.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../../helpers/helpers.dart';
 import 'conversation_screen_harness.dart';
@@ -321,6 +322,72 @@ void main() {
       await pumpTile(tester, groupChat(id: 7, name: 'Team'));
 
       expect(find.byIcon(Icons.notifications_off_outlined), findsNothing);
+    });
+  });
+
+  group('Confirming what cannot be undone', () {
+    // Deleting a chat, leaving a group and removing a member cannot be taken
+    // back; the swipe that deletes a chat from the list already asks with the
+    // dangerous dialog, and the same action from the info screen asked with
+    // the plain one, whose yes is in the accent colour.
+    bool askedDangerously(WidgetTester tester) => tester.widget<ConfirmDialog>(find.byType(ConfirmDialog)).dangerous;
+
+    Future<void> choose(WidgetTester tester, Finder menu, String item) async {
+      await tester.tap(menu);
+      await settle(tester);
+      await tester.tap(find.text(item));
+      await settle(tester);
+    }
+
+    testWidgets('deleting a dialog', (tester) async {
+      harness.withDialogReady(chatId: 6);
+      await tester.pumpWidget(
+        harness.wrap(
+          const DialogChatInfo(
+            'user-1',
+            'user-2',
+            isAudioCallEnabled: true,
+            isVideoCallEnabled: true,
+            isMuteEnabled: false,
+          ),
+        ),
+      );
+      await settle(tester);
+
+      final l10n = tester.element(find.byType(DialogChatInfo)).l10n;
+      await choose(tester, find.byType(PopupMenuButton).first, l10n.messaging_DialogInfo_deleteBtn);
+
+      expect(askedDangerously(tester), isTrue);
+    });
+
+    testWidgets('deleting and leaving a group', (tester) async {
+      harness.withGroupReady();
+      await tester.pumpWidget(harness.wrap(const GroupChatInfo('user-1', isMuteEnabled: false)));
+      await settle(tester);
+
+      final l10n = tester.element(find.byType(GroupChatInfo)).l10n;
+      await choose(
+        tester,
+        find.descendant(of: find.byType(AppBar), matching: find.byType(PopupMenuButton)),
+        l10n.messaging_GroupInfo_deleteLeaveBtnText,
+      );
+
+      expect(askedDangerously(tester), isTrue);
+    });
+
+    testWidgets('removing a member', (tester) async {
+      harness.withGroupReady();
+      await tester.pumpWidget(harness.wrap(const GroupChatInfo('user-1', isMuteEnabled: false)));
+      await settle(tester);
+
+      final l10n = tester.element(find.byType(GroupChatInfo)).l10n;
+      await choose(
+        tester,
+        find.descendant(of: find.byType(ListView), matching: find.byType(PopupMenuButton)).last,
+        l10n.messaging_GroupInfo_removeUserBtnText,
+      );
+
+      expect(askedDangerously(tester), isTrue);
     });
   });
 }
