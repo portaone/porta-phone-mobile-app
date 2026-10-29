@@ -155,6 +155,12 @@ interface ConnectionTracker {
      */
     fun wasEndedWithoutFlutterState(callId: String): Boolean
 
+    /** When [markEndedWithoutFlutterState] was last recorded for [callId] (wall clock); null while unmarked. */
+    fun endedWithoutFlutterStateAtMs(callId: String): Long?
+
+    /** Clears the mark of [markEndedWithoutFlutterState]: the server offered [callId] again after it. */
+    fun clearEndedWithoutFlutterState(callId: String)
+
     /** Record that the app reported [callId] itself; cleared by [markTerminated] and [clear]. */
     fun markReportedByApp(callId: String)
 

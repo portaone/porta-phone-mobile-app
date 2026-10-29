@@ -77,8 +77,10 @@ class WebtritCallkeep extends WebtritCallkeepPlatform {
     String callId,
     CallkeepHandle handle,
     String? displayName,
-    bool hasVideo,
-  ) async {
+    bool hasVideo, {
+    // CallKit keeps no end of a call the app never presented, so there is nothing to compare.
+    DateTime? offeredAt,
+  }) async {
     final uuid = _uuidToCallIdMapping.put(callId: callId);
     _callGroups.callReported(callId);
     final error = await _api.reportNewIncomingCall(uuid, handle.toPigeon(), displayName, hasVideo);

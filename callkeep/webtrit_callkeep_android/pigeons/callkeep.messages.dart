@@ -268,8 +268,17 @@ abstract class PHostBackgroundPushNotificationIsolateBootstrapApi {
   /// when Telecom refused it (a second call while one rings) or the registration deadline
   /// passed, in which case the backend is asked to cancel it and the app declines it on the
   /// server.
+  ///
+  /// [offeredAtMs] is when the server offered the call (FCM `sentTime` of the push, epoch
+  /// milliseconds), null if unknown: see `CallkeepCore.registerIncomingCall`.
   @async
-  PIncomingCallError? reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo);
+  PIncomingCallError? reportNewIncomingCall(
+    String callId,
+    PHandle handle,
+    String? displayName,
+    bool hasVideo,
+    int? offeredAtMs,
+  );
 }
 
 @HostApi()
@@ -413,9 +422,17 @@ abstract class PHostApi {
   @async
   void tearDown();
 
-  @ObjCSelector('reportNewIncomingCall:handle:displayName:hasVideo:')
+  /// [offeredAtMs] is when the server offered the call (epoch milliseconds), null if unknown: a
+  /// call the app ended before presenting it is refused unless offered after that end.
+  @ObjCSelector('reportNewIncomingCall:handle:displayName:hasVideo:offeredAtMs:')
   @async
-  PIncomingCallError? reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo);
+  PIncomingCallError? reportNewIncomingCall(
+    String callId,
+    PHandle handle,
+    String? displayName,
+    bool hasVideo,
+    int? offeredAtMs,
+  );
 
   @ObjCSelector('reportConnectingOutgoingCall:')
   @async

@@ -124,6 +124,16 @@ class IncomingCallSmsTriggerReceiverTest {
     }
 
     @Test
+    fun `an SMS the centre took after that end is a new attempt and registers`() {
+        core.markEndedWithoutFlutterState("s7")
+
+        val sms = sms("s7", offeredAtMs = System.currentTimeMillis() + 60_000)
+
+        assertFalse("the new attempt waits for Telecom", sms.isCompleted)
+        assertTrue(core.isPending("s7"))
+    }
+
+    @Test
     fun `a Telecom refusal of an SMS call reaches a push waiting on the same call`() {
         sms("s5")
         val push = push("s5")
@@ -145,7 +155,10 @@ class IncomingCallSmsTriggerReceiverTest {
         assertTrue(core.wasEndedWithoutFlutterState("s6"))
     }
 
-    private fun sms(callId: String): Job = scope.launch { receiver.registerCall(CallMetadata(callId = callId), core) }.also { idle() }
+    private fun sms(
+        callId: String,
+        offeredAtMs: Long? = null,
+    ): Job = scope.launch { receiver.registerCall(CallMetadata(callId = callId), offeredAtMs, core) }.also { idle() }
 
     private fun push(callId: String) = scope.async { core.registerIncomingCall(CallMetadata(callId = callId), "push") }.also { idle() }
 

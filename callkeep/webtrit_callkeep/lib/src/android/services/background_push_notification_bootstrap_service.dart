@@ -26,12 +26,18 @@ class BackgroundPushNotificationBootstrapService {
   /// Reports a new incoming call triggered by a push notification.
   ///
   /// Returns a [CallkeepIncomingCallError] if reporting fails.
+  ///
+  /// [offeredAt] is when the server offered the call: FCM `RemoteMessage.sentTime` for a push, the
+  /// moment of receipt for an event the signaling socket delivered. A call offered after the app
+  /// ended [callId] before presenting it is a new attempt of the id (a blind transfer repeated
+  /// offers the same id again); an older or untimed one is a late copy and is refused.
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(
     String callId,
     CallkeepHandle handle, {
     String? displayName,
     bool hasVideo = false,
+    DateTime? offeredAt,
   }) {
-    return platform.incomingCallPushNotificationService(callId, handle, displayName, hasVideo);
+    return platform.incomingCallPushNotificationService(callId, handle, displayName, hasVideo, offeredAt: offeredAt);
   }
 }

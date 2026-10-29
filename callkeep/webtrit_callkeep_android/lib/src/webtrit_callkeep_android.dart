@@ -81,10 +81,11 @@ class WebtritCallkeepAndroid extends WebtritCallkeepPlatform {
     String callId,
     CallkeepHandle handle,
     String? displayName,
-    bool hasVideo,
-  ) {
+    bool hasVideo, {
+    DateTime? offeredAt,
+  }) {
     return _api
-        .reportNewIncomingCall(callId, handle.toPigeon(), displayName, hasVideo)
+        .reportNewIncomingCall(callId, handle.toPigeon(), displayName, hasVideo, offeredAt?.millisecondsSinceEpoch)
         .then((value) => value?.value.toCallkeep());
   }
 
@@ -305,10 +306,11 @@ class WebtritCallkeepAndroid extends WebtritCallkeepPlatform {
     String callId,
     CallkeepHandle handle,
     String? displayName,
-    bool hasVideo,
-  ) {
+    bool hasVideo, {
+    DateTime? offeredAt,
+  }) {
     return _backgroundPushNotificationIsolateBootstrapApi
-        .reportNewIncomingCall(callId, handle.toPigeon(), displayName, hasVideo)
+        .reportNewIncomingCall(callId, handle.toPigeon(), displayName, hasVideo, offeredAt?.millisecondsSinceEpoch)
         .then((value) => value?.value.toCallkeep());
   }
 

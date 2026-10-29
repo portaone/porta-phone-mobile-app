@@ -23,8 +23,9 @@ class BackgroundPushNotificationIsolateBootstrapApi(
         handle: PHandle,
         displayName: String?,
         hasVideo: Boolean,
+        offeredAtMs: Long?,
     ): PIncomingCallError? {
-        Log.d(TAG, "reportNewIncomingCall: $callId, $handle, $displayName, $hasVideo")
+        Log.d(TAG, "reportNewIncomingCall: $callId, $handle, $displayName, $hasVideo, offered at $offeredAtMs")
         val core = CallkeepCore.instance
         val ringtonePath = StorageDelegate.Sound.getRingtonePath(context)
 
@@ -37,7 +38,7 @@ class BackgroundPushNotificationIsolateBootstrapApi(
                 ringtonePath = ringtonePath,
             )
 
-        return core.registerIncomingCall(metadata, PushClient)
+        return core.registerIncomingCall(metadata, PushClient, offeredAtMs)
     }
 
     /** The push path as a client of the core's incoming registration. */

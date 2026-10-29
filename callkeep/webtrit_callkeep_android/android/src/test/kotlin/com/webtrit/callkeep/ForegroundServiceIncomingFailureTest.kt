@@ -90,6 +90,7 @@ class ForegroundServiceIncomingFailureTest {
                         handle = PHandle(PHandleTypeEnum.NUMBER, "1002"),
                         displayName = null,
                         hasVideo = false,
+                        offeredAtMs = null,
                     )
                 }
             shadowOf(service.mainLooper).idle()

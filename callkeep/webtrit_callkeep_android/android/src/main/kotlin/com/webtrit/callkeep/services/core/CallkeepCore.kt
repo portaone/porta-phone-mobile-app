@@ -310,10 +310,16 @@ interface CallkeepCore {
      * The core owns guards, dispatch, timeout, state promotion, and cleanup before returning.
      * Already-answered calls return CALL_ID_ALREADY_EXISTS_AND_ANSWERED so a UI adapter can
      * deliver its answer notification. A cancelled caller releases only its own waiter.
+     *
+     * [offeredAtMs] is when the server offered the call (epoch milliseconds), null when unknown. A
+     * call the app ended before it presented it is refused, so a replay of it does not ring; a call
+     * offered after that end is a new attempt of the id (a blind transfer repeated offers the same
+     * id again) and is registered.
      */
     suspend fun registerIncomingCall(
         metadata: CallMetadata,
         client: Any,
+        offeredAtMs: Long? = null,
     ): PIncomingCallError?
 
     /** The activity bridge is gone; other clients and their calls remain live. */

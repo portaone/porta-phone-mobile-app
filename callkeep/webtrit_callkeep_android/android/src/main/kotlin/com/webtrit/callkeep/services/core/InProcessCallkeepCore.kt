@@ -653,13 +653,44 @@ class InProcessCallkeepCore internal constructor(
         }
     }
 
+    /**
+     * Whether [callId] was offered at [offeredAtMs] after the app ended an earlier attempt of it
+     * before presenting it: a new attempt, which that end must not refuse (a blind transfer
+     * repeated offers the same id again). False with no such end, or with no offer time. The
+     * offer's time is the server's or the moment the socket delivered it, the end's is this
+     * device's: a clock behind the server by more than the time between a push and the end lets a
+     * late copy of that push through.
+     */
+    private fun isOfferedAfterEnd(
+        callId: String,
+        offeredAtMs: Long?,
+    ): Boolean {
+        val endedAt = tracker.endedWithoutFlutterStateAtMs(callId) ?: return false
+        return offeredAtMs != null && offeredAtMs > endedAt
+    }
+
+    /** Lets a new attempt of [callId] in: the end of the earlier one goes, with the release it left. */
+    private fun reopenForNewAttempt(
+        callId: String,
+        offeredAtMs: Long?,
+    ) {
+        val endedAt = tracker.endedWithoutFlutterStateAtMs(callId)
+        tracker.clearEndedWithoutFlutterState(callId)
+        val releaseDropped = PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey(callId))
+        Log.i(TAG, "Incoming call $callId offered at $offeredAtMs, after its end at $endedAt: a new attempt (pending release dropped=$releaseDropped)")
+    }
+
     override suspend fun registerIncomingCall(
         metadata: CallMetadata,
         client: Any,
+        offeredAtMs: Long?,
     ): PIncomingCallError? {
         ensureReceiving()
         val callId = metadata.callId
-        if (wasEndedWithoutFlutterState(callId)) {
+        if (isOfferedAfterEnd(callId, offeredAtMs)) {
+            reopenForNewAttempt(callId, offeredAtMs)
+        } else if (wasEndedWithoutFlutterState(callId)) {
+            Log.i(TAG, "Incoming call $callId refused: the app ended it before it was presented (offered at $offeredAtMs)")
             return PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED)
         }
         // The foreground bridge is the app itself: a call it reports is the app's already.
