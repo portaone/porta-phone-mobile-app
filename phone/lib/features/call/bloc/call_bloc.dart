@@ -893,9 +893,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       );
 
       await state.performOnActiveCall(event.callId, (activeCall) async {
-        // Dispose the peer connection first. If it was already completed with an error
-        // (e.g. UserMediaError in the answer path), disposePeerConnection may throw.
-        // Wrap it so that callkeep notification and stream release always run.
+        // Release the local stream before closing the peer connection: on Android stopping a track
+        // only disables it, and WebRTC stops the microphone only while the track is still on a
+        // sender.
+        try {
+          await _releaseLocalStream(activeCall.localStream);
+        } catch (e) {
+          _logger.warning('__onResetStateEventCompleteCall: _releaseLocalStream error $e');
+        }
+
+        // If the peer connection was already completed with an error (e.g. UserMediaError in the
+        // answer path), disposePeerConnection may throw. Wrap it so that callkeep notification
+        // always runs.
         try {
           await _callPeerConnectionManager.disposePeerConnection(activeCall.callId);
         } catch (e) {
@@ -907,7 +916,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           activeCall.displayName ?? activeCall.handle.value,
           event.endReason,
         );
-        await _releaseLocalStream(activeCall.localStream);
       });
       _removeActiveCall(event.callId, emit);
     } catch (e) {
@@ -2958,8 +2966,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         // Need to close peer connection after the signaling request (decline/hangup) has been sent,
         // or after skipping it for blind transfer, to prevent "Simulate a 'hangup' coming from the
         // application" triggered by "No WebRTC media anymore".
+        // Release the local stream before closing the peer connection: on Android stopping a track
+        // only disables it, and WebRTC stops the microphone only while the track is still on a
+        // sender. A call that never started sending (cancelled while ringing) whose connection is
+        // closed first keeps the microphone recording until the next call ends. A failed release
+        // must not keep the connection open.
+        await _releaseLocalStream(activeCall.localStream).catchError((e) {
+          _logger.warning('__onMutationPerformEnd: _releaseLocalStream error $e');
+        });
         await _callPeerConnectionManager.disposePeerConnection(activeCall.callId);
-        await _releaseLocalStream(activeCall.localStream);
       });
 
       _removeActiveCall(event.callId, emit);
