@@ -49,6 +49,7 @@ has its own `README.md` saying what belongs there; this page lists everything at
 | [fonts.md](architecture/fonts.md) | How the app gets the typeface a theme names |
 | [history_paging.md](architecture/history_paging.md) | Paging a history by date: reaching records an endpoint does not volunteer |
 | [ice_servers.md](architecture/ice_servers.md) | Where the STUN/TURN servers come from, how they are cached and renewed |
+| [incoming_call_lifecycle.md](architecture/incoming_call_lifecycle.md) | One call id reported many times: the same call, a ghost of an ended one, a new attempt |
 | [incoming_call_scenarios.md](architecture/incoming_call_scenarios.md) | How an incoming call is delivered and handled per app state and mode |
 | [polling.md](architecture/polling.md) | PollingService: periodic, lifecycle and manual refreshes without overlap |
 | [polling_workers.md](architecture/polling_workers.md) | The polling worker pattern: one sync cycle apart from its scheduling |
