@@ -10,7 +10,6 @@ import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/contacts/contacts.dart';
 import 'package:webtrit_phone/features/favorites/favorites.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
-import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -27,9 +26,6 @@ class _MockFavoritesBloc extends MockBloc<FavoritesEvent, FavoritesState> implem
 class _MockSessionStatusCubit extends MockCubit<SessionStatusState> implements SessionStatusCubit {}
 
 class _MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCubit {}
-
-class _MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
-    implements MicrophoneStatusBloc {}
 
 class _RememberedSourceType implements ActiveContactsListRepository {
   _RememberedSourceType(this._value);
@@ -88,7 +84,6 @@ void main() {
   late _MockFavoritesBloc favoritesBloc;
   late _MockSessionStatusCubit sessionStatusCubit;
   late _MockUserInfoCubit userInfoCubit;
-  late _MockMicrophoneStatusBloc microphoneStatusBloc;
 
   setUp(() {
     listTopInset = null;
@@ -101,8 +96,6 @@ void main() {
     when(() => sessionStatusCubit.state).thenReturn(const SessionStatusState());
     userInfoCubit = _MockUserInfoCubit();
     when(() => userInfoCubit.state).thenReturn(const UserInfoState());
-    microphoneStatusBloc = _MockMicrophoneStatusBloc();
-    when(() => microphoneStatusBloc.state).thenReturn(const MicrophoneStatusState());
   });
 
   Future<ContactsBloc> pumpScreen(
@@ -143,7 +136,6 @@ void main() {
                   BlocProvider<FavoritesBloc>.value(value: favoritesBloc),
                   BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
                   BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
-                  BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
                 ],
                 child: ContactsFilterScreen(
                   selections: selections,

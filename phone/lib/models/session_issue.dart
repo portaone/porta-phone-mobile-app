@@ -9,7 +9,7 @@ enum SessionIssueSeverity { info, warning, critical }
 /// kind of issue: add a value here, produce it from a source in
 /// `SessionStatusCubit`, and add its strings to `SessionIssueL10n`. The UI
 /// (avatar badge, account summary, diagnostic details) stays generic.
-enum SessionIssueId { limitedStandaloneCallMode, fullScreenCallsUnavailable }
+enum SessionIssueId { microphoneUnavailable, limitedStandaloneCallMode, fullScreenCallsUnavailable }
 
 /// A single side issue with its severity. The id resolves to user-facing
 /// strings via the `SessionIssueL10n` extension.

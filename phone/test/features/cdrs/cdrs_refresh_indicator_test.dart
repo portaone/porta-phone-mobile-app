@@ -12,7 +12,6 @@ import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/features/cdrs/cdrs.dart';
 import 'package:webtrit_phone/features/cdrs/widgets/full_recent_cdrs_list.dart';
 import 'package:webtrit_phone/features/cdrs/widgets/missed_recent_cdrs_list.dart';
-import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
 import 'package:webtrit_phone/features/recents/recents.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/user_info/user_info.dart';
@@ -31,9 +30,6 @@ class MockCdrsHistoryClearCubit extends MockCubit<CdrsHistoryClearState> impleme
 class MockSessionStatusCubit extends MockCubit<SessionStatusState> implements SessionStatusCubit {}
 
 class MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCubit {}
-
-class MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
-    implements MicrophoneStatusBloc {}
 
 class MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {}
 
@@ -63,7 +59,6 @@ void main() {
   late MockCdrsHistoryClearCubit clearCubit;
   late MockSessionStatusCubit sessionStatusCubit;
   late MockUserInfoCubit userInfoCubit;
-  late MockMicrophoneStatusBloc microphoneStatusBloc;
   late MockCallBloc callBloc;
   late MockCallRoutingCubit callRoutingCubit;
   late MockContactsRepository contactsRepository;
@@ -76,7 +71,6 @@ void main() {
     clearCubit = MockCdrsHistoryClearCubit();
     sessionStatusCubit = MockSessionStatusCubit();
     userInfoCubit = MockUserInfoCubit();
-    microphoneStatusBloc = MockMicrophoneStatusBloc();
     callBloc = MockCallBloc();
     callRoutingCubit = MockCallRoutingCubit();
     contactsRepository = MockContactsRepository();
@@ -89,11 +83,6 @@ void main() {
     whenListen(clearCubit, const Stream<CdrsHistoryClearState>.empty(), initialState: CdrsHistoryClearState.idle);
     whenListen(sessionStatusCubit, const Stream<SessionStatusState>.empty(), initialState: const SessionStatusState());
     whenListen(userInfoCubit, const Stream<UserInfoState>.empty(), initialState: const UserInfoState());
-    whenListen(
-      microphoneStatusBloc,
-      const Stream<MicrophoneStatusState>.empty(),
-      initialState: const MicrophoneStatusState(),
-    );
     whenListen(callBloc, const Stream<CallState>.empty(), initialState: const CallState());
     whenListen(callRoutingCubit, const Stream<CallRoutingState?>.empty(), initialState: null);
     when(() => contactsRepository.watchContactByPhoneNumber(any())).thenAnswer((_) => Stream.value(null));
@@ -123,7 +112,6 @@ void main() {
               BlocProvider<CdrsHistoryClearCubit>.value(value: clearCubit),
               BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
               BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
-              BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
               BlocProvider<CallBloc>.value(value: callBloc),
               BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
             ],

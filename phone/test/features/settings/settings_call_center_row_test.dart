@@ -8,7 +8,6 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/features/call_center/call_center.dart';
-import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
 import 'package:webtrit_phone/features/register_status/register_status.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/settings/settings.dart';
@@ -21,9 +20,6 @@ import 'package:webtrit_phone/utils/utils.dart';
 import '../call_center/fake_call_queues_repository.dart';
 
 class _MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState> implements SettingsBloc {}
-
-class _MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
-    implements MicrophoneStatusBloc {}
 
 class _MockUserInfoCubit extends MockCubit<UserInfoState> implements UserInfoCubit {}
 
@@ -44,7 +40,6 @@ void main() {
   );
 
   late _MockSettingsBloc settingsBloc;
-  late _MockMicrophoneStatusBloc microphoneStatusBloc;
   late _MockUserInfoCubit userInfoCubit;
   late _MockSessionStatusCubit sessionStatusCubit;
   late _MockRegisterStatusCubit registerStatusCubit;
@@ -55,14 +50,12 @@ void main() {
 
   setUp(() {
     settingsBloc = _MockSettingsBloc();
-    microphoneStatusBloc = _MockMicrophoneStatusBloc();
     userInfoCubit = _MockUserInfoCubit();
     sessionStatusCubit = _MockSessionStatusCubit();
     registerStatusCubit = _MockRegisterStatusCubit();
     router = _MockStackRouter();
 
     when(() => settingsBloc.state).thenReturn(const SettingsState(progress: false));
-    when(() => microphoneStatusBloc.state).thenReturn(const MicrophoneStatusState());
     when(() => userInfoCubit.state).thenReturn(const UserInfoState(userInfo: info));
     when(() => sessionStatusCubit.state).thenReturn(const SessionStatusState());
     when(() => registerStatusCubit.state).thenReturn(const RegisterStatus(value: true));
@@ -116,7 +109,6 @@ void main() {
               child: MultiBlocProvider(
                 providers: [
                   BlocProvider<SettingsBloc>.value(value: settingsBloc),
-                  BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
                   BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
                   BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
                   BlocProvider<RegisterStatusCubit>.value(value: registerStatusCubit),

@@ -7,6 +7,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:signaling/signaling.dart' as ws;
 
 import 'package:webtrit_phone/app/constants.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/push_tokens/bloc/push_tokens_bloc.dart';
 import 'package:webtrit_phone/features/session_status/bloc/session_status_cubit.dart';
@@ -15,6 +16,8 @@ import 'package:webtrit_phone/models/models.dart';
 class _MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {}
 
 class _MockPushTokensBloc extends MockBloc<PushTokensEvent, PushTokensState> implements PushTokensBloc {}
+
+class _MockAppPermissions extends Mock implements AppPermissions {}
 
 SessionStatus _statusFor(CallStatus s, {String? pushTokenError}) =>
     SessionStatus(signalingStatus: s, pushTokenError: pushTokenError);
@@ -51,10 +54,15 @@ void main() {
   group('SessionStatusCubit', () {
     late _MockCallBloc callBloc;
     late _MockPushTokensBloc pushTokensBloc;
+    late _MockAppPermissions appPermissions;
+
+    setUpAll(() => registerFallbackValue(Permission.microphone));
 
     setUp(() {
       callBloc = _MockCallBloc();
       pushTokensBloc = _MockPushTokensBloc();
+      appPermissions = _MockAppPermissions();
+      when(() => appPermissions.isPermissionGranted(any())).thenAnswer((_) async => true);
     });
 
     SessionStatusCubit buildCubit({
@@ -67,7 +75,7 @@ void main() {
       when(() => callBloc.stream).thenAnswer((_) => callStream);
       when(() => pushTokensBloc.state).thenReturn(initialPushState);
       when(() => pushTokensBloc.stream).thenAnswer((_) => pushStream ?? const Stream.empty());
-      return SessionStatusCubit(pushTokensBloc: pushTokensBloc, callBloc: callBloc);
+      return SessionStatusCubit(pushTokensBloc: pushTokensBloc, callBloc: callBloc, appPermissions: appPermissions);
     }
 
     test('emits initial status from constructor state', () {
@@ -355,6 +363,31 @@ void main() {
         pushController.close();
         unawaited(cubit.close());
       });
+    });
+
+    test('a missing microphone is the top issue', () async {
+      when(() => appPermissions.isPermissionGranted(Permission.microphone)).thenAnswer((_) async => false);
+
+      final cubit = buildCubit(initialCallState: _cs(CallStatus.ready), callStream: const Stream.empty());
+      await pumpEventQueue();
+
+      expect(cubit.state.topIssue?.id, SessionIssueId.microphoneUnavailable);
+      expect(cubit.state.topIssue?.severity, SessionIssueSeverity.critical);
+      await cubit.close();
+    });
+
+    test('the microphone granted in the system settings clears the issue on refresh', () async {
+      when(() => appPermissions.isPermissionGranted(Permission.microphone)).thenAnswer((_) async => false);
+
+      final cubit = buildCubit(initialCallState: _cs(CallStatus.ready), callStream: const Stream.empty());
+      await pumpEventQueue();
+      expect(cubit.state.issues.map((issue) => issue.id), contains(SessionIssueId.microphoneUnavailable));
+
+      when(() => appPermissions.isPermissionGranted(Permission.microphone)).thenAnswer((_) async => true);
+      await cubit.refreshPermissionIssues();
+
+      expect(cubit.state.issues.map((issue) => issue.id), isNot(contains(SessionIssueId.microphoneUnavailable)));
+      await cubit.close();
     });
   });
 }

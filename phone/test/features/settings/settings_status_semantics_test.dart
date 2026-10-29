@@ -8,7 +8,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
-import 'package:webtrit_phone/features/microphone_status/microphone_status.dart';
 import 'package:webtrit_phone/features/register_status/register_status.dart';
 import 'package:webtrit_phone/features/settings/settings.dart';
 import 'package:webtrit_phone/features/settings/widgets/register_status_list_tile.dart';
@@ -20,18 +19,12 @@ import '../../helpers/helpers.dart';
 
 class _MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState> implements SettingsBloc {}
 
-class _MockMicrophoneStatusBloc extends MockBloc<MicrophoneStatusEvent, MicrophoneStatusState>
-    implements MicrophoneStatusBloc {}
-
 void main() {
   late _MockSettingsBloc settingsBloc;
-  late _MockMicrophoneStatusBloc microphoneStatusBloc;
 
   setUp(() {
     settingsBloc = _MockSettingsBloc();
-    microphoneStatusBloc = _MockMicrophoneStatusBloc();
     when(() => settingsBloc.state).thenReturn(const SettingsState(progress: false));
-    when(() => microphoneStatusBloc.state).thenReturn(const MicrophoneStatusState());
   });
 
   Widget wrap(Widget child) => MaterialApp(
@@ -39,10 +32,7 @@ void main() {
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       body: MultiBlocProvider(
-        providers: [
-          BlocProvider<SettingsBloc>.value(value: settingsBloc),
-          BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
-        ],
+        providers: [BlocProvider<SettingsBloc>.value(value: settingsBloc)],
         child: child,
       ),
     ),

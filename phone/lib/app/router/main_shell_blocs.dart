@@ -308,19 +308,13 @@ class MainShellBlocs extends StatelessWidget {
                 create: (_) => SessionStatusCubit(
                   pushTokensBloc: context.read<PushTokensBloc>(),
                   callBloc: context.read<CallBloc>(),
+                  appPermissions: context.read<AppPermissions>(),
                 ),
               ),
               BlocProvider(
                 lazy: false,
                 create: (_) =>
                     RegisterStatusCubit(context.read<AppRepository>(), context.read<RegisterStatusRepository>()),
-              ),
-              BlocProvider(
-                lazy: false,
-                create: (context) {
-                  return MicrophoneStatusBloc(appPermissions: context.read<AppPermissions>())
-                    ..add(MicrophoneStatusStarted());
-                },
               ),
               BlocProvider(
                 lazy: false,
@@ -349,7 +343,7 @@ class MainShellBlocs extends StatelessWidget {
                 ),
               ),
             ],
-            child: child,
+            child: SessionIssuesRefresher(child: child),
           );
         },
       ),
