@@ -9,16 +9,12 @@ part 'session.g.dart';
 class Session with _$Session {
   const Session({this.coreUrl, this.token, this.tenantId = '', this.userId = ''});
 
-  @override
   final String? coreUrl;
 
-  @override
   final String? token;
 
-  @override
   final String tenantId;
 
-  @override
   final String userId;
 
   factory Session.fromJson(Map<String, dynamic> json) => _$SessionFromJson(json);

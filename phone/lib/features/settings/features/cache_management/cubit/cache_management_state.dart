@@ -14,22 +14,16 @@ class CacheSectionState with _$CacheSectionState {
     this.clearing = false,
   });
 
-  @override
   final String id;
 
-  @override
   final String titleL10n;
 
-  @override
   final String descriptionL10n;
 
-  @override
   final CacheUsage? usage;
 
-  @override
   final bool measureFailed;
 
-  @override
   final bool clearing;
 }
 
@@ -37,7 +31,6 @@ class CacheSectionState with _$CacheSectionState {
 class CacheManagementState with _$CacheManagementState {
   const CacheManagementState({this.sections = const []});
 
-  @override
   final List<CacheSectionState> sections;
 
   CacheManagementState copyWithSection(CacheSectionState section) {

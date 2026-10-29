@@ -4,6 +4,5 @@ part of 'notifications_bloc.dart';
 class NotificationsState with _$NotificationsState {
   const NotificationsState({this.lastNotification});
 
-  @override
   final Notification? lastNotification;
 }

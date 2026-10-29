@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_push_token.dart';
@@ -9,13 +9,14 @@ part of 'app_push_token.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$AppPushToken {
 
- AppPushTokenType get type; String get value; AppPushTokenEnv? get env;
+
 /// Create a copy of AppPushToken
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $AppPushTokenCopyWith<AppPushToken> get copyWith => _$AppPushTokenCopyWithImpl<A
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppPushToken&&(identical(other.type, type) || other.type == type)&&(identical(other.value, value) || other.value == value)&&(identical(other.env, env) || other.env == env));
+  final _this = this as AppPushToken;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppPushToken&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.value, _this.value) || other.value == _this.value)&&(identical(other.env, _this.env) || other.env == _this.env));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,type,value,env);
+int get hashCode {
+  final _this = this as AppPushToken;
+  return Object.hash(runtimeType,_this.type,_this.value,_this.env);
+}
 
 @override
 String toString() {
-  return 'AppPushToken(type: $type, value: $value, env: $env)';
+  final _this = this as AppPushToken;
+  return 'AppPushToken(type: ${_this.type}, value: ${_this.value}, env: ${_this.env})';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'session_otp_credential.dart';
@@ -9,13 +9,14 @@ part of 'session_otp_credential.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$SessionOtpCredential {
 
- String? get bundleId; AppType get type; String get identifier; String get userRef;
+
 /// Create a copy of SessionOtpCredential
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $SessionOtpCredentialCopyWith<SessionOtpCredential> get copyWith => _$SessionOtp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionOtpCredential&&(identical(other.bundleId, bundleId) || other.bundleId == bundleId)&&(identical(other.type, type) || other.type == type)&&(identical(other.identifier, identifier) || other.identifier == identifier)&&(identical(other.userRef, userRef) || other.userRef == userRef));
+  final _this = this as SessionOtpCredential;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionOtpCredential&&(identical(other.bundleId, _this.bundleId) || other.bundleId == _this.bundleId)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.identifier, _this.identifier) || other.identifier == _this.identifier)&&(identical(other.userRef, _this.userRef) || other.userRef == _this.userRef));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,bundleId,type,identifier,userRef);
+int get hashCode {
+  final _this = this as SessionOtpCredential;
+  return Object.hash(runtimeType,_this.bundleId,_this.type,_this.identifier,_this.userRef);
+}
 
 @override
 String toString() {
-  return 'SessionOtpCredential(bundleId: $bundleId, type: $type, identifier: $identifier, userRef: $userRef)';
+  final _this = this as SessionOtpCredential;
+  return 'SessionOtpCredential(bundleId: ${_this.bundleId}, type: ${_this.type}, identifier: ${_this.identifier}, userRef: ${_this.userRef})';
 }
 
 

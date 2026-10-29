@@ -16,13 +16,10 @@ enum AppPushTokenEnv { dev, prod }
 class AppPushToken with _$AppPushToken {
   const AppPushToken({required this.type, required this.value, this.env});
 
-  @override
   final AppPushTokenType type;
 
-  @override
   final String value;
 
-  @override
   final AppPushTokenEnv? env;
 
   factory AppPushToken.fromJson(Map<String, dynamic> json) => _$AppPushTokenFromJson(json);

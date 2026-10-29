@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_contact.dart';
@@ -9,13 +9,14 @@ part of 'app_contact.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$AppContact {
 
- String get identifier; List<String> get phones;
+
 /// Create a copy of AppContact
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $AppContactCopyWith<AppContact> get copyWith => _$AppContactCopyWithImpl<AppCont
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppContact&&(identical(other.identifier, identifier) || other.identifier == identifier)&&const DeepCollectionEquality().equals(other.phones, phones));
+  final _this = this as AppContact;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppContact&&(identical(other.identifier, _this.identifier) || other.identifier == _this.identifier)&&const DeepCollectionEquality().equals(other.phones, _this.phones));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,identifier,const DeepCollectionEquality().hash(phones));
+int get hashCode {
+  final _this = this as AppContact;
+  return Object.hash(runtimeType,_this.identifier,const DeepCollectionEquality().hash(_this.phones));
+}
 
 @override
 String toString() {
-  return 'AppContact(identifier: $identifier, phones: $phones)';
+  final _this = this as AppContact;
+  return 'AppContact(identifier: ${_this.identifier}, phones: ${_this.phones})';
 }
 
 

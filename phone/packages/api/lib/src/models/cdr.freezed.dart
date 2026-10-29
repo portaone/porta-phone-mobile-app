@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'cdr.dart';
@@ -9,13 +9,14 @@ part of 'cdr.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$CdrRecord {
 
- String get callId; String get callee; String get caller; DateTime get connectTime; CdrDirection get direction; String get disconnectReason; DateTime get disconnectTime; int get duration; dynamic get recordingId; CdrStatus get status;
+
 /// Create a copy of CdrRecord
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $CdrRecordCopyWith<CdrRecord> get copyWith => _$CdrRecordCopyWithImpl<CdrRecord>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CdrRecord&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.callee, callee) || other.callee == callee)&&(identical(other.caller, caller) || other.caller == caller)&&(identical(other.connectTime, connectTime) || other.connectTime == connectTime)&&(identical(other.direction, direction) || other.direction == direction)&&(identical(other.disconnectReason, disconnectReason) || other.disconnectReason == disconnectReason)&&(identical(other.disconnectTime, disconnectTime) || other.disconnectTime == disconnectTime)&&(identical(other.duration, duration) || other.duration == duration)&&const DeepCollectionEquality().equals(other.recordingId, recordingId)&&(identical(other.status, status) || other.status == status));
+  final _this = this as CdrRecord;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CdrRecord&&(identical(other.callId, _this.callId) || other.callId == _this.callId)&&(identical(other.callee, _this.callee) || other.callee == _this.callee)&&(identical(other.caller, _this.caller) || other.caller == _this.caller)&&(identical(other.connectTime, _this.connectTime) || other.connectTime == _this.connectTime)&&(identical(other.direction, _this.direction) || other.direction == _this.direction)&&(identical(other.disconnectReason, _this.disconnectReason) || other.disconnectReason == _this.disconnectReason)&&(identical(other.disconnectTime, _this.disconnectTime) || other.disconnectTime == _this.disconnectTime)&&(identical(other.duration, _this.duration) || other.duration == _this.duration)&&const DeepCollectionEquality().equals(other.recordingId, _this.recordingId)&&(identical(other.status, _this.status) || other.status == _this.status));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,callId,callee,caller,connectTime,direction,disconnectReason,disconnectTime,duration,const DeepCollectionEquality().hash(recordingId),status);
+int get hashCode {
+  final _this = this as CdrRecord;
+  return Object.hash(runtimeType,_this.callId,_this.callee,_this.caller,_this.connectTime,_this.direction,_this.disconnectReason,_this.disconnectTime,_this.duration,const DeepCollectionEquality().hash(_this.recordingId),_this.status);
+}
 
 @override
 String toString() {
-  return 'CdrRecord(callId: $callId, callee: $callee, caller: $caller, connectTime: $connectTime, direction: $direction, disconnectReason: $disconnectReason, disconnectTime: $disconnectTime, duration: $duration, recordingId: $recordingId, status: $status)';
+  final _this = this as CdrRecord;
+  return 'CdrRecord(callId: ${_this.callId}, callee: ${_this.callee}, caller: ${_this.caller}, connectTime: ${_this.connectTime}, direction: ${_this.direction}, disconnectReason: ${_this.disconnectReason}, disconnectTime: ${_this.disconnectTime}, duration: ${_this.duration}, recordingId: ${_this.recordingId}, status: ${_this.status})';
 }
 
 
@@ -210,7 +216,7 @@ case _:
 /// @nodoc
 mixin _$CdrHistoryResponse {
 
- List<CdrRecord> get items; Pagination? get pagination;
+
 /// Create a copy of CdrHistoryResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -221,16 +227,21 @@ $CdrHistoryResponseCopyWith<CdrHistoryResponse> get copyWith => _$CdrHistoryResp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CdrHistoryResponse&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.pagination, pagination) || other.pagination == pagination));
+  final _this = this as CdrHistoryResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CdrHistoryResponse&&const DeepCollectionEquality().equals(other.items, _this.items)&&(identical(other.pagination, _this.pagination) || other.pagination == _this.pagination));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),pagination);
+int get hashCode {
+  final _this = this as CdrHistoryResponse;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items),_this.pagination);
+}
 
 @override
 String toString() {
-  return 'CdrHistoryResponse(items: $items, pagination: $pagination)';
+  final _this = this as CdrHistoryResponse;
+  return 'CdrHistoryResponse(items: ${_this.items}, pagination: ${_this.pagination})';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'demo_call_to_actions_response.dart';
@@ -9,13 +9,14 @@ part of 'demo_call_to_actions_response.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$DemoCallToActionsResponse {
 
- List<DemoCallToActionsResponseActions> get actions;
+
 /// Create a copy of DemoCallToActionsResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $DemoCallToActionsResponseCopyWith<DemoCallToActionsResponse> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoCallToActionsResponse&&const DeepCollectionEquality().equals(other.actions, actions));
+  final _this = this as DemoCallToActionsResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoCallToActionsResponse&&const DeepCollectionEquality().equals(other.actions, _this.actions));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(actions));
+int get hashCode {
+  final _this = this as DemoCallToActionsResponse;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.actions));
+}
 
 @override
 String toString() {
-  return 'DemoCallToActionsResponse(actions: $actions)';
+  final _this = this as DemoCallToActionsResponse;
+  return 'DemoCallToActionsResponse(actions: ${_this.actions})';
 }
 
 
@@ -201,7 +207,7 @@ case _:
 /// @nodoc
 mixin _$DemoCallToActionsResponseActions {
 
- String? get title; String? get description; String get url; DemoCallToActionsResponseActionsExtraData get extraData;
+
 /// Create a copy of DemoCallToActionsResponseActions
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -212,16 +218,21 @@ $DemoCallToActionsResponseActionsCopyWith<DemoCallToActionsResponseActions> get 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoCallToActionsResponseActions&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.url, url) || other.url == url)&&(identical(other.extraData, extraData) || other.extraData == extraData));
+  final _this = this as DemoCallToActionsResponseActions;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoCallToActionsResponseActions&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.url, _this.url) || other.url == _this.url)&&(identical(other.extraData, _this.extraData) || other.extraData == _this.extraData));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,title,description,url,extraData);
+int get hashCode {
+  final _this = this as DemoCallToActionsResponseActions;
+  return Object.hash(runtimeType,_this.title,_this.description,_this.url,_this.extraData);
+}
 
 @override
 String toString() {
-  return 'DemoCallToActionsResponseActions(title: $title, description: $description, url: $url, extraData: $extraData)';
+  final _this = this as DemoCallToActionsResponseActions;
+  return 'DemoCallToActionsResponseActions(title: ${_this.title}, description: ${_this.description}, url: ${_this.url}, extraData: ${_this.extraData})';
 }
 
 
@@ -390,7 +401,7 @@ case _:
 /// @nodoc
 mixin _$DemoCallToActionsResponseActionsExtraData {
 
- String get apiToken; String get tokenExpires;
+
 /// Create a copy of DemoCallToActionsResponseActionsExtraData
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -401,16 +412,21 @@ $DemoCallToActionsResponseActionsExtraDataCopyWith<DemoCallToActionsResponseActi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoCallToActionsResponseActionsExtraData&&(identical(other.apiToken, apiToken) || other.apiToken == apiToken)&&(identical(other.tokenExpires, tokenExpires) || other.tokenExpires == tokenExpires));
+  final _this = this as DemoCallToActionsResponseActionsExtraData;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoCallToActionsResponseActionsExtraData&&(identical(other.apiToken, _this.apiToken) || other.apiToken == _this.apiToken)&&(identical(other.tokenExpires, _this.tokenExpires) || other.tokenExpires == _this.tokenExpires));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,apiToken,tokenExpires);
+int get hashCode {
+  final _this = this as DemoCallToActionsResponseActionsExtraData;
+  return Object.hash(runtimeType,_this.apiToken,_this.tokenExpires);
+}
 
 @override
 String toString() {
-  return 'DemoCallToActionsResponseActionsExtraData(apiToken: $apiToken, tokenExpires: $tokenExpires)';
+  final _this = this as DemoCallToActionsResponseActionsExtraData;
+  return 'DemoCallToActionsResponseActionsExtraData(apiToken: ${_this.apiToken}, tokenExpires: ${_this.tokenExpires})';
 }
 
 

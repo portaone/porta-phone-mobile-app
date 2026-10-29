@@ -16,7 +16,6 @@ part 'call_queue_list_response.g.dart';
 class CallQueueListResponse with _$CallQueueListResponse {
   const CallQueueListResponse({required this.items});
 
-  @override
   final List<CallQueue> items;
 
   factory CallQueueListResponse.fromJson(Map<String, dynamic> json) => _$CallQueueListResponseFromJson(json);

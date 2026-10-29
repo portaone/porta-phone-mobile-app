@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_bloc.dart';
@@ -9,6 +9,7 @@ part of 'app_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $AppStateCopyWith<AppState> get copyWith => _$AppStateCopyWithImpl<AppState>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppState&&(identical(other.status, status) || other.status == status)&&(identical(other.logoutReason, logoutReason) || other.logoutReason == logoutReason)&&(identical(other.session, session) || other.session == session)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.userAgreementStatus, userAgreementStatus) || other.userAgreementStatus == userAgreementStatus)&&(identical(other.contactsAgreementStatus, contactsAgreementStatus) || other.contactsAgreementStatus == contactsAgreementStatus)&&(identical(other.appCompatibility, appCompatibility) || other.appCompatibility == appCompatibility));
+  final _this = this as AppState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppState&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.logoutReason, _this.logoutReason) || other.logoutReason == _this.logoutReason)&&(identical(other.session, _this.session) || other.session == _this.session)&&(identical(other.themeMode, _this.themeMode) || other.themeMode == _this.themeMode)&&(identical(other.locale, _this.locale) || other.locale == _this.locale)&&(identical(other.userAgreementStatus, _this.userAgreementStatus) || other.userAgreementStatus == _this.userAgreementStatus)&&(identical(other.contactsAgreementStatus, _this.contactsAgreementStatus) || other.contactsAgreementStatus == _this.contactsAgreementStatus)&&(identical(other.appCompatibility, _this.appCompatibility) || other.appCompatibility == _this.appCompatibility));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,logoutReason,session,themeMode,locale,userAgreementStatus,contactsAgreementStatus,appCompatibility);
+int get hashCode {
+  final _this = this as AppState;
+  return Object.hash(runtimeType,_this.status,_this.logoutReason,_this.session,_this.themeMode,_this.locale,_this.userAgreementStatus,_this.contactsAgreementStatus,_this.appCompatibility);
+}
 
 @override
 String toString() {
-  return 'AppState(status: $status, logoutReason: $logoutReason, session: $session, themeMode: $themeMode, locale: $locale, userAgreementStatus: $userAgreementStatus, contactsAgreementStatus: $contactsAgreementStatus, appCompatibility: $appCompatibility)';
+  final _this = this as AppState;
+  return 'AppState(status: ${_this.status}, logoutReason: ${_this.logoutReason}, session: ${_this.session}, themeMode: ${_this.themeMode}, locale: ${_this.locale}, userAgreementStatus: ${_this.userAgreementStatus}, contactsAgreementStatus: ${_this.contactsAgreementStatus}, appCompatibility: ${_this.appCompatibility})';
 }
 
 
@@ -63,7 +69,7 @@ class _$AppStateCopyWithImpl<$Res>
 /// Create a copy of AppState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? logoutReason = freezed,Object? session = null,Object? themeMode = null,Object? locale = null,Object? userAgreementStatus = null,Object? contactsAgreementStatus = null,Object? appCompatibility = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as AppLifecycleStatus,logoutReason: freezed == logoutReason ? _self.logoutReason : logoutReason // ignore: cast_nullable_to_non_nullable
 as AppLogoutReason?,session: null == session ? _self.session : session // ignore: cast_nullable_to_non_nullable
@@ -238,16 +244,18 @@ _$AppStateCopyWith<_AppState> get copyWith => __$AppStateCopyWithImpl<_AppState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppState&&(identical(other.status, status) || other.status == status)&&(identical(other.logoutReason, logoutReason) || other.logoutReason == logoutReason)&&(identical(other.session, session) || other.session == session)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.userAgreementStatus, userAgreementStatus) || other.userAgreementStatus == userAgreementStatus)&&(identical(other.contactsAgreementStatus, contactsAgreementStatus) || other.contactsAgreementStatus == contactsAgreementStatus)&&(identical(other.appCompatibility, appCompatibility) || other.appCompatibility == appCompatibility));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppState&&(identical(other.status, status) || other.status == status)&&(identical(other.logoutReason, logoutReason) || other.logoutReason == logoutReason)&&(identical(other.session, session) || other.session == session)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.userAgreementStatus, userAgreementStatus) || other.userAgreementStatus == userAgreementStatus)&&(identical(other.contactsAgreementStatus, contactsAgreementStatus) || other.contactsAgreementStatus == contactsAgreementStatus)&&(identical(other.appCompatibility, appCompatibility) || other.appCompatibility == appCompatibility));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,logoutReason,session,themeMode,locale,userAgreementStatus,contactsAgreementStatus,appCompatibility);
+int get hashCode {
+    return Object.hash(runtimeType,status,logoutReason,session,themeMode,locale,userAgreementStatus,contactsAgreementStatus,appCompatibility);
+}
 
 @override
 String toString() {
-  return 'AppState(status: $status, logoutReason: $logoutReason, session: $session, themeMode: $themeMode, locale: $locale, userAgreementStatus: $userAgreementStatus, contactsAgreementStatus: $contactsAgreementStatus, appCompatibility: $appCompatibility)';
+    return 'AppState(status: $status, logoutReason: $logoutReason, session: $session, themeMode: $themeMode, locale: $locale, userAgreementStatus: $userAgreementStatus, contactsAgreementStatus: $contactsAgreementStatus, appCompatibility: $appCompatibility)';
 }
 
 

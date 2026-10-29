@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'page_background.dart';
@@ -9,13 +9,14 @@ part of 'page_background.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$PageBackgroundSolid {
 
- String get color; String get type;
+
 /// Create a copy of PageBackgroundSolid
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $PageBackgroundSolidCopyWith<PageBackgroundSolid> get copyWith => _$PageBackgrou
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PageBackgroundSolid&&(identical(other.color, color) || other.color == color)&&(identical(other.type, type) || other.type == type));
+  final _this = this as PageBackgroundSolid;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PageBackgroundSolid&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,color,type);
+int get hashCode {
+  final _this = this as PageBackgroundSolid;
+  return Object.hash(runtimeType,_this.color,_this.type);
+}
 
 @override
 String toString() {
-  return 'PageBackgroundSolid(color: $color, type: $type)';
+  final _this = this as PageBackgroundSolid;
+  return 'PageBackgroundSolid(color: ${_this.color}, type: ${_this.type})';
 }
 
 
@@ -202,7 +208,7 @@ case _:
 /// @nodoc
 mixin _$PageBackgroundGradient {
 
- List<String> get colors; List<double> get stops; double get beginX; double get beginY; double get endX; double get endY; String get type;
+
 /// Create a copy of PageBackgroundGradient
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -213,16 +219,21 @@ $PageBackgroundGradientCopyWith<PageBackgroundGradient> get copyWith => _$PageBa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PageBackgroundGradient&&const DeepCollectionEquality().equals(other.colors, colors)&&const DeepCollectionEquality().equals(other.stops, stops)&&(identical(other.beginX, beginX) || other.beginX == beginX)&&(identical(other.beginY, beginY) || other.beginY == beginY)&&(identical(other.endX, endX) || other.endX == endX)&&(identical(other.endY, endY) || other.endY == endY)&&(identical(other.type, type) || other.type == type));
+  final _this = this as PageBackgroundGradient;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PageBackgroundGradient&&const DeepCollectionEquality().equals(other.colors, _this.colors)&&const DeepCollectionEquality().equals(other.stops, _this.stops)&&(identical(other.beginX, _this.beginX) || other.beginX == _this.beginX)&&(identical(other.beginY, _this.beginY) || other.beginY == _this.beginY)&&(identical(other.endX, _this.endX) || other.endX == _this.endX)&&(identical(other.endY, _this.endY) || other.endY == _this.endY)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(colors),const DeepCollectionEquality().hash(stops),beginX,beginY,endX,endY,type);
+int get hashCode {
+  final _this = this as PageBackgroundGradient;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.colors),const DeepCollectionEquality().hash(_this.stops),_this.beginX,_this.beginY,_this.endX,_this.endY,_this.type);
+}
 
 @override
 String toString() {
-  return 'PageBackgroundGradient(colors: $colors, stops: $stops, beginX: $beginX, beginY: $beginY, endX: $endX, endY: $endY, type: $type)';
+  final _this = this as PageBackgroundGradient;
+  return 'PageBackgroundGradient(colors: ${_this.colors}, stops: ${_this.stops}, beginX: ${_this.beginX}, beginY: ${_this.beginY}, endX: ${_this.endX}, endY: ${_this.endY}, type: ${_this.type})';
 }
 
 
@@ -394,7 +405,7 @@ case _:
 /// @nodoc
 mixin _$PageBackgroundImage {
 
- String get imageUrl; BoxFitConfig get fit; double get opacity; String get type;
+
 /// Create a copy of PageBackgroundImage
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -405,16 +416,21 @@ $PageBackgroundImageCopyWith<PageBackgroundImage> get copyWith => _$PageBackgrou
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PageBackgroundImage&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.fit, fit) || other.fit == fit)&&(identical(other.opacity, opacity) || other.opacity == opacity)&&(identical(other.type, type) || other.type == type));
+  final _this = this as PageBackgroundImage;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PageBackgroundImage&&(identical(other.imageUrl, _this.imageUrl) || other.imageUrl == _this.imageUrl)&&(identical(other.fit, _this.fit) || other.fit == _this.fit)&&(identical(other.opacity, _this.opacity) || other.opacity == _this.opacity)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,imageUrl,fit,opacity,type);
+int get hashCode {
+  final _this = this as PageBackgroundImage;
+  return Object.hash(runtimeType,_this.imageUrl,_this.fit,_this.opacity,_this.type);
+}
 
 @override
 String toString() {
-  return 'PageBackgroundImage(imageUrl: $imageUrl, fit: $fit, opacity: $opacity, type: $type)';
+  final _this = this as PageBackgroundImage;
+  return 'PageBackgroundImage(imageUrl: ${_this.imageUrl}, fit: ${_this.fit}, opacity: ${_this.opacity}, type: ${_this.type})';
 }
 
 

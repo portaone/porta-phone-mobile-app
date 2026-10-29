@@ -7,12 +7,10 @@ class SessionStatusState with _$SessionStatusState {
     this.issues = const [],
   });
 
-  @override
   final SessionStatus status;
 
   /// Side issues independent of the primary signaling [status] (e.g. limited
   /// standalone call mode). Drives the avatar indicator and account summary.
-  @override
   final List<SessionIssue> issues;
 
   bool get hasIssues => issues.isNotEmpty;

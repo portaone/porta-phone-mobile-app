@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'session_result.dart';
@@ -9,6 +9,7 @@ part of 'session_result.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 SessionResult _$SessionResultFromJson(
@@ -48,7 +49,7 @@ mixin _$SessionResult {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionResult);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionResult);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -57,7 +58,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'SessionResult()';
+    return 'SessionResult()';
 }
 
 
@@ -215,7 +216,7 @@ return data(_that.data);case _:
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class SessionOtpProvisional implements SessionResult {
-  const SessionOtpProvisional({required this.otpId, this.notificationType, this.fromEmail, this.tenantId, final  String? $type}): $type = $type ?? 'otpProvisional';
+  const SessionOtpProvisional({required this.otpId, this.notificationType, this.fromEmail, this.tenantId,  String? $type}): $type = $type ?? 'otpProvisional';
   factory SessionOtpProvisional.fromJson(Map<String, dynamic> json) => _$SessionOtpProvisionalFromJson(json);
 
  final  String otpId;
@@ -237,16 +238,18 @@ $SessionOtpProvisionalCopyWith<SessionOtpProvisional> get copyWith => _$SessionO
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionOtpProvisional&&(identical(other.otpId, otpId) || other.otpId == otpId)&&(identical(other.notificationType, notificationType) || other.notificationType == notificationType)&&(identical(other.fromEmail, fromEmail) || other.fromEmail == fromEmail)&&(identical(other.tenantId, tenantId) || other.tenantId == tenantId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionOtpProvisional&&(identical(other.otpId, otpId) || other.otpId == otpId)&&(identical(other.notificationType, notificationType) || other.notificationType == notificationType)&&(identical(other.fromEmail, fromEmail) || other.fromEmail == fromEmail)&&(identical(other.tenantId, tenantId) || other.tenantId == tenantId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,otpId,notificationType,fromEmail,tenantId);
+int get hashCode {
+    return Object.hash(runtimeType,otpId,notificationType,fromEmail,tenantId);
+}
 
 @override
 String toString() {
-  return 'SessionResult.otpProvisional(otpId: $otpId, notificationType: $notificationType, fromEmail: $fromEmail, tenantId: $tenantId)';
+    return 'SessionResult.otpProvisional(otpId: $otpId, notificationType: $notificationType, fromEmail: $fromEmail, tenantId: $tenantId)';
 }
 
 
@@ -291,11 +294,10 @@ as String?,
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class SessionToken implements SessionResult {
-  const SessionToken({required this.token, this.userId, this.tenantId, final  String? $type}): $type = $type ?? 'token';
+  const SessionToken({required this.token, this.userId, this.tenantId,  String? $type}): $type = $type ?? 'token';
   factory SessionToken.fromJson(Map<String, dynamic> json) => _$SessionTokenFromJson(json);
 
  final  String token;
-// Maintain backward compatibility by providing a default null value for userId, as older core versions do not utilize this field.
  final  String? userId;
  final  String? tenantId;
 
@@ -313,16 +315,18 @@ $SessionTokenCopyWith<SessionToken> get copyWith => _$SessionTokenCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionToken&&(identical(other.token, token) || other.token == token)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.tenantId, tenantId) || other.tenantId == tenantId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionToken&&(identical(other.token, token) || other.token == token)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.tenantId, tenantId) || other.tenantId == tenantId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,token,userId,tenantId);
+int get hashCode {
+    return Object.hash(runtimeType,token,userId,tenantId);
+}
 
 @override
 String toString() {
-  return 'SessionResult.token(token: $token, userId: $userId, tenantId: $tenantId)';
+    return 'SessionResult.token(token: $token, userId: $userId, tenantId: $tenantId)';
 }
 
 
@@ -366,7 +370,7 @@ as String?,
 
 @JsonSerializable(fieldRename: FieldRename.snake)
 class SessionData implements SessionResult {
-  const SessionData({required final  Map<String, dynamic> data, final  String? $type}): _data = data,$type = $type ?? 'data';
+  const SessionData({required  Map<String, dynamic> data,  String? $type}): _data = data,$type = $type ?? 'data';
   factory SessionData.fromJson(Map<String, dynamic> json) => _$SessionDataFromJson(json);
 
  final  Map<String, dynamic> _data;
@@ -391,16 +395,18 @@ $SessionDataCopyWith<SessionData> get copyWith => _$SessionDataCopyWithImpl<Sess
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionData&&const DeepCollectionEquality().equals(other._data, _data));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionData&&const DeepCollectionEquality().equals(other.data, _data));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_data));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_data));
+}
 
 @override
 String toString() {
-  return 'SessionResult.data(data: $data)';
+    return 'SessionResult.data(data: $data)';
 }
 
 

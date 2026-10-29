@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'overlay_style_model.dart';
@@ -9,13 +9,14 @@ part of 'overlay_style_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$OverlayStyleModel {
 
- String? get systemNavigationBarColor; String? get systemNavigationBarIconBrightness; String? get statusBarIconBrightness; String? get statusBarBrightness;
+
 /// Create a copy of OverlayStyleModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $OverlayStyleModelCopyWith<OverlayStyleModel> get copyWith => _$OverlayStyleMode
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OverlayStyleModel&&(identical(other.systemNavigationBarColor, systemNavigationBarColor) || other.systemNavigationBarColor == systemNavigationBarColor)&&(identical(other.systemNavigationBarIconBrightness, systemNavigationBarIconBrightness) || other.systemNavigationBarIconBrightness == systemNavigationBarIconBrightness)&&(identical(other.statusBarIconBrightness, statusBarIconBrightness) || other.statusBarIconBrightness == statusBarIconBrightness)&&(identical(other.statusBarBrightness, statusBarBrightness) || other.statusBarBrightness == statusBarBrightness));
+  final _this = this as OverlayStyleModel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OverlayStyleModel&&(identical(other.systemNavigationBarColor, _this.systemNavigationBarColor) || other.systemNavigationBarColor == _this.systemNavigationBarColor)&&(identical(other.systemNavigationBarIconBrightness, _this.systemNavigationBarIconBrightness) || other.systemNavigationBarIconBrightness == _this.systemNavigationBarIconBrightness)&&(identical(other.statusBarIconBrightness, _this.statusBarIconBrightness) || other.statusBarIconBrightness == _this.statusBarIconBrightness)&&(identical(other.statusBarBrightness, _this.statusBarBrightness) || other.statusBarBrightness == _this.statusBarBrightness));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,systemNavigationBarColor,systemNavigationBarIconBrightness,statusBarIconBrightness,statusBarBrightness);
+int get hashCode {
+  final _this = this as OverlayStyleModel;
+  return Object.hash(runtimeType,_this.systemNavigationBarColor,_this.systemNavigationBarIconBrightness,_this.statusBarIconBrightness,_this.statusBarBrightness);
+}
 
 @override
 String toString() {
-  return 'OverlayStyleModel(systemNavigationBarColor: $systemNavigationBarColor, systemNavigationBarIconBrightness: $systemNavigationBarIconBrightness, statusBarIconBrightness: $statusBarIconBrightness, statusBarBrightness: $statusBarBrightness)';
+  final _this = this as OverlayStyleModel;
+  return 'OverlayStyleModel(systemNavigationBarColor: ${_this.systemNavigationBarColor}, systemNavigationBarIconBrightness: ${_this.systemNavigationBarIconBrightness}, statusBarIconBrightness: ${_this.statusBarIconBrightness}, statusBarBrightness: ${_this.statusBarBrightness})';
 }
 
 

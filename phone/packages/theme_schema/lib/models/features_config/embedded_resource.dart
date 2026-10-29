@@ -48,42 +48,33 @@ class EmbeddedResource with _$EmbeddedResource {
   });
 
   /// Unique identifier for this resource.
-  @override
   final String id;
 
   /// The URI that points to the embedded resource.
-  @override
   final String uri;
 
   /// The type of the resource (e.g., web, file, etc.).
-  @override
   final EmbeddedResourceType type;
 
   /// Toolbar configuration for the resource.
-  @override
   final ToolbarConfig toolbar;
 
   /// Metadata attached to this resource.
-  @override
   final Metadata metadata;
 
   /// Optional payload data to pass to the embedded resource.
-  @override
   final List<String> payload;
 
   /// Whether to capture `console.*` logs from inside the WebView.
-  @override
   final bool enableConsoleLogCapture;
 
   /// Strategy applied when network reconnects.
-  @override
   final String? reconnectStrategy;
 
   /// What the app does with the page when a request it posted to the app ends without success.
   ///
   /// Unset, or a value this build does not know, leaves the choice to the app (see
   /// [ResultStrategyConfig]), so a configuration written for a newer build still loads.
-  @override
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final ResultStrategyConfig? resultStrategy;
 
@@ -120,11 +111,9 @@ class ToolbarConfig with _$ToolbarConfig {
   const ToolbarConfig({this.titleL10n, this.showToolbar = false});
 
   /// The localized title for the toolbar.
-  @override
   final String? titleL10n;
 
   /// Whether the toolbar should be visible.
-  @override
   final bool showToolbar;
 
   factory ToolbarConfig.fromJson(Map<String, Object?> json) => _$ToolbarConfigFromJson(json);

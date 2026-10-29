@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'voicemail_session_cubit.dart';
@@ -9,12 +9,13 @@ part of 'voicemail_session_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$VoicemailSessionState {
 
- VoicemailStatus get status; List<Voicemail> get items; int get unreadCount; Map<String, String> get forwarderNames; Map<String, VoicemailForward> get forwards; Object? get error;
+
 /// Create a copy of VoicemailSessionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,12 +26,16 @@ $VoicemailSessionStateCopyWith<VoicemailSessionState> get copyWith => _$Voicemai
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailSessionState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.unreadCount, unreadCount) || other.unreadCount == unreadCount)&&const DeepCollectionEquality().equals(other.forwarderNames, forwarderNames)&&const DeepCollectionEquality().equals(other.forwards, forwards)&&const DeepCollectionEquality().equals(other.error, error));
+  final _this = this as VoicemailSessionState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailSessionState&&(identical(other.status, _this.status) || other.status == _this.status)&&const DeepCollectionEquality().equals(other.items, _this.items)&&(identical(other.unreadCount, _this.unreadCount) || other.unreadCount == _this.unreadCount)&&const DeepCollectionEquality().equals(other.forwarderNames, _this.forwarderNames)&&const DeepCollectionEquality().equals(other.forwards, _this.forwards)&&const DeepCollectionEquality().equals(other.error, _this.error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(items),unreadCount,const DeepCollectionEquality().hash(forwarderNames),const DeepCollectionEquality().hash(forwards),const DeepCollectionEquality().hash(error));
+int get hashCode {
+  final _this = this as VoicemailSessionState;
+  return Object.hash(runtimeType,_this.status,const DeepCollectionEquality().hash(_this.items),_this.unreadCount,const DeepCollectionEquality().hash(_this.forwarderNames),const DeepCollectionEquality().hash(_this.forwards),const DeepCollectionEquality().hash(_this.error));
+}
 
 
 

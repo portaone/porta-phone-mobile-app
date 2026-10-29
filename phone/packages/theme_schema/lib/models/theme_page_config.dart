@@ -31,49 +31,35 @@ class ThemePageConfig with _$ThemePageConfig {
     this.systemNotifications = const SystemNotificationsPageConfig(),
   });
 
-  @override
   final LoginPageConfig login;
 
-  @override
   final AboutPageConfig about;
 
-  @override
   final CallPageConfig dialing;
 
-  @override
   final KeypadPageConfig keypad;
 
-  @override
   final SettingsPageConfig settings;
 
-  @override
   final ContactsPageConfig contacts;
 
-  @override
   final EmbeddedPageConfig embedded;
 
-  @override
   final FavoritesPageConfig favorites;
 
-  @override
   final ConversationsPageConfig conversations;
 
-  @override
   final RecentsPageConfig recents;
 
-  @override
   final NumberCdrsPageConfig numberCdrs;
 
   /// The voicemail tab. Only its app bar tint is applied so far.
-  @override
   final VoicemailPageConfig voicemail;
 
   /// The call center tab. Only its app bar tint is applied so far.
-  @override
   final CallCenterPageConfig callCenter;
 
   /// The system notifications screen. Only its app bar tint is applied so far.
-  @override
   final SystemNotificationsPageConfig systemNotifications;
 
   factory ThemePageConfig.fromJson(Map<String, Object?> json) => _$ThemePageConfigFromJson(json);
@@ -88,12 +74,10 @@ class ThemeOverrideConfig with _$ThemeOverrideConfig {
   const ThemeOverrideConfig({this.mode = ThemeModeConfig.system, this.applyToAppBar = true});
 
   /// The target mode to force (e.g., ensure screen is always Dark).
-  @override
   final ThemeModeConfig mode;
 
   /// If true (default), the AppBar adopts the [mode].
   /// If false, the AppBar keeps the global theme.
-  @override
   final bool applyToAppBar;
 
   factory ThemeOverrideConfig.fromJson(Map<String, Object?> json) => _$ThemeOverrideConfigFromJson(json);
@@ -118,25 +102,18 @@ class LoginPageConfig with _$LoginPageConfig {
     this.coreUrlAssign = const LoginCoreUrlAssignPageConfig(),
   });
 
-  @override
   final LoginModeSelectPageConfig modeSelect;
 
-  @override
   final LoginSwitchPageConfig switchPage;
 
-  @override
   final LoginOtpSigninPageConfig otpSignin;
 
-  @override
   final LoginPasswordSigninPageConfig passwordSignin;
 
-  @override
   final LoginOtpSigninVerifyScreenPageConfig otpSigninVerify;
 
-  @override
   final LoginSignupVerifyScreenPageConfig signupVerify;
 
-  @override
   final LoginCoreUrlAssignPageConfig coreUrlAssign;
 
   factory LoginPageConfig.fromJson(Map<String, Object?> json) => _$LoginPageConfigFromJson(json);
@@ -154,7 +131,6 @@ class LoginPageConfig with _$LoginPageConfig {
 class LoginOtpSigninPageConfig with _$LoginOtpSigninPageConfig {
   const LoginOtpSigninPageConfig({this.refTextField});
 
-  @override
   final TextFieldConfig? refTextField;
 
   factory LoginOtpSigninPageConfig.fromJson(Map<String, Object?> json) => _$LoginOtpSigninPageConfigFromJson(json);
@@ -168,10 +144,8 @@ class LoginOtpSigninPageConfig with _$LoginOtpSigninPageConfig {
 class LoginPasswordSigninPageConfig with _$LoginPasswordSigninPageConfig {
   const LoginPasswordSigninPageConfig({this.refTextField, this.passwordTextField});
 
-  @override
   final TextFieldConfig? refTextField;
 
-  @override
   final TextFieldConfig? passwordTextField;
 
   factory LoginPasswordSigninPageConfig.fromJson(Map<String, Object?> json) =>
@@ -185,7 +159,6 @@ class LoginPasswordSigninPageConfig with _$LoginPasswordSigninPageConfig {
 class LoginOtpSigninVerifyScreenPageConfig with _$LoginOtpSigninVerifyScreenPageConfig {
   const LoginOtpSigninVerifyScreenPageConfig({this.countdownRepeatIntervalSeconds = 30});
 
-  @override
   final int countdownRepeatIntervalSeconds;
 
   factory LoginOtpSigninVerifyScreenPageConfig.fromJson(Map<String, Object?> json) =>
@@ -199,7 +172,6 @@ class LoginOtpSigninVerifyScreenPageConfig with _$LoginOtpSigninVerifyScreenPage
 class LoginSignupVerifyScreenPageConfig with _$LoginSignupVerifyScreenPageConfig {
   const LoginSignupVerifyScreenPageConfig({this.countdownRepeatIntervalSeconds = 30});
 
-  @override
   final int countdownRepeatIntervalSeconds;
 
   factory LoginSignupVerifyScreenPageConfig.fromJson(Map<String, Object?> json) =>
@@ -223,25 +195,19 @@ class LoginModeSelectPageConfig with _$LoginModeSelectPageConfig implements Base
     this.appBarStyle,
   });
 
-  @override
   final ThemeOverrideConfig themeOverride;
 
-  @override
   final OverlayStyleModel? systemUiOverlayStyle;
 
-  @override
   final ImageSource? mainLogo;
 
-  @override
   final ElevatedButtonStyleType buttonLoginStyleType;
 
-  @override
   final ElevatedButtonStyleType buttonSignupStyleType;
 
   @override
   final PageBackground? background;
 
-  @override
   final TextStyleConfig? greetingTextStyle;
 
   @override
@@ -267,16 +233,13 @@ class LoginSwitchPageConfig with _$LoginSwitchPageConfig implements BasePageConf
     this.appBarStyle,
   });
 
-  @override
   final ThemeOverrideConfig themeOverride;
 
-  @override
   final ImageSource? mainLogo;
 
   @override
   final PageBackground? background;
 
-  @override
   final ButtonStyleConfig? segmentButtonStyle;
 
   @override
@@ -302,10 +265,8 @@ class AboutPageConfig with _$AboutPageConfig implements BasePageConfig {
     this.appBarStyle,
   });
 
-  @override
   final ImageSource? mainLogo;
 
-  @override
   final Metadata metadata;
 
   @override
@@ -341,22 +302,17 @@ class CallPageConfig with _$CallPageConfig implements BasePageConfig {
     this.appBarBlurredSurface,
   });
 
-  @override
   final OverlayStyleModel? systemUiOverlayStyle;
 
   @override
   final AppBarConfig? appBarStyle;
 
-  @override
   final CallPageInfoConfig? callInfo;
 
-  @override
   final CallPageListConfig? callList;
 
-  @override
   final CallPageHintConfig? actingOnHint;
 
-  @override
   final CallPageActionsConfig? actions;
 
   @override
@@ -386,37 +342,27 @@ class CallPageActionsConfig with _$CallPageActionsConfig {
     this.keypadInputStyle,
   });
 
-  @override
   final ButtonStyleConfig callStart;
 
-  @override
   final ButtonStyleConfig hangup;
 
-  @override
   final ButtonStyleConfig transfer;
 
-  @override
   final ButtonStyleConfig camera;
 
-  @override
   final ButtonStyleConfig muted;
 
-  @override
   final ButtonStyleConfig speaker;
 
-  @override
   final ButtonStyleConfig held;
 
-  @override
   final ButtonStyleConfig swap;
 
-  @override
   final ButtonStyleConfig key;
 
   /// Text style for the digits typed on the in-call DTMF keypad (the value shown
   /// above the keys). When unset the app falls back to its default display text
   /// style for the keypad input.
-  @override
   final TextStyleConfig? keypadInputStyle;
 
   factory CallPageActionsConfig.fromJson(Map<String, Object?> json) => _$CallPageActionsConfigFromJson(json);
@@ -435,16 +381,12 @@ class CallPageInfoConfig with _$CallPageInfoConfig {
     this.processingStatusTextStyle,
   });
 
-  @override
   final TextStyleConfig? usernameTextStyle;
 
-  @override
   final TextStyleConfig? numberTextStyle;
 
-  @override
   final TextStyleConfig? callStatusTextStyle;
 
-  @override
   final TextStyleConfig? processingStatusTextStyle;
 
   factory CallPageInfoConfig.fromJson(Map<String, Object?> json) => _$CallPageInfoConfigFromJson(json);
@@ -467,22 +409,16 @@ class CallPageListConfig with _$CallPageListConfig {
     this.dotHeldColor,
   });
 
-  @override
   final String? rowBackgroundColor;
 
-  @override
   final String? rowFocusedBackgroundColor;
 
-  @override
   final String? rowFocusedBorderColor;
 
-  @override
   final String? dotRingingColor;
 
-  @override
   final String? dotOnCallColor;
 
-  @override
   final String? dotHeldColor;
 
   factory CallPageListConfig.fromJson(Map<String, Object?> json) => _$CallPageListConfigFromJson(json);
@@ -497,10 +433,8 @@ class CallPageListConfig with _$CallPageListConfig {
 class CallPageHintConfig with _$CallPageHintConfig {
   const CallPageHintConfig({this.backgroundColor, this.affectedNameColor});
 
-  @override
   final String? backgroundColor;
 
-  @override
   final String? affectedNameColor;
 
   factory CallPageHintConfig.fromJson(Map<String, Object?> json) => _$CallPageHintConfigFromJson(json);
@@ -524,26 +458,20 @@ class KeypadPageConfig with _$KeypadPageConfig implements BasePageConfig {
     this.appBarStyle,
   });
 
-  @override
   final OverlayStyleModel? systemUiOverlayStyle;
 
-  @override
   final TextFieldConfig? textField;
 
-  @override
   final TextFieldConfig? contactName;
 
-  @override
   final KeypadStyleConfig? keypad;
 
-  @override
   final ActionPadWidgetConfig? actionpad;
 
   @override
   final PageBackground? background;
 
   /// Configuration to force override the theme mode (e.g., force Dark mode).
-  @override
   final ThemeOverrideConfig themeOverride;
 
   @override
@@ -566,14 +494,11 @@ class ActionPadWidgetConfig with _$ActionPadWidgetConfig {
     this.backspace = const ButtonStyleConfig(),
   });
 
-  @override
   final ButtonStyleConfig callStart;
 
-  @override
   final ButtonStyleConfig callTransfer;
 
   /// Style of the backspace key under the dial pad.
-  @override
   final ButtonStyleConfig backspace;
 
   /// The retired name of [backspace], read and written for as long as themes
@@ -617,29 +542,22 @@ class SettingsPageConfig with _$SettingsPageConfig implements BasePageConfig {
   });
 
   /// Configuration to force override the theme mode.
-  @override
   final ThemeOverrideConfig themeOverride;
 
-  @override
   final String? leadingIconsColor;
 
-  @override
   final String? userIconColor;
 
-  @override
   final String? logoutIconColor;
 
-  @override
   final GroupTitleListTileWidgetConfig? groupTitleListTile;
 
   /// Style of the divider lines between setting items (visibility + color).
-  @override
   final SeparatorStyleConfig? separator;
 
   @override
   final PageBackground? background;
 
-  @override
   final TextStyleConfig? itemTextStyle;
 
   @override
@@ -664,7 +582,6 @@ class ContactsPageConfig with _$ContactsPageConfig implements BasePageConfig {
   });
 
   /// Configuration to force override the theme mode.
-  @override
   final ThemeOverrideConfig themeOverride;
 
   @override
@@ -692,7 +609,6 @@ class EmbeddedPageConfig with _$EmbeddedPageConfig implements BasePageConfig {
   });
 
   /// Configuration to force override the theme mode.
-  @override
   final ThemeOverrideConfig themeOverride;
 
   @override
@@ -720,7 +636,6 @@ class FavoritesPageConfig with _$FavoritesPageConfig implements BasePageConfig {
   });
 
   /// Configuration to force override the theme mode.
-  @override
   final ThemeOverrideConfig themeOverride;
 
   @override
@@ -748,7 +663,6 @@ class VoicemailPageConfig with _$VoicemailPageConfig implements BasePageConfig {
   });
 
   /// Configuration to force override the theme mode.
-  @override
   final ThemeOverrideConfig themeOverride;
 
   @override
@@ -776,7 +690,6 @@ class CallCenterPageConfig with _$CallCenterPageConfig implements BasePageConfig
   });
 
   /// Configuration to force override the theme mode.
-  @override
   final ThemeOverrideConfig themeOverride;
 
   @override
@@ -804,7 +717,6 @@ class SystemNotificationsPageConfig with _$SystemNotificationsPageConfig impleme
   });
 
   /// Configuration to force override the theme mode.
-  @override
   final ThemeOverrideConfig themeOverride;
 
   @override
@@ -833,7 +745,6 @@ class ConversationsPageConfig with _$ConversationsPageConfig implements BasePage
   });
 
   /// Configuration to force override the theme mode.
-  @override
   final ThemeOverrideConfig themeOverride;
 
   @override
@@ -861,7 +772,6 @@ class RecentsPageConfig with _$RecentsPageConfig implements BasePageConfig {
   });
 
   /// Configuration to force override the theme mode.
-  @override
   final ThemeOverrideConfig themeOverride;
 
   @override
@@ -890,10 +800,8 @@ class LoginCoreUrlAssignPageConfig with _$LoginCoreUrlAssignPageConfig implement
     this.appBarStyle,
   });
 
-  @override
   final ThemeOverrideConfig themeOverride;
 
-  @override
   final OverlayStyleModel? systemUiOverlayStyle;
 
   @override

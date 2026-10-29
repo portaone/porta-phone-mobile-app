@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_status.dart';
@@ -9,13 +9,14 @@ part of 'app_status.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$AppStatus {
 
- bool get register;
+
 /// Create a copy of AppStatus
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $AppStatusCopyWith<AppStatus> get copyWith => _$AppStatusCopyWithImpl<AppStatus>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppStatus&&(identical(other.register, register) || other.register == register));
+  final _this = this as AppStatus;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppStatus&&(identical(other.register, _this.register) || other.register == _this.register));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,register);
+int get hashCode {
+  final _this = this as AppStatus;
+  return Object.hash(runtimeType,_this.register);
+}
 
 @override
 String toString() {
-  return 'AppStatus(register: $register)';
+  final _this = this as AppStatus;
+  return 'AppStatus(register: ${_this.register})';
 }
 
 

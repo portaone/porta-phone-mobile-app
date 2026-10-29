@@ -9,13 +9,10 @@ enum FavoriteSourceType { pbx, device }
 class FavoritesGetResult with _$FavoritesGetResult {
   const FavoritesGetResult({required this.notModified, required this.etag, this.data});
 
-  @override
   final bool notModified;
 
-  @override
   final String etag;
 
-  @override
   final FavoritesListResponse? data;
 }
 
@@ -24,7 +21,6 @@ class FavoritesGetResult with _$FavoritesGetResult {
 class FavoritesListResponse with _$FavoritesListResponse {
   const FavoritesListResponse({required this.items});
 
-  @override
   final List<FavoriteItem> items;
 
   factory FavoritesListResponse.fromJson(Map<String, Object?> json) => _$FavoritesListResponseFromJson(json);
@@ -43,19 +39,14 @@ class FavoriteItem with _$FavoriteItem {
     required this.position,
   });
 
-  @override
   final String number;
 
-  @override
   final FavoriteSourceType sourceType;
 
-  @override
   final String sourceId;
 
-  @override
   final String label;
 
-  @override
   final int position;
 
   factory FavoriteItem.fromJson(Map<String, Object?> json) => _$FavoriteItemFromJson(json);
@@ -77,22 +68,16 @@ class FavoriteBatchAction with _$FavoriteBatchAction {
     this.position,
   });
 
-  @override
   final FavoriteBatchActionType action;
 
-  @override
   final String number;
 
-  @override
   final FavoriteSourceType sourceType;
 
-  @override
   final String? sourceId;
 
-  @override
   final String? label;
 
-  @override
   final int? position;
 
   factory FavoriteBatchAction.fromJson(Map<String, Object?> json) => _$FavoriteBatchActionFromJson(json);
@@ -104,10 +89,8 @@ class FavoriteBatchAction with _$FavoriteBatchAction {
 class FavoriteBatchSyncResult with _$FavoriteBatchSyncResult {
   const FavoriteBatchSyncResult({required this.data, required this.etag});
 
-  @override
   final FavoriteBatchSyncResponse data;
 
-  @override
   final String etag;
 }
 
@@ -116,10 +99,8 @@ class FavoriteBatchSyncResult with _$FavoriteBatchSyncResult {
 class FavoriteBatchSyncResponse with _$FavoriteBatchSyncResponse {
   const FavoriteBatchSyncResponse({required this.items, required this.conflicts});
 
-  @override
   final List<FavoriteItem> items;
 
-  @override
   final List<FavoriteBatchConflict> conflicts;
 
   factory FavoriteBatchSyncResponse.fromJson(Map<String, Object?> json) => _$FavoriteBatchSyncResponseFromJson(json);
@@ -137,16 +118,12 @@ class FavoriteBatchConflict with _$FavoriteBatchConflict {
     required this.reason,
   });
 
-  @override
   final FavoriteBatchActionType action;
 
-  @override
   final String number;
 
-  @override
   final FavoriteSourceType sourceType;
 
-  @override
   final FavoriteBatchConflictReason reason;
 
   factory FavoriteBatchConflict.fromJson(Map<String, Object?> json) => _$FavoriteBatchConflictFromJson(json);

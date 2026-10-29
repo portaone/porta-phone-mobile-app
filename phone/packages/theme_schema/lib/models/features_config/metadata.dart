@@ -15,7 +15,6 @@ class Metadata with _$Metadata {
   const Metadata({this.attributes = const {}});
 
   /// A map storing arbitrary key-value pairs for contextual or configuration data.
-  @override
   final Map<String, dynamic> attributes;
 
   /// Creates an instance of `Metadata` from a JSON map.

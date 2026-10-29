@@ -21,31 +21,22 @@ class UserInfo with _$UserInfo {
     this.timeZone,
   });
 
-  @override
   final UserInfoStatus? status;
 
-  @override
   final Balance? balance;
 
-  @override
   final Numbers numbers;
 
-  @override
   final String? email;
 
-  @override
   final String? firstName;
 
-  @override
   final String? lastName;
 
-  @override
   final String? aliasName;
 
-  @override
   final String? companyName;
 
-  @override
   final String? timeZone;
 
   factory UserInfo.fromJson(Map<String, Object?> json) => _$UserInfoFromJson(json);

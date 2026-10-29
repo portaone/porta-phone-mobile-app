@@ -16,15 +16,12 @@ part 'ice_servers.g.dart';
 class IceServersResponse with _$IceServersResponse {
   const IceServersResponse({this.iceServers = const [], this.ttl, this.expiresAt});
 
-  @override
   final List<IceServer> iceServers;
 
   /// Lifetime of the returned credentials in seconds. `null` = not declared.
-  @override
   final int? ttl;
 
   /// Absolute expiration of the returned credentials. `null` = not declared.
-  @override
   final DateTime? expiresAt;
 
   factory IceServersResponse.fromJson(Map<String, Object?> json) => _$IceServersResponseFromJson(json);
@@ -41,13 +38,10 @@ class IceServersResponse with _$IceServersResponse {
 class IceServer with _$IceServer {
   const IceServer({this.urls = const [], this.username, this.credential});
 
-  @override
   final List<String> urls;
 
-  @override
   final String? username;
 
-  @override
   final String? credential;
 
   factory IceServer.fromJson(Map<String, Object?> json) => _$IceServerFromJson(json);

@@ -12,11 +12,9 @@ part 'user_sessions.g.dart';
 class UserSessionList with _$UserSessionList {
   const UserSessionList({this.items = const [], this.autoTerminate});
 
-  @override
   final List<UserSession> items;
 
   /// Absent from a core without idle-session cleanup.
-  @override
   final UserSessionsAutoTerminate? autoTerminate;
 
   factory UserSessionList.fromJson(Map<String, Object?> json) => _$UserSessionListFromJson(json);
@@ -33,12 +31,10 @@ class UserSessionsAutoTerminate with _$UserSessionsAutoTerminate {
 
   /// Idle days after which the user's sessions end - the shorter of the user's
   /// own choice and [installationMaxDays]. Null when sessions are never ended.
-  @override
   final int? inactivityTimeoutDays;
 
   /// The installation's own timeout, set by its administrator; a user may only
   /// choose a shorter one. Null when the installation sets none.
-  @override
   final int? installationMaxDays;
 
   factory UserSessionsAutoTerminate.fromJson(Map<String, Object?> json) => _$UserSessionsAutoTerminateFromJson(json);

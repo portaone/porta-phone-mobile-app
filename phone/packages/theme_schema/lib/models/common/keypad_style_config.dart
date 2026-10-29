@@ -34,16 +34,12 @@ class KeypadStyleConfig with _$KeypadStyleConfig {
     this.padding,
   });
 
-  @override
   final TextStyleConfig? textStyle;
 
-  @override
   final TextStyleConfig? subtextStyle;
 
-  @override
   final double? spacing;
 
-  @override
   final double? padding;
 
   factory KeypadStyleConfig.fromJson(Map<String, dynamic> json) => _$KeypadStyleConfigFromJson(json);

@@ -8,16 +8,13 @@ part 'caller_id_settings.g.dart';
 class PrefixMatcher with _$PrefixMatcher {
   const PrefixMatcher({required this.prefix, required this.number, this.country});
 
-  @override
   final String prefix;
 
-  @override
   final String number;
 
   /// ISO 3166-1 alpha-2 code of the country picked for [prefix], for display
   /// only. Left out of the request when unknown: the backend then keeps the
   /// country it already has for the same prefix.
-  @override
   @JsonKey(includeIfNull: false)
   final String? country;
 
@@ -36,16 +33,12 @@ class CallerIdSettings with _$CallerIdSettings {
     required this.modifiedAt,
   });
 
-  @override
   final String? defaultNumber;
 
-  @override
   final List<PrefixMatcher> prefixMatchers;
 
-  @override
   final int version;
 
-  @override
   final DateTime modifiedAt;
 
   factory CallerIdSettings.fromJson(Map<String, Object?> json) => _$CallerIdSettingsFromJson(json);

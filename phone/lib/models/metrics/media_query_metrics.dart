@@ -14,16 +14,12 @@ class MediaQueryMetrics with _$MediaQueryMetrics {
     required this.bottomSafeInset,
   });
 
-  @override
   final String brightness;
 
-  @override
   final double devicePixelRatio;
 
-  @override
   final int topSafeInset;
 
-  @override
   final int bottomSafeInset;
 
   factory MediaQueryMetrics.fromJson(Map<String, dynamic> json) => _$MediaQueryMetricsFromJson(json);

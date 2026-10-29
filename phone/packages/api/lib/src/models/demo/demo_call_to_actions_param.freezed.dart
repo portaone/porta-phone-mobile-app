@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'demo_call_to_actions_param.dart';
@@ -9,13 +9,14 @@ part of 'demo_call_to_actions_param.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$DemoCallToActionsParam {
 
- String get email; String get tab;
+
 /// Create a copy of DemoCallToActionsParam
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $DemoCallToActionsParamCopyWith<DemoCallToActionsParam> get copyWith => _$DemoCa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoCallToActionsParam&&(identical(other.email, email) || other.email == email)&&(identical(other.tab, tab) || other.tab == tab));
+  final _this = this as DemoCallToActionsParam;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DemoCallToActionsParam&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.tab, _this.tab) || other.tab == _this.tab));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,email,tab);
+int get hashCode {
+  final _this = this as DemoCallToActionsParam;
+  return Object.hash(runtimeType,_this.email,_this.tab);
+}
 
 @override
 String toString() {
-  return 'DemoCallToActionsParam(email: $email, tab: $tab)';
+  final _this = this as DemoCallToActionsParam;
+  return 'DemoCallToActionsParam(email: ${_this.email}, tab: ${_this.tab})';
 }
 
 

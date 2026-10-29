@@ -1,7 +1,8 @@
 part of 'call_bloc.dart';
 
-@freezed
-class CallState with _$CallState {
+// DiagnosticableTreeMixin counts as a custom toString to freezed 4; ask for its own.
+@Freezed(toStringOverride: true)
+class CallState with DiagnosticableTreeMixin, _$CallState {
   const CallState({
     this.callServiceState = const CallServiceState(),
     this.currentAppLifecycleState,
@@ -17,36 +18,28 @@ class CallState with _$CallState {
     this.linkedCall,
   });
 
-  @override
   final CallServiceState callServiceState;
 
-  @override
   final AppLifecycleState? currentAppLifecycleState;
 
-  @override
   final int linesCount;
 
-  @override
   final List<ActiveCall> activeCalls;
 
-  @override
   final bool? minimized;
 
   /// The route in use, as the platform last reported it.
-  @override
   final CallAudioDevice? audioDevice;
 
   /// A device the person asked for that the platform has not confirmed yet; null when
   /// nothing is asked for, and always null where the platform reports only a route it
   /// moved to.
-  @override
   final AudioDeviceRequest? audioDeviceRequest;
 
   /// The device the person takes the call to be on: the one asked for while the
   /// platform is still moving the audio, the route in use otherwise.
   CallAudioDevice? get shownAudioDevice => audioDeviceRequest?.device ?? audioDevice;
 
-  @override
   final List<CallAudioDevice> availableAudioDevices;
 
   /// The call the user has explicitly focused (e.g. tapped in the call list).
@@ -56,23 +49,19 @@ class CallState with _$CallState {
   /// list-based call screen, where one bottom action area acts on the focused
   /// call. Always read it through [focusedCall], which clamps a stale id back
   /// to `current`.
-  @override
   final String? selectedCallId;
 
   /// The call the person placed that holds the focus (see
   /// [copyWithFocusOnPlacedCall]), with the selection it took over: the focus
   /// goes back to that one when the call ends or joins the room. Null when no
   /// placed call holds the focus.
-  @override
   final ({String callId, String? returnsTo})? placedCallFocus;
 
   /// The conference room this client hosts; an empty one when there is none.
-  @override
   final ConferenceState conference;
 
   /// The call being placed on behalf of another one - a consultation before a
   /// transfer - while it is being placed; null when there is none.
-  @override
   final LinkedCall? linkedCall;
 
   CallStatus get status => callServiceState.status;

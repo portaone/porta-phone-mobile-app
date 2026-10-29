@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'separator_style_config.dart';
@@ -9,13 +9,14 @@ part of 'separator_style_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$SeparatorStyleConfig {
 
- bool get enabled; String? get color;
+
 /// Create a copy of SeparatorStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $SeparatorStyleConfigCopyWith<SeparatorStyleConfig> get copyWith => _$SeparatorS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SeparatorStyleConfig&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.color, color) || other.color == color));
+  final _this = this as SeparatorStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SeparatorStyleConfig&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.color, _this.color) || other.color == _this.color));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,color);
+int get hashCode {
+  final _this = this as SeparatorStyleConfig;
+  return Object.hash(runtimeType,_this.enabled,_this.color);
+}
 
 @override
 String toString() {
-  return 'SeparatorStyleConfig(enabled: $enabled, color: $color)';
+  final _this = this as SeparatorStyleConfig;
+  return 'SeparatorStyleConfig(enabled: ${_this.enabled}, color: ${_this.color})';
 }
 
 

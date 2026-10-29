@@ -13,16 +13,12 @@ part 'session_otp_credential.g.dart';
 class SessionOtpCredential with _$SessionOtpCredential {
   const SessionOtpCredential({this.bundleId, required this.type, required this.identifier, required this.userRef});
 
-  @override
   final String? bundleId;
 
-  @override
   final AppType type;
 
-  @override
   final String identifier;
 
-  @override
   final String userRef;
 
   factory SessionOtpCredential.fromJson(Map<String, dynamic> json) => _$SessionOtpCredentialFromJson(json);

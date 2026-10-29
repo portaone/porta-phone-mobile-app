@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'self_config.dart';
@@ -9,13 +9,14 @@ part of 'self_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$SelfConfigResponse {
 
- Uri get url; DateTime get expiresAt;
+
 /// Create a copy of SelfConfigResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $SelfConfigResponseCopyWith<SelfConfigResponse> get copyWith => _$SelfConfigResp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SelfConfigResponse&&(identical(other.url, url) || other.url == url)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  final _this = this as SelfConfigResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SelfConfigResponse&&(identical(other.url, _this.url) || other.url == _this.url)&&(identical(other.expiresAt, _this.expiresAt) || other.expiresAt == _this.expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,url,expiresAt);
+int get hashCode {
+  final _this = this as SelfConfigResponse;
+  return Object.hash(runtimeType,_this.url,_this.expiresAt);
+}
 
 @override
 String toString() {
-  return 'SelfConfigResponse(url: $url, expiresAt: $expiresAt)';
+  final _this = this as SelfConfigResponse;
+  return 'SelfConfigResponse(url: ${_this.url}, expiresAt: ${_this.expiresAt})';
 }
 
 

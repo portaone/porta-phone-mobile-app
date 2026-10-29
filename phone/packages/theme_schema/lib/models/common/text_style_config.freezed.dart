@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'text_style_config.dart';
@@ -9,13 +9,14 @@ part of 'text_style_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$TextStyleConfig {
 
- String? get fontFamily; double? get fontSize; FontWeightConfig? get fontWeight; FontStyleConfig? get fontStyle; String? get color; double? get letterSpacing; double? get wordSpacing; double? get height; TextDecorationConfig? get decoration; String? get backgroundColor; double? get backgroundBorderRadius; PaddingConfig? get backgroundPadding;
+
 /// Create a copy of TextStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $TextStyleConfigCopyWith<TextStyleConfig> get copyWith => _$TextStyleConfigCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextStyleConfig&&(identical(other.fontFamily, fontFamily) || other.fontFamily == fontFamily)&&(identical(other.fontSize, fontSize) || other.fontSize == fontSize)&&(identical(other.fontWeight, fontWeight) || other.fontWeight == fontWeight)&&(identical(other.fontStyle, fontStyle) || other.fontStyle == fontStyle)&&(identical(other.color, color) || other.color == color)&&(identical(other.letterSpacing, letterSpacing) || other.letterSpacing == letterSpacing)&&(identical(other.wordSpacing, wordSpacing) || other.wordSpacing == wordSpacing)&&(identical(other.height, height) || other.height == height)&&(identical(other.decoration, decoration) || other.decoration == decoration)&&(identical(other.backgroundColor, backgroundColor) || other.backgroundColor == backgroundColor)&&(identical(other.backgroundBorderRadius, backgroundBorderRadius) || other.backgroundBorderRadius == backgroundBorderRadius)&&(identical(other.backgroundPadding, backgroundPadding) || other.backgroundPadding == backgroundPadding));
+  final _this = this as TextStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextStyleConfig&&(identical(other.fontFamily, _this.fontFamily) || other.fontFamily == _this.fontFamily)&&(identical(other.fontSize, _this.fontSize) || other.fontSize == _this.fontSize)&&(identical(other.fontWeight, _this.fontWeight) || other.fontWeight == _this.fontWeight)&&(identical(other.fontStyle, _this.fontStyle) || other.fontStyle == _this.fontStyle)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.letterSpacing, _this.letterSpacing) || other.letterSpacing == _this.letterSpacing)&&(identical(other.wordSpacing, _this.wordSpacing) || other.wordSpacing == _this.wordSpacing)&&(identical(other.height, _this.height) || other.height == _this.height)&&(identical(other.decoration, _this.decoration) || other.decoration == _this.decoration)&&(identical(other.backgroundColor, _this.backgroundColor) || other.backgroundColor == _this.backgroundColor)&&(identical(other.backgroundBorderRadius, _this.backgroundBorderRadius) || other.backgroundBorderRadius == _this.backgroundBorderRadius)&&(identical(other.backgroundPadding, _this.backgroundPadding) || other.backgroundPadding == _this.backgroundPadding));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,fontFamily,fontSize,fontWeight,fontStyle,color,letterSpacing,wordSpacing,height,decoration,backgroundColor,backgroundBorderRadius,backgroundPadding);
+int get hashCode {
+  final _this = this as TextStyleConfig;
+  return Object.hash(runtimeType,_this.fontFamily,_this.fontSize,_this.fontWeight,_this.fontStyle,_this.color,_this.letterSpacing,_this.wordSpacing,_this.height,_this.decoration,_this.backgroundColor,_this.backgroundBorderRadius,_this.backgroundPadding);
+}
 
 @override
 String toString() {
-  return 'TextStyleConfig(fontFamily: $fontFamily, fontSize: $fontSize, fontWeight: $fontWeight, fontStyle: $fontStyle, color: $color, letterSpacing: $letterSpacing, wordSpacing: $wordSpacing, height: $height, decoration: $decoration, backgroundColor: $backgroundColor, backgroundBorderRadius: $backgroundBorderRadius, backgroundPadding: $backgroundPadding)';
+  final _this = this as TextStyleConfig;
+  return 'TextStyleConfig(fontFamily: ${_this.fontFamily}, fontSize: ${_this.fontSize}, fontWeight: ${_this.fontWeight}, fontStyle: ${_this.fontStyle}, color: ${_this.color}, letterSpacing: ${_this.letterSpacing}, wordSpacing: ${_this.wordSpacing}, height: ${_this.height}, decoration: ${_this.decoration}, backgroundColor: ${_this.backgroundColor}, backgroundBorderRadius: ${_this.backgroundBorderRadius}, backgroundPadding: ${_this.backgroundPadding})';
 }
 
 
@@ -212,7 +218,7 @@ case _:
 /// @nodoc
 mixin _$FontWeightConfig {
 
- int get weight;
+
 /// Create a copy of FontWeightConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -223,16 +229,21 @@ $FontWeightConfigCopyWith<FontWeightConfig> get copyWith => _$FontWeightConfigCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FontWeightConfig&&(identical(other.weight, weight) || other.weight == weight));
+  final _this = this as FontWeightConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FontWeightConfig&&(identical(other.weight, _this.weight) || other.weight == _this.weight));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,weight);
+int get hashCode {
+  final _this = this as FontWeightConfig;
+  return Object.hash(runtimeType,_this.weight);
+}
 
 @override
 String toString() {
-  return 'FontWeightConfig(weight: $weight)';
+  final _this = this as FontWeightConfig;
+  return 'FontWeightConfig(weight: ${_this.weight})';
 }
 
 
@@ -398,7 +409,7 @@ case _:
 /// @nodoc
 mixin _$FontStyleConfig {
 
- String get value;
+
 /// Create a copy of FontStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -409,16 +420,21 @@ $FontStyleConfigCopyWith<FontStyleConfig> get copyWith => _$FontStyleConfigCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FontStyleConfig&&(identical(other.value, value) || other.value == value));
+  final _this = this as FontStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FontStyleConfig&&(identical(other.value, _this.value) || other.value == _this.value));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,value);
+int get hashCode {
+  final _this = this as FontStyleConfig;
+  return Object.hash(runtimeType,_this.value);
+}
 
 @override
 String toString() {
-  return 'FontStyleConfig(value: $value)';
+  final _this = this as FontStyleConfig;
+  return 'FontStyleConfig(value: ${_this.value})';
 }
 
 
@@ -584,7 +600,7 @@ case _:
 /// @nodoc
 mixin _$TextDecorationConfig {
 
- List<String> get types; String? get hint; TextStyleConfig? get hintStyle; String? get prefixText; TextStyleConfig? get prefixStyle;
+
 /// Create a copy of TextDecorationConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -595,16 +611,21 @@ $TextDecorationConfigCopyWith<TextDecorationConfig> get copyWith => _$TextDecora
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextDecorationConfig&&const DeepCollectionEquality().equals(other.types, types)&&(identical(other.hint, hint) || other.hint == hint)&&(identical(other.hintStyle, hintStyle) || other.hintStyle == hintStyle)&&(identical(other.prefixText, prefixText) || other.prefixText == prefixText)&&(identical(other.prefixStyle, prefixStyle) || other.prefixStyle == prefixStyle));
+  final _this = this as TextDecorationConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextDecorationConfig&&const DeepCollectionEquality().equals(other.types, _this.types)&&(identical(other.hint, _this.hint) || other.hint == _this.hint)&&(identical(other.hintStyle, _this.hintStyle) || other.hintStyle == _this.hintStyle)&&(identical(other.prefixText, _this.prefixText) || other.prefixText == _this.prefixText)&&(identical(other.prefixStyle, _this.prefixStyle) || other.prefixStyle == _this.prefixStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(types),hint,hintStyle,prefixText,prefixStyle);
+int get hashCode {
+  final _this = this as TextDecorationConfig;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.types),_this.hint,_this.hintStyle,_this.prefixText,_this.prefixStyle);
+}
 
 @override
 String toString() {
-  return 'TextDecorationConfig(types: $types, hint: $hint, hintStyle: $hintStyle, prefixText: $prefixText, prefixStyle: $prefixStyle)';
+  final _this = this as TextDecorationConfig;
+  return 'TextDecorationConfig(types: ${_this.types}, hint: ${_this.hint}, hintStyle: ${_this.hintStyle}, prefixText: ${_this.prefixText}, prefixStyle: ${_this.prefixStyle})';
 }
 
 

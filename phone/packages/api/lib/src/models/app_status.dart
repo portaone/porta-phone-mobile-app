@@ -11,7 +11,6 @@ part 'app_status.g.dart';
 class AppStatus with _$AppStatus {
   const AppStatus({required this.register});
 
-  @override
   final bool register;
 
   factory AppStatus.fromJson(Map<String, dynamic> json) => _$AppStatusFromJson(json);

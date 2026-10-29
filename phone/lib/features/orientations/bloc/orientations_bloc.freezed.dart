@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'orientations_bloc.dart';
@@ -9,12 +9,13 @@ part of 'orientations_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OrientationsState {
 
- PreferredOrientation? get lastOrientation;
+
 /// Create a copy of OrientationsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $OrientationsStateCopyWith<OrientationsState> get copyWith => _$OrientationsStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrientationsState&&(identical(other.lastOrientation, lastOrientation) || other.lastOrientation == lastOrientation));
+  final _this = this as OrientationsState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrientationsState&&(identical(other.lastOrientation, _this.lastOrientation) || other.lastOrientation == _this.lastOrientation));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,lastOrientation);
+int get hashCode {
+  final _this = this as OrientationsState;
+  return Object.hash(runtimeType,_this.lastOrientation);
+}
 
 @override
 String toString() {
-  return 'OrientationsState(lastOrientation: $lastOrientation)';
+  final _this = this as OrientationsState;
+  return 'OrientationsState(lastOrientation: ${_this.lastOrientation})';
 }
 
 

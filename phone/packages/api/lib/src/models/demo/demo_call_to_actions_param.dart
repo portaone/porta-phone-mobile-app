@@ -11,10 +11,8 @@ part 'demo_call_to_actions_param.g.dart';
 class DemoCallToActionsParam with _$DemoCallToActionsParam {
   const DemoCallToActionsParam({required this.email, required this.tab});
 
-  @override
   final String email;
 
-  @override
   final String tab;
 
   factory DemoCallToActionsParam.fromJson(Map<String, dynamic> json) => _$DemoCallToActionsParamFromJson(json);

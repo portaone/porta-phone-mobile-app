@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'sip_subscriptions.dart';
@@ -9,12 +9,13 @@ part of 'sip_subscriptions.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SipSubscriptionsGetResult {
 
- bool get notModified; String get etag; SipSubscriptionsListResponse? get data;
+
 /// Create a copy of SipSubscriptionsGetResult
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $SipSubscriptionsGetResultCopyWith<SipSubscriptionsGetResult> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionsGetResult&&(identical(other.notModified, notModified) || other.notModified == notModified)&&(identical(other.etag, etag) || other.etag == etag)&&(identical(other.data, data) || other.data == data));
+  final _this = this as SipSubscriptionsGetResult;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionsGetResult&&(identical(other.notModified, _this.notModified) || other.notModified == _this.notModified)&&(identical(other.etag, _this.etag) || other.etag == _this.etag)&&(identical(other.data, _this.data) || other.data == _this.data));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,notModified,etag,data);
+int get hashCode {
+  final _this = this as SipSubscriptionsGetResult;
+  return Object.hash(runtimeType,_this.notModified,_this.etag,_this.data);
+}
 
 @override
 String toString() {
-  return 'SipSubscriptionsGetResult(notModified: $notModified, etag: $etag, data: $data)';
+  final _this = this as SipSubscriptionsGetResult;
+  return 'SipSubscriptionsGetResult(notModified: ${_this.notModified}, etag: ${_this.etag}, data: ${_this.data})';
 }
 
 
@@ -202,7 +208,7 @@ case _:
 /// @nodoc
 mixin _$SipSubscriptionsListResponse {
 
- List<SipSubscriptionItem> get subscriptions;
+
 /// Create a copy of SipSubscriptionsListResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -213,16 +219,21 @@ $SipSubscriptionsListResponseCopyWith<SipSubscriptionsListResponse> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionsListResponse&&const DeepCollectionEquality().equals(other.subscriptions, subscriptions));
+  final _this = this as SipSubscriptionsListResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionsListResponse&&const DeepCollectionEquality().equals(other.subscriptions, _this.subscriptions));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(subscriptions));
+int get hashCode {
+  final _this = this as SipSubscriptionsListResponse;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.subscriptions));
+}
 
 @override
 String toString() {
-  return 'SipSubscriptionsListResponse(subscriptions: $subscriptions)';
+  final _this = this as SipSubscriptionsListResponse;
+  return 'SipSubscriptionsListResponse(subscriptions: ${_this.subscriptions})';
 }
 
 
@@ -388,7 +399,7 @@ case _:
 /// @nodoc
 mixin _$SipSubscriptionItem {
 
- SipSubscriptionType get type; String get number; String get contactUserId; DateTime get subscribedAt;
+
 /// Create a copy of SipSubscriptionItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -399,16 +410,21 @@ $SipSubscriptionItemCopyWith<SipSubscriptionItem> get copyWith => _$SipSubscript
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionItem&&(identical(other.type, type) || other.type == type)&&(identical(other.number, number) || other.number == number)&&(identical(other.contactUserId, contactUserId) || other.contactUserId == contactUserId)&&(identical(other.subscribedAt, subscribedAt) || other.subscribedAt == subscribedAt));
+  final _this = this as SipSubscriptionItem;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionItem&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.contactUserId, _this.contactUserId) || other.contactUserId == _this.contactUserId)&&(identical(other.subscribedAt, _this.subscribedAt) || other.subscribedAt == _this.subscribedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,type,number,contactUserId,subscribedAt);
+int get hashCode {
+  final _this = this as SipSubscriptionItem;
+  return Object.hash(runtimeType,_this.type,_this.number,_this.contactUserId,_this.subscribedAt);
+}
 
 @override
 String toString() {
-  return 'SipSubscriptionItem(type: $type, number: $number, contactUserId: $contactUserId, subscribedAt: $subscribedAt)';
+  final _this = this as SipSubscriptionItem;
+  return 'SipSubscriptionItem(type: ${_this.type}, number: ${_this.number}, contactUserId: ${_this.contactUserId}, subscribedAt: ${_this.subscribedAt})';
 }
 
 
@@ -577,7 +593,7 @@ case _:
 /// @nodoc
 mixin _$SipSubscriptionBatchAction {
 
- SipSubscriptionBatchActionType get action; SipSubscriptionType get type; String get number; String get contactUserId; DateTime? get subscribedAt;
+
 /// Create a copy of SipSubscriptionBatchAction
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -588,16 +604,21 @@ $SipSubscriptionBatchActionCopyWith<SipSubscriptionBatchAction> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionBatchAction&&(identical(other.action, action) || other.action == action)&&(identical(other.type, type) || other.type == type)&&(identical(other.number, number) || other.number == number)&&(identical(other.contactUserId, contactUserId) || other.contactUserId == contactUserId)&&(identical(other.subscribedAt, subscribedAt) || other.subscribedAt == subscribedAt));
+  final _this = this as SipSubscriptionBatchAction;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionBatchAction&&(identical(other.action, _this.action) || other.action == _this.action)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.contactUserId, _this.contactUserId) || other.contactUserId == _this.contactUserId)&&(identical(other.subscribedAt, _this.subscribedAt) || other.subscribedAt == _this.subscribedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,action,type,number,contactUserId,subscribedAt);
+int get hashCode {
+  final _this = this as SipSubscriptionBatchAction;
+  return Object.hash(runtimeType,_this.action,_this.type,_this.number,_this.contactUserId,_this.subscribedAt);
+}
 
 @override
 String toString() {
-  return 'SipSubscriptionBatchAction(action: $action, type: $type, number: $number, contactUserId: $contactUserId, subscribedAt: $subscribedAt)';
+  final _this = this as SipSubscriptionBatchAction;
+  return 'SipSubscriptionBatchAction(action: ${_this.action}, type: ${_this.type}, number: ${_this.number}, contactUserId: ${_this.contactUserId}, subscribedAt: ${_this.subscribedAt})';
 }
 
 
@@ -766,7 +787,7 @@ case _:
 /// @nodoc
 mixin _$SipSubscriptionBatchSyncResult {
 
- SipSubscriptionBatchSyncResponse get data; String get etag;
+
 /// Create a copy of SipSubscriptionBatchSyncResult
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -777,16 +798,21 @@ $SipSubscriptionBatchSyncResultCopyWith<SipSubscriptionBatchSyncResult> get copy
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionBatchSyncResult&&(identical(other.data, data) || other.data == data)&&(identical(other.etag, etag) || other.etag == etag));
+  final _this = this as SipSubscriptionBatchSyncResult;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionBatchSyncResult&&(identical(other.data, _this.data) || other.data == _this.data)&&(identical(other.etag, _this.etag) || other.etag == _this.etag));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,data,etag);
+int get hashCode {
+  final _this = this as SipSubscriptionBatchSyncResult;
+  return Object.hash(runtimeType,_this.data,_this.etag);
+}
 
 @override
 String toString() {
-  return 'SipSubscriptionBatchSyncResult(data: $data, etag: $etag)';
+  final _this = this as SipSubscriptionBatchSyncResult;
+  return 'SipSubscriptionBatchSyncResult(data: ${_this.data}, etag: ${_this.etag})';
 }
 
 
@@ -953,7 +979,7 @@ case _:
 /// @nodoc
 mixin _$SipSubscriptionBatchSyncResponse {
 
- List<SipSubscriptionItem> get subscriptions; List<SipSubscriptionBatchConflict> get conflicts;
+
 /// Create a copy of SipSubscriptionBatchSyncResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -964,16 +990,21 @@ $SipSubscriptionBatchSyncResponseCopyWith<SipSubscriptionBatchSyncResponse> get 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionBatchSyncResponse&&const DeepCollectionEquality().equals(other.subscriptions, subscriptions)&&const DeepCollectionEquality().equals(other.conflicts, conflicts));
+  final _this = this as SipSubscriptionBatchSyncResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionBatchSyncResponse&&const DeepCollectionEquality().equals(other.subscriptions, _this.subscriptions)&&const DeepCollectionEquality().equals(other.conflicts, _this.conflicts));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(subscriptions),const DeepCollectionEquality().hash(conflicts));
+int get hashCode {
+  final _this = this as SipSubscriptionBatchSyncResponse;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.subscriptions),const DeepCollectionEquality().hash(_this.conflicts));
+}
 
 @override
 String toString() {
-  return 'SipSubscriptionBatchSyncResponse(subscriptions: $subscriptions, conflicts: $conflicts)';
+  final _this = this as SipSubscriptionBatchSyncResponse;
+  return 'SipSubscriptionBatchSyncResponse(subscriptions: ${_this.subscriptions}, conflicts: ${_this.conflicts})';
 }
 
 
@@ -1140,7 +1171,7 @@ case _:
 /// @nodoc
 mixin _$SipSubscriptionBatchConflict {
 
- SipSubscriptionBatchActionType get action; SipSubscriptionType get type; String get number; String? get contactUserId; SipSubscriptionBatchConflictReason get reason;
+
 /// Create a copy of SipSubscriptionBatchConflict
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1151,16 +1182,21 @@ $SipSubscriptionBatchConflictCopyWith<SipSubscriptionBatchConflict> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionBatchConflict&&(identical(other.action, action) || other.action == action)&&(identical(other.type, type) || other.type == type)&&(identical(other.number, number) || other.number == number)&&(identical(other.contactUserId, contactUserId) || other.contactUserId == contactUserId)&&(identical(other.reason, reason) || other.reason == reason));
+  final _this = this as SipSubscriptionBatchConflict;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipSubscriptionBatchConflict&&(identical(other.action, _this.action) || other.action == _this.action)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.contactUserId, _this.contactUserId) || other.contactUserId == _this.contactUserId)&&(identical(other.reason, _this.reason) || other.reason == _this.reason));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,action,type,number,contactUserId,reason);
+int get hashCode {
+  final _this = this as SipSubscriptionBatchConflict;
+  return Object.hash(runtimeType,_this.action,_this.type,_this.number,_this.contactUserId,_this.reason);
+}
 
 @override
 String toString() {
-  return 'SipSubscriptionBatchConflict(action: $action, type: $type, number: $number, contactUserId: $contactUserId, reason: $reason)';
+  final _this = this as SipSubscriptionBatchConflict;
+  return 'SipSubscriptionBatchConflict(action: ${_this.action}, type: ${_this.type}, number: ${_this.number}, contactUserId: ${_this.contactUserId}, reason: ${_this.reason})';
 }
 
 

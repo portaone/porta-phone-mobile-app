@@ -50,51 +50,39 @@ class TextStyleConfig with _$TextStyleConfig {
   });
 
   /// The name of the font family to use (e.g., "Roboto").
-  @override
   final String? fontFamily;
 
   /// The size of glyphs (e.g., 14.0).
-  @override
   final double? fontSize;
 
   /// The thickness of the glyphs.
-  @override
   final FontWeightConfig? fontWeight;
 
   /// Whether the glyphs should be italicized.
-  @override
   final FontStyleConfig? fontStyle;
 
   /// The text color in hex format (e.g., "#FF0000").
-  @override
   final String? color;
 
   /// The spacing between letters, in logical pixels.
-  @override
   final double? letterSpacing;
 
   /// The spacing between words, in logical pixels.
-  @override
   final double? wordSpacing;
 
   /// The line height, as a multiplier of font size.
-  @override
   final double? height;
 
   /// Decorations like underline or strikethrough.
-  @override
   final TextDecorationConfig? decoration;
 
   /// Background color for the text in hex format.
-  @override
   final String? backgroundColor;
 
   /// Border radius for background decoration.
-  @override
   final double? backgroundBorderRadius;
 
   /// Padding around text when background is applied.
-  @override
   final PaddingConfig? backgroundPadding;
 
   factory TextStyleConfig.fromJson(Map<String, Object?> json) => _$TextStyleConfigFromJson(json);
@@ -111,7 +99,6 @@ class FontWeightConfig with _$FontWeightConfig {
   const FontWeightConfig({required this.weight});
 
   /// Numeric weight of the font (100–900 typical).
-  @override
   final int weight;
 
   factory FontWeightConfig.fromJson(Map<String, Object?> json) => _$FontWeightConfigFromJson(json);
@@ -130,7 +117,6 @@ class FontStyleConfig with _$FontStyleConfig {
   });
 
   /// The font style, as a string. Common values: `"normal"`, `"italic"`.
-  @override
   final String value;
 
   factory FontStyleConfig.fromJson(Map<String, Object?> json) => _$FontStyleConfigFromJson(json);
@@ -150,23 +136,18 @@ class TextDecorationConfig with _$TextDecorationConfig {
 
   /// A list of decoration types. Supported values:
   /// `"underline"`, `"lineThrough"`, `"overline"`.
-  @override
   final List<String> types;
 
   /// Text to suggest what sort of input the field accepts.
-  @override
   final String? hint;
 
   /// The style to use for the [hint].
-  @override
   final TextStyleConfig? hintStyle;
 
   /// Text that appears before the editable part of the field (e.g., a currency symbol or country code).
-  @override
   final String? prefixText;
 
   /// The style to use for the [prefixText].
-  @override
   final TextStyleConfig? prefixStyle;
 
   factory TextDecorationConfig.fromJson(Map<String, Object?> json) => _$TextDecorationConfigFromJson(json);

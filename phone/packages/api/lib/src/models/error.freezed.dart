@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'error.dart';
@@ -9,13 +9,14 @@ part of 'error.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ErrorResponse {
 
- String? get code; String? get message; ErrorDetail? get details;
+
 /// Create a copy of ErrorResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $ErrorResponseCopyWith<ErrorResponse> get copyWith => _$ErrorResponseCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ErrorResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.message, message) || other.message == message)&&(identical(other.details, details) || other.details == details));
+  final _this = this as ErrorResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ErrorResponse&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.message, _this.message) || other.message == _this.message)&&(identical(other.details, _this.details) || other.details == _this.details));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,code,message,details);
+int get hashCode {
+  final _this = this as ErrorResponse;
+  return Object.hash(runtimeType,_this.code,_this.message,_this.details);
+}
 
 @override
 String toString() {
-  return 'ErrorResponse(code: $code, message: $message, details: $details)';
+  final _this = this as ErrorResponse;
+  return 'ErrorResponse(code: ${_this.code}, message: ${_this.message}, details: ${_this.details})';
 }
 
 
@@ -203,7 +209,7 @@ case _:
 /// @nodoc
 mixin _$ErrorDetail {
 
- String? get path; String get reason;
+
 /// Create a copy of ErrorDetail
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -214,16 +220,21 @@ $ErrorDetailCopyWith<ErrorDetail> get copyWith => _$ErrorDetailCopyWithImpl<Erro
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ErrorDetail&&(identical(other.path, path) || other.path == path)&&(identical(other.reason, reason) || other.reason == reason));
+  final _this = this as ErrorDetail;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ErrorDetail&&(identical(other.path, _this.path) || other.path == _this.path)&&(identical(other.reason, _this.reason) || other.reason == _this.reason));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,path,reason);
+int get hashCode {
+  final _this = this as ErrorDetail;
+  return Object.hash(runtimeType,_this.path,_this.reason);
+}
 
 @override
 String toString() {
-  return 'ErrorDetail(path: $path, reason: $reason)';
+  final _this = this as ErrorDetail;
+  return 'ErrorDetail(path: ${_this.path}, reason: ${_this.reason})';
 }
 
 

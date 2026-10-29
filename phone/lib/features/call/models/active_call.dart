@@ -59,10 +59,8 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   @override
   final String callId;
 
-  @override
   final CallkeepHandle handle;
 
-  @override
   final DateTime createdTime;
 
   /// Whether the user has explicitly enabled the local camera for this call.
@@ -70,7 +68,6 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// This is local camera intent, not remote SDP capability. It is set only by
   /// user actions (the camera control event) and initial media setup.
   /// Never derive it from a remote SDP offer — that is what [remoteVideo] is for.
-  @override
   final bool video;
 
   /// Set when an incoming video call was answered audio-only because camera
@@ -78,37 +75,26 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// to app settings. It is a best-effort hint: the button re-checks the live
   /// permission on tap, so a stale value cannot send a user with granted
   /// permission to settings.
-  @override
   final bool videoPermissionDenied;
 
-  @override
   final CallProcessingStatus processingStatus;
 
-  @override
   final bool? frontCamera;
 
-  @override
   final bool held;
 
-  @override
   final bool muted;
 
-  @override
   final bool updating;
 
-  @override
   final JsepValue? incomingOffer;
 
-  @override
   final String? displayName;
 
-  @override
   final String? fromReferId;
 
-  @override
   final String? fromReplaces;
 
-  @override
   final String? fromNumber;
 
   @override
@@ -117,16 +103,12 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   @override
   final DateTime? hungUpTime;
 
-  @override
   final Transfer? transfer;
 
-  @override
   final Object? failure;
 
-  @override
   final MediaStream? localStream;
 
-  @override
   final MediaStream? remoteStream;
 
   /// Last known remote camera state, delivered via the media_state signaling
@@ -134,7 +116,6 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// the negotiated video track alive (black frames), so the track presence
   /// alone cannot tell whether the remote camera is actually on - this flag
   /// can.
-  @override
   final bool? remoteCameraEnabled;
 
   /// What this call is waiting for the server to answer, if anything.
@@ -145,7 +126,6 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// values says what has to arrive before it is over. `null` is a settled
   /// call - which is what a refused request leaves behind, since a request the
   /// server would not take changed nothing.
-  @override
   final CallTransition? transition;
 
   /// Whether the room has let this call go and the hold that makes it an
@@ -159,7 +139,6 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// the host's alone and the server tells a muted participant nothing, so
   /// there is nothing here to check it against. It is shown and it ends with
   /// the call; nothing functional hangs on it.
-  @override
   final bool? peerReportedConferenceMute;
 
   /// Whether the other party of this call says they have stepped aside from
@@ -168,18 +147,14 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// A claim about this call on the same terms as [peerReportedConferenceMute]:
   /// nothing here can check it, it is shown as somebody's word, and it ends
   /// with the call.
-  @override
   final bool? peerReportedConferenceHostAway;
 
-  @override
   final List<RTCIceCandidate> iceCandidates;
 
-  @override
   final IceConnectionIssue? iceConnectionIssue;
 
   /// Transient media-degradation indicator from Janus `slowlink` events.
   /// Null when the media is healthy; auto-cleared once slowlink events stop.
-  @override
   final CallNetworkQuality? networkQuality;
 
   /// Whether the remote side already streams audio to this outgoing call before
@@ -191,7 +166,6 @@ class ActiveCall with _$ActiveCall implements CallEntry {
   /// Once set, the local ringback must not be started again: a provisional
   /// ringing answer can still arrive afterwards and would otherwise play the
   /// bundled tone on top of the network one.
-  @override
   final bool earlyMedia;
 
   @override

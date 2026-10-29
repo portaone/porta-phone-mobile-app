@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'push_tokens_bloc.dart';
@@ -9,12 +9,13 @@ part of 'push_tokens_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$PushTokensState {
+mixin _$PushTokensState implements DiagnosticableTreeMixin {
 
- String? get errorMessage; String? get pushToken;
+
 /// Create a copy of PushTokensState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -22,19 +23,31 @@ mixin _$PushTokensState {
 $PushTokensStateCopyWith<PushTokensState> get copyWith => _$PushTokensStateCopyWithImpl<PushTokensState>(this as PushTokensState, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  final _this = this as PushTokensState;
+  properties
+    ..add(DiagnosticsProperty('type', 'PushTokensState'))
+    ..add(DiagnosticsProperty('errorMessage', _this.errorMessage))..add(DiagnosticsProperty('pushToken', _this.pushToken));
+}
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PushTokensState&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.pushToken, pushToken) || other.pushToken == pushToken));
+  final _this = this as PushTokensState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PushTokensState&&(identical(other.errorMessage, _this.errorMessage) || other.errorMessage == _this.errorMessage)&&(identical(other.pushToken, _this.pushToken) || other.pushToken == _this.pushToken));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,errorMessage,pushToken);
+int get hashCode {
+  final _this = this as PushTokensState;
+  return Object.hash(runtimeType,_this.errorMessage,_this.pushToken);
+}
 
 @override
-String toString() {
-  return 'PushTokensState(errorMessage: $errorMessage, pushToken: $pushToken)';
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  final _this = this as PushTokensState;
+  return 'PushTokensState(errorMessage: ${_this.errorMessage}, pushToken: ${_this.pushToken})';
 }
 
 

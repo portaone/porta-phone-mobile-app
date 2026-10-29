@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'leading_avatar_style_config.dart';
@@ -9,13 +9,14 @@ part of 'leading_avatar_style_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$LeadingAvatarStyleConfig {
 
- String? get backgroundColor; double? get radius; TextStyleConfig? get initialsTextStyle; IconDataConfig? get placeholderIcon; LoadingOverlayStyleConfig? get loading; SmartIndicatorStyleConfig? get smartIndicator; RegisteredBadgeStyleConfig? get registeredBadge; PresenceBadgeStyleConfig? get presenceBadge; NameColorsStyleConfig? get nameColors;
+
 /// Create a copy of LeadingAvatarStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $LeadingAvatarStyleConfigCopyWith<LeadingAvatarStyleConfig> get copyWith => _$Le
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LeadingAvatarStyleConfig&&(identical(other.backgroundColor, backgroundColor) || other.backgroundColor == backgroundColor)&&(identical(other.radius, radius) || other.radius == radius)&&(identical(other.initialsTextStyle, initialsTextStyle) || other.initialsTextStyle == initialsTextStyle)&&(identical(other.placeholderIcon, placeholderIcon) || other.placeholderIcon == placeholderIcon)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.smartIndicator, smartIndicator) || other.smartIndicator == smartIndicator)&&(identical(other.registeredBadge, registeredBadge) || other.registeredBadge == registeredBadge)&&(identical(other.presenceBadge, presenceBadge) || other.presenceBadge == presenceBadge)&&(identical(other.nameColors, nameColors) || other.nameColors == nameColors));
+  final _this = this as LeadingAvatarStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LeadingAvatarStyleConfig&&(identical(other.backgroundColor, _this.backgroundColor) || other.backgroundColor == _this.backgroundColor)&&(identical(other.radius, _this.radius) || other.radius == _this.radius)&&(identical(other.initialsTextStyle, _this.initialsTextStyle) || other.initialsTextStyle == _this.initialsTextStyle)&&(identical(other.placeholderIcon, _this.placeholderIcon) || other.placeholderIcon == _this.placeholderIcon)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.smartIndicator, _this.smartIndicator) || other.smartIndicator == _this.smartIndicator)&&(identical(other.registeredBadge, _this.registeredBadge) || other.registeredBadge == _this.registeredBadge)&&(identical(other.presenceBadge, _this.presenceBadge) || other.presenceBadge == _this.presenceBadge)&&(identical(other.nameColors, _this.nameColors) || other.nameColors == _this.nameColors));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,backgroundColor,radius,initialsTextStyle,placeholderIcon,loading,smartIndicator,registeredBadge,presenceBadge,nameColors);
+int get hashCode {
+  final _this = this as LeadingAvatarStyleConfig;
+  return Object.hash(runtimeType,_this.backgroundColor,_this.radius,_this.initialsTextStyle,_this.placeholderIcon,_this.loading,_this.smartIndicator,_this.registeredBadge,_this.presenceBadge,_this.nameColors);
+}
 
 @override
 String toString() {
-  return 'LeadingAvatarStyleConfig(backgroundColor: $backgroundColor, radius: $radius, initialsTextStyle: $initialsTextStyle, placeholderIcon: $placeholderIcon, loading: $loading, smartIndicator: $smartIndicator, registeredBadge: $registeredBadge, presenceBadge: $presenceBadge, nameColors: $nameColors)';
+  final _this = this as LeadingAvatarStyleConfig;
+  return 'LeadingAvatarStyleConfig(backgroundColor: ${_this.backgroundColor}, radius: ${_this.radius}, initialsTextStyle: ${_this.initialsTextStyle}, placeholderIcon: ${_this.placeholderIcon}, loading: ${_this.loading}, smartIndicator: ${_this.smartIndicator}, registeredBadge: ${_this.registeredBadge}, presenceBadge: ${_this.presenceBadge}, nameColors: ${_this.nameColors})';
 }
 
 
@@ -209,7 +215,7 @@ case _:
 /// @nodoc
 mixin _$NameColorsStyleConfig {
 
- bool get enabled; List<String>? get palette;
+
 /// Create a copy of NameColorsStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -220,16 +226,21 @@ $NameColorsStyleConfigCopyWith<NameColorsStyleConfig> get copyWith => _$NameColo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NameColorsStyleConfig&&(identical(other.enabled, enabled) || other.enabled == enabled)&&const DeepCollectionEquality().equals(other.palette, palette));
+  final _this = this as NameColorsStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NameColorsStyleConfig&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&const DeepCollectionEquality().equals(other.palette, _this.palette));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,const DeepCollectionEquality().hash(palette));
+int get hashCode {
+  final _this = this as NameColorsStyleConfig;
+  return Object.hash(runtimeType,_this.enabled,const DeepCollectionEquality().hash(_this.palette));
+}
 
 @override
 String toString() {
-  return 'NameColorsStyleConfig(enabled: $enabled, palette: $palette)';
+  final _this = this as NameColorsStyleConfig;
+  return 'NameColorsStyleConfig(enabled: ${_this.enabled}, palette: ${_this.palette})';
 }
 
 
@@ -396,7 +407,7 @@ case _:
 /// @nodoc
 mixin _$LoadingOverlayStyleConfig {
 
- bool get showByDefault; PaddingConfig get padding; double? get strokeWidth;
+
 /// Create a copy of LoadingOverlayStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -407,16 +418,21 @@ $LoadingOverlayStyleConfigCopyWith<LoadingOverlayStyleConfig> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoadingOverlayStyleConfig&&(identical(other.showByDefault, showByDefault) || other.showByDefault == showByDefault)&&(identical(other.padding, padding) || other.padding == padding)&&(identical(other.strokeWidth, strokeWidth) || other.strokeWidth == strokeWidth));
+  final _this = this as LoadingOverlayStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoadingOverlayStyleConfig&&(identical(other.showByDefault, _this.showByDefault) || other.showByDefault == _this.showByDefault)&&(identical(other.padding, _this.padding) || other.padding == _this.padding)&&(identical(other.strokeWidth, _this.strokeWidth) || other.strokeWidth == _this.strokeWidth));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,showByDefault,padding,strokeWidth);
+int get hashCode {
+  final _this = this as LoadingOverlayStyleConfig;
+  return Object.hash(runtimeType,_this.showByDefault,_this.padding,_this.strokeWidth);
+}
 
 @override
 String toString() {
-  return 'LoadingOverlayStyleConfig(showByDefault: $showByDefault, padding: $padding, strokeWidth: $strokeWidth)';
+  final _this = this as LoadingOverlayStyleConfig;
+  return 'LoadingOverlayStyleConfig(showByDefault: ${_this.showByDefault}, padding: ${_this.padding}, strokeWidth: ${_this.strokeWidth})';
 }
 
 
@@ -584,7 +600,7 @@ case _:
 /// @nodoc
 mixin _$SmartIndicatorStyleConfig {
 
- String? get backgroundColor; IconDataConfig? get icon; double? get sizeFactor;
+
 /// Create a copy of SmartIndicatorStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -595,16 +611,21 @@ $SmartIndicatorStyleConfigCopyWith<SmartIndicatorStyleConfig> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SmartIndicatorStyleConfig&&(identical(other.backgroundColor, backgroundColor) || other.backgroundColor == backgroundColor)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.sizeFactor, sizeFactor) || other.sizeFactor == sizeFactor));
+  final _this = this as SmartIndicatorStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SmartIndicatorStyleConfig&&(identical(other.backgroundColor, _this.backgroundColor) || other.backgroundColor == _this.backgroundColor)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.sizeFactor, _this.sizeFactor) || other.sizeFactor == _this.sizeFactor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,backgroundColor,icon,sizeFactor);
+int get hashCode {
+  final _this = this as SmartIndicatorStyleConfig;
+  return Object.hash(runtimeType,_this.backgroundColor,_this.icon,_this.sizeFactor);
+}
 
 @override
 String toString() {
-  return 'SmartIndicatorStyleConfig(backgroundColor: $backgroundColor, icon: $icon, sizeFactor: $sizeFactor)';
+  final _this = this as SmartIndicatorStyleConfig;
+  return 'SmartIndicatorStyleConfig(backgroundColor: ${_this.backgroundColor}, icon: ${_this.icon}, sizeFactor: ${_this.sizeFactor})';
 }
 
 
@@ -772,7 +793,7 @@ case _:
 /// @nodoc
 mixin _$RegisteredBadgeStyleConfig {
 
- String? get registeredColor; String? get unregisteredColor; double? get sizeFactor;
+
 /// Create a copy of RegisteredBadgeStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -783,16 +804,21 @@ $RegisteredBadgeStyleConfigCopyWith<RegisteredBadgeStyleConfig> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegisteredBadgeStyleConfig&&(identical(other.registeredColor, registeredColor) || other.registeredColor == registeredColor)&&(identical(other.unregisteredColor, unregisteredColor) || other.unregisteredColor == unregisteredColor)&&(identical(other.sizeFactor, sizeFactor) || other.sizeFactor == sizeFactor));
+  final _this = this as RegisteredBadgeStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegisteredBadgeStyleConfig&&(identical(other.registeredColor, _this.registeredColor) || other.registeredColor == _this.registeredColor)&&(identical(other.unregisteredColor, _this.unregisteredColor) || other.unregisteredColor == _this.unregisteredColor)&&(identical(other.sizeFactor, _this.sizeFactor) || other.sizeFactor == _this.sizeFactor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,registeredColor,unregisteredColor,sizeFactor);
+int get hashCode {
+  final _this = this as RegisteredBadgeStyleConfig;
+  return Object.hash(runtimeType,_this.registeredColor,_this.unregisteredColor,_this.sizeFactor);
+}
 
 @override
 String toString() {
-  return 'RegisteredBadgeStyleConfig(registeredColor: $registeredColor, unregisteredColor: $unregisteredColor, sizeFactor: $sizeFactor)';
+  final _this = this as RegisteredBadgeStyleConfig;
+  return 'RegisteredBadgeStyleConfig(registeredColor: ${_this.registeredColor}, unregisteredColor: ${_this.unregisteredColor}, sizeFactor: ${_this.sizeFactor})';
 }
 
 
@@ -960,7 +986,7 @@ case _:
 /// @nodoc
 mixin _$PresenceBadgeStyleConfig {
 
- String? get availableColor; String? get unavailableColor; String? get busyColor; String? get iconColor; double? get sizeFactor;
+
 /// Create a copy of PresenceBadgeStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -971,16 +997,21 @@ $PresenceBadgeStyleConfigCopyWith<PresenceBadgeStyleConfig> get copyWith => _$Pr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresenceBadgeStyleConfig&&(identical(other.availableColor, availableColor) || other.availableColor == availableColor)&&(identical(other.unavailableColor, unavailableColor) || other.unavailableColor == unavailableColor)&&(identical(other.busyColor, busyColor) || other.busyColor == busyColor)&&(identical(other.iconColor, iconColor) || other.iconColor == iconColor)&&(identical(other.sizeFactor, sizeFactor) || other.sizeFactor == sizeFactor));
+  final _this = this as PresenceBadgeStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresenceBadgeStyleConfig&&(identical(other.availableColor, _this.availableColor) || other.availableColor == _this.availableColor)&&(identical(other.unavailableColor, _this.unavailableColor) || other.unavailableColor == _this.unavailableColor)&&(identical(other.busyColor, _this.busyColor) || other.busyColor == _this.busyColor)&&(identical(other.iconColor, _this.iconColor) || other.iconColor == _this.iconColor)&&(identical(other.sizeFactor, _this.sizeFactor) || other.sizeFactor == _this.sizeFactor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,availableColor,unavailableColor,busyColor,iconColor,sizeFactor);
+int get hashCode {
+  final _this = this as PresenceBadgeStyleConfig;
+  return Object.hash(runtimeType,_this.availableColor,_this.unavailableColor,_this.busyColor,_this.iconColor,_this.sizeFactor);
+}
 
 @override
 String toString() {
-  return 'PresenceBadgeStyleConfig(availableColor: $availableColor, unavailableColor: $unavailableColor, busyColor: $busyColor, iconColor: $iconColor, sizeFactor: $sizeFactor)';
+  final _this = this as PresenceBadgeStyleConfig;
+  return 'PresenceBadgeStyleConfig(availableColor: ${_this.availableColor}, unavailableColor: ${_this.unavailableColor}, busyColor: ${_this.busyColor}, iconColor: ${_this.iconColor}, sizeFactor: ${_this.sizeFactor})';
 }
 
 

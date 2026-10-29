@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'transfer.dart';
@@ -9,6 +9,7 @@ part of 'transfer.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -20,7 +21,7 @@ mixin _$Transfer {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Transfer);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is Transfer);
 }
 
 
@@ -29,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'Transfer()';
+    return 'Transfer()';
 }
 
 
@@ -215,7 +216,7 @@ class BlindTransferInitiated extends Transfer {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindTransferInitiated);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindTransferInitiated);
 }
 
 
@@ -224,7 +225,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'Transfer.blindTransferInitiated()';
+    return 'Transfer.blindTransferInitiated()';
 }
 
 
@@ -252,16 +253,18 @@ $BlindTransferTransferSubmittedCopyWith<BlindTransferTransferSubmitted> get copy
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindTransferTransferSubmitted&&(identical(other.toNumber, toNumber) || other.toNumber == toNumber));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindTransferTransferSubmitted&&(identical(other.toNumber, toNumber) || other.toNumber == toNumber));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,toNumber);
+int get hashCode {
+    return Object.hash(runtimeType,toNumber);
+}
 
 @override
 String toString() {
-  return 'Transfer.blindTransferTransferSubmitted(toNumber: $toNumber)';
+    return 'Transfer.blindTransferTransferSubmitted(toNumber: $toNumber)';
 }
 
 
@@ -318,16 +321,18 @@ $AttendedTransferTransferSubmittedCopyWith<AttendedTransferTransferSubmitted> ge
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttendedTransferTransferSubmitted&&(identical(other.replaceCallId, replaceCallId) || other.replaceCallId == replaceCallId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AttendedTransferTransferSubmitted&&(identical(other.replaceCallId, replaceCallId) || other.replaceCallId == replaceCallId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,replaceCallId);
+int get hashCode {
+    return Object.hash(runtimeType,replaceCallId);
+}
 
 @override
 String toString() {
-  return 'Transfer.attendedTransferTransferSubmitted(replaceCallId: $replaceCallId)';
+    return 'Transfer.attendedTransferTransferSubmitted(replaceCallId: $replaceCallId)';
 }
 
 
@@ -386,16 +391,18 @@ $TransferingCopyWith<Transfering> get copyWith => _$TransferingCopyWithImpl<Tran
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Transfering&&(identical(other.fromAttendedTransfer, fromAttendedTransfer) || other.fromAttendedTransfer == fromAttendedTransfer)&&(identical(other.fromBlindTransfer, fromBlindTransfer) || other.fromBlindTransfer == fromBlindTransfer)&&(identical(other.toNumber, toNumber) || other.toNumber == toNumber));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is Transfering&&(identical(other.fromAttendedTransfer, fromAttendedTransfer) || other.fromAttendedTransfer == fromAttendedTransfer)&&(identical(other.fromBlindTransfer, fromBlindTransfer) || other.fromBlindTransfer == fromBlindTransfer)&&(identical(other.toNumber, toNumber) || other.toNumber == toNumber));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,fromAttendedTransfer,fromBlindTransfer,toNumber);
+int get hashCode {
+    return Object.hash(runtimeType,fromAttendedTransfer,fromBlindTransfer,toNumber);
+}
 
 @override
 String toString() {
-  return 'Transfer.transfering(fromAttendedTransfer: $fromAttendedTransfer, fromBlindTransfer: $fromBlindTransfer, toNumber: $toNumber)';
+    return 'Transfer.transfering(fromAttendedTransfer: $fromAttendedTransfer, fromBlindTransfer: $fromBlindTransfer, toNumber: $toNumber)';
 }
 
 
@@ -456,16 +463,18 @@ $AttendedTransferConfirmationRequestedCopyWith<AttendedTransferConfirmationReque
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttendedTransferConfirmationRequested&&(identical(other.referId, referId) || other.referId == referId)&&(identical(other.referTo, referTo) || other.referTo == referTo)&&(identical(other.referredBy, referredBy) || other.referredBy == referredBy));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AttendedTransferConfirmationRequested&&(identical(other.referId, referId) || other.referId == referId)&&(identical(other.referTo, referTo) || other.referTo == referTo)&&(identical(other.referredBy, referredBy) || other.referredBy == referredBy));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,referId,referTo,referredBy);
+int get hashCode {
+    return Object.hash(runtimeType,referId,referTo,referredBy);
+}
 
 @override
 String toString() {
-  return 'Transfer.attendedTransferConfirmationRequested(referId: $referId, referTo: $referTo, referredBy: $referredBy)';
+    return 'Transfer.attendedTransferConfirmationRequested(referId: $referId, referTo: $referTo, referredBy: $referredBy)';
 }
 
 
@@ -525,16 +534,18 @@ $InviteToAttendedTransferCopyWith<InviteToAttendedTransfer> get copyWith => _$In
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteToAttendedTransfer&&(identical(other.replaceCallId, replaceCallId) || other.replaceCallId == replaceCallId)&&(identical(other.referredBy, referredBy) || other.referredBy == referredBy));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is InviteToAttendedTransfer&&(identical(other.replaceCallId, replaceCallId) || other.replaceCallId == replaceCallId)&&(identical(other.referredBy, referredBy) || other.referredBy == referredBy));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,replaceCallId,referredBy);
+int get hashCode {
+    return Object.hash(runtimeType,replaceCallId,referredBy);
+}
 
 @override
 String toString() {
-  return 'Transfer.inviteToAttendedTransfer(replaceCallId: $replaceCallId, referredBy: $referredBy)';
+    return 'Transfer.inviteToAttendedTransfer(replaceCallId: $replaceCallId, referredBy: $referredBy)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'theme_widget_config.dart';
@@ -9,13 +9,14 @@ part of 'theme_widget_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ThemeWidgetConfig {
 
- FontsConfig get fonts; ButtonWidgetConfig get button; GroupWidgetConfig? get group; BarWidgetConfig get bar; ImageAssetsConfig get imageAssets; InputWidgetConfig get input; TextWidgetConfig get text; DialogWidgetConfig get dialog; StatusesWidgetConfig get statuses;
+
 /// Create a copy of ThemeWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $ThemeWidgetConfigCopyWith<ThemeWidgetConfig> get copyWith => _$ThemeWidgetConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemeWidgetConfig&&(identical(other.fonts, fonts) || other.fonts == fonts)&&(identical(other.button, button) || other.button == button)&&(identical(other.group, group) || other.group == group)&&(identical(other.bar, bar) || other.bar == bar)&&(identical(other.imageAssets, imageAssets) || other.imageAssets == imageAssets)&&(identical(other.input, input) || other.input == input)&&(identical(other.text, text) || other.text == text)&&(identical(other.dialog, dialog) || other.dialog == dialog)&&(identical(other.statuses, statuses) || other.statuses == statuses));
+  final _this = this as ThemeWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemeWidgetConfig&&(identical(other.fonts, _this.fonts) || other.fonts == _this.fonts)&&(identical(other.button, _this.button) || other.button == _this.button)&&(identical(other.group, _this.group) || other.group == _this.group)&&(identical(other.bar, _this.bar) || other.bar == _this.bar)&&(identical(other.imageAssets, _this.imageAssets) || other.imageAssets == _this.imageAssets)&&(identical(other.input, _this.input) || other.input == _this.input)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.dialog, _this.dialog) || other.dialog == _this.dialog)&&(identical(other.statuses, _this.statuses) || other.statuses == _this.statuses));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,fonts,button,group,bar,imageAssets,input,text,dialog,statuses);
+int get hashCode {
+  final _this = this as ThemeWidgetConfig;
+  return Object.hash(runtimeType,_this.fonts,_this.button,_this.group,_this.bar,_this.imageAssets,_this.input,_this.text,_this.dialog,_this.statuses);
+}
 
 @override
 String toString() {
-  return 'ThemeWidgetConfig(fonts: $fonts, button: $button, group: $group, bar: $bar, imageAssets: $imageAssets, input: $input, text: $text, dialog: $dialog, statuses: $statuses)';
+  final _this = this as ThemeWidgetConfig;
+  return 'ThemeWidgetConfig(fonts: ${_this.fonts}, button: ${_this.button}, group: ${_this.group}, bar: ${_this.bar}, imageAssets: ${_this.imageAssets}, input: ${_this.input}, text: ${_this.text}, dialog: ${_this.dialog}, statuses: ${_this.statuses})';
 }
 
 
@@ -209,7 +215,7 @@ case _:
 /// @nodoc
 mixin _$FontsConfig {
 
- String? get fontFamily;
+
 /// Create a copy of FontsConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -220,16 +226,21 @@ $FontsConfigCopyWith<FontsConfig> get copyWith => _$FontsConfigCopyWithImpl<Font
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FontsConfig&&(identical(other.fontFamily, fontFamily) || other.fontFamily == fontFamily));
+  final _this = this as FontsConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FontsConfig&&(identical(other.fontFamily, _this.fontFamily) || other.fontFamily == _this.fontFamily));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,fontFamily);
+int get hashCode {
+  final _this = this as FontsConfig;
+  return Object.hash(runtimeType,_this.fontFamily);
+}
 
 @override
 String toString() {
-  return 'FontsConfig(fontFamily: $fontFamily)';
+  final _this = this as FontsConfig;
+  return 'FontsConfig(fontFamily: ${_this.fontFamily})';
 }
 
 
@@ -395,7 +406,7 @@ case _:
 /// @nodoc
 mixin _$ButtonWidgetConfig {
 
- ButtonStyleConfig? get primaryElevatedButton;
+
 /// Create a copy of ButtonWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -406,16 +417,21 @@ $ButtonWidgetConfigCopyWith<ButtonWidgetConfig> get copyWith => _$ButtonWidgetCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ButtonWidgetConfig&&(identical(other.primaryElevatedButton, primaryElevatedButton) || other.primaryElevatedButton == primaryElevatedButton));
+  final _this = this as ButtonWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ButtonWidgetConfig&&(identical(other.primaryElevatedButton, _this.primaryElevatedButton) || other.primaryElevatedButton == _this.primaryElevatedButton));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,primaryElevatedButton);
+int get hashCode {
+  final _this = this as ButtonWidgetConfig;
+  return Object.hash(runtimeType,_this.primaryElevatedButton);
+}
 
 @override
 String toString() {
-  return 'ButtonWidgetConfig(primaryElevatedButton: $primaryElevatedButton)';
+  final _this = this as ButtonWidgetConfig;
+  return 'ButtonWidgetConfig(primaryElevatedButton: ${_this.primaryElevatedButton})';
 }
 
 
@@ -581,7 +597,7 @@ case _:
 /// @nodoc
 mixin _$GroupWidgetConfig {
 
- GroupTitleListTileWidgetConfig get groupTitleListTile;
+
 /// Create a copy of GroupWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -592,16 +608,21 @@ $GroupWidgetConfigCopyWith<GroupWidgetConfig> get copyWith => _$GroupWidgetConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GroupWidgetConfig&&(identical(other.groupTitleListTile, groupTitleListTile) || other.groupTitleListTile == groupTitleListTile));
+  final _this = this as GroupWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GroupWidgetConfig&&(identical(other.groupTitleListTile, _this.groupTitleListTile) || other.groupTitleListTile == _this.groupTitleListTile));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,groupTitleListTile);
+int get hashCode {
+  final _this = this as GroupWidgetConfig;
+  return Object.hash(runtimeType,_this.groupTitleListTile);
+}
 
 @override
 String toString() {
-  return 'GroupWidgetConfig(groupTitleListTile: $groupTitleListTile)';
+  final _this = this as GroupWidgetConfig;
+  return 'GroupWidgetConfig(groupTitleListTile: ${_this.groupTitleListTile})';
 }
 
 
@@ -767,7 +788,7 @@ case _:
 /// @nodoc
 mixin _$BarWidgetConfig {
 
- BottomNavigationBarWidgetConfig get bottomNavigationBar; AppBarConfig get appBarConfig; TabBarConfig get tabBarConfig;
+
 /// Create a copy of BarWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -778,16 +799,21 @@ $BarWidgetConfigCopyWith<BarWidgetConfig> get copyWith => _$BarWidgetConfigCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BarWidgetConfig&&(identical(other.bottomNavigationBar, bottomNavigationBar) || other.bottomNavigationBar == bottomNavigationBar)&&(identical(other.appBarConfig, appBarConfig) || other.appBarConfig == appBarConfig)&&(identical(other.tabBarConfig, tabBarConfig) || other.tabBarConfig == tabBarConfig));
+  final _this = this as BarWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BarWidgetConfig&&(identical(other.bottomNavigationBar, _this.bottomNavigationBar) || other.bottomNavigationBar == _this.bottomNavigationBar)&&(identical(other.appBarConfig, _this.appBarConfig) || other.appBarConfig == _this.appBarConfig)&&(identical(other.tabBarConfig, _this.tabBarConfig) || other.tabBarConfig == _this.tabBarConfig));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,bottomNavigationBar,appBarConfig,tabBarConfig);
+int get hashCode {
+  final _this = this as BarWidgetConfig;
+  return Object.hash(runtimeType,_this.bottomNavigationBar,_this.appBarConfig,_this.tabBarConfig);
+}
 
 @override
 String toString() {
-  return 'BarWidgetConfig(bottomNavigationBar: $bottomNavigationBar, appBarConfig: $appBarConfig, tabBarConfig: $tabBarConfig)';
+  final _this = this as BarWidgetConfig;
+  return 'BarWidgetConfig(bottomNavigationBar: ${_this.bottomNavigationBar}, appBarConfig: ${_this.appBarConfig}, tabBarConfig: ${_this.tabBarConfig})';
 }
 
 
@@ -955,7 +981,7 @@ case _:
 /// @nodoc
 mixin _$BottomNavigationBarWidgetConfig {
 
- String? get backgroundColor; double? get elevation; String? get selectedItemColor; String? get unSelectedItemColor; TextStyleConfig? get selectedLabelStyle; TextStyleConfig? get unselectedLabelStyle; IconThemeDataConfig? get selectedIconTheme; IconThemeDataConfig? get unselectedIconTheme; bool? get showSelectedLabels; bool? get showUnselectedLabels;
+
 /// Create a copy of BottomNavigationBarWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -966,16 +992,21 @@ $BottomNavigationBarWidgetConfigCopyWith<BottomNavigationBarWidgetConfig> get co
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BottomNavigationBarWidgetConfig&&(identical(other.backgroundColor, backgroundColor) || other.backgroundColor == backgroundColor)&&(identical(other.elevation, elevation) || other.elevation == elevation)&&(identical(other.selectedItemColor, selectedItemColor) || other.selectedItemColor == selectedItemColor)&&(identical(other.unSelectedItemColor, unSelectedItemColor) || other.unSelectedItemColor == unSelectedItemColor)&&(identical(other.selectedLabelStyle, selectedLabelStyle) || other.selectedLabelStyle == selectedLabelStyle)&&(identical(other.unselectedLabelStyle, unselectedLabelStyle) || other.unselectedLabelStyle == unselectedLabelStyle)&&(identical(other.selectedIconTheme, selectedIconTheme) || other.selectedIconTheme == selectedIconTheme)&&(identical(other.unselectedIconTheme, unselectedIconTheme) || other.unselectedIconTheme == unselectedIconTheme)&&(identical(other.showSelectedLabels, showSelectedLabels) || other.showSelectedLabels == showSelectedLabels)&&(identical(other.showUnselectedLabels, showUnselectedLabels) || other.showUnselectedLabels == showUnselectedLabels));
+  final _this = this as BottomNavigationBarWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BottomNavigationBarWidgetConfig&&(identical(other.backgroundColor, _this.backgroundColor) || other.backgroundColor == _this.backgroundColor)&&(identical(other.elevation, _this.elevation) || other.elevation == _this.elevation)&&(identical(other.selectedItemColor, _this.selectedItemColor) || other.selectedItemColor == _this.selectedItemColor)&&(identical(other.unSelectedItemColor, _this.unSelectedItemColor) || other.unSelectedItemColor == _this.unSelectedItemColor)&&(identical(other.selectedLabelStyle, _this.selectedLabelStyle) || other.selectedLabelStyle == _this.selectedLabelStyle)&&(identical(other.unselectedLabelStyle, _this.unselectedLabelStyle) || other.unselectedLabelStyle == _this.unselectedLabelStyle)&&(identical(other.selectedIconTheme, _this.selectedIconTheme) || other.selectedIconTheme == _this.selectedIconTheme)&&(identical(other.unselectedIconTheme, _this.unselectedIconTheme) || other.unselectedIconTheme == _this.unselectedIconTheme)&&(identical(other.showSelectedLabels, _this.showSelectedLabels) || other.showSelectedLabels == _this.showSelectedLabels)&&(identical(other.showUnselectedLabels, _this.showUnselectedLabels) || other.showUnselectedLabels == _this.showUnselectedLabels));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,backgroundColor,elevation,selectedItemColor,unSelectedItemColor,selectedLabelStyle,unselectedLabelStyle,selectedIconTheme,unselectedIconTheme,showSelectedLabels,showUnselectedLabels);
+int get hashCode {
+  final _this = this as BottomNavigationBarWidgetConfig;
+  return Object.hash(runtimeType,_this.backgroundColor,_this.elevation,_this.selectedItemColor,_this.unSelectedItemColor,_this.selectedLabelStyle,_this.unselectedLabelStyle,_this.selectedIconTheme,_this.unselectedIconTheme,_this.showSelectedLabels,_this.showUnselectedLabels);
+}
 
 @override
 String toString() {
-  return 'BottomNavigationBarWidgetConfig(backgroundColor: $backgroundColor, elevation: $elevation, selectedItemColor: $selectedItemColor, unSelectedItemColor: $unSelectedItemColor, selectedLabelStyle: $selectedLabelStyle, unselectedLabelStyle: $unselectedLabelStyle, selectedIconTheme: $selectedIconTheme, unselectedIconTheme: $unselectedIconTheme, showSelectedLabels: $showSelectedLabels, showUnselectedLabels: $showUnselectedLabels)';
+  final _this = this as BottomNavigationBarWidgetConfig;
+  return 'BottomNavigationBarWidgetConfig(backgroundColor: ${_this.backgroundColor}, elevation: ${_this.elevation}, selectedItemColor: ${_this.selectedItemColor}, unSelectedItemColor: ${_this.unSelectedItemColor}, selectedLabelStyle: ${_this.selectedLabelStyle}, unselectedLabelStyle: ${_this.unselectedLabelStyle}, selectedIconTheme: ${_this.selectedIconTheme}, unselectedIconTheme: ${_this.unselectedIconTheme}, showSelectedLabels: ${_this.showSelectedLabels}, showUnselectedLabels: ${_this.showUnselectedLabels})';
 }
 
 
@@ -1150,7 +1181,7 @@ case _:
 /// @nodoc
 mixin _$GroupTitleListTileWidgetConfig {
 
- String? get backgroundColor; TextStyleConfig? get textStyle;
+
 /// Create a copy of GroupTitleListTileWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1161,16 +1192,21 @@ $GroupTitleListTileWidgetConfigCopyWith<GroupTitleListTileWidgetConfig> get copy
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GroupTitleListTileWidgetConfig&&(identical(other.backgroundColor, backgroundColor) || other.backgroundColor == backgroundColor)&&(identical(other.textStyle, textStyle) || other.textStyle == textStyle));
+  final _this = this as GroupTitleListTileWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GroupTitleListTileWidgetConfig&&(identical(other.backgroundColor, _this.backgroundColor) || other.backgroundColor == _this.backgroundColor)&&(identical(other.textStyle, _this.textStyle) || other.textStyle == _this.textStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,backgroundColor,textStyle);
+int get hashCode {
+  final _this = this as GroupTitleListTileWidgetConfig;
+  return Object.hash(runtimeType,_this.backgroundColor,_this.textStyle);
+}
 
 @override
 String toString() {
-  return 'GroupTitleListTileWidgetConfig(backgroundColor: $backgroundColor, textStyle: $textStyle)';
+  final _this = this as GroupTitleListTileWidgetConfig;
+  return 'GroupTitleListTileWidgetConfig(backgroundColor: ${_this.backgroundColor}, textStyle: ${_this.textStyle})';
 }
 
 
@@ -1337,7 +1373,7 @@ case _:
 /// @nodoc
 mixin _$ImageAssetsConfig {
 
- ImageSource? get defaultPlaceholderImage; AppIconWidgetConfig get appIcon; LeadingAvatarStyleConfig get leadingAvatarStyle;
+
 /// Create a copy of ImageAssetsConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1348,16 +1384,21 @@ $ImageAssetsConfigCopyWith<ImageAssetsConfig> get copyWith => _$ImageAssetsConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageAssetsConfig&&(identical(other.defaultPlaceholderImage, defaultPlaceholderImage) || other.defaultPlaceholderImage == defaultPlaceholderImage)&&(identical(other.appIcon, appIcon) || other.appIcon == appIcon)&&(identical(other.leadingAvatarStyle, leadingAvatarStyle) || other.leadingAvatarStyle == leadingAvatarStyle));
+  final _this = this as ImageAssetsConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageAssetsConfig&&(identical(other.defaultPlaceholderImage, _this.defaultPlaceholderImage) || other.defaultPlaceholderImage == _this.defaultPlaceholderImage)&&(identical(other.appIcon, _this.appIcon) || other.appIcon == _this.appIcon)&&(identical(other.leadingAvatarStyle, _this.leadingAvatarStyle) || other.leadingAvatarStyle == _this.leadingAvatarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,defaultPlaceholderImage,appIcon,leadingAvatarStyle);
+int get hashCode {
+  final _this = this as ImageAssetsConfig;
+  return Object.hash(runtimeType,_this.defaultPlaceholderImage,_this.appIcon,_this.leadingAvatarStyle);
+}
 
 @override
 String toString() {
-  return 'ImageAssetsConfig(defaultPlaceholderImage: $defaultPlaceholderImage, appIcon: $appIcon, leadingAvatarStyle: $leadingAvatarStyle)';
+  final _this = this as ImageAssetsConfig;
+  return 'ImageAssetsConfig(defaultPlaceholderImage: ${_this.defaultPlaceholderImage}, appIcon: ${_this.appIcon}, leadingAvatarStyle: ${_this.leadingAvatarStyle})';
 }
 
 
@@ -1525,7 +1566,7 @@ case _:
 /// @nodoc
 mixin _$AppIconWidgetConfig {
 
- String? get color;
+
 /// Create a copy of AppIconWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1536,16 +1577,21 @@ $AppIconWidgetConfigCopyWith<AppIconWidgetConfig> get copyWith => _$AppIconWidge
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppIconWidgetConfig&&(identical(other.color, color) || other.color == color));
+  final _this = this as AppIconWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppIconWidgetConfig&&(identical(other.color, _this.color) || other.color == _this.color));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,color);
+int get hashCode {
+  final _this = this as AppIconWidgetConfig;
+  return Object.hash(runtimeType,_this.color);
+}
 
 @override
 String toString() {
-  return 'AppIconWidgetConfig(color: $color)';
+  final _this = this as AppIconWidgetConfig;
+  return 'AppIconWidgetConfig(color: ${_this.color})';
 }
 
 
@@ -1711,7 +1757,7 @@ case _:
 /// @nodoc
 mixin _$InputWidgetConfig {
 
- TextFormFieldWidgetConfig get primary;
+
 /// Create a copy of InputWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1722,16 +1768,21 @@ $InputWidgetConfigCopyWith<InputWidgetConfig> get copyWith => _$InputWidgetConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputWidgetConfig&&(identical(other.primary, primary) || other.primary == primary));
+  final _this = this as InputWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputWidgetConfig&&(identical(other.primary, _this.primary) || other.primary == _this.primary));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,primary);
+int get hashCode {
+  final _this = this as InputWidgetConfig;
+  return Object.hash(runtimeType,_this.primary);
+}
 
 @override
 String toString() {
-  return 'InputWidgetConfig(primary: $primary)';
+  final _this = this as InputWidgetConfig;
+  return 'InputWidgetConfig(primary: ${_this.primary})';
 }
 
 
@@ -1897,7 +1948,7 @@ case _:
 /// @nodoc
 mixin _$TextFormFieldWidgetConfig {
 
- String? get labelColor; InputBorderWidgetConfig get border;
+
 /// Create a copy of TextFormFieldWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1908,16 +1959,21 @@ $TextFormFieldWidgetConfigCopyWith<TextFormFieldWidgetConfig> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextFormFieldWidgetConfig&&(identical(other.labelColor, labelColor) || other.labelColor == labelColor)&&(identical(other.border, border) || other.border == border));
+  final _this = this as TextFormFieldWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextFormFieldWidgetConfig&&(identical(other.labelColor, _this.labelColor) || other.labelColor == _this.labelColor)&&(identical(other.border, _this.border) || other.border == _this.border));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,labelColor,border);
+int get hashCode {
+  final _this = this as TextFormFieldWidgetConfig;
+  return Object.hash(runtimeType,_this.labelColor,_this.border);
+}
 
 @override
 String toString() {
-  return 'TextFormFieldWidgetConfig(labelColor: $labelColor, border: $border)';
+  final _this = this as TextFormFieldWidgetConfig;
+  return 'TextFormFieldWidgetConfig(labelColor: ${_this.labelColor}, border: ${_this.border})';
 }
 
 
@@ -2084,7 +2140,7 @@ case _:
 /// @nodoc
 mixin _$InputBorderWidgetConfig {
 
- BorderWidgetConfig get disabled; BorderWidgetConfig get focused; BorderWidgetConfig get any;
+
 /// Create a copy of InputBorderWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2095,16 +2151,21 @@ $InputBorderWidgetConfigCopyWith<InputBorderWidgetConfig> get copyWith => _$Inpu
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputBorderWidgetConfig&&(identical(other.disabled, disabled) || other.disabled == disabled)&&(identical(other.focused, focused) || other.focused == focused)&&(identical(other.any, any) || other.any == any));
+  final _this = this as InputBorderWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputBorderWidgetConfig&&(identical(other.disabled, _this.disabled) || other.disabled == _this.disabled)&&(identical(other.focused, _this.focused) || other.focused == _this.focused)&&(identical(other.any, _this.any) || other.any == _this.any));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,disabled,focused,any);
+int get hashCode {
+  final _this = this as InputBorderWidgetConfig;
+  return Object.hash(runtimeType,_this.disabled,_this.focused,_this.any);
+}
 
 @override
 String toString() {
-  return 'InputBorderWidgetConfig(disabled: $disabled, focused: $focused, any: $any)';
+  final _this = this as InputBorderWidgetConfig;
+  return 'InputBorderWidgetConfig(disabled: ${_this.disabled}, focused: ${_this.focused}, any: ${_this.any})';
 }
 
 
@@ -2272,7 +2333,7 @@ case _:
 /// @nodoc
 mixin _$BorderWidgetConfig {
 
- String? get typicalColor; String? get errorColor;
+
 /// Create a copy of BorderWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2283,16 +2344,21 @@ $BorderWidgetConfigCopyWith<BorderWidgetConfig> get copyWith => _$BorderWidgetCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BorderWidgetConfig&&(identical(other.typicalColor, typicalColor) || other.typicalColor == typicalColor)&&(identical(other.errorColor, errorColor) || other.errorColor == errorColor));
+  final _this = this as BorderWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BorderWidgetConfig&&(identical(other.typicalColor, _this.typicalColor) || other.typicalColor == _this.typicalColor)&&(identical(other.errorColor, _this.errorColor) || other.errorColor == _this.errorColor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,typicalColor,errorColor);
+int get hashCode {
+  final _this = this as BorderWidgetConfig;
+  return Object.hash(runtimeType,_this.typicalColor,_this.errorColor);
+}
 
 @override
 String toString() {
-  return 'BorderWidgetConfig(typicalColor: $typicalColor, errorColor: $errorColor)';
+  final _this = this as BorderWidgetConfig;
+  return 'BorderWidgetConfig(typicalColor: ${_this.typicalColor}, errorColor: ${_this.errorColor})';
 }
 
 
@@ -2459,7 +2525,7 @@ case _:
 /// @nodoc
 mixin _$TextWidgetConfig {
 
- TextSelectionWidgetConfig get selection; LinkifyWidgetConfig get linkify;
+
 /// Create a copy of TextWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2470,16 +2536,21 @@ $TextWidgetConfigCopyWith<TextWidgetConfig> get copyWith => _$TextWidgetConfigCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextWidgetConfig&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.linkify, linkify) || other.linkify == linkify));
+  final _this = this as TextWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextWidgetConfig&&(identical(other.selection, _this.selection) || other.selection == _this.selection)&&(identical(other.linkify, _this.linkify) || other.linkify == _this.linkify));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,selection,linkify);
+int get hashCode {
+  final _this = this as TextWidgetConfig;
+  return Object.hash(runtimeType,_this.selection,_this.linkify);
+}
 
 @override
 String toString() {
-  return 'TextWidgetConfig(selection: $selection, linkify: $linkify)';
+  final _this = this as TextWidgetConfig;
+  return 'TextWidgetConfig(selection: ${_this.selection}, linkify: ${_this.linkify})';
 }
 
 
@@ -2646,7 +2717,7 @@ case _:
 /// @nodoc
 mixin _$TextSelectionWidgetConfig {
 
- String? get cursorColor; String? get selectionColor; String? get selectionHandleColor;
+
 /// Create a copy of TextSelectionWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2657,16 +2728,21 @@ $TextSelectionWidgetConfigCopyWith<TextSelectionWidgetConfig> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextSelectionWidgetConfig&&(identical(other.cursorColor, cursorColor) || other.cursorColor == cursorColor)&&(identical(other.selectionColor, selectionColor) || other.selectionColor == selectionColor)&&(identical(other.selectionHandleColor, selectionHandleColor) || other.selectionHandleColor == selectionHandleColor));
+  final _this = this as TextSelectionWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextSelectionWidgetConfig&&(identical(other.cursorColor, _this.cursorColor) || other.cursorColor == _this.cursorColor)&&(identical(other.selectionColor, _this.selectionColor) || other.selectionColor == _this.selectionColor)&&(identical(other.selectionHandleColor, _this.selectionHandleColor) || other.selectionHandleColor == _this.selectionHandleColor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,cursorColor,selectionColor,selectionHandleColor);
+int get hashCode {
+  final _this = this as TextSelectionWidgetConfig;
+  return Object.hash(runtimeType,_this.cursorColor,_this.selectionColor,_this.selectionHandleColor);
+}
 
 @override
 String toString() {
-  return 'TextSelectionWidgetConfig(cursorColor: $cursorColor, selectionColor: $selectionColor, selectionHandleColor: $selectionHandleColor)';
+  final _this = this as TextSelectionWidgetConfig;
+  return 'TextSelectionWidgetConfig(cursorColor: ${_this.cursorColor}, selectionColor: ${_this.selectionColor}, selectionHandleColor: ${_this.selectionHandleColor})';
 }
 
 
@@ -2834,7 +2910,7 @@ case _:
 /// @nodoc
 mixin _$LinkifyWidgetConfig {
 
- String? get styleColor; String? get linkifyStyleColor;
+
 /// Create a copy of LinkifyWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2845,16 +2921,21 @@ $LinkifyWidgetConfigCopyWith<LinkifyWidgetConfig> get copyWith => _$LinkifyWidge
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinkifyWidgetConfig&&(identical(other.styleColor, styleColor) || other.styleColor == styleColor)&&(identical(other.linkifyStyleColor, linkifyStyleColor) || other.linkifyStyleColor == linkifyStyleColor));
+  final _this = this as LinkifyWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinkifyWidgetConfig&&(identical(other.styleColor, _this.styleColor) || other.styleColor == _this.styleColor)&&(identical(other.linkifyStyleColor, _this.linkifyStyleColor) || other.linkifyStyleColor == _this.linkifyStyleColor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,styleColor,linkifyStyleColor);
+int get hashCode {
+  final _this = this as LinkifyWidgetConfig;
+  return Object.hash(runtimeType,_this.styleColor,_this.linkifyStyleColor);
+}
 
 @override
 String toString() {
-  return 'LinkifyWidgetConfig(styleColor: $styleColor, linkifyStyleColor: $linkifyStyleColor)';
+  final _this = this as LinkifyWidgetConfig;
+  return 'LinkifyWidgetConfig(styleColor: ${_this.styleColor}, linkifyStyleColor: ${_this.linkifyStyleColor})';
 }
 
 
@@ -3021,7 +3102,7 @@ case _:
 /// @nodoc
 mixin _$DialogWidgetConfig {
 
- DialogThemeConfig get theme; ConfirmDialogWidgetConfig get confirmDialog; SnackBarWidgetConfig get snackBar;
+
 /// Create a copy of DialogWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3032,16 +3113,21 @@ $DialogWidgetConfigCopyWith<DialogWidgetConfig> get copyWith => _$DialogWidgetCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DialogWidgetConfig&&(identical(other.theme, theme) || other.theme == theme)&&(identical(other.confirmDialog, confirmDialog) || other.confirmDialog == confirmDialog)&&(identical(other.snackBar, snackBar) || other.snackBar == snackBar));
+  final _this = this as DialogWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DialogWidgetConfig&&(identical(other.theme, _this.theme) || other.theme == _this.theme)&&(identical(other.confirmDialog, _this.confirmDialog) || other.confirmDialog == _this.confirmDialog)&&(identical(other.snackBar, _this.snackBar) || other.snackBar == _this.snackBar));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,theme,confirmDialog,snackBar);
+int get hashCode {
+  final _this = this as DialogWidgetConfig;
+  return Object.hash(runtimeType,_this.theme,_this.confirmDialog,_this.snackBar);
+}
 
 @override
 String toString() {
-  return 'DialogWidgetConfig(theme: $theme, confirmDialog: $confirmDialog, snackBar: $snackBar)';
+  final _this = this as DialogWidgetConfig;
+  return 'DialogWidgetConfig(theme: ${_this.theme}, confirmDialog: ${_this.confirmDialog}, snackBar: ${_this.snackBar})';
 }
 
 
@@ -3209,7 +3295,7 @@ case _:
 /// @nodoc
 mixin _$DialogThemeConfig {
 
- String? get backgroundColor; String? get surfaceTintColor; String? get shadowColor; String? get barrierColor; double? get elevation; double? get borderRadius; TextStyleConfig? get titleTextStyle; TextStyleConfig? get contentTextStyle;
+
 /// Create a copy of DialogThemeConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3220,16 +3306,21 @@ $DialogThemeConfigCopyWith<DialogThemeConfig> get copyWith => _$DialogThemeConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DialogThemeConfig&&(identical(other.backgroundColor, backgroundColor) || other.backgroundColor == backgroundColor)&&(identical(other.surfaceTintColor, surfaceTintColor) || other.surfaceTintColor == surfaceTintColor)&&(identical(other.shadowColor, shadowColor) || other.shadowColor == shadowColor)&&(identical(other.barrierColor, barrierColor) || other.barrierColor == barrierColor)&&(identical(other.elevation, elevation) || other.elevation == elevation)&&(identical(other.borderRadius, borderRadius) || other.borderRadius == borderRadius)&&(identical(other.titleTextStyle, titleTextStyle) || other.titleTextStyle == titleTextStyle)&&(identical(other.contentTextStyle, contentTextStyle) || other.contentTextStyle == contentTextStyle));
+  final _this = this as DialogThemeConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DialogThemeConfig&&(identical(other.backgroundColor, _this.backgroundColor) || other.backgroundColor == _this.backgroundColor)&&(identical(other.surfaceTintColor, _this.surfaceTintColor) || other.surfaceTintColor == _this.surfaceTintColor)&&(identical(other.shadowColor, _this.shadowColor) || other.shadowColor == _this.shadowColor)&&(identical(other.barrierColor, _this.barrierColor) || other.barrierColor == _this.barrierColor)&&(identical(other.elevation, _this.elevation) || other.elevation == _this.elevation)&&(identical(other.borderRadius, _this.borderRadius) || other.borderRadius == _this.borderRadius)&&(identical(other.titleTextStyle, _this.titleTextStyle) || other.titleTextStyle == _this.titleTextStyle)&&(identical(other.contentTextStyle, _this.contentTextStyle) || other.contentTextStyle == _this.contentTextStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,backgroundColor,surfaceTintColor,shadowColor,barrierColor,elevation,borderRadius,titleTextStyle,contentTextStyle);
+int get hashCode {
+  final _this = this as DialogThemeConfig;
+  return Object.hash(runtimeType,_this.backgroundColor,_this.surfaceTintColor,_this.shadowColor,_this.barrierColor,_this.elevation,_this.borderRadius,_this.titleTextStyle,_this.contentTextStyle);
+}
 
 @override
 String toString() {
-  return 'DialogThemeConfig(backgroundColor: $backgroundColor, surfaceTintColor: $surfaceTintColor, shadowColor: $shadowColor, barrierColor: $barrierColor, elevation: $elevation, borderRadius: $borderRadius, titleTextStyle: $titleTextStyle, contentTextStyle: $contentTextStyle)';
+  final _this = this as DialogThemeConfig;
+  return 'DialogThemeConfig(backgroundColor: ${_this.backgroundColor}, surfaceTintColor: ${_this.surfaceTintColor}, shadowColor: ${_this.shadowColor}, barrierColor: ${_this.barrierColor}, elevation: ${_this.elevation}, borderRadius: ${_this.borderRadius}, titleTextStyle: ${_this.titleTextStyle}, contentTextStyle: ${_this.contentTextStyle})';
 }
 
 
@@ -3402,7 +3493,7 @@ case _:
 /// @nodoc
 mixin _$ConfirmDialogWidgetConfig {
 
- String? get activeButtonColor1; String? get activeButtonColor2; String? get defaultButtonColor; String? get backgroundColor; String? get surfaceTintColor; double? get elevation; double? get borderRadius; TextStyleConfig? get titleTextStyle; TextStyleConfig? get contentTextStyle;
+
 /// Create a copy of ConfirmDialogWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3413,16 +3504,21 @@ $ConfirmDialogWidgetConfigCopyWith<ConfirmDialogWidgetConfig> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConfirmDialogWidgetConfig&&(identical(other.activeButtonColor1, activeButtonColor1) || other.activeButtonColor1 == activeButtonColor1)&&(identical(other.activeButtonColor2, activeButtonColor2) || other.activeButtonColor2 == activeButtonColor2)&&(identical(other.defaultButtonColor, defaultButtonColor) || other.defaultButtonColor == defaultButtonColor)&&(identical(other.backgroundColor, backgroundColor) || other.backgroundColor == backgroundColor)&&(identical(other.surfaceTintColor, surfaceTintColor) || other.surfaceTintColor == surfaceTintColor)&&(identical(other.elevation, elevation) || other.elevation == elevation)&&(identical(other.borderRadius, borderRadius) || other.borderRadius == borderRadius)&&(identical(other.titleTextStyle, titleTextStyle) || other.titleTextStyle == titleTextStyle)&&(identical(other.contentTextStyle, contentTextStyle) || other.contentTextStyle == contentTextStyle));
+  final _this = this as ConfirmDialogWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConfirmDialogWidgetConfig&&(identical(other.activeButtonColor1, _this.activeButtonColor1) || other.activeButtonColor1 == _this.activeButtonColor1)&&(identical(other.activeButtonColor2, _this.activeButtonColor2) || other.activeButtonColor2 == _this.activeButtonColor2)&&(identical(other.defaultButtonColor, _this.defaultButtonColor) || other.defaultButtonColor == _this.defaultButtonColor)&&(identical(other.backgroundColor, _this.backgroundColor) || other.backgroundColor == _this.backgroundColor)&&(identical(other.surfaceTintColor, _this.surfaceTintColor) || other.surfaceTintColor == _this.surfaceTintColor)&&(identical(other.elevation, _this.elevation) || other.elevation == _this.elevation)&&(identical(other.borderRadius, _this.borderRadius) || other.borderRadius == _this.borderRadius)&&(identical(other.titleTextStyle, _this.titleTextStyle) || other.titleTextStyle == _this.titleTextStyle)&&(identical(other.contentTextStyle, _this.contentTextStyle) || other.contentTextStyle == _this.contentTextStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,activeButtonColor1,activeButtonColor2,defaultButtonColor,backgroundColor,surfaceTintColor,elevation,borderRadius,titleTextStyle,contentTextStyle);
+int get hashCode {
+  final _this = this as ConfirmDialogWidgetConfig;
+  return Object.hash(runtimeType,_this.activeButtonColor1,_this.activeButtonColor2,_this.defaultButtonColor,_this.backgroundColor,_this.surfaceTintColor,_this.elevation,_this.borderRadius,_this.titleTextStyle,_this.contentTextStyle);
+}
 
 @override
 String toString() {
-  return 'ConfirmDialogWidgetConfig(activeButtonColor1: $activeButtonColor1, activeButtonColor2: $activeButtonColor2, defaultButtonColor: $defaultButtonColor, backgroundColor: $backgroundColor, surfaceTintColor: $surfaceTintColor, elevation: $elevation, borderRadius: $borderRadius, titleTextStyle: $titleTextStyle, contentTextStyle: $contentTextStyle)';
+  final _this = this as ConfirmDialogWidgetConfig;
+  return 'ConfirmDialogWidgetConfig(activeButtonColor1: ${_this.activeButtonColor1}, activeButtonColor2: ${_this.activeButtonColor2}, defaultButtonColor: ${_this.defaultButtonColor}, backgroundColor: ${_this.backgroundColor}, surfaceTintColor: ${_this.surfaceTintColor}, elevation: ${_this.elevation}, borderRadius: ${_this.borderRadius}, titleTextStyle: ${_this.titleTextStyle}, contentTextStyle: ${_this.contentTextStyle})';
 }
 
 
@@ -3596,7 +3692,7 @@ case _:
 /// @nodoc
 mixin _$SnackBarWidgetConfig {
 
- String get successBackgroundColor; String get errorBackgroundColor; String get infoBackgroundColor; String get warningBackgroundColor;
+
 /// Create a copy of SnackBarWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3607,16 +3703,21 @@ $SnackBarWidgetConfigCopyWith<SnackBarWidgetConfig> get copyWith => _$SnackBarWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SnackBarWidgetConfig&&(identical(other.successBackgroundColor, successBackgroundColor) || other.successBackgroundColor == successBackgroundColor)&&(identical(other.errorBackgroundColor, errorBackgroundColor) || other.errorBackgroundColor == errorBackgroundColor)&&(identical(other.infoBackgroundColor, infoBackgroundColor) || other.infoBackgroundColor == infoBackgroundColor)&&(identical(other.warningBackgroundColor, warningBackgroundColor) || other.warningBackgroundColor == warningBackgroundColor));
+  final _this = this as SnackBarWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SnackBarWidgetConfig&&(identical(other.successBackgroundColor, _this.successBackgroundColor) || other.successBackgroundColor == _this.successBackgroundColor)&&(identical(other.errorBackgroundColor, _this.errorBackgroundColor) || other.errorBackgroundColor == _this.errorBackgroundColor)&&(identical(other.infoBackgroundColor, _this.infoBackgroundColor) || other.infoBackgroundColor == _this.infoBackgroundColor)&&(identical(other.warningBackgroundColor, _this.warningBackgroundColor) || other.warningBackgroundColor == _this.warningBackgroundColor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,successBackgroundColor,errorBackgroundColor,infoBackgroundColor,warningBackgroundColor);
+int get hashCode {
+  final _this = this as SnackBarWidgetConfig;
+  return Object.hash(runtimeType,_this.successBackgroundColor,_this.errorBackgroundColor,_this.infoBackgroundColor,_this.warningBackgroundColor);
+}
 
 @override
 String toString() {
-  return 'SnackBarWidgetConfig(successBackgroundColor: $successBackgroundColor, errorBackgroundColor: $errorBackgroundColor, infoBackgroundColor: $infoBackgroundColor, warningBackgroundColor: $warningBackgroundColor)';
+  final _this = this as SnackBarWidgetConfig;
+  return 'SnackBarWidgetConfig(successBackgroundColor: ${_this.successBackgroundColor}, errorBackgroundColor: ${_this.errorBackgroundColor}, infoBackgroundColor: ${_this.infoBackgroundColor}, warningBackgroundColor: ${_this.warningBackgroundColor})';
 }
 
 
@@ -3785,7 +3886,7 @@ case _:
 /// @nodoc
 mixin _$StatusesWidgetConfig {
 
- RegistrationStatusesWidgetConfig get registrationStatuses; CallStatusesWidgetConfig get callStatuses;
+
 /// Create a copy of StatusesWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3796,16 +3897,21 @@ $StatusesWidgetConfigCopyWith<StatusesWidgetConfig> get copyWith => _$StatusesWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StatusesWidgetConfig&&(identical(other.registrationStatuses, registrationStatuses) || other.registrationStatuses == registrationStatuses)&&(identical(other.callStatuses, callStatuses) || other.callStatuses == callStatuses));
+  final _this = this as StatusesWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StatusesWidgetConfig&&(identical(other.registrationStatuses, _this.registrationStatuses) || other.registrationStatuses == _this.registrationStatuses)&&(identical(other.callStatuses, _this.callStatuses) || other.callStatuses == _this.callStatuses));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,registrationStatuses,callStatuses);
+int get hashCode {
+  final _this = this as StatusesWidgetConfig;
+  return Object.hash(runtimeType,_this.registrationStatuses,_this.callStatuses);
+}
 
 @override
 String toString() {
-  return 'StatusesWidgetConfig(registrationStatuses: $registrationStatuses, callStatuses: $callStatuses)';
+  final _this = this as StatusesWidgetConfig;
+  return 'StatusesWidgetConfig(registrationStatuses: ${_this.registrationStatuses}, callStatuses: ${_this.callStatuses})';
 }
 
 
@@ -3972,7 +4078,7 @@ case _:
 /// @nodoc
 mixin _$RegistrationStatusesWidgetConfig {
 
- String get online; String get offline;
+
 /// Create a copy of RegistrationStatusesWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3983,16 +4089,21 @@ $RegistrationStatusesWidgetConfigCopyWith<RegistrationStatusesWidgetConfig> get 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegistrationStatusesWidgetConfig&&(identical(other.online, online) || other.online == online)&&(identical(other.offline, offline) || other.offline == offline));
+  final _this = this as RegistrationStatusesWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegistrationStatusesWidgetConfig&&(identical(other.online, _this.online) || other.online == _this.online)&&(identical(other.offline, _this.offline) || other.offline == _this.offline));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,online,offline);
+int get hashCode {
+  final _this = this as RegistrationStatusesWidgetConfig;
+  return Object.hash(runtimeType,_this.online,_this.offline);
+}
 
 @override
 String toString() {
-  return 'RegistrationStatusesWidgetConfig(online: $online, offline: $offline)';
+  final _this = this as RegistrationStatusesWidgetConfig;
+  return 'RegistrationStatusesWidgetConfig(online: ${_this.online}, offline: ${_this.offline})';
 }
 
 
@@ -4159,7 +4270,7 @@ case _:
 /// @nodoc
 mixin _$CallStatusesWidgetConfig {
 
- String get connectivityNone; String get connectError; String get appUnregistered; String get connectIssue; String get inProgress; String get ready;
+
 /// Create a copy of CallStatusesWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4170,16 +4281,21 @@ $CallStatusesWidgetConfigCopyWith<CallStatusesWidgetConfig> get copyWith => _$Ca
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallStatusesWidgetConfig&&(identical(other.connectivityNone, connectivityNone) || other.connectivityNone == connectivityNone)&&(identical(other.connectError, connectError) || other.connectError == connectError)&&(identical(other.appUnregistered, appUnregistered) || other.appUnregistered == appUnregistered)&&(identical(other.connectIssue, connectIssue) || other.connectIssue == connectIssue)&&(identical(other.inProgress, inProgress) || other.inProgress == inProgress)&&(identical(other.ready, ready) || other.ready == ready));
+  final _this = this as CallStatusesWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallStatusesWidgetConfig&&(identical(other.connectivityNone, _this.connectivityNone) || other.connectivityNone == _this.connectivityNone)&&(identical(other.connectError, _this.connectError) || other.connectError == _this.connectError)&&(identical(other.appUnregistered, _this.appUnregistered) || other.appUnregistered == _this.appUnregistered)&&(identical(other.connectIssue, _this.connectIssue) || other.connectIssue == _this.connectIssue)&&(identical(other.inProgress, _this.inProgress) || other.inProgress == _this.inProgress)&&(identical(other.ready, _this.ready) || other.ready == _this.ready));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,connectivityNone,connectError,appUnregistered,connectIssue,inProgress,ready);
+int get hashCode {
+  final _this = this as CallStatusesWidgetConfig;
+  return Object.hash(runtimeType,_this.connectivityNone,_this.connectError,_this.appUnregistered,_this.connectIssue,_this.inProgress,_this.ready);
+}
 
 @override
 String toString() {
-  return 'CallStatusesWidgetConfig(connectivityNone: $connectivityNone, connectError: $connectError, appUnregistered: $appUnregistered, connectIssue: $connectIssue, inProgress: $inProgress, ready: $ready)';
+  final _this = this as CallStatusesWidgetConfig;
+  return 'CallStatusesWidgetConfig(connectivityNone: ${_this.connectivityNone}, connectError: ${_this.connectError}, appUnregistered: ${_this.appUnregistered}, connectIssue: ${_this.connectIssue}, inProgress: ${_this.inProgress}, ready: ${_this.ready})';
 }
 
 
@@ -4350,7 +4466,7 @@ case _:
 /// @nodoc
 mixin _$TabBarConfig {
 
- String? get indicatorColor; String? get dividerColor; String? get labelColor; String? get unselectedLabelColor; String? get overlayColor; double? get dividerHeight; PaddingConfig? get labelPadding; TextStyleConfig? get labelStyle; TextStyleConfig? get unselectedLabelStyle; TabBarIndicatorSizeConfig? get indicatorSize; TabAlignmentConfig? get tabAlignment; TabIndicatorAnimationConfig? get indicatorAnimation; TabSplashFactoryConfig? get splashFactory; BorderConfig? get indicatorBorder;
+
 /// Create a copy of TabBarConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4361,16 +4477,21 @@ $TabBarConfigCopyWith<TabBarConfig> get copyWith => _$TabBarConfigCopyWithImpl<T
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TabBarConfig&&(identical(other.indicatorColor, indicatorColor) || other.indicatorColor == indicatorColor)&&(identical(other.dividerColor, dividerColor) || other.dividerColor == dividerColor)&&(identical(other.labelColor, labelColor) || other.labelColor == labelColor)&&(identical(other.unselectedLabelColor, unselectedLabelColor) || other.unselectedLabelColor == unselectedLabelColor)&&(identical(other.overlayColor, overlayColor) || other.overlayColor == overlayColor)&&(identical(other.dividerHeight, dividerHeight) || other.dividerHeight == dividerHeight)&&(identical(other.labelPadding, labelPadding) || other.labelPadding == labelPadding)&&(identical(other.labelStyle, labelStyle) || other.labelStyle == labelStyle)&&(identical(other.unselectedLabelStyle, unselectedLabelStyle) || other.unselectedLabelStyle == unselectedLabelStyle)&&(identical(other.indicatorSize, indicatorSize) || other.indicatorSize == indicatorSize)&&(identical(other.tabAlignment, tabAlignment) || other.tabAlignment == tabAlignment)&&(identical(other.indicatorAnimation, indicatorAnimation) || other.indicatorAnimation == indicatorAnimation)&&(identical(other.splashFactory, splashFactory) || other.splashFactory == splashFactory)&&(identical(other.indicatorBorder, indicatorBorder) || other.indicatorBorder == indicatorBorder));
+  final _this = this as TabBarConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TabBarConfig&&(identical(other.indicatorColor, _this.indicatorColor) || other.indicatorColor == _this.indicatorColor)&&(identical(other.dividerColor, _this.dividerColor) || other.dividerColor == _this.dividerColor)&&(identical(other.labelColor, _this.labelColor) || other.labelColor == _this.labelColor)&&(identical(other.unselectedLabelColor, _this.unselectedLabelColor) || other.unselectedLabelColor == _this.unselectedLabelColor)&&(identical(other.overlayColor, _this.overlayColor) || other.overlayColor == _this.overlayColor)&&(identical(other.dividerHeight, _this.dividerHeight) || other.dividerHeight == _this.dividerHeight)&&(identical(other.labelPadding, _this.labelPadding) || other.labelPadding == _this.labelPadding)&&(identical(other.labelStyle, _this.labelStyle) || other.labelStyle == _this.labelStyle)&&(identical(other.unselectedLabelStyle, _this.unselectedLabelStyle) || other.unselectedLabelStyle == _this.unselectedLabelStyle)&&(identical(other.indicatorSize, _this.indicatorSize) || other.indicatorSize == _this.indicatorSize)&&(identical(other.tabAlignment, _this.tabAlignment) || other.tabAlignment == _this.tabAlignment)&&(identical(other.indicatorAnimation, _this.indicatorAnimation) || other.indicatorAnimation == _this.indicatorAnimation)&&(identical(other.splashFactory, _this.splashFactory) || other.splashFactory == _this.splashFactory)&&(identical(other.indicatorBorder, _this.indicatorBorder) || other.indicatorBorder == _this.indicatorBorder));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,indicatorColor,dividerColor,labelColor,unselectedLabelColor,overlayColor,dividerHeight,labelPadding,labelStyle,unselectedLabelStyle,indicatorSize,tabAlignment,indicatorAnimation,splashFactory,indicatorBorder);
+int get hashCode {
+  final _this = this as TabBarConfig;
+  return Object.hash(runtimeType,_this.indicatorColor,_this.dividerColor,_this.labelColor,_this.unselectedLabelColor,_this.overlayColor,_this.dividerHeight,_this.labelPadding,_this.labelStyle,_this.unselectedLabelStyle,_this.indicatorSize,_this.tabAlignment,_this.indicatorAnimation,_this.splashFactory,_this.indicatorBorder);
+}
 
 @override
 String toString() {
-  return 'TabBarConfig(indicatorColor: $indicatorColor, dividerColor: $dividerColor, labelColor: $labelColor, unselectedLabelColor: $unselectedLabelColor, overlayColor: $overlayColor, dividerHeight: $dividerHeight, labelPadding: $labelPadding, labelStyle: $labelStyle, unselectedLabelStyle: $unselectedLabelStyle, indicatorSize: $indicatorSize, tabAlignment: $tabAlignment, indicatorAnimation: $indicatorAnimation, splashFactory: $splashFactory, indicatorBorder: $indicatorBorder)';
+  final _this = this as TabBarConfig;
+  return 'TabBarConfig(indicatorColor: ${_this.indicatorColor}, dividerColor: ${_this.dividerColor}, labelColor: ${_this.labelColor}, unselectedLabelColor: ${_this.unselectedLabelColor}, overlayColor: ${_this.overlayColor}, dividerHeight: ${_this.dividerHeight}, labelPadding: ${_this.labelPadding}, labelStyle: ${_this.labelStyle}, unselectedLabelStyle: ${_this.unselectedLabelStyle}, indicatorSize: ${_this.indicatorSize}, tabAlignment: ${_this.tabAlignment}, indicatorAnimation: ${_this.indicatorAnimation}, splashFactory: ${_this.splashFactory}, indicatorBorder: ${_this.indicatorBorder})';
 }
 
 
@@ -4549,7 +4670,7 @@ case _:
 /// @nodoc
 mixin _$AppBarConfig {
 
- bool get primary; bool get showBackButton; String? get backgroundColor; String? get foregroundColor; String? get shadowColor; String? get surfaceTintColor; double? get elevation; double? get scrolledUnderElevation; double? get titleSpacing; double? get leadingWidth; double? get toolbarHeight; bool? get centerTitle; IconThemeDataConfig? get iconTheme; IconThemeDataConfig? get actionsIconTheme; TextStyleConfig? get titleTextStyle; TextStyleConfig? get toolbarTextStyle; OverlayStyleModel? get systemOverlayStyle;
+
 /// Create a copy of AppBarConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4560,16 +4681,21 @@ $AppBarConfigCopyWith<AppBarConfig> get copyWith => _$AppBarConfigCopyWithImpl<A
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppBarConfig&&(identical(other.primary, primary) || other.primary == primary)&&(identical(other.showBackButton, showBackButton) || other.showBackButton == showBackButton)&&(identical(other.backgroundColor, backgroundColor) || other.backgroundColor == backgroundColor)&&(identical(other.foregroundColor, foregroundColor) || other.foregroundColor == foregroundColor)&&(identical(other.shadowColor, shadowColor) || other.shadowColor == shadowColor)&&(identical(other.surfaceTintColor, surfaceTintColor) || other.surfaceTintColor == surfaceTintColor)&&(identical(other.elevation, elevation) || other.elevation == elevation)&&(identical(other.scrolledUnderElevation, scrolledUnderElevation) || other.scrolledUnderElevation == scrolledUnderElevation)&&(identical(other.titleSpacing, titleSpacing) || other.titleSpacing == titleSpacing)&&(identical(other.leadingWidth, leadingWidth) || other.leadingWidth == leadingWidth)&&(identical(other.toolbarHeight, toolbarHeight) || other.toolbarHeight == toolbarHeight)&&(identical(other.centerTitle, centerTitle) || other.centerTitle == centerTitle)&&(identical(other.iconTheme, iconTheme) || other.iconTheme == iconTheme)&&(identical(other.actionsIconTheme, actionsIconTheme) || other.actionsIconTheme == actionsIconTheme)&&(identical(other.titleTextStyle, titleTextStyle) || other.titleTextStyle == titleTextStyle)&&(identical(other.toolbarTextStyle, toolbarTextStyle) || other.toolbarTextStyle == toolbarTextStyle)&&(identical(other.systemOverlayStyle, systemOverlayStyle) || other.systemOverlayStyle == systemOverlayStyle));
+  final _this = this as AppBarConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppBarConfig&&(identical(other.primary, _this.primary) || other.primary == _this.primary)&&(identical(other.showBackButton, _this.showBackButton) || other.showBackButton == _this.showBackButton)&&(identical(other.backgroundColor, _this.backgroundColor) || other.backgroundColor == _this.backgroundColor)&&(identical(other.foregroundColor, _this.foregroundColor) || other.foregroundColor == _this.foregroundColor)&&(identical(other.shadowColor, _this.shadowColor) || other.shadowColor == _this.shadowColor)&&(identical(other.surfaceTintColor, _this.surfaceTintColor) || other.surfaceTintColor == _this.surfaceTintColor)&&(identical(other.elevation, _this.elevation) || other.elevation == _this.elevation)&&(identical(other.scrolledUnderElevation, _this.scrolledUnderElevation) || other.scrolledUnderElevation == _this.scrolledUnderElevation)&&(identical(other.titleSpacing, _this.titleSpacing) || other.titleSpacing == _this.titleSpacing)&&(identical(other.leadingWidth, _this.leadingWidth) || other.leadingWidth == _this.leadingWidth)&&(identical(other.toolbarHeight, _this.toolbarHeight) || other.toolbarHeight == _this.toolbarHeight)&&(identical(other.centerTitle, _this.centerTitle) || other.centerTitle == _this.centerTitle)&&(identical(other.iconTheme, _this.iconTheme) || other.iconTheme == _this.iconTheme)&&(identical(other.actionsIconTheme, _this.actionsIconTheme) || other.actionsIconTheme == _this.actionsIconTheme)&&(identical(other.titleTextStyle, _this.titleTextStyle) || other.titleTextStyle == _this.titleTextStyle)&&(identical(other.toolbarTextStyle, _this.toolbarTextStyle) || other.toolbarTextStyle == _this.toolbarTextStyle)&&(identical(other.systemOverlayStyle, _this.systemOverlayStyle) || other.systemOverlayStyle == _this.systemOverlayStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,primary,showBackButton,backgroundColor,foregroundColor,shadowColor,surfaceTintColor,elevation,scrolledUnderElevation,titleSpacing,leadingWidth,toolbarHeight,centerTitle,iconTheme,actionsIconTheme,titleTextStyle,toolbarTextStyle,systemOverlayStyle);
+int get hashCode {
+  final _this = this as AppBarConfig;
+  return Object.hash(runtimeType,_this.primary,_this.showBackButton,_this.backgroundColor,_this.foregroundColor,_this.shadowColor,_this.surfaceTintColor,_this.elevation,_this.scrolledUnderElevation,_this.titleSpacing,_this.leadingWidth,_this.toolbarHeight,_this.centerTitle,_this.iconTheme,_this.actionsIconTheme,_this.titleTextStyle,_this.toolbarTextStyle,_this.systemOverlayStyle);
+}
 
 @override
 String toString() {
-  return 'AppBarConfig(primary: $primary, showBackButton: $showBackButton, backgroundColor: $backgroundColor, foregroundColor: $foregroundColor, shadowColor: $shadowColor, surfaceTintColor: $surfaceTintColor, elevation: $elevation, scrolledUnderElevation: $scrolledUnderElevation, titleSpacing: $titleSpacing, leadingWidth: $leadingWidth, toolbarHeight: $toolbarHeight, centerTitle: $centerTitle, iconTheme: $iconTheme, actionsIconTheme: $actionsIconTheme, titleTextStyle: $titleTextStyle, toolbarTextStyle: $toolbarTextStyle, systemOverlayStyle: $systemOverlayStyle)';
+  final _this = this as AppBarConfig;
+  return 'AppBarConfig(primary: ${_this.primary}, showBackButton: ${_this.showBackButton}, backgroundColor: ${_this.backgroundColor}, foregroundColor: ${_this.foregroundColor}, shadowColor: ${_this.shadowColor}, surfaceTintColor: ${_this.surfaceTintColor}, elevation: ${_this.elevation}, scrolledUnderElevation: ${_this.scrolledUnderElevation}, titleSpacing: ${_this.titleSpacing}, leadingWidth: ${_this.leadingWidth}, toolbarHeight: ${_this.toolbarHeight}, centerTitle: ${_this.centerTitle}, iconTheme: ${_this.iconTheme}, actionsIconTheme: ${_this.actionsIconTheme}, titleTextStyle: ${_this.titleTextStyle}, toolbarTextStyle: ${_this.toolbarTextStyle}, systemOverlayStyle: ${_this.systemOverlayStyle})';
 }
 
 

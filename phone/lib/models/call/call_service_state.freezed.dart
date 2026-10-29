@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'call_service_state.dart';
@@ -9,12 +9,13 @@ part of 'call_service_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CallServiceState {
 
- SignalingClientStatus get signalingClientStatus; Registration? get registration; NetworkStatus? get networkStatus; Object? get lastSignalingClientConnectError; Object? get lastSignalingClientDisconnectError; int? get lastSignalingDisconnectCode;
+
 /// Create a copy of CallServiceState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $CallServiceStateCopyWith<CallServiceState> get copyWith => _$CallServiceStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallServiceState&&(identical(other.signalingClientStatus, signalingClientStatus) || other.signalingClientStatus == signalingClientStatus)&&(identical(other.registration, registration) || other.registration == registration)&&(identical(other.networkStatus, networkStatus) || other.networkStatus == networkStatus)&&const DeepCollectionEquality().equals(other.lastSignalingClientConnectError, lastSignalingClientConnectError)&&const DeepCollectionEquality().equals(other.lastSignalingClientDisconnectError, lastSignalingClientDisconnectError)&&(identical(other.lastSignalingDisconnectCode, lastSignalingDisconnectCode) || other.lastSignalingDisconnectCode == lastSignalingDisconnectCode));
+  final _this = this as CallServiceState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallServiceState&&(identical(other.signalingClientStatus, _this.signalingClientStatus) || other.signalingClientStatus == _this.signalingClientStatus)&&(identical(other.registration, _this.registration) || other.registration == _this.registration)&&(identical(other.networkStatus, _this.networkStatus) || other.networkStatus == _this.networkStatus)&&const DeepCollectionEquality().equals(other.lastSignalingClientConnectError, _this.lastSignalingClientConnectError)&&const DeepCollectionEquality().equals(other.lastSignalingClientDisconnectError, _this.lastSignalingClientDisconnectError)&&(identical(other.lastSignalingDisconnectCode, _this.lastSignalingDisconnectCode) || other.lastSignalingDisconnectCode == _this.lastSignalingDisconnectCode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,signalingClientStatus,registration,networkStatus,const DeepCollectionEquality().hash(lastSignalingClientConnectError),const DeepCollectionEquality().hash(lastSignalingClientDisconnectError),lastSignalingDisconnectCode);
+int get hashCode {
+  final _this = this as CallServiceState;
+  return Object.hash(runtimeType,_this.signalingClientStatus,_this.registration,_this.networkStatus,const DeepCollectionEquality().hash(_this.lastSignalingClientConnectError),const DeepCollectionEquality().hash(_this.lastSignalingClientDisconnectError),_this.lastSignalingDisconnectCode);
+}
 
 @override
 String toString() {
-  return 'CallServiceState(signalingClientStatus: $signalingClientStatus, registration: $registration, networkStatus: $networkStatus, lastSignalingClientConnectError: $lastSignalingClientConnectError, lastSignalingClientDisconnectError: $lastSignalingClientDisconnectError, lastSignalingDisconnectCode: $lastSignalingDisconnectCode)';
+  final _this = this as CallServiceState;
+  return 'CallServiceState(signalingClientStatus: ${_this.signalingClientStatus}, registration: ${_this.registration}, networkStatus: ${_this.networkStatus}, lastSignalingClientConnectError: ${_this.lastSignalingClientConnectError}, lastSignalingClientDisconnectError: ${_this.lastSignalingClientDisconnectError}, lastSignalingDisconnectCode: ${_this.lastSignalingDisconnectCode})';
 }
 
 

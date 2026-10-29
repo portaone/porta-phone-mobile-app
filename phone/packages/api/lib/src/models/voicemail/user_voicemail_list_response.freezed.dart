@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'user_voicemail_list_response.dart';
@@ -9,13 +9,14 @@ part of 'user_voicemail_list_response.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$UserVoicemailListResponse {
 
- bool get hasNewMessages; List<UserVoicemailSummary> get items;
+
 /// Create a copy of UserVoicemailListResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $UserVoicemailListResponseCopyWith<UserVoicemailListResponse> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailListResponse&&(identical(other.hasNewMessages, hasNewMessages) || other.hasNewMessages == hasNewMessages)&&const DeepCollectionEquality().equals(other.items, items));
+  final _this = this as UserVoicemailListResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailListResponse&&(identical(other.hasNewMessages, _this.hasNewMessages) || other.hasNewMessages == _this.hasNewMessages)&&const DeepCollectionEquality().equals(other.items, _this.items));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,hasNewMessages,const DeepCollectionEquality().hash(items));
+int get hashCode {
+  final _this = this as UserVoicemailListResponse;
+  return Object.hash(runtimeType,_this.hasNewMessages,const DeepCollectionEquality().hash(_this.items));
+}
 
 @override
 String toString() {
-  return 'UserVoicemailListResponse(hasNewMessages: $hasNewMessages, items: $items)';
+  final _this = this as UserVoicemailListResponse;
+  return 'UserVoicemailListResponse(hasNewMessages: ${_this.hasNewMessages}, items: ${_this.items})';
 }
 
 
@@ -202,7 +208,7 @@ case _:
 /// @nodoc
 mixin _$UserVoicemailSummary {
 
- String get id; String get date; double? get duration; bool get seen; int get size; String get type; bool? get saved; String? get forwardedBy; String? get sender; String? get receiver;
+
 /// Create a copy of UserVoicemailSummary
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -213,16 +219,21 @@ $UserVoicemailSummaryCopyWith<UserVoicemailSummary> get copyWith => _$UserVoicem
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.seen, seen) || other.seen == seen)&&(identical(other.size, size) || other.size == size)&&(identical(other.type, type) || other.type == type)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.forwardedBy, forwardedBy) || other.forwardedBy == forwardedBy)&&(identical(other.sender, sender) || other.sender == sender)&&(identical(other.receiver, receiver) || other.receiver == receiver));
+  final _this = this as UserVoicemailSummary;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailSummary&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.duration, _this.duration) || other.duration == _this.duration)&&(identical(other.seen, _this.seen) || other.seen == _this.seen)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.saved, _this.saved) || other.saved == _this.saved)&&(identical(other.forwardedBy, _this.forwardedBy) || other.forwardedBy == _this.forwardedBy)&&(identical(other.sender, _this.sender) || other.sender == _this.sender)&&(identical(other.receiver, _this.receiver) || other.receiver == _this.receiver));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,date,duration,seen,size,type,saved,forwardedBy,sender,receiver);
+int get hashCode {
+  final _this = this as UserVoicemailSummary;
+  return Object.hash(runtimeType,_this.id,_this.date,_this.duration,_this.seen,_this.size,_this.type,_this.saved,_this.forwardedBy,_this.sender,_this.receiver);
+}
 
 @override
 String toString() {
-  return 'UserVoicemailSummary(id: $id, date: $date, duration: $duration, seen: $seen, size: $size, type: $type, saved: $saved, forwardedBy: $forwardedBy, sender: $sender, receiver: $receiver)';
+  final _this = this as UserVoicemailSummary;
+  return 'UserVoicemailSummary(id: ${_this.id}, date: ${_this.date}, duration: ${_this.duration}, seen: ${_this.seen}, size: ${_this.size}, type: ${_this.type}, saved: ${_this.saved}, forwardedBy: ${_this.forwardedBy}, sender: ${_this.sender}, receiver: ${_this.receiver})';
 }
 
 
