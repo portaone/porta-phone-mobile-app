@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'about_bloc.dart';
@@ -9,12 +9,13 @@ part of 'about_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AboutState {
 
- bool get progress; List<EmbeddedData> get embeddedResources; String get packageName; String get appIdentifier; Uri get coreUrl; String get userAgent; String get appInfo; String get deviceInfo; String? get fcmPushToken; Version? get coreVersion; String? get bundleVersion;
+
 /// Create a copy of AboutState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $AboutStateCopyWith<AboutState> get copyWith => _$AboutStateCopyWithImpl<AboutSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AboutState&&(identical(other.progress, progress) || other.progress == progress)&&const DeepCollectionEquality().equals(other.embeddedResources, embeddedResources)&&(identical(other.packageName, packageName) || other.packageName == packageName)&&(identical(other.appIdentifier, appIdentifier) || other.appIdentifier == appIdentifier)&&(identical(other.coreUrl, coreUrl) || other.coreUrl == coreUrl)&&(identical(other.userAgent, userAgent) || other.userAgent == userAgent)&&(identical(other.appInfo, appInfo) || other.appInfo == appInfo)&&(identical(other.deviceInfo, deviceInfo) || other.deviceInfo == deviceInfo)&&(identical(other.fcmPushToken, fcmPushToken) || other.fcmPushToken == fcmPushToken)&&(identical(other.coreVersion, coreVersion) || other.coreVersion == coreVersion)&&(identical(other.bundleVersion, bundleVersion) || other.bundleVersion == bundleVersion));
+  final _this = this as AboutState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AboutState&&(identical(other.progress, _this.progress) || other.progress == _this.progress)&&const DeepCollectionEquality().equals(other.embeddedResources, _this.embeddedResources)&&(identical(other.packageName, _this.packageName) || other.packageName == _this.packageName)&&(identical(other.appIdentifier, _this.appIdentifier) || other.appIdentifier == _this.appIdentifier)&&(identical(other.coreUrl, _this.coreUrl) || other.coreUrl == _this.coreUrl)&&(identical(other.userAgent, _this.userAgent) || other.userAgent == _this.userAgent)&&(identical(other.appInfo, _this.appInfo) || other.appInfo == _this.appInfo)&&(identical(other.deviceInfo, _this.deviceInfo) || other.deviceInfo == _this.deviceInfo)&&(identical(other.fcmPushToken, _this.fcmPushToken) || other.fcmPushToken == _this.fcmPushToken)&&(identical(other.coreVersion, _this.coreVersion) || other.coreVersion == _this.coreVersion)&&(identical(other.bundleVersion, _this.bundleVersion) || other.bundleVersion == _this.bundleVersion));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,progress,const DeepCollectionEquality().hash(embeddedResources),packageName,appIdentifier,coreUrl,userAgent,appInfo,deviceInfo,fcmPushToken,coreVersion,bundleVersion);
+int get hashCode {
+  final _this = this as AboutState;
+  return Object.hash(runtimeType,_this.progress,const DeepCollectionEquality().hash(_this.embeddedResources),_this.packageName,_this.appIdentifier,_this.coreUrl,_this.userAgent,_this.appInfo,_this.deviceInfo,_this.fcmPushToken,_this.coreVersion,_this.bundleVersion);
+}
 
 @override
 String toString() {
-  return 'AboutState(progress: $progress, embeddedResources: $embeddedResources, packageName: $packageName, appIdentifier: $appIdentifier, coreUrl: $coreUrl, userAgent: $userAgent, appInfo: $appInfo, deviceInfo: $deviceInfo, fcmPushToken: $fcmPushToken, coreVersion: $coreVersion, bundleVersion: $bundleVersion)';
+  final _this = this as AboutState;
+  return 'AboutState(progress: ${_this.progress}, embeddedResources: ${_this.embeddedResources}, packageName: ${_this.packageName}, appIdentifier: ${_this.appIdentifier}, coreUrl: ${_this.coreUrl}, userAgent: ${_this.userAgent}, appInfo: ${_this.appInfo}, deviceInfo: ${_this.deviceInfo}, fcmPushToken: ${_this.fcmPushToken}, coreVersion: ${_this.coreVersion}, bundleVersion: ${_this.bundleVersion})';
 }
 
 

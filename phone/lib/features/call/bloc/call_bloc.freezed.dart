@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'call_bloc.dart';
@@ -9,12 +9,13 @@ part of 'call_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$CallState {
+mixin _$CallState implements DiagnosticableTreeMixin {
 
- CallServiceState get callServiceState; AppLifecycleState? get currentAppLifecycleState; int get linesCount; List<ActiveCall> get activeCalls; bool? get minimized; CallAudioDevice? get audioDevice; AudioDeviceRequest? get audioDeviceRequest; List<CallAudioDevice> get availableAudioDevices; String? get selectedCallId; ({String callId, String? returnsTo})? get placedCallFocus; ConferenceState get conference; LinkedCall? get linkedCall;
+
 /// Create a copy of CallState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -22,19 +23,31 @@ mixin _$CallState {
 $CallStateCopyWith<CallState> get copyWith => _$CallStateCopyWithImpl<CallState>(this as CallState, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  final _this = this as CallState;
+  properties
+    ..add(DiagnosticsProperty('type', 'CallState'))
+    ..add(DiagnosticsProperty('callServiceState', _this.callServiceState))..add(DiagnosticsProperty('currentAppLifecycleState', _this.currentAppLifecycleState))..add(DiagnosticsProperty('linesCount', _this.linesCount))..add(DiagnosticsProperty('activeCalls', _this.activeCalls))..add(DiagnosticsProperty('minimized', _this.minimized))..add(DiagnosticsProperty('audioDevice', _this.audioDevice))..add(DiagnosticsProperty('audioDeviceRequest', _this.audioDeviceRequest))..add(DiagnosticsProperty('availableAudioDevices', _this.availableAudioDevices))..add(DiagnosticsProperty('selectedCallId', _this.selectedCallId))..add(DiagnosticsProperty('placedCallFocus', _this.placedCallFocus))..add(DiagnosticsProperty('conference', _this.conference))..add(DiagnosticsProperty('linkedCall', _this.linkedCall));
+}
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallState&&(identical(other.callServiceState, callServiceState) || other.callServiceState == callServiceState)&&(identical(other.currentAppLifecycleState, currentAppLifecycleState) || other.currentAppLifecycleState == currentAppLifecycleState)&&(identical(other.linesCount, linesCount) || other.linesCount == linesCount)&&const DeepCollectionEquality().equals(other.activeCalls, activeCalls)&&(identical(other.minimized, minimized) || other.minimized == minimized)&&(identical(other.audioDevice, audioDevice) || other.audioDevice == audioDevice)&&(identical(other.audioDeviceRequest, audioDeviceRequest) || other.audioDeviceRequest == audioDeviceRequest)&&const DeepCollectionEquality().equals(other.availableAudioDevices, availableAudioDevices)&&(identical(other.selectedCallId, selectedCallId) || other.selectedCallId == selectedCallId)&&(identical(other.placedCallFocus, placedCallFocus) || other.placedCallFocus == placedCallFocus)&&(identical(other.conference, conference) || other.conference == conference)&&(identical(other.linkedCall, linkedCall) || other.linkedCall == linkedCall));
+  final _this = this as CallState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallState&&(identical(other.callServiceState, _this.callServiceState) || other.callServiceState == _this.callServiceState)&&(identical(other.currentAppLifecycleState, _this.currentAppLifecycleState) || other.currentAppLifecycleState == _this.currentAppLifecycleState)&&(identical(other.linesCount, _this.linesCount) || other.linesCount == _this.linesCount)&&const DeepCollectionEquality().equals(other.activeCalls, _this.activeCalls)&&(identical(other.minimized, _this.minimized) || other.minimized == _this.minimized)&&(identical(other.audioDevice, _this.audioDevice) || other.audioDevice == _this.audioDevice)&&(identical(other.audioDeviceRequest, _this.audioDeviceRequest) || other.audioDeviceRequest == _this.audioDeviceRequest)&&const DeepCollectionEquality().equals(other.availableAudioDevices, _this.availableAudioDevices)&&(identical(other.selectedCallId, _this.selectedCallId) || other.selectedCallId == _this.selectedCallId)&&(identical(other.placedCallFocus, _this.placedCallFocus) || other.placedCallFocus == _this.placedCallFocus)&&(identical(other.conference, _this.conference) || other.conference == _this.conference)&&(identical(other.linkedCall, _this.linkedCall) || other.linkedCall == _this.linkedCall));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,callServiceState,currentAppLifecycleState,linesCount,const DeepCollectionEquality().hash(activeCalls),minimized,audioDevice,audioDeviceRequest,const DeepCollectionEquality().hash(availableAudioDevices),selectedCallId,placedCallFocus,conference,linkedCall);
+int get hashCode {
+  final _this = this as CallState;
+  return Object.hash(runtimeType,_this.callServiceState,_this.currentAppLifecycleState,_this.linesCount,const DeepCollectionEquality().hash(_this.activeCalls),_this.minimized,_this.audioDevice,_this.audioDeviceRequest,const DeepCollectionEquality().hash(_this.availableAudioDevices),_this.selectedCallId,_this.placedCallFocus,_this.conference,_this.linkedCall);
+}
 
 @override
-String toString() {
-  return 'CallState(callServiceState: $callServiceState, currentAppLifecycleState: $currentAppLifecycleState, linesCount: $linesCount, activeCalls: $activeCalls, minimized: $minimized, audioDevice: $audioDevice, audioDeviceRequest: $audioDeviceRequest, availableAudioDevices: $availableAudioDevices, selectedCallId: $selectedCallId, placedCallFocus: $placedCallFocus, conference: $conference, linkedCall: $linkedCall)';
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+  final _this = this as CallState;
+  return 'CallState(callServiceState: ${_this.callServiceState}, currentAppLifecycleState: ${_this.currentAppLifecycleState}, linesCount: ${_this.linesCount}, activeCalls: ${_this.activeCalls}, minimized: ${_this.minimized}, audioDevice: ${_this.audioDevice}, audioDeviceRequest: ${_this.audioDeviceRequest}, availableAudioDevices: ${_this.availableAudioDevices}, selectedCallId: ${_this.selectedCallId}, placedCallFocus: ${_this.placedCallFocus}, conference: ${_this.conference}, linkedCall: ${_this.linkedCall})';
 }
 
 
@@ -45,7 +58,7 @@ abstract mixin class $CallStateCopyWith<$Res>  {
   factory $CallStateCopyWith(CallState value, $Res Function(CallState) _then) = _$CallStateCopyWithImpl;
 @useResult
 $Res call({
- CallServiceState callServiceState, AppLifecycleState? currentAppLifecycleState, int linesCount, List<ActiveCall> activeCalls, bool? minimized, CallAudioDevice? audioDevice, AudioDeviceRequest? audioDeviceRequest, List<CallAudioDevice> availableAudioDevices, String? selectedCallId, ({String callId, String? returnsTo})? placedCallFocus, ConferenceState conference, LinkedCall? linkedCall
+ CallServiceState callServiceState, AppLifecycleState? currentAppLifecycleState, int linesCount, List<ActiveCall> activeCalls, bool? minimized, CallAudioDevice? audioDevice, AudioDeviceRequest? audioDeviceRequest, List<CallAudioDevice> availableAudioDevices, String? selectedCallId, ({String callId, String? returnsTo,})? placedCallFocus, ConferenceState conference, LinkedCall? linkedCall
 });
 
 
@@ -74,7 +87,7 @@ as CallAudioDevice?,audioDeviceRequest: freezed == audioDeviceRequest ? _self.au
 as AudioDeviceRequest?,availableAudioDevices: null == availableAudioDevices ? _self.availableAudioDevices : availableAudioDevices // ignore: cast_nullable_to_non_nullable
 as List<CallAudioDevice>,selectedCallId: freezed == selectedCallId ? _self.selectedCallId : selectedCallId // ignore: cast_nullable_to_non_nullable
 as String?,placedCallFocus: freezed == placedCallFocus ? _self.placedCallFocus : placedCallFocus // ignore: cast_nullable_to_non_nullable
-as ({String callId, String? returnsTo})?,conference: null == conference ? _self.conference : conference // ignore: cast_nullable_to_non_nullable
+as ({String callId, String? returnsTo,})?,conference: null == conference ? _self.conference : conference // ignore: cast_nullable_to_non_nullable
 as ConferenceState,linkedCall: freezed == linkedCall ? _self.linkedCall : linkedCall // ignore: cast_nullable_to_non_nullable
 as LinkedCall?,
   ));

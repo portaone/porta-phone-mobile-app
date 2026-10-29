@@ -45,39 +45,30 @@ class LeadingAvatarStyleConfig with _$LeadingAvatarStyleConfig {
   });
 
   /// Circle background color. Defaults to theme.secondaryContainer when null.
-  @override
   final String? backgroundColor;
 
   /// Avatar radius (defaults to 20.0 in widget if null).
-  @override
   final double? radius;
 
   /// Text style for initials fallback.
-  @override
   final TextStyleConfig? initialsTextStyle;
 
   /// Placeholder icon when no username/thumbnail is available.
-  @override
   final IconDataConfig? placeholderIcon;
 
   /// Loading overlay appearance.
-  @override
   final LoadingOverlayStyleConfig? loading;
 
   /// "Smart" badge indicator appearance.
-  @override
   final SmartIndicatorStyleConfig? smartIndicator;
 
   /// Registered/unregistered badge appearance.
-  @override
   final RegisteredBadgeStyleConfig? registeredBadge;
 
   /// Presence badge appearance.
-  @override
   final PresenceBadgeStyleConfig? presenceBadge;
 
   /// Per-name pseudorandom color appearance.
-  @override
   final NameColorsStyleConfig? nameColors;
 
   factory LeadingAvatarStyleConfig.fromJson(Map<String, Object?> json) => _$LeadingAvatarStyleConfigFromJson(json);
@@ -103,12 +94,10 @@ class NameColorsStyleConfig with _$NameColorsStyleConfig {
   });
 
   /// Whether name-derived colors are used at all.
-  @override
   final bool enabled;
 
   /// Optional fixed palette to pick from; when null/empty the color is generated from the
   /// name hash (hue) so the number of distinct colors is unbounded.
-  @override
   final List<String>? palette;
 
   factory NameColorsStyleConfig.fromJson(Map<String, Object?> json) => _$NameColorsStyleConfigFromJson(json);
@@ -133,15 +122,12 @@ class LoadingOverlayStyleConfig with _$LoadingOverlayStyleConfig {
   });
 
   /// Whether the overlay should be shown by default (widget may still override).
-  @override
   final bool showByDefault;
 
   /// Padding around the loading indicator.
-  @override
   final PaddingConfig padding;
 
   /// CircularProgressIndicator stroke width (defaults to 1.0 in widget).
-  @override
   final double? strokeWidth;
 
   factory LoadingOverlayStyleConfig.fromJson(Map<String, Object?> json) => _$LoadingOverlayStyleConfigFromJson(json);
@@ -166,15 +152,12 @@ class SmartIndicatorStyleConfig with _$SmartIndicatorStyleConfig {
   });
 
   /// Background color of the smart indicator circle.
-  @override
   final String? backgroundColor;
 
   /// Icon displayed inside the smart indicator.
-  @override
   final IconDataConfig? icon;
 
   /// Size factor relative to avatar diameter (widget uses ~0.4 by default).
-  @override
   final double? sizeFactor;
 
   factory SmartIndicatorStyleConfig.fromJson(Map<String, Object?> json) => _$SmartIndicatorStyleConfigFromJson(json);
@@ -199,15 +182,12 @@ class RegisteredBadgeStyleConfig with _$RegisteredBadgeStyleConfig {
   });
 
   /// Color used when `registered == true`.
-  @override
   final String? registeredColor;
 
   /// Color used when `registered == false`.
-  @override
   final String? unregisteredColor;
 
   /// Size factor relative to avatar diameter (widget uses ~0.2 by default).
-  @override
   final double? sizeFactor;
 
   factory RegisteredBadgeStyleConfig.fromJson(Map<String, Object?> json) => _$RegisteredBadgeStyleConfigFromJson(json);
@@ -240,25 +220,20 @@ class PresenceBadgeStyleConfig with _$PresenceBadgeStyleConfig {
   });
 
   /// Color used when presence is "available" (e.g., online, idle).
-  @override
   final String? availableColor;
 
   /// Color used when presence is "unavailable" (e.g., offline).
-  @override
   final String? unavailableColor;
 
   /// Color used when the contact should not be called right now: one
   /// publishing "busy" or "do not disturb".
-  @override
   final String? busyColor;
 
   /// Color of the activity glyph drawn inside the badge; it has to read on
   /// top of the badge fill.
-  @override
   final String? iconColor;
 
   /// Size factor relative to avatar diameter.
-  @override
   final double? sizeFactor;
 
   factory PresenceBadgeStyleConfig.fromJson(Map<String, Object?> json) => _$PresenceBadgeStyleConfigFromJson(json);

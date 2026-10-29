@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'icon_theme_data_config.dart';
@@ -9,13 +9,14 @@ part of 'icon_theme_data_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$IconThemeDataConfig {
 
- double? get size; double? get fill; double? get weight; double? get grade; double? get opticalSize; String? get color; double? get opacity; List<ShadowConfig>? get shadows; bool? get applyTextScaling;
+
 /// Create a copy of IconThemeDataConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $IconThemeDataConfigCopyWith<IconThemeDataConfig> get copyWith => _$IconThemeDat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IconThemeDataConfig&&(identical(other.size, size) || other.size == size)&&(identical(other.fill, fill) || other.fill == fill)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.grade, grade) || other.grade == grade)&&(identical(other.opticalSize, opticalSize) || other.opticalSize == opticalSize)&&(identical(other.color, color) || other.color == color)&&(identical(other.opacity, opacity) || other.opacity == opacity)&&const DeepCollectionEquality().equals(other.shadows, shadows)&&(identical(other.applyTextScaling, applyTextScaling) || other.applyTextScaling == applyTextScaling));
+  final _this = this as IconThemeDataConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IconThemeDataConfig&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.fill, _this.fill) || other.fill == _this.fill)&&(identical(other.weight, _this.weight) || other.weight == _this.weight)&&(identical(other.grade, _this.grade) || other.grade == _this.grade)&&(identical(other.opticalSize, _this.opticalSize) || other.opticalSize == _this.opticalSize)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.opacity, _this.opacity) || other.opacity == _this.opacity)&&const DeepCollectionEquality().equals(other.shadows, _this.shadows)&&(identical(other.applyTextScaling, _this.applyTextScaling) || other.applyTextScaling == _this.applyTextScaling));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,size,fill,weight,grade,opticalSize,color,opacity,const DeepCollectionEquality().hash(shadows),applyTextScaling);
+int get hashCode {
+  final _this = this as IconThemeDataConfig;
+  return Object.hash(runtimeType,_this.size,_this.fill,_this.weight,_this.grade,_this.opticalSize,_this.color,_this.opacity,const DeepCollectionEquality().hash(_this.shadows),_this.applyTextScaling);
+}
 
 @override
 String toString() {
-  return 'IconThemeDataConfig(size: $size, fill: $fill, weight: $weight, grade: $grade, opticalSize: $opticalSize, color: $color, opacity: $opacity, shadows: $shadows, applyTextScaling: $applyTextScaling)';
+  final _this = this as IconThemeDataConfig;
+  return 'IconThemeDataConfig(size: ${_this.size}, fill: ${_this.fill}, weight: ${_this.weight}, grade: ${_this.grade}, opticalSize: ${_this.opticalSize}, color: ${_this.color}, opacity: ${_this.opacity}, shadows: ${_this.shadows}, applyTextScaling: ${_this.applyTextScaling})';
 }
 
 
@@ -209,7 +215,7 @@ case _:
 /// @nodoc
 mixin _$ShadowConfig {
 
- String? get color; OffsetConfig? get offset; double get blurRadius;
+
 /// Create a copy of ShadowConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -220,16 +226,21 @@ $ShadowConfigCopyWith<ShadowConfig> get copyWith => _$ShadowConfigCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShadowConfig&&(identical(other.color, color) || other.color == color)&&(identical(other.offset, offset) || other.offset == offset)&&(identical(other.blurRadius, blurRadius) || other.blurRadius == blurRadius));
+  final _this = this as ShadowConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShadowConfig&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.offset, _this.offset) || other.offset == _this.offset)&&(identical(other.blurRadius, _this.blurRadius) || other.blurRadius == _this.blurRadius));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,color,offset,blurRadius);
+int get hashCode {
+  final _this = this as ShadowConfig;
+  return Object.hash(runtimeType,_this.color,_this.offset,_this.blurRadius);
+}
 
 @override
 String toString() {
-  return 'ShadowConfig(color: $color, offset: $offset, blurRadius: $blurRadius)';
+  final _this = this as ShadowConfig;
+  return 'ShadowConfig(color: ${_this.color}, offset: ${_this.offset}, blurRadius: ${_this.blurRadius})';
 }
 
 
@@ -397,7 +408,7 @@ case _:
 /// @nodoc
 mixin _$OffsetConfig {
 
- double get dx; double get dy;
+
 /// Create a copy of OffsetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -408,16 +419,21 @@ $OffsetConfigCopyWith<OffsetConfig> get copyWith => _$OffsetConfigCopyWithImpl<O
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OffsetConfig&&(identical(other.dx, dx) || other.dx == dx)&&(identical(other.dy, dy) || other.dy == dy));
+  final _this = this as OffsetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OffsetConfig&&(identical(other.dx, _this.dx) || other.dx == _this.dx)&&(identical(other.dy, _this.dy) || other.dy == _this.dy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,dx,dy);
+int get hashCode {
+  final _this = this as OffsetConfig;
+  return Object.hash(runtimeType,_this.dx,_this.dy);
+}
 
 @override
 String toString() {
-  return 'OffsetConfig(dx: $dx, dy: $dy)';
+  final _this = this as OffsetConfig;
+  return 'OffsetConfig(dx: ${_this.dx}, dy: ${_this.dy})';
 }
 
 

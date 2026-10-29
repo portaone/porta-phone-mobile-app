@@ -36,96 +36,69 @@ class LoginState with _$LoginState {
     this.pendingLoginCallbackData,
   });
 
-  @override
   final bool processing;
 
-  @override
   final LoginMode? mode;
 
-  @override
   final String? coreUrl;
 
-  @override
   final String? tenantId;
 
-  @override
   final WebtritSystemInfo? systemInfo;
 
-  @override
   final List<LoginType>? supportedLoginTypes;
 
-  @override
   final SessionOtpProvisionalWithDateTime? otpSigninSessionOtpProvisionalWithDateTime;
 
-  @override
   final bool passwordSigninPasswordInputObscureText;
 
-  @override
   final SessionOtpProvisionalWithDateTime? signupSessionOtpProvisionalWithDateTime;
 
-  @override
   final String? token;
 
-  @override
   final String? userId;
 
-  @override
   final EmbeddedData? embedded;
 
-  @override
   final Map<String, dynamic>? embeddedExtras;
 
-  @override
   final Map<String, dynamic>? embeddedCallbackData;
 
-  @override
   final Object? embeddedRequestError;
 
   /// The last signup of the embedded page that ended without a session, until the page asks
   /// again. The page waits for an answer it cannot get by itself; the screen answers it from this.
-  @override
   final EmbeddedSignupFailure? embeddedSignupFailure;
 
-  @override
   final UrlInput coreUrlInput;
 
   /// Failure of the last Core URL submit meaning the entered address does not
   /// host a reachable Cloud Backend; rendered inline under the URL field.
-  @override
   final Object? coreUrlAssignError;
 
-  @override
   final UserRefInput otpSigninUserRefInput;
 
-  @override
   final CodeInput otpSigninCodeInput;
 
-  @override
   final UserRefInput passwordSigninUserRefInput;
 
-  @override
   final PasswordInput passwordSigninPasswordInput;
 
-  @override
   final EmailInput signupEmailInput;
 
-  @override
   final CodeInput signupCodeInput;
 
   /// The login the backend is holding back until one of the account's devices
   /// is signed out. The device limit screen is shown for as long as it is set.
-  @override
   final PendingLogin? pendingLogin;
 
   /// The session being signed out to finish [pendingLogin], while that request
   /// is out.
-  @override
   final String? pendingLoginRevokingSessionId;
 
   /// The request an embedded page asked to be made after the login that is now
   /// [pendingLogin]. It waits with that login and goes with it: a login started
   /// another way has none.
-  @override
   final Map<String, dynamic>? pendingLoginCallbackData;
 
   /// OTP login identifiers supported by the backend adapter.

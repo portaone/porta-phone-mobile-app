@@ -52,7 +52,7 @@ asked for with `d=404` on purpose, so that a missing picture falls back to the i
 
 ## Web assets
 
-`web/sqlite3.wasm` (sqlite3 3.3.2) and `web/drift_worker.js` (drift 2.33.0) back
+`web/sqlite3.wasm` (sqlite3 3.5.2) and `web/drift_worker.js` (drift 2.35.3) back
 the drift `WasmDatabase` and are served from the app root. Keep them version-matched
 to the `drift` / `sqlite3` dependencies.
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'media_query_metrics.dart';
@@ -9,13 +9,14 @@ part of 'media_query_metrics.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$MediaQueryMetrics {
 
- String get brightness; double get devicePixelRatio; int get topSafeInset; int get bottomSafeInset;
+
 /// Create a copy of MediaQueryMetrics
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $MediaQueryMetricsCopyWith<MediaQueryMetrics> get copyWith => _$MediaQueryMetric
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaQueryMetrics&&(identical(other.brightness, brightness) || other.brightness == brightness)&&(identical(other.devicePixelRatio, devicePixelRatio) || other.devicePixelRatio == devicePixelRatio)&&(identical(other.topSafeInset, topSafeInset) || other.topSafeInset == topSafeInset)&&(identical(other.bottomSafeInset, bottomSafeInset) || other.bottomSafeInset == bottomSafeInset));
+  final _this = this as MediaQueryMetrics;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MediaQueryMetrics&&(identical(other.brightness, _this.brightness) || other.brightness == _this.brightness)&&(identical(other.devicePixelRatio, _this.devicePixelRatio) || other.devicePixelRatio == _this.devicePixelRatio)&&(identical(other.topSafeInset, _this.topSafeInset) || other.topSafeInset == _this.topSafeInset)&&(identical(other.bottomSafeInset, _this.bottomSafeInset) || other.bottomSafeInset == _this.bottomSafeInset));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,brightness,devicePixelRatio,topSafeInset,bottomSafeInset);
+int get hashCode {
+  final _this = this as MediaQueryMetrics;
+  return Object.hash(runtimeType,_this.brightness,_this.devicePixelRatio,_this.topSafeInset,_this.bottomSafeInset);
+}
 
 @override
 String toString() {
-  return 'MediaQueryMetrics(brightness: $brightness, devicePixelRatio: $devicePixelRatio, topSafeInset: $topSafeInset, bottomSafeInset: $bottomSafeInset)';
+  final _this = this as MediaQueryMetrics;
+  return 'MediaQueryMetrics(brightness: ${_this.brightness}, devicePixelRatio: ${_this.devicePixelRatio}, topSafeInset: ${_this.topSafeInset}, bottomSafeInset: ${_this.bottomSafeInset})';
 }
 
 

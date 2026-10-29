@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'keypad_style_config.dart';
@@ -9,13 +9,14 @@ part of 'keypad_style_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$KeypadStyleConfig {
 
- TextStyleConfig? get textStyle; TextStyleConfig? get subtextStyle; double? get spacing; double? get padding;
+
 /// Create a copy of KeypadStyleConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $KeypadStyleConfigCopyWith<KeypadStyleConfig> get copyWith => _$KeypadStyleConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is KeypadStyleConfig&&(identical(other.textStyle, textStyle) || other.textStyle == textStyle)&&(identical(other.subtextStyle, subtextStyle) || other.subtextStyle == subtextStyle)&&(identical(other.spacing, spacing) || other.spacing == spacing)&&(identical(other.padding, padding) || other.padding == padding));
+  final _this = this as KeypadStyleConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is KeypadStyleConfig&&(identical(other.textStyle, _this.textStyle) || other.textStyle == _this.textStyle)&&(identical(other.subtextStyle, _this.subtextStyle) || other.subtextStyle == _this.subtextStyle)&&(identical(other.spacing, _this.spacing) || other.spacing == _this.spacing)&&(identical(other.padding, _this.padding) || other.padding == _this.padding));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,textStyle,subtextStyle,spacing,padding);
+int get hashCode {
+  final _this = this as KeypadStyleConfig;
+  return Object.hash(runtimeType,_this.textStyle,_this.subtextStyle,_this.spacing,_this.padding);
+}
 
 @override
 String toString() {
-  return 'KeypadStyleConfig(textStyle: $textStyle, subtextStyle: $subtextStyle, spacing: $spacing, padding: $padding)';
+  final _this = this as KeypadStyleConfig;
+  return 'KeypadStyleConfig(textStyle: ${_this.textStyle}, subtextStyle: ${_this.subtextStyle}, spacing: ${_this.spacing}, padding: ${_this.padding})';
 }
 
 

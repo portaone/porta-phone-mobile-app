@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'session_status_cubit.dart';
@@ -9,12 +9,13 @@ part of 'session_status_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SessionStatusState {
 
- SessionStatus get status; List<SessionIssue> get issues;
+
 /// Create a copy of SessionStatusState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $SessionStatusStateCopyWith<SessionStatusState> get copyWith => _$SessionStatusS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionStatusState&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.issues, issues));
+  final _this = this as SessionStatusState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionStatusState&&(identical(other.status, _this.status) || other.status == _this.status)&&const DeepCollectionEquality().equals(other.issues, _this.issues));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,const DeepCollectionEquality().hash(issues));
+int get hashCode {
+  final _this = this as SessionStatusState;
+  return Object.hash(runtimeType,_this.status,const DeepCollectionEquality().hash(_this.issues));
+}
 
 @override
 String toString() {
-  return 'SessionStatusState(status: $status, issues: $issues)';
+  final _this = this as SessionStatusState;
+  return 'SessionStatusState(status: ${_this.status}, issues: ${_this.issues})';
 }
 
 

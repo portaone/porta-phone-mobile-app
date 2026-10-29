@@ -11,16 +11,12 @@ part 'common.g.dart';
 class Numbers with _$Numbers {
   const Numbers({this.main, this.ext, this.additional, this.sms});
 
-  @override
   final String? main;
 
-  @override
   final String? ext;
 
-  @override
   final List<String>? additional;
 
-  @override
   final List<String>? sms;
 
   factory Numbers.fromJson(Map<String, Object?> json) => _$NumbersFromJson(json);
@@ -33,16 +29,12 @@ class Numbers with _$Numbers {
 class Balance with _$Balance {
   const Balance({this.balanceType, this.amount, this.creditLimit, this.currency});
 
-  @override
   final BalanceType? balanceType;
 
-  @override
   final double? amount;
 
-  @override
   final double? creditLimit;
 
-  @override
   final String? currency;
 
   factory Balance.fromJson(Map<String, Object?> json) => _$BalanceFromJson(json);
@@ -61,15 +53,12 @@ class Balance with _$Balance {
 class Pagination with _$Pagination {
   const Pagination({this.page, this.itemsPerPage, this.itemsTotal});
 
-  @override
   final int? page;
 
-  @override
   final int? itemsPerPage;
 
   /// How many records the FILTERED result set holds - the whole of it, not the
   /// page. With a time range in the request that is the count within the range.
-  @override
   final int? itemsTotal;
 
   factory Pagination.fromJson(Map<String, Object?> json) => _$PaginationFromJson(json);

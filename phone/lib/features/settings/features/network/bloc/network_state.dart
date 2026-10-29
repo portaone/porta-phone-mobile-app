@@ -8,13 +8,10 @@ class NetworkState with _$NetworkState {
     this.smsFallbackEnabled = false,
   });
 
-  @override
   final List<IncomingCallTypeModel> incomingCallTypeModels;
 
-  @override
   final List<IncomingCallType> incomingCallTypesRemainder;
 
-  @override
   final bool smsFallbackEnabled;
 
   IncomingCallTypeModel? get selectedIncomingCallTypeModel =>

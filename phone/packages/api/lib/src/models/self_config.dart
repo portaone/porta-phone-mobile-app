@@ -9,10 +9,8 @@ part 'self_config.g.dart';
 class SelfConfigResponse with _$SelfConfigResponse {
   const SelfConfigResponse({required this.url, required this.expiresAt});
 
-  @override
   final Uri url;
 
-  @override
   final DateTime expiresAt;
 
   factory SelfConfigResponse.fromJson(Map<String, Object?> json) => _$SelfConfigResponseFromJson(json);

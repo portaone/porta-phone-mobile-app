@@ -66,23 +66,18 @@ class ImageSource with _$ImageSource {
   });
 
   /// Backend asset ID (unique identifier in storage).
-  @override
   final String? id;
 
   /// Unified URI pointing to the resource.
-  @override
   final String? uri;
 
   /// Semantic type of reference (default = "asset").
-  @override
   final String refType;
 
   /// Rendering specification (scale, padding, etc.).
-  @override
   final ImageRenderSpec? render;
 
   /// Freeform metadata for CLI or pipeline tools.
-  @override
   final Metadata metadata;
 
   static const _preserveRemoteKey = 'preserveRemote';
@@ -117,17 +112,13 @@ class ImageRenderSpec with _$ImageRenderSpec {
     this.fit,
   });
 
-  @override
   final double? scale;
 
-  @override
   final PaddingConfig? padding;
 
-  @override
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final AlignmentConfig? alignment;
 
-  @override
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final BoxFitConfig? fit;
 

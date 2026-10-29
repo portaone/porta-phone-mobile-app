@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'user_contact.dart';
@@ -9,13 +9,14 @@ part of 'user_contact.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$UserContact {
 
- String? get userId; SipStatus? get sipStatus; Numbers get numbers; String? get email; String? get firstName; String? get lastName; String? get aliasName; String? get companyName; bool? get isCurrentUser; bool? get isRegisteredUser;
+
 /// Create a copy of UserContact
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $UserContactCopyWith<UserContact> get copyWith => _$UserContactCopyWithImpl<User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserContact&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.sipStatus, sipStatus) || other.sipStatus == sipStatus)&&(identical(other.numbers, numbers) || other.numbers == numbers)&&(identical(other.email, email) || other.email == email)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.aliasName, aliasName) || other.aliasName == aliasName)&&(identical(other.companyName, companyName) || other.companyName == companyName)&&(identical(other.isCurrentUser, isCurrentUser) || other.isCurrentUser == isCurrentUser)&&(identical(other.isRegisteredUser, isRegisteredUser) || other.isRegisteredUser == isRegisteredUser));
+  final _this = this as UserContact;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserContact&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.sipStatus, _this.sipStatus) || other.sipStatus == _this.sipStatus)&&(identical(other.numbers, _this.numbers) || other.numbers == _this.numbers)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.firstName, _this.firstName) || other.firstName == _this.firstName)&&(identical(other.lastName, _this.lastName) || other.lastName == _this.lastName)&&(identical(other.aliasName, _this.aliasName) || other.aliasName == _this.aliasName)&&(identical(other.companyName, _this.companyName) || other.companyName == _this.companyName)&&(identical(other.isCurrentUser, _this.isCurrentUser) || other.isCurrentUser == _this.isCurrentUser)&&(identical(other.isRegisteredUser, _this.isRegisteredUser) || other.isRegisteredUser == _this.isRegisteredUser));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,sipStatus,numbers,email,firstName,lastName,aliasName,companyName,isCurrentUser,isRegisteredUser);
+int get hashCode {
+  final _this = this as UserContact;
+  return Object.hash(runtimeType,_this.userId,_this.sipStatus,_this.numbers,_this.email,_this.firstName,_this.lastName,_this.aliasName,_this.companyName,_this.isCurrentUser,_this.isRegisteredUser);
+}
 
 @override
 String toString() {
-  return 'UserContact(userId: $userId, sipStatus: $sipStatus, numbers: $numbers, email: $email, firstName: $firstName, lastName: $lastName, aliasName: $aliasName, companyName: $companyName, isCurrentUser: $isCurrentUser, isRegisteredUser: $isRegisteredUser)';
+  final _this = this as UserContact;
+  return 'UserContact(userId: ${_this.userId}, sipStatus: ${_this.sipStatus}, numbers: ${_this.numbers}, email: ${_this.email}, firstName: ${_this.firstName}, lastName: ${_this.lastName}, aliasName: ${_this.aliasName}, companyName: ${_this.companyName}, isCurrentUser: ${_this.isCurrentUser}, isRegisteredUser: ${_this.isRegisteredUser})';
 }
 
 

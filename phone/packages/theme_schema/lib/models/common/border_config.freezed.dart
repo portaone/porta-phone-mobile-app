@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'border_config.dart';
@@ -9,13 +9,14 @@ part of 'border_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$BorderConfig {
 
- BorderTypeConfig get type; double? get borderRadius; String? get borderColor; double? get borderWidth;
+
 /// Create a copy of BorderConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $BorderConfigCopyWith<BorderConfig> get copyWith => _$BorderConfigCopyWithImpl<B
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BorderConfig&&(identical(other.type, type) || other.type == type)&&(identical(other.borderRadius, borderRadius) || other.borderRadius == borderRadius)&&(identical(other.borderColor, borderColor) || other.borderColor == borderColor)&&(identical(other.borderWidth, borderWidth) || other.borderWidth == borderWidth));
+  final _this = this as BorderConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BorderConfig&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.borderRadius, _this.borderRadius) || other.borderRadius == _this.borderRadius)&&(identical(other.borderColor, _this.borderColor) || other.borderColor == _this.borderColor)&&(identical(other.borderWidth, _this.borderWidth) || other.borderWidth == _this.borderWidth));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,type,borderRadius,borderColor,borderWidth);
+int get hashCode {
+  final _this = this as BorderConfig;
+  return Object.hash(runtimeType,_this.type,_this.borderRadius,_this.borderColor,_this.borderWidth);
+}
 
 @override
 String toString() {
-  return 'BorderConfig(type: $type, borderRadius: $borderRadius, borderColor: $borderColor, borderWidth: $borderWidth)';
+  final _this = this as BorderConfig;
+  return 'BorderConfig(type: ${_this.type}, borderRadius: ${_this.borderRadius}, borderColor: ${_this.borderColor}, borderWidth: ${_this.borderWidth})';
 }
 
 

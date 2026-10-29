@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'contact_bloc.dart';
@@ -9,12 +9,13 @@ part of 'contact_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ContactState {
 
- Contact? get contact; bool get deleted; List<PresenceInfo> get presenceInfo;
+
 /// Create a copy of ContactState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $ContactStateCopyWith<ContactState> get copyWith => _$ContactStateCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactState&&(identical(other.contact, contact) || other.contact == contact)&&(identical(other.deleted, deleted) || other.deleted == deleted)&&const DeepCollectionEquality().equals(other.presenceInfo, presenceInfo));
+  final _this = this as ContactState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactState&&(identical(other.contact, _this.contact) || other.contact == _this.contact)&&(identical(other.deleted, _this.deleted) || other.deleted == _this.deleted)&&const DeepCollectionEquality().equals(other.presenceInfo, _this.presenceInfo));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,contact,deleted,const DeepCollectionEquality().hash(presenceInfo));
+int get hashCode {
+  final _this = this as ContactState;
+  return Object.hash(runtimeType,_this.contact,_this.deleted,const DeepCollectionEquality().hash(_this.presenceInfo));
+}
 
 @override
 String toString() {
-  return 'ContactState(contact: $contact, deleted: $deleted, presenceInfo: $presenceInfo)';
+  final _this = this as ContactState;
+  return 'ContactState(contact: ${_this.contact}, deleted: ${_this.deleted}, presenceInfo: ${_this.presenceInfo})';
 }
 
 

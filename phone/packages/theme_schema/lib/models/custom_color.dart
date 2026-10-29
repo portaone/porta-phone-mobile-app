@@ -11,11 +11,9 @@ class CustomColor with _$CustomColor {
   const CustomColor({required this.color, this.blend = true});
 
   /// The base color in hex format (e.g., `#FF0000`).
-  @override
   final String color;
 
   /// Whether this color should blend with the theme seed.
-  @override
   final bool blend;
 
   factory CustomColor.fromJson(Map<String, Object?> json) => _$CustomColorFromJson(json);

@@ -22,31 +22,22 @@ class ThemeWidgetConfig with _$ThemeWidgetConfig {
     this.statuses = const StatusesWidgetConfig(),
   });
 
-  @override
   final FontsConfig fonts;
 
-  @override
   final ButtonWidgetConfig button;
 
-  @override
   final GroupWidgetConfig? group;
 
-  @override
   final BarWidgetConfig bar;
 
-  @override
   final ImageAssetsConfig imageAssets;
 
-  @override
   final InputWidgetConfig input;
 
-  @override
   final TextWidgetConfig text;
 
-  @override
   final DialogWidgetConfig dialog;
 
-  @override
   final StatusesWidgetConfig statuses;
 
   factory ThemeWidgetConfig.fromJson(Map<String, Object?> json) => _$ThemeWidgetConfigFromJson(json);
@@ -59,7 +50,6 @@ class ThemeWidgetConfig with _$ThemeWidgetConfig {
 class FontsConfig with _$FontsConfig {
   const FontsConfig({this.fontFamily});
 
-  @override
   final String? fontFamily;
 
   factory FontsConfig.fromJson(Map<String, Object?> json) => _$FontsConfigFromJson(json);
@@ -72,7 +62,6 @@ class FontsConfig with _$FontsConfig {
 class ButtonWidgetConfig with _$ButtonWidgetConfig {
   const ButtonWidgetConfig({this.primaryElevatedButton});
 
-  @override
   final ButtonStyleConfig? primaryElevatedButton;
 
   factory ButtonWidgetConfig.fromJson(Map<String, Object?> json) => _$ButtonWidgetConfigFromJson(json);
@@ -85,7 +74,6 @@ class ButtonWidgetConfig with _$ButtonWidgetConfig {
 class GroupWidgetConfig with _$GroupWidgetConfig {
   const GroupWidgetConfig({this.groupTitleListTile = const GroupTitleListTileWidgetConfig()});
 
-  @override
   final GroupTitleListTileWidgetConfig groupTitleListTile;
 
   factory GroupWidgetConfig.fromJson(Map<String, Object?> json) => _$GroupWidgetConfigFromJson(json);
@@ -102,13 +90,10 @@ class BarWidgetConfig with _$BarWidgetConfig {
     this.tabBarConfig = const TabBarConfig(),
   });
 
-  @override
   final BottomNavigationBarWidgetConfig bottomNavigationBar;
 
-  @override
   final AppBarConfig appBarConfig;
 
-  @override
   final TabBarConfig tabBarConfig;
 
   factory BarWidgetConfig.fromJson(Map<String, Object?> json) => _$BarWidgetConfigFromJson(json);
@@ -136,38 +121,28 @@ class BottomNavigationBarWidgetConfig with _$BottomNavigationBarWidgetConfig {
   /// what is behind it says so in the colour's own alpha channel - the widget
   /// used to apply an alpha of its own, which no brand asked for and none
   /// could correct.
-  @override
   final String? backgroundColor;
 
-  @override
   final double? elevation;
 
   /// Colours the selected item. A caption takes it only while
   /// [selectedLabelStyle] names no colour of its own: Flutter uses a label
   /// style's colour *instead of* this one, which is why a style is the way to
   /// paint captions differently from icons.
-  @override
   final String? selectedItemColor;
 
-  @override
   final String? unSelectedItemColor;
 
-  @override
   final TextStyleConfig? selectedLabelStyle;
 
-  @override
   final TextStyleConfig? unselectedLabelStyle;
 
-  @override
   final IconThemeDataConfig? selectedIconTheme;
 
-  @override
   final IconThemeDataConfig? unselectedIconTheme;
 
-  @override
   final bool? showSelectedLabels;
 
-  @override
   final bool? showUnselectedLabels;
 
   factory BottomNavigationBarWidgetConfig.fromJson(Map<String, Object?> json) =>
@@ -187,10 +162,8 @@ class GroupTitleListTileWidgetConfig with _$GroupTitleListTileWidgetConfig {
     this.textStyle,
   });
 
-  @override
   final String? backgroundColor;
 
-  @override
   final TextStyleConfig? textStyle;
 
   factory GroupTitleListTileWidgetConfig.fromJson(Map<String, Object?> json) =>
@@ -208,13 +181,10 @@ class ImageAssetsConfig with _$ImageAssetsConfig {
     this.leadingAvatarStyle = const LeadingAvatarStyleConfig(),
   });
 
-  @override
   final ImageSource? defaultPlaceholderImage;
 
-  @override
   final AppIconWidgetConfig appIcon;
 
-  @override
   final LeadingAvatarStyleConfig leadingAvatarStyle;
 
   static const String metadataPrimaryOnboardingLogoUrl = 'primaryOnboardingLogoUrl';
@@ -231,7 +201,6 @@ class ImageAssetsConfig with _$ImageAssetsConfig {
 class AppIconWidgetConfig with _$AppIconWidgetConfig {
   const AppIconWidgetConfig({this.color});
 
-  @override
   final String? color;
 
   factory AppIconWidgetConfig.fromJson(Map<String, Object?> json) => _$AppIconWidgetConfigFromJson(json);
@@ -244,7 +213,6 @@ class AppIconWidgetConfig with _$AppIconWidgetConfig {
 class InputWidgetConfig with _$InputWidgetConfig {
   const InputWidgetConfig({this.primary = const TextFormFieldWidgetConfig()});
 
-  @override
   final TextFormFieldWidgetConfig primary;
 
   factory InputWidgetConfig.fromJson(Map<String, Object?> json) => _$InputWidgetConfigFromJson(json);
@@ -257,10 +225,8 @@ class InputWidgetConfig with _$InputWidgetConfig {
 class TextFormFieldWidgetConfig with _$TextFormFieldWidgetConfig {
   const TextFormFieldWidgetConfig({this.labelColor, this.border = const InputBorderWidgetConfig()});
 
-  @override
   final String? labelColor;
 
-  @override
   final InputBorderWidgetConfig border;
 
   factory TextFormFieldWidgetConfig.fromJson(Map<String, Object?> json) => _$TextFormFieldWidgetConfigFromJson(json);
@@ -277,13 +243,10 @@ class InputBorderWidgetConfig with _$InputBorderWidgetConfig {
     this.any = const BorderWidgetConfig(),
   });
 
-  @override
   final BorderWidgetConfig disabled;
 
-  @override
   final BorderWidgetConfig focused;
 
-  @override
   final BorderWidgetConfig any;
 
   factory InputBorderWidgetConfig.fromJson(Map<String, Object?> json) => _$InputBorderWidgetConfigFromJson(json);
@@ -296,10 +259,8 @@ class InputBorderWidgetConfig with _$InputBorderWidgetConfig {
 class BorderWidgetConfig with _$BorderWidgetConfig {
   const BorderWidgetConfig({this.typicalColor, this.errorColor});
 
-  @override
   final String? typicalColor;
 
-  @override
   final String? errorColor;
 
   factory BorderWidgetConfig.fromJson(Map<String, Object?> json) => _$BorderWidgetConfigFromJson(json);
@@ -315,10 +276,8 @@ class TextWidgetConfig with _$TextWidgetConfig {
     this.linkify = const LinkifyWidgetConfig(),
   });
 
-  @override
   final TextSelectionWidgetConfig selection;
 
-  @override
   final LinkifyWidgetConfig linkify;
 
   factory TextWidgetConfig.fromJson(Map<String, Object?> json) => _$TextWidgetConfigFromJson(json);
@@ -331,13 +290,10 @@ class TextWidgetConfig with _$TextWidgetConfig {
 class TextSelectionWidgetConfig with _$TextSelectionWidgetConfig {
   const TextSelectionWidgetConfig({this.cursorColor, this.selectionColor, this.selectionHandleColor});
 
-  @override
   final String? cursorColor;
 
-  @override
   final String? selectionColor;
 
-  @override
   final String? selectionHandleColor;
 
   factory TextSelectionWidgetConfig.fromJson(Map<String, Object?> json) => _$TextSelectionWidgetConfigFromJson(json);
@@ -350,10 +306,8 @@ class TextSelectionWidgetConfig with _$TextSelectionWidgetConfig {
 class LinkifyWidgetConfig with _$LinkifyWidgetConfig {
   const LinkifyWidgetConfig({this.styleColor, this.linkifyStyleColor});
 
-  @override
   final String? styleColor;
 
-  @override
   final String? linkifyStyleColor;
 
   factory LinkifyWidgetConfig.fromJson(Map<String, Object?> json) => _$LinkifyWidgetConfigFromJson(json);
@@ -375,13 +329,10 @@ class DialogWidgetConfig with _$DialogWidgetConfig {
   /// Material 3 derives the dialog background from `surfaceContainerHigh`, which
   /// can resolve to an unreadable color in some color schemes; this config lets a
   /// theme pin a predictable surface/text/shape for all dialogs.
-  @override
   final DialogThemeConfig theme;
 
-  @override
   final ConfirmDialogWidgetConfig confirmDialog;
 
-  @override
   final SnackBarWidgetConfig snackBar;
 
   factory DialogWidgetConfig.fromJson(Map<String, Object?> json) => _$DialogWidgetConfigFromJson(json);
@@ -407,28 +358,20 @@ class DialogThemeConfig with _$DialogThemeConfig {
     this.contentTextStyle,
   });
 
-  @override
   final String? backgroundColor;
 
-  @override
   final String? surfaceTintColor;
 
-  @override
   final String? shadowColor;
 
-  @override
   final String? barrierColor;
 
-  @override
   final double? elevation;
 
-  @override
   final double? borderRadius;
 
-  @override
   final TextStyleConfig? titleTextStyle;
 
-  @override
   final TextStyleConfig? contentTextStyle;
 
   factory DialogThemeConfig.fromJson(Map<String, Object?> json) => _$DialogThemeConfigFromJson(json);
@@ -451,33 +394,24 @@ class ConfirmDialogWidgetConfig with _$ConfirmDialogWidgetConfig {
     this.contentTextStyle,
   });
 
-  @override
   final String? activeButtonColor1;
 
-  @override
   final String? activeButtonColor2;
 
-  @override
   final String? defaultButtonColor;
 
   /// Confirm-dialog-only overrides layered on top of [DialogThemeConfig];
   /// when null the dialog inherits [ThemeData.dialogTheme].
-  @override
   final String? backgroundColor;
 
-  @override
   final String? surfaceTintColor;
 
-  @override
   final double? elevation;
 
-  @override
   final double? borderRadius;
 
-  @override
   final TextStyleConfig? titleTextStyle;
 
-  @override
   final TextStyleConfig? contentTextStyle;
 
   factory ConfirmDialogWidgetConfig.fromJson(Map<String, Object?> json) => _$ConfirmDialogWidgetConfigFromJson(json);
@@ -495,16 +429,12 @@ class SnackBarWidgetConfig with _$SnackBarWidgetConfig {
     this.warningBackgroundColor = '#F95A14',
   });
 
-  @override
   final String successBackgroundColor;
 
-  @override
   final String errorBackgroundColor;
 
-  @override
   final String infoBackgroundColor;
 
-  @override
   final String warningBackgroundColor;
 
   factory SnackBarWidgetConfig.fromJson(Map<String, Object?> json) => _$SnackBarWidgetConfigFromJson(json);
@@ -520,10 +450,8 @@ class StatusesWidgetConfig with _$StatusesWidgetConfig {
     this.callStatuses = const CallStatusesWidgetConfig(),
   });
 
-  @override
   final RegistrationStatusesWidgetConfig registrationStatuses;
 
-  @override
   final CallStatusesWidgetConfig callStatuses;
 
   factory StatusesWidgetConfig.fromJson(Map<String, Object?> json) => _$StatusesWidgetConfigFromJson(json);
@@ -536,10 +464,8 @@ class StatusesWidgetConfig with _$StatusesWidgetConfig {
 class RegistrationStatusesWidgetConfig with _$RegistrationStatusesWidgetConfig {
   const RegistrationStatusesWidgetConfig({this.online = '#75B943', this.offline = '#EEF3F6'});
 
-  @override
   final String online;
 
-  @override
   final String offline;
 
   factory RegistrationStatusesWidgetConfig.fromJson(Map<String, Object?> json) =>
@@ -560,22 +486,16 @@ class CallStatusesWidgetConfig with _$CallStatusesWidgetConfig {
     this.ready = '#75B943',
   });
 
-  @override
   final String connectivityNone;
 
-  @override
   final String connectError;
 
-  @override
   final String appUnregistered;
 
-  @override
   final String connectIssue;
 
-  @override
   final String inProgress;
 
-  @override
   final String ready;
 
   factory CallStatusesWidgetConfig.fromJson(Map<String, Object?> json) => _$CallStatusesWidgetConfigFromJson(json);
@@ -608,50 +528,36 @@ class TabBarConfig with _$TabBarConfig {
     this.indicatorBorder,
   });
 
-  @override
   final String? indicatorColor;
 
-  @override
   final String? dividerColor;
 
-  @override
   final String? labelColor;
 
-  @override
   final String? unselectedLabelColor;
 
-  @override
   final String? overlayColor;
 
-  @override
   final double? dividerHeight;
 
-  @override
   final PaddingConfig? labelPadding;
 
-  @override
   final TextStyleConfig? labelStyle;
 
-  @override
   final TextStyleConfig? unselectedLabelStyle;
 
-  @override
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final TabBarIndicatorSizeConfig? indicatorSize;
 
-  @override
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final TabAlignmentConfig? tabAlignment;
 
-  @override
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final TabIndicatorAnimationConfig? indicatorAnimation;
 
-  @override
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final TabSplashFactoryConfig? splashFactory;
 
-  @override
   final BorderConfig? indicatorBorder;
 
   factory TabBarConfig.fromJson(Map<String, Object?> json) => _$TabBarConfigFromJson(json);
@@ -687,39 +593,22 @@ class AppBarConfig with _$AppBarConfig {
     this.systemOverlayStyle,
   });
 
-  @override
   final bool primary;
-  @override
   final bool showBackButton;
-  @override
   final String? backgroundColor;
-  @override
   final String? foregroundColor;
-  @override
   final String? shadowColor;
-  @override
   final String? surfaceTintColor;
-  @override
   final double? elevation;
-  @override
   final double? scrolledUnderElevation;
-  @override
   final double? titleSpacing;
-  @override
   final double? leadingWidth;
-  @override
   final double? toolbarHeight;
-  @override
   final bool? centerTitle;
-  @override
   final IconThemeDataConfig? iconTheme;
-  @override
   final IconThemeDataConfig? actionsIconTheme;
-  @override
   final TextStyleConfig? titleTextStyle;
-  @override
   final TextStyleConfig? toolbarTextStyle;
-  @override
   final OverlayStyleModel? systemOverlayStyle;
 
   factory AppBarConfig.fromJson(Map<String, Object?> json) => _$AppBarConfigFromJson(json);

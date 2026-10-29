@@ -1,15 +1,8 @@
-// The AST accessors this uses - `EnumDeclaration.constants`, `ClassDeclaration.members`,
-// `.name` - are marked deprecated in analyzer 10.2 in favour of `body` and `namePart`.
-// The replacement is only half landed: `ClassBody` is a public sealed marker that
-// declares nothing, so a class's members are unreachable through it. Migrating what
-// can be migrated would leave the file split across two spellings of the same walk,
-// so it stays on one until the new shape is whole.
-//
 // The build tooling below is a dev dependency, and this library is named only by
 // `build.yaml` - nothing at run time imports it - so `depend_on_referenced_packages`
 // is silenced rather than answered by making a contract package depend on an
 // analyzer.
-// ignore_for_file: deprecated_member_use, depend_on_referenced_packages
+// ignore_for_file: depend_on_referenced_packages
 
 import 'dart:async';
 
@@ -453,24 +446,23 @@ String _format(StringBuffer buffer) =>
 
 _EnumInfo _enumInfo(EnumDeclaration declaration) {
   final byConstant = <String, String>{};
-  for (final constant in declaration.constants) {
+  for (final constant in declaration.body.constants) {
     final name = constant.name.lexeme;
     byConstant[name] = _stringArgument(constant.metadata, 'JsonValue') ?? name;
   }
-  return _EnumInfo(declaration.name.lexeme, byConstant);
+  return _EnumInfo(declaration.namePart.typeName.lexeme, byConstant);
 }
 
 _ClassInfo _classInfo(ClassDeclaration declaration, String path) {
   final defaults = <String, String>{};
   final collectionDefaults = <String, String>{};
   String? redirectsTo;
-  for (final member in declaration.members) {
+  for (final member in declaration.body.members) {
     if (member is! ConstructorDeclaration || member.name != null) continue;
     redirectsTo ??= member.redirectedConstructor?.type.name.lexeme;
     for (final parameter in member.parameters.parameters) {
-      if (parameter is! DefaultFormalParameter) continue;
       final name = parameter.name?.lexeme;
-      final value = parameter.defaultValue;
+      final value = parameter.defaultClause?.value;
       if (name == null || value == null) continue;
       defaults[name] = value.toSource();
       if (_isNonEmptyCollection(value)) collectionDefaults[name] = value.toSource();
@@ -480,7 +472,7 @@ _ClassInfo _classInfo(ClassDeclaration declaration, String path) {
   final fields = <String, _FieldInfo>{};
   final converters = <String, String>{};
   var exposesSchema = false;
-  for (final member in declaration.members) {
+  for (final member in declaration.body.members) {
     if (member is! FieldDeclaration) continue;
     if (member.isStatic) {
       if (member.fields.variables.any((variable) => variable.name.lexeme == 'jsonSchema')) exposesSchema = true;
@@ -510,7 +502,7 @@ _ClassInfo _classInfo(ClassDeclaration declaration, String path) {
   final freezed = declaration.metadata.where((entry) => entry.name.name == 'Freezed');
 
   return _ClassInfo(
-    declaration.name.lexeme,
+    declaration.namePart.typeName.lexeme,
     declaration.extendsClause?.superclass.name.lexeme,
     declaration.sealedKeyword != null,
     path,
@@ -553,8 +545,8 @@ String? _enumConstantOf(String? expression) {
 Expression? _namedArgument(List<Annotation> metadata, String annotation, String argument) {
   for (final entry in metadata) {
     if (entry.name.name != annotation) continue;
-    for (final expression in entry.arguments?.arguments ?? const <Expression>[]) {
-      if (expression is NamedExpression && expression.name.label.name == argument) return expression.expression;
+    for (final expression in entry.arguments?.arguments ?? const <Argument>[]) {
+      if (expression is NamedArgument && expression.name.lexeme == argument) return expression.argumentExpression;
     }
   }
   return null;

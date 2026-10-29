@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'common.dart';
@@ -9,13 +9,14 @@ part of 'common.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$Numbers {
 
- String? get main; String? get ext; List<String>? get additional; List<String>? get sms;
+
 /// Create a copy of Numbers
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $NumbersCopyWith<Numbers> get copyWith => _$NumbersCopyWithImpl<Numbers>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Numbers&&(identical(other.main, main) || other.main == main)&&(identical(other.ext, ext) || other.ext == ext)&&const DeepCollectionEquality().equals(other.additional, additional)&&const DeepCollectionEquality().equals(other.sms, sms));
+  final _this = this as Numbers;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Numbers&&(identical(other.main, _this.main) || other.main == _this.main)&&(identical(other.ext, _this.ext) || other.ext == _this.ext)&&const DeepCollectionEquality().equals(other.additional, _this.additional)&&const DeepCollectionEquality().equals(other.sms, _this.sms));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,main,ext,const DeepCollectionEquality().hash(additional),const DeepCollectionEquality().hash(sms));
+int get hashCode {
+  final _this = this as Numbers;
+  return Object.hash(runtimeType,_this.main,_this.ext,const DeepCollectionEquality().hash(_this.additional),const DeepCollectionEquality().hash(_this.sms));
+}
 
 @override
 String toString() {
-  return 'Numbers(main: $main, ext: $ext, additional: $additional, sms: $sms)';
+  final _this = this as Numbers;
+  return 'Numbers(main: ${_this.main}, ext: ${_this.ext}, additional: ${_this.additional}, sms: ${_this.sms})';
 }
 
 
@@ -204,7 +210,7 @@ case _:
 /// @nodoc
 mixin _$Balance {
 
- BalanceType? get balanceType; double? get amount; double? get creditLimit; String? get currency;
+
 /// Create a copy of Balance
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -215,16 +221,21 @@ $BalanceCopyWith<Balance> get copyWith => _$BalanceCopyWithImpl<Balance>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Balance&&(identical(other.balanceType, balanceType) || other.balanceType == balanceType)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.creditLimit, creditLimit) || other.creditLimit == creditLimit)&&(identical(other.currency, currency) || other.currency == currency));
+  final _this = this as Balance;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Balance&&(identical(other.balanceType, _this.balanceType) || other.balanceType == _this.balanceType)&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.creditLimit, _this.creditLimit) || other.creditLimit == _this.creditLimit)&&(identical(other.currency, _this.currency) || other.currency == _this.currency));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,balanceType,amount,creditLimit,currency);
+int get hashCode {
+  final _this = this as Balance;
+  return Object.hash(runtimeType,_this.balanceType,_this.amount,_this.creditLimit,_this.currency);
+}
 
 @override
 String toString() {
-  return 'Balance(balanceType: $balanceType, amount: $amount, creditLimit: $creditLimit, currency: $currency)';
+  final _this = this as Balance;
+  return 'Balance(balanceType: ${_this.balanceType}, amount: ${_this.amount}, creditLimit: ${_this.creditLimit}, currency: ${_this.currency})';
 }
 
 
@@ -393,7 +404,7 @@ case _:
 /// @nodoc
 mixin _$Pagination {
 
- int? get page; int? get itemsPerPage; int? get itemsTotal;
+
 /// Create a copy of Pagination
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -404,16 +415,21 @@ $PaginationCopyWith<Pagination> get copyWith => _$PaginationCopyWithImpl<Paginat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Pagination&&(identical(other.page, page) || other.page == page)&&(identical(other.itemsPerPage, itemsPerPage) || other.itemsPerPage == itemsPerPage)&&(identical(other.itemsTotal, itemsTotal) || other.itemsTotal == itemsTotal));
+  final _this = this as Pagination;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Pagination&&(identical(other.page, _this.page) || other.page == _this.page)&&(identical(other.itemsPerPage, _this.itemsPerPage) || other.itemsPerPage == _this.itemsPerPage)&&(identical(other.itemsTotal, _this.itemsTotal) || other.itemsTotal == _this.itemsTotal));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,page,itemsPerPage,itemsTotal);
+int get hashCode {
+  final _this = this as Pagination;
+  return Object.hash(runtimeType,_this.page,_this.itemsPerPage,_this.itemsTotal);
+}
 
 @override
 String toString() {
-  return 'Pagination(page: $page, itemsPerPage: $itemsPerPage, itemsTotal: $itemsTotal)';
+  final _this = this as Pagination;
+  return 'Pagination(page: ${_this.page}, itemsPerPage: ${_this.itemsPerPage}, itemsTotal: ${_this.itemsTotal})';
 }
 
 

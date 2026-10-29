@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'supported_feature.dart';
@@ -9,13 +9,14 @@ part of 'supported_feature.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$SupportedThemeMode {
 
- ThemeModeConfig get mode; String get type;
+
 /// Create a copy of SupportedThemeMode
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $SupportedThemeModeCopyWith<SupportedThemeMode> get copyWith => _$SupportedTheme
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedThemeMode&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.type, type) || other.type == type));
+  final _this = this as SupportedThemeMode;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedThemeMode&&(identical(other.mode, _this.mode) || other.mode == _this.mode)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,mode,type);
+int get hashCode {
+  final _this = this as SupportedThemeMode;
+  return Object.hash(runtimeType,_this.mode,_this.type);
+}
 
 @override
 String toString() {
-  return 'SupportedThemeMode(mode: $mode, type: $type)';
+  final _this = this as SupportedThemeMode;
+  return 'SupportedThemeMode(mode: ${_this.mode}, type: ${_this.type})';
 }
 
 
@@ -202,7 +208,7 @@ case _:
 /// @nodoc
 mixin _$SupportedVideoCall {
 
- bool get enabled; String get type;
+
 /// Create a copy of SupportedVideoCall
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -213,16 +219,21 @@ $SupportedVideoCallCopyWith<SupportedVideoCall> get copyWith => _$SupportedVideo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedVideoCall&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.type, type) || other.type == type));
+  final _this = this as SupportedVideoCall;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedVideoCall&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,type);
+int get hashCode {
+  final _this = this as SupportedVideoCall;
+  return Object.hash(runtimeType,_this.enabled,_this.type);
+}
 
 @override
 String toString() {
-  return 'SupportedVideoCall(enabled: $enabled, type: $type)';
+  final _this = this as SupportedVideoCall;
+  return 'SupportedVideoCall(enabled: ${_this.enabled}, type: ${_this.type})';
 }
 
 
@@ -389,7 +400,7 @@ case _:
 /// @nodoc
 mixin _$SupportedLoggingConfig {
 
- String get logLevel; int get checkIntervalSec; bool get anonymizationEnabled; String get type;
+
 /// Create a copy of SupportedLoggingConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -400,16 +411,21 @@ $SupportedLoggingConfigCopyWith<SupportedLoggingConfig> get copyWith => _$Suppor
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedLoggingConfig&&(identical(other.logLevel, logLevel) || other.logLevel == logLevel)&&(identical(other.checkIntervalSec, checkIntervalSec) || other.checkIntervalSec == checkIntervalSec)&&(identical(other.anonymizationEnabled, anonymizationEnabled) || other.anonymizationEnabled == anonymizationEnabled)&&(identical(other.type, type) || other.type == type));
+  final _this = this as SupportedLoggingConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedLoggingConfig&&(identical(other.logLevel, _this.logLevel) || other.logLevel == _this.logLevel)&&(identical(other.checkIntervalSec, _this.checkIntervalSec) || other.checkIntervalSec == _this.checkIntervalSec)&&(identical(other.anonymizationEnabled, _this.anonymizationEnabled) || other.anonymizationEnabled == _this.anonymizationEnabled)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,logLevel,checkIntervalSec,anonymizationEnabled,type);
+int get hashCode {
+  final _this = this as SupportedLoggingConfig;
+  return Object.hash(runtimeType,_this.logLevel,_this.checkIntervalSec,_this.anonymizationEnabled,_this.type);
+}
 
 @override
 String toString() {
-  return 'SupportedLoggingConfig(logLevel: $logLevel, checkIntervalSec: $checkIntervalSec, anonymizationEnabled: $anonymizationEnabled, type: $type)';
+  final _this = this as SupportedLoggingConfig;
+  return 'SupportedLoggingConfig(logLevel: ${_this.logLevel}, checkIntervalSec: ${_this.checkIntervalSec}, anonymizationEnabled: ${_this.anonymizationEnabled}, type: ${_this.type})';
 }
 
 
@@ -578,7 +594,7 @@ case _:
 /// @nodoc
 mixin _$SupportedSystemNotifications {
 
- bool get enabled; String get type;
+
 /// Create a copy of SupportedSystemNotifications
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -589,16 +605,21 @@ $SupportedSystemNotificationsCopyWith<SupportedSystemNotifications> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedSystemNotifications&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.type, type) || other.type == type));
+  final _this = this as SupportedSystemNotifications;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedSystemNotifications&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,type);
+int get hashCode {
+  final _this = this as SupportedSystemNotifications;
+  return Object.hash(runtimeType,_this.enabled,_this.type);
+}
 
 @override
 String toString() {
-  return 'SupportedSystemNotifications(enabled: $enabled, type: $type)';
+  final _this = this as SupportedSystemNotifications;
+  return 'SupportedSystemNotifications(enabled: ${_this.enabled}, type: ${_this.type})';
 }
 
 
@@ -765,7 +786,7 @@ case _:
 /// @nodoc
 mixin _$SupportedHybridPresence {
 
- bool get enabled; String get type;
+
 /// Create a copy of SupportedHybridPresence
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -776,16 +797,21 @@ $SupportedHybridPresenceCopyWith<SupportedHybridPresence> get copyWith => _$Supp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedHybridPresence&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.type, type) || other.type == type));
+  final _this = this as SupportedHybridPresence;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedHybridPresence&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,type);
+int get hashCode {
+  final _this = this as SupportedHybridPresence;
+  return Object.hash(runtimeType,_this.enabled,_this.type);
+}
 
 @override
 String toString() {
-  return 'SupportedHybridPresence(enabled: $enabled, type: $type)';
+  final _this = this as SupportedHybridPresence;
+  return 'SupportedHybridPresence(enabled: ${_this.enabled}, type: ${_this.type})';
 }
 
 
@@ -952,7 +978,7 @@ case _:
 /// @nodoc
 mixin _$SupportedCallPull {
 
- String get videoStrategy; String get type;
+
 /// Create a copy of SupportedCallPull
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -963,16 +989,21 @@ $SupportedCallPullCopyWith<SupportedCallPull> get copyWith => _$SupportedCallPul
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedCallPull&&(identical(other.videoStrategy, videoStrategy) || other.videoStrategy == videoStrategy)&&(identical(other.type, type) || other.type == type));
+  final _this = this as SupportedCallPull;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportedCallPull&&(identical(other.videoStrategy, _this.videoStrategy) || other.videoStrategy == _this.videoStrategy)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,videoStrategy,type);
+int get hashCode {
+  final _this = this as SupportedCallPull;
+  return Object.hash(runtimeType,_this.videoStrategy,_this.type);
+}
 
 @override
 String toString() {
-  return 'SupportedCallPull(videoStrategy: $videoStrategy, type: $type)';
+  final _this = this as SupportedCallPull;
+  return 'SupportedCallPull(videoStrategy: ${_this.videoStrategy}, type: ${_this.type})';
 }
 
 

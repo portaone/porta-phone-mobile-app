@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'custom_color.dart';
@@ -9,13 +9,14 @@ part of 'custom_color.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$CustomColor {
 
- String get color; bool get blend;
+
 /// Create a copy of CustomColor
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $CustomColorCopyWith<CustomColor> get copyWith => _$CustomColorCopyWithImpl<Cust
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CustomColor&&(identical(other.color, color) || other.color == color)&&(identical(other.blend, blend) || other.blend == blend));
+  final _this = this as CustomColor;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CustomColor&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.blend, _this.blend) || other.blend == _this.blend));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,color,blend);
+int get hashCode {
+  final _this = this as CustomColor;
+  return Object.hash(runtimeType,_this.color,_this.blend);
+}
 
 @override
 String toString() {
-  return 'CustomColor(color: $color, blend: $blend)';
+  final _this = this as CustomColor;
+  return 'CustomColor(color: ${_this.color}, blend: ${_this.blend})';
 }
 
 

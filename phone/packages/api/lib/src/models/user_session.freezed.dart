@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'user_session.dart';
@@ -9,13 +9,14 @@ part of 'user_session.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$UserSession {
 
- String get id; bool get current; UserSessionStatus get status; String? get userAgent; String? get ip; String? get location; String? get lastActivityIp; String? get lastActivityLocation; AppType? get appType; String? get appIdentifier; String? get appBundleId; DateTime? get createdAt; DateTime? get lastActivityAt;
+
 /// Create a copy of UserSession
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $UserSessionCopyWith<UserSession> get copyWith => _$UserSessionCopyWithImpl<User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserSession&&(identical(other.id, id) || other.id == id)&&(identical(other.current, current) || other.current == current)&&(identical(other.status, status) || other.status == status)&&(identical(other.userAgent, userAgent) || other.userAgent == userAgent)&&(identical(other.ip, ip) || other.ip == ip)&&(identical(other.location, location) || other.location == location)&&(identical(other.lastActivityIp, lastActivityIp) || other.lastActivityIp == lastActivityIp)&&(identical(other.lastActivityLocation, lastActivityLocation) || other.lastActivityLocation == lastActivityLocation)&&(identical(other.appType, appType) || other.appType == appType)&&(identical(other.appIdentifier, appIdentifier) || other.appIdentifier == appIdentifier)&&(identical(other.appBundleId, appBundleId) || other.appBundleId == appBundleId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastActivityAt, lastActivityAt) || other.lastActivityAt == lastActivityAt));
+  final _this = this as UserSession;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserSession&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.current, _this.current) || other.current == _this.current)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.userAgent, _this.userAgent) || other.userAgent == _this.userAgent)&&(identical(other.ip, _this.ip) || other.ip == _this.ip)&&(identical(other.location, _this.location) || other.location == _this.location)&&(identical(other.lastActivityIp, _this.lastActivityIp) || other.lastActivityIp == _this.lastActivityIp)&&(identical(other.lastActivityLocation, _this.lastActivityLocation) || other.lastActivityLocation == _this.lastActivityLocation)&&(identical(other.appType, _this.appType) || other.appType == _this.appType)&&(identical(other.appIdentifier, _this.appIdentifier) || other.appIdentifier == _this.appIdentifier)&&(identical(other.appBundleId, _this.appBundleId) || other.appBundleId == _this.appBundleId)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.lastActivityAt, _this.lastActivityAt) || other.lastActivityAt == _this.lastActivityAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,current,status,userAgent,ip,location,lastActivityIp,lastActivityLocation,appType,appIdentifier,appBundleId,createdAt,lastActivityAt);
+int get hashCode {
+  final _this = this as UserSession;
+  return Object.hash(runtimeType,_this.id,_this.current,_this.status,_this.userAgent,_this.ip,_this.location,_this.lastActivityIp,_this.lastActivityLocation,_this.appType,_this.appIdentifier,_this.appBundleId,_this.createdAt,_this.lastActivityAt);
+}
 
 @override
 String toString() {
-  return 'UserSession(id: $id, current: $current, status: $status, userAgent: $userAgent, ip: $ip, location: $location, lastActivityIp: $lastActivityIp, lastActivityLocation: $lastActivityLocation, appType: $appType, appIdentifier: $appIdentifier, appBundleId: $appBundleId, createdAt: $createdAt, lastActivityAt: $lastActivityAt)';
+  final _this = this as UserSession;
+  return 'UserSession(id: ${_this.id}, current: ${_this.current}, status: ${_this.status}, userAgent: ${_this.userAgent}, ip: ${_this.ip}, location: ${_this.location}, lastActivityIp: ${_this.lastActivityIp}, lastActivityLocation: ${_this.lastActivityLocation}, appType: ${_this.appType}, appIdentifier: ${_this.appIdentifier}, appBundleId: ${_this.appBundleId}, createdAt: ${_this.createdAt}, lastActivityAt: ${_this.lastActivityAt})';
 }
 
 

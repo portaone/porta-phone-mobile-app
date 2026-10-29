@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'geometry_config.dart';
@@ -9,13 +9,14 @@ part of 'geometry_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$SizeConfig {
 
- double get width; double get height;
+
 /// Create a copy of SizeConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $SizeConfigCopyWith<SizeConfig> get copyWith => _$SizeConfigCopyWithImpl<SizeCon
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SizeConfig&&(identical(other.width, width) || other.width == width)&&(identical(other.height, height) || other.height == height));
+  final _this = this as SizeConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SizeConfig&&(identical(other.width, _this.width) || other.width == _this.width)&&(identical(other.height, _this.height) || other.height == _this.height));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,width,height);
+int get hashCode {
+  final _this = this as SizeConfig;
+  return Object.hash(runtimeType,_this.width,_this.height);
+}
 
 @override
 String toString() {
-  return 'SizeConfig(width: $width, height: $height)';
+  final _this = this as SizeConfig;
+  return 'SizeConfig(width: ${_this.width}, height: ${_this.height})';
 }
 
 
@@ -202,7 +208,7 @@ case _:
 /// @nodoc
 mixin _$EdgeInsetsConfig {
 
- double get left; double get top; double get right; double get bottom;
+
 /// Create a copy of EdgeInsetsConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -213,16 +219,21 @@ $EdgeInsetsConfigCopyWith<EdgeInsetsConfig> get copyWith => _$EdgeInsetsConfigCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EdgeInsetsConfig&&(identical(other.left, left) || other.left == left)&&(identical(other.top, top) || other.top == top)&&(identical(other.right, right) || other.right == right)&&(identical(other.bottom, bottom) || other.bottom == bottom));
+  final _this = this as EdgeInsetsConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EdgeInsetsConfig&&(identical(other.left, _this.left) || other.left == _this.left)&&(identical(other.top, _this.top) || other.top == _this.top)&&(identical(other.right, _this.right) || other.right == _this.right)&&(identical(other.bottom, _this.bottom) || other.bottom == _this.bottom));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,left,top,right,bottom);
+int get hashCode {
+  final _this = this as EdgeInsetsConfig;
+  return Object.hash(runtimeType,_this.left,_this.top,_this.right,_this.bottom);
+}
 
 @override
 String toString() {
-  return 'EdgeInsetsConfig(left: $left, top: $top, right: $right, bottom: $bottom)';
+  final _this = this as EdgeInsetsConfig;
+  return 'EdgeInsetsConfig(left: ${_this.left}, top: ${_this.top}, right: ${_this.right}, bottom: ${_this.bottom})';
 }
 
 
@@ -391,7 +402,7 @@ case _:
 /// @nodoc
 mixin _$BorderSideConfig {
 
- String? get color; double get width; String get style;
+
 /// Create a copy of BorderSideConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -402,16 +413,21 @@ $BorderSideConfigCopyWith<BorderSideConfig> get copyWith => _$BorderSideConfigCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BorderSideConfig&&(identical(other.color, color) || other.color == color)&&(identical(other.width, width) || other.width == width)&&(identical(other.style, style) || other.style == style));
+  final _this = this as BorderSideConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BorderSideConfig&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.width, _this.width) || other.width == _this.width)&&(identical(other.style, _this.style) || other.style == _this.style));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,color,width,style);
+int get hashCode {
+  final _this = this as BorderSideConfig;
+  return Object.hash(runtimeType,_this.color,_this.width,_this.style);
+}
 
 @override
 String toString() {
-  return 'BorderSideConfig(color: $color, width: $width, style: $style)';
+  final _this = this as BorderSideConfig;
+  return 'BorderSideConfig(color: ${_this.color}, width: ${_this.width}, style: ${_this.style})';
 }
 
 
@@ -579,7 +595,7 @@ case _:
 /// @nodoc
 mixin _$ShapeBorderConfig {
 
- String get type; double? get borderRadius;
+
 /// Create a copy of ShapeBorderConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -590,16 +606,21 @@ $ShapeBorderConfigCopyWith<ShapeBorderConfig> get copyWith => _$ShapeBorderConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShapeBorderConfig&&(identical(other.type, type) || other.type == type)&&(identical(other.borderRadius, borderRadius) || other.borderRadius == borderRadius));
+  final _this = this as ShapeBorderConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShapeBorderConfig&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.borderRadius, _this.borderRadius) || other.borderRadius == _this.borderRadius));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,type,borderRadius);
+int get hashCode {
+  final _this = this as ShapeBorderConfig;
+  return Object.hash(runtimeType,_this.type,_this.borderRadius);
+}
 
 @override
 String toString() {
-  return 'ShapeBorderConfig(type: $type, borderRadius: $borderRadius)';
+  final _this = this as ShapeBorderConfig;
+  return 'ShapeBorderConfig(type: ${_this.type}, borderRadius: ${_this.borderRadius})';
 }
 
 
@@ -766,7 +787,7 @@ case _:
 /// @nodoc
 mixin _$VisualDensityConfig {
 
- double get horizontal; double get vertical;
+
 /// Create a copy of VisualDensityConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -777,16 +798,21 @@ $VisualDensityConfigCopyWith<VisualDensityConfig> get copyWith => _$VisualDensit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VisualDensityConfig&&(identical(other.horizontal, horizontal) || other.horizontal == horizontal)&&(identical(other.vertical, vertical) || other.vertical == vertical));
+  final _this = this as VisualDensityConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VisualDensityConfig&&(identical(other.horizontal, _this.horizontal) || other.horizontal == _this.horizontal)&&(identical(other.vertical, _this.vertical) || other.vertical == _this.vertical));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,horizontal,vertical);
+int get hashCode {
+  final _this = this as VisualDensityConfig;
+  return Object.hash(runtimeType,_this.horizontal,_this.vertical);
+}
 
 @override
 String toString() {
-  return 'VisualDensityConfig(horizontal: $horizontal, vertical: $vertical)';
+  final _this = this as VisualDensityConfig;
+  return 'VisualDensityConfig(horizontal: ${_this.horizontal}, vertical: ${_this.vertical})';
 }
 
 

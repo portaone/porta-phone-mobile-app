@@ -21,41 +21,30 @@ class UserVoicemail with _$UserVoicemail {
     this.forwardedBy,
   });
 
-  @override
   final String id;
 
-  @override
   final String date;
 
-  @override
   final double duration;
 
-  @override
   final String sender;
 
-  @override
   final String receiver;
 
-  @override
   final bool seen;
 
-  @override
   final int size;
 
-  @override
   final String type;
 
-  @override
   final List<UserVoicemailAttachment> attachments;
 
   /// Whether the user is keeping this message; null when the backend omitted the
   /// field, which means the control does not apply. See [UserVoicemailSummary.saved].
-  @override
   final bool? saved;
 
   /// The id of the user who forwarded this message on; null unless it arrived
   /// that way. See [UserVoicemailSummary.forwardedBy].
-  @override
   final String? forwardedBy;
 
   factory UserVoicemail.fromJson(Map<String, dynamic> json) => _$UserVoicemailFromJson(json);
@@ -73,16 +62,12 @@ class UserVoicemailAttachment with _$UserVoicemailAttachment {
     required this.subtype,
   });
 
-  @override
   final String filename;
 
-  @override
   final int size;
 
-  @override
   final String type;
 
-  @override
   final String subtype;
 
   factory UserVoicemailAttachment.fromJson(Map<String, dynamic> json) => _$UserVoicemailAttachmentFromJson(json);

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'caller_id_settings.dart';
@@ -9,13 +9,14 @@ part of 'caller_id_settings.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$PrefixMatcher {
 
- String get prefix; String get number; String? get country;
+
 /// Create a copy of PrefixMatcher
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $PrefixMatcherCopyWith<PrefixMatcher> get copyWith => _$PrefixMatcherCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrefixMatcher&&(identical(other.prefix, prefix) || other.prefix == prefix)&&(identical(other.number, number) || other.number == number)&&(identical(other.country, country) || other.country == country));
+  final _this = this as PrefixMatcher;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrefixMatcher&&(identical(other.prefix, _this.prefix) || other.prefix == _this.prefix)&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.country, _this.country) || other.country == _this.country));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,prefix,number,country);
+int get hashCode {
+  final _this = this as PrefixMatcher;
+  return Object.hash(runtimeType,_this.prefix,_this.number,_this.country);
+}
 
 @override
 String toString() {
-  return 'PrefixMatcher(prefix: $prefix, number: $number, country: $country)';
+  final _this = this as PrefixMatcher;
+  return 'PrefixMatcher(prefix: ${_this.prefix}, number: ${_this.number}, country: ${_this.country})';
 }
 
 
@@ -203,7 +209,7 @@ case _:
 /// @nodoc
 mixin _$CallerIdSettings {
 
- String? get defaultNumber; List<PrefixMatcher> get prefixMatchers; int get version; DateTime get modifiedAt;
+
 /// Create a copy of CallerIdSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -214,16 +220,21 @@ $CallerIdSettingsCopyWith<CallerIdSettings> get copyWith => _$CallerIdSettingsCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallerIdSettings&&(identical(other.defaultNumber, defaultNumber) || other.defaultNumber == defaultNumber)&&const DeepCollectionEquality().equals(other.prefixMatchers, prefixMatchers)&&(identical(other.version, version) || other.version == version)&&(identical(other.modifiedAt, modifiedAt) || other.modifiedAt == modifiedAt));
+  final _this = this as CallerIdSettings;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallerIdSettings&&(identical(other.defaultNumber, _this.defaultNumber) || other.defaultNumber == _this.defaultNumber)&&const DeepCollectionEquality().equals(other.prefixMatchers, _this.prefixMatchers)&&(identical(other.version, _this.version) || other.version == _this.version)&&(identical(other.modifiedAt, _this.modifiedAt) || other.modifiedAt == _this.modifiedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,defaultNumber,const DeepCollectionEquality().hash(prefixMatchers),version,modifiedAt);
+int get hashCode {
+  final _this = this as CallerIdSettings;
+  return Object.hash(runtimeType,_this.defaultNumber,const DeepCollectionEquality().hash(_this.prefixMatchers),_this.version,_this.modifiedAt);
+}
 
 @override
 String toString() {
-  return 'CallerIdSettings(defaultNumber: $defaultNumber, prefixMatchers: $prefixMatchers, version: $version, modifiedAt: $modifiedAt)';
+  final _this = this as CallerIdSettings;
+  return 'CallerIdSettings(defaultNumber: ${_this.defaultNumber}, prefixMatchers: ${_this.prefixMatchers}, version: ${_this.version}, modifiedAt: ${_this.modifiedAt})';
 }
 
 

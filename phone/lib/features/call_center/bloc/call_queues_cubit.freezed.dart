@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'call_queues_cubit.dart';
@@ -9,12 +9,13 @@ part of 'call_queues_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CallQueuesState {
 
- List<CallQueue> get queues; bool get known; Set<String> get pendingIds; bool get allPending; bool get readFailed;
+
 /// Create a copy of CallQueuesState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $CallQueuesStateCopyWith<CallQueuesState> get copyWith => _$CallQueuesStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallQueuesState&&const DeepCollectionEquality().equals(other.queues, queues)&&(identical(other.known, known) || other.known == known)&&const DeepCollectionEquality().equals(other.pendingIds, pendingIds)&&(identical(other.allPending, allPending) || other.allPending == allPending)&&(identical(other.readFailed, readFailed) || other.readFailed == readFailed));
+  final _this = this as CallQueuesState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallQueuesState&&const DeepCollectionEquality().equals(other.queues, _this.queues)&&(identical(other.known, _this.known) || other.known == _this.known)&&const DeepCollectionEquality().equals(other.pendingIds, _this.pendingIds)&&(identical(other.allPending, _this.allPending) || other.allPending == _this.allPending)&&(identical(other.readFailed, _this.readFailed) || other.readFailed == _this.readFailed));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(queues),known,const DeepCollectionEquality().hash(pendingIds),allPending,readFailed);
+int get hashCode {
+  final _this = this as CallQueuesState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.queues),_this.known,const DeepCollectionEquality().hash(_this.pendingIds),_this.allPending,_this.readFailed);
+}
 
 @override
 String toString() {
-  return 'CallQueuesState(queues: $queues, known: $known, pendingIds: $pendingIds, allPending: $allPending, readFailed: $readFailed)';
+  final _this = this as CallQueuesState;
+  return 'CallQueuesState(queues: ${_this.queues}, known: ${_this.known}, pendingIds: ${_this.pendingIds}, allPending: ${_this.allPending}, readFailed: ${_this.readFailed})';
 }
 
 

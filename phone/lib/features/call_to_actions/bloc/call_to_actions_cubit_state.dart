@@ -4,16 +4,12 @@ part of 'call_to_actions_cubit.dart';
 class CallToActionsCubitState with _$CallToActionsCubitState {
   const CallToActionsCubitState({required this.locale, this.actions = const {}, this.visible = true, this.flavor});
 
-  @override
   final Locale locale;
 
-  @override
   final Map<MainFlavor, List<CallToAction>> actions;
 
-  @override
   final bool visible;
 
-  @override
   final MainFlavor? flavor;
 
   // Returns the first action associated with the current flavor.

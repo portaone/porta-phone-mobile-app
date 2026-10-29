@@ -4,12 +4,9 @@ part of 'keypad_cubit.dart';
 class KeypadState with _$KeypadState {
   KeypadState({this.contact, this.value});
 
-  @override
   final Contact? contact;
 
-  @override
   final String? value;
 
-  @override
   late final noValue = value?.isEmpty ?? true;
 }

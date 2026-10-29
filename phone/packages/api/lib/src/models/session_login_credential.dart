@@ -19,19 +19,14 @@ class SessionLoginCredential with _$SessionLoginCredential {
     required this.password,
   });
 
-  @override
   final String? bundleId;
 
-  @override
   final AppType type;
 
-  @override
   final String identifier;
 
-  @override
   final String login;
 
-  @override
   final String password;
 
   factory SessionLoginCredential.fromJson(Map<String, dynamic> json) => _$SessionLoginCredentialFromJson(json);

@@ -15924,10 +15924,7 @@ final class $$ContactsTableTableReferences
   _contactPhonesTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.contactPhonesTable,
-        aliasName: $_aliasNameGenerator(
-          db.contactsTable.id,
-          db.contactPhonesTable.contactId,
-        ),
+        aliasName: 'contacts__id__contact_phones__contact_id',
       );
 
   $$ContactPhonesTableTableProcessedTableManager get contactPhonesTableRefs {
@@ -15948,10 +15945,7 @@ final class $$ContactsTableTableReferences
   _contactEmailsTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.contactEmailsTable,
-        aliasName: $_aliasNameGenerator(
-          db.contactsTable.id,
-          db.contactEmailsTable.contactId,
-        ),
+        aliasName: 'contacts__id__contact_emails__contact_id',
       );
 
   $$ContactEmailsTableTableProcessedTableManager get contactEmailsTableRefs {
@@ -16379,7 +16373,7 @@ class $$ContactsTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ContactsTableTable, ContactData>(table),
                   $$ContactsTableTableReferences(db, table, e),
                 ),
               )
@@ -16399,10 +16393,11 @@ class $$ContactsTableTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (contactPhonesTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ContactData,
                           $ContactsTableTable,
-                          ContactPhoneData
+                          ContactPhoneData,
+                          $ContactPhonesTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ContactsTableTableReferences
@@ -16413,17 +16408,16 @@ class $$ContactsTableTableTableManager
                                 table,
                                 p0,
                               ).contactPhonesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'contact_id',
                           typedResults: items,
                         ),
                       if (contactEmailsTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ContactData,
                           $ContactsTableTable,
-                          ContactEmailData
+                          ContactEmailData,
+                          $ContactEmailsTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ContactsTableTableReferences
@@ -16434,10 +16428,8 @@ class $$ContactsTableTableTableManager
                                 table,
                                 p0,
                               ).contactEmailsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'contact_id',
                           typedResults: items,
                         ),
                     ];
@@ -16498,12 +16490,7 @@ final class $$ContactPhonesTableTableReferences
   );
 
   static $ContactsTableTable _contactIdTable(_$AppDatabase db) =>
-      db.contactsTable.createAlias(
-        $_aliasNameGenerator(
-          db.contactPhonesTable.contactId,
-          db.contactsTable.id,
-        ),
-      );
+      db.contactsTable.createAlias('contact_phones__contact_id__contacts__id');
 
   $$ContactsTableTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -16522,10 +16509,7 @@ final class $$ContactPhonesTableTableReferences
   static MultiTypedResultKey<$FavoritesTableTable, List<FavoriteData>>
   _favoritesTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.favoritesTable,
-    aliasName: $_aliasNameGenerator(
-      db.contactPhonesTable.id,
-      db.favoritesTable.contactPhoneId,
-    ),
+    aliasName: 'contact_phones__id__favorites__contact_phone_id',
   );
 
   $$FavoritesTableTableProcessedTableManager get favoritesTableRefs {
@@ -16823,7 +16807,9 @@ class $$ContactPhonesTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ContactPhonesTableTable, ContactPhoneData>(
+                    table,
+                  ),
                   $$ContactPhonesTableTableReferences(db, table, e),
                 ),
               )
@@ -16872,10 +16858,11 @@ class $$ContactPhonesTableTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (favoritesTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ContactPhoneData,
                           $ContactPhonesTableTable,
-                          FavoriteData
+                          FavoriteData,
+                          $FavoritesTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ContactPhonesTableTableReferences
@@ -16886,10 +16873,8 @@ class $$ContactPhonesTableTableTableManager
                                 table,
                                 p0,
                               ).favoritesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.contactPhoneId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'contact_phone_id',
                           typedResults: items,
                         ),
                     ];
@@ -16947,12 +16932,7 @@ final class $$ContactEmailsTableTableReferences
   );
 
   static $ContactsTableTable _contactIdTable(_$AppDatabase db) =>
-      db.contactsTable.createAlias(
-        $_aliasNameGenerator(
-          db.contactEmailsTable.contactId,
-          db.contactsTable.id,
-        ),
-      );
+      db.contactsTable.createAlias('contact_emails__contact_id__contacts__id');
 
   $$ContactsTableTableProcessedTableManager get contactId {
     final $_column = $_itemColumn<int>('contact_id')!;
@@ -17201,7 +17181,9 @@ class $$ContactEmailsTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ContactEmailsTableTable, ContactEmailData>(
+                    table,
+                  ),
                   $$ContactEmailsTableTableReferences(db, table, e),
                 ),
               )
@@ -17501,7 +17483,16 @@ class $$CallLogsTableTableTableManager
                 hungUpAt: hungUpAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$CallLogsTableTable, CallLogData>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CallLogsTableTable,
+                    CallLogData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -17546,13 +17537,9 @@ final class $$FavoritesTableTableReferences
     super.$_typedResult,
   );
 
-  static $ContactPhonesTableTable _contactPhoneIdTable(_$AppDatabase db) =>
-      db.contactPhonesTable.createAlias(
-        $_aliasNameGenerator(
-          db.favoritesTable.contactPhoneId,
-          db.contactPhonesTable.id,
-        ),
-      );
+  static $ContactPhonesTableTable _contactPhoneIdTable(_$AppDatabase db) => db
+      .contactPhonesTable
+      .createAlias('favorites__contact_phone_id__contact_phones__id');
 
   $$ContactPhonesTableTableProcessedTableManager get contactPhoneId {
     final $_column = $_itemColumn<int>('contact_phone_id')!;
@@ -17746,7 +17733,7 @@ class $$FavoritesTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$FavoritesTableTable, FavoriteData>(table),
                   $$FavoritesTableTableReferences(db, table, e),
                 ),
               )
@@ -18074,7 +18061,19 @@ class $$FavoritesOutboxTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<
+                    $FavoritesOutboxTableTable,
+                    FavoriteOutboxEntryData
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $FavoritesOutboxTableTable,
+                    FavoriteOutboxEntryData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -18292,7 +18291,16 @@ class $$FavoritesV2TableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$FavoritesV2TableTable, FavoriteV2Data>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $FavoritesV2TableTable,
+                    FavoriteV2Data
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -18340,10 +18348,7 @@ final class $$ChatsTableTableReferences
   static MultiTypedResultKey<$ChatMembersTableTable, List<ChatMemberData>>
   _chatMembersTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.chatMembersTable,
-    aliasName: $_aliasNameGenerator(
-      db.chatsTable.id,
-      db.chatMembersTable.chatId,
-    ),
+    aliasName: 'chats__id__chat_members__chat_id',
   );
 
   $$ChatMembersTableTableProcessedTableManager get chatMembersTableRefs {
@@ -18364,10 +18369,7 @@ final class $$ChatsTableTableReferences
   _chatMessagesTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.chatMessagesTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatMessagesTable.chatId,
-        ),
+        aliasName: 'chats__id__chat_messages__chat_id',
       );
 
   $$ChatMessagesTableTableProcessedTableManager get chatMessagesTableRefs {
@@ -18391,10 +18393,7 @@ final class $$ChatsTableTableReferences
   _chatMessageSyncCursorTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.chatMessageSyncCursorTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatMessageSyncCursorTable.chatId,
-        ),
+        aliasName: 'chats__id__chat_message_sync_cursors__chat_id',
       );
 
   $$ChatMessageSyncCursorTableTableProcessedTableManager
@@ -18419,10 +18418,7 @@ final class $$ChatsTableTableReferences
   _chatMessageReadCursorTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.chatMessageReadCursorTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatMessageReadCursorTable.chatId,
-        ),
+        aliasName: 'chats__id__chat_message_read_cursors__chat_id',
       );
 
   $$ChatMessageReadCursorTableTableProcessedTableManager
@@ -18447,10 +18443,7 @@ final class $$ChatsTableTableReferences
   _chatUserSettingsTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.chatUserSettingsTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatUserSettingsTable.chatId,
-        ),
+        aliasName: 'chats__id__chat_user_settings__chat_id',
       );
 
   $$ChatUserSettingsTableTableProcessedTableManager
@@ -18475,10 +18468,7 @@ final class $$ChatsTableTableReferences
   _chatOutboxMessageTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.chatOutboxMessageTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatOutboxMessageTable.chatId,
-        ),
+        aliasName: 'chats__id__chat_outbox_messages__chat_id',
       );
 
   $$ChatOutboxMessageTableTableProcessedTableManager
@@ -18503,10 +18493,7 @@ final class $$ChatsTableTableReferences
   _chatOutboxMessageEditTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.chatOutboxMessageEditTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatOutboxMessageEditTable.chatId,
-        ),
+        aliasName: 'chats__id__chat_outbox_message_edits__chat_id',
       );
 
   $$ChatOutboxMessageEditTableTableProcessedTableManager
@@ -18531,10 +18518,7 @@ final class $$ChatsTableTableReferences
   _chatOutboxMessageDeleteTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.chatOutboxMessageDeleteTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatOutboxMessageDeleteTable.chatId,
-        ),
+        aliasName: 'chats__id__chat_outbox_message_deletes__chat_id',
       );
 
   $$ChatOutboxMessageDeleteTableTableProcessedTableManager
@@ -18559,10 +18543,7 @@ final class $$ChatsTableTableReferences
   _chatOutboxReadCursorsTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.chatOutboxReadCursorsTable,
-        aliasName: $_aliasNameGenerator(
-          db.chatsTable.id,
-          db.chatOutboxReadCursorsTable.chatId,
-        ),
+        aliasName: 'chats__id__chat_outbox_read_cursors__chat_id',
       );
 
   $$ChatOutboxReadCursorsTableTableProcessedTableManager
@@ -19235,7 +19216,7 @@ class $$ChatsTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ChatsTableTable, ChatData>(table),
                   $$ChatsTableTableReferences(db, table, e),
                 ),
               )
@@ -19274,10 +19255,11 @@ class $$ChatsTableTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (chatMembersTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatData,
                           $ChatsTableTable,
-                          ChatMemberData
+                          ChatMemberData,
+                          $ChatMembersTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ChatsTableTableReferences
@@ -19288,17 +19270,16 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatMembersTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'chat_id',
                           typedResults: items,
                         ),
                       if (chatMessagesTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatData,
                           $ChatsTableTable,
-                          ChatMessageData
+                          ChatMessageData,
+                          $ChatMessagesTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ChatsTableTableReferences
@@ -19309,17 +19290,16 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatMessagesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'chat_id',
                           typedResults: items,
                         ),
                       if (chatMessageSyncCursorTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatData,
                           $ChatsTableTable,
-                          ChatMessageSyncCursorData
+                          ChatMessageSyncCursorData,
+                          $ChatMessageSyncCursorTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ChatsTableTableReferences
@@ -19330,17 +19310,16 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatMessageSyncCursorTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'chat_id',
                           typedResults: items,
                         ),
                       if (chatMessageReadCursorTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatData,
                           $ChatsTableTable,
-                          ChatMessageReadCursorData
+                          ChatMessageReadCursorData,
+                          $ChatMessageReadCursorTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ChatsTableTableReferences
@@ -19351,17 +19330,16 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatMessageReadCursorTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'chat_id',
                           typedResults: items,
                         ),
                       if (chatUserSettingsTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatData,
                           $ChatsTableTable,
-                          ChatUserSettingsData
+                          ChatUserSettingsData,
+                          $ChatUserSettingsTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ChatsTableTableReferences
@@ -19372,17 +19350,16 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatUserSettingsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'chat_id',
                           typedResults: items,
                         ),
                       if (chatOutboxMessageTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatData,
                           $ChatsTableTable,
-                          ChatOutboxMessageData
+                          ChatOutboxMessageData,
+                          $ChatOutboxMessageTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ChatsTableTableReferences
@@ -19393,17 +19370,16 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatOutboxMessageTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'chat_id',
                           typedResults: items,
                         ),
                       if (chatOutboxMessageEditTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatData,
                           $ChatsTableTable,
-                          ChatOutboxMessageEditData
+                          ChatOutboxMessageEditData,
+                          $ChatOutboxMessageEditTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ChatsTableTableReferences
@@ -19414,17 +19390,16 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatOutboxMessageEditTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'chat_id',
                           typedResults: items,
                         ),
                       if (chatOutboxMessageDeleteTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatData,
                           $ChatsTableTable,
-                          ChatOutboxMessageDeleteData
+                          ChatOutboxMessageDeleteData,
+                          $ChatOutboxMessageDeleteTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ChatsTableTableReferences
@@ -19435,17 +19410,16 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatOutboxMessageDeleteTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'chat_id',
                           typedResults: items,
                         ),
                       if (chatOutboxReadCursorsTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           ChatData,
                           $ChatsTableTable,
-                          ChatOutboxReadCursorData
+                          ChatOutboxReadCursorData,
+                          $ChatOutboxReadCursorsTableTable
                         >(
                           currentTable: table,
                           referencedTable: $$ChatsTableTableReferences
@@ -19456,10 +19430,8 @@ class $$ChatsTableTableTableManager
                                 table,
                                 p0,
                               ).chatOutboxReadCursorsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.chatId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'chat_id',
                           typedResults: items,
                         ),
                     ];
@@ -19519,9 +19491,7 @@ final class $$ChatMembersTableTableReferences
   );
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(db.chatMembersTable.chatId, db.chatsTable.id),
-      );
+      db.chatsTable.createAlias('chat_members__chat_id__chats__id');
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
@@ -19741,7 +19711,7 @@ class $$ChatMembersTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ChatMembersTableTable, ChatMemberData>(table),
                   $$ChatMembersTableTableReferences(db, table, e),
                 ),
               )
@@ -19852,9 +19822,7 @@ final class $$ChatMessagesTableTableReferences
   );
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(db.chatMessagesTable.chatId, db.chatsTable.id),
-      );
+      db.chatsTable.createAlias('chat_messages__chat_id__chats__id');
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
@@ -20213,7 +20181,7 @@ class $$ChatMessagesTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ChatMessagesTableTable, ChatMessageData>(table),
                   $$ChatMessagesTableTableReferences(db, table, e),
                 ),
               )
@@ -20307,13 +20275,8 @@ final class $$ChatMessageSyncCursorTableTableReferences
     super.$_typedResult,
   );
 
-  static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatMessageSyncCursorTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+  static $ChatsTableTable _chatIdTable(_$AppDatabase db) => db.chatsTable
+      .createAlias('chat_message_sync_cursors__chat_id__chats__id');
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
@@ -20533,7 +20496,10 @@ class $$ChatMessageSyncCursorTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $ChatMessageSyncCursorTableTable,
+                    ChatMessageSyncCursorData
+                  >(table),
                   $$ChatMessageSyncCursorTableTableReferences(db, table, e),
                 ),
               )
@@ -20627,13 +20593,8 @@ final class $$ChatMessageReadCursorTableTableReferences
     super.$_typedResult,
   );
 
-  static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatMessageReadCursorTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+  static $ChatsTableTable _chatIdTable(_$AppDatabase db) => db.chatsTable
+      .createAlias('chat_message_read_cursors__chat_id__chats__id');
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
@@ -20844,7 +20805,10 @@ class $$ChatMessageReadCursorTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $ChatMessageReadCursorTableTable,
+                    ChatMessageReadCursorData
+                  >(table),
                   $$ChatMessageReadCursorTableTableReferences(db, table, e),
                 ),
               )
@@ -20937,9 +20901,7 @@ final class $$ChatUserSettingsTableTableReferences
   );
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(db.chatUserSettingsTable.chatId, db.chatsTable.id),
-      );
+      db.chatsTable.createAlias('chat_user_settings__chat_id__chats__id');
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
@@ -21143,7 +21105,10 @@ class $$ChatUserSettingsTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $ChatUserSettingsTableTable,
+                    ChatUserSettingsData
+                  >(table),
                   $$ChatUserSettingsTableTableReferences(db, table, e),
                 ),
               )
@@ -21248,12 +21213,7 @@ final class $$ChatOutboxMessageTableTableReferences
   );
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatOutboxMessageTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+      db.chatsTable.createAlias('chat_outbox_messages__chat_id__chats__id');
 
   $$ChatsTableTableProcessedTableManager? get chatId {
     final $_column = $_itemColumn<int>('chat_id');
@@ -21550,7 +21510,10 @@ class $$ChatOutboxMessageTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $ChatOutboxMessageTableTable,
+                    ChatOutboxMessageData
+                  >(table),
                   $$ChatOutboxMessageTableTableReferences(db, table, e),
                 ),
               )
@@ -21646,13 +21609,8 @@ final class $$ChatOutboxMessageEditTableTableReferences
     super.$_typedResult,
   );
 
-  static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatOutboxMessageEditTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+  static $ChatsTableTable _chatIdTable(_$AppDatabase db) => db.chatsTable
+      .createAlias('chat_outbox_message_edits__chat_id__chats__id');
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
@@ -21895,7 +21853,10 @@ class $$ChatOutboxMessageEditTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $ChatOutboxMessageEditTableTable,
+                    ChatOutboxMessageEditData
+                  >(table),
                   $$ChatOutboxMessageEditTableTableReferences(db, table, e),
                 ),
               )
@@ -21989,13 +21950,8 @@ final class $$ChatOutboxMessageDeleteTableTableReferences
     super.$_typedResult,
   );
 
-  static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatOutboxMessageDeleteTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+  static $ChatsTableTable _chatIdTable(_$AppDatabase db) => db.chatsTable
+      .createAlias('chat_outbox_message_deletes__chat_id__chats__id');
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
@@ -22219,7 +22175,10 @@ class $$ChatOutboxMessageDeleteTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $ChatOutboxMessageDeleteTableTable,
+                    ChatOutboxMessageDeleteData
+                  >(table),
                   $$ChatOutboxMessageDeleteTableTableReferences(db, table, e),
                 ),
               )
@@ -22315,12 +22274,7 @@ final class $$ChatOutboxReadCursorsTableTableReferences
   );
 
   static $ChatsTableTable _chatIdTable(_$AppDatabase db) =>
-      db.chatsTable.createAlias(
-        $_aliasNameGenerator(
-          db.chatOutboxReadCursorsTable.chatId,
-          db.chatsTable.id,
-        ),
-      );
+      db.chatsTable.createAlias('chat_outbox_read_cursors__chat_id__chats__id');
 
   $$ChatsTableTableProcessedTableManager get chatId {
     final $_column = $_itemColumn<int>('chat_id')!;
@@ -22529,7 +22483,10 @@ class $$ChatOutboxReadCursorsTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $ChatOutboxReadCursorsTableTable,
+                    ChatOutboxReadCursorData
+                  >(table),
                   $$ChatOutboxReadCursorsTableTableReferences(db, table, e),
                 ),
               )
@@ -22629,14 +22586,13 @@ final class $$SmsConversationsTableTableReferences
     $SmsConversationUserSettingsTableTable,
     List<SmsConversationUserSettingsData>
   >
-  _smsConversationUserSettingsTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.smsConversationUserSettingsTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsConversationUserSettingsTable.conversationId,
-        ),
-      );
+  _smsConversationUserSettingsTableRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.smsConversationUserSettingsTable,
+    aliasName:
+        'sms_conversations__id__sms_conversation_user_settings__conversation_id',
+  );
 
   $$SmsConversationUserSettingsTableTableProcessedTableManager
   get smsConversationUserSettingsTableRefs {
@@ -22656,10 +22612,7 @@ final class $$SmsConversationsTableTableReferences
   static MultiTypedResultKey<$SmsMessagesTableTable, List<SmsMessageData>>
   _smsMessagesTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.smsMessagesTable,
-    aliasName: $_aliasNameGenerator(
-      db.smsConversationsTable.id,
-      db.smsMessagesTable.conversationId,
-    ),
+    aliasName: 'sms_conversations__id__sms_messages__conversation_id',
   );
 
   $$SmsMessagesTableTableProcessedTableManager get smsMessagesTableRefs {
@@ -22683,10 +22636,8 @@ final class $$SmsConversationsTableTableReferences
   _smsMessageSyncCursorTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.smsMessageSyncCursorTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsMessageSyncCursorTable.conversationId,
-        ),
+        aliasName:
+            'sms_conversations__id__sms_message_sync_cursors__conversation_id',
       );
 
   $$SmsMessageSyncCursorTableTableProcessedTableManager
@@ -22711,10 +22662,8 @@ final class $$SmsConversationsTableTableReferences
   _smsMessageReadCursorTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.smsMessageReadCursorTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsMessageReadCursorTable.conversationId,
-        ),
+        aliasName:
+            'sms_conversations__id__sms_message_read_cursors__conversation_id',
       );
 
   $$SmsMessageReadCursorTableTableProcessedTableManager
@@ -22739,10 +22688,8 @@ final class $$SmsConversationsTableTableReferences
   _smsOutboxMessagesTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.smsOutboxMessagesTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsOutboxMessagesTable.conversationId,
-        ),
+        aliasName:
+            'sms_conversations__id__sms_outbox_messages__conversation_id',
       );
 
   $$SmsOutboxMessagesTableTableProcessedTableManager
@@ -22764,14 +22711,13 @@ final class $$SmsConversationsTableTableReferences
     $SmsOutboxMessageDeleteTableTable,
     List<SmsOutboxMessageDeleteData>
   >
-  _smsOutboxMessageDeleteTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.smsOutboxMessageDeleteTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsOutboxMessageDeleteTable.conversationId,
-        ),
-      );
+  _smsOutboxMessageDeleteTableRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.smsOutboxMessageDeleteTable,
+    aliasName:
+        'sms_conversations__id__sms_outbox_message_deletes__conversation_id',
+  );
 
   $$SmsOutboxMessageDeleteTableTableProcessedTableManager
   get smsOutboxMessageDeleteTableRefs {
@@ -22795,10 +22741,8 @@ final class $$SmsConversationsTableTableReferences
   _smsOutboxReadCursorsTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.smsOutboxReadCursorsTable,
-        aliasName: $_aliasNameGenerator(
-          db.smsConversationsTable.id,
-          db.smsOutboxReadCursorsTable.conversationId,
-        ),
+        aliasName:
+            'sms_conversations__id__sms_outbox_read_cursors__conversation_id',
       );
 
   $$SmsOutboxReadCursorsTableTableProcessedTableManager
@@ -23376,7 +23320,9 @@ class $$SmsConversationsTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$SmsConversationsTableTable, SmsConversationData>(
+                    table,
+                  ),
                   $$SmsConversationsTableTableReferences(db, table, e),
                 ),
               )
@@ -23411,10 +23357,11 @@ class $$SmsConversationsTableTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (smsConversationUserSettingsTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           SmsConversationData,
                           $SmsConversationsTableTable,
-                          SmsConversationUserSettingsData
+                          SmsConversationUserSettingsData,
+                          $SmsConversationUserSettingsTableTable
                         >(
                           currentTable: table,
                           referencedTable:
@@ -23428,17 +23375,16 @@ class $$SmsConversationsTableTableTableManager
                                 table,
                                 p0,
                               ).smsConversationUserSettingsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'conversation_id',
                           typedResults: items,
                         ),
                       if (smsMessagesTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           SmsConversationData,
                           $SmsConversationsTableTable,
-                          SmsMessageData
+                          SmsMessageData,
+                          $SmsMessagesTableTable
                         >(
                           currentTable: table,
                           referencedTable:
@@ -23450,17 +23396,16 @@ class $$SmsConversationsTableTableTableManager
                                 table,
                                 p0,
                               ).smsMessagesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'conversation_id',
                           typedResults: items,
                         ),
                       if (smsMessageSyncCursorTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           SmsConversationData,
                           $SmsConversationsTableTable,
-                          SmsMessageSyncCursorData
+                          SmsMessageSyncCursorData,
+                          $SmsMessageSyncCursorTableTable
                         >(
                           currentTable: table,
                           referencedTable:
@@ -23472,17 +23417,16 @@ class $$SmsConversationsTableTableTableManager
                                 table,
                                 p0,
                               ).smsMessageSyncCursorTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'conversation_id',
                           typedResults: items,
                         ),
                       if (smsMessageReadCursorTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           SmsConversationData,
                           $SmsConversationsTableTable,
-                          SmsMessageReadCursorData
+                          SmsMessageReadCursorData,
+                          $SmsMessageReadCursorTableTable
                         >(
                           currentTable: table,
                           referencedTable:
@@ -23494,17 +23438,16 @@ class $$SmsConversationsTableTableTableManager
                                 table,
                                 p0,
                               ).smsMessageReadCursorTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'conversation_id',
                           typedResults: items,
                         ),
                       if (smsOutboxMessagesTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           SmsConversationData,
                           $SmsConversationsTableTable,
-                          SmsOutboxMessageData
+                          SmsOutboxMessageData,
+                          $SmsOutboxMessagesTableTable
                         >(
                           currentTable: table,
                           referencedTable:
@@ -23516,17 +23459,16 @@ class $$SmsConversationsTableTableTableManager
                                 table,
                                 p0,
                               ).smsOutboxMessagesTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'conversation_id',
                           typedResults: items,
                         ),
                       if (smsOutboxMessageDeleteTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           SmsConversationData,
                           $SmsConversationsTableTable,
-                          SmsOutboxMessageDeleteData
+                          SmsOutboxMessageDeleteData,
+                          $SmsOutboxMessageDeleteTableTable
                         >(
                           currentTable: table,
                           referencedTable:
@@ -23538,17 +23480,16 @@ class $$SmsConversationsTableTableTableManager
                                 table,
                                 p0,
                               ).smsOutboxMessageDeleteTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'conversation_id',
                           typedResults: items,
                         ),
                       if (smsOutboxReadCursorsTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           SmsConversationData,
                           $SmsConversationsTableTable,
-                          SmsOutboxReadCursorData
+                          SmsOutboxReadCursorData,
+                          $SmsOutboxReadCursorsTableTable
                         >(
                           currentTable: table,
                           referencedTable:
@@ -23560,10 +23501,8 @@ class $$SmsConversationsTableTableTableManager
                                 table,
                                 p0,
                               ).smsOutboxReadCursorsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.conversationId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'conversation_id',
                           typedResults: items,
                         ),
                     ];
@@ -23622,13 +23561,11 @@ final class $$SmsConversationUserSettingsTableTableReferences
     super.$_typedResult,
   );
 
-  static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
-      db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsConversationUserSettingsTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
-      );
+  static $SmsConversationsTableTable _conversationIdTable(
+    _$AppDatabase db,
+  ) => db.smsConversationsTable.createAlias(
+    'sms_conversation_user_settings__conversation_id__sms_conversations__id',
+  );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
     final $_column = $_itemColumn<int>('conversation_id')!;
@@ -23838,7 +23775,10 @@ class $$SmsConversationUserSettingsTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $SmsConversationUserSettingsTableTable,
+                    SmsConversationUserSettingsData
+                  >(table),
                   $$SmsConversationUserSettingsTableTableReferences(
                     db,
                     table,
@@ -23951,10 +23891,7 @@ final class $$SmsMessagesTableTableReferences
 
   static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
       db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsMessagesTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
+        'sms_messages__conversation_id__sms_conversations__id',
       );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
@@ -24308,7 +24245,7 @@ class $$SmsMessagesTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$SmsMessagesTableTable, SmsMessageData>(table),
                   $$SmsMessagesTableTableReferences(db, table, e),
                 ),
               )
@@ -24404,10 +24341,7 @@ final class $$SmsMessageSyncCursorTableTableReferences
 
   static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
       db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsMessageSyncCursorTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
+        'sms_message_sync_cursors__conversation_id__sms_conversations__id',
       );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
@@ -24630,7 +24564,10 @@ class $$SmsMessageSyncCursorTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $SmsMessageSyncCursorTableTable,
+                    SmsMessageSyncCursorData
+                  >(table),
                   $$SmsMessageSyncCursorTableTableReferences(db, table, e),
                 ),
               )
@@ -24726,10 +24663,7 @@ final class $$SmsMessageReadCursorTableTableReferences
 
   static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
       db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsMessageReadCursorTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
+        'sms_message_read_cursors__conversation_id__sms_conversations__id',
       );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
@@ -24944,7 +24878,10 @@ class $$SmsMessageReadCursorTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $SmsMessageReadCursorTableTable,
+                    SmsMessageReadCursorData
+                  >(table),
                   $$SmsMessageReadCursorTableTableReferences(db, table, e),
                 ),
               )
@@ -25048,10 +24985,7 @@ final class $$SmsOutboxMessagesTableTableReferences
 
   static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
       db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsOutboxMessagesTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
+        'sms_outbox_messages__conversation_id__sms_conversations__id',
       );
 
   $$SmsConversationsTableTableProcessedTableManager? get conversationId {
@@ -25337,7 +25271,10 @@ class $$SmsOutboxMessagesTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $SmsOutboxMessagesTableTable,
+                    SmsOutboxMessageData
+                  >(table),
                   $$SmsOutboxMessagesTableTableReferences(db, table, e),
                 ),
               )
@@ -25433,10 +25370,7 @@ final class $$SmsOutboxMessageDeleteTableTableReferences
 
   static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
       db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsOutboxMessageDeleteTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
+        'sms_outbox_message_deletes__conversation_id__sms_conversations__id',
       );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
@@ -25664,7 +25598,10 @@ class $$SmsOutboxMessageDeleteTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $SmsOutboxMessageDeleteTableTable,
+                    SmsOutboxMessageDeleteData
+                  >(table),
                   $$SmsOutboxMessageDeleteTableTableReferences(db, table, e),
                 ),
               )
@@ -25761,10 +25698,7 @@ final class $$SmsOutboxReadCursorsTableTableReferences
 
   static $SmsConversationsTableTable _conversationIdTable(_$AppDatabase db) =>
       db.smsConversationsTable.createAlias(
-        $_aliasNameGenerator(
-          db.smsOutboxReadCursorsTable.conversationId,
-          db.smsConversationsTable.id,
-        ),
+        'sms_outbox_read_cursors__conversation_id__sms_conversations__id',
       );
 
   $$SmsConversationsTableTableProcessedTableManager get conversationId {
@@ -25974,7 +25908,10 @@ class $$SmsOutboxReadCursorsTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $SmsOutboxReadCursorsTableTable,
+                    SmsOutboxReadCursorData
+                  >(table),
                   $$SmsOutboxReadCursorsTableTableReferences(db, table, e),
                 ),
               )
@@ -26221,7 +26158,18 @@ class $$SipSubscriptionsTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SipSubscriptionsTableTable, SipSubscriptionData>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SipSubscriptionsTableTable,
+                    SipSubscriptionData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -26477,7 +26425,19 @@ class $$SipSubscriptionsOutboxTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<
+                    $SipSubscriptionsOutboxTableTable,
+                    SipSubscriptionOutboxEntryData
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SipSubscriptionsOutboxTableTable,
+                    SipSubscriptionOutboxEntryData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -26619,7 +26579,18 @@ class $$UserSmsNumbersTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$UserSmsNumbersTableTable, UserSmsNumberData>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $UserSmsNumbersTableTable,
+                    UserSmsNumberData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -26861,7 +26832,19 @@ class $$ActiveMessageNotificationsTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<
+                    $ActiveMessageNotificationsTableTable,
+                    ActiveMessageNotificationData
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ActiveMessageNotificationsTableTable,
+                    ActiveMessageNotificationData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -27185,7 +27168,16 @@ class $$VoicemailTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$VoicemailTableTable, VoicemailData>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $VoicemailTableTable,
+                    VoicemailData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -27247,14 +27239,13 @@ final class $$SystemNotificationsTableTableReferences
     $SystemNotificationsOutboxTableTable,
     List<SystemNotificationOutboxEntryData>
   >
-  _systemNotificationsOutboxTableRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.systemNotificationsOutboxTable,
-        aliasName: $_aliasNameGenerator(
-          db.systemNotificationsTable.id,
-          db.systemNotificationsOutboxTable.notificationId,
-        ),
-      );
+  _systemNotificationsOutboxTableRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.systemNotificationsOutboxTable,
+    aliasName:
+        'system_notifications__id__system_notifications_outbox__notification_id',
+  );
 
   $$SystemNotificationsOutboxTableTableProcessedTableManager
   get systemNotificationsOutboxTableRefs {
@@ -27536,7 +27527,10 @@ class $$SystemNotificationsTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $SystemNotificationsTableTable,
+                    SystemNotificationData
+                  >(table),
                   $$SystemNotificationsTableTableReferences(db, table, e),
                 ),
               )
@@ -27553,10 +27547,11 @@ class $$SystemNotificationsTableTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (systemNotificationsOutboxTableRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           SystemNotificationData,
                           $SystemNotificationsTableTable,
-                          SystemNotificationOutboxEntryData
+                          SystemNotificationOutboxEntryData,
+                          $SystemNotificationsOutboxTableTable
                         >(
                           currentTable: table,
                           referencedTable:
@@ -27568,10 +27563,8 @@ class $$SystemNotificationsTableTableTableManager
                                 table,
                                 p0,
                               ).systemNotificationsOutboxTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.notificationId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'notification_id',
                           typedResults: items,
                         ),
                     ];
@@ -27629,10 +27622,7 @@ final class $$SystemNotificationsOutboxTableTableReferences
   static $SystemNotificationsTableTable _notificationIdTable(
     _$AppDatabase db,
   ) => db.systemNotificationsTable.createAlias(
-    $_aliasNameGenerator(
-      db.systemNotificationsOutboxTable.notificationId,
-      db.systemNotificationsTable.id,
-    ),
+    'system_notifications_outbox__notification_id__system_notifications__id',
   );
 
   $$SystemNotificationsTableTableProcessedTableManager get notificationId {
@@ -27873,7 +27863,10 @@ class $$SystemNotificationsOutboxTableTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $SystemNotificationsOutboxTableTable,
+                    SystemNotificationOutboxEntryData
+                  >(table),
                   $$SystemNotificationsOutboxTableTableReferences(db, table, e),
                 ),
               )
@@ -28251,7 +28244,16 @@ class $$PresenceInfoTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$PresenceInfoTableTable, PresenceInfoData>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $PresenceInfoTableTable,
+                    PresenceInfoData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -28646,7 +28648,16 @@ class $$DialogInfoTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$DialogInfoTableTable, DialogInfoData>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $DialogInfoTableTable,
+                    DialogInfoData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -28995,7 +29006,16 @@ class $$CdrTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$CdrTableTable, CdrRecordData>(table),
+                  BaseReferences<_$AppDatabase, $CdrTableTable, CdrRecordData>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -29150,7 +29170,18 @@ class $$CdrSyncCursorTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$CdrSyncCursorTableTable, CdrSyncCursorData>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CdrSyncCursorTableTable,
+                    CdrSyncCursorData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),

@@ -20,33 +20,26 @@ class SystemInfo with _$SystemInfo {
     this.bundleVersion,
   });
 
-  @override
   final CoreInfo core;
 
-  @override
   final PostgresInfo postgres;
 
-  @override
   final AdapterInfo? adapter;
 
-  @override
   final JanusInfo? janus;
 
-  @override
   final GorushInfo? gorush;
 
   /// Optional minimum app version the backend declares it supports, as a raw
   /// semver string (JSON key `min_supported_app_version`). `null` = not
   /// enforced. Kept as a `String?` here so the API layer stays a dumb
   /// transport; the domain mapper parses it into a [Version].
-  @override
   final String? minSupportedAppVersion;
 
   /// Optional version of the deployment bundle (JSON key `bundle_version`),
   /// e.g. the Add-on Mart package version. `null` = not configured on the
   /// backend. Kept as a raw string: the bundle version format is not
   /// guaranteed to be semver.
-  @override
   final String? bundleVersion;
 
   factory SystemInfo.fromJson(Map<String, Object?> json) => _$SystemInfoFromJson(json);
@@ -63,14 +56,12 @@ class CoreInfo with _$CoreInfo {
     this.notificationDeletedRetentionDays,
   });
 
-  @override
   @VersionConverter()
   final Version version;
 
   /// Whether the deployment bundles its own STUN/TURN servers, served by
   /// `GET /api/v1/user/ice-servers` (JSON key `ice_servers_configured`).
   /// `null` = the core does not report the capability, i.e. it has none.
-  @override
   final bool? iceServersConfigured;
 
   /// For how many days the core reports a deleted notification in the
@@ -79,7 +70,6 @@ class CoreInfo with _$CoreInfo {
   /// the notifications not brought up to date for longer may hold some that
   /// were deleted since. `null` = the core does not report deleted
   /// notifications at all.
-  @override
   final int? notificationDeletedRetentionDays;
 
   factory CoreInfo.fromJson(Map<String, Object?> json) => _$CoreInfoFromJson(json);
@@ -92,7 +82,6 @@ class CoreInfo with _$CoreInfo {
 class PostgresInfo with _$PostgresInfo {
   const PostgresInfo({this.version});
 
-  @override
   final String? version;
 
   factory PostgresInfo.fromJson(Map<String, Object?> json) => _$PostgresInfoFromJson(json);
@@ -105,16 +94,12 @@ class PostgresInfo with _$PostgresInfo {
 class AdapterInfo with _$AdapterInfo {
   const AdapterInfo({this.name, this.version, this.supported, this.custom});
 
-  @override
   final String? name;
 
-  @override
   final String? version;
 
-  @override
   final List<String>? supported;
 
-  @override
   final Map<String, dynamic>? custom;
 
   factory AdapterInfo.fromJson(Map<String, Object?> json) => _$AdapterInfoFromJson(json);
@@ -127,13 +112,10 @@ class AdapterInfo with _$AdapterInfo {
 class JanusInfo with _$JanusInfo {
   const JanusInfo({this.plugins, this.transports, this.version});
 
-  @override
   final Plugins? plugins;
 
-  @override
   final Transports? transports;
 
-  @override
   final String? version;
 
   factory JanusInfo.fromJson(Map<String, Object?> json) => _$JanusInfoFromJson(json);
@@ -146,7 +128,6 @@ class JanusInfo with _$JanusInfo {
 class GorushInfo with _$GorushInfo {
   const GorushInfo({this.version});
 
-  @override
   final String? version;
 
   factory GorushInfo.fromJson(Map<String, Object?> json) => _$GorushInfoFromJson(json);
@@ -159,7 +140,6 @@ class GorushInfo with _$GorushInfo {
 class Transports with _$Transports {
   const Transports({this.websocket});
 
-  @override
   final Websocket? websocket;
 
   factory Transports.fromJson(Map<String, Object?> json) => _$TransportsFromJson(json);
@@ -172,7 +152,6 @@ class Transports with _$Transports {
 class Websocket with _$Websocket {
   const Websocket({this.version});
 
-  @override
   final String? version;
 
   factory Websocket.fromJson(Map<String, Object?> json) => _$WebsocketFromJson(json);
@@ -185,7 +164,6 @@ class Websocket with _$Websocket {
 class Plugins with _$Plugins {
   const Plugins({this.sip});
 
-  @override
   final SipVersion? sip;
 
   factory Plugins.fromJson(Map<String, Object?> json) => _$PluginsFromJson(json);
@@ -198,7 +176,6 @@ class Plugins with _$Plugins {
 class SipVersion with _$SipVersion {
   const SipVersion({this.version});
 
-  @override
   final String? version;
 
   factory SipVersion.fromJson(Map<String, Object?> json) => _$SipVersionFromJson(json);

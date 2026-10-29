@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_config.dart';
@@ -9,13 +9,14 @@ part of 'app_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$AppConfig {
 
- AppConfigLogin get loginConfig; AppConfigMain get mainConfig; AppConfigSettings get settingsConfig; AppConfigCall get callConfig; AppConfigContacts get contacts; AppConfigMessaging get messaging; List<SupportedFeature> get supported;
+
 /// Create a copy of AppConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $AppConfigCopyWith<AppConfig> get copyWith => _$AppConfigCopyWithImpl<AppConfig>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfig&&(identical(other.loginConfig, loginConfig) || other.loginConfig == loginConfig)&&(identical(other.mainConfig, mainConfig) || other.mainConfig == mainConfig)&&(identical(other.settingsConfig, settingsConfig) || other.settingsConfig == settingsConfig)&&(identical(other.callConfig, callConfig) || other.callConfig == callConfig)&&(identical(other.contacts, contacts) || other.contacts == contacts)&&(identical(other.messaging, messaging) || other.messaging == messaging)&&const DeepCollectionEquality().equals(other.supported, supported));
+  final _this = this as AppConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfig&&(identical(other.loginConfig, _this.loginConfig) || other.loginConfig == _this.loginConfig)&&(identical(other.mainConfig, _this.mainConfig) || other.mainConfig == _this.mainConfig)&&(identical(other.settingsConfig, _this.settingsConfig) || other.settingsConfig == _this.settingsConfig)&&(identical(other.callConfig, _this.callConfig) || other.callConfig == _this.callConfig)&&(identical(other.contacts, _this.contacts) || other.contacts == _this.contacts)&&(identical(other.messaging, _this.messaging) || other.messaging == _this.messaging)&&const DeepCollectionEquality().equals(other.supported, _this.supported));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,loginConfig,mainConfig,settingsConfig,callConfig,contacts,messaging,const DeepCollectionEquality().hash(supported));
+int get hashCode {
+  final _this = this as AppConfig;
+  return Object.hash(runtimeType,_this.loginConfig,_this.mainConfig,_this.settingsConfig,_this.callConfig,_this.contacts,_this.messaging,const DeepCollectionEquality().hash(_this.supported));
+}
 
 @override
 String toString() {
-  return 'AppConfig(loginConfig: $loginConfig, mainConfig: $mainConfig, settingsConfig: $settingsConfig, callConfig: $callConfig, contacts: $contacts, messaging: $messaging, supported: $supported)';
+  final _this = this as AppConfig;
+  return 'AppConfig(loginConfig: ${_this.loginConfig}, mainConfig: ${_this.mainConfig}, settingsConfig: ${_this.settingsConfig}, callConfig: ${_this.callConfig}, contacts: ${_this.contacts}, messaging: ${_this.messaging}, supported: ${_this.supported})';
 }
 
 
@@ -207,7 +213,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigLogin {
 
- AppConfigLoginCommon get common; AppConfigLoginModeSelect get modeSelect; List<String> get signinOrder; AppConfigLoginQr get qr;
+
 /// Create a copy of AppConfigLogin
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -218,16 +224,21 @@ $AppConfigLoginCopyWith<AppConfigLogin> get copyWith => _$AppConfigLoginCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLogin&&(identical(other.common, common) || other.common == common)&&(identical(other.modeSelect, modeSelect) || other.modeSelect == modeSelect)&&const DeepCollectionEquality().equals(other.signinOrder, signinOrder)&&(identical(other.qr, qr) || other.qr == qr));
+  final _this = this as AppConfigLogin;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLogin&&(identical(other.common, _this.common) || other.common == _this.common)&&(identical(other.modeSelect, _this.modeSelect) || other.modeSelect == _this.modeSelect)&&const DeepCollectionEquality().equals(other.signinOrder, _this.signinOrder)&&(identical(other.qr, _this.qr) || other.qr == _this.qr));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,common,modeSelect,const DeepCollectionEquality().hash(signinOrder),qr);
+int get hashCode {
+  final _this = this as AppConfigLogin;
+  return Object.hash(runtimeType,_this.common,_this.modeSelect,const DeepCollectionEquality().hash(_this.signinOrder),_this.qr);
+}
 
 @override
 String toString() {
-  return 'AppConfigLogin(common: $common, modeSelect: $modeSelect, signinOrder: $signinOrder, qr: $qr)';
+  final _this = this as AppConfigLogin;
+  return 'AppConfigLogin(common: ${_this.common}, modeSelect: ${_this.modeSelect}, signinOrder: ${_this.signinOrder}, qr: ${_this.qr})';
 }
 
 
@@ -396,7 +407,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigLoginQr {
 
- bool get enabled; List<AppConfigLoginQrFormat> get formats; String? get expectedHost;
+
 /// Create a copy of AppConfigLoginQr
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -407,16 +418,21 @@ $AppConfigLoginQrCopyWith<AppConfigLoginQr> get copyWith => _$AppConfigLoginQrCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLoginQr&&(identical(other.enabled, enabled) || other.enabled == enabled)&&const DeepCollectionEquality().equals(other.formats, formats)&&(identical(other.expectedHost, expectedHost) || other.expectedHost == expectedHost));
+  final _this = this as AppConfigLoginQr;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLoginQr&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&const DeepCollectionEquality().equals(other.formats, _this.formats)&&(identical(other.expectedHost, _this.expectedHost) || other.expectedHost == _this.expectedHost));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,const DeepCollectionEquality().hash(formats),expectedHost);
+int get hashCode {
+  final _this = this as AppConfigLoginQr;
+  return Object.hash(runtimeType,_this.enabled,const DeepCollectionEquality().hash(_this.formats),_this.expectedHost);
+}
 
 @override
 String toString() {
-  return 'AppConfigLoginQr(enabled: $enabled, formats: $formats, expectedHost: $expectedHost)';
+  final _this = this as AppConfigLoginQr;
+  return 'AppConfigLoginQr(enabled: ${_this.enabled}, formats: ${_this.formats}, expectedHost: ${_this.expectedHost})';
 }
 
 
@@ -584,7 +600,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigLoginQrFormat {
 
- String get type; List<String>? get schemes;
+
 /// Create a copy of AppConfigLoginQrFormat
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -595,16 +611,21 @@ $AppConfigLoginQrFormatCopyWith<AppConfigLoginQrFormat> get copyWith => _$AppCon
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLoginQrFormat&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.schemes, schemes));
+  final _this = this as AppConfigLoginQrFormat;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLoginQrFormat&&(identical(other.type, _this.type) || other.type == _this.type)&&const DeepCollectionEquality().equals(other.schemes, _this.schemes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,type,const DeepCollectionEquality().hash(schemes));
+int get hashCode {
+  final _this = this as AppConfigLoginQrFormat;
+  return Object.hash(runtimeType,_this.type,const DeepCollectionEquality().hash(_this.schemes));
+}
 
 @override
 String toString() {
-  return 'AppConfigLoginQrFormat(type: $type, schemes: $schemes)';
+  final _this = this as AppConfigLoginQrFormat;
+  return 'AppConfigLoginQrFormat(type: ${_this.type}, schemes: ${_this.schemes})';
 }
 
 
@@ -771,7 +792,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigLoginCommon {
 
- String? get fullScreenLaunchEmbeddedResourceId;
+
 /// Create a copy of AppConfigLoginCommon
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -782,16 +803,21 @@ $AppConfigLoginCommonCopyWith<AppConfigLoginCommon> get copyWith => _$AppConfigL
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLoginCommon&&(identical(other.fullScreenLaunchEmbeddedResourceId, fullScreenLaunchEmbeddedResourceId) || other.fullScreenLaunchEmbeddedResourceId == fullScreenLaunchEmbeddedResourceId));
+  final _this = this as AppConfigLoginCommon;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLoginCommon&&(identical(other.fullScreenLaunchEmbeddedResourceId, _this.fullScreenLaunchEmbeddedResourceId) || other.fullScreenLaunchEmbeddedResourceId == _this.fullScreenLaunchEmbeddedResourceId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,fullScreenLaunchEmbeddedResourceId);
+int get hashCode {
+  final _this = this as AppConfigLoginCommon;
+  return Object.hash(runtimeType,_this.fullScreenLaunchEmbeddedResourceId);
+}
 
 @override
 String toString() {
-  return 'AppConfigLoginCommon(fullScreenLaunchEmbeddedResourceId: $fullScreenLaunchEmbeddedResourceId)';
+  final _this = this as AppConfigLoginCommon;
+  return 'AppConfigLoginCommon(fullScreenLaunchEmbeddedResourceId: ${_this.fullScreenLaunchEmbeddedResourceId})';
 }
 
 
@@ -957,7 +983,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigLoginModeSelect {
 
- String? get greetingL10n; List<AppConfigModeSelectAction> get actions;
+
 /// Create a copy of AppConfigLoginModeSelect
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -968,16 +994,21 @@ $AppConfigLoginModeSelectCopyWith<AppConfigLoginModeSelect> get copyWith => _$Ap
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLoginModeSelect&&(identical(other.greetingL10n, greetingL10n) || other.greetingL10n == greetingL10n)&&const DeepCollectionEquality().equals(other.actions, actions));
+  final _this = this as AppConfigLoginModeSelect;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigLoginModeSelect&&(identical(other.greetingL10n, _this.greetingL10n) || other.greetingL10n == _this.greetingL10n)&&const DeepCollectionEquality().equals(other.actions, _this.actions));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,greetingL10n,const DeepCollectionEquality().hash(actions));
+int get hashCode {
+  final _this = this as AppConfigLoginModeSelect;
+  return Object.hash(runtimeType,_this.greetingL10n,const DeepCollectionEquality().hash(_this.actions));
+}
 
 @override
 String toString() {
-  return 'AppConfigLoginModeSelect(greetingL10n: $greetingL10n, actions: $actions)';
+  final _this = this as AppConfigLoginModeSelect;
+  return 'AppConfigLoginModeSelect(greetingL10n: ${_this.greetingL10n}, actions: ${_this.actions})';
 }
 
 
@@ -1144,7 +1175,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigModeSelectAction {
 
- bool get enabled; String get type; String get titleL10n; String? get embeddedId;
+
 /// Create a copy of AppConfigModeSelectAction
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1155,16 +1186,21 @@ $AppConfigModeSelectActionCopyWith<AppConfigModeSelectAction> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigModeSelectAction&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.type, type) || other.type == type)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.embeddedId, embeddedId) || other.embeddedId == embeddedId));
+  final _this = this as AppConfigModeSelectAction;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigModeSelectAction&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.embeddedId, _this.embeddedId) || other.embeddedId == _this.embeddedId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,type,titleL10n,embeddedId);
+int get hashCode {
+  final _this = this as AppConfigModeSelectAction;
+  return Object.hash(runtimeType,_this.enabled,_this.type,_this.titleL10n,_this.embeddedId);
+}
 
 @override
 String toString() {
-  return 'AppConfigModeSelectAction(enabled: $enabled, type: $type, titleL10n: $titleL10n, embeddedId: $embeddedId)';
+  final _this = this as AppConfigModeSelectAction;
+  return 'AppConfigModeSelectAction(enabled: ${_this.enabled}, type: ${_this.type}, titleL10n: ${_this.titleL10n}, embeddedId: ${_this.embeddedId})';
 }
 
 
@@ -1333,7 +1369,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigMain {
 
- AppConfigBottomMenu get bottomMenu;
+
 /// Create a copy of AppConfigMain
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1344,16 +1380,21 @@ $AppConfigMainCopyWith<AppConfigMain> get copyWith => _$AppConfigMainCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigMain&&(identical(other.bottomMenu, bottomMenu) || other.bottomMenu == bottomMenu));
+  final _this = this as AppConfigMain;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigMain&&(identical(other.bottomMenu, _this.bottomMenu) || other.bottomMenu == _this.bottomMenu));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,bottomMenu);
+int get hashCode {
+  final _this = this as AppConfigMain;
+  return Object.hash(runtimeType,_this.bottomMenu);
+}
 
 @override
 String toString() {
-  return 'AppConfigMain(bottomMenu: $bottomMenu)';
+  final _this = this as AppConfigMain;
+  return 'AppConfigMain(bottomMenu: ${_this.bottomMenu})';
 }
 
 
@@ -1519,7 +1560,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigBottomMenu {
 
- bool get cacheSelectedTab; List<BottomMenuTabScheme> get tabs;
+
 /// Create a copy of AppConfigBottomMenu
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1530,16 +1571,21 @@ $AppConfigBottomMenuCopyWith<AppConfigBottomMenu> get copyWith => _$AppConfigBot
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigBottomMenu&&(identical(other.cacheSelectedTab, cacheSelectedTab) || other.cacheSelectedTab == cacheSelectedTab)&&const DeepCollectionEquality().equals(other.tabs, tabs));
+  final _this = this as AppConfigBottomMenu;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigBottomMenu&&(identical(other.cacheSelectedTab, _this.cacheSelectedTab) || other.cacheSelectedTab == _this.cacheSelectedTab)&&const DeepCollectionEquality().equals(other.tabs, _this.tabs));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,cacheSelectedTab,const DeepCollectionEquality().hash(tabs));
+int get hashCode {
+  final _this = this as AppConfigBottomMenu;
+  return Object.hash(runtimeType,_this.cacheSelectedTab,const DeepCollectionEquality().hash(_this.tabs));
+}
 
 @override
 String toString() {
-  return 'AppConfigBottomMenu(cacheSelectedTab: $cacheSelectedTab, tabs: $tabs)';
+  final _this = this as AppConfigBottomMenu;
+  return 'AppConfigBottomMenu(cacheSelectedTab: ${_this.cacheSelectedTab}, tabs: ${_this.tabs})';
 }
 
 
@@ -1706,7 +1752,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigCall {
 
- bool get videoEnabled; AppConfigTransfer get transfer; AppConfigEncoding get encoding; AppConfigPeerConnection get peerConnection; AppConfigIce get ice; AppConfigCallAudio get audio;
+
 /// Create a copy of AppConfigCall
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1717,16 +1763,21 @@ $AppConfigCallCopyWith<AppConfigCall> get copyWith => _$AppConfigCallCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigCall&&(identical(other.videoEnabled, videoEnabled) || other.videoEnabled == videoEnabled)&&(identical(other.transfer, transfer) || other.transfer == transfer)&&(identical(other.encoding, encoding) || other.encoding == encoding)&&(identical(other.peerConnection, peerConnection) || other.peerConnection == peerConnection)&&(identical(other.ice, ice) || other.ice == ice)&&(identical(other.audio, audio) || other.audio == audio));
+  final _this = this as AppConfigCall;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigCall&&(identical(other.videoEnabled, _this.videoEnabled) || other.videoEnabled == _this.videoEnabled)&&(identical(other.transfer, _this.transfer) || other.transfer == _this.transfer)&&(identical(other.encoding, _this.encoding) || other.encoding == _this.encoding)&&(identical(other.peerConnection, _this.peerConnection) || other.peerConnection == _this.peerConnection)&&(identical(other.ice, _this.ice) || other.ice == _this.ice)&&(identical(other.audio, _this.audio) || other.audio == _this.audio));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,videoEnabled,transfer,encoding,peerConnection,ice,audio);
+int get hashCode {
+  final _this = this as AppConfigCall;
+  return Object.hash(runtimeType,_this.videoEnabled,_this.transfer,_this.encoding,_this.peerConnection,_this.ice,_this.audio);
+}
 
 @override
 String toString() {
-  return 'AppConfigCall(videoEnabled: $videoEnabled, transfer: $transfer, encoding: $encoding, peerConnection: $peerConnection, ice: $ice, audio: $audio)';
+  final _this = this as AppConfigCall;
+  return 'AppConfigCall(videoEnabled: ${_this.videoEnabled}, transfer: ${_this.transfer}, encoding: ${_this.encoding}, peerConnection: ${_this.peerConnection}, ice: ${_this.ice}, audio: ${_this.audio})';
 }
 
 
@@ -1897,7 +1948,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigTransfer {
 
- bool get enableBlindTransfer; bool get enableAttendedTransfer;
+
 /// Create a copy of AppConfigTransfer
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1908,16 +1959,21 @@ $AppConfigTransferCopyWith<AppConfigTransfer> get copyWith => _$AppConfigTransfe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigTransfer&&(identical(other.enableBlindTransfer, enableBlindTransfer) || other.enableBlindTransfer == enableBlindTransfer)&&(identical(other.enableAttendedTransfer, enableAttendedTransfer) || other.enableAttendedTransfer == enableAttendedTransfer));
+  final _this = this as AppConfigTransfer;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigTransfer&&(identical(other.enableBlindTransfer, _this.enableBlindTransfer) || other.enableBlindTransfer == _this.enableBlindTransfer)&&(identical(other.enableAttendedTransfer, _this.enableAttendedTransfer) || other.enableAttendedTransfer == _this.enableAttendedTransfer));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enableBlindTransfer,enableAttendedTransfer);
+int get hashCode {
+  final _this = this as AppConfigTransfer;
+  return Object.hash(runtimeType,_this.enableBlindTransfer,_this.enableAttendedTransfer);
+}
 
 @override
 String toString() {
-  return 'AppConfigTransfer(enableBlindTransfer: $enableBlindTransfer, enableAttendedTransfer: $enableAttendedTransfer)';
+  final _this = this as AppConfigTransfer;
+  return 'AppConfigTransfer(enableBlindTransfer: ${_this.enableBlindTransfer}, enableAttendedTransfer: ${_this.enableAttendedTransfer})';
 }
 
 
@@ -2084,7 +2140,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigEncoding {
 
- bool get bypassConfig; EncodingDefaultPresetOverride get defaultPresetOverride; List<String>? get conferenceAudioCodecs;
+
 /// Create a copy of AppConfigEncoding
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2095,16 +2151,21 @@ $AppConfigEncodingCopyWith<AppConfigEncoding> get copyWith => _$AppConfigEncodin
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigEncoding&&(identical(other.bypassConfig, bypassConfig) || other.bypassConfig == bypassConfig)&&(identical(other.defaultPresetOverride, defaultPresetOverride) || other.defaultPresetOverride == defaultPresetOverride)&&const DeepCollectionEquality().equals(other.conferenceAudioCodecs, conferenceAudioCodecs));
+  final _this = this as AppConfigEncoding;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigEncoding&&(identical(other.bypassConfig, _this.bypassConfig) || other.bypassConfig == _this.bypassConfig)&&(identical(other.defaultPresetOverride, _this.defaultPresetOverride) || other.defaultPresetOverride == _this.defaultPresetOverride)&&const DeepCollectionEquality().equals(other.conferenceAudioCodecs, _this.conferenceAudioCodecs));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,bypassConfig,defaultPresetOverride,const DeepCollectionEquality().hash(conferenceAudioCodecs));
+int get hashCode {
+  final _this = this as AppConfigEncoding;
+  return Object.hash(runtimeType,_this.bypassConfig,_this.defaultPresetOverride,const DeepCollectionEquality().hash(_this.conferenceAudioCodecs));
+}
 
 @override
 String toString() {
-  return 'AppConfigEncoding(bypassConfig: $bypassConfig, defaultPresetOverride: $defaultPresetOverride, conferenceAudioCodecs: $conferenceAudioCodecs)';
+  final _this = this as AppConfigEncoding;
+  return 'AppConfigEncoding(bypassConfig: ${_this.bypassConfig}, defaultPresetOverride: ${_this.defaultPresetOverride}, conferenceAudioCodecs: ${_this.conferenceAudioCodecs})';
 }
 
 
@@ -2272,7 +2333,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigIce {
 
- String get certificateVerification; bool get certificateVerificationConfigurable;
+
 /// Create a copy of AppConfigIce
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2283,16 +2344,21 @@ $AppConfigIceCopyWith<AppConfigIce> get copyWith => _$AppConfigIceCopyWithImpl<A
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigIce&&(identical(other.certificateVerification, certificateVerification) || other.certificateVerification == certificateVerification)&&(identical(other.certificateVerificationConfigurable, certificateVerificationConfigurable) || other.certificateVerificationConfigurable == certificateVerificationConfigurable));
+  final _this = this as AppConfigIce;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigIce&&(identical(other.certificateVerification, _this.certificateVerification) || other.certificateVerification == _this.certificateVerification)&&(identical(other.certificateVerificationConfigurable, _this.certificateVerificationConfigurable) || other.certificateVerificationConfigurable == _this.certificateVerificationConfigurable));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,certificateVerification,certificateVerificationConfigurable);
+int get hashCode {
+  final _this = this as AppConfigIce;
+  return Object.hash(runtimeType,_this.certificateVerification,_this.certificateVerificationConfigurable);
+}
 
 @override
 String toString() {
-  return 'AppConfigIce(certificateVerification: $certificateVerification, certificateVerificationConfigurable: $certificateVerificationConfigurable)';
+  final _this = this as AppConfigIce;
+  return 'AppConfigIce(certificateVerification: ${_this.certificateVerification}, certificateVerificationConfigurable: ${_this.certificateVerificationConfigurable})';
 }
 
 
@@ -2459,7 +2525,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigCallAudio {
 
- bool get speakerOnMinimize; bool get speakerOnMinimizeConfigurable;
+
 /// Create a copy of AppConfigCallAudio
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2470,16 +2536,21 @@ $AppConfigCallAudioCopyWith<AppConfigCallAudio> get copyWith => _$AppConfigCallA
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigCallAudio&&(identical(other.speakerOnMinimize, speakerOnMinimize) || other.speakerOnMinimize == speakerOnMinimize)&&(identical(other.speakerOnMinimizeConfigurable, speakerOnMinimizeConfigurable) || other.speakerOnMinimizeConfigurable == speakerOnMinimizeConfigurable));
+  final _this = this as AppConfigCallAudio;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigCallAudio&&(identical(other.speakerOnMinimize, _this.speakerOnMinimize) || other.speakerOnMinimize == _this.speakerOnMinimize)&&(identical(other.speakerOnMinimizeConfigurable, _this.speakerOnMinimizeConfigurable) || other.speakerOnMinimizeConfigurable == _this.speakerOnMinimizeConfigurable));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,speakerOnMinimize,speakerOnMinimizeConfigurable);
+int get hashCode {
+  final _this = this as AppConfigCallAudio;
+  return Object.hash(runtimeType,_this.speakerOnMinimize,_this.speakerOnMinimizeConfigurable);
+}
 
 @override
 String toString() {
-  return 'AppConfigCallAudio(speakerOnMinimize: $speakerOnMinimize, speakerOnMinimizeConfigurable: $speakerOnMinimizeConfigurable)';
+  final _this = this as AppConfigCallAudio;
+  return 'AppConfigCallAudio(speakerOnMinimize: ${_this.speakerOnMinimize}, speakerOnMinimizeConfigurable: ${_this.speakerOnMinimizeConfigurable})';
 }
 
 
@@ -2646,7 +2717,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigPeerConnection {
 
- AppConfigNegotiationSettingsOverride get negotiation;
+
 /// Create a copy of AppConfigPeerConnection
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2657,16 +2728,21 @@ $AppConfigPeerConnectionCopyWith<AppConfigPeerConnection> get copyWith => _$AppC
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigPeerConnection&&(identical(other.negotiation, negotiation) || other.negotiation == negotiation));
+  final _this = this as AppConfigPeerConnection;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigPeerConnection&&(identical(other.negotiation, _this.negotiation) || other.negotiation == _this.negotiation));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,negotiation);
+int get hashCode {
+  final _this = this as AppConfigPeerConnection;
+  return Object.hash(runtimeType,_this.negotiation);
+}
 
 @override
 String toString() {
-  return 'AppConfigPeerConnection(negotiation: $negotiation)';
+  final _this = this as AppConfigPeerConnection;
+  return 'AppConfigPeerConnection(negotiation: ${_this.negotiation})';
 }
 
 
@@ -2832,7 +2908,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigNegotiationSettingsOverride {
 
- bool get includeInactiveVideoInOfferAnswer;
+
 /// Create a copy of AppConfigNegotiationSettingsOverride
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2843,16 +2919,21 @@ $AppConfigNegotiationSettingsOverrideCopyWith<AppConfigNegotiationSettingsOverri
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigNegotiationSettingsOverride&&(identical(other.includeInactiveVideoInOfferAnswer, includeInactiveVideoInOfferAnswer) || other.includeInactiveVideoInOfferAnswer == includeInactiveVideoInOfferAnswer));
+  final _this = this as AppConfigNegotiationSettingsOverride;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigNegotiationSettingsOverride&&(identical(other.includeInactiveVideoInOfferAnswer, _this.includeInactiveVideoInOfferAnswer) || other.includeInactiveVideoInOfferAnswer == _this.includeInactiveVideoInOfferAnswer));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,includeInactiveVideoInOfferAnswer);
+int get hashCode {
+  final _this = this as AppConfigNegotiationSettingsOverride;
+  return Object.hash(runtimeType,_this.includeInactiveVideoInOfferAnswer);
+}
 
 @override
 String toString() {
-  return 'AppConfigNegotiationSettingsOverride(includeInactiveVideoInOfferAnswer: $includeInactiveVideoInOfferAnswer)';
+  final _this = this as AppConfigNegotiationSettingsOverride;
+  return 'AppConfigNegotiationSettingsOverride(includeInactiveVideoInOfferAnswer: ${_this.includeInactiveVideoInOfferAnswer})';
 }
 
 
@@ -3018,7 +3099,7 @@ case _:
 /// @nodoc
 mixin _$EncodingDefaultPresetOverride {
 
- int? get audioBitrate; int? get videoBitrate; int? get ptime; int? get maxptime; int? get opusSamplingRate; int? get opusBitrate; bool? get opusStereo; bool? get opusDtx; bool? get removeStaticAudioRtpMaps; bool? get remapTE8payloadTo101; bool? get removeREMBFeedback; bool? get removeTWCCFeedback; List<String>? get removeExtmaps;
+
 /// Create a copy of EncodingDefaultPresetOverride
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3029,16 +3110,21 @@ $EncodingDefaultPresetOverrideCopyWith<EncodingDefaultPresetOverride> get copyWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EncodingDefaultPresetOverride&&(identical(other.audioBitrate, audioBitrate) || other.audioBitrate == audioBitrate)&&(identical(other.videoBitrate, videoBitrate) || other.videoBitrate == videoBitrate)&&(identical(other.ptime, ptime) || other.ptime == ptime)&&(identical(other.maxptime, maxptime) || other.maxptime == maxptime)&&(identical(other.opusSamplingRate, opusSamplingRate) || other.opusSamplingRate == opusSamplingRate)&&(identical(other.opusBitrate, opusBitrate) || other.opusBitrate == opusBitrate)&&(identical(other.opusStereo, opusStereo) || other.opusStereo == opusStereo)&&(identical(other.opusDtx, opusDtx) || other.opusDtx == opusDtx)&&(identical(other.removeStaticAudioRtpMaps, removeStaticAudioRtpMaps) || other.removeStaticAudioRtpMaps == removeStaticAudioRtpMaps)&&(identical(other.remapTE8payloadTo101, remapTE8payloadTo101) || other.remapTE8payloadTo101 == remapTE8payloadTo101)&&(identical(other.removeREMBFeedback, removeREMBFeedback) || other.removeREMBFeedback == removeREMBFeedback)&&(identical(other.removeTWCCFeedback, removeTWCCFeedback) || other.removeTWCCFeedback == removeTWCCFeedback)&&const DeepCollectionEquality().equals(other.removeExtmaps, removeExtmaps));
+  final _this = this as EncodingDefaultPresetOverride;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EncodingDefaultPresetOverride&&(identical(other.audioBitrate, _this.audioBitrate) || other.audioBitrate == _this.audioBitrate)&&(identical(other.videoBitrate, _this.videoBitrate) || other.videoBitrate == _this.videoBitrate)&&(identical(other.ptime, _this.ptime) || other.ptime == _this.ptime)&&(identical(other.maxptime, _this.maxptime) || other.maxptime == _this.maxptime)&&(identical(other.opusSamplingRate, _this.opusSamplingRate) || other.opusSamplingRate == _this.opusSamplingRate)&&(identical(other.opusBitrate, _this.opusBitrate) || other.opusBitrate == _this.opusBitrate)&&(identical(other.opusStereo, _this.opusStereo) || other.opusStereo == _this.opusStereo)&&(identical(other.opusDtx, _this.opusDtx) || other.opusDtx == _this.opusDtx)&&(identical(other.removeStaticAudioRtpMaps, _this.removeStaticAudioRtpMaps) || other.removeStaticAudioRtpMaps == _this.removeStaticAudioRtpMaps)&&(identical(other.remapTE8payloadTo101, _this.remapTE8payloadTo101) || other.remapTE8payloadTo101 == _this.remapTE8payloadTo101)&&(identical(other.removeREMBFeedback, _this.removeREMBFeedback) || other.removeREMBFeedback == _this.removeREMBFeedback)&&(identical(other.removeTWCCFeedback, _this.removeTWCCFeedback) || other.removeTWCCFeedback == _this.removeTWCCFeedback)&&const DeepCollectionEquality().equals(other.removeExtmaps, _this.removeExtmaps));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,audioBitrate,videoBitrate,ptime,maxptime,opusSamplingRate,opusBitrate,opusStereo,opusDtx,removeStaticAudioRtpMaps,remapTE8payloadTo101,removeREMBFeedback,removeTWCCFeedback,const DeepCollectionEquality().hash(removeExtmaps));
+int get hashCode {
+  final _this = this as EncodingDefaultPresetOverride;
+  return Object.hash(runtimeType,_this.audioBitrate,_this.videoBitrate,_this.ptime,_this.maxptime,_this.opusSamplingRate,_this.opusBitrate,_this.opusStereo,_this.opusDtx,_this.removeStaticAudioRtpMaps,_this.remapTE8payloadTo101,_this.removeREMBFeedback,_this.removeTWCCFeedback,const DeepCollectionEquality().hash(_this.removeExtmaps));
+}
 
 @override
 String toString() {
-  return 'EncodingDefaultPresetOverride(audioBitrate: $audioBitrate, videoBitrate: $videoBitrate, ptime: $ptime, maxptime: $maxptime, opusSamplingRate: $opusSamplingRate, opusBitrate: $opusBitrate, opusStereo: $opusStereo, opusDtx: $opusDtx, removeStaticAudioRtpMaps: $removeStaticAudioRtpMaps, remapTE8payloadTo101: $remapTE8payloadTo101, removeREMBFeedback: $removeREMBFeedback, removeTWCCFeedback: $removeTWCCFeedback, removeExtmaps: $removeExtmaps)';
+  final _this = this as EncodingDefaultPresetOverride;
+  return 'EncodingDefaultPresetOverride(audioBitrate: ${_this.audioBitrate}, videoBitrate: ${_this.videoBitrate}, ptime: ${_this.ptime}, maxptime: ${_this.maxptime}, opusSamplingRate: ${_this.opusSamplingRate}, opusBitrate: ${_this.opusBitrate}, opusStereo: ${_this.opusStereo}, opusDtx: ${_this.opusDtx}, removeStaticAudioRtpMaps: ${_this.removeStaticAudioRtpMaps}, remapTE8payloadTo101: ${_this.remapTE8payloadTo101}, removeREMBFeedback: ${_this.removeREMBFeedback}, removeTWCCFeedback: ${_this.removeTWCCFeedback}, removeExtmaps: ${_this.removeExtmaps})';
 }
 
 
@@ -3216,7 +3302,7 @@ case _:
 /// @nodoc
 mixin _$FavoritesTabScheme {
 
- bool get enabled; bool get initial; String get titleL10n; String get icon; String get type;
+
 /// Create a copy of FavoritesTabScheme
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3227,16 +3313,21 @@ $FavoritesTabSchemeCopyWith<FavoritesTabScheme> get copyWith => _$FavoritesTabSc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoritesTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.type, type) || other.type == type));
+  final _this = this as FavoritesTabScheme;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoritesTabScheme&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.initial, _this.initial) || other.initial == _this.initial)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,type);
+int get hashCode {
+  final _this = this as FavoritesTabScheme;
+  return Object.hash(runtimeType,_this.enabled,_this.initial,_this.titleL10n,_this.icon,_this.type);
+}
 
 @override
 String toString() {
-  return 'FavoritesTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, type: $type)';
+  final _this = this as FavoritesTabScheme;
+  return 'FavoritesTabScheme(enabled: ${_this.enabled}, initial: ${_this.initial}, titleL10n: ${_this.titleL10n}, icon: ${_this.icon}, type: ${_this.type})';
 }
 
 
@@ -3406,7 +3497,7 @@ case _:
 /// @nodoc
 mixin _$RecentsTabScheme {
 
- bool get enabled; bool get initial; String get titleL10n; String get icon; bool get supportsCallHistory; RecentsLayoutScheme get layout; String get type;
+
 /// Create a copy of RecentsTabScheme
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3417,16 +3508,21 @@ $RecentsTabSchemeCopyWith<RecentsTabScheme> get copyWith => _$RecentsTabSchemeCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.supportsCallHistory, supportsCallHistory) || other.supportsCallHistory == supportsCallHistory)&&(identical(other.layout, layout) || other.layout == layout)&&(identical(other.type, type) || other.type == type));
+  final _this = this as RecentsTabScheme;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsTabScheme&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.initial, _this.initial) || other.initial == _this.initial)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.supportsCallHistory, _this.supportsCallHistory) || other.supportsCallHistory == _this.supportsCallHistory)&&(identical(other.layout, _this.layout) || other.layout == _this.layout)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,supportsCallHistory,layout,type);
+int get hashCode {
+  final _this = this as RecentsTabScheme;
+  return Object.hash(runtimeType,_this.enabled,_this.initial,_this.titleL10n,_this.icon,_this.supportsCallHistory,_this.layout,_this.type);
+}
 
 @override
 String toString() {
-  return 'RecentsTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, supportsCallHistory: $supportsCallHistory, layout: $layout, type: $type)';
+  final _this = this as RecentsTabScheme;
+  return 'RecentsTabScheme(enabled: ${_this.enabled}, initial: ${_this.initial}, titleL10n: ${_this.titleL10n}, icon: ${_this.icon}, supportsCallHistory: ${_this.supportsCallHistory}, layout: ${_this.layout}, type: ${_this.type})';
 }
 
 
@@ -3598,7 +3694,7 @@ case _:
 /// @nodoc
 mixin _$ContactsTabScheme {
 
- bool get enabled; bool get initial; String get titleL10n; String get icon; List<String> get contactSourceTypes; ContactsLayoutScheme get layout; bool get favorites; String get type;
+
 /// Create a copy of ContactsTabScheme
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3609,16 +3705,21 @@ $ContactsTabSchemeCopyWith<ContactsTabScheme> get copyWith => _$ContactsTabSchem
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactsTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&const DeepCollectionEquality().equals(other.contactSourceTypes, contactSourceTypes)&&(identical(other.layout, layout) || other.layout == layout)&&(identical(other.favorites, favorites) || other.favorites == favorites)&&(identical(other.type, type) || other.type == type));
+  final _this = this as ContactsTabScheme;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactsTabScheme&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.initial, _this.initial) || other.initial == _this.initial)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&const DeepCollectionEquality().equals(other.contactSourceTypes, _this.contactSourceTypes)&&(identical(other.layout, _this.layout) || other.layout == _this.layout)&&(identical(other.favorites, _this.favorites) || other.favorites == _this.favorites)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,const DeepCollectionEquality().hash(contactSourceTypes),layout,favorites,type);
+int get hashCode {
+  final _this = this as ContactsTabScheme;
+  return Object.hash(runtimeType,_this.enabled,_this.initial,_this.titleL10n,_this.icon,const DeepCollectionEquality().hash(_this.contactSourceTypes),_this.layout,_this.favorites,_this.type);
+}
 
 @override
 String toString() {
-  return 'ContactsTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, contactSourceTypes: $contactSourceTypes, layout: $layout, favorites: $favorites, type: $type)';
+  final _this = this as ContactsTabScheme;
+  return 'ContactsTabScheme(enabled: ${_this.enabled}, initial: ${_this.initial}, titleL10n: ${_this.titleL10n}, icon: ${_this.icon}, contactSourceTypes: ${_this.contactSourceTypes}, layout: ${_this.layout}, favorites: ${_this.favorites}, type: ${_this.type})';
 }
 
 
@@ -3791,7 +3892,7 @@ case _:
 /// @nodoc
 mixin _$KeypadTabScheme {
 
- bool get enabled; bool get initial; String get titleL10n; String get icon; String get type;
+
 /// Create a copy of KeypadTabScheme
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3802,16 +3903,21 @@ $KeypadTabSchemeCopyWith<KeypadTabScheme> get copyWith => _$KeypadTabSchemeCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is KeypadTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.type, type) || other.type == type));
+  final _this = this as KeypadTabScheme;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is KeypadTabScheme&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.initial, _this.initial) || other.initial == _this.initial)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,type);
+int get hashCode {
+  final _this = this as KeypadTabScheme;
+  return Object.hash(runtimeType,_this.enabled,_this.initial,_this.titleL10n,_this.icon,_this.type);
+}
 
 @override
 String toString() {
-  return 'KeypadTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, type: $type)';
+  final _this = this as KeypadTabScheme;
+  return 'KeypadTabScheme(enabled: ${_this.enabled}, initial: ${_this.initial}, titleL10n: ${_this.titleL10n}, icon: ${_this.icon}, type: ${_this.type})';
 }
 
 
@@ -3981,7 +4087,7 @@ case _:
 /// @nodoc
 mixin _$MessagingTabScheme {
 
- bool get enabled; bool get initial; String get titleL10n; String get icon; String get type;
+
 /// Create a copy of MessagingTabScheme
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3992,16 +4098,21 @@ $MessagingTabSchemeCopyWith<MessagingTabScheme> get copyWith => _$MessagingTabSc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.type, type) || other.type == type));
+  final _this = this as MessagingTabScheme;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingTabScheme&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.initial, _this.initial) || other.initial == _this.initial)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,type);
+int get hashCode {
+  final _this = this as MessagingTabScheme;
+  return Object.hash(runtimeType,_this.enabled,_this.initial,_this.titleL10n,_this.icon,_this.type);
+}
 
 @override
 String toString() {
-  return 'MessagingTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, type: $type)';
+  final _this = this as MessagingTabScheme;
+  return 'MessagingTabScheme(enabled: ${_this.enabled}, initial: ${_this.initial}, titleL10n: ${_this.titleL10n}, icon: ${_this.icon}, type: ${_this.type})';
 }
 
 
@@ -4171,7 +4282,7 @@ case _:
 /// @nodoc
 mixin _$VoicemailTabScheme {
 
- bool get enabled; bool get initial; String get titleL10n; String get icon; String get type;
+
 /// Create a copy of VoicemailTabScheme
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4182,16 +4293,21 @@ $VoicemailTabSchemeCopyWith<VoicemailTabScheme> get copyWith => _$VoicemailTabSc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.type, type) || other.type == type));
+  final _this = this as VoicemailTabScheme;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailTabScheme&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.initial, _this.initial) || other.initial == _this.initial)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,type);
+int get hashCode {
+  final _this = this as VoicemailTabScheme;
+  return Object.hash(runtimeType,_this.enabled,_this.initial,_this.titleL10n,_this.icon,_this.type);
+}
 
 @override
 String toString() {
-  return 'VoicemailTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, type: $type)';
+  final _this = this as VoicemailTabScheme;
+  return 'VoicemailTabScheme(enabled: ${_this.enabled}, initial: ${_this.initial}, titleL10n: ${_this.titleL10n}, icon: ${_this.icon}, type: ${_this.type})';
 }
 
 
@@ -4361,7 +4477,7 @@ case _:
 /// @nodoc
 mixin _$CallCenterTabScheme {
 
- bool get enabled; bool get initial; String get titleL10n; String get icon; String get type;
+
 /// Create a copy of CallCenterTabScheme
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4372,16 +4488,21 @@ $CallCenterTabSchemeCopyWith<CallCenterTabScheme> get copyWith => _$CallCenterTa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallCenterTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.type, type) || other.type == type));
+  final _this = this as CallCenterTabScheme;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallCenterTabScheme&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.initial, _this.initial) || other.initial == _this.initial)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,type);
+int get hashCode {
+  final _this = this as CallCenterTabScheme;
+  return Object.hash(runtimeType,_this.enabled,_this.initial,_this.titleL10n,_this.icon,_this.type);
+}
 
 @override
 String toString() {
-  return 'CallCenterTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, type: $type)';
+  final _this = this as CallCenterTabScheme;
+  return 'CallCenterTabScheme(enabled: ${_this.enabled}, initial: ${_this.initial}, titleL10n: ${_this.titleL10n}, icon: ${_this.icon}, type: ${_this.type})';
 }
 
 
@@ -4551,7 +4672,7 @@ case _:
 /// @nodoc
 mixin _$EmbeddedTabScheme {
 
- bool get enabled; bool get initial; String get titleL10n; String get icon; String get embeddedResourceId; String get type;
+
 /// Create a copy of EmbeddedTabScheme
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4562,16 +4683,21 @@ $EmbeddedTabSchemeCopyWith<EmbeddedTabScheme> get copyWith => _$EmbeddedTabSchem
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.embeddedResourceId, embeddedResourceId) || other.embeddedResourceId == embeddedResourceId)&&(identical(other.type, type) || other.type == type));
+  final _this = this as EmbeddedTabScheme;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedTabScheme&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.initial, _this.initial) || other.initial == _this.initial)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.embeddedResourceId, _this.embeddedResourceId) || other.embeddedResourceId == _this.embeddedResourceId)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,embeddedResourceId,type);
+int get hashCode {
+  final _this = this as EmbeddedTabScheme;
+  return Object.hash(runtimeType,_this.enabled,_this.initial,_this.titleL10n,_this.icon,_this.embeddedResourceId,_this.type);
+}
 
 @override
 String toString() {
-  return 'EmbeddedTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, embeddedResourceId: $embeddedResourceId, type: $type)';
+  final _this = this as EmbeddedTabScheme;
+  return 'EmbeddedTabScheme(enabled: ${_this.enabled}, initial: ${_this.initial}, titleL10n: ${_this.titleL10n}, icon: ${_this.icon}, embeddedResourceId: ${_this.embeddedResourceId}, type: ${_this.type})';
 }
 
 
@@ -4742,7 +4868,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigSettings {
 
- List<AppConfigSettingsSection> get sections;
+
 /// Create a copy of AppConfigSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4753,16 +4879,21 @@ $AppConfigSettingsCopyWith<AppConfigSettings> get copyWith => _$AppConfigSetting
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigSettings&&const DeepCollectionEquality().equals(other.sections, sections));
+  final _this = this as AppConfigSettings;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigSettings&&const DeepCollectionEquality().equals(other.sections, _this.sections));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(sections));
+int get hashCode {
+  final _this = this as AppConfigSettings;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.sections));
+}
 
 @override
 String toString() {
-  return 'AppConfigSettings(sections: $sections)';
+  final _this = this as AppConfigSettings;
+  return 'AppConfigSettings(sections: ${_this.sections})';
 }
 
 
@@ -4928,7 +5059,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigSettingsSection {
 
- String get titleL10n; bool get enabled; List<AppConfigSettingsItem> get items;
+
 /// Create a copy of AppConfigSettingsSection
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4939,16 +5070,21 @@ $AppConfigSettingsSectionCopyWith<AppConfigSettingsSection> get copyWith => _$Ap
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigSettingsSection&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&const DeepCollectionEquality().equals(other.items, items));
+  final _this = this as AppConfigSettingsSection;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigSettingsSection&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&const DeepCollectionEquality().equals(other.items, _this.items));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,titleL10n,enabled,const DeepCollectionEquality().hash(items));
+int get hashCode {
+  final _this = this as AppConfigSettingsSection;
+  return Object.hash(runtimeType,_this.titleL10n,_this.enabled,const DeepCollectionEquality().hash(_this.items));
+}
 
 @override
 String toString() {
-  return 'AppConfigSettingsSection(titleL10n: $titleL10n, enabled: $enabled, items: $items)';
+  final _this = this as AppConfigSettingsSection;
+  return 'AppConfigSettingsSection(titleL10n: ${_this.titleL10n}, enabled: ${_this.enabled}, items: ${_this.items})';
 }
 
 
@@ -5116,7 +5252,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigSettingsItem {
 
- bool get enabled; String get titleL10n; String get type; String get icon; String? get iconColor; String? get embeddedResourceId;
+
 /// Create a copy of AppConfigSettingsItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5127,16 +5263,21 @@ $AppConfigSettingsItemCopyWith<AppConfigSettingsItem> get copyWith => _$AppConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigSettingsItem&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.type, type) || other.type == type)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.iconColor, iconColor) || other.iconColor == iconColor)&&(identical(other.embeddedResourceId, embeddedResourceId) || other.embeddedResourceId == embeddedResourceId));
+  final _this = this as AppConfigSettingsItem;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigSettingsItem&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.iconColor, _this.iconColor) || other.iconColor == _this.iconColor)&&(identical(other.embeddedResourceId, _this.embeddedResourceId) || other.embeddedResourceId == _this.embeddedResourceId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,titleL10n,type,icon,iconColor,embeddedResourceId);
+int get hashCode {
+  final _this = this as AppConfigSettingsItem;
+  return Object.hash(runtimeType,_this.enabled,_this.titleL10n,_this.type,_this.icon,_this.iconColor,_this.embeddedResourceId);
+}
 
 @override
 String toString() {
-  return 'AppConfigSettingsItem(enabled: $enabled, titleL10n: $titleL10n, type: $type, icon: $icon, iconColor: $iconColor, embeddedResourceId: $embeddedResourceId)';
+  final _this = this as AppConfigSettingsItem;
+  return 'AppConfigSettingsItem(enabled: ${_this.enabled}, titleL10n: ${_this.titleL10n}, type: ${_this.type}, icon: ${_this.icon}, iconColor: ${_this.iconColor}, embeddedResourceId: ${_this.embeddedResourceId})';
 }
 
 
@@ -5307,7 +5448,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigContacts {
 
- AppConfigContactDetails get details;
+
 /// Create a copy of AppConfigContacts
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5318,16 +5459,21 @@ $AppConfigContactsCopyWith<AppConfigContacts> get copyWith => _$AppConfigContact
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigContacts&&(identical(other.details, details) || other.details == details));
+  final _this = this as AppConfigContacts;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigContacts&&(identical(other.details, _this.details) || other.details == _this.details));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,details);
+int get hashCode {
+  final _this = this as AppConfigContacts;
+  return Object.hash(runtimeType,_this.details);
+}
 
 @override
 String toString() {
-  return 'AppConfigContacts(details: $details)';
+  final _this = this as AppConfigContacts;
+  return 'AppConfigContacts(details: ${_this.details})';
 }
 
 
@@ -5493,7 +5639,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigContactDetails {
 
- AppConfigContactDetailsActions get actions;
+
 /// Create a copy of AppConfigContactDetails
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5504,16 +5650,21 @@ $AppConfigContactDetailsCopyWith<AppConfigContactDetails> get copyWith => _$AppC
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigContactDetails&&(identical(other.actions, actions) || other.actions == actions));
+  final _this = this as AppConfigContactDetails;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigContactDetails&&(identical(other.actions, _this.actions) || other.actions == _this.actions));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,actions);
+int get hashCode {
+  final _this = this as AppConfigContactDetails;
+  return Object.hash(runtimeType,_this.actions);
+}
 
 @override
 String toString() {
-  return 'AppConfigContactDetails(actions: $actions)';
+  final _this = this as AppConfigContactDetails;
+  return 'AppConfigContactDetails(actions: ${_this.actions})';
 }
 
 
@@ -5679,7 +5830,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigContactDetailsActions {
 
- List<String>? get appBar; List<String>? get phoneTile; List<String>? get emailTile;
+
 /// Create a copy of AppConfigContactDetailsActions
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5690,16 +5841,21 @@ $AppConfigContactDetailsActionsCopyWith<AppConfigContactDetailsActions> get copy
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigContactDetailsActions&&const DeepCollectionEquality().equals(other.appBar, appBar)&&const DeepCollectionEquality().equals(other.phoneTile, phoneTile)&&const DeepCollectionEquality().equals(other.emailTile, emailTile));
+  final _this = this as AppConfigContactDetailsActions;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigContactDetailsActions&&const DeepCollectionEquality().equals(other.appBar, _this.appBar)&&const DeepCollectionEquality().equals(other.phoneTile, _this.phoneTile)&&const DeepCollectionEquality().equals(other.emailTile, _this.emailTile));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(appBar),const DeepCollectionEquality().hash(phoneTile),const DeepCollectionEquality().hash(emailTile));
+int get hashCode {
+  final _this = this as AppConfigContactDetailsActions;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.appBar),const DeepCollectionEquality().hash(_this.phoneTile),const DeepCollectionEquality().hash(_this.emailTile));
+}
 
 @override
 String toString() {
-  return 'AppConfigContactDetailsActions(appBar: $appBar, phoneTile: $phoneTile, emailTile: $emailTile)';
+  final _this = this as AppConfigContactDetailsActions;
+  return 'AppConfigContactDetailsActions(appBar: ${_this.appBar}, phoneTile: ${_this.phoneTile}, emailTile: ${_this.emailTile})';
 }
 
 
@@ -5867,7 +6023,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigMessaging {
 
- AppConfigChats get chats;
+
 /// Create a copy of AppConfigMessaging
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5878,16 +6034,21 @@ $AppConfigMessagingCopyWith<AppConfigMessaging> get copyWith => _$AppConfigMessa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigMessaging&&(identical(other.chats, chats) || other.chats == chats));
+  final _this = this as AppConfigMessaging;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigMessaging&&(identical(other.chats, _this.chats) || other.chats == _this.chats));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,chats);
+int get hashCode {
+  final _this = this as AppConfigMessaging;
+  return Object.hash(runtimeType,_this.chats);
+}
 
 @override
 String toString() {
-  return 'AppConfigMessaging(chats: $chats)';
+  final _this = this as AppConfigMessaging;
+  return 'AppConfigMessaging(chats: ${_this.chats})';
 }
 
 
@@ -6053,7 +6214,7 @@ case _:
 /// @nodoc
 mixin _$AppConfigChats {
 
- bool get groupChatButtonEnabled; ChatContactInfo get contactInfo;
+
 /// Create a copy of AppConfigChats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -6064,16 +6225,21 @@ $AppConfigChatsCopyWith<AppConfigChats> get copyWith => _$AppConfigChatsCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigChats&&(identical(other.groupChatButtonEnabled, groupChatButtonEnabled) || other.groupChatButtonEnabled == groupChatButtonEnabled)&&(identical(other.contactInfo, contactInfo) || other.contactInfo == contactInfo));
+  final _this = this as AppConfigChats;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigChats&&(identical(other.groupChatButtonEnabled, _this.groupChatButtonEnabled) || other.groupChatButtonEnabled == _this.groupChatButtonEnabled)&&(identical(other.contactInfo, _this.contactInfo) || other.contactInfo == _this.contactInfo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,groupChatButtonEnabled,contactInfo);
+int get hashCode {
+  final _this = this as AppConfigChats;
+  return Object.hash(runtimeType,_this.groupChatButtonEnabled,_this.contactInfo);
+}
 
 @override
 String toString() {
-  return 'AppConfigChats(groupChatButtonEnabled: $groupChatButtonEnabled, contactInfo: $contactInfo)';
+  final _this = this as AppConfigChats;
+  return 'AppConfigChats(groupChatButtonEnabled: ${_this.groupChatButtonEnabled}, contactInfo: ${_this.contactInfo})';
 }
 
 
@@ -6240,7 +6406,7 @@ case _:
 /// @nodoc
 mixin _$ChatContactInfo {
 
- bool get showVideoButtonAction;
+
 /// Create a copy of ChatContactInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -6251,16 +6417,21 @@ $ChatContactInfoCopyWith<ChatContactInfo> get copyWith => _$ChatContactInfoCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatContactInfo&&(identical(other.showVideoButtonAction, showVideoButtonAction) || other.showVideoButtonAction == showVideoButtonAction));
+  final _this = this as ChatContactInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatContactInfo&&(identical(other.showVideoButtonAction, _this.showVideoButtonAction) || other.showVideoButtonAction == _this.showVideoButtonAction));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,showVideoButtonAction);
+int get hashCode {
+  final _this = this as ChatContactInfo;
+  return Object.hash(runtimeType,_this.showVideoButtonAction);
+}
 
 @override
 String toString() {
-  return 'ChatContactInfo(showVideoButtonAction: $showVideoButtonAction)';
+  final _this = this as ChatContactInfo;
+  return 'ChatContactInfo(showVideoButtonAction: ${_this.showVideoButtonAction})';
 }
 
 

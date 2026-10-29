@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'text_field_mask_config.dart';
@@ -9,13 +9,14 @@ part of 'text_field_mask_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$MaskConfig {
 
- String? get pattern; Map<String, String>? get filter;
+
 /// Create a copy of MaskConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $MaskConfigCopyWith<MaskConfig> get copyWith => _$MaskConfigCopyWithImpl<MaskCon
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MaskConfig&&(identical(other.pattern, pattern) || other.pattern == pattern)&&const DeepCollectionEquality().equals(other.filter, filter));
+  final _this = this as MaskConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MaskConfig&&(identical(other.pattern, _this.pattern) || other.pattern == _this.pattern)&&const DeepCollectionEquality().equals(other.filter, _this.filter));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,pattern,const DeepCollectionEquality().hash(filter));
+int get hashCode {
+  final _this = this as MaskConfig;
+  return Object.hash(runtimeType,_this.pattern,const DeepCollectionEquality().hash(_this.filter));
+}
 
 @override
 String toString() {
-  return 'MaskConfig(pattern: $pattern, filter: $filter)';
+  final _this = this as MaskConfig;
+  return 'MaskConfig(pattern: ${_this.pattern}, filter: ${_this.filter})';
 }
 
 

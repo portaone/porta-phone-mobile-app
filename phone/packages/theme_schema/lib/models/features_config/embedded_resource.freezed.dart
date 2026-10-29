@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'embedded_resource.dart';
@@ -9,13 +9,14 @@ part of 'embedded_resource.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$EmbeddedResource {
 
- String get id; String get uri; EmbeddedResourceType get type; ToolbarConfig get toolbar; Metadata get metadata; List<String> get payload; bool get enableConsoleLogCapture; String? get reconnectStrategy; ResultStrategyConfig? get resultStrategy;
+
 /// Create a copy of EmbeddedResource
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $EmbeddedResourceCopyWith<EmbeddedResource> get copyWith => _$EmbeddedResourceCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedResource&&(identical(other.id, id) || other.id == id)&&(identical(other.uri, uri) || other.uri == uri)&&(identical(other.type, type) || other.type == type)&&(identical(other.toolbar, toolbar) || other.toolbar == toolbar)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&const DeepCollectionEquality().equals(other.payload, payload)&&(identical(other.enableConsoleLogCapture, enableConsoleLogCapture) || other.enableConsoleLogCapture == enableConsoleLogCapture)&&(identical(other.reconnectStrategy, reconnectStrategy) || other.reconnectStrategy == reconnectStrategy)&&(identical(other.resultStrategy, resultStrategy) || other.resultStrategy == resultStrategy));
+  final _this = this as EmbeddedResource;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedResource&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.uri, _this.uri) || other.uri == _this.uri)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.toolbar, _this.toolbar) || other.toolbar == _this.toolbar)&&(identical(other.metadata, _this.metadata) || other.metadata == _this.metadata)&&const DeepCollectionEquality().equals(other.payload, _this.payload)&&(identical(other.enableConsoleLogCapture, _this.enableConsoleLogCapture) || other.enableConsoleLogCapture == _this.enableConsoleLogCapture)&&(identical(other.reconnectStrategy, _this.reconnectStrategy) || other.reconnectStrategy == _this.reconnectStrategy)&&(identical(other.resultStrategy, _this.resultStrategy) || other.resultStrategy == _this.resultStrategy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,uri,type,toolbar,metadata,const DeepCollectionEquality().hash(payload),enableConsoleLogCapture,reconnectStrategy,resultStrategy);
+int get hashCode {
+  final _this = this as EmbeddedResource;
+  return Object.hash(runtimeType,_this.id,_this.uri,_this.type,_this.toolbar,_this.metadata,const DeepCollectionEquality().hash(_this.payload),_this.enableConsoleLogCapture,_this.reconnectStrategy,_this.resultStrategy);
+}
 
 @override
 String toString() {
-  return 'EmbeddedResource(id: $id, uri: $uri, type: $type, toolbar: $toolbar, metadata: $metadata, payload: $payload, enableConsoleLogCapture: $enableConsoleLogCapture, reconnectStrategy: $reconnectStrategy, resultStrategy: $resultStrategy)';
+  final _this = this as EmbeddedResource;
+  return 'EmbeddedResource(id: ${_this.id}, uri: ${_this.uri}, type: ${_this.type}, toolbar: ${_this.toolbar}, metadata: ${_this.metadata}, payload: ${_this.payload}, enableConsoleLogCapture: ${_this.enableConsoleLogCapture}, reconnectStrategy: ${_this.reconnectStrategy}, resultStrategy: ${_this.resultStrategy})';
 }
 
 
@@ -209,7 +215,7 @@ case _:
 /// @nodoc
 mixin _$ToolbarConfig {
 
- String? get titleL10n; bool get showToolbar;
+
 /// Create a copy of ToolbarConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -220,16 +226,21 @@ $ToolbarConfigCopyWith<ToolbarConfig> get copyWith => _$ToolbarConfigCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ToolbarConfig&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.showToolbar, showToolbar) || other.showToolbar == showToolbar));
+  final _this = this as ToolbarConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ToolbarConfig&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.showToolbar, _this.showToolbar) || other.showToolbar == _this.showToolbar));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,titleL10n,showToolbar);
+int get hashCode {
+  final _this = this as ToolbarConfig;
+  return Object.hash(runtimeType,_this.titleL10n,_this.showToolbar);
+}
 
 @override
 String toString() {
-  return 'ToolbarConfig(titleL10n: $titleL10n, showToolbar: $showToolbar)';
+  final _this = this as ToolbarConfig;
+  return 'ToolbarConfig(titleL10n: ${_this.titleL10n}, showToolbar: ${_this.showToolbar})';
 }
 
 

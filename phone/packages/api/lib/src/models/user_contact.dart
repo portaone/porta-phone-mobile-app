@@ -22,34 +22,24 @@ class UserContact with _$UserContact {
     this.isRegisteredUser,
   });
 
-  @override
   final String? userId;
 
-  @override
   final SipStatus? sipStatus;
 
-  @override
   final Numbers numbers;
 
-  @override
   final String? email;
 
-  @override
   final String? firstName;
 
-  @override
   final String? lastName;
 
-  @override
   final String? aliasName;
 
-  @override
   final String? companyName;
 
-  @override
   final bool? isCurrentUser;
 
-  @override
   final bool? isRegisteredUser;
 
   factory UserContact.fromJson(Map<String, Object?> json) => _$UserContactFromJson(json);

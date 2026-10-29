@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'cache_management_cubit.dart';
@@ -9,12 +9,13 @@ part of 'cache_management_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CacheSectionState {
 
- String get id; String get titleL10n; String get descriptionL10n; CacheUsage? get usage; bool get measureFailed; bool get clearing;
+
 /// Create a copy of CacheSectionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $CacheSectionStateCopyWith<CacheSectionState> get copyWith => _$CacheSectionStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CacheSectionState&&(identical(other.id, id) || other.id == id)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.descriptionL10n, descriptionL10n) || other.descriptionL10n == descriptionL10n)&&(identical(other.usage, usage) || other.usage == usage)&&(identical(other.measureFailed, measureFailed) || other.measureFailed == measureFailed)&&(identical(other.clearing, clearing) || other.clearing == clearing));
+  final _this = this as CacheSectionState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CacheSectionState&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.titleL10n, _this.titleL10n) || other.titleL10n == _this.titleL10n)&&(identical(other.descriptionL10n, _this.descriptionL10n) || other.descriptionL10n == _this.descriptionL10n)&&(identical(other.usage, _this.usage) || other.usage == _this.usage)&&(identical(other.measureFailed, _this.measureFailed) || other.measureFailed == _this.measureFailed)&&(identical(other.clearing, _this.clearing) || other.clearing == _this.clearing));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,titleL10n,descriptionL10n,usage,measureFailed,clearing);
+int get hashCode {
+  final _this = this as CacheSectionState;
+  return Object.hash(runtimeType,_this.id,_this.titleL10n,_this.descriptionL10n,_this.usage,_this.measureFailed,_this.clearing);
+}
 
 @override
 String toString() {
-  return 'CacheSectionState(id: $id, titleL10n: $titleL10n, descriptionL10n: $descriptionL10n, usage: $usage, measureFailed: $measureFailed, clearing: $clearing)';
+  final _this = this as CacheSectionState;
+  return 'CacheSectionState(id: ${_this.id}, titleL10n: ${_this.titleL10n}, descriptionL10n: ${_this.descriptionL10n}, usage: ${_this.usage}, measureFailed: ${_this.measureFailed}, clearing: ${_this.clearing})';
 }
 
 
@@ -204,7 +210,7 @@ case _:
 /// @nodoc
 mixin _$CacheManagementState {
 
- List<CacheSectionState> get sections;
+
 /// Create a copy of CacheManagementState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -215,16 +221,21 @@ $CacheManagementStateCopyWith<CacheManagementState> get copyWith => _$CacheManag
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CacheManagementState&&const DeepCollectionEquality().equals(other.sections, sections));
+  final _this = this as CacheManagementState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CacheManagementState&&const DeepCollectionEquality().equals(other.sections, _this.sections));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(sections));
+int get hashCode {
+  final _this = this as CacheManagementState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.sections));
+}
 
 @override
 String toString() {
-  return 'CacheManagementState(sections: $sections)';
+  final _this = this as CacheManagementState;
+  return 'CacheManagementState(sections: ${_this.sections})';
 }
 
 

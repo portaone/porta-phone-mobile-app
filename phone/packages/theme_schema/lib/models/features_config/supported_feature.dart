@@ -51,11 +51,9 @@ sealed class SupportedFeature {
 class SupportedThemeMode extends SupportedFeature with _$SupportedThemeMode {
   const SupportedThemeMode({this.mode = ThemeModeConfig.system, this.type = 'themeMode'});
 
-  @override
   final ThemeModeConfig mode;
 
   /// The discriminator. Always `themeMode`.
-  @override
   final String type;
 
   factory SupportedThemeMode.fromJson(Map<String, Object?> json) => _$SupportedThemeModeFromJson(json);
@@ -72,11 +70,9 @@ class SupportedThemeMode extends SupportedFeature with _$SupportedThemeMode {
 class SupportedVideoCall extends SupportedFeature with _$SupportedVideoCall {
   const SupportedVideoCall({this.enabled = true, this.type = 'videoCall'});
 
-  @override
   final bool enabled;
 
   /// The discriminator. Always `videoCall`.
-  @override
   final String type;
 
   factory SupportedVideoCall.fromJson(Map<String, Object?> json) => _$SupportedVideoCallFromJson(json);
@@ -99,18 +95,14 @@ class SupportedLoggingConfig extends SupportedFeature with _$SupportedLoggingCon
   });
 
   /// The application log level.
-  @override
   final String logLevel;
 
   /// How often the RTP traffic monitor checks for traffic, in seconds.
-  @override
   final int checkIntervalSec;
 
-  @override
   final bool anonymizationEnabled;
 
   /// The discriminator. Always `loggingConfig`.
-  @override
   final String type;
 
   factory SupportedLoggingConfig.fromJson(Map<String, Object?> json) => _$SupportedLoggingConfigFromJson(json);
@@ -127,11 +119,9 @@ class SupportedLoggingConfig extends SupportedFeature with _$SupportedLoggingCon
 class SupportedSystemNotifications extends SupportedFeature with _$SupportedSystemNotifications {
   const SupportedSystemNotifications({this.enabled = true, this.type = 'systemNotifications'});
 
-  @override
   final bool enabled;
 
   /// The discriminator. Always `systemNotifications`.
-  @override
   final String type;
 
   factory SupportedSystemNotifications.fromJson(Map<String, Object?> json) =>
@@ -149,11 +139,9 @@ class SupportedSystemNotifications extends SupportedFeature with _$SupportedSyst
 class SupportedHybridPresence extends SupportedFeature with _$SupportedHybridPresence {
   const SupportedHybridPresence({this.enabled = true, this.type = 'hybridPresence'});
 
-  @override
   final bool enabled;
 
   /// The discriminator. Always `hybridPresence`.
-  @override
   final String type;
 
   factory SupportedHybridPresence.fromJson(Map<String, Object?> json) => _$SupportedHybridPresenceFromJson(json);
@@ -172,11 +160,9 @@ class SupportedCallPull extends SupportedFeature with _$SupportedCallPull {
 
   /// Parsed by the app into a call-pull video strategy. `softMute` is the one
   /// that needs no backend; the others are `hideVideo` and `mirror`.
-  @override
   final String videoStrategy;
 
   /// The discriminator. Always `callPull`.
-  @override
   final String type;
 
   factory SupportedCallPull.fromJson(Map<String, Object?> json) => _$SupportedCallPullFromJson(json);

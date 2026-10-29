@@ -21,33 +21,24 @@ class SystemNotification with _$SystemNotification {
     this.deletedAt,
   });
 
-  @override
   final int id;
 
-  @override
   final String title;
 
-  @override
   final String content;
 
-  @override
   final bool seen;
 
-  @override
   final SystemNotificationType type;
 
-  @override
   final DateTime createdAt;
 
-  @override
   final DateTime updatedAt;
 
-  @override
   final DateTime? readAt;
 
   /// Set on a notification the backend has deleted. Only the updates feed
   /// returns one, and only when asked to; its title and content are blank.
-  @override
   final DateTime? deletedAt;
 
   factory SystemNotification.fromJson(Map<String, Object?> json) => _$SystemNotificationFromJson(json);
@@ -60,7 +51,6 @@ class SystemNotification with _$SystemNotification {
 class SystemNotificationResponce with _$SystemNotificationResponce {
   const SystemNotificationResponce({required this.items});
 
-  @override
   final List<SystemNotification> items;
 
   factory SystemNotificationResponce.fromJson(Map<String, Object?> json) => _$SystemNotificationResponceFromJson(json);
@@ -73,7 +63,6 @@ class SystemNotificationResponce with _$SystemNotificationResponce {
 class SystemNotificationsDeleteResponse with _$SystemNotificationsDeleteResponse {
   const SystemNotificationsDeleteResponse({required this.deletedIds});
 
-  @override
   final List<int> deletedIds;
 
   factory SystemNotificationsDeleteResponse.fromJson(Map<String, Object?> json) =>

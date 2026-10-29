@@ -40,35 +40,25 @@ class CdrRecord with _$CdrRecord {
     required this.status,
   });
 
-  @override
   final String callId;
 
-  @override
   final String callee;
 
-  @override
   final String caller;
 
-  @override
   final DateTime connectTime;
 
-  @override
   @JsonKey(unknownEnumValue: CdrDirection.unrecognized)
   final CdrDirection direction;
 
-  @override
   final String disconnectReason;
 
-  @override
   final DateTime disconnectTime;
 
-  @override
   final int duration;
 
-  @override
   final dynamic recordingId;
 
-  @override
   @JsonKey(unknownEnumValue: CdrStatus.unrecognized)
   final CdrStatus status;
 
@@ -82,12 +72,10 @@ class CdrRecord with _$CdrRecord {
 class CdrHistoryResponse with _$CdrHistoryResponse {
   const CdrHistoryResponse({required this.items, this.pagination});
 
-  @override
   final List<CdrRecord> items;
 
   /// Absent when the adapter answered without it; `items` is then all that is
   /// known about the result set.
-  @override
   final Pagination? pagination;
 
   factory CdrHistoryResponse.fromJson(Map<String, Object?> json) => _$CdrHistoryResponseFromJson(json);

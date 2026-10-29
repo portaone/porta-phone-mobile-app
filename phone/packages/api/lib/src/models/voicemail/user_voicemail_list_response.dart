@@ -9,10 +9,8 @@ part 'user_voicemail_list_response.g.dart';
 class UserVoicemailListResponse with _$UserVoicemailListResponse {
   const UserVoicemailListResponse({required this.hasNewMessages, required this.items});
 
-  @override
   final bool hasNewMessages;
 
-  @override
   final List<UserVoicemailSummary> items;
 
   factory UserVoicemailListResponse.fromJson(Map<String, dynamic> json) => _$UserVoicemailListResponseFromJson(json);
@@ -40,10 +38,8 @@ class UserVoicemailSummary with _$UserVoicemailSummary {
     this.receiver,
   });
 
-  @override
   final String id;
 
-  @override
   final String date;
 
   /// How long the recording is, in seconds; null when the backend lists the
@@ -52,16 +48,12 @@ class UserVoicemailSummary with _$UserVoicemailSummary {
   /// The field is optional all the way down - the PBX adapter passes on what
   /// the mailbox reports and has nothing to put in its place - so a message
   /// without a length must not cost the client the whole list.
-  @override
   final double? duration;
 
-  @override
   final bool seen;
 
-  @override
   final int size;
 
-  @override
   final String type;
 
   /// Whether the user is keeping this message.
@@ -70,7 +62,6 @@ class UserVoicemailSummary with _$UserVoicemailSummary {
   /// the mailbox behind it cannot persist the flag. That is not the same as
   /// `false`: it means the control does not apply to this message, so a client
   /// hides it rather than offering to save something that will not stay saved.
-  @override
   final bool? saved;
 
   /// The id of the user who forwarded this message on, present only on a message
@@ -78,7 +69,6 @@ class UserVoicemailSummary with _$UserVoicemailSummary {
   ///
   /// The sender stays the original caller, so this is the only field naming the
   /// colleague who passed it along.
-  @override
   final String? forwardedBy;
 
   /// Who left the message, when the list says.
@@ -86,11 +76,9 @@ class UserVoicemailSummary with _$UserVoicemailSummary {
   /// Null on a single message whose headers the backend could not read: it
   /// lists such a row without a sender rather than failing the whole list. Null
   /// on every row of an older backend, whose list did not carry senders at all.
-  @override
   final String? sender;
 
   /// Whose mailbox the message was left in; null where [sender] would be.
-  @override
   final String? receiver;
 
   factory UserVoicemailSummary.fromJson(Map<String, dynamic> json) => _$UserVoicemailSummaryFromJson(json);

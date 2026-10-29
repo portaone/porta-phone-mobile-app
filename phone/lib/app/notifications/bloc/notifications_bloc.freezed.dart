@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'notifications_bloc.dart';
@@ -9,12 +9,13 @@ part of 'notifications_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$NotificationsState {
 
- Notification? get lastNotification;
+
 /// Create a copy of NotificationsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $NotificationsStateCopyWith<NotificationsState> get copyWith => _$NotificationsS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationsState&&(identical(other.lastNotification, lastNotification) || other.lastNotification == lastNotification));
+  final _this = this as NotificationsState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NotificationsState&&(identical(other.lastNotification, _this.lastNotification) || other.lastNotification == _this.lastNotification));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,lastNotification);
+int get hashCode {
+  final _this = this as NotificationsState;
+  return Object.hash(runtimeType,_this.lastNotification);
+}
 
 @override
 String toString() {
-  return 'NotificationsState(lastNotification: $lastNotification)';
+  final _this = this as NotificationsState;
+  return 'NotificationsState(lastNotification: ${_this.lastNotification})';
 }
 
 

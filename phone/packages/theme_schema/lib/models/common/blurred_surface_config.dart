@@ -13,15 +13,12 @@ class BlurredSurfaceConfig with _$BlurredSurfaceConfig {
   const BlurredSurfaceConfig({this.color, this.sigmaX, this.sigmaY});
 
   /// Overlay color (hex string, e.g. `#000000`).
-  @override
   final String? color;
 
   /// Horizontal gaussian blur sigma.
-  @override
   final double? sigmaX;
 
   /// Vertical gaussian blur sigma.
-  @override
   final double? sigmaY;
 
   factory BlurredSurfaceConfig.fromJson(Map<String, Object?> json) => _$BlurredSurfaceConfigFromJson(json);

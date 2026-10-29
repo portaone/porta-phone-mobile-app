@@ -75,20 +75,16 @@ class LinkedCall with _$LinkedCall {
   });
 
   /// The call that was placed.
-  @override
   final String callId;
 
   /// The call it was placed for.
-  @override
   final String anchorCallId;
 
-  @override
   final LinkedCallPurpose purpose;
 
   /// Whether the anchor was live, not on hold, when the linked call was
   /// placed. Placing a call holds the anchor, and only a hold the link put on
   /// is the link's to take off when the call fails.
-  @override
   final bool anchorWasLive;
 
   /// Whether the call joins the room the anchor was a leg of when it was
@@ -99,18 +95,15 @@ class LinkedCall with _$LinkedCall {
   /// The room is not held for the call, it stands aside while a call outside
   /// it is up and comes back by itself once there is none, so a failed call
   /// has nothing of it to give back.
-  @override
   final bool intoRoom;
 
   /// Whether the call was answered while the room it joins could not take a
   /// call - still assembling, or rejoining after a lost connection. It joins
   /// once the room is up again.
-  @override
   final bool awaitingRoom;
 
   /// Why the linked call is ending, once that is known; null while it is
   /// under way.
-  @override
   final LinkedCallFailure? failure;
 
   /// The linked call among [calls], once it has been answered; null before

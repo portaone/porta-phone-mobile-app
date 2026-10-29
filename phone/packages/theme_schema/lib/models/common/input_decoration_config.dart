@@ -77,61 +77,42 @@ class InputDecorationConfig with _$InputDecorationConfig {
     this.disabledBorder,
   });
 
-  @override
   final String? hintText;
 
-  @override
   final TextStyleConfig? hintStyle;
 
-  @override
   final String? labelText;
 
-  @override
   final TextStyleConfig? labelStyle;
 
-  @override
   final String? helperText;
 
-  @override
   final TextStyleConfig? helperStyle;
 
-  @override
   final TextStyleConfig? errorStyle;
 
-  @override
   final String? prefixText;
 
-  @override
   final TextStyleConfig? prefixStyle;
 
-  @override
   final String? suffixText;
 
-  @override
   final TextStyleConfig? suffixStyle;
 
-  @override
   final String? fillColor;
 
-  @override
   final bool? filled;
 
-  @override
   final BorderConfig? border;
 
-  @override
   final BorderConfig? enabledBorder;
 
-  @override
   final BorderConfig? focusedBorder;
 
-  @override
   final BorderConfig? errorBorder;
 
-  @override
   final BorderConfig? focusedErrorBorder;
 
-  @override
   final BorderConfig? disabledBorder;
 
   factory InputDecorationConfig.fromJson(Map<String, dynamic> json) => _$InputDecorationConfigFromJson(json);
