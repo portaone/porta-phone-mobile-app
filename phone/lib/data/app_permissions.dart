@@ -15,11 +15,11 @@ typedef ExcludePermissions = List<Permission> Function();
 final _logger = Logger('AppPermissions');
 
 class AppPermissions {
-  /// A list of permissions that are absolutely required for the app to function correctly.
-  static const _requiredPermissions = [Permission.microphone];
-
   /// The list of all possible permissions that the app may request.
-  static const _fullPermissions = [..._requiredPermissions, Permission.camera, Permission.contacts, Permission.sms];
+  ///
+  /// None of them is required to open the app: each is asked for once on the way in from a
+  /// sign-in, and a missing one is reported where it is used.
+  static const _fullPermissions = [Permission.microphone, Permission.camera, Permission.contacts, Permission.sms];
 
   /// Permissions supported by permission_handler's web implementation. Requesting
   /// or querying any other permission on web throws UnsupportedError, so on web
@@ -87,19 +87,22 @@ class AppPermissions {
   /// The list of permissions that the app may request, excluding those specified by [_excludePermissions].
   List<Permission> get permissions => _permissionsCache.value;
 
-  /// Returns `true` if any of the [_requiredPermissions] is not granted.
+  /// Whether the system may still ask for a permission the app asks for ([permissions]).
   ///
-  /// Special permissions are deliberately not part of this: they change how a call
-  /// is presented, not whether the app works, so a missing one must never keep the
-  /// user out.
-  Future<bool> get isDenied async {
-    for (final permission in _requiredPermissions) {
-      final status = await permission.status;
-      if (!status.isGranted) {
-        return true;
-      }
+  /// Decides whether the permissions screen is shown after a sign-in. Only a permission that
+  /// reads denied counts: granted and limited (a selection of contacts) are answers, a
+  /// permanent refusal or a restriction is not asked about again, and SMS on iOS is not a
+  /// permission there at all - permission_handler reports it denied for ever, which would
+  /// bring the screen back after every sign-in. On Android a permanent refusal still reads
+  /// denied (only a request can tell), so there the screen comes once per sign-in.
+  ///
+  /// Special permissions are deliberately not part of this: they change how a call is
+  /// presented, not whether the app works.
+  Future<bool> get anyNotGranted async {
+    for (final permission in permissions) {
+      if (PlatformInfo.isIOS && permission == Permission.sms) continue;
+      if ((await permission.status).isDenied) return true;
     }
-
     return false;
   }
 
@@ -119,13 +122,9 @@ class AppPermissions {
     return Map.fromEntries(entries);
   }
 
-  /// Checks the status of regular permissions.
-  ///
-  /// [onlyRequired] - If true, checks only [_requiredPermissions].
-  ///                  If false (default), checks all non-excluded permissions (the filtered list from [_fullPermissions]).
-  Future<Map<Permission, PermissionStatus>> getPermissionStatuses({bool onlyRequired = false}) async {
-    // Select the list based on the flag
-    final targetPermissions = onlyRequired ? _requiredPermissions : permissions;
+  /// Checks the status of every non-excluded permission (the filtered list from [_fullPermissions]).
+  Future<Map<Permission, PermissionStatus>> getPermissionStatuses() async {
+    final targetPermissions = permissions;
 
     if (targetPermissions.isEmpty) return {};
 

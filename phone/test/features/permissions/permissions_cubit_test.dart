@@ -32,8 +32,6 @@ void main() {
   void givenFullScreenIntentDenied() {
     when(() => appPermissions.getSpecialPermissionStatuses())
         .thenAnswer((_) async => {fullScreenIntent: CallkeepSpecialPermissionStatus.denied});
-    // The app's own gate never counts a special permission, so it stays satisfied.
-    when(() => appPermissions.isDenied).thenAnswer((_) async => false);
   }
 
   setUpAll(() {
@@ -59,7 +57,6 @@ void main() {
     await pumpEventQueue();
 
     expect(cubit.state.missingSpecialPermissions, [fullScreenIntent]);
-    expect(cubit.state.isPermanentlyDenied, isFalse);
 
     await cubit.close();
   });

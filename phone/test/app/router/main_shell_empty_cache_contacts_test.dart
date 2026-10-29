@@ -118,7 +118,6 @@ void main() {
     appPermissions = MockAppPermissions();
     stored = null;
 
-    when(() => appPermissions.isDenied).thenAnswer((_) async => false);
     when(() => appBloc.state).thenReturn(
       AppState(
         status: AppLifecycleStatus.authenticated,

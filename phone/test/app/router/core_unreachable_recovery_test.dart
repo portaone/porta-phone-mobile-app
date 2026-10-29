@@ -141,7 +141,6 @@ void main() {
   AppRouter buildRouter() {
     final featureAccess = featureAccessFor(systemInfoWithSupported(const []));
     final permissions = _MockAppPermissions();
-    when(() => permissions.isDenied).thenAnswer((_) async => false);
     return AppRouter(
       appBloc,
       permissions,

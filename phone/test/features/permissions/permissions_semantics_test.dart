@@ -45,24 +45,4 @@ void main() {
 
     handle.dispose();
   });
-
-  testWidgets('once the denial is permanent the settings button takes its place', (tester) async {
-    final handle = tester.ensureSemantics();
-
-    when(() => cubit.state).thenReturn(const PermissionsState(isPermanentlyDenied: true));
-
-    await tester.pumpWidget(wrap());
-
-    // The two buttons replace each other, so they carry different ids: a flow
-    // waiting for the wrong one would wait forever on a screen that is stuck.
-    expect(find.bySemanticsIdentifier(permissionsInitButtonId), findsNothing);
-    expectTapTargetSemantics(
-      tester,
-      find.bySemanticsIdentifier(permissionsSettingsButtonId),
-      label: 'Open app Settings',
-      identifier: permissionsSettingsButtonId,
-    );
-
-    handle.dispose();
-  });
 }

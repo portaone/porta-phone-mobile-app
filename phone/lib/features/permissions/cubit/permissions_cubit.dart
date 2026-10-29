@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:bloc/bloc.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -9,6 +7,7 @@ import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
+import 'package:webtrit_phone/utils/utils.dart';
 
 import '../models/models.dart';
 
@@ -33,13 +32,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   /// This is primarily used when the app resumes from the background ([AppLifecycleState.resumed]).
   /// It handles the scenario where a user is sent to system settings to manually grant permissions
   /// and then returns to the app.
-  ///
-  /// Updates [isPermanentlyDenied] to reflect if permissions are still missing,
-  /// allowing the UI to switch between the "Request" button and the "Open Settings" button.
   void checkPermissions() async {
-    final isDenied = await appPermissions.isDenied;
-    _logger.info('Is denied: $isDenied');
-
     final missingSpecialPermissions = await _resolveSpecialPermissions();
     _logger.info('Special permissions to handle: $missingSpecialPermissions');
 
@@ -50,13 +43,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     // several awaits; bail out if the cubit was closed in the meantime.
     if (isClosed) return;
 
-    emit(
-      state.copyWith(
-        isPermanentlyDenied: isDenied,
-        missingSpecialPermissions: missingSpecialPermissions,
-        manufacturerTip: manufacturerTip,
-      ),
-    );
+    emit(state.copyWith(missingSpecialPermissions: missingSpecialPermissions, manufacturerTip: manufacturerTip));
   }
 
   /// Executes the comprehensive permission request sequence:
@@ -66,8 +53,8 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   /// 3. **Special Permissions:** Identifies denied special permissions (e.g., battery optimization).
   ///    Since these cannot be requested via a system modal, this triggers UI instructions/settings.
   /// 4. **Manufacturer Tips:** Resolves specific tips (e.g., for Xiaomi/Samsung) which the user can dismiss.
-  /// 5. **Final Check:** Evaluates [isDenied]. If true (minimum requirements not met),
-  ///    it triggers the UI to prompt the user to open system settings manually.
+  ///
+  /// Whatever is answered, the flow then completes: no permission keeps the user out.
   void initiatePermissionFlow() async {
     _logger.info('Requesting permissions');
 
@@ -87,8 +74,6 @@ class PermissionsCubit extends Cubit<PermissionsState> {
       final manufacturerTip = await _resolveManufacturerTip();
       _logger.info('Manufacturer tip: $manufacturerTip');
 
-      final isDenied = await appPermissions.isDenied;
-
       if (isClosed) return;
 
       // Emit state at the end to ensure all dependent UI elements are initialized.
@@ -96,7 +81,6 @@ class PermissionsCubit extends Cubit<PermissionsState> {
       emit(
         state.copyWith(
           initialRequestCompleted: true,
-          isPermanentlyDenied: isDenied,
           manufacturerTip: manufacturerTip,
           missingSpecialPermissions: missingSpecialPermissions,
         ),
@@ -132,7 +116,7 @@ class PermissionsCubit extends Cubit<PermissionsState> {
 
   Future<void> _requestFirebaseMessagingPermission() async {
     // No Firebase app on the web (see main.dart).
-    if (kIsWeb) return;
+    if (PlatformInfo.isWeb) return;
     final notificationSettings = await FirebaseMessaging.instance.requestPermission();
     if (notificationSettings.authorizationStatus == AuthorizationStatus.authorized) {
       _logger.info('User granted firebase permission');
@@ -199,10 +183,6 @@ class PermissionsCubit extends Cubit<PermissionsState> {
     emit(
       state.copyWith(missingSpecialPermissions: state.missingSpecialPermissions.where((p) => p != permission).toList()),
     );
-  }
-
-  void openAppSettings() {
-    appPermissions.toAppSettings();
   }
 
   /// Opens the OEM permissions screen hosting both the "display pop-up windows
