@@ -86,7 +86,12 @@ void main() {
     when(() => sessionsCubit.state).thenReturn(SessionsState());
   });
 
-  Widget wrapScreen({bool sessionsEnabled = false, int sessions = 0, SettingScreenStyle? style}) {
+  Widget wrapScreen({
+    bool sessionsEnabled = false,
+    int sessions = 0,
+    SettingScreenStyle? style,
+    List<SettingsSection> sections = const [],
+  }) {
     when(() => sessionsCubit.state).thenReturn(
       SessionsState(
         sessions: [for (var i = 0; i < sessions; i++) ActiveSession(id: '$i', current: i == 0)],
@@ -98,28 +103,33 @@ void main() {
       settings: const ThemeSettings(),
       lightDynamic: null,
       darkDynamic: null,
-      child: MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: appLocalizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: RouterScope(
-          controller: router,
-          inheritableObserversBuilder: () => const [],
-          stateHash: 0,
-          navigatorObservers: const [],
-          child: StackRouterScope(
+      // The app's own theme, so the dialog carries the button styles the
+      // theme hands it rather than bare Material defaults.
+      child: Builder(
+        builder: (context) => MaterialApp(
+          theme: ThemeProvider.of(context).light(),
+          locale: const Locale('en'),
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: RouterScope(
             controller: router,
+            inheritableObserversBuilder: () => const [],
             stateHash: 0,
-            child: MultiBlocProvider(
-              providers: [
-                BlocProvider<SettingsBloc>.value(value: settingsBloc),
-                BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
-                BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
-                BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
-                BlocProvider<RegisterStatusCubit>.value(value: registerStatusCubit),
-                BlocProvider<SessionsCubit>.value(value: sessionsCubit),
-              ],
-              child: _presence(SettingsScreen(sections: const [], sessionsEnabled: sessionsEnabled, style: style)),
+            navigatorObservers: const [],
+            child: StackRouterScope(
+              controller: router,
+              stateHash: 0,
+              child: MultiBlocProvider(
+                providers: [
+                  BlocProvider<SettingsBloc>.value(value: settingsBloc),
+                  BlocProvider<MicrophoneStatusBloc>.value(value: microphoneStatusBloc),
+                  BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
+                  BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
+                  BlocProvider<RegisterStatusCubit>.value(value: registerStatusCubit),
+                  BlocProvider<SessionsCubit>.value(value: sessionsCubit),
+                ],
+                child: _presence(SettingsScreen(sections: sections, sessionsEnabled: sessionsEnabled, style: style)),
+              ),
             ),
           ),
         ),
@@ -169,6 +179,46 @@ void main() {
     await tester.pumpAndSettle();
 
     verify(() => settingsBloc.add(const SettingsLogouted())).called(1);
+  });
+
+  testWidgets('the question says yes in the colour of an action that cannot be undone', (tester) async {
+    // Logout ends the session like signing another device out does; its yes
+    // in the theme's accent read as an ordinary confirmation next to theirs.
+    await tester.pumpWidget(wrapScreen());
+
+    await tester.tap(find.byKey(settingsLogoutButtonKey));
+    await tester.pumpAndSettle();
+
+    final yes = find.byKey(confirmDialogYesButtonKey);
+    final label = tester.widget<RichText>(find.descendant(of: yes, matching: find.byType(RichText)));
+    expect(label.text.style?.color, Theme.of(tester.element(yes)).colorScheme.error);
+  });
+
+  testWidgets('deleting the account asks the same way', (tester) async {
+    // Deleting the account cannot be undone either, and the row sits in the
+    // same list as logout.
+    await tester.pumpWidget(
+      wrapScreen(
+        sections: [
+          SettingsSection(
+            titleL10n: 'settings_ListViewTileTitle_toolbox',
+            items: const [
+              SettingItem(
+                titleL10n: 'settings_ListViewTileTitle_accountDelete',
+                icon: Icons.delete_outline,
+                flavor: SettingsFlavor.deleteAccount,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    await tester.scrollUntilVisible(find.text('Delete account'), 200);
+    await tester.tap(find.text('Delete account'));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<ConfirmDialog>(find.byType(ConfirmDialog)).dangerous, isTrue);
   });
 
   testWidgets('logout refuses the press while the account is busy', (tester) async {

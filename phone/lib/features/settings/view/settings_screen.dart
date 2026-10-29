@@ -329,7 +329,7 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _onLogoutTap(BuildContext context) async {
     final settingsBloc = context.read<SettingsBloc>();
-    final logout = await ConfirmDialog.show(
+    final logout = await ConfirmDialog.showDangerous(
       context,
       title: context.l10n.settings_LogoutConfirmDialog_title,
       content: context.l10n.settings_LogoutConfirmDialog_content,
@@ -341,7 +341,7 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _onDeleteAccountTap(BuildContext context) async {
     final settingsBloc = context.read<SettingsBloc>();
-    final deleteAccount = await ConfirmDialog.show(
+    final deleteAccount = await ConfirmDialog.showDangerous(
       context,
       title: context.l10n.settings_AccountDeleteConfirmDialog_title,
       content: context.l10n.settings_AccountDeleteConfirmDialog_content,
