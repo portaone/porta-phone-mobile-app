@@ -3616,7 +3616,7 @@ abstract class AppLocalizations {
   /// Shown in a notification or snackbar when the app cannot access camera or microphone required for a call. Context: occurs when getUserMedia or platform permission check fails; typical causes include the user denying camera/microphone permission, OS-level restriction or revoked permission, missing runtime permission (Android), or the device hardware being busy or unavailable.
   ///
   /// In en, this message translates to:
-  /// **'No access to media input, please check app permissions'**
+  /// **'The call cannot use the microphone or camera. Check the app\'s permissions'**
   String get notifications_errorSnackBar_callUserMedia;
 
   /// Shown in a notification or snackbar when the user attempts to start a call while the app or device is offline. Context: occurs at call initiation when there is no network connectivity (airplane mode, Wi‑Fi or cellular disabled, weak signal, or captive portal) or when network restrictions/firewall/VPN prevent reaching the signaling/core server. Typical causes: no internet, temporary carrier/Wi‑Fi outage, or network policies blocking signaling; suggest the user check their connection and retry.
