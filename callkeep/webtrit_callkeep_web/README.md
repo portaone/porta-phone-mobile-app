@@ -11,7 +11,7 @@ outgoing call screens are rendered entirely by the Flutter application.
 | Feature | Status |
 | --- | --- |
 | `setUp` / `tearDown` | Supported |
-| `reportNewIncomingCall` | Supported (in-memory, delegate notified) |
+| `reportNewIncomingCall` | Supported (in-memory, delegate notified); a terminated id is refused unless `offeredAt` is after its end |
 | `startCall` / `answerCall` / `endCall` | Supported (delegate notified) |
 | `setHeld` / `setMuted` / `sendDTMF` | Supported (delegate notified) |
 | `setAudioDevice` | Supported (delegate notified) |

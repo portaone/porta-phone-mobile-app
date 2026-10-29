@@ -600,14 +600,18 @@ Future<void> _handleBackgroundMessage(RemoteMessage message, Logger logger) asyn
     // due to concurrent database access from multiple isolates.
     final displayName = await _resolveContactDisplayNameWithFallback(appPush, logger, isolateContext.appPath);
 
-    await AndroidCallkeepServices.backgroundPushNotificationBootstrapService
+    final error = await AndroidCallkeepServices.backgroundPushNotificationBootstrapService
         .reportNewIncomingCall(
           appPush.call.id,
           CallkeepHandle.number(appPush.call.handle),
           displayName: displayName,
           hasVideo: appPush.call.hasVideo,
+          // When the server sent the push: a late copy of an ended call's push is older than its end.
+          offeredAt: message.sentTime,
         )
         .timeout(const Duration(seconds: 10), onTimeout: () => _onReportIncomingCallTimeout(logger));
+    // A refused push is otherwise silent: the call simply never rings.
+    if (error != null) logger.info('reportNewIncomingCall ${appPush.call.id}: $error');
   }
 
   if (appPush is MessagePush) {

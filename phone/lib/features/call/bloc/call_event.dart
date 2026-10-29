@@ -155,6 +155,7 @@ sealed class _CallSignalingEvent extends CallEvent {
     bool? isFocus,
     JsepValue? jsep,
     bool? remoteVideo,
+    required DateTime? offeredAt,
   }) = _CallSignalingEventIncoming;
 
   const factory _CallSignalingEvent.ringing({required int? line, required String callId}) = _CallSignalingEventRinging;
@@ -292,6 +293,7 @@ class _CallSignalingEventIncoming extends _CallSignalingEvent {
     this.isFocus,
     this.jsep,
     this.remoteVideo,
+    required this.offeredAt,
   });
 
   final int? line;
@@ -316,6 +318,11 @@ class _CallSignalingEventIncoming extends _CallSignalingEvent {
   /// the call is restored from a log rather than heard live; null otherwise.
   final bool? remoteVideo;
 
+  /// When the server offered the call: the moment the signaling socket delivered it. Null for a
+  /// call a handshake lists among the server's lines - a replay, possibly of a call the app already
+  /// ended, offered at a time nobody here knows.
+  final DateTime? offeredAt;
+
   @override
   List<Object?> get props => [
     line,
@@ -327,6 +334,7 @@ class _CallSignalingEventIncoming extends _CallSignalingEvent {
     replaceCallId,
     isFocus,
     jsep,
+    offeredAt,
   ];
 }
 
@@ -1528,6 +1536,7 @@ sealed class _CallMutationEvent extends CallEvent {
     bool? isFocus,
     JsepValue? jsep,
     bool? remoteVideo,
+    required DateTime? offeredAt,
   }) = _CallMutationEventSignalingIncoming;
   const factory _CallMutationEvent.signalingAccepted({required String callId, JsepValue? jsep}) =
       _CallMutationEventSignalingAccepted;
@@ -1820,6 +1829,7 @@ class _CallMutationEventSignalingIncoming extends _CallMutationEvent {
     this.isFocus,
     this.jsep,
     this.remoteVideo,
+    required this.offeredAt,
   });
   final int? line;
   final String callId;
@@ -1831,6 +1841,9 @@ class _CallMutationEventSignalingIncoming extends _CallMutationEvent {
   final bool? isFocus;
   final JsepValue? jsep;
   final bool? remoteVideo;
+
+  /// See [_CallSignalingEventIncoming.offeredAt].
+  final DateTime? offeredAt;
   @override
   List<Object?> get props => [
     line,
@@ -1843,6 +1856,7 @@ class _CallMutationEventSignalingIncoming extends _CallMutationEvent {
     isFocus,
     jsep,
     remoteVideo,
+    offeredAt,
   ];
 }
 

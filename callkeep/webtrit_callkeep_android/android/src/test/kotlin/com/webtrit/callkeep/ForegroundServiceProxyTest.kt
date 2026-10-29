@@ -48,6 +48,7 @@ class ForegroundServiceProxyTest {
             handle: PHandle,
             displayName: String?,
             hasVideo: Boolean,
+            offeredAtMs: Long?,
         ): PIncomingCallError? = null
 
         override suspend fun reportConnectingOutgoingCall(callId: String) = Unit

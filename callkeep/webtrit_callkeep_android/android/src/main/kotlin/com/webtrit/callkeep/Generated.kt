@@ -1380,8 +1380,11 @@ interface PHostBackgroundPushNotificationIsolateBootstrapApi {
    * when Telecom refused it (a second call while one rings) or the registration deadline
    * passed, in which case the backend is asked to cancel it and the app declines it on the
    * server.
+   *
+   * [offeredAtMs] is when the server offered the call (FCM `sentTime` of the push, epoch
+   * milliseconds), null if unknown: see `CallkeepCore.registerIncomingCall`.
    */
-  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean): PIncomingCallError?
+  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean, offeredAtMs: Long?): PIncomingCallError?
 
   companion object {
     /** The codec used by PHostBackgroundPushNotificationIsolateBootstrapApi. */
@@ -1422,9 +1425,10 @@ interface PHostBackgroundPushNotificationIsolateBootstrapApi {
             val handleArg = args[1] as PHandle
             val displayNameArg = args[2] as String?
             val hasVideoArg = args[3] as Boolean
+            val offeredAtMsArg = args[4] as Long?
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
-                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg))
+                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg, offeredAtMsArg))
               } catch (exception: Throwable) {
                 GeneratedPigeonUtils.wrapError(exception)
               }
@@ -1998,7 +2002,11 @@ interface PHostApi {
   fun isSetUp(): Boolean
   suspend fun setUp(options: POptions)
   suspend fun tearDown()
-  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean): PIncomingCallError?
+  /**
+   * [offeredAtMs] is when the server offered the call (epoch milliseconds), null if unknown: a
+   * call the app ended before presenting it is refused unless offered after that end.
+   */
+  suspend fun reportNewIncomingCall(callId: String, handle: PHandle, displayName: String?, hasVideo: Boolean, offeredAtMs: Long?): PIncomingCallError?
   suspend fun reportConnectingOutgoingCall(callId: String)
   suspend fun reportConnectedOutgoingCall(callId: String)
   suspend fun reportUpdateCall(callId: String, handle: PHandle?, displayName: String?, hasVideo: Boolean?, proximityEnabled: Boolean?)
@@ -2091,9 +2099,10 @@ interface PHostApi {
             val handleArg = args[1] as PHandle
             val displayNameArg = args[2] as String?
             val hasVideoArg = args[3] as Boolean
+            val offeredAtMsArg = args[4] as Long?
             CoroutineScope(Dispatchers.Main).launch {
               val wrapped: List<Any?> = try {
-                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg))
+                listOf(api.reportNewIncomingCall(callIdArg, handleArg, displayNameArg, hasVideoArg, offeredAtMsArg))
               } catch (exception: Throwable) {
                 GeneratedPigeonUtils.wrapError(exception)
               }

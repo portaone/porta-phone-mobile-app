@@ -95,7 +95,7 @@ class ForegroundServiceLiveAppCallTest {
 
     @Test
     fun `a call the app reports through its bridge is the app's`() {
-        scope.launch { service.reportNewIncomingCall("app-call", PHandle(PHandleTypeEnum.NUMBER, "1002"), null, false) }
+        scope.launch { service.reportNewIncomingCall("app-call", PHandle(PHandleTypeEnum.NUMBER, "1002"), null, false, null) }
         shadowOf(service.mainLooper).idle()
 
         assertTrue(CallkeepCore.instance.isReportedByApp("app-call"))

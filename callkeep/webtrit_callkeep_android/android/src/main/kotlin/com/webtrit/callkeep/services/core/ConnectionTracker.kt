@@ -142,18 +142,25 @@ interface ConnectionTracker {
      * call: in a push->foreground handoff the connection-state replay can re-drive an incoming call
      * for a callId the signaling layer already hung up, arriving as a fresh reportNewIncomingCall.
      *
-     * Semantic, not time-based: a transfer-back always reuses a call the app DID know about, so its
-     * end never lands here - the mark therefore distinguishes a ghost from a legitimate reuse
-     * without any timing window.
+     * The mark keeps the time of the end: a report of [callId] the server offered after it is a new
+     * attempt of the id (a blind transfer repeated to this device), one offered before it or with
+     * no offer time is a ghost. A transfer-back reuses a call the app held, whose end is not marked.
      */
     fun markEndedWithoutFlutterState(callId: String)
 
     /**
      * Returns true if [markEndedWithoutFlutterState] was recorded for [callId]. Sticky (not removed
      * on read): a stale handshake can replay the dead incoming several times, so every
-     * re-presentation must be rejected, not just the first. Cleared on tearDown via [clear].
+     * re-presentation must be rejected, not just the first. Cleared by a new attempt
+     * ([clearEndedWithoutFlutterState]) and on tearDown via [clear].
      */
     fun wasEndedWithoutFlutterState(callId: String): Boolean
+
+    /** When [markEndedWithoutFlutterState] was last recorded for [callId] (wall clock); null while unmarked. */
+    fun endedWithoutFlutterStateAtMs(callId: String): Long?
+
+    /** Clears the mark of [markEndedWithoutFlutterState]: the server offered [callId] again after it. */
+    fun clearEndedWithoutFlutterState(callId: String)
 
     /** Record that the app reported [callId] itself; cleared by [markTerminated] and [clear]. */
     fun markReportedByApp(callId: String)

@@ -38,8 +38,9 @@ class _FakePlatform extends WebtritCallkeepPlatform with MockPlatformInterfaceMi
     String callId,
     CallkeepHandle handle,
     String? displayName,
-    bool hasVideo,
-  ) async {
+    bool hasVideo, {
+    DateTime? offeredAt,
+  }) async {
     await registrationGate?.future;
     if (registrationError != null) throw registrationError!;
     return registrationResult;

@@ -477,6 +477,7 @@ class ForegroundService :
         handle: PHandle,
         displayName: String?,
         hasVideo: Boolean,
+        offeredAtMs: Long?,
     ): PIncomingCallError? {
         val metadata =
             CallMetadata(
@@ -486,7 +487,7 @@ class ForegroundService :
                 hasVideo = hasVideo,
                 ringtonePath = StorageDelegate.Sound.getRingtonePath(baseContext),
             )
-        val result = core.registerIncomingCall(metadata, this)
+        val result = core.registerIncomingCall(metadata, this, offeredAtMs)
         if (result?.value == PIncomingCallErrorEnum.CALL_ID_ALREADY_EXISTS_AND_ANSWERED) {
             // The backend already answered before this engine learned the call's offer.
             // Core adopted it; the bridge only delivers the Flutter-side answer effect.
