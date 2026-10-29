@@ -14,6 +14,7 @@ Why the app is shaped this way: the mechanisms a feature is built on.
 | [fonts.md](fonts.md) | How the app gets the typeface a theme names |
 | [history_paging.md](history_paging.md) | Paging a history by date: reaching records an endpoint does not volunteer |
 | [ice_servers.md](ice_servers.md) | Where the STUN/TURN servers come from, how they are cached and renewed |
+| [incoming_call_lifecycle.md](incoming_call_lifecycle.md) | One call id reported many times: the same call, a ghost of an ended one, a new attempt |
 | [incoming_call_scenarios.md](incoming_call_scenarios.md) | How an incoming call is delivered and handled per app state and mode |
 | [polling.md](polling.md) | PollingService: periodic, lifecycle and manual refreshes without overlap |
 | [polling_workers.md](polling_workers.md) | The polling worker pattern: one sync cycle apart from its scheduling |

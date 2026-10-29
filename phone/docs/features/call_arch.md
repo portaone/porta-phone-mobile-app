@@ -276,7 +276,9 @@ declined the call first - `performEndCall` carried `CallkeepEndedBy.user`, which
 keeps as `QueuedTerminationRequest.declinedByUser`; kept the same way for now), callkeep keeps the fact
 (`Callkeep.wasEndedBeforePresented`) and drops the presentation itself when it is still on its
 way; a presentation already received and waiting on contact resolution is checked against it
-after the wait. The bloc holds no such list of its own.
+after the wait. The bloc holds no such list of its own. A report offered after that end is a new
+attempt of the id and rings; see
+[incoming_call_lifecycle.md](../architecture/incoming_call_lifecycle.md).
 
 **ICE servers** — a peer connection's STUN/TURN servers come from `DefaultPeerConnectionFactory`,
 which resolves them per connection through `IceServersRepository` rather than holding a fixed list,
