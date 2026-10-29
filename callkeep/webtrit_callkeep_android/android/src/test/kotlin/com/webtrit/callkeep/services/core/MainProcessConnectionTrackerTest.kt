@@ -679,6 +679,92 @@ class MainProcessConnectionTrackerTest {
     }
 
     // -------------------------------------------------------------------------
+    // endedWithoutFlutterStateAtMs / clearEndedWithoutFlutterState (time of the end, new attempt)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `endedWithoutFlutterStateAtMs — null for an unmarked call`() {
+        assertNull(tracker.endedWithoutFlutterStateAtMs("call-1"))
+    }
+
+    @Test
+    fun `endedWithoutFlutterStateAtMs — the wall clock time of the mark`() {
+        val before = System.currentTimeMillis()
+        tracker.markEndedWithoutFlutterState("call-1")
+        val after = System.currentTimeMillis()
+
+        val endedAt = tracker.endedWithoutFlutterStateAtMs("call-1")
+
+        assertNotNull(endedAt)
+        assertTrue("$endedAt is not between $before and $after", endedAt!! in before..after)
+    }
+
+    @Test
+    fun `endedWithoutFlutterStateAtMs — a second mark keeps the time of the later end`() {
+        tracker.markEndedWithoutFlutterState("call-1")
+        val first = tracker.endedWithoutFlutterStateAtMs("call-1")!!
+        Thread.sleep(5)
+
+        tracker.markEndedWithoutFlutterState("call-1")
+
+        assertTrue(tracker.endedWithoutFlutterStateAtMs("call-1")!! > first)
+    }
+
+    @Test
+    fun `clearEndedWithoutFlutterState — removes the mark and its time`() {
+        tracker.markEndedWithoutFlutterState("call-1")
+
+        tracker.clearEndedWithoutFlutterState("call-1")
+
+        assertFalse(tracker.wasEndedWithoutFlutterState("call-1"))
+        assertNull(tracker.endedWithoutFlutterStateAtMs("call-1"))
+    }
+
+    @Test
+    fun `clearEndedWithoutFlutterState — leaves the mark of another call`() {
+        tracker.markEndedWithoutFlutterState("call-1")
+        tracker.markEndedWithoutFlutterState("call-2")
+
+        tracker.clearEndedWithoutFlutterState("call-1")
+
+        assertTrue(tracker.wasEndedWithoutFlutterState("call-2"))
+        assertNotNull(tracker.endedWithoutFlutterStateAtMs("call-2"))
+    }
+
+    @Test
+    fun `clearEndedWithoutFlutterState — an unmarked call stays unmarked`() {
+        tracker.clearEndedWithoutFlutterState("call-1")
+
+        assertFalse(tracker.wasEndedWithoutFlutterState("call-1"))
+        assertNull(tracker.endedWithoutFlutterStateAtMs("call-1"))
+    }
+
+    @Test
+    fun `endedWithoutFlutterStateAtMs — survives addPending, promote and markTerminated`() {
+        // A transfer-back reuses a call the app knew, so its end is never marked: the lifecycle
+        // resets do not touch the mark, only a new attempt or tearDown clears it.
+        tracker.markEndedWithoutFlutterState("call-1")
+        val endedAt = tracker.endedWithoutFlutterStateAtMs("call-1")
+
+        tracker.addPending("call-1")
+        assertEquals(endedAt, tracker.endedWithoutFlutterStateAtMs("call-1"))
+        tracker.promote("call-1", metadata(), PCallkeepConnectionState.STATE_RINGING)
+        assertEquals(endedAt, tracker.endedWithoutFlutterStateAtMs("call-1"))
+        tracker.markTerminated("call-1")
+        assertEquals(endedAt, tracker.endedWithoutFlutterStateAtMs("call-1"))
+        assertTrue(tracker.wasEndedWithoutFlutterState("call-1"))
+    }
+
+    @Test
+    fun `clear — endedWithoutFlutterStateAtMs returns null`() {
+        tracker.markEndedWithoutFlutterState("call-1")
+
+        tracker.clear()
+
+        assertNull(tracker.endedWithoutFlutterStateAtMs("call-1"))
+    }
+
+    // -------------------------------------------------------------------------
     // Dual state: registered AND pending at once (push-path re-registration)
     //
     // The push isolate calls addPending without a duplicate check, so a call the

@@ -3,7 +3,9 @@
 How an incoming call is delivered and handled depending on the app state and the configured mode.
 The single decision that selects the owner of the background work lives in callkeep
 (`IncomingCallHandler.maybeInitBackgroundHandling`); see the callkeep doc
-`webtrit_callkeep_android/docs/incoming-call-handling.md`. This page shows the app-level scenarios.
+`webtrit_callkeep_android/docs/incoming-call-handling.md`. This page shows the app-level scenarios;
+what happens when the same call id is reported again is in
+[incoming_call_lifecycle.md](incoming_call_lifecycle.md).
 
 GitHub renders the `mermaid` blocks below.
 
@@ -317,7 +319,9 @@ answers a decline the user made on this device - the platform's `performEndCall`
 id before the report crosses to the platform (on the M32 the replay got through the main looper
 3 s before it). The delegate callkeep hands the platform drops `didPresentIncomingCall` for a
 recorded id, and the bloc asks `Callkeep.wasEndedBeforePresented` after its contact lookup
-before it shows a presentation it received earlier. The bloc keeps no list of its own.
+before it shows a presentation it received earlier. The bloc keeps no list of its own. How a
+kept end tells such a ghost from a new attempt of the same id is in
+[incoming_call_lifecycle.md](incoming_call_lifecycle.md).
 
 ## Sequence — Case B (persistent / socket)
 

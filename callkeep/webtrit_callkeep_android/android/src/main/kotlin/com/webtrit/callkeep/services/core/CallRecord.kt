@@ -46,14 +46,15 @@ internal data class CallRecord(
     // Termination was directly notified via performEndCall in tearDown(). Suppresses the
     // stale async HungUp broadcast that arrives after the new session starts.
     val directNotified: Boolean = false,
-    // The app ended this call while it was never presented in Flutter state (the call==null
-    // signaling-hangup path). Used by reportNewIncomingCall to reject EVERY stale ghost
-    // re-presentation of such a call (a stale handshake can replay the dead incoming several
-    // times, so this is a sticky flag, not one-shot). Deliberately NOT reset by
-    // addPending/promote — a transfer-back always reuses a call the app DID know, so its end
-    // never lands here, making this a semantic discriminator rather than a timing bet.
-    // Cleared only via MainProcessConnectionTracker.clear() on tearDown.
-    val endedWithoutFlutterState: Boolean = false,
+    // When (System.currentTimeMillis) the app ended this call while it was never presented in
+    // Flutter state (the call==null signaling-hangup path); null when it did not. Used by
+    // reportNewIncomingCall to reject EVERY stale ghost re-presentation of such a call (a stale
+    // handshake can replay the dead incoming several times, so this is sticky, not one-shot).
+    // Deliberately NOT reset by addPending/promote — a transfer-back always reuses a call the app
+    // DID know, so its end never lands here. Cleared on tearDown via
+    // MainProcessConnectionTracker.clear(), and when the server offers the id again after this
+    // time (a blind transfer repeated offers the same id): that registration is a new attempt.
+    val endedWithoutFlutterStateAtMs: Long? = null,
     // The app reported this call itself (its foreground bridge registered it), as opposed to a
     // push or an SMS trigger alone. Such a call is the app's already and is not presented back
     // to it. Lives for one life of the call id: cleared when the call terminates, so a

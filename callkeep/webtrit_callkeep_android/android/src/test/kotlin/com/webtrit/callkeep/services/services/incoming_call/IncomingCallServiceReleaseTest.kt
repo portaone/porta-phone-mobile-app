@@ -11,6 +11,7 @@ import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.toPCallkeepIncomingCallData
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.core.CallkeepCore
+import com.webtrit.callkeep.services.services.connection.ConnectionManager
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -48,6 +49,7 @@ class IncomingCallServiceReleaseTest {
             .grantPermissions("${context.packageName}.INTERNAL_BROADCAST")
         PendingBroadcastQueue.clear()
         CallkeepCore.instance.clear()
+        ConnectionManager.instance = ConnectionManager()
         controller = Robolectric.buildService(IncomingCallService::class.java).create()
         service = controller.get()
     }
@@ -168,6 +170,29 @@ class IncomingCallServiceReleaseTest {
         assertEquals(listOf("A"), session.endCallIds)
         assertTrue(session.handoffCallIds.isEmpty())
         assertFalse("the session ends the call on the server and finishes; only then does the service stop", stopped())
+    }
+
+    @Test
+    fun `an end of the shown call lets its id reservation go`() {
+        show("A")
+        service.getCallLifecycleHandler().flutterApi = RecordingCommunicator()
+        ConnectionManager.instance.checkAndReservePending("A")
+
+        release("A", IncomingCallRelease.IC_RELEASE_ENDED)
+
+        assertFalse("a new attempt of the same id must not be refused as already pending", ConnectionManager.instance.isPending("A"))
+    }
+
+    @Test
+    fun `an end the app reported lets its id reservation go too`() {
+        show("A")
+        service.getCallLifecycleHandler().flutterApi = RecordingCommunicator()
+        ConnectionManager.instance.checkAndReservePending("A")
+        CallkeepCore.instance.reportCallEnded(CallMetadata(callId = "A"), PEndCallReasonEnum.DECLINED_BY_USER)
+
+        release("A", IncomingCallRelease.IC_RELEASE_ENDED)
+
+        assertFalse(ConnectionManager.instance.isPending("A"))
     }
 
     @Test

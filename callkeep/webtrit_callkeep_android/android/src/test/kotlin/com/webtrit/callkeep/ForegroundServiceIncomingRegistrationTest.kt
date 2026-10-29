@@ -12,6 +12,7 @@ import com.webtrit.callkeep.services.broadcaster.CallCommandEvent
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.services.foreground.ForegroundService
+import io.flutter.plugin.common.BinaryMessenger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockingDetails
 import org.mockito.Mockito.verifyNoInteractions
@@ -36,6 +39,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ServiceController
 import org.robolectric.annotation.Config
+import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 
 /**
@@ -74,7 +78,10 @@ class ForegroundServiceIncomingRegistrationTest {
         core.clear()
     }
 
-    private fun report(callId: String): Deferred<PIncomingCallError?> =
+    private fun report(
+        callId: String,
+        offeredAtMs: Long? = null,
+    ): Deferred<PIncomingCallError?> =
         scope
             .async {
                 service.reportNewIncomingCall(
@@ -82,6 +89,7 @@ class ForegroundServiceIncomingRegistrationTest {
                     handle = PHandle(PHandleTypeEnum.NUMBER, "1002"),
                     displayName = null,
                     hasVideo = false,
+                    offeredAtMs = offeredAtMs,
                 )
             }.also { idle() }
 
@@ -365,9 +373,12 @@ class ForegroundServiceIncomingRegistrationTest {
 
     private val push by lazy { BackgroundPushNotificationIsolateBootstrapApi(ApplicationProvider.getApplicationContext()) }
 
-    private fun pushReport(callId: String): Deferred<PIncomingCallError?> =
+    private fun pushReport(
+        callId: String,
+        offeredAtMs: Long? = null,
+    ): Deferred<PIncomingCallError?> =
         scope
-            .async { push.reportNewIncomingCall(callId, PHandle(PHandleTypeEnum.NUMBER, "1003"), null, false) }
+            .async { push.reportNewIncomingCall(callId, PHandle(PHandleTypeEnum.NUMBER, "1003"), null, false, offeredAtMs) }
             .also { idle() }
 
     @Test
@@ -516,5 +527,112 @@ class ForegroundServiceIncomingRegistrationTest {
 
         assertEquals(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED, pushed.result()?.value)
         assertFalse(core.isPending("push-ghost"))
+    }
+
+    // A blind transfer repeated after the target declined or missed the call offers the same id again.
+
+    @Test
+    fun `a call offered after the end of one the app never presented is a new attempt and registers`() {
+        core.markEndedWithoutFlutterState("retransfer")
+
+        val waiting = report("retransfer", offeredAtMs = System.currentTimeMillis() + 60_000)
+
+        assertFalse("the new attempt is not refused as terminated", waiting.isCompleted)
+        assertTrue(core.isPending("retransfer"))
+        assertFalse(core.wasEndedWithoutFlutterState("retransfer"))
+
+        event(CallLifecycleEvent.IncomingConnectionReported, "retransfer")
+
+        assertNull(waiting.result())
+    }
+
+    @Test
+    fun `a push offered after that end is a new attempt too`() {
+        core.markEndedWithoutFlutterState("push-retransfer")
+
+        val pushed = pushReport("push-retransfer", offeredAtMs = System.currentTimeMillis() + 60_000)
+
+        assertFalse("the new attempt is not refused as terminated", pushed.isCompleted)
+        assertTrue(core.isPending("push-retransfer"))
+    }
+
+    @Test
+    fun `a push offered before that end is a late copy and is refused as terminated`() {
+        core.markEndedWithoutFlutterState("push-late")
+
+        val pushed = pushReport("push-late", offeredAtMs = System.currentTimeMillis() - 60_000)
+
+        assertEquals(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED, pushed.result()?.value)
+        assertFalse(core.isPending("push-late"))
+        assertTrue("the end stays for the next late copy", core.wasEndedWithoutFlutterState("push-late"))
+    }
+
+    @Test
+    fun `the end of the new attempt refuses its own replay again`() {
+        core.markEndedWithoutFlutterState("retransfer")
+        report("retransfer", offeredAtMs = System.currentTimeMillis() + 60_000)
+        event(CallLifecycleEvent.IncomingConnectionReported, "retransfer")
+
+        core.markEndedWithoutFlutterState("retransfer")
+
+        assertEquals(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED, report("retransfer").result()?.value)
+    }
+
+    // The push isolate's Pigeon channel carries the offer time as its fifth argument.
+
+    /** Send the push isolate's reportNewIncomingCall the way Dart does; the reply arrives on the main looper. */
+    private fun sendPushReport(
+        callId: String,
+        offeredAtMs: Long?,
+    ): () -> List<Any?>? {
+        val handlers = mutableMapOf<String, BinaryMessenger.BinaryMessageHandler>()
+        val messenger = mock(BinaryMessenger::class.java)
+        doAnswer { invocation ->
+            invocation.getArgument<BinaryMessenger.BinaryMessageHandler?>(1)?.let { handlers[invocation.getArgument(0)] = it }
+            null
+        }.`when`(messenger).setMessageHandler(any(String::class.java), any())
+        doAnswer { invocation ->
+            invocation.getArgument<BinaryMessenger.BinaryMessageHandler?>(1)?.let { handlers[invocation.getArgument(0)] = it }
+            null
+        }.`when`(messenger).setMessageHandler(any(String::class.java), any(), any())
+        PHostBackgroundPushNotificationIsolateBootstrapApi.setUp(messenger, push)
+
+        val handler = handlers.getValue("dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateBootstrapApi.reportNewIncomingCall")
+        var reply: List<Any?>? = null
+        val args = listOf(callId, PHandle(PHandleTypeEnum.NUMBER, "1003"), null, false, offeredAtMs)
+        val message = PHostBackgroundPushNotificationIsolateBootstrapApi.codec.encodeMessage(args)!!.also { it.rewind() }
+        handler.onMessage(message) { bytes: ByteBuffer? ->
+            bytes!!.rewind()
+            @Suppress("UNCHECKED_CAST")
+            reply = PHostBackgroundPushNotificationIsolateBootstrapApi.codec.decodeMessage(bytes) as List<Any?>
+        }
+        idle()
+        return { reply }
+    }
+
+    @Test
+    fun `a push whose message carries an offer time after the end reaches the core as a new attempt`() {
+        core.markEndedWithoutFlutterState("pigeon-retransfer")
+
+        val reply = sendPushReport("pigeon-retransfer", offeredAtMs = System.currentTimeMillis() + 60_000)
+
+        assertNull("the new attempt waits for Telecom", reply())
+        assertTrue(core.isPending("pigeon-retransfer"))
+        assertFalse(core.wasEndedWithoutFlutterState("pigeon-retransfer"))
+
+        event(CallLifecycleEvent.IncomingConnectionReported, "pigeon-retransfer")
+
+        assertEquals(listOf(null), reply())
+    }
+
+    @Test
+    fun `a push whose message carries no offer time reaches the core without one and is refused after the end`() {
+        core.markEndedWithoutFlutterState("pigeon-late")
+
+        val reply = sendPushReport("pigeon-late", offeredAtMs = null)
+
+        assertEquals(listOf(PIncomingCallError(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED)), reply())
+        assertFalse(core.isPending("pigeon-late"))
+        assertTrue(core.wasEndedWithoutFlutterState("pigeon-late"))
     }
 }

@@ -148,6 +148,37 @@ void main() {
       expect(a.event.callId, _kCallId);
     });
 
+    test('the call is offered when the server logged its incoming call, not a later event', () async {
+      final line = _makeLine(
+        callLogs: [
+          CallEventLog(timestamp: 2000, callEvent: _makeRingingEvent()),
+          CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent()),
+        ],
+      );
+
+      final actions = processor.process(lines: [line], guestLine: null, activeCalls: const []);
+
+      final a = actions.single as HandleIncomingCallAction;
+      expect(a.offeredAt, DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true));
+    });
+
+    // A blind transfer repeated offers the same call id again: the newest offer is the attempt
+    // that rings now, and its time is what tells it from the earlier attempt's end.
+    test('the call is offered when the server logged its newest incoming call', () async {
+      final line = _makeLine(
+        callLogs: [
+          CallEventLog(timestamp: 5000, callEvent: _makeIncomingEvent()),
+          CallEventLog(timestamp: 2000, callEvent: _makeRingingEvent()),
+          CallEventLog(timestamp: 1000, callEvent: _makeIncomingEvent()),
+        ],
+      );
+
+      final actions = processor.process(lines: [line], guestLine: null, activeCalls: const []);
+
+      final a = actions.single as HandleIncomingCallAction;
+      expect(a.offeredAt, DateTime.fromMillisecondsSinceEpoch(5000, isUtc: true));
+    });
+
     test('returns HandleIncomingCallAction when ProceedingEvent prepended', () async {
       final line = _makeLine(
         callLogs: [

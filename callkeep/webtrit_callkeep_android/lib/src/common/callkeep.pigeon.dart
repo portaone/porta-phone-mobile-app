@@ -1249,14 +1249,17 @@ class PHostBackgroundPushNotificationIsolateBootstrapApi {
   /// when Telecom refused it (a second call while one rings) or the registration deadline
   /// passed, in which case the backend is asked to cancel it and the app declines it on the
   /// server.
-  Future<PIncomingCallError?> reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo) async {
+  ///
+  /// [offeredAtMs] is when the server offered the call (FCM `sentTime` of the push, epoch
+  /// milliseconds), null if unknown: see `CallkeepCore.registerIncomingCall`.
+  Future<PIncomingCallError?> reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo, int? offeredAtMs) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostBackgroundPushNotificationIsolateBootstrapApi.reportNewIncomingCall$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, handle, displayName, hasVideo]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, handle, displayName, hasVideo, offeredAtMs]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
@@ -1890,14 +1893,16 @@ class PHostApi {
     ;
   }
 
-  Future<PIncomingCallError?> reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo) async {
+  /// [offeredAtMs] is when the server offered the call (epoch milliseconds), null if unknown: a
+  /// call the app ended before presenting it is refused unless offered after that end.
+  Future<PIncomingCallError?> reportNewIncomingCall(String callId, PHandle handle, String? displayName, bool hasVideo, int? offeredAtMs) async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.reportNewIncomingCall$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, handle, displayName, hasVideo]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[callId, handle, displayName, hasVideo, offeredAtMs]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(

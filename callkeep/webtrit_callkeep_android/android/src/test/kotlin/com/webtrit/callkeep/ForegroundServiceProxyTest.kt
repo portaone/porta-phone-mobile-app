@@ -43,12 +43,18 @@ class ForegroundServiceProxyTest {
 
         override suspend fun tearDown() = Unit
 
+        val incomingReports = mutableListOf<Pair<String, Long?>>()
+
         override suspend fun reportNewIncomingCall(
             callId: String,
             handle: PHandle,
             displayName: String?,
             hasVideo: Boolean,
-        ): PIncomingCallError? = null
+            offeredAtMs: Long?,
+        ): PIncomingCallError? {
+            incomingReports += callId to offeredAtMs
+            return null
+        }
 
         override suspend fun reportConnectingOutgoingCall(callId: String) = Unit
 
@@ -165,6 +171,23 @@ class ForegroundServiceProxyTest {
         val handler = handlers.getValue("dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.setUp")
         var reply: List<Any?>? = null
         val message = PHostApi.codec.encodeMessage(listOf(options))!!.also { it.rewind() }
+        handler.onMessage(message) { bytes: ByteBuffer? ->
+            bytes!!.rewind()
+            @Suppress("UNCHECKED_CAST")
+            reply = PHostApi.codec.decodeMessage(bytes) as List<Any?>
+        }
+        return { reply }
+    }
+
+    /** Send reportNewIncomingCall the way Dart does; the reply arrives once the main looper runs. */
+    private fun sendReportNewIncomingCall(
+        callId: String,
+        offeredAtMs: Long?,
+    ): () -> List<Any?>? {
+        val handler = handlers.getValue("dev.flutter.pigeon.webtrit_callkeep_android.PHostApi.reportNewIncomingCall")
+        var reply: List<Any?>? = null
+        val args = listOf(callId, PHandle(PHandleTypeEnum.NUMBER, "1002"), null, false, offeredAtMs)
+        val message = PHostApi.codec.encodeMessage(args)!!.also { it.rewind() }
         handler.onMessage(message) { bytes: ByteBuffer? ->
             bytes!!.rewind()
             @Suppress("UNCHECKED_CAST")
@@ -302,5 +325,29 @@ class ForegroundServiceProxyTest {
         assertEquals(listOf(null), reply())
         assertTrue(first.setUps.isEmpty())
         assertEquals(listOf(options), second.setUps)
+    }
+
+    @Test
+    fun `reportNewIncomingCall passes the offer time to the service`() {
+        val service = FakeService()
+        proxy.connected(service)
+
+        val reply = sendReportNewIncomingCall("c1", offeredAtMs = 1_761_700_000_123)
+        runMainLooper()
+
+        assertEquals(listOf(null), reply())
+        assertEquals(listOf("c1" to 1_761_700_000_123), service.incomingReports)
+    }
+
+    @Test
+    fun `reportNewIncomingCall without an offer time passes none`() {
+        val service = FakeService()
+        proxy.connected(service)
+
+        val reply = sendReportNewIncomingCall("c1", offeredAtMs = null)
+        runMainLooper()
+
+        assertEquals(listOf(null), reply())
+        assertEquals(listOf<Pair<String, Long?>>("c1" to null), service.incomingReports)
     }
 }

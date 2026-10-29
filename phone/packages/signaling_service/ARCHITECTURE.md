@@ -298,6 +298,10 @@ The rules:
   line (numbered or guest; newest first, as the server orders a log; a new call opens its line,
   a hangup or a missed call frees it at its position) and the conference block. Presence and
   dialog blocks, the keepalive interval and the timestamp stay as the handshake reported them.
+  An event folded into a line is logged at the moment the buffer received it (the phone's
+  clock), where the server's own entries keep the server's time; the app takes the entry of an
+  incoming call as the time the call was offered
+  ([incoming_call_lifecycle.md](../../docs/architecture/incoming_call_lifecycle.md)).
   A late subscriber gets the handshake rendered from it - the one the server would send now -
   and takes the path it takes after a reconnect, where the server itself describes calls that
   are already up. A second handshake in one session replaces the state and is replayed once.

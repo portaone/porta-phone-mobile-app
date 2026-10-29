@@ -144,14 +144,19 @@ class Callkeep {
   /// is, an adoption of a call the platform already holds included: the Android core answers
   /// [CallkeepIncomingCallError.callIdAlreadyExists] for a call it holds, and CallKit refuses a
   /// known UUID the same way, so a registration cannot reopen an id behind the old call's back.
+  ///
+  /// [offeredAt] is when the server offered the call: the moment an event of the signaling socket
+  /// arrived, or the server's time of the offer a handshake lists; null when it is not known. See
+  /// [WebtritCallkeepPlatform.reportNewIncomingCall].
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(
     String callId,
     CallkeepHandle handle, {
     String? displayName,
     bool hasVideo = false,
+    DateTime? offeredAt,
   }) async {
     final reportedAs = _endsReportedUnseen[callId];
-    final result = await platform.reportNewIncomingCall(callId, handle, displayName, hasVideo);
+    final result = await platform.reportNewIncomingCall(callId, handle, displayName, hasVideo, offeredAt: offeredAt);
     if (reportedAs != null && result == null && _endsReportedUnseen[callId] == reportedAs) {
       _endsReportedUnseen.remove(callId);
     }

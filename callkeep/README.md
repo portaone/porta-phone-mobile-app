@@ -128,7 +128,7 @@ Use these methods to notify the platform about call state changes.
 | --- | --- |
 | `setUp(options)` | Register phone account, initialize notification channels |
 | `tearDown()` | Hang up all calls and release resources |
-| `reportNewIncomingCall(callId, handle, ...)` | Register an incoming call with the platform |
+| `reportNewIncomingCall(callId, handle, ..., offeredAt)` | Register an incoming call with the platform. `offeredAt` is when the server offered it: a call offered after the end of an earlier attempt the app never held is a new attempt, not a ghost (Android, web) |
 | `reportConnectingOutgoingCall(callId, handle, ...)` | Mark outgoing call as connecting |
 | `reportConnectedOutgoingCall(callId, handle, ...)` | Mark outgoing call as connected |
 | `reportUpdateCall(callId, ...)` | Update call metadata (display name, video, etc.) |

@@ -580,7 +580,9 @@ class IncomingCallService :
 
             // The app reported this end itself (reportEndCall), so it already knows: asking it
             // to end the call again would send the server a decline for a call it hung up.
-            !CallkeepCore.instance.markEndCallDispatched(callId) -> {
+            // Either way the call's id reservation is let go, as on the main path: a new attempt
+            // of the same id (a blind transfer repeated) is otherwise refused as already pending.
+            !CallkeepCore.instance.clearAndMarkEndCallDispatched(callId) -> {
                 Log.i(TAG, "handleRelease: the app reported the end of $callId itself, not asking it to end the call")
                 callLifecycleHandler.performHandoff(CallMetadata(callId = callId))
             }

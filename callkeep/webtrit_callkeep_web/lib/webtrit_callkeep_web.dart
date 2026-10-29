@@ -17,14 +17,15 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
   /// Active connections keyed by callId.
   final Map<String, CallkeepConnection> _connections = {};
 
-  /// Call IDs that have been terminated since the last [setUp].
+  /// When each call ID was terminated since the last [setUp].
   ///
   /// Populated by [endCall], [reportEndCall], and [tearDown].
   /// Cleared on [tearDown] (after notifying the delegate) and on [cleanConnections],
   /// so it only guards within a single setUp/tearDown session.
   /// Used to return [CallkeepIncomingCallError.callIdAlreadyTerminated]
-  /// on a re-report of the same ID within the same session.
-  final Set<String> _terminatedCallIds = {};
+  /// on a re-report of the same ID within the same session, unless the report says the call was
+  /// offered after that end: a new attempt of the id (a blind transfer repeated offers it again).
+  final Map<String, DateTime> _terminatedCallIds = {};
 
   /// Group id by callId for the calls declared grouped through [setCallGroup].
   ///
@@ -87,7 +88,7 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
     _isSetUp = false;
     final activeIds = _connections.keys.toList();
     for (final callId in activeIds) {
-      _terminatedCallIds.add(callId);
+      _terminatedCallIds[callId] = DateTime.now();
       // A teardown is the app's own end of every call it still holds.
       await _delegate?.performEndCall(callId, CallkeepEndedBy.app);
       _delegate?.didDeactivateAudioSession();
@@ -107,8 +108,9 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
     String callId,
     CallkeepHandle handle,
     String? displayName,
-    bool hasVideo,
-  ) async {
+    bool hasVideo, {
+    DateTime? offeredAt,
+  }) async {
     if (_connections.containsKey(callId)) {
       final state = _connections[callId]!.state;
       if (state == CallkeepConnectionState.stateActive) {
@@ -116,8 +118,12 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
       }
       return CallkeepIncomingCallError.callIdAlreadyExists;
     }
-    if (_terminatedCallIds.contains(callId)) {
-      return CallkeepIncomingCallError.callIdAlreadyTerminated;
+    final terminatedAt = _terminatedCallIds[callId];
+    if (terminatedAt != null) {
+      if (offeredAt == null || !offeredAt.isAfter(terminatedAt)) {
+        return CallkeepIncomingCallError.callIdAlreadyTerminated;
+      }
+      _terminatedCallIds.remove(callId);
     }
     _connections[callId] = CallkeepConnection(
       callId: callId,
@@ -156,7 +162,7 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
   Future<void> reportEndCall(String callId, String displayName, CallkeepEndCallReason reason) async {
     _connections.remove(callId);
     _forgetGroupOf(callId);
-    _terminatedCallIds.add(callId);
+    _terminatedCallIds[callId] = DateTime.now();
     _delegate?.didDeactivateAudioSession();
   }
 
@@ -200,7 +206,7 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
     if (!_connections.containsKey(callId)) {
       return CallkeepCallRequestError.unknownCallUuid;
     }
-    _terminatedCallIds.add(callId);
+    _terminatedCallIds[callId] = DateTime.now();
     await _delegate?.performEndCall(callId, endedBy);
     _connections.remove(callId);
     // Ended here or reported ended, the call leaves its group either way.
@@ -363,8 +369,9 @@ class WebtritCallkeepWeb extends WebtritCallkeepPlatform {
     String callId,
     CallkeepHandle handle,
     String? displayName,
-    bool hasVideo,
-  ) async => null;
+    bool hasVideo, {
+    DateTime? offeredAt,
+  }) async => null;
 
   @override
   Future<dynamic> endCallsBackgroundPushNotificationService() async {}
