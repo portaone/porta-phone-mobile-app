@@ -114,6 +114,27 @@ void main() {
       await cubit.close();
     });
 
+    test('revokeAllOthers leaves a session whose sign-out is already on its way', () async {
+      when(() => repository.getSessions())
+          .thenAnswer((_) async => SessionList(sessions: [_session('a', current: true), _session('b'), _session('c')]));
+      final pending = Completer<void>();
+      when(() => repository.revokeSession('b')).thenAnswer((_) => pending.future);
+      when(() => repository.revokeSession('c')).thenAnswer((_) async {});
+
+      final cubit = SessionsCubit(repository);
+      await cubit.fetch();
+
+      final one = cubit.revoke('b');
+      await cubit.revokeAllOthers();
+      pending.complete();
+      await one;
+
+      verify(() => repository.revokeSession('b')).called(1);
+      verify(() => repository.revokeSession('c')).called(1);
+      expect(cubit.state.sessions.map((s) => s.id), equals(['a']));
+      await cubit.close();
+    });
+
     test('fetch exposes when idle sessions end, as the core said', () async {
       const autoTerminate = SessionAutoTerminate(inactivityTimeoutDays: 30, installationMaxDays: 90);
       when(() => repository.getSessions())

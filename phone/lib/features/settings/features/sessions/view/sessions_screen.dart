@@ -120,7 +120,9 @@ class SessionsScreen extends StatelessWidget {
                       child: FilledButton.icon(
                         icon: const Icon(Icons.logout),
                         label: Text(l10n.sessions_Button_revokeAllOthers),
-                        onPressed: () => _onRevokeAllOthers(context),
+                        // Not while a sign-out is on its way: the one under
+                        // way would be asked for a second time.
+                        onPressed: state.revoking.isEmpty ? () => _onRevokeAllOthers(context) : null,
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
                           foregroundColor: colorScheme.onError,

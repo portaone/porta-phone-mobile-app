@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -30,5 +32,28 @@ void main() {
     expect(one.color, colorScheme.error);
     expect(style.backgroundColor?.resolve({}), colorScheme.error);
     expect(style.foregroundColor?.resolve({}), colorScheme.onError);
+  });
+
+  testWidgets('signing every other device out waits while one is being signed out', (tester) async {
+    // Pressed then, it would ask the core for that device a second time.
+    final harness = SessionsAutoTerminateHarness(null, sessions: sessions);
+    await harness.pump(tester);
+    harness.repository.revokeGate = Completer<void>();
+
+    await tester.tap(find.bySemanticsIdentifier(sessionsTileRevokeButtonId));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yes'));
+    await tester.pump();
+
+    FilledButton all() => tester.widget<FilledButton>(
+      find.descendant(
+        of: find.bySemanticsIdentifier(sessionsRevokeAllOthersButtonId),
+        matching: find.byWidgetPredicate((widget) => widget is FilledButton),
+      ),
+    );
+    expect(all().onPressed, isNull);
+
+    harness.repository.revokeGate!.complete();
+    await tester.pumpAndSettle();
   });
 }
