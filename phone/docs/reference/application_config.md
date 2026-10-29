@@ -214,13 +214,27 @@ Recent calls or history screen.
   "enabled": true,
   "titleL10n": "main_BottomNavigationBarItemLabel_recents",
   "icon": "0xe03a",
-  "supportsCallHistory": true
+  "supportsCallHistory": true,
+  "layout": "tabbed"
 }
 ```
 
-| Field                 | Type      | Default | Description |
-| --------------------- | --------- | ------- | ----------- |
-| `supportsCallHistory` | `boolean` | `true`  | Local opt-in for remote call history (CDRs). |
+| Field                 | Type      | Default    | Description |
+| --------------------- | --------- | ---------- | ----------- |
+| `supportsCallHistory` | `boolean` | `true`     | Local opt-in for remote call history (CDRs). |
+| `layout`              | `string`  | `"tabbed"` | Where the filter and the list's actions sit: `tabbed` or `unified`. |
+
+`layout` arranges the same lists and the same actions two ways:
+
+- `tabbed` - the All / Missed filters as tabs under the title, and the list's actions ("Clear call
+  history") on a floating button at the corner of the list. This is the arrangement the app had
+  before `layout` existed, and the one a config that says nothing keeps.
+- `unified` - the header of the unified contacts screen: the filter is a chooser on the line under
+  the title, and the actions open from a menu button at the other end of that line, where contacts
+  has its search.
+
+An unknown `layout` value falls back to `tabbed`, so a configurator may offer an arrangement before
+an installed app knows how to draw it.
 
 Remote call history (CDRs) is shown only when both signals agree: the resolved local flag is `true`
 AND the server advertises the `callHistory` adapter capability in system-info. When either is false

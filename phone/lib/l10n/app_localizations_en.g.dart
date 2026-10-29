@@ -2391,9 +2391,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get presence_settings_statusIcon_title => 'Status Icon:';
 
   @override
+  String get recents_ActionsButton_label => 'More actions';
+
+  @override
   String recents_BodyCenter_empty(Object filter) {
     return 'Currently you have no ${filter}recent calls.';
   }
+
+  @override
+  String get recents_ClearHistoryAction_label => 'Clear call history';
+
+  @override
+  String get recents_ClearHistoryDialog_contentAccount =>
+      'All calls will be removed from Recents on every device signed in to this account. New calls will appear as usual.';
+
+  @override
+  String get recents_ClearHistoryDialog_contentDevice =>
+      'All calls will be removed from Recents on this device. New calls will appear as usual.';
+
+  @override
+  String get recents_ClearHistoryDialog_title => 'Clear call history?';
 
   @override
   String get recents_DeleteConfirmDialog_content => 'Are you sure you want to delete the current call log?';
@@ -2402,12 +2419,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recents_DeleteConfirmDialog_title => 'Confirm deleting';
 
   @override
+  String get recents_FilterPicker_label => 'Show calls';
+
+  @override
   String get recents_HistoryTile_missedCallText => 'Missed';
 
   @override
   String recents_snackBar_deleted(String name) {
     return '$name deleted';
   }
+
+  @override
+  String get recents_snackBar_historyClearFailed => 'Could not clear call history. Check the connection and try again.';
+
+  @override
+  String get recents_snackBar_historyClearUnsupported => 'This server does not support clearing call history.';
+
+  @override
+  String get recents_snackBar_historyCleared => 'Call history cleared';
 
   @override
   String get recentsVisibilityFilter_all => 'All';

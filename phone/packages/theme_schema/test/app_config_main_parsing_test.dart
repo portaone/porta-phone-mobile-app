@@ -128,6 +128,36 @@ void main() {
     });
   });
 
+  group('RecentsTabScheme.layout parsing', () {
+    RecentsTabScheme recentsTab(Map<String, Object?> extra) {
+      return BottomMenuTabScheme.fromJson({
+            'type': 'recents',
+            'enabled': true,
+            'titleL10n': 'recents',
+            'icon': '0xe03a',
+            ...extra,
+          })
+          as RecentsTabScheme;
+    }
+
+    test('a configuration that names an arrangement gets it', () {
+      expect(recentsTab({'layout': 'tabbed'}).layout, RecentsLayoutScheme.tabbed);
+      expect(recentsTab({'layout': 'unified'}).layout, RecentsLayoutScheme.unified);
+    });
+
+    test('one that names none keeps the arrangement it has', () {
+      expect(recentsTab(const {}).layout, RecentsLayoutScheme.tabbed);
+    });
+
+    test('and one written for a newer app still opens', () {
+      expect(recentsTab({'layout': 'something-this-build-never-heard-of'}).layout, RecentsLayoutScheme.tabbed);
+    });
+
+    test('is written back under its own key', () {
+      expect(recentsTab({'layout': 'unified'}).toJson()['layout'], 'unified');
+    });
+  });
+
   group('ContactsTabScheme.layout parsing', () {
     ContactsTabScheme contactsTab(Map<String, Object?> extra) {
       return BottomMenuTabScheme.fromJson({

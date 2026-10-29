@@ -3406,7 +3406,7 @@ case _:
 /// @nodoc
 mixin _$RecentsTabScheme {
 
- bool get enabled; bool get initial; String get titleL10n; String get icon; bool get supportsCallHistory; String get type;
+ bool get enabled; bool get initial; String get titleL10n; String get icon; bool get supportsCallHistory; RecentsLayoutScheme get layout; String get type;
 /// Create a copy of RecentsTabScheme
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3417,16 +3417,16 @@ $RecentsTabSchemeCopyWith<RecentsTabScheme> get copyWith => _$RecentsTabSchemeCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.supportsCallHistory, supportsCallHistory) || other.supportsCallHistory == supportsCallHistory)&&(identical(other.type, type) || other.type == type));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsTabScheme&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.initial, initial) || other.initial == initial)&&(identical(other.titleL10n, titleL10n) || other.titleL10n == titleL10n)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.supportsCallHistory, supportsCallHistory) || other.supportsCallHistory == supportsCallHistory)&&(identical(other.layout, layout) || other.layout == layout)&&(identical(other.type, type) || other.type == type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,supportsCallHistory,type);
+int get hashCode => Object.hash(runtimeType,enabled,initial,titleL10n,icon,supportsCallHistory,layout,type);
 
 @override
 String toString() {
-  return 'RecentsTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, supportsCallHistory: $supportsCallHistory, type: $type)';
+  return 'RecentsTabScheme(enabled: $enabled, initial: $initial, titleL10n: $titleL10n, icon: $icon, supportsCallHistory: $supportsCallHistory, layout: $layout, type: $type)';
 }
 
 
@@ -3437,7 +3437,7 @@ abstract mixin class $RecentsTabSchemeCopyWith<$Res>  {
   factory $RecentsTabSchemeCopyWith(RecentsTabScheme value, $Res Function(RecentsTabScheme) _then) = _$RecentsTabSchemeCopyWithImpl;
 @useResult
 $Res call({
- bool enabled, bool initial, String titleL10n, String icon, bool supportsCallHistory, String type
+ bool enabled, bool initial, String titleL10n, String icon, bool supportsCallHistory, RecentsLayoutScheme layout, String type
 });
 
 
@@ -3454,14 +3454,15 @@ class _$RecentsTabSchemeCopyWithImpl<$Res>
 
 /// Create a copy of RecentsTabScheme
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? enabled = null,Object? initial = null,Object? titleL10n = null,Object? icon = null,Object? supportsCallHistory = null,Object? type = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? enabled = null,Object? initial = null,Object? titleL10n = null,Object? icon = null,Object? supportsCallHistory = null,Object? layout = null,Object? type = null,}) {
   return _then(RecentsTabScheme(
 enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
 as bool,initial: null == initial ? _self.initial : initial // ignore: cast_nullable_to_non_nullable
 as bool,titleL10n: null == titleL10n ? _self.titleL10n : titleL10n // ignore: cast_nullable_to_non_nullable
 as String,icon: null == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
 as String,supportsCallHistory: null == supportsCallHistory ? _self.supportsCallHistory : supportsCallHistory // ignore: cast_nullable_to_non_nullable
-as bool,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as bool,layout: null == layout ? _self.layout : layout // ignore: cast_nullable_to_non_nullable
+as RecentsLayoutScheme,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

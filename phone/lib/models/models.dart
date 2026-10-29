@@ -53,6 +53,7 @@ export 'pending_login.dart';
 export 'presence/presence.dart';
 export 'queued_termination_request.dart';
 export 'recent.dart';
+export 'recents_layout.dart';
 export 'recents_visibility_filter.dart';
 export 'rtp_codec_profile.dart';
 export 'session_auto_terminate.dart';

@@ -67,4 +67,31 @@ void main() {
     expect(response.items, hasLength(1));
     expect(response.pagination, isNull);
   });
+
+  group('clearCdrHistory', () {
+    test('posts to the clear route with no body and accepts 204', () async {
+      late Request captured;
+      final httpClient = MockClient((request) async {
+        captured = request;
+        return Response('', 204, request: request);
+      });
+      final apiClient = WebtritApiClient.inner(Uri.https('core.webtrit.com'), '', httpClient: httpClient);
+
+      await apiClient.clearCdrHistory('token');
+
+      expect(captured.method, equalsIgnoringCase('POST'));
+      expect(captured.url.path, '/api/v1/user/history/clear');
+      expect(captured.url.queryParameters, isEmpty);
+      expect(captured.headers['Authorization'], 'Bearer token');
+    });
+
+    test('a backend without the route reports it as not supported', () {
+      // An older backend has no such route and answers a bare 404; the caller
+      // has to tell that apart from a clear that failed.
+      final httpClient = MockClient((request) async => Response('', 404, request: request));
+      final apiClient = WebtritApiClient.inner(Uri.https('core.webtrit.com'), '', httpClient: httpClient);
+
+      expect(apiClient.clearCdrHistory('token'), throwsA(isA<EndpointNotSupportedException>()));
+    });
+  });
 }

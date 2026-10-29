@@ -1259,6 +1259,26 @@ class WebtritApiClient {
     return CdrHistoryResponse.fromJson(responseJson as Map<String, dynamic>);
   }
 
+  /// Clears the user's call history on every device of the account.
+  ///
+  /// Nothing is deleted on the switch: the backend remembers the moment and
+  /// from then on [getCdrHistory] returns no record that connected earlier,
+  /// whatever range is asked for. Records of calls made afterwards come back
+  /// as usual, so a client only has to drop what it keeps locally.
+  ///
+  /// Optional: a backend older than the route answers it with a bare 404,
+  /// which arrives as [EndpointNotSupportedException].
+  Future<void> clearCdrHistory(String token, {RequestOptions options = const RequestOptions()}) async {
+    await _httpClientExecutePost(
+      [..._apiBasePathSegmentsV1, 'user', 'history', 'clear'],
+      null,
+      token,
+      null,
+      requestOptions: options,
+      responseOptions: _optionalEndpoint,
+    );
+  }
+
   Future<CallerIdSettings> getCallerIdSettings(String token, {RequestOptions options = const RequestOptions()}) async {
     final responseJson = await _httpClientExecuteGet(
       [..._apiBasePathSegmentsV1, 'user', 'preferences', 'caller-id'],

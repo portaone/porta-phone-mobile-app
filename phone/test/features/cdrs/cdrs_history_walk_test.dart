@@ -87,6 +87,9 @@ class FakeAdapterRemoteRepository implements CdrsRemoteRepository {
   Future<void> Function()? beforeAnswer;
 
   @override
+  Future<void> clearHistory() => throw UnimplementedError('the walk never clears');
+
+  @override
   Future<CdrHistoryPage> getHistory({DateTime? timeFrom, DateTime? timeTo, int? page, int? limit}) async {
     requests.add(HistoryRequest(timeFrom, timeTo, page, limit));
     await beforeAnswer?.call();
@@ -209,6 +212,16 @@ class FakeLocalRepository implements CdrsLocalRepository {
     stored.clear();
     _syncCursor = null;
     _walkedTo = null;
+    _events.add(CdrRecordsWiped());
+  }
+
+  @override
+  Future<void> replaceAfterClear(List<CdrRecord> cdrs, {required DateTime syncedAt, bool archiveHidden = true}) async {
+    stored
+      ..clear()
+      ..addAll(cdrs);
+    _syncCursor = syncedAt;
+    _walkedTo = archiveHidden ? DateTime.fromMicrosecondsSinceEpoch(0, isUtc: true) : null;
     _events.add(CdrRecordsWiped());
   }
 

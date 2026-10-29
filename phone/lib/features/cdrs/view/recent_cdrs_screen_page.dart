@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/environment_config.dart';
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
 import '../cdrs.dart';
@@ -31,6 +32,13 @@ class RecentCdrsScreenPage extends StatelessWidget {
           )..init(),
         ),
         BlocProvider(
+          create: (context) => CdrsHistoryClearCubit(
+            context.read<CdrsRemoteRepository>(),
+            context.read<CdrsLocalRepository>(),
+            cdrsSync,
+          ),
+        ),
+        BlocProvider(
           create: (context) => MissedRecentCdrsCubit(
             context.read<CdrsLocalRepository>(),
             context.read<CdrsRemoteRepository>(),
@@ -42,6 +50,7 @@ class RecentCdrsScreenPage extends StatelessWidget {
       ],
       child: RecentCdrsScreen(
         title: Text(EnvironmentConfig.APP_NAME),
+        layout: featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>()?.layout ?? RecentsLayout.tabbed,
         transferEnabled: featureAccess.callConfig.capabilities.isBlindTransferEnabled,
         videoEnabled: featureAccess.callConfig.capabilities.isVideoCallEnabled,
         chatsEnabled: featureAccess.messagingConfig.chatsPresent,

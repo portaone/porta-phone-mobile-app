@@ -4345,11 +4345,41 @@ abstract class AppLocalizations {
   /// **'Status Icon:'**
   String get presence_settings_statusIcon_title;
 
+  /// No description provided for @recents_ActionsButton_label.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get recents_ActionsButton_label;
+
   /// No description provided for @recents_BodyCenter_empty.
   ///
   /// In en, this message translates to:
   /// **'Currently you have no {filter}recent calls.'**
   String recents_BodyCenter_empty(Object filter);
+
+  /// No description provided for @recents_ClearHistoryAction_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear call history'**
+  String get recents_ClearHistoryAction_label;
+
+  /// No description provided for @recents_ClearHistoryDialog_contentAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'All calls will be removed from Recents on every device signed in to this account. New calls will appear as usual.'**
+  String get recents_ClearHistoryDialog_contentAccount;
+
+  /// No description provided for @recents_ClearHistoryDialog_contentDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'All calls will be removed from Recents on this device. New calls will appear as usual.'**
+  String get recents_ClearHistoryDialog_contentDevice;
+
+  /// No description provided for @recents_ClearHistoryDialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear call history?'**
+  String get recents_ClearHistoryDialog_title;
 
   /// No description provided for @recents_DeleteConfirmDialog_content.
   ///
@@ -4363,6 +4393,12 @@ abstract class AppLocalizations {
   /// **'Confirm deleting'**
   String get recents_DeleteConfirmDialog_title;
 
+  /// No description provided for @recents_FilterPicker_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Show calls'**
+  String get recents_FilterPicker_label;
+
   /// No description provided for @recents_HistoryTile_missedCallText.
   ///
   /// In en, this message translates to:
@@ -4374,6 +4410,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} deleted'**
   String recents_snackBar_deleted(String name);
+
+  /// No description provided for @recents_snackBar_historyClearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear call history. Check the connection and try again.'**
+  String get recents_snackBar_historyClearFailed;
+
+  /// No description provided for @recents_snackBar_historyClearUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not support clearing call history.'**
+  String get recents_snackBar_historyClearUnsupported;
+
+  /// No description provided for @recents_snackBar_historyCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Call history cleared'**
+  String get recents_snackBar_historyCleared;
 
   /// No description provided for @recentsVisibilityFilter_all.
   ///

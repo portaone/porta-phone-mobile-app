@@ -20,6 +20,11 @@ class RecentsFiltered extends RecentsEvent {
   List<Object?> get props => [filter];
 }
 
+/// The whole call log of this device is to be cleared.
+class RecentsCleared extends RecentsEvent {
+  const RecentsCleared();
+}
+
 class RecentsDeleted extends RecentsEvent {
   const RecentsDeleted(this.recent);
 

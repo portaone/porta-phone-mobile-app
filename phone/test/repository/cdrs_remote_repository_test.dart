@@ -73,4 +73,12 @@ void main() {
     verify(() => apiClient.getCdrHistory('user_token', timeFrom: timeFrom, timeTo: timeTo, page: 2, limit: 50))
         .called(1);
   });
+
+  test('clearing asks the backend with the session token', () async {
+    when(() => apiClient.clearCdrHistory(any())).thenAnswer((_) async {});
+
+    await repository.clearHistory();
+
+    verify(() => apiClient.clearCdrHistory('user_token')).called(1);
+  });
 }

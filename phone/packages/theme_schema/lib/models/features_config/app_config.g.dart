@@ -741,6 +741,13 @@ RecentsTabScheme _$RecentsTabSchemeFromJson(Map<String, dynamic> json) =>
           _readRecentsSupportsCallHistory(json, 'supportsCallHistory')
               as bool? ??
           true,
+      layout:
+          $enumDecodeNullable(
+            _$RecentsLayoutSchemeEnumMap,
+            json['layout'],
+            unknownValue: RecentsLayoutScheme.tabbed,
+          ) ??
+          RecentsLayoutScheme.tabbed,
       type: json['type'] as String? ?? 'recents',
     );
 
@@ -751,6 +758,7 @@ Map<String, dynamic> _$RecentsTabSchemeToJson(RecentsTabScheme instance) =>
       'titleL10n': instance.titleL10n,
       'icon': instance.icon,
       'supportsCallHistory': instance.supportsCallHistory,
+      'layout': _$RecentsLayoutSchemeEnumMap[instance.layout]!,
       'type': instance.type,
     };
 
@@ -768,6 +776,11 @@ const _$RecentsTabSchemeJsonSchema = {
           'Local opt-in for remote call history (CDRs). Resolved against the server\n`callHistory` adapter capability in feature_access - both must be true.\n\nReads the `supportsCallHistory` key and falls back to the legacy `useCdrs`\nkey so existing configs keep their value.',
       'default': true,
     },
+    'layout': {
+      'type': 'object',
+      'description':
+          'How the section is arranged. A deployment that says nothing keeps the\narrangement it already has.\n\nRead leniently, as the contacts layout is: a configurator may offer an\narrangement before an installed app knows how to draw it, and such a\nbuild falls back to the one it knows rather than fail to read its\nsettings.',
+    },
     'type': {
       'type': 'string',
       'description': 'The discriminator. Always `recents`.',
@@ -775,6 +788,11 @@ const _$RecentsTabSchemeJsonSchema = {
     },
   },
   'required': ['titleL10n', 'icon'],
+};
+
+const _$RecentsLayoutSchemeEnumMap = {
+  RecentsLayoutScheme.tabbed: 'tabbed',
+  RecentsLayoutScheme.unified: 'unified',
 };
 
 ContactsTabScheme _$ContactsTabSchemeFromJson(Map<String, dynamic> json) =>
