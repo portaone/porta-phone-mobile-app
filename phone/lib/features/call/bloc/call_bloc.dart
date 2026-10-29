@@ -2890,6 +2890,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         return;
       }
 
+      // A microphone or camera the system refused is the user's to fix: tell them, as an
+      // outgoing call does, or the answered call just disappears.
+      if (e is UserMediaError) callErrorReporter.handle(e, stackTrace, '__onMutationPerformAnswer error:');
+
       // For non-disconnect errors (e.g. UserMediaError, SDP errors) the server line
       // may still be alive. Send DeclineRequest to clean it up, and handle 4610 in
       // the inner catch — that means the caller already hung up server-side.
