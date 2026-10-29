@@ -59,7 +59,7 @@ final _cases = <_Case>[
       jsep: _offer,
     ),
     '_CallSignalingEventIncoming',
-    [0, 'c1', '200', '100', 'Ann', '300', 'r1', true, _jsep('offer', 'v=0')],
+    [0, 'c1', '200', '100', 'Ann', '300', 'r1', true, _jsep('offer', 'v=0'), isA<DateTime>()],
   ),
   _Case(RingingEvent(line: 0, callId: 'c1'), '_CallSignalingEventRinging', [0, 'c1']),
   _Case(ProceedingEvent(line: 0, callId: 'c1', code: 183), '_CallSignalingEventProceeding', [0, 'c1', 183]),

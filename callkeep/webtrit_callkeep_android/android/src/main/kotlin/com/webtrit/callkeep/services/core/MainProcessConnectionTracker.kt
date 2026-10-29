@@ -80,7 +80,7 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
         // cause the second clearAndMarkEndCallDispatched to return false, suppressing the
         // required performEndCall. metadata and state are deliberately untouched: state must
         // survive this reset (cold-start adoption reads it), and an already-promoted record
-        // stays promoted (push-path re-registration window). endedWithoutFlutterState is
+        // stays promoted (push-path re-registration window). endedWithoutFlutterStateAtMs is
         // sticky — see its declaration.
         calls.compute(callId) { _, rec ->
             val r = rec ?: CallRecord()
@@ -111,7 +111,7 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
         // Reset all per-call lifecycle guards in case addPending was not called first (push-path),
         // or in case this callId is being reused without going through addPending. Note this also
         // clears an earlier `answered` — adoption sites must call markAnswered AFTER promote.
-        // endedWithoutFlutterState is sticky — see its declaration.
+        // endedWithoutFlutterStateAtMs is sticky — see its declaration.
         transition(callId) { rec ->
             rec.copy(
                 metadata = metadata,
@@ -421,10 +421,17 @@ class MainProcessConnectionTracker internal constructor() : ConnectionTracker {
     }
 
     override fun markEndedWithoutFlutterState(callId: String) {
-        transition(callId) { it.copy(endedWithoutFlutterState = true) }
+        val now = System.currentTimeMillis()
+        transition(callId) { it.copy(endedWithoutFlutterStateAtMs = now) }
     }
 
-    override fun wasEndedWithoutFlutterState(callId: String): Boolean = calls[callId]?.endedWithoutFlutterState == true
+    override fun wasEndedWithoutFlutterState(callId: String): Boolean = endedWithoutFlutterStateAtMs(callId) != null
+
+    override fun endedWithoutFlutterStateAtMs(callId: String): Long? = calls[callId]?.endedWithoutFlutterStateAtMs
+
+    override fun clearEndedWithoutFlutterState(callId: String) {
+        calls.computeIfPresent(callId) { _, rec -> rec.copy(endedWithoutFlutterStateAtMs = null) }
+    }
 
     override fun markReportedByApp(callId: String) {
         calls.compute(callId) { _, rec -> (rec ?: CallRecord()).copy(reportedByApp = true) }

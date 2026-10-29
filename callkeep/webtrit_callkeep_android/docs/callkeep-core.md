@@ -87,7 +87,7 @@ events. `ForegroundService.onConnectionEvent` still handles the other call and U
 | `clear()`                                                      | end of `tearDown`; `cleanConnections`                                                                                          | Full per-session reset                                                                                                              |
 | `markDirectNotified` / `consumeDirectNotified`                 | `tearDown` / HungUp handler                                                                                                    | Stale-broadcast suppression                                                                                                         |
 | `markEndCallDispatched(id)`                                    | `endCall`; `reportCallEnded`; the incoming-call service on `IC_RELEASE_ENDED`                                                  | performEndCall dedup; true = first mark                                                                                             |
-| `markEndedWithoutFlutterState` / `wasEndedWithoutFlutterState` | `reportCallEnded(MISSED_WHILE_CONNECTING, DECLINED_BY_USER)` / `reportNewIncomingCall`                                         | Sticky ghost-re-presentation guard                                                                                                  |
+| `markEndedWithoutFlutterState` / `wasEndedWithoutFlutterState` | `reportCallEnded(MISSED_WHILE_CONNECTING, DECLINED_BY_USER)` / `reportNewIncomingCall`                                         | Sticky ghost-re-presentation guard, by the time of the end; a call offered after it clears it                                       |
 
 `clearAndMarkEndCallDispatched` is the one sanctioned main-process touch of
 `ConnectionManager.instance`: it drops the `pendingCallIds` reservation that
@@ -199,9 +199,9 @@ enter the same pipeline, independent of `CallEndListener` presence:
   Both backends remember this cancellation, reject creation that arrives later, clear deferred
   answers and end an existing connection. A late confirmation, answer or replay is suppressed
   and retries cancellation; a late state event cannot repopulate the shadow. No timed-out
-  metadata or waiters are retained. Re-reporting this UUID returns `CALL_ID_ALREADY_TERMINATED`.
-  A different UUID starts a new operation normally. Unlike a call that was successfully
-  presented, this already-declined UUID is not a transfer-back candidate.
+  metadata or waiters are retained. Re-reporting this UUID returns `CALL_ID_ALREADY_TERMINATED`,
+  unless the server offered it after this end (a new attempt, see "Reporting a call ended").
+  A different UUID starts a new operation normally.
 - A synchronous dispatch exception cleans up the operation immediately and propagates the
   original exception to its waiting callers, with the same terminal-event suppression.
   A late dispatch callback is tied to its operation
@@ -297,8 +297,8 @@ it back in `IncomingCallQueue`:
 - **Ending a waiting call.** `reportCallEnded`, `ForegroundService.endCall`, and
   `startDeclineCall` / `startHungUpCall` (the push session's end or release of a call) take it
   out of the queue without touching the backend, where it never was. It leaves the facts any
-  ended call leaves - terminated, its end dispatched, and for `MISSED_WHILE_CONNECTING` (or `DECLINED_BY_USER`) never to be
-  registered again - so a late report of it (the push after the signaling) does not ring it.
+  ended call leaves - terminated, its end dispatched, and for `MISSED_WHILE_CONNECTING` (or `DECLINED_BY_USER`) the time of its
+  end - so a late report of it (the push after the signaling) does not ring it.
 - **User actions.** `answerQueuedCall(callId)` marks the call to be answered and declines the
   ringing calls (`startDeclineCall`, the path of a ringing notification's own Decline button, so
   the app or the push session ends them on the server); `declineRingingCalls()` only declines.
@@ -369,12 +369,14 @@ party hung up, nobody answered, the app never got to present it (`MISSED_WHILE_C
 the user declined it on this device (`DECLINED_BY_USER`; kept like `MISSED_WHILE_CONNECTING` for now,
 both through `keepsEndWithoutFlutterState`). It is one fact whoever reports it - the foreground bridge
 (`PHostApi.reportEndCall`), the push session (`PHostBackgroundPushNotificationIsolateApi.reportEndCall`)
-or a hosted engine (`ExternalEngineCallApi`) - and the core does the same four things at once:
+or a hosted engine (`ExternalEngineCallApi`) - and the core does the same five things at once:
 
 1. marks the call terminated ahead of the backend's echo, which also rejects a registration
    still waiting on it;
-2. for a never-presented end, arms the ghost guard, so a replay, a late confirmation or a late
-   push of the same call is refused and the backend is asked to cancel it;
+2. for a never-presented end, arms the ghost guard with the time of the end, so a replay, a late
+   confirmation or a late push of the same call is refused and the backend is asked to cancel it;
+   a report the server offered after that time is a new attempt of the id (a blind transfer
+   repeated to this device) and clears the guard (`registerIncomingCall`, `offeredAtMs`);
 3. marks the end dispatched, so no engine is asked to end the call again: the incoming-call
    service, on the `IC_RELEASE_ENDED` that follows, hands the call off to its session
    (`performHandoff`) instead of asking it to end the call - the push session would otherwise

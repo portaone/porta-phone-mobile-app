@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class ReportCallEndedTest {
     private lateinit var router: CallServiceRouter
+    private lateinit var tracker: MainProcessConnectionTracker
     private lateinit var core: InProcessCallkeepCore
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
     private val delivered = mutableListOf<ConnectionEvent>()
@@ -54,7 +55,8 @@ class ReportCallEndedTest {
         ContextHolder.init(ApplicationProvider.getApplicationContext<Context>())
         PendingBroadcastQueue.clear()
         router = mock(CallServiceRouter::class.java)
-        core = InProcessCallkeepCore(tracker = MainProcessConnectionTracker(), routerInit = { router })
+        tracker = MainProcessConnectionTracker()
+        core = InProcessCallkeepCore(tracker = tracker, routerInit = { router })
         core.addConnectionEventListener { event, _ -> delivered += event }
     }
 
@@ -162,6 +164,63 @@ class ReportCallEndedTest {
         assertTrue(PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")))
     }
 
+    // A blind transfer repeated after the target missed the call offers the same id again.
+
+    @Test
+    fun `a new attempt offered after an end with no service running drops the release that end left`() {
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.MISSED_WHILE_CONNECTING)
+        val endedAt = tracker.endedWithoutFlutterStateAtMs("c1")!!
+
+        val attempt = report("c1", offeredAtMs = endedAt + 1)
+
+        assertFalse("the new attempt waits for Telecom", attempt.isCompleted)
+        assertTrue(core.isPending("c1"))
+        assertFalse(core.wasEndedWithoutFlutterState("c1"))
+        verify(router).startIncomingCall(anyArgument(), anyArgument(), anyArgument())
+        assertFalse(
+            "a service started for the new attempt must show it, not end it",
+            PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")),
+        )
+    }
+
+    @Test
+    fun `a late copy offered before that end is refused and keeps the release`() {
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.MISSED_WHILE_CONNECTING)
+        val endedAt = tracker.endedWithoutFlutterStateAtMs("c1")!!
+
+        val late = report("c1", offeredAtMs = endedAt - 1)
+
+        assertEquals(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED, late.result()?.value)
+        assertTrue(core.wasEndedWithoutFlutterState("c1"))
+        verify(router, never()).startIncomingCall(anyArgument(), anyArgument(), anyArgument())
+        assertTrue(
+            "a service started for the ended call must still end it without showing it",
+            PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")),
+        )
+    }
+
+    @Test
+    fun `a report offered at the very moment of the end is refused as terminated`() {
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.MISSED_WHILE_CONNECTING)
+        val endedAt = tracker.endedWithoutFlutterStateAtMs("c1")!!
+
+        val same = report("c1", offeredAtMs = endedAt)
+
+        assertEquals(PIncomingCallErrorEnum.CALL_ID_ALREADY_TERMINATED, same.result()?.value)
+        assertEquals("only an offer strictly after the end is a new attempt", endedAt, tracker.endedWithoutFlutterStateAtMs("c1"))
+        assertTrue(PendingBroadcastQueue.consume(PendingBroadcastQueue.incomingReleaseKey("c1")))
+    }
+
+    @Test
+    fun `an offer time does not matter for a call whose end the app knew`() {
+        core.reportCallEnded(CallMetadata(callId = "c1"), PEndCallReasonEnum.REMOTE_ENDED)
+
+        val reused = report("c1", offeredAtMs = 0)
+
+        assertFalse("a transfer-back reuses the id and registers", reused.isCompleted)
+        assertTrue(core.isPending("c1"))
+    }
+
     private fun offMain(block: () -> Unit) {
         val worker = Executors.newSingleThreadExecutor()
         try {
@@ -171,7 +230,10 @@ class ReportCallEndedTest {
         }
     }
 
-    private fun report(callId: String): Deferred<PIncomingCallError?> = scope.async { core.registerIncomingCall(CallMetadata(callId = callId), "push") }.also { idle() }
+    private fun report(
+        callId: String,
+        offeredAtMs: Long? = null,
+    ): Deferred<PIncomingCallError?> = scope.async { core.registerIncomingCall(CallMetadata(callId = callId), "push", offeredAtMs) }.also { idle() }
 
     private fun event(
         event: CallLifecycleEvent,

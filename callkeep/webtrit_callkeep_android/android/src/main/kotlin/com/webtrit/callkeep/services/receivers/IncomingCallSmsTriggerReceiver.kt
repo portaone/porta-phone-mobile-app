@@ -45,7 +45,7 @@ class IncomingCallSmsTriggerReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.Main.immediate).launch {
             try {
-                validMessages.forEach { registerCall(it) }
+                validMessages.forEach { (metadata, offeredAtMs) -> registerCall(metadata, offeredAtMs) }
             } finally {
                 pendingResult.finish()
             }
@@ -55,14 +55,16 @@ class IncomingCallSmsTriggerReceiver : BroadcastReceiver() {
     /**
      * Registers an SMS-triggered call through the same core operation as push and signaling,
      * so it joins a report of the same call already waiting, is refused when that call already
-     * ended, and its refusal or deadline is settled by the core.
+     * ended, and its refusal or deadline is settled by the core. [offeredAtMs] is when the SMS
+     * centre took the message: a call it offers after the app ended the id is a new attempt.
      */
     internal suspend fun registerCall(
         metadata: CallMetadata,
+        offeredAtMs: Long?,
         core: CallkeepCore = CallkeepCore.instance,
     ) {
         try {
-            val error = core.registerIncomingCall(metadata, SmsClient)
+            val error = core.registerIncomingCall(metadata, SmsClient, offeredAtMs)
             if (error == null) {
                 Log.d(TAG, "Incoming call registered: ${metadata.callId}")
             } else {
@@ -78,7 +80,7 @@ class IncomingCallSmsTriggerReceiver : BroadcastReceiver() {
         intent: Intent,
         prefix: String,
         regex: Regex,
-    ): List<CallMetadata> {
+    ): List<Pair<CallMetadata, Long?>> {
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent) ?: return emptyList()
 
         val fullBody = messages.joinToString(separator = "") { it.messageBody ?: "" }
@@ -95,7 +97,7 @@ class IncomingCallSmsTriggerReceiver : BroadcastReceiver() {
                 displayName = URLDecoder.decode(displayNameEncoded, "UTF-8"),
                 hasVideo = hasVideoStr == "true",
                 ringtonePath = StorageDelegate.Sound.getRingtonePath(context),
-            ),
+            ) to messages.first().timestampMillis.takeIf { it > 0 },
         )
     }
 

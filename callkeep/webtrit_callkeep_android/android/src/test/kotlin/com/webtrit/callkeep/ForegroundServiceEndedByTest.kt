@@ -57,7 +57,7 @@ class ForegroundServiceEndedByTest {
     private fun idle() = shadowOf(service.mainLooper).idle()
 
     private fun ringing(callId: String) {
-        scope.launch { service.reportNewIncomingCall(callId, PHandle(PHandleTypeEnum.NUMBER, "1002"), null, false) }
+        scope.launch { service.reportNewIncomingCall(callId, PHandle(PHandleTypeEnum.NUMBER, "1002"), null, false, null) }
         idle()
         core.notifyConnectionEvent(CallLifecycleEvent.IncomingConnectionReported, CallMetadata(callId = callId).toBundle())
         idle()

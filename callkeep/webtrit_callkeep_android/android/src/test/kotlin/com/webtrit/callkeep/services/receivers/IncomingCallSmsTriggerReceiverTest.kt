@@ -1,18 +1,24 @@
 package com.webtrit.callkeep.services.receivers
 
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Looper
+import android.provider.Telephony
 import androidx.test.core.app.ApplicationProvider
 import com.webtrit.callkeep.PCallkeepConnectionState
 import com.webtrit.callkeep.PIncomingCallError
 import com.webtrit.callkeep.PIncomingCallErrorEnum
 import com.webtrit.callkeep.common.ContextHolder
+import com.webtrit.callkeep.common.Log
+import com.webtrit.callkeep.common.StorageDelegate
 import com.webtrit.callkeep.models.CallMetadata
 import com.webtrit.callkeep.models.FailureMetadata
 import com.webtrit.callkeep.services.broadcaster.CallLifecycleEvent
 import com.webtrit.callkeep.services.core.CallServiceRouter
+import com.webtrit.callkeep.services.core.CallkeepCore
 import com.webtrit.callkeep.services.core.InProcessCallkeepCore
 import com.webtrit.callkeep.services.core.MainProcessConnectionTracker
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +46,9 @@ import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLog
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.concurrent.TimeUnit
 
 /** An SMS-triggered call goes through the same registration as push and signaling reports. */
@@ -69,6 +78,8 @@ class IncomingCallSmsTriggerReceiverTest {
     fun tearDown() {
         scope.cancel()
         core.endIncomingRegistrations()
+        CallkeepCore.instance.endIncomingRegistrations()
+        CallkeepCore.instance.clear()
     }
 
     @Test
@@ -124,6 +135,16 @@ class IncomingCallSmsTriggerReceiverTest {
     }
 
     @Test
+    fun `an SMS the centre took after that end is a new attempt and registers`() {
+        core.markEndedWithoutFlutterState("s7")
+
+        val sms = sms("s7", offeredAtMs = System.currentTimeMillis() + 60_000)
+
+        assertFalse("the new attempt waits for Telecom", sms.isCompleted)
+        assertTrue(core.isPending("s7"))
+    }
+
+    @Test
     fun `a Telecom refusal of an SMS call reaches a push waiting on the same call`() {
         sms("s5")
         val push = push("s5")
@@ -145,7 +166,89 @@ class IncomingCallSmsTriggerReceiverTest {
         assertTrue(core.wasEndedWithoutFlutterState("s6"))
     }
 
-    private fun sms(callId: String): Job = scope.launch { receiver.registerCall(CallMetadata(callId = callId), core) }.also { idle() }
+    // The offer time comes from the SMS itself: the centre's timestamp of a broadcast SMS_RECEIVED,
+    // through the receiver's own parsing, into the process-wide core.
+
+    @Test
+    fun `an SMS without a centre timestamp offers no time and is refused after an end`() {
+        CallkeepCore.instance.markEndedWithoutFlutterState("s8")
+
+        receiveSms(deliverPdu("s8", month = 0))
+
+        assertTrue("the end stays", CallkeepCore.instance.wasEndedWithoutFlutterState("s8"))
+        assertFalse(CallkeepCore.instance.isPending("s8"))
+        assertLogged("Incoming call s8 refused: the app ended it before it was presented (offered at null)")
+    }
+
+    @Test
+    fun `an SMS the centre took after an end offers its timestamp and is a new attempt`() {
+        CallkeepCore.instance.markEndedWithoutFlutterState("s9")
+        val takenAt = LocalDateTime.of(2089, 1, 2, 3, 4, 5).toEpochSecond(ZoneOffset.UTC) * 1000
+
+        receiveSms(deliverPdu("s9", year = 89, month = 1, day = 2, hour = 3, minute = 4, second = 5))
+
+        assertFalse(CallkeepCore.instance.wasEndedWithoutFlutterState("s9"))
+        assertLogged("Incoming call s9 offered at $takenAt, after its end at")
+    }
+
+    private fun receiveSms(pdu: ByteArray) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        Log.clearLogFilePath()
+        StorageDelegate.IncomingCallSmsConfig.setSmsPrefix(context, SMS_PREFIX)
+        StorageDelegate.IncomingCallSmsConfig.setRegexPattern(context, SMS_REGEX)
+        context.registerReceiver(receiver, IntentFilter(Telephony.Sms.Intents.SMS_RECEIVED_ACTION), Context.RECEIVER_EXPORTED)
+        try {
+            val intent =
+                Intent(Telephony.Sms.Intents.SMS_RECEIVED_ACTION)
+                    .putExtra("pdus", arrayOf<Any>(pdu))
+                    .putExtra("format", "3gpp")
+            context.sendBroadcast(intent)
+            idle()
+        } finally {
+            context.unregisterReceiver(receiver)
+        }
+    }
+
+    private fun assertLogged(text: String) {
+        assertTrue("no log line contains: $text", ShadowLog.getLogs().any { it.msg.contains(text) })
+    }
+
+    /**
+     * A GSM SMS-DELIVER PDU carrying a call trigger for [callId], its body in UCS-2. The centre
+     * timestamp fields are as the PDU holds them: a month of 0 is no valid date, which Android
+     * reads as a timestamp of 0.
+     */
+    private fun deliverPdu(
+        callId: String,
+        year: Int = 26,
+        month: Int,
+        day: Int = 1,
+        hour: Int = 0,
+        minute: Int = 0,
+        second: Int = 0,
+    ): ByteArray {
+        val body = "$SMS_PREFIX$callId:1002:Alice:false".toByteArray(Charsets.UTF_16BE)
+        val header =
+            byteArrayOf(
+                0x00, // no SMSC address
+                0x04, // SMS-DELIVER, no more messages
+                0x04, // originating address: 4 digits
+                0x81.toByte(), // unknown type, ISDN numbering plan
+                0x21,
+                0x43, // "1234"
+                0x00, // protocol identifier
+                0x08, // data coding: UCS-2
+            )
+        val timestamp = intArrayOf(year, month, day, hour, minute, second, 0).map { semiOctet(it) }.toByteArray()
+        return header + timestamp + byteArrayOf(body.size.toByte()) + body
+    }
+
+    private fun semiOctet(value: Int): Byte = (((value % 10) shl 4) or (value / 10)).toByte()
+
+    private fun sms(
+        callId: String,
+        offeredAtMs: Long? = null,
+    ): Job = scope.launch { receiver.registerCall(CallMetadata(callId = callId), offeredAtMs, core) }.also { idle() }
 
     private fun push(callId: String) = scope.async { core.registerIncomingCall(CallMetadata(callId = callId), "push") }.also { idle() }
 
@@ -172,4 +275,9 @@ class IncomingCallSmsTriggerReceiverTest {
 
     // A generic return avoids Kotlin inserting a null check for Mockito's matcher placeholder.
     private fun <T> anyArgument(): T = ArgumentMatchers.any()
+
+    private companion object {
+        const val SMS_PREFIX = "CALL:"
+        const val SMS_REGEX = "CALL:([^:]+):([^:]+):([^:]*):(true|false)"
+    }
 }

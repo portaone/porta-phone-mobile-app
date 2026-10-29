@@ -343,13 +343,18 @@ class FakeCallkeep extends Fake implements Callkeep {
   Completer<void>? updateGate;
   CallkeepIncomingCallError? incomingRegistrationError;
 
+  /// Every incoming registration, with when the bloc said the server offered the call.
+  final List<(String, DateTime?)> incomingReports = [];
+
   @override
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(
     String callId,
     CallkeepHandle handle, {
     String? displayName,
     bool hasVideo = false,
+    DateTime? offeredAt,
   }) async {
+    incomingReports.add((callId, offeredAt));
     if (incomingRegistrationError == null) endedUnseen.remove(callId);
     return incomingRegistrationError;
   }

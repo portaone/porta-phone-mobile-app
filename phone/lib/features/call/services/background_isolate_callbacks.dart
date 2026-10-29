@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/widgets.dart';
 import 'package:logging/logging.dart';
 
@@ -230,6 +231,8 @@ Future<void> onSignalingBackgroundCallEvent(Event event) async {
             event.callId,
             CallkeepHandle.number(event.caller),
             displayName: event.callerDisplayName?.isEmpty == true ? null : event.callerDisplayName,
+            // The socket delivers a call as the server offers it, so it is offered now.
+            offeredAt: clock.now(),
           )
           .timeout(
             const Duration(seconds: 10),
