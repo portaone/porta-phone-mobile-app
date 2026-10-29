@@ -9,13 +9,6 @@ class PermissionsState with _$PermissionsState {
     /// success ([isFlowCompleted]) before the user has actually attempted to grant permissions.
     this.initialRequestCompleted = false,
 
-    /// Indicates whether the required permissions are denied in a way that prevents
-    /// further in-app requests (e.g., the user selected "Don't ask again").
-    ///
-    /// When `true`, the system permission dialog cannot be shown. The UI should
-    /// instead prompt the user to open the App Settings to enable permissions manually.
-    this.isPermanentlyDenied = false,
-
     /// Indicates whether the permission request sequence is currently in progress.
     ///
     /// When `true`, the UI should display a loading indicator and disable interaction.
@@ -50,9 +43,6 @@ class PermissionsState with _$PermissionsState {
   final bool initialRequestCompleted;
 
   @override
-  final bool isPermanentlyDenied;
-
-  @override
   final bool isRequesting;
 
   @override
@@ -69,11 +59,7 @@ class PermissionsState with _$PermissionsState {
   bool get shouldShowManufacturerTip => manufacturerTip != null && manufacturerTip!.shown == false;
 
   bool get isFlowCompleted =>
-      !requiresSpecialPermissionsAction &&
-      !shouldShowManufacturerTip &&
-      initialRequestCompleted &&
-      !isRequesting &&
-      !isPermanentlyDenied;
+      !requiresSpecialPermissionsAction && !shouldShowManufacturerTip && initialRequestCompleted && !isRequesting;
 
   bool get hasFailure => failure != null;
 }

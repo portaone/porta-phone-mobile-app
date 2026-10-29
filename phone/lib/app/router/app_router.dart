@@ -65,7 +65,8 @@ class AppRouter extends RootStackRouter {
 
   Session get session => _appBloc.state.session;
 
-  Future<bool> get appPermissionsDenied => _appPermissions.isDenied;
+  /// Whether a permission the app asks for is not granted yet.
+  Future<bool> get appPermissionsNotGranted => _appPermissions.anyNotGranted;
 
   /// Indicates whether the user agreement is unaccepted.
   ///
@@ -79,6 +80,45 @@ class AppRouter extends RootStackRouter {
   /// If the user views the agreement and does not accept it, the status
   /// is updated to `declined`, ensuring the user does not see the screen again automatically.
   bool get appContactsAgreementUnaccepted => _appBloc.state.contactsAgreementStatus.isPending;
+
+  /// Whether the contacts agreement still has to be shown: pending, and the contacts tab
+  /// shows the phone's own contacts.
+  bool get _contactsAgreementPending {
+    final contactsSourceTypes = _bottomMenuFeature.getTabEnabled<ContactsBottomMenuTab>()?.contactSourceTypes;
+    final isLocalContactsEnabled = contactsSourceTypes?.contains(ContactSourceType.local) ?? false;
+    return appContactsAgreementUnaccepted && isLocalContactsEnabled;
+  }
+
+  bool _leavingSignIn = false;
+
+  /// Leaves the sign-in for where it leads ([_afterSignIn]), once. A sign-in brings more than
+  /// one reevaluation of the routes (the session, then the status), and the permission
+  /// queries in between give the second one time to arrive while the first still waits; it
+  /// is dropped, so the next screen is built once.
+  Future<void> _leaveSignIn(StackRouter router) async {
+    if (_leavingSignIn) return;
+    _leavingSignIn = true;
+    try {
+      router.replaceAll([await _afterSignIn()]);
+    } finally {
+      _leavingSignIn = false;
+    }
+  }
+
+  /// Where a sign-in leads once its last step is done.
+  ///
+  /// The permissions are asked for here and only here - a step on the way from the sign-in
+  /// to the main screen, never a gate of the main screen: a start of an app already signed
+  /// in goes straight in, whatever was granted, and a permission refused later is reported
+  /// where it is used. The agreements come first (the contacts one decides whether contacts
+  /// are asked for), so while one is open this leads to the main screen, whose guard shows
+  /// it, and the agreement's own exit comes back here.
+  Future<PageRouteInfo> _afterSignIn() async {
+    if (!session.isLoggedIn) return const MainShellRoute();
+    if (appUserAgreementUnaccepted || _contactsAgreementPending) return const MainShellRoute();
+    if (await appPermissionsNotGranted) return const PermissionsScreenPageRoute();
+    return const MainShellRoute();
+  }
 
   /// Retrieves the initial tab  for the main screen.
   ///
@@ -329,12 +369,12 @@ class AppRouter extends RootStackRouter {
     ),
   ];
 
-  void onLoginScreenPageRouteGuardNavigation(NavigationResolver resolver, StackRouter router) {
+  Future<void> onLoginScreenPageRouteGuardNavigation(NavigationResolver resolver, StackRouter router) async {
     _logger.fine(_onNavigationLoggerMessage('onLoginScreenPageRouteGuardNavigation', resolver));
 
     if (session.isLoggedIn) {
       resolver.next(false);
-      router.replaceAll([const MainShellRoute()]);
+      await _leaveSignIn(router);
     } else {
       resolver.next(true);
     }
@@ -343,7 +383,7 @@ class AppRouter extends RootStackRouter {
   Future<void> onPermissionsScreenPageRouteGuardNavigation(NavigationResolver resolver, StackRouter router) async {
     _logger.fine(_onNavigationLoggerMessage('onPermissionsScreenPageRouteGuardNavigation', resolver));
 
-    if (await appPermissionsDenied) {
+    if (await appPermissionsNotGranted) {
       resolver.next(true);
     } else {
       resolver.next(false);
@@ -351,25 +391,28 @@ class AppRouter extends RootStackRouter {
     }
   }
 
-  void onUserAgreementScreenPageRouteGuardNavigation(NavigationResolver resolver, StackRouter router) {
+  Future<void> onUserAgreementScreenPageRouteGuardNavigation(NavigationResolver resolver, StackRouter router) async {
     _logger.fine(_onNavigationLoggerMessage('onUserAgreementScreenPageRouteGuardNavigation', resolver));
 
     if (appUserAgreementUnaccepted) {
       resolver.next(true);
     } else {
       resolver.next(false);
-      router.replaceAll([const MainShellRoute()]);
+      await _leaveSignIn(router);
     }
   }
 
-  void onContactsAgreementScreenPageRouteGuardNavigation(NavigationResolver resolver, StackRouter router) {
+  Future<void> onContactsAgreementScreenPageRouteGuardNavigation(
+    NavigationResolver resolver,
+    StackRouter router,
+  ) async {
     _logger.fine(_onNavigationLoggerMessage('onContactsAgreementScreenPageRouteGuardNavigation', resolver));
 
     if (appContactsAgreementUnaccepted) {
       resolver.next(true);
     } else {
       resolver.next(false);
-      router.replaceAll([const MainShellRoute()]);
+      await _leaveSignIn(router);
     }
   }
 
@@ -413,7 +456,8 @@ class AppRouter extends RootStackRouter {
   /// Orchestrates navigation logic for the application's main shell.
   ///
   /// Evaluates the current [AppLifecycleStatus] and enforces access control based on
-  /// authentication state, legal agreements, and required system permissions.
+  /// authentication state and legal agreements. Permissions are not checked here: they are
+  /// asked for on the way in from a sign-in ([_afterSignIn]), never as a gate.
   Future<void> onMainShellRouteGuardNavigation(NavigationResolver resolver, StackRouter router) async {
     _logger.fine(_onNavigationLoggerMessage('onMainShellRouteGuardNavigation', resolver));
 
@@ -469,25 +513,16 @@ class AppRouter extends RootStackRouter {
         break;
     }
 
-    // Enforce mandatory legal agreements and system permissions.
-    final contactsSourceTypes = _bottomMenuFeature.getTabEnabled<ContactsBottomMenuTab>()?.contactSourceTypes;
-    final isLocalContactsEnabled = contactsSourceTypes?.contains(ContactSourceType.local) ?? false;
-
+    // Enforce mandatory legal agreements.
     if (appUserAgreementUnaccepted) {
       resolver.next(false);
       router.replaceAll([const UserAgreementScreenPageRoute()]);
       return;
     }
 
-    if (appContactsAgreementUnaccepted && isLocalContactsEnabled) {
+    if (_contactsAgreementPending) {
       resolver.next(false);
       router.replaceAll([const ContactsAgreementScreenPageRoute()]);
-      return;
-    }
-
-    if (await appPermissionsDenied) {
-      resolver.next(false);
-      router.replaceAll([const PermissionsScreenPageRoute()]);
       return;
     }
 
@@ -543,7 +578,7 @@ class AppRouter extends RootStackRouter {
     }
   }
 
-  void onAutoprovisionScreenPageRouteGuardNavigation(NavigationResolver resolver, StackRouter router) {
+  Future<void> onAutoprovisionScreenPageRouteGuardNavigation(NavigationResolver resolver, StackRouter router) async {
     _logger.fine(_onNavigationLoggerMessage('onAutoprovisionScreenPageRouteGuardNavigation', resolver));
 
     final query = resolver.route.queryParams;
@@ -554,6 +589,10 @@ class AppRouter extends RootStackRouter {
     // so the reevaluation will be triggered
     if (configToken != null && configToken.isNotEmpty && !resolver.isReevaluating) {
       resolver.next(true);
+    } else if (resolver.isReevaluating && session.isLoggedIn) {
+      // The token was applied and signed the user in: the way in goes on from here.
+      resolver.next(false);
+      await _leaveSignIn(router);
     } else {
       resolver.next(false);
       router.replaceAll([const MainShellRoute()]);
