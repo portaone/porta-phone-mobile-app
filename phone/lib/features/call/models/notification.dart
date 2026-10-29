@@ -75,6 +75,11 @@ const _diagnosticRoute = SettingsRouterPageRoute(children: [DiagnosticScreenPage
 final class CallUserMediaErrorNotification extends MessageNotification {
   const CallUserMediaErrorNotification();
 
+  /// A call answered from the lock screen ends here with the app out of sight; without the
+  /// shade the user would only see the call stop.
+  @override
+  Set<NotificationDelivery> deliveries() => const {NotificationDelivery.inApp, NotificationDelivery.shade};
+
   @override
   String l10n(BuildContext context) {
     return context.l10n.notifications_errorSnackBar_callUserMedia;
@@ -95,6 +100,10 @@ final class CallUserMediaErrorNotification extends MessageNotification {
 /// shortcut to the diagnostic screen, where the permission is granted.
 final class CallVideoDowngradedNotification extends MessageNotification {
   const CallVideoDowngradedNotification();
+
+  /// Answered from the lock screen as often as from the app, so it may go to the shade too.
+  @override
+  Set<NotificationDelivery> deliveries() => const {NotificationDelivery.inApp, NotificationDelivery.shade};
 
   @override
   String l10n(BuildContext context) {

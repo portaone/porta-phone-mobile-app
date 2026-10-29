@@ -53,7 +53,7 @@ class LocalPushRepositoryFLNImpl implements LocalPushRepository {
       id: notification.id,
       title: notification.title,
       body: notification.body,
-      notificationDetails: kNotificationDetails,
+      notificationDetails: notification.longBody ? _longBodyDetails(notification.body) : kNotificationDetails,
       payload: jsonEncode(notification.payload ?? {}),
     );
   }
@@ -110,3 +110,16 @@ const kDarwinNotificationDetails = DarwinNotificationDetails(
   interruptionLevel: InterruptionLevel.active,
 );
 const kNotificationDetails = NotificationDetails(android: kAndroidNotificationDetails, iOS: kDarwinNotificationDetails);
+
+/// [kNotificationDetails] for a body to be read whole: Android cuts a body to one line unless
+/// it is given the big-text style. iOS wraps it by itself.
+NotificationDetails _longBodyDetails(String body) => NotificationDetails(
+  android: AndroidNotificationDetails(
+    kLocalPushChannelId,
+    kLocalPushChannelName,
+    importance: Importance.high,
+    priority: Priority.high,
+    styleInformation: BigTextStyleInformation(body),
+  ),
+  iOS: kDarwinNotificationDetails,
+);
