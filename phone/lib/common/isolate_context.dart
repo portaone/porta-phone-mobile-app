@@ -163,11 +163,24 @@ class PushIsolateContext extends IsolateContext {
     // Phase 2 - best-effort: failures are isolated, flow continues with nulls.
     AppDatabase? appDatabase;
     if (base.appPath != null) {
-      Logger.root.info('IsolateDatabase.connectOrCreate call from PushIsolateContext.init');
-      appDatabase = await _tryInit(
-        () => IsolateDatabase.connectOrCreate(directoryPath: base.appPath!.applicationDocumentsPath),
-        'AppDatabase',
-      );
+      Logger.root.info('IsolateDatabase.open call from PushIsolateContext.init');
+      final appPath = base.appPath!;
+      appDatabase = await _tryInit(() async {
+        final db = IsolateDatabase.open(
+          directoryPath: appPath.applicationDocumentsPath,
+          tempDirectoryPath: appPath.temporaryPath,
+        );
+        // The connection opens on the first query; make it here, so a database
+        // that cannot be opened - or a server that never answers - leaves the
+        // context without one, as documented, instead of holding the call up.
+        try {
+          await db.customSelect('SELECT 1').get().timeout(const Duration(seconds: 10));
+        } catch (_) {
+          await db.close();
+          rethrow;
+        }
+        return db;
+      }, 'AppDatabase');
     } else {
       Logger.root.warning('PushIsolateContext: AppPath unavailable - skipping DB init');
     }

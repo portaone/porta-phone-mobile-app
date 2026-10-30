@@ -20,11 +20,12 @@ const _targetNumber = 'SHARED-NUMBER';
 /// Tune this to make race/lock scenarios more likely.
 const int writeJitterMaxMs = 100;
 
+var _databases = 0;
+
 /// Integration tests for Database Concurrency & Locking.
 ///
-/// These tests verify that the SQLite configuration (specifically WAL mode and busy_timeout)
-/// correctly handles simultaneous read/write operations from multiple isolates
-/// (Main UI Isolate and Background Isolate).
+/// These tests verify that simultaneous writes from multiple isolates (Main UI Isolate and
+/// Background Isolate) all land, through the one database server they share.
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -39,12 +40,13 @@ void main() {
     setUp(() async {
       fakeAppPath = FakeAppPath();
       dbPath = fakeAppPath.applicationDocumentsPath;
-      dbName = 'test_db.sqlite';
+      // The server is found by the database's name, so every test has its own.
+      dbName = 'test_db_${_databases++}.sqlite';
 
       // Ensure a fresh state for each test
       await DatabaseFileHelper.deleteDatabaseFiles(directoryPath: dbPath, dbName: dbName);
 
-      mainDb = IsolateDatabase.create(directoryPath: dbPath, dbName: dbName);
+      mainDb = IsolateDatabase.open(directoryPath: dbPath, tempDirectoryPath: dbPath, dbName: dbName);
       mainRepository = CallLogsRepository(appDatabase: mainDb);
     });
 
@@ -119,9 +121,13 @@ Future<void> _executeConcurrencyTest(
 
 /// Entry point for the background isolate.
 ///
-/// Establishes an independent DB connection and executes the write batch.
+/// Connects to the shared database server and executes the write batch.
 Future<int> _runBackgroundWrites(ConcurrencyWorkerArgs config) async {
-  final db = IsolateDatabase.create(directoryPath: config.dbPath, dbName: config.dbName);
+  final db = IsolateDatabase.open(
+    directoryPath: config.dbPath,
+    tempDirectoryPath: config.dbPath,
+    dbName: config.dbName,
+  );
   final repository = CallLogsRepository(appDatabase: db);
 
   try {

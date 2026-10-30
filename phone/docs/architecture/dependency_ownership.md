@@ -29,8 +29,7 @@ registered with the builder and covered by `abort()`.
 
 A shared dependency reaches the tree by value, so no provider can close it. A
 provider never passes `dispose:` for something it did not create, and never
-performs a process-wide teardown - `DriftIsolate.shutdownAll()`,
-`IsolateNameServer.removePortNameMapping`, or closing a `StreamController` that
+performs a process-wide teardown - `IsolateNameServer.removePortNameMapping`, or closing a `StreamController` that
 someone outside the tree still listens to.
 
 There is no lookup by type: a widget is given its dependencies through the
@@ -67,7 +66,6 @@ Two consequences worth spelling out:
 
 | Object | Resource to release | Who else holds it | Released by |
 |---|---|---|---|
-| `DatabaseServer` (native only) | database server isolate + the `IsolateNameServer` mapping background isolates use to find it | widgets take client connections from it | the application |
 | `ConnectivityService` | plugin subscription, two broadcast controllers, the checker | `PollingService`, `ConnectivityLifecycleService` | the application |
 | `SystemInfoRepository` | broadcast controller | `FeatureAccessStreamFactory` (startup level), `PollingService` | the application |
 | `LogRecordsRepository` | subscription to the root logger; the file-backed one also owns a rotating appender | - | the application |
@@ -88,7 +86,7 @@ Two consequences worth spelling out:
 | the preference-backed repositories | `RootApp.build` | nothing to release |
 | `AppCompatibilityResolver`, `SignalingServiceFactory` | `RootApp.build`, both const | nothing to release |
 | `FirebaseMessaging` | `RootApp.build`, plugin singleton | nothing to release |
-| `AppDatabaseLifecycleHolder` and `AppDatabase` | `RootApp.build` | itself - it owns the client connection and its lifecycle observer |
+| `AppDatabaseLifecycleHolder` and `AppDatabase` | `RootApp.build` | itself - it owns the client connection and its lifecycle observer; drift's database server, shared with the background isolates, shuts down after its last client |
 | `PollingService`, `CdrsSync`, `ExternalContactsSync`, session services | `main_shell_services.dart` | the same provider; each sync owner releases its worker and task |
 | `PrivateGatewayRepository` | `main_shell_repositories.dart` | the same provider |
 | the session's `WebtritApiClient` and its session-rejection subscription | `main_shell.dart` | the shell cancels the subscription; the client itself is not closed |
