@@ -168,6 +168,7 @@ Widget buildCallScaffold(
   ConferenceState conference = const ConferenceState(),
   bool conferenceParked = false,
   LinkedCall? linkedCall,
+  HandOver? handOver,
   DestinationPickingCubit? picking,
   bool canStartAttendedTransfer = true,
   AddParticipantAvailability addParticipantAvailability = AddParticipantAvailability.hidden,
@@ -189,6 +190,15 @@ Widget buildCallScaffold(
       remotePlaceholderBuilder: null,
       keepControlsVisible: keepControlsVisible,
       linkedCall: linkedCall,
+      // As the screen reads it: from the state, unless a test says otherwise.
+      handOver:
+          handOver ??
+          CallState(
+            linesCount: 3,
+            activeCalls: activeCalls,
+            conference: conference,
+            linkedCall: linkedCall,
+          ).handOverFor(focusedCall.callId),
       canStartAttendedTransfer: canStartAttendedTransfer,
       addParticipantAvailability: addParticipantAvailability,
     ),

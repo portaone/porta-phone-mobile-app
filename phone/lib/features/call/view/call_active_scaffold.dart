@@ -37,6 +37,7 @@ class CallActiveScaffold extends StatefulWidget {
     required this.keepControlsVisible,
     this.contactResolver,
     this.linkedCall,
+    this.handOver,
     this.addParticipantAvailability = AddParticipantAvailability.hidden,
   });
 
@@ -69,6 +70,10 @@ class CallActiveScaffold extends StatefulWidget {
   /// (see [CallState.linkedCall]): the consultation an attended transfer
   /// hands the call it is for over to.
   final LinkedCall? linkedCall;
+
+  /// The hand-over the transfer menu offers (see [CallState.handOverFor]),
+  /// or null when there is none.
+  final HandOver? handOver;
 
   /// Whether somebody can be called into the conversation on the screen
   /// (see [CallState.addParticipantAvailability]).
@@ -270,18 +275,14 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     dispatchInteractionDebounce();
   }
 
-  /// Hands [referorCall] over to the attended transfer's second call. Which call that is
-  /// is read from the link rather than guessed from which call is live: a
-  /// third call answered meanwhile would be the live one, and handing the
-  /// referor to it would connect two people who never meant to talk.
-  void _submitAttendedTransfer(ActiveCall referorCall) {
-    final transferCall = _attendedTransferCall;
-    if (transferCall == null) return;
-    _callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: referorCall, replaceCall: transferCall));
+  /// Hands [referorCall] over to [replaceCall]. Both come from the transfer
+  /// menu, which picks the second call by one rule rather than guessing it
+  /// from which call is live: a third call answered meanwhile would be the
+  /// live one, and handing the referor to it would connect two people who
+  /// never meant to talk.
+  void _submitAttendedTransfer(ActiveCall referorCall, ActiveCall replaceCall) {
+    _callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: referorCall, replaceCall: replaceCall));
   }
-
-  /// The answered second call of the attended transfer under way, if any.
-  ActiveCall? get _attendedTransferCall => widget.linkedCall?.answeredTransferCallIn(widget.activeCalls);
 
   /// Sends the person to the lists to choose whom to consult before handing
   /// the focused call over. Refused where somebody is already choosing for
@@ -473,6 +474,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                       onAttendedTransferInitiated: _startAttendedTransfer,
                       onAttendedTransferSubmitted: _submitAttendedTransfer,
                       linkedCall: widget.linkedCall,
+                      handOver: widget.handOver,
                       canStartAttendedTransfer: widget.canStartAttendedTransfer,
                       onHeldChanged: _toggleFocusedHeld,
                       onKeyPressed: _sendDtmfKey,
