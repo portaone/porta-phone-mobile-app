@@ -51,10 +51,17 @@ class CallActionArea extends StatelessWidget {
     // silence the whole conference. The grid acts on the room instead.
     final focusedIsLeg = params.conference.isLeg(focusedCall.callId);
 
-    // Which held calls the menu lists and which call they are connected with
-    // come from the state as one hand-over (see [CallState.handOverFor]),
-    // never a leg of the room: the server refuses a transfer that involves one.
+    // Which calls the menu lists and which two calls each entry connects come
+    // from the state as one hand-over (see [CallState.handOverFor]), never a
+    // leg of the room: the server refuses a transfer that involves one.
     final handOver = params.handOver;
+
+    // A pick sends the transfer of its entry, read from the same hand-over the
+    // menu was built from, never guessed from which call happens to be live.
+    void submitHandOver(ActiveCall listedCall) {
+      final entry = handOver?.entryOf(listedCall);
+      if (entry != null) params.onAttendedTransferSubmitted(entry.referorCall, entry.replaceCall);
+    }
 
     if (!focusedIsRinging) {
       return ActiveCallActions(
@@ -83,7 +90,7 @@ class CallActionArea extends StatelessWidget {
         // A leg is neither a call to hand over nor one to hand a call to: the
         // server refuses a transfer of one, from whichever side. For a leg the
         // menu is only the way to invite somebody into the room.
-        transferableCalls: focusedIsLeg ? const [] : handOver?.referorCalls ?? const [],
+        transferableCalls: focusedIsLeg ? const [] : handOver?.listedCalls ?? const [],
         onBlindTransferInitiated: callConfig.isBlindTransferEnabled && !focusedIsLeg
             ? (!focusedCall.wasAccepted || focusedTransfer != null ? null : params.onBlindTransferInitiated)
             : null,
@@ -91,11 +98,8 @@ class CallActionArea extends StatelessWidget {
         onAttendedTransferInitiated: callConfig.isAttendedTransferEnabled && params.canStartAttendedTransfer
             ? params.onAttendedTransferInitiated
             : null,
-        // The submit hands the call named in the menu over to the call the
-        // menu was built for, never to one guessed from which call happens
-        // to be live.
         onAttendedTransferSubmitted: callConfig.isAttendedTransferEnabled && handOver != null && focusedTransfer == null
-            ? (referorCall) => params.onAttendedTransferSubmitted(referorCall, handOver.replaceCall)
+            ? submitHandOver
             : null,
         heldValue: focusedCall.held,
         // Hold pauses just the focused call; Resume brings it

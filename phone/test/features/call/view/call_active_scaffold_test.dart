@@ -674,13 +674,20 @@ void main() {
       await teardownCallScaffold(tester);
     });
 
-    testWidgets('a held call on screen offers no hand-over', (tester) async {
-      // "Connect them with this call" would name the held call itself.
+    testWidgets('a held call on screen is offered the live call and handed over to it', (tester) async {
+      // The entry names the other call of the pair; the held call on screen is
+      // the one handed over, as in an attended transfer.
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
 
       await openTransferMenu(tester);
+      expect(inMenu('Boris Klein'), findsOneWidget);
+      expect(inMenu('Clara Diaz'), findsNothing);
+      await tester.tap(inMenu('Boris Klein'));
+      await tester.pumpAndSettle();
 
-      expect(find.byKey(callActionsTransferMenuNumberKey), findsNothing);
+      verify(
+        () => callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: held, replaceCall: live)),
+      ).called(1);
       await teardownCallScaffold(tester);
     });
 

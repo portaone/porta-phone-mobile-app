@@ -91,8 +91,8 @@ class CallControlsParams {
   final VoidCallback onBlindTransferInitiated;
   final VoidCallback onAttendedTransferInitiated;
 
-  /// Hands the call picked in the menu over to [HandOver.replaceCall] of
-  /// [handOver].
+  /// Sends the transfer of the entry picked in the menu (see [HandOverEntry]):
+  /// its referor call handed over to its replace call.
   final void Function(ActiveCall referorCall, ActiveCall replaceCall) onAttendedTransferSubmitted;
   final ValueChanged<bool> onHeldChanged;
   final ValueChanged<String> onKeyPressed;
