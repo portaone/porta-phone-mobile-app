@@ -65,10 +65,13 @@ class CallBlocHarness {
     // The line rotation is process-wide; left as an earlier test set it, the
     // line an outgoing call takes would depend on the order tests run in.
     CallState.lastUsedLine = null;
+    peerFactory.order = sideEffectOrder;
+    final recordingLines = _RecordingLinesStateRepository(linesRepository, sideEffectOrder);
+    publishedLines = recordingLines.published;
     bloc = CallBloc(
       callLogsRepository: _FakeCallLogsRepository(),
       onMissedCall: (_, _) {},
-      linesStateRepository: LinesStateRepositoryInMemoryImpl(),
+      linesStateRepository: recordingLines,
       presenceInfoRepository: _FakePresenceInfoRepository(),
       dialogInfoRepository: _FakeDialogInfoRepository(),
       presenceSettingsRepository: _FakePresenceSettingsRepository(),
@@ -96,6 +99,10 @@ class CallBlocHarness {
       roomCodecMoveTimer: roomCodecMoveTimer,
       conferenceAudioCodecs: conferenceAudioCodecs,
       conferenceAudioProfiles: conferenceAudioProfiles,
+      onCallEnded: () {
+        callsEnded++;
+        sideEffectOrder.add('call ended');
+      },
     );
     if (lines != null) {
       // ignore: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
@@ -108,6 +115,23 @@ class CallBlocHarness {
   final FakeCallkeep callkeep = FakeCallkeep();
   final FakeQueuedTerminationRequestsRepository terminationQueue = FakeQueuedTerminationRequestsRepository();
   final RecordingCallErrorReporter errors = RecordingCallErrorReporter();
+
+  /// Where the bloc publishes the lines of the account: every state change
+  /// the bloc made is published here, for the rest of the app.
+  final LinesStateRepository linesRepository = LinesStateRepositoryInMemoryImpl();
+
+  /// How often the bloc said a call ended.
+  int callsEnded = 0;
+
+  /// What the bloc told the app about the lines, in order.
+  late final List<LinesState> publishedLines;
+
+  /// The side effects of the state changes, in the order they ran.
+  ///
+  /// A change runs several of them, synchronously and outside the queues.
+  /// Which of them ran first is part of the behaviour, so the harness
+  /// records the order rather than only their outcome.
+  final List<String> sideEffectOrder = [];
 
   /// The factory both the calls and the room's connection are built from. A
   /// test that needs a connection which misbehaves passes its own.
@@ -195,6 +219,14 @@ class CallBlocHarness {
   }
 
   Future<void> close() async {
+    // The platform stub is restored when the test ends, which happens before
+    // this runs: a handler the bloc still has in flight - the one that stops
+    // the ringback, for one - would then reach the placeholder, which throws
+    // for every call it does not implement. The stub is put back for the
+    // closing, so the work the bloc finishes sees the same platform the work
+    // it started saw.
+    final stub = _lastInstalledPlatform;
+    if (stub != null) WebtritCallkeepPlatform.instance = stub;
     await bloc.close();
     await signaling.close();
   }
@@ -206,8 +238,18 @@ class CallBlocHarness {
   /// installs them itself. They last for the current test only: left in place, they would
   /// answer the next file's widgets too (a renderer told `null` instead of a texture id).
   static void installPlatformStubs() {
+    final stub = _installPlatformStubs();
+    _lastInstalledPlatform = stub;
+  }
+
+  /// The stub the last [installPlatformStubs] installed, so a harness that
+  /// was built before the test's own teardown can put it back.
+  static WebtritCallkeepPlatform? _lastInstalledPlatform;
+
+  static WebtritCallkeepPlatform _installPlatformStubs() {
     final previousCallkeep = WebtritCallkeepPlatform.instance;
-    WebtritCallkeepPlatform.instance = _FakeCallkeepPlatform();
+    final stub = _FakeCallkeepPlatform();
+    WebtritCallkeepPlatform.instance = stub;
     final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     const channels = ['FlutterWebRTC.Method', 'FlutterWebRTC.Event'];
     for (final channel in channels) {
@@ -219,6 +261,42 @@ class CallBlocHarness {
         messenger.setMockMethodCallHandler(MethodChannel(channel), null);
       }
     });
+    return stub;
+  }
+}
+
+/// The lines the bloc publishes, recorded at the moment the bloc publishes
+/// them.
+///
+/// The repository the bloc writes to tells its listeners through a stream, so
+/// a listener of that stream hears about a publication a turn later - and the
+/// order the bloc ran its side effects in would be lost. The recording
+/// happens in [setState] itself, which is where the bloc publishes, so the
+/// order the harness reports is the order the bloc ran the side effects in.
+class _RecordingLinesStateRepository implements LinesStateRepository {
+  _RecordingLinesStateRepository(this._inner, this._sideEffectOrder) {
+    _inner.stateUpdates().listen(published.add);
+  }
+
+  final LinesStateRepository _inner;
+  final List<String> _sideEffectOrder;
+
+  /// Every state the bloc published, in order.
+  final List<LinesState> published = [];
+
+  @override
+  LinesState getState() => _inner.getState();
+
+  @override
+  Stream<LinesState> stateUpdates() => _inner.stateUpdates();
+
+  @override
+  Stream<LinesState> getStateAndListen() => _inner.getStateAndListen();
+
+  @override
+  void setState(LinesState state) {
+    _sideEffectOrder.add('lines published');
+    _inner.setState(state);
   }
 }
 
@@ -289,6 +367,23 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   /// request it cannot send with `null` rather than with a future.
   bool sendable = true;
 
+  /// How often the module was asked to open a connection. The reconnect
+  /// controller calls it when the session it wants is not up.
+  int connects = 0;
+
+  /// How often the module was asked to close its connection.
+  int disconnects = 0;
+
+  @override
+  void connect() {
+    connects++;
+  }
+
+  @override
+  Future<void> disconnect() async {
+    disconnects++;
+  }
+
   @override
   Stream<SignalingModuleEvent> get events => _events.stream;
 
@@ -324,6 +419,11 @@ class FakeSignalingModule extends Fake implements SignalingModule {
 
   void _add(SignalingModuleEvent event) {
     _session.onEvent(event);
+    // A real module that nobody listens to any more keeps what the server
+    // sends and throws nothing. The fake closed its stream when the test
+    // closed the harness, and an event that arrives after that would be a
+    // fault of the fake, not of the bloc.
+    if (_events.isClosed) return;
     _events.add(event);
   }
 
@@ -497,10 +597,22 @@ class FakeCallkeep extends Fake implements Callkeep {
   /// trip a handshake can land inside.
   Completer<void>? holdGate;
 
+  /// Whether a hold request is answered the way the platform answers it: the
+  /// native side calls the delegate back with the change it applied, and the
+  /// bloc learns of it that way.
+  ///
+  /// Off by default, so a test that reads [held] alone sees the request and
+  /// nothing else. A test that drives the whole flow - the person holds, the
+  /// platform tells the bloc - turns it on.
+  bool relayHeldToDelegate = false;
+
   @override
   Future<CallkeepCallRequestError?> setHeld(String callId, {required bool onHold}) async {
     held.add((callId: callId, onHold: onHold));
     await holdGate?.future;
+    if (relayHeldToDelegate) {
+      await _delegate?.performSetHeld(callId, onHold);
+    }
     return null;
   }
 
@@ -513,6 +625,15 @@ class FakeCallkeep extends Fake implements Callkeep {
   @override
   Future<CallkeepCallRequestError?> unsetCallGroup(List<String> callIds) async {
     ungroups.add(List.of(callIds));
+    return null;
+  }
+
+  /// The DTMF the platform was asked to send, in order.
+  final List<String> dtmfKeys = [];
+
+  @override
+  Future<CallkeepCallRequestError?> sendDTMF(String callId, String key) async {
+    dtmfKeys.add(key);
     return null;
   }
 }
@@ -579,6 +700,10 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
 
   static const _minimalSdp = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\n';
   int closes = 0;
+
+  /// Where the close is recorded, so that a test can see in which order the
+  /// side effects of a state change ran.
+  List<String>? order;
   final List<FakeRtpSender> _senders = [];
   final List<MediaStreamTrack> addedTracks = [];
   final List<RTCSessionDescription> remoteDescriptions = [];
@@ -633,6 +758,7 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   @override
   Future<void> close() async {
     closes++;
+    order?.add('peer connection closed');
   }
 
   @override
@@ -864,12 +990,17 @@ class FakePeerConnectionFactory implements PeerConnectionFactory {
   /// connection's own minimal one.
   String? offerSdp;
 
+  /// Where the connections record what they were closed for, so that a test
+  /// can see in which order the side effects of a state change ran.
+  List<String>? order;
+
   @override
   Future<RTCPeerConnection> create([
     Map<String, dynamic> configuration = const {},
     Map<String, dynamic> constraints = const {},
   ]) async {
     final peerConnection = FakePeerConnection(offerSdp: offerSdp);
+    peerConnection.order = order;
     created.add(peerConnection);
     return peerConnection;
   }
