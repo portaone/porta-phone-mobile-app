@@ -3480,6 +3480,18 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       return;
     }
 
+    // The menu offered the pair as the calls were when it was built; a second
+    // tap finds the first transfer under way, and a call may have ended or
+    // started to go meanwhile. Each of them would send a transfer the server
+    // refuses, or a second one of a call already being handed over.
+    if (!state.canHandOver(referorCall.callId, replaceCall.callId)) {
+      _logger.warning(
+        '__onMutationControlAttendedTransfer: ${referorCall.callId} can no longer be handed over '
+        'to ${replaceCall.callId}, dropped',
+      );
+      return;
+    }
+
     try {
       final transferRequest = TransferRequest(
         transaction: WebtritSignalingClient.generateTransactionId(),

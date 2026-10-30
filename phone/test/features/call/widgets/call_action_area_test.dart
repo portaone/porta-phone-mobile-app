@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -29,14 +30,10 @@ void main() {
     bool? canStartAttendedTransfer,
   }) {
     // As the screen reads it: from the state, unless a test says otherwise.
+    final state = CallState(linesCount: 3, activeCalls: activeCalls, conference: conference, linkedCall: linkedCall);
     final canStart =
         canStartAttendedTransfer ??
-        CallState(
-          linesCount: 3,
-          activeCalls: activeCalls,
-          conference: conference,
-          linkedCall: linkedCall,
-        ).canLinkCallTo(focusedCall.callId, purpose: LinkedCallPurpose.attendedTransfer, isConferenceEnabled: true);
+        state.canLinkCallTo(focusedCall.callId, purpose: LinkedCallPurpose.attendedTransfer, isConferenceEnabled: true);
     return CallActionArea(
       params: CallControlsParams(
         activeCalls: activeCalls,
@@ -54,13 +51,14 @@ void main() {
         onAudioDeviceChanged: (_) {},
         onBlindTransferInitiated: () {},
         onAttendedTransferInitiated: () {},
-        onAttendedTransferSubmitted: (_) {},
+        onAttendedTransferSubmitted: (_, _) {},
         onHeldChanged: (_) {},
         onKeyPressed: (_) {},
         onHangup: onHangup ?? () {},
         onAccept: onAccept ?? () {},
         conference: conference,
         linkedCall: linkedCall,
+        handOver: state.handOverFor(focusedCall.callId),
         canStartAttendedTransfer: canStart,
       ),
     );
@@ -242,6 +240,47 @@ void main() {
       await tester.pumpWidget(wrap(buildArea(activeCalls: [active], focusedCall: active)));
 
       expect(buttonWithIcon(tester, Icons.phone_forwarded).onPressed, isNotNull);
+    });
+
+    testWidgets('a call to connect leaves the attended transfer to somebody else offered', (tester) async {
+      // With a held call listed the menu used to drop the attended transfer,
+      // so the live call could not be handed to a third person after asking.
+      final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
+      await tester.pumpWidget(
+        wrap(
+          buildArea(
+            activeCalls: [held, active],
+            focusedCall: active,
+            callConfig: const CallCapabilitiesConfig(isAttendedTransferEnabled: true, isBlindTransferEnabled: true),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.phone_forwarded));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(callActionsTransferMenuNumberKey), findsOneWidget);
+      expect(find.byKey(callActionsTransferMenuAttendedInitKey), findsOneWidget);
+    });
+
+    testWidgets('the attended transfer is left out beside a call to connect when none can start', (tester) async {
+      final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
+      await tester.pumpWidget(
+        wrap(
+          buildArea(
+            activeCalls: [held, active],
+            focusedCall: active,
+            callConfig: const CallCapabilitiesConfig(isAttendedTransferEnabled: true, isBlindTransferEnabled: true),
+            canStartAttendedTransfer: false,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.phone_forwarded));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(callActionsTransferMenuNumberKey), findsOneWidget);
+      expect(find.byKey(callActionsTransferMenuAttendedInitKey), findsNothing);
     });
   });
 }

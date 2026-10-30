@@ -186,6 +186,75 @@ class CallState with _$CallState {
         anchor.processingStatus != CallProcessingStatus.disconnecting;
   }
 
+  /// Whether [referorCallId] can be handed over to [replaceCallId] by an
+  /// attended transfer now: two different calls, each one a transfer can name
+  /// ([_canTakeTransfer]).
+  ///
+  /// The menu lists by it and the bloc checks it again on the submit, with
+  /// the calls as they are then: a second tap on an entry finds the call in
+  /// the transfer the first one started, and a call that ended while the menu
+  /// was open is not there at all.
+  bool canHandOver(String referorCallId, String replaceCallId) =>
+      referorCallId != replaceCallId && _canTakeTransfer(referorCallId) && _canTakeTransfer(replaceCallId);
+
+  /// Whether [callId] is a call a transfer can name: answered, on a numbered
+  /// line - the server transfers calls by line - in no transfer already, not
+  /// on its way out and not a leg of the room, which the server never
+  /// transfers. A video call is one: unlike a call placed for another
+  /// ([_canAnchor]), a transfer joins no room and adds no call of its own.
+  bool _canTakeTransfer(String callId) {
+    final call = retrieveActiveCall(callId);
+    if (call == null || isConferenced(callId)) return false;
+    return call.wasAccepted &&
+        call.line != null &&
+        call.transfer == null &&
+        !call.wasHungUp &&
+        call.processingStatus != CallProcessingStatus.disconnecting;
+  }
+
+  /// The hand-over the transfer menu of [focusedCallId] offers, or null when
+  /// there is none.
+  ///
+  /// With a call linked, it is the call the attended transfer was started for,
+  /// handed over to the linked call once that is answered, whichever row is
+  /// focused: an incoming call grabs the selection at ring time, so the held
+  /// original may stay focused through the whole transfer. A link of another
+  /// purpose offers none, so the call it is about is not handed elsewhere
+  /// halfway.
+  ///
+  /// With nothing linked - a second call dialled or answered the ordinary way -
+  /// each entry is a call the person picks, connected "with this call", the
+  /// focused one: with a live call on screen every held call is listed and
+  /// handed over to it; with a held call on screen every other call is
+  /// listed, live or held, and the held call on screen is handed over to the
+  /// one picked. A held call is the one handed over, as in an attended
+  /// transfer, and the pair is the person's choice - never guessed from which
+  /// call happens to be live, which a third call answered meanwhile changes.
+  HandOver? handOverFor(String focusedCallId) {
+    final link = linkedCall;
+    final List<HandOverEntry> entries;
+    if (link != null) {
+      final replaceCall = link.answeredTransferCallIn(activeCalls);
+      entries = [
+        if (replaceCall != null)
+          for (final call in activeCalls)
+            if (call.held && call.callId == link.anchorCallId && canHandOver(call.callId, replaceCall.callId))
+              HandOverEntry(listedCall: call, referorCall: call, replaceCall: replaceCall),
+      ];
+    } else {
+      final focused = retrieveActiveCall(focusedCallId);
+      entries = [
+        if (focused != null)
+          for (final call in activeCalls)
+            if ((focused.held || call.held) && canHandOver(call.callId, focused.callId))
+              focused.held
+                  ? HandOverEntry(listedCall: call, referorCall: focused, replaceCall: call)
+                  : HandOverEntry(listedCall: call, referorCall: call, replaceCall: focused),
+      ];
+    }
+    return entries.isEmpty ? null : HandOver(entries);
+  }
+
   /// Whether [callId] is the call placed by the current link.
   bool isLinkedCall(String callId) => linkedCall?.callId == callId;
 

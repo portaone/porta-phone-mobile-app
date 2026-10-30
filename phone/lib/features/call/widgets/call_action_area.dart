@@ -39,8 +39,6 @@ class CallActionArea extends StatelessWidget {
     final callConfig = params.callConfig;
     final interactionsEnabled = params.interactionsEnabled;
 
-    final heldCalls = activeCalls.nonCurrent;
-
     final nonIncomingRingingCalls = activeCalls.nonIncomingRinging;
     final nonIncomingRingingCanBeHolded = nonIncomingRingingCalls.where((call) => call.wasAccepted == true).toList();
 
@@ -53,21 +51,17 @@ class CallActionArea extends StatelessWidget {
     // silence the whole conference. The grid acts on the room instead.
     final focusedIsLeg = params.conference.isLeg(focusedCall.callId);
 
-    // The calls a transfer can go to, and the one it would replace, are never
-    // legs of the room: the server refuses a transfer that involves one.
-    //
-    // The hand-over is of the call the attended transfer was started for, to
-    // the call placed to consult, and there is one to offer only while such
-    // a call is up and answered. Every held call used to be listed, and a
-    // third call answered meanwhile was offered as a target too, which
-    // handed people over to a stranger.
-    final attendedTransferCall = params.attendedTransferCall;
-    final transferAnchorId = attendedTransferCall == null ? null : params.linkedCall?.anchorCallId;
-    final transferTargets = [
-      for (final call in heldCalls)
-        if (call.callId == transferAnchorId && !params.conference.isLeg(call.callId)) call,
-    ];
-    final transferCallIsLeg = attendedTransferCall != null && params.conference.isLeg(attendedTransferCall.callId);
+    // Which calls the menu lists and which two calls each entry connects come
+    // from the state as one hand-over (see [CallState.handOverFor]), never a
+    // leg of the room: the server refuses a transfer that involves one.
+    final handOver = params.handOver;
+
+    // A pick sends the transfer of its entry, read from the same hand-over the
+    // menu was built from, never guessed from which call happens to be live.
+    void submitHandOver(ActiveCall listedCall) {
+      final entry = handOver?.entryOf(listedCall);
+      if (entry != null) params.onAttendedTransferSubmitted(entry.referorCall, entry.replaceCall);
+    }
 
     if (!focusedIsRinging) {
       return ActiveCallActions(
@@ -96,7 +90,7 @@ class CallActionArea extends StatelessWidget {
         // A leg is neither a call to hand over nor one to hand a call to: the
         // server refuses a transfer of one, from whichever side. For a leg the
         // menu is only the way to invite somebody into the room.
-        transferableCalls: focusedIsLeg ? const [] : transferTargets,
+        transferableCalls: focusedIsLeg ? const [] : handOver?.listedCalls ?? const [],
         onBlindTransferInitiated: callConfig.isBlindTransferEnabled && !focusedIsLeg
             ? (!focusedCall.wasAccepted || focusedTransfer != null ? null : params.onBlindTransferInitiated)
             : null,
@@ -104,17 +98,8 @@ class CallActionArea extends StatelessWidget {
         onAttendedTransferInitiated: callConfig.isAttendedTransferEnabled && params.canStartAttendedTransfer
             ? params.onAttendedTransferInitiated
             : null,
-        // TODO (Serdun): Simplify complex condition in the widget tree.
-        // The submit hands the call named in the menu over to the call placed
-        // for it; which call that is comes from the link, not from which call
-        // happens to be live (see [CallControlsParams.attendedTransferCall]).
-        // Gated on the link the submit acts on, not on which call is live.
-        onAttendedTransferSubmitted:
-            callConfig.isAttendedTransferEnabled &&
-                attendedTransferCall != null &&
-                !transferCallIsLeg &&
-                focusedTransfer == null
-            ? params.onAttendedTransferSubmitted
+        onAttendedTransferSubmitted: callConfig.isAttendedTransferEnabled && handOver != null && focusedTransfer == null
+            ? submitHandOver
             : null,
         heldValue: focusedCall.held,
         // Hold pauses just the focused call; Resume brings it

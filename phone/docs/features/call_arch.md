@@ -379,6 +379,19 @@ hand-over is made of - the transfer menu then offers one target, the call the tr
 started for, and the submit replaces the linked call - rather than a guess from which call
 happens to be live, which a third call answered meanwhile used to break.
 
+Two calls with nothing linking them - the second dialled from the keypad or answered the
+ordinary way - can be connected too, the way most phones transfer. Each entry of the transfer
+menu is a call the person picks, connected with the focused one: with a live call on screen the
+held calls are listed and the one picked is handed over to it; with a held call on screen every
+other call is listed, live or held, and the held call on screen is handed over to the one picked.
+A held call is the referor either way, as in an attended transfer. Every entry carries its pair (`HandOverEntry`),
+so the menu shows and the submit sends the same transfer. The menu reads
+`CallState.handOverFor`, and the bloc checks `CallState.canHandOver` again on the submit with
+the calls as they are then: both calls answered, on a line, in no transfer, not on their way
+out and not legs of the room - video calls included, unlike a call a consultation is placed
+for - so a second tap or a call that ended while the menu was open sends nothing. A link of another purpose, or one whose
+second call still rings, offers no hand-over at all.
+
 Every way the second call can fail before it is answered - the platform refusing to place it,
 the signalling wait timing out, media, a hangup with any code, the person ending it - ends with
 it leaving `activeCalls`, and that is the one place the give-back hangs on (`_followLinkedCall`

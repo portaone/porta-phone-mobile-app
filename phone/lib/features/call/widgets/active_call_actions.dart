@@ -326,7 +326,10 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
     final transferInitAvailable =
         onBlindTransferInitiated != null || onAttendedTransferInitiated != null || inviteOffered;
     final transferToCallAvailable =
-        onBlindTransferInitiated != null || widget.onAttendedTransferSubmitted != null || inviteOffered;
+        onBlindTransferInitiated != null ||
+        widget.onAttendedTransferSubmitted != null ||
+        onAttendedTransferInitiated != null ||
+        inviteOffered;
     final transferMenuLabel = inviteShown
         ? context.l10n.call_CallActionsTooltip_addOrTransfer
         : context.l10n.call_CallActionsTooltip_transfer;
@@ -342,8 +345,11 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
     final foregroundColor =
         widget.style?.key?.foregroundColor?.resolve(const <WidgetState>{}) ?? Theme.of(context).colorScheme.surface;
 
-    final keypadTextStyle = DefaultTextStyle.of(context).style
-        .copyWith(fontSize: Theme.of(context).textTheme.headlineLarge?.fontSize, height: 1.0, color: foregroundColor);
+    final keypadTextStyle = DefaultTextStyle.of(context).style.copyWith(
+      fontSize: Theme.of(context).textTheme.headlineLarge?.fontSize,
+      height: 1.0,
+      color: foregroundColor,
+    );
 
     final subKeypadTextStyle = DefaultTextStyle.of(context).style.copyWith(
       fontSize: Theme.of(context).textTheme.bodyMedium?.fontSize,
@@ -575,7 +581,9 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
   }
 
   /// Menu items of the transfer popup while other calls can be transfer
-  /// targets: one per transferable call, plus the free-number option.
+  /// targets: one per transferable call, plus the free-number option and the
+  /// attended transfer to somebody else - a call to connect does not take
+  /// away consulting a third person first.
   List<PopupMenuEntry<dynamic>> _buildTransferToCallItems(ThemeData themeData) {
     final popupMenuIconSize = themeData.textTheme.bodyLarge!.fontSize;
     final onAttendedTransferSubmitted = widget.onAttendedTransferSubmitted;
@@ -619,6 +627,7 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
           ),
           textStyle: themeData.textTheme.bodyMedium,
         ),
+      if (widget.onAttendedTransferInitiated != null) _attendedTransferInitItem(themeData),
     ];
   }
 
@@ -694,22 +703,27 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
           ),
           textStyle: themeData.textTheme.bodyMedium,
         ),
-      if (widget.onAttendedTransferInitiated != null)
-        CallPopupMenuItem(
-          key: callActionsTransferMenuAttendedInitKey,
-          identifier: callActionsTransferMenuAttendedInitId,
-          // Transfer is signaling-dependent, disable during renegotiation.
-          enabled: widget.enableInteractions,
-          onTap: widget.onAttendedTransferInitiated,
-          text: context.l10n.call_CallActionsTooltip_attended_transfer,
-          subtitle: context.l10n.call_CallActionsTooltip_attendedTransferHint,
-          icon: Icon(
-            Icons.phone_forwarded_outlined,
-            size: popupMenuIconSize,
-            color: themeData.textTheme.bodyMedium!.color,
-          ),
-          textStyle: themeData.textTheme.bodyMedium,
-        ),
+      if (widget.onAttendedTransferInitiated != null) _attendedTransferInitItem(themeData),
     ];
+  }
+
+  /// The entry that starts an attended transfer; the same entry in both
+  /// shapes of the menu, which never appear together.
+  CallPopupMenuItem _attendedTransferInitItem(ThemeData themeData) {
+    return CallPopupMenuItem(
+      key: callActionsTransferMenuAttendedInitKey,
+      identifier: callActionsTransferMenuAttendedInitId,
+      // Transfer is signaling-dependent, disable during renegotiation.
+      enabled: widget.enableInteractions,
+      onTap: widget.onAttendedTransferInitiated,
+      text: context.l10n.call_CallActionsTooltip_attended_transfer,
+      subtitle: context.l10n.call_CallActionsTooltip_attendedTransferHint,
+      icon: Icon(
+        Icons.phone_forwarded_outlined,
+        size: themeData.textTheme.bodyLarge!.fontSize,
+        color: themeData.textTheme.bodyMedium!.color,
+      ),
+      textStyle: themeData.textTheme.bodyMedium,
+    );
   }
 }

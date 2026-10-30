@@ -48,6 +48,7 @@ class CallControlsParams {
     this.onMerge,
     this.onConferenceAdd,
     this.linkedCall,
+    this.handOver,
     this.canStartAttendedTransfer = false,
     this.onConferenceSelfMuted,
     this.onConferenceParticipantMuted,
@@ -89,7 +90,10 @@ class CallControlsParams {
   final ValueChanged<CallAudioDevice> onAudioDeviceChanged;
   final VoidCallback onBlindTransferInitiated;
   final VoidCallback onAttendedTransferInitiated;
-  final ValueChanged<ActiveCall> onAttendedTransferSubmitted;
+
+  /// Sends the transfer of the entry picked in the menu (see [HandOverEntry]):
+  /// its referor call handed over to its replace call.
+  final void Function(ActiveCall referorCall, ActiveCall replaceCall) onAttendedTransferSubmitted;
   final ValueChanged<bool> onHeldChanged;
   final ValueChanged<String> onKeyPressed;
   final VoidCallback onHangup;
@@ -123,8 +127,9 @@ class CallControlsParams {
   /// every held call as a possible target.
   final LinkedCall? linkedCall;
 
-  /// The answered second call of the attended transfer under way, if any.
-  ActiveCall? get attendedTransferCall => linkedCall?.answeredTransferCallIn(activeCalls);
+  /// The hand-over the transfer menu offers (see [CallState.handOverFor]), or
+  /// `null` while there is none.
+  final HandOver? handOver;
 
   /// Whether an attended transfer can be started for the focused call (see
   /// [CallState.canLinkCallTo]); the control is offered disabled otherwise.
