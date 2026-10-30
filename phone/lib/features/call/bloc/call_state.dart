@@ -200,28 +200,36 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   /// halfway.
   ///
   /// With nothing linked - a second call dialled or answered the ordinary way -
-  /// every held call is listed, each picked by the person, and handed over to
-  /// the focused call while that is the live one: the entry connects the held
-  /// call "with this call". The call it goes to is never guessed from which
+  /// each entry is a call the person picks, connected "with this call", the
+  /// focused one: with a live call on screen every held call is listed and
+  /// handed over to it; with a held call on screen every other call is
+  /// listed, live or held, and the held call on screen is handed over to the
+  /// one picked. A held call is the one handed over, as in an attended
+  /// transfer, and the pair is the person's choice - never guessed from which
   /// call happens to be live, which a third call answered meanwhile changes.
   HandOver? handOverFor(String focusedCallId) {
     final link = linkedCall;
-    final ActiveCall? replaceCall;
+    final List<HandOverEntry> entries;
     if (link != null) {
-      replaceCall = link.answeredTransferCallIn(activeCalls);
+      final replaceCall = link.answeredTransferCallIn(activeCalls);
+      entries = [
+        if (replaceCall != null)
+          for (final call in activeCalls)
+            if (call.held && call.callId == link.anchorCallId && canHandOver(call.callId, replaceCall.callId))
+              HandOverEntry(listedCall: call, referorCall: call, replaceCall: replaceCall),
+      ];
     } else {
       final focused = retrieveActiveCall(focusedCallId);
-      replaceCall = focused == null || focused.held ? null : focused;
+      entries = [
+        if (focused != null)
+          for (final call in activeCalls)
+            if ((focused.held || call.held) && canHandOver(call.callId, focused.callId))
+              focused.held
+                  ? HandOverEntry(listedCall: call, referorCall: focused, replaceCall: call)
+                  : HandOverEntry(listedCall: call, referorCall: call, replaceCall: focused),
+      ];
     }
-    if (replaceCall == null) return null;
-    final referorCalls = [
-      for (final call in activeCalls)
-        if (call.held &&
-            (link == null || call.callId == link.anchorCallId) &&
-            canHandOver(call.callId, replaceCall.callId))
-          call,
-    ];
-    return referorCalls.isEmpty ? null : HandOver(replaceCall: replaceCall, referorCalls: referorCalls);
+    return entries.isEmpty ? null : HandOver(entries);
   }
 
   /// Whether [callId] is the call placed by the current link.

@@ -124,9 +124,10 @@ what it does.
 - Two calls up with no consultation between them - the second one came in, or
   was dialled as an ordinary call: the menu of the live call on screen lists
   every held call, "<name> - Connect them with this call", each an entry of its
-  own; the one picked is connected with the call on screen. A held call on
-  screen offers no such entry. A call that cannot be transferred - a video
-  call, one already in a transfer, one ending - is not listed.
+  own; the one picked is connected with the call on screen. The menu of a held
+  call on screen lists every other call the same way, live or held. A call that cannot be
+  transferred - a video call, one already in a transfer, one ending - is not
+  listed.
 
 ## Key widgets
 

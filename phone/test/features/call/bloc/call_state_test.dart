@@ -2141,17 +2141,32 @@ void main() {
     final held = _makeCall(callId: 'b', line: 0, held: true, acceptedTime: DateTime(2024));
     final live = _makeCall(callId: 'c', line: 1, acceptedTime: DateTime(2024));
 
-    List<String>? listed(CallState state, String focused) =>
-        state.handOverFor(focused)?.referorCalls.map((call) => call.callId).toList();
+    // Each entry as `listed: referor -> replace`, the calls by id.
+    List<String>? entries(CallState state, String focused) => state
+        .handOverFor(focused)
+        ?.entries
+        .map((e) => '${e.listedCall.callId}: ${e.referorCall.callId} -> ${e.replaceCall.callId}')
+        .toList();
 
     test('two calls placed separately: the held one goes to the live one on screen', () {
-      final state = CallState(linesCount: 3, activeCalls: [held, live]);
-      expect(listed(state, 'c'), ['b']);
-      expect(state.handOverFor('c')?.replaceCall.callId, 'c');
+      expect(entries(CallState(linesCount: 3, activeCalls: [held, live]), 'c'), ['b: b -> c']);
     });
 
-    test('a held call on screen offers none', () {
-      expect(CallState(linesCount: 3, activeCalls: [held, live]).handOverFor('b'), isNull);
+    test('a held call on screen lists the live call, and is the one handed over to it', () {
+      // The pair is the person's pick either way; the held call is handed
+      // over, as in an attended transfer.
+      expect(entries(CallState(linesCount: 3, activeCalls: [held, live]), 'b'), ['c: b -> c']);
+    });
+
+    test('a held call on screen lists every other call, live or held', () {
+      final other = _makeCall(callId: 'd', line: 2, held: true, acceptedTime: DateTime(2024));
+      expect(entries(CallState(linesCount: 3, activeCalls: [held, other, live]), 'b'), ['d: b -> d', 'c: b -> c']);
+    });
+
+    test('two held calls and no live one: either connects with the other', () {
+      final other = _makeCall(callId: 'd', line: 2, held: true, acceptedTime: DateTime(2024));
+      expect(entries(CallState(linesCount: 3, activeCalls: [held, other]), 'b'), ['d: b -> d']);
+      expect(entries(CallState(linesCount: 3, activeCalls: [held, other]), 'd'), ['b: d -> b']);
     });
 
     test('a held call that cannot be handed over is not listed', () {
@@ -2167,6 +2182,7 @@ void main() {
       };
       for (final MapEntry(key: why, value: call) in cases.entries) {
         expect(CallState(linesCount: 3, activeCalls: [call, live]).handOverFor('c'), isNull, reason: why);
+        expect(CallState(linesCount: 3, activeCalls: [call, live]).handOverFor('b'), isNull, reason: '$why, on screen');
       }
     });
 
@@ -2178,8 +2194,8 @@ void main() {
       final other = _makeCall(callId: 'd', line: 2, held: true, acceptedTime: DateTime(2024));
       const link = LinkedCall(callId: 'c', anchorCallId: 'b', purpose: LinkedCallPurpose.attendedTransfer);
       final state = CallState(linesCount: 3, activeCalls: [held, other, live], linkedCall: link);
-      expect(listed(state, 'b'), ['b']);
-      expect(state.handOverFor('b')?.replaceCall.callId, 'c');
+      expect(entries(state, 'b'), ['b: b -> c']);
+      expect(entries(state, 'c'), ['b: b -> c']);
     });
 
     test('a call placed to join keeps the held calls out', () {
@@ -2194,6 +2210,7 @@ void main() {
         conference: const ConferenceState(phase: ConferencePhase.active, legs: {'b': 0}),
       );
       expect(state.handOverFor('c'), isNull);
+      expect(state.handOverFor('b'), isNull);
     });
   });
 }
