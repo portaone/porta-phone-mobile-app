@@ -1,204 +1,133 @@
 import 'dart:async';
-import 'dart:isolate';
-import 'dart:ui';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:drift/drift.dart';
-import 'package:drift/isolate.dart';
-import 'package:flutter/foundation.dart';
+import 'package:drift_flutter/drift_flutter.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' show join;
+import 'package:sqlite3/common.dart';
 
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/environment_config.dart';
 
-/// The [IsolateNameServer] key under which the [DriftIsolate] server's [SendPort] is registered.
+final _logger = Logger('IsolateDatabase');
+
+/// Opens [AppDatabase] in any isolate of the process.
 ///
-/// Used by background isolates (e.g. FCM handler, WorkManager) to connect to the shared
-/// database server spawned by the main isolate, eliminating write-write contention.
-const _kDbPortName = 'webtrit_app_db';
-
-/// Entry point for the dedicated [DriftIsolate] database server isolate.
-///
-/// This function is spawned via [Isolate.spawn] and runs in a separate isolate.
-/// It creates a synchronous [NativeDatabase], starts a [DriftIsolate] server,
-/// and sends back the [SendPort] so that any isolate can connect to it.
-@pragma('vm:entry-point')
-void _driftServerEntryPoint(List<dynamic> args) {
-  final sendPort = args[0] as SendPort;
-  final directoryPath = args[1] as String;
-  final dbName = args[2] as String;
-  final logStatements = args[3] as bool;
-
-  final executor = createAppDatabaseNative(directoryPath, dbName, logStatements: logStatements);
-
-  final server = DriftIsolate.inCurrent(() => DatabaseConnection(executor));
-  sendPort.send(server.connectPort);
-}
-
-/// Helper for creating [AppDatabase] instances in different isolates.
+/// Every isolate - the app, the push-notification isolate, the background
+/// tasks - shares one connection to the database file. Whichever opens the
+/// database first spawns drift's server isolate and registers it in the
+/// process-wide `IsolateNameServer`; the others connect to that server, and it
+/// shuts down once the last of them has disconnected. Two connections to one
+/// file would answer each other's writes with `database is locked`, so nothing
+/// opens the file directly.
 abstract final class IsolateDatabase {
-  /// The [IsolateNameServer] key used to share the [DriftIsolate] [SendPort].
-  static const kDbPortName = _kDbPortName;
+  /// The database file, in [AppPath.applicationDocumentsPath] on native
+  /// platforms and the database name on the web.
+  static const dbName = 'db.sqlite';
 
-  /// Spawns a dedicated [DriftIsolate] server isolate that owns the single database
-  /// connection for [directoryPath]/[dbName], and registers its [SendPort] in
-  /// [IsolateNameServer] under [kDbPortName].
+  /// Opens a client connection to the shared database.
   ///
-  /// Call this once from the main isolate (e.g. in [bootstrap]) before [runApp].
-  /// All other isolates should use [connectOrCreate] to obtain a client connection.
-  static Future<DriftIsolate> spawnServer({required String directoryPath, String dbName = 'db.sqlite'}) async {
-    final existingPort = IsolateNameServer.lookupPortByName(kDbPortName);
-    if (existingPort != null) {
-      Logger.root.warning('IsolateDatabase.spawnServer - warning: existing for "$kDbPortName" during server startup');
-      final isolate = DriftIsolate.fromConnectPort(existingPort);
-      // Attempt to shutdown the existing isolate gracefully in case it's a stale instance
-      // Note: Already dead in debug mode restart
-      if (!kDebugMode) {
-        await isolate
-            .shutdownAll()
-            .timeout(const Duration(seconds: 5))
-            .catchError((e, s) {
-              Logger.root.warning('IsolateDatabase.spawnServer - failed to shutdown existing isolate', e, s);
-            })
-            .then((_) {
-              Logger.root.info('IsolateDatabase.spawnServer - shutdown of existing isolate completed');
-            });
-      }
-
-      final removed = IsolateNameServer.removePortNameMapping(kDbPortName);
-      Logger.root.info('IsolateDatabase.spawnServer - removed existing port mapping: $removed');
-    }
-
-    final receivePort = ReceivePort();
-    final errorPort = ReceivePort();
-    final exitPort = ReceivePort();
-
-    final completer = Completer<SendPort>();
-
-    final receiveSub = receivePort.listen((message) {
-      if (!completer.isCompleted) completer.complete(message as SendPort);
-    });
-
-    final errorSub = errorPort.listen((message) {
-      if (completer.isCompleted) return;
-      final error = message is List ? message[0] : message;
-      final rawStack = message is List && message.length > 1 ? message[1] : null;
-      final stackTrace = rawStack is String ? StackTrace.fromString(rawStack) : StackTrace.current;
-      completer.completeError(DatabaseInitializationException('Database isolate error: $error', stackTrace));
-    });
-
-    final exitSub = exitPort.listen((_) {
-      if (!completer.isCompleted) {
-        completer.completeError(
-          DatabaseInitializationException('Database isolate exited before sending connect port', StackTrace.current),
-        );
-      }
-    });
-
-    final isolate = await Isolate.spawn(
-      _driftServerEntryPoint,
-      [receivePort.sendPort, directoryPath, dbName, EnvironmentConfig.DATABASE_LOG_STATEMENTS],
-      onError: errorPort.sendPort,
-      onExit: exitPort.sendPort,
+  /// [directoryPath] holds the file and [tempDirectoryPath] SQLite's temporary
+  /// files - [AppPath.applicationDocumentsPath] and [AppPath.temporaryPath].
+  /// Both are passed rather than looked up: an isolate started with
+  /// `Isolate.spawn` or `compute` has no platform channels to ask. Both are
+  /// ignored on the web.
+  ///
+  /// The server is found by [dbName] alone: once one runs for a name, every
+  /// later open of that name reaches its file, whatever [directoryPath] says.
+  static AppDatabase open({required String directoryPath, required String tempDirectoryPath, String dbName = dbName}) {
+    assert(kIsWeb || directoryPath.isNotEmpty, 'directoryPath must not be empty');
+    final connection = driftDatabase(
+      name: dbName,
+      native: DriftNativeOptions(
+        shareAcrossIsolates: true,
+        databasePath: () async => join(directoryPath, dbName),
+        tempDirectoryPath: () async => tempDirectoryPath,
+        setup: _setUp,
+      ),
+      web: DriftWebOptions(
+        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+        driftWorker: Uri.parse('drift_worker.js'),
+        onResult: _logWebStorage,
+      ),
     );
-
-    SendPort connectPort;
-    try {
-      connectPort = await completer.future.timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          isolate.kill(priority: Isolate.immediate);
-          throw DatabaseInitializationException('Timed out waiting for database isolate to start', StackTrace.current);
-        },
-      );
-    } finally {
-      await receiveSub.cancel();
-      await errorSub.cancel();
-      await exitSub.cancel();
-      receivePort.close();
-      errorPort.close();
-      exitPort.close();
-    }
-
-    final registered = IsolateNameServer.registerPortWithName(connectPort, kDbPortName);
-    Logger.root.info('IsolateDatabase.spawnServer - registered port with name "$kDbPortName": $registered');
-    if (!registered) {
-      throw DatabaseInitializationException(
-        'Failed to register DriftIsolate SendPort under "$kDbPortName"',
-        StackTrace.current,
-      );
-    }
-    return DriftIsolate.fromConnectPort(connectPort);
-  }
-
-  /// Connects to the shared [DriftIsolate] server registered in [IsolateNameServer],
-  /// or falls back to a direct [NativeDatabase] connection if none is found.
-  ///
-  /// Use this in isolates that may run concurrently with the main app
-  /// (e.g. FCM background handler, WorkManager) instead of [create].
-  static Future<AppDatabase> connectOrCreate({required String directoryPath, String dbName = 'db.sqlite'}) async {
-    final sendPort = IsolateNameServer.lookupPortByName(kDbPortName);
-    if (sendPort != null) {
-      Logger.root.info('IsolateDatabase.connectOrCreate: sendPort found, connecting to DriftIsolate server');
-      try {
-        final driftIsolate = DriftIsolate.fromConnectPort(sendPort);
-        return AppDatabase(await driftIsolate.connect());
-      } catch (e, s) {
-        Logger.root.severe(
-          'IsolateDatabase.connectOrCreate: failed to connect, falling back to direct connection',
-          e,
-          s,
-        );
-        // Stale port (e.g. after hot reload or app restart) — remove mapping and fall through to direct connection.
-        IsolateNameServer.removePortNameMapping(kDbPortName);
-      }
-    }
-    return create(directoryPath: directoryPath, dbName: dbName);
-  }
-
-  /// Opens a direct web [AppDatabase] backed by a drift `WasmDatabase`.
-  ///
-  /// Web has no isolate server (`dart:isolate` spawning is unsupported), so the
-  /// single connection is created here and opened lazily on first query. The
-  /// directory path is ignored on web; the database lives in IndexedDB/OPFS.
-  static AppDatabase openWeb({String dbName = 'db.sqlite'}) {
-    final executor = createAppDatabaseConnection(
-      null,
-      dbName,
-      logStatements: EnvironmentConfig.DATABASE_LOG_STATEMENTS,
+    return AppDatabase(
+      EnvironmentConfig.DATABASE_LOG_STATEMENTS ? connection.interceptWith(_StatementLog()) : connection,
     );
-    Logger.root.info('IsolateDatabase.openWeb - created web database connection');
-    return AppDatabase(executor);
   }
 
-  /// Opens a new direct [AppDatabase] instance for [directoryPath]/[dbName].
-  ///
-  /// Note: This creates a new SQLite connection each time. Avoid calling it repeatedly in
-  /// concurrent code paths; prefer [use] to ensure connections are closed deterministically.
-  static AppDatabase create({required String directoryPath, String dbName = 'db.sqlite'}) {
-    assert(directoryPath.isNotEmpty, 'directoryPath must not be empty');
-    assert(dbName.isNotEmpty, 'dbName must not be empty');
+  /// Runs once, in the server isolate, on the one connection it holds.
+  static void _setUp(CommonDatabase database) {
+    // The server isolate has none of the app's log handlers, so this goes to
+    // the console: a second such line in one process is a second server.
+    // ignore: avoid_print
+    print('IsolateDatabase - the database server opened the database');
+    // In the default DELETE journal readers block writers and writers block
+    // readers; with WAL they do not.
+    database.execute('PRAGMA journal_mode=WAL;');
+    database.execute('PRAGMA busy_timeout=5000;');
+  }
 
-    try {
-      final executor = createAppDatabaseConnection(
-        directoryPath,
-        dbName,
-        logStatements: EnvironmentConfig.DATABASE_LOG_STATEMENTS,
+  /// drift downgrades the web storage by itself (OPFS -> IndexedDB -> memory).
+  /// The in-memory one (a private window, a browser with neither) loses all
+  /// local data on reload, so it is said rather than left silent.
+  static void _logWebStorage(WasmDatabaseResult result) {
+    if (result.chosenImplementation == WasmStorageImplementation.inMemory) {
+      _logger.warning(
+        'Web database has no persistent storage (in-memory fallback) - local data '
+        'will be lost on reload. missingFeatures: ${result.missingFeatures}',
       );
-      Logger.root.info('IsolateDatabase.create - created direct database connection');
-      return AppDatabase(executor);
-    } catch (e, stackTrace) {
-      Logger.root.severe('IsolateDatabase.create - failed to initialize database', e, stackTrace);
-      throw DatabaseInitializationException('Failed to initialize database: $e', stackTrace);
+    } else {
+      _logger.info(
+        'Web database storage: ${result.chosenImplementation}'
+        '${result.missingFeatures.isEmpty ? '' : ' (missing: ${result.missingFeatures})'}',
+      );
     }
   }
 }
 
-class DatabaseInitializationException implements Exception {
-  final String message;
-  final StackTrace stackTrace;
-
-  DatabaseInitializationException(this.message, this.stackTrace);
+/// Prints every statement a client sends, with its arguments
+/// (`WEBTRIT_APP_DATABASE_LOG_STATEMENTS`) - to the console, as drift's own
+/// `logStatements` does, never to the app's log and the remote logging behind it.
+class _StatementLog extends QueryInterceptor {
+  // ignore: avoid_print
+  void _log(String statement, List<Object?> args) => print('Drift: Sent $statement with args $args');
 
   @override
-  String toString() => 'DatabaseInitializationException: $message\n$stackTrace';
+  Future<List<Map<String, Object?>>> runSelect(QueryExecutor executor, String statement, List<Object?> args) {
+    _log(statement, args);
+    return executor.runSelect(statement, args);
+  }
+
+  @override
+  Future<int> runInsert(QueryExecutor executor, String statement, List<Object?> args) {
+    _log(statement, args);
+    return executor.runInsert(statement, args);
+  }
+
+  @override
+  Future<int> runUpdate(QueryExecutor executor, String statement, List<Object?> args) {
+    _log(statement, args);
+    return executor.runUpdate(statement, args);
+  }
+
+  @override
+  Future<int> runDelete(QueryExecutor executor, String statement, List<Object?> args) {
+    _log(statement, args);
+    return executor.runDelete(statement, args);
+  }
+
+  @override
+  Future<void> runCustom(QueryExecutor executor, String statement, List<Object?> args) {
+    _log(statement, args);
+    return executor.runCustom(statement, args);
+  }
+
+  @override
+  Future<void> runBatched(QueryExecutor executor, BatchedStatements statements) {
+    _log(statements.statements.join('; '), statements.arguments);
+    return executor.runBatched(statements);
+  }
 }

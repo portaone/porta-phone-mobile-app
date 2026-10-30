@@ -46,9 +46,9 @@ as its slowest member, not as long as their sum:
 | `app-preferences` | 5 | 4..5 |
 | `remote-config-cache` | 3 | 2..5 |
 
-The serial tail after the wave - api clients, database isolate, callkeep, connectivity,
-work manager - is around 90 ms in total, with `callkeep` (15) and `database-isolate` (10)
-the largest single items.
+The serial tail after the wave - api clients, callkeep, connectivity, work manager - is
+around 80 ms in total, with `callkeep` (15) the largest single item. The database is not
+opened at startup: drift's server isolate is spawned by whichever isolate opens it first.
 
 Outside the wave but inside `bootstrap`: `platform` 53 (Firebase core 51 and local
 notifications 43 run inside it).
