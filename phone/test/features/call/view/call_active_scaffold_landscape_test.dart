@@ -457,7 +457,7 @@ void main() {
         onAudioDeviceChanged: (_) {},
         onBlindTransferInitiated: () {},
         onAttendedTransferInitiated: () {},
-        onAttendedTransferSubmitted: (_) {},
+        onAttendedTransferSubmitted: (_, _) {},
         onHeldChanged: (_) {},
         onKeyPressed: (_) {},
         onHangup: () {},
