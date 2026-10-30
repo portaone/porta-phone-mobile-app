@@ -29,14 +29,10 @@ void main() {
     bool? canStartAttendedTransfer,
   }) {
     // As the screen reads it: from the state, unless a test says otherwise.
+    final state = CallState(linesCount: 3, activeCalls: activeCalls, conference: conference, linkedCall: linkedCall);
     final canStart =
         canStartAttendedTransfer ??
-        CallState(
-          linesCount: 3,
-          activeCalls: activeCalls,
-          conference: conference,
-          linkedCall: linkedCall,
-        ).canLinkCallTo(focusedCall.callId, purpose: LinkedCallPurpose.attendedTransfer, isConferenceEnabled: true);
+        state.canLinkCallTo(focusedCall.callId, purpose: LinkedCallPurpose.attendedTransfer, isConferenceEnabled: true);
     return CallActionArea(
       params: CallControlsParams(
         activeCalls: activeCalls,
@@ -54,13 +50,14 @@ void main() {
         onAudioDeviceChanged: (_) {},
         onBlindTransferInitiated: () {},
         onAttendedTransferInitiated: () {},
-        onAttendedTransferSubmitted: (_) {},
+        onAttendedTransferSubmitted: (_, _) {},
         onHeldChanged: (_) {},
         onKeyPressed: (_) {},
         onHangup: onHangup ?? () {},
         onAccept: onAccept ?? () {},
         conference: conference,
         linkedCall: linkedCall,
+        handOver: state.handOverFor(focusedCall.callId),
         canStartAttendedTransfer: canStart,
       ),
     );

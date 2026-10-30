@@ -623,6 +623,96 @@ void main() {
     });
   });
 
+  // A second call dialled from the keypad or answered the ordinary way has
+  // nothing linking it to the first, the way most phones transfer: hold, call
+  // somebody else, then connect the two.
+  group('CallActiveScaffold - transfer between two calls placed separately', () {
+    final held = makeCall(callId: 'held', acceptedTime: DateTime(2024), held: true, displayName: 'Clara Diaz');
+    final live = makeCall(
+      callId: 'live',
+      direction: CallDirection.outgoing,
+      acceptedTime: DateTime(2024),
+      displayName: 'Boris Klein',
+    );
+
+    Future<void> openTransferMenu(WidgetTester tester) async {
+      await tester.tap(find.byKey(callActionsTransferMenuKey));
+      await tester.pumpAndSettle();
+    }
+
+    Finder inMenu(String name) => find.descendant(of: find.byType(PopupMenuItem<dynamic>), matching: find.text(name));
+
+    testWidgets('the held call is offered and handed over to the call on screen', (tester) async {
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: live));
+
+      await openTransferMenu(tester);
+      expect(inMenu('Clara Diaz'), findsOneWidget);
+      await tester.tap(inMenu('Clara Diaz'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: held, replaceCall: live)),
+      ).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('with a third call each held call is an entry of its own', (tester) async {
+      // The person picks which held call joins the one on screen, so nothing
+      // is guessed from which call happens to be live.
+      final other = makeCall(callId: 'other', acceptedTime: DateTime(2024), held: true, displayName: 'Dana Weber');
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, other, live], focusedCall: live));
+
+      await openTransferMenu(tester);
+      expect(inMenu('Clara Diaz'), findsOneWidget);
+      await tester.tap(inMenu('Dana Weber'));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => callBloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: other, replaceCall: live)),
+      ).called(1);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a held call on screen offers no hand-over', (tester) async {
+      // "Connect them with this call" would name the held call itself.
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: held));
+
+      await openTransferMenu(tester);
+
+      expect(find.byKey(callActionsTransferMenuNumberKey), findsNothing);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a call that was never answered is not offered', (tester) async {
+      final dialling = makeCall(
+        callId: 'dialling',
+        direction: CallDirection.outgoing,
+        held: true,
+        displayName: 'Dana Weber',
+      );
+      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [dialling, live], focusedCall: live));
+
+      await openTransferMenu(tester);
+
+      expect(find.byKey(callActionsTransferMenuNumberKey), findsNothing);
+      await teardownCallScaffold(tester);
+    });
+
+    testWidgets('a call being placed for another one keeps the held calls out', (tester) async {
+      // Calling somebody into a call links the new call to it; until it is
+      // answered and has joined, the call it is for is not to be handed away.
+      const join = LinkedCall(callId: 'live', anchorCallId: 'held', purpose: LinkedCallPurpose.join);
+      await tester.pumpWidget(
+        buildCallScaffold(callBloc, activeCalls: [held, live], focusedCall: live, linkedCall: join),
+      );
+
+      await openTransferMenu(tester);
+
+      expect(find.byKey(callActionsTransferMenuNumberKey), findsNothing);
+      await teardownCallScaffold(tester);
+    });
+  });
+
   group('CallActiveScaffold - avatar in the video area', () {
     testWidgets('audio-only call shows the remote avatar instead of the video overlay', (tester) async {
       await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
