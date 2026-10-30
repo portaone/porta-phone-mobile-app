@@ -126,7 +126,9 @@ what it does.
   every held call, "<name> - Connect them with this call", each an entry of its
   own; the one picked is connected with the call on screen. The menu of a held
   call on screen lists every other call the same way, live or held. A call that cannot be
-  transferred - one already in a transfer, one ending - is not listed.
+  transferred - one already in a transfer, one ending - is not listed. The
+  unattended and the attended transfer to somebody else stay offered next to
+  these entries; the attended one while a line is free for the consultation.
 
 ## Key widgets
 
