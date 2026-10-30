@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'system_info.dart';
@@ -9,13 +9,14 @@ part of 'system_info.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$SystemInfo {
 
- CoreInfo get core; PostgresInfo get postgres; AdapterInfo? get adapter; JanusInfo? get janus; GorushInfo? get gorush; String? get minSupportedAppVersion; String? get bundleVersion;
+
 /// Create a copy of SystemInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $SystemInfoCopyWith<SystemInfo> get copyWith => _$SystemInfoCopyWithImpl<SystemI
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemInfo&&(identical(other.core, core) || other.core == core)&&(identical(other.postgres, postgres) || other.postgres == postgres)&&(identical(other.adapter, adapter) || other.adapter == adapter)&&(identical(other.janus, janus) || other.janus == janus)&&(identical(other.gorush, gorush) || other.gorush == gorush)&&(identical(other.minSupportedAppVersion, minSupportedAppVersion) || other.minSupportedAppVersion == minSupportedAppVersion)&&(identical(other.bundleVersion, bundleVersion) || other.bundleVersion == bundleVersion));
+  final _this = this as SystemInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemInfo&&(identical(other.core, _this.core) || other.core == _this.core)&&(identical(other.postgres, _this.postgres) || other.postgres == _this.postgres)&&(identical(other.adapter, _this.adapter) || other.adapter == _this.adapter)&&(identical(other.janus, _this.janus) || other.janus == _this.janus)&&(identical(other.gorush, _this.gorush) || other.gorush == _this.gorush)&&(identical(other.minSupportedAppVersion, _this.minSupportedAppVersion) || other.minSupportedAppVersion == _this.minSupportedAppVersion)&&(identical(other.bundleVersion, _this.bundleVersion) || other.bundleVersion == _this.bundleVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,core,postgres,adapter,janus,gorush,minSupportedAppVersion,bundleVersion);
+int get hashCode {
+  final _this = this as SystemInfo;
+  return Object.hash(runtimeType,_this.core,_this.postgres,_this.adapter,_this.janus,_this.gorush,_this.minSupportedAppVersion,_this.bundleVersion);
+}
 
 @override
 String toString() {
-  return 'SystemInfo(core: $core, postgres: $postgres, adapter: $adapter, janus: $janus, gorush: $gorush, minSupportedAppVersion: $minSupportedAppVersion, bundleVersion: $bundleVersion)';
+  final _this = this as SystemInfo;
+  return 'SystemInfo(core: ${_this.core}, postgres: ${_this.postgres}, adapter: ${_this.adapter}, janus: ${_this.janus}, gorush: ${_this.gorush}, minSupportedAppVersion: ${_this.minSupportedAppVersion}, bundleVersion: ${_this.bundleVersion})';
 }
 
 
@@ -207,7 +213,7 @@ case _:
 /// @nodoc
 mixin _$CoreInfo {
 
- Version get version; bool? get iceServersConfigured; int? get notificationDeletedRetentionDays;
+
 /// Create a copy of CoreInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -218,16 +224,21 @@ $CoreInfoCopyWith<CoreInfo> get copyWith => _$CoreInfoCopyWithImpl<CoreInfo>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoreInfo&&(identical(other.version, version) || other.version == version)&&(identical(other.iceServersConfigured, iceServersConfigured) || other.iceServersConfigured == iceServersConfigured)&&(identical(other.notificationDeletedRetentionDays, notificationDeletedRetentionDays) || other.notificationDeletedRetentionDays == notificationDeletedRetentionDays));
+  final _this = this as CoreInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CoreInfo&&(identical(other.version, _this.version) || other.version == _this.version)&&(identical(other.iceServersConfigured, _this.iceServersConfigured) || other.iceServersConfigured == _this.iceServersConfigured)&&(identical(other.notificationDeletedRetentionDays, _this.notificationDeletedRetentionDays) || other.notificationDeletedRetentionDays == _this.notificationDeletedRetentionDays));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,version,iceServersConfigured,notificationDeletedRetentionDays);
+int get hashCode {
+  final _this = this as CoreInfo;
+  return Object.hash(runtimeType,_this.version,_this.iceServersConfigured,_this.notificationDeletedRetentionDays);
+}
 
 @override
 String toString() {
-  return 'CoreInfo(version: $version, iceServersConfigured: $iceServersConfigured, notificationDeletedRetentionDays: $notificationDeletedRetentionDays)';
+  final _this = this as CoreInfo;
+  return 'CoreInfo(version: ${_this.version}, iceServersConfigured: ${_this.iceServersConfigured}, notificationDeletedRetentionDays: ${_this.notificationDeletedRetentionDays})';
 }
 
 
@@ -395,7 +406,7 @@ case _:
 /// @nodoc
 mixin _$PostgresInfo {
 
- String? get version;
+
 /// Create a copy of PostgresInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -406,16 +417,21 @@ $PostgresInfoCopyWith<PostgresInfo> get copyWith => _$PostgresInfoCopyWithImpl<P
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PostgresInfo&&(identical(other.version, version) || other.version == version));
+  final _this = this as PostgresInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PostgresInfo&&(identical(other.version, _this.version) || other.version == _this.version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,version);
+int get hashCode {
+  final _this = this as PostgresInfo;
+  return Object.hash(runtimeType,_this.version);
+}
 
 @override
 String toString() {
-  return 'PostgresInfo(version: $version)';
+  final _this = this as PostgresInfo;
+  return 'PostgresInfo(version: ${_this.version})';
 }
 
 
@@ -581,7 +597,7 @@ case _:
 /// @nodoc
 mixin _$AdapterInfo {
 
- String? get name; String? get version; List<String>? get supported; Map<String, dynamic>? get custom;
+
 /// Create a copy of AdapterInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -592,16 +608,21 @@ $AdapterInfoCopyWith<AdapterInfo> get copyWith => _$AdapterInfoCopyWithImpl<Adap
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AdapterInfo&&(identical(other.name, name) || other.name == name)&&(identical(other.version, version) || other.version == version)&&const DeepCollectionEquality().equals(other.supported, supported)&&const DeepCollectionEquality().equals(other.custom, custom));
+  final _this = this as AdapterInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AdapterInfo&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.version, _this.version) || other.version == _this.version)&&const DeepCollectionEquality().equals(other.supported, _this.supported)&&const DeepCollectionEquality().equals(other.custom, _this.custom));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,version,const DeepCollectionEquality().hash(supported),const DeepCollectionEquality().hash(custom));
+int get hashCode {
+  final _this = this as AdapterInfo;
+  return Object.hash(runtimeType,_this.name,_this.version,const DeepCollectionEquality().hash(_this.supported),const DeepCollectionEquality().hash(_this.custom));
+}
 
 @override
 String toString() {
-  return 'AdapterInfo(name: $name, version: $version, supported: $supported, custom: $custom)';
+  final _this = this as AdapterInfo;
+  return 'AdapterInfo(name: ${_this.name}, version: ${_this.version}, supported: ${_this.supported}, custom: ${_this.custom})';
 }
 
 
@@ -770,7 +791,7 @@ case _:
 /// @nodoc
 mixin _$JanusInfo {
 
- Plugins? get plugins; Transports? get transports; String? get version;
+
 /// Create a copy of JanusInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -781,16 +802,21 @@ $JanusInfoCopyWith<JanusInfo> get copyWith => _$JanusInfoCopyWithImpl<JanusInfo>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is JanusInfo&&(identical(other.plugins, plugins) || other.plugins == plugins)&&(identical(other.transports, transports) || other.transports == transports)&&(identical(other.version, version) || other.version == version));
+  final _this = this as JanusInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is JanusInfo&&(identical(other.plugins, _this.plugins) || other.plugins == _this.plugins)&&(identical(other.transports, _this.transports) || other.transports == _this.transports)&&(identical(other.version, _this.version) || other.version == _this.version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,plugins,transports,version);
+int get hashCode {
+  final _this = this as JanusInfo;
+  return Object.hash(runtimeType,_this.plugins,_this.transports,_this.version);
+}
 
 @override
 String toString() {
-  return 'JanusInfo(plugins: $plugins, transports: $transports, version: $version)';
+  final _this = this as JanusInfo;
+  return 'JanusInfo(plugins: ${_this.plugins}, transports: ${_this.transports}, version: ${_this.version})';
 }
 
 
@@ -958,7 +984,7 @@ case _:
 /// @nodoc
 mixin _$GorushInfo {
 
- String? get version;
+
 /// Create a copy of GorushInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -969,16 +995,21 @@ $GorushInfoCopyWith<GorushInfo> get copyWith => _$GorushInfoCopyWithImpl<GorushI
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GorushInfo&&(identical(other.version, version) || other.version == version));
+  final _this = this as GorushInfo;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GorushInfo&&(identical(other.version, _this.version) || other.version == _this.version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,version);
+int get hashCode {
+  final _this = this as GorushInfo;
+  return Object.hash(runtimeType,_this.version);
+}
 
 @override
 String toString() {
-  return 'GorushInfo(version: $version)';
+  final _this = this as GorushInfo;
+  return 'GorushInfo(version: ${_this.version})';
 }
 
 
@@ -1144,7 +1175,7 @@ case _:
 /// @nodoc
 mixin _$Transports {
 
- Websocket? get websocket;
+
 /// Create a copy of Transports
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1155,16 +1186,21 @@ $TransportsCopyWith<Transports> get copyWith => _$TransportsCopyWithImpl<Transpo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Transports&&(identical(other.websocket, websocket) || other.websocket == websocket));
+  final _this = this as Transports;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Transports&&(identical(other.websocket, _this.websocket) || other.websocket == _this.websocket));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,websocket);
+int get hashCode {
+  final _this = this as Transports;
+  return Object.hash(runtimeType,_this.websocket);
+}
 
 @override
 String toString() {
-  return 'Transports(websocket: $websocket)';
+  final _this = this as Transports;
+  return 'Transports(websocket: ${_this.websocket})';
 }
 
 
@@ -1330,7 +1366,7 @@ case _:
 /// @nodoc
 mixin _$Websocket {
 
- String? get version;
+
 /// Create a copy of Websocket
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1341,16 +1377,21 @@ $WebsocketCopyWith<Websocket> get copyWith => _$WebsocketCopyWithImpl<Websocket>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Websocket&&(identical(other.version, version) || other.version == version));
+  final _this = this as Websocket;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Websocket&&(identical(other.version, _this.version) || other.version == _this.version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,version);
+int get hashCode {
+  final _this = this as Websocket;
+  return Object.hash(runtimeType,_this.version);
+}
 
 @override
 String toString() {
-  return 'Websocket(version: $version)';
+  final _this = this as Websocket;
+  return 'Websocket(version: ${_this.version})';
 }
 
 
@@ -1516,7 +1557,7 @@ case _:
 /// @nodoc
 mixin _$Plugins {
 
- SipVersion? get sip;
+
 /// Create a copy of Plugins
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1527,16 +1568,21 @@ $PluginsCopyWith<Plugins> get copyWith => _$PluginsCopyWithImpl<Plugins>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Plugins&&(identical(other.sip, sip) || other.sip == sip));
+  final _this = this as Plugins;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Plugins&&(identical(other.sip, _this.sip) || other.sip == _this.sip));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,sip);
+int get hashCode {
+  final _this = this as Plugins;
+  return Object.hash(runtimeType,_this.sip);
+}
 
 @override
 String toString() {
-  return 'Plugins(sip: $sip)';
+  final _this = this as Plugins;
+  return 'Plugins(sip: ${_this.sip})';
 }
 
 
@@ -1702,7 +1748,7 @@ case _:
 /// @nodoc
 mixin _$SipVersion {
 
- String? get version;
+
 /// Create a copy of SipVersion
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1713,16 +1759,21 @@ $SipVersionCopyWith<SipVersion> get copyWith => _$SipVersionCopyWithImpl<SipVers
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipVersion&&(identical(other.version, version) || other.version == version));
+  final _this = this as SipVersion;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SipVersion&&(identical(other.version, _this.version) || other.version == _this.version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,version);
+int get hashCode {
+  final _this = this as SipVersion;
+  return Object.hash(runtimeType,_this.version);
+}
 
 @override
 String toString() {
-  return 'SipVersion(version: $version)';
+  final _this = this as SipVersion;
+  return 'SipVersion(version: ${_this.version})';
 }
 
 

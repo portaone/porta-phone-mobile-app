@@ -28,53 +28,40 @@ class UserSession with _$UserSession {
   });
 
   /// Session identifier, used to revoke this session.
-  @override
   final String id;
 
   /// Whether this is the session the app is currently using.
-  @override
   final bool current;
 
-  @override
   @JsonKey(unknownEnumValue: UserSessionStatus.unknown)
   final UserSessionStatus status;
 
   /// `User-Agent` captured at session creation; stored as received, not validated.
-  @override
   final String? userAgent;
 
-  @override
   final String? ip;
 
   /// ISO 3166-1 alpha-2 country code resolved once, at session creation.
-  @override
   final String? location;
 
-  @override
   final String? lastActivityIp;
 
   /// ISO 3166-1 alpha-2 country code of [lastActivityIp], resolved per request,
   /// so it may differ from [location] for a roaming device.
-  @override
   final String? lastActivityLocation;
 
   /// Null for a type this build does not know: the session is still one of
   /// the user's, and a list that lost it would hide a device that can be
   /// signed out.
-  @override
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   final AppType? appType;
 
-  @override
   final String? appIdentifier;
 
-  @override
   final String? appBundleId;
 
-  @override
   final DateTime? createdAt;
 
-  @override
   final DateTime? lastActivityAt;
 
   factory UserSession.fromJson(Map<String, Object?> json) => _$UserSessionFromJson(json);

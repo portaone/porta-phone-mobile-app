@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'diagnostic_cubit.dart';
@@ -9,12 +9,13 @@ part of 'diagnostic_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DiagnosticState {
 
- List<PermissionWithStatus> get permissions; PushTokenStatus get pushTokenStatus; CallkeepAndroidBatteryMode get batteryMode; CallkeepAndroidCallDeliveryMode get callDeliveryMode; bool get isXiaomiDevice; CallkeepSpecialPermissionStatus get backgroundActivityStartStatus; CallkeepSpecialPermissionStatus get showWhenLockedStatus; CallkeepSpecialPermissionStatus get fullScreenIntentStatus;
+
 /// Create a copy of DiagnosticState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $DiagnosticStateCopyWith<DiagnosticState> get copyWith => _$DiagnosticStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiagnosticState&&const DeepCollectionEquality().equals(other.permissions, permissions)&&(identical(other.pushTokenStatus, pushTokenStatus) || other.pushTokenStatus == pushTokenStatus)&&(identical(other.batteryMode, batteryMode) || other.batteryMode == batteryMode)&&(identical(other.callDeliveryMode, callDeliveryMode) || other.callDeliveryMode == callDeliveryMode)&&(identical(other.isXiaomiDevice, isXiaomiDevice) || other.isXiaomiDevice == isXiaomiDevice)&&(identical(other.backgroundActivityStartStatus, backgroundActivityStartStatus) || other.backgroundActivityStartStatus == backgroundActivityStartStatus)&&(identical(other.showWhenLockedStatus, showWhenLockedStatus) || other.showWhenLockedStatus == showWhenLockedStatus)&&(identical(other.fullScreenIntentStatus, fullScreenIntentStatus) || other.fullScreenIntentStatus == fullScreenIntentStatus));
+  final _this = this as DiagnosticState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiagnosticState&&const DeepCollectionEquality().equals(other.permissions, _this.permissions)&&(identical(other.pushTokenStatus, _this.pushTokenStatus) || other.pushTokenStatus == _this.pushTokenStatus)&&(identical(other.batteryMode, _this.batteryMode) || other.batteryMode == _this.batteryMode)&&(identical(other.callDeliveryMode, _this.callDeliveryMode) || other.callDeliveryMode == _this.callDeliveryMode)&&(identical(other.isXiaomiDevice, _this.isXiaomiDevice) || other.isXiaomiDevice == _this.isXiaomiDevice)&&(identical(other.backgroundActivityStartStatus, _this.backgroundActivityStartStatus) || other.backgroundActivityStartStatus == _this.backgroundActivityStartStatus)&&(identical(other.showWhenLockedStatus, _this.showWhenLockedStatus) || other.showWhenLockedStatus == _this.showWhenLockedStatus)&&(identical(other.fullScreenIntentStatus, _this.fullScreenIntentStatus) || other.fullScreenIntentStatus == _this.fullScreenIntentStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(permissions),pushTokenStatus,batteryMode,callDeliveryMode,isXiaomiDevice,backgroundActivityStartStatus,showWhenLockedStatus,fullScreenIntentStatus);
+int get hashCode {
+  final _this = this as DiagnosticState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.permissions),_this.pushTokenStatus,_this.batteryMode,_this.callDeliveryMode,_this.isXiaomiDevice,_this.backgroundActivityStartStatus,_this.showWhenLockedStatus,_this.fullScreenIntentStatus);
+}
 
 @override
 String toString() {
-  return 'DiagnosticState(permissions: $permissions, pushTokenStatus: $pushTokenStatus, batteryMode: $batteryMode, callDeliveryMode: $callDeliveryMode, isXiaomiDevice: $isXiaomiDevice, backgroundActivityStartStatus: $backgroundActivityStartStatus, showWhenLockedStatus: $showWhenLockedStatus, fullScreenIntentStatus: $fullScreenIntentStatus)';
+  final _this = this as DiagnosticState;
+  return 'DiagnosticState(permissions: ${_this.permissions}, pushTokenStatus: ${_this.pushTokenStatus}, batteryMode: ${_this.batteryMode}, callDeliveryMode: ${_this.callDeliveryMode}, isXiaomiDevice: ${_this.isXiaomiDevice}, backgroundActivityStartStatus: ${_this.backgroundActivityStartStatus}, showWhenLockedStatus: ${_this.showWhenLockedStatus}, fullScreenIntentStatus: ${_this.fullScreenIntentStatus})';
 }
 
 

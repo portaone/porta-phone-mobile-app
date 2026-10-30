@@ -21,11 +21,9 @@ class SeparatorStyleConfig with _$SeparatorStyleConfig {
   const SeparatorStyleConfig({this.enabled = true, this.color});
 
   /// Whether to render the separator.
-  @override
   final bool enabled;
 
   /// Separator color (hex string, e.g. `#CAC7D1`). `null` → theme default.
-  @override
   final String? color;
 
   factory SeparatorStyleConfig.fromJson(Map<String, Object?> json) => _$SeparatorStyleConfigFromJson(json);

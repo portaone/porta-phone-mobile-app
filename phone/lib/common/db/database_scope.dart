@@ -1,4 +1,5 @@
 import 'package:logging/logging.dart';
+
 import 'package:webtrit_phone/data/data.dart';
 
 import 'isolate_database.dart';
@@ -9,15 +10,15 @@ import 'isolate_database.dart';
 ///
 /// Example:
 /// ```dart
-/// await DatabaseScope(appPath.applicationDocumentsPath)
+/// await DatabaseScope(appPath)
 ///   .onError((e, s) => logger.warning('failed: $e'))
 ///   .execute((db) async => repo.set(item))
 ///   .run();
 /// ```
 class DatabaseScope {
-  DatabaseScope(this._directoryPath);
+  DatabaseScope(this._appPath);
 
-  final String _directoryPath;
+  final AppPath _appPath;
   void Function(Object, StackTrace)? _onError;
   Future<void> Function(AppDatabase db)? _action;
   Duration _timeout = const Duration(seconds: 10);
@@ -42,7 +43,10 @@ class DatabaseScope {
     AppDatabase? db;
     try {
       Logger.root.info('DatabaseScope - opening connection');
-      db = await IsolateDatabase.connectOrCreate(directoryPath: _directoryPath);
+      db = IsolateDatabase.open(
+        directoryPath: _appPath.applicationDocumentsPath,
+        tempDirectoryPath: _appPath.temporaryPath,
+      );
       Logger.root.info('DatabaseScope - running (time: ${DateTime.now().toIso8601String()})');
       await _action!(db).timeout(_timeout);
       Logger.root.info('DatabaseScope - completed (time: ${DateTime.now().toIso8601String()})');

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'session.dart';
@@ -9,13 +9,14 @@ part of 'session.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$Session {
 
- String? get coreUrl; String? get token; String get tenantId; String get userId;
+
 /// Create a copy of Session
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $SessionCopyWith<Session> get copyWith => _$SessionCopyWithImpl<Session>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Session&&(identical(other.coreUrl, coreUrl) || other.coreUrl == coreUrl)&&(identical(other.token, token) || other.token == token)&&(identical(other.tenantId, tenantId) || other.tenantId == tenantId)&&(identical(other.userId, userId) || other.userId == userId));
+  final _this = this as Session;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Session&&(identical(other.coreUrl, _this.coreUrl) || other.coreUrl == _this.coreUrl)&&(identical(other.token, _this.token) || other.token == _this.token)&&(identical(other.tenantId, _this.tenantId) || other.tenantId == _this.tenantId)&&(identical(other.userId, _this.userId) || other.userId == _this.userId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,coreUrl,token,tenantId,userId);
+int get hashCode {
+  final _this = this as Session;
+  return Object.hash(runtimeType,_this.coreUrl,_this.token,_this.tenantId,_this.userId);
+}
 
 @override
 String toString() {
-  return 'Session(coreUrl: $coreUrl, token: $token, tenantId: $tenantId, userId: $userId)';
+  final _this = this as Session;
+  return 'Session(coreUrl: ${_this.coreUrl}, token: ${_this.token}, tenantId: ${_this.tenantId}, userId: ${_this.userId})';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'text_field_config.dart';
@@ -9,13 +9,14 @@ part of 'text_field_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$TextFieldConfig {
 
- InputDecorationConfig? get decoration; TextStyleConfig? get style; String get textAlign; bool get showCursor; String get keyboardType; MaskConfig? get mask; InputValueConfig? get inputValue;
+
 /// Create a copy of TextFieldConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $TextFieldConfigCopyWith<TextFieldConfig> get copyWith => _$TextFieldConfigCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextFieldConfig&&(identical(other.decoration, decoration) || other.decoration == decoration)&&(identical(other.style, style) || other.style == style)&&(identical(other.textAlign, textAlign) || other.textAlign == textAlign)&&(identical(other.showCursor, showCursor) || other.showCursor == showCursor)&&(identical(other.keyboardType, keyboardType) || other.keyboardType == keyboardType)&&(identical(other.mask, mask) || other.mask == mask)&&(identical(other.inputValue, inputValue) || other.inputValue == inputValue));
+  final _this = this as TextFieldConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TextFieldConfig&&(identical(other.decoration, _this.decoration) || other.decoration == _this.decoration)&&(identical(other.style, _this.style) || other.style == _this.style)&&(identical(other.textAlign, _this.textAlign) || other.textAlign == _this.textAlign)&&(identical(other.showCursor, _this.showCursor) || other.showCursor == _this.showCursor)&&(identical(other.keyboardType, _this.keyboardType) || other.keyboardType == _this.keyboardType)&&(identical(other.mask, _this.mask) || other.mask == _this.mask)&&(identical(other.inputValue, _this.inputValue) || other.inputValue == _this.inputValue));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,decoration,style,textAlign,showCursor,keyboardType,mask,inputValue);
+int get hashCode {
+  final _this = this as TextFieldConfig;
+  return Object.hash(runtimeType,_this.decoration,_this.style,_this.textAlign,_this.showCursor,_this.keyboardType,_this.mask,_this.inputValue);
+}
 
 @override
 String toString() {
-  return 'TextFieldConfig(decoration: $decoration, style: $style, textAlign: $textAlign, showCursor: $showCursor, keyboardType: $keyboardType, mask: $mask, inputValue: $inputValue)';
+  final _this = this as TextFieldConfig;
+  return 'TextFieldConfig(decoration: ${_this.decoration}, style: ${_this.style}, textAlign: ${_this.textAlign}, showCursor: ${_this.showCursor}, keyboardType: ${_this.keyboardType}, mask: ${_this.mask}, inputValue: ${_this.inputValue})';
 }
 
 
@@ -207,7 +213,7 @@ case _:
 /// @nodoc
 mixin _$InputValueConfig {
 
- bool? get includePrefixInData; String? get initialValue;
+
 /// Create a copy of InputValueConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -218,16 +224,21 @@ $InputValueConfigCopyWith<InputValueConfig> get copyWith => _$InputValueConfigCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputValueConfig&&(identical(other.includePrefixInData, includePrefixInData) || other.includePrefixInData == includePrefixInData)&&(identical(other.initialValue, initialValue) || other.initialValue == initialValue));
+  final _this = this as InputValueConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputValueConfig&&(identical(other.includePrefixInData, _this.includePrefixInData) || other.includePrefixInData == _this.includePrefixInData)&&(identical(other.initialValue, _this.initialValue) || other.initialValue == _this.initialValue));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,includePrefixInData,initialValue);
+int get hashCode {
+  final _this = this as InputValueConfig;
+  return Object.hash(runtimeType,_this.includePrefixInData,_this.initialValue);
+}
 
 @override
 String toString() {
-  return 'InputValueConfig(includePrefixInData: $includePrefixInData, initialValue: $initialValue)';
+  final _this = this as InputValueConfig;
+  return 'InputValueConfig(includePrefixInData: ${_this.includePrefixInData}, initialValue: ${_this.initialValue})';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'linked_call.dart';
@@ -9,12 +9,13 @@ part of 'linked_call.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LinkedCall {
 
- String get callId; String get anchorCallId; LinkedCallPurpose get purpose; bool get anchorWasLive; bool get intoRoom; bool get awaitingRoom; LinkedCallFailure? get failure;
+
 /// Create a copy of LinkedCall
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $LinkedCallCopyWith<LinkedCall> get copyWith => _$LinkedCallCopyWithImpl<LinkedC
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinkedCall&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.anchorCallId, anchorCallId) || other.anchorCallId == anchorCallId)&&(identical(other.purpose, purpose) || other.purpose == purpose)&&(identical(other.anchorWasLive, anchorWasLive) || other.anchorWasLive == anchorWasLive)&&(identical(other.intoRoom, intoRoom) || other.intoRoom == intoRoom)&&(identical(other.awaitingRoom, awaitingRoom) || other.awaitingRoom == awaitingRoom)&&(identical(other.failure, failure) || other.failure == failure));
+  final _this = this as LinkedCall;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinkedCall&&(identical(other.callId, _this.callId) || other.callId == _this.callId)&&(identical(other.anchorCallId, _this.anchorCallId) || other.anchorCallId == _this.anchorCallId)&&(identical(other.purpose, _this.purpose) || other.purpose == _this.purpose)&&(identical(other.anchorWasLive, _this.anchorWasLive) || other.anchorWasLive == _this.anchorWasLive)&&(identical(other.intoRoom, _this.intoRoom) || other.intoRoom == _this.intoRoom)&&(identical(other.awaitingRoom, _this.awaitingRoom) || other.awaitingRoom == _this.awaitingRoom)&&(identical(other.failure, _this.failure) || other.failure == _this.failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,callId,anchorCallId,purpose,anchorWasLive,intoRoom,awaitingRoom,failure);
+int get hashCode {
+  final _this = this as LinkedCall;
+  return Object.hash(runtimeType,_this.callId,_this.anchorCallId,_this.purpose,_this.anchorWasLive,_this.intoRoom,_this.awaitingRoom,_this.failure);
+}
 
 @override
 String toString() {
-  return 'LinkedCall(callId: $callId, anchorCallId: $anchorCallId, purpose: $purpose, anchorWasLive: $anchorWasLive, intoRoom: $intoRoom, awaitingRoom: $awaitingRoom, failure: $failure)';
+  final _this = this as LinkedCall;
+  return 'LinkedCall(callId: ${_this.callId}, anchorCallId: ${_this.anchorCallId}, purpose: ${_this.purpose}, anchorWasLive: ${_this.anchorWasLive}, intoRoom: ${_this.intoRoom}, awaitingRoom: ${_this.awaitingRoom}, failure: ${_this.failure})';
 }
 
 

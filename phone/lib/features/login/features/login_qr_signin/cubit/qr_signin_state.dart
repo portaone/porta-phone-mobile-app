@@ -20,20 +20,16 @@ class QrSigninState with _$QrSigninState {
     this.detection,
   });
 
-  @override
   final QrSigninStatus status;
 
   /// Whether asking again is pointless (the OS will not show the dialog);
   /// the user has to enable the permission on the settings screen instead.
-  @override
   final bool cameraPermanentlyDenied;
 
   /// Why the last scanned code was rejected; cleared automatically after
   /// [QrSigninCubit.errorDisplayDuration].
-  @override
   final QrSigninParseError? parseError;
 
   /// A successfully parsed code waiting to be handed over to the login flow.
-  @override
   final QrSigninParseResult? detection;
 }

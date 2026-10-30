@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'user_voicemail.dart';
@@ -9,13 +9,14 @@ part of 'user_voicemail.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$UserVoicemail {
 
- String get id; String get date; double get duration; String get sender; String get receiver; bool get seen; int get size; String get type; List<UserVoicemailAttachment> get attachments; bool? get saved; String? get forwardedBy;
+
 /// Create a copy of UserVoicemail
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $UserVoicemailCopyWith<UserVoicemail> get copyWith => _$UserVoicemailCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemail&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.duration, duration) || other.duration == duration)&&(identical(other.sender, sender) || other.sender == sender)&&(identical(other.receiver, receiver) || other.receiver == receiver)&&(identical(other.seen, seen) || other.seen == seen)&&(identical(other.size, size) || other.size == size)&&(identical(other.type, type) || other.type == type)&&const DeepCollectionEquality().equals(other.attachments, attachments)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.forwardedBy, forwardedBy) || other.forwardedBy == forwardedBy));
+  final _this = this as UserVoicemail;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemail&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.duration, _this.duration) || other.duration == _this.duration)&&(identical(other.sender, _this.sender) || other.sender == _this.sender)&&(identical(other.receiver, _this.receiver) || other.receiver == _this.receiver)&&(identical(other.seen, _this.seen) || other.seen == _this.seen)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.type, _this.type) || other.type == _this.type)&&const DeepCollectionEquality().equals(other.attachments, _this.attachments)&&(identical(other.saved, _this.saved) || other.saved == _this.saved)&&(identical(other.forwardedBy, _this.forwardedBy) || other.forwardedBy == _this.forwardedBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,date,duration,sender,receiver,seen,size,type,const DeepCollectionEquality().hash(attachments),saved,forwardedBy);
+int get hashCode {
+  final _this = this as UserVoicemail;
+  return Object.hash(runtimeType,_this.id,_this.date,_this.duration,_this.sender,_this.receiver,_this.seen,_this.size,_this.type,const DeepCollectionEquality().hash(_this.attachments),_this.saved,_this.forwardedBy);
+}
 
 @override
 String toString() {
-  return 'UserVoicemail(id: $id, date: $date, duration: $duration, sender: $sender, receiver: $receiver, seen: $seen, size: $size, type: $type, attachments: $attachments, saved: $saved, forwardedBy: $forwardedBy)';
+  final _this = this as UserVoicemail;
+  return 'UserVoicemail(id: ${_this.id}, date: ${_this.date}, duration: ${_this.duration}, sender: ${_this.sender}, receiver: ${_this.receiver}, seen: ${_this.seen}, size: ${_this.size}, type: ${_this.type}, attachments: ${_this.attachments}, saved: ${_this.saved}, forwardedBy: ${_this.forwardedBy})';
 }
 
 
@@ -211,7 +217,7 @@ case _:
 /// @nodoc
 mixin _$UserVoicemailAttachment {
 
- String get filename; int get size; String get type; String get subtype;
+
 /// Create a copy of UserVoicemailAttachment
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -222,16 +228,21 @@ $UserVoicemailAttachmentCopyWith<UserVoicemailAttachment> get copyWith => _$User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailAttachment&&(identical(other.filename, filename) || other.filename == filename)&&(identical(other.size, size) || other.size == size)&&(identical(other.type, type) || other.type == type)&&(identical(other.subtype, subtype) || other.subtype == subtype));
+  final _this = this as UserVoicemailAttachment;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserVoicemailAttachment&&(identical(other.filename, _this.filename) || other.filename == _this.filename)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.subtype, _this.subtype) || other.subtype == _this.subtype));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,filename,size,type,subtype);
+int get hashCode {
+  final _this = this as UserVoicemailAttachment;
+  return Object.hash(runtimeType,_this.filename,_this.size,_this.type,_this.subtype);
+}
 
 @override
 String toString() {
-  return 'UserVoicemailAttachment(filename: $filename, size: $size, type: $type, subtype: $subtype)';
+  final _this = this as UserVoicemailAttachment;
+  return 'UserVoicemailAttachment(filename: ${_this.filename}, size: ${_this.size}, type: ${_this.type}, subtype: ${_this.subtype})';
 }
 
 

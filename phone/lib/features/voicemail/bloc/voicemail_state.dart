@@ -22,13 +22,11 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   });
 
   /// Which view is on.
-  @override
   final VoicemailFilter filter;
 
   /// Which views this mailbox offers, decided once from what the backend
   /// supports. A filter the backend cannot serve is absent rather than
   /// disabled, so nothing offers to show a list that cannot exist.
-  @override
   final List<VoicemailFilter> filters;
 
   /// Whether a message can be passed on to a colleague.
@@ -36,10 +34,8 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   /// Carried rather than derived: unlike keeping and the trash, forwarding
   /// adds no view of its own, so there is no filter whose presence could
   /// stand in for it.
-  @override
   final bool forwardSupported;
 
-  @override
   final List<String> selectedVoicemailsIds;
 
   /// The messages that playing marked heard while New is showing, which New
@@ -49,7 +45,6 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   /// New the moment it started and its player stopped with it. Emptied when
   /// the filter changes, on a refresh, and once nobody is looking at the list
   /// - so it never holds a message New was not showing as new.
-  @override
   final List<String> heardByListening;
 
   /// The trash as the last fetch of it found it, empty whenever the screen is
@@ -57,22 +52,18 @@ class VoicemailState with _$VoicemailState, DiagnosticableTreeMixin {
   ///
   /// The screen's rather than the session's: the trash is fetched on demand
   /// and never stored, and it is read only while somebody is looking at it.
-  @override
   final List<Voicemail> trashedItems;
 
   /// Where the last read of the trash stands; [VoicemailStatus.initial] while
   /// the trash is not being looked at. Apart from how the read of the mailbox
   /// stands, which is the session's: they are two reads of two lists.
-  @override
   final VoicemailStatus trashStatus;
 
   /// Why the last read of the trash did not go through, or null when it did.
-  @override
   final Object? trashError;
 
   /// Whether this screen is in the middle of something the person asked for -
   /// deleting, restoring, keeping, marking.
-  @override
   final bool busy;
 
   /// Whether this mailbox can keep a message.

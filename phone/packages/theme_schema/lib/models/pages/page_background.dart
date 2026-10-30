@@ -51,11 +51,9 @@ class PageBackgroundSolid extends PageBackground with _$PageBackgroundSolid {
   const PageBackgroundSolid({required this.color, this.type = 'solid'});
 
   /// The colour to fill with (hex string, e.g. `#3A6EA5`).
-  @override
   final String color;
 
   /// The discriminator. Always `solid`.
-  @override
   final String type;
 
   factory PageBackgroundSolid.fromJson(Map<String, Object?> json) => _$PageBackgroundSolidFromJson(json);
@@ -87,27 +85,20 @@ class PageBackgroundGradient extends PageBackground with _$PageBackgroundGradien
   });
 
   /// The colours to run between (hex strings).
-  @override
   final List<String> colors;
 
   /// Where each colour sits, `0.0` to `1.0`. Empty means an even spread.
-  @override
   final List<double> stops;
 
-  @override
   final double beginX;
 
-  @override
   final double beginY;
 
-  @override
   final double endX;
 
-  @override
   final double endY;
 
   /// The discriminator. Always `gradient`.
-  @override
   final String type;
 
   factory PageBackgroundGradient.fromJson(Map<String, Object?> json) => _$PageBackgroundGradientFromJson(json);
@@ -129,18 +120,14 @@ class PageBackgroundImage extends PageBackground with _$PageBackgroundImage {
     this.type = 'image',
   });
 
-  @override
   final String imageUrl;
 
   /// How the image is fitted into the page.
-  @override
   final BoxFitConfig fit;
 
-  @override
   final double opacity;
 
   /// The discriminator. Always `image`.
-  @override
   final String type;
 
   factory PageBackgroundImage.fromJson(Map<String, Object?> json) => _$PageBackgroundImageFromJson(json);

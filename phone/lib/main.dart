@@ -288,13 +288,12 @@ class _RootAppState extends State<RootApp> {
   }
 
   AppDatabaseLifecycleHolder _createAppDatabaseLifecycleHolder(BuildContext context) {
-    if (kIsWeb) {
-      // TODO(web): no DriftIsolate server on web; open the WasmDatabase directly.
-      final db = IsolateDatabase.openWeb();
-      return AppDatabaseLifecycleHolder(db)..attach();
-    }
-    // Establish the connection; the IPC handshake to the server isolate starts when this Future is created.
-    final db = AppDatabase(context.read<DatabaseServer>().connect());
+    final appPath = context.read<AppPath>();
+    Logger.root.info('IsolateDatabase.open call from RootApp');
+    final db = IsolateDatabase.open(
+      directoryPath: appPath.applicationDocumentsPath,
+      tempDirectoryPath: appPath.temporaryPath,
+    );
     return AppDatabaseLifecycleHolder(db)..attach();
   }
 
@@ -306,10 +305,8 @@ class _RootAppState extends State<RootApp> {
 /// Owns the connection this app instance opened to the database, and closes it
 /// when the widget owning it goes away or the app is detached.
 ///
-/// The database server itself (the drift isolate and its name-server mapping)
-/// belongs to the startup path and is shut down by the startup teardown - a
-/// widget going away must not take it down with it, because the background
-/// isolates find the database through that same mapping.
+/// Closing it closes this client only: the database server goes on serving the
+/// background isolates connected to it, and shuts down after the last of them.
 class AppDatabaseLifecycleHolder with WidgetsBindingObserver {
   AppDatabaseLifecycleHolder(this.db);
 
@@ -327,8 +324,8 @@ class AppDatabaseLifecycleHolder with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.detached) {
-      // Close the main-isolate client connection. The server isolate stays alive
-      // until dispose() is called or all clients disconnect.
+      // Close the main-isolate client connection; the server isolate stays alive
+      // while any other client is connected.
       unawaited(db.close());
     }
   }

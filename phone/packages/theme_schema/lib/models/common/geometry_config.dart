@@ -10,10 +10,8 @@ part 'geometry_config.g.dart';
 class SizeConfig with _$SizeConfig {
   const SizeConfig({required this.width, required this.height});
 
-  @override
   final double width;
 
-  @override
   final double height;
 
   factory SizeConfig.fromJson(Map<String, Object?> json) => _$SizeConfigFromJson(json);
@@ -27,13 +25,9 @@ class SizeConfig with _$SizeConfig {
 class EdgeInsetsConfig with _$EdgeInsetsConfig {
   const EdgeInsetsConfig({this.left = 0.0, this.top = 0.0, this.right = 0.0, this.bottom = 0.0});
 
-  @override
   final double left;
-  @override
   final double top;
-  @override
   final double right;
-  @override
   final double bottom;
 
   factory EdgeInsetsConfig.fromJson(Map<String, Object?> json) => _$EdgeInsetsConfigFromJson(json);
@@ -58,14 +52,11 @@ class BorderSideConfig with _$BorderSideConfig {
   const BorderSideConfig({this.color, this.width = 1.0, this.style = 'solid'});
 
   /// Color in hex format.
-  @override
   final String? color;
 
-  @override
   final double width;
 
   /// Border style (e.g., 'solid', 'none').
-  @override
   final String style;
 
   factory BorderSideConfig.fromJson(Map<String, Object?> json) => _$BorderSideConfigFromJson(json);
@@ -80,11 +71,9 @@ class ShapeBorderConfig with _$ShapeBorderConfig {
   const ShapeBorderConfig({this.type = 'rounded', this.borderRadius});
 
   /// The type of shape. Common values: 'rounded', 'circle', 'stadium', 'beveled'.
-  @override
   final String type;
 
   /// The border radius value (for rounded/beveled shapes).
-  @override
   final double? borderRadius;
 
   factory ShapeBorderConfig.fromJson(Map<String, Object?> json) => _$ShapeBorderConfigFromJson(json);
@@ -98,10 +87,8 @@ class ShapeBorderConfig with _$ShapeBorderConfig {
 class VisualDensityConfig with _$VisualDensityConfig {
   const VisualDensityConfig({this.horizontal = 0.0, this.vertical = 0.0});
 
-  @override
   final double horizontal;
 
-  @override
   final double vertical;
 
   factory VisualDensityConfig.fromJson(Map<String, Object?> json) => _$VisualDensityConfigFromJson(json);

@@ -11,7 +11,6 @@ part 'demo_call_to_actions_response.g.dart';
 class DemoCallToActionsResponse with _$DemoCallToActionsResponse {
   const DemoCallToActionsResponse({required this.actions});
 
-  @override
   final List<DemoCallToActionsResponseActions> actions;
 
   factory DemoCallToActionsResponse.fromJson(Map<String, dynamic> json) => _$DemoCallToActionsResponseFromJson(json);
@@ -29,16 +28,12 @@ class DemoCallToActionsResponseActions with _$DemoCallToActionsResponseActions {
     @JsonKey(name: 'extra_data') required this.extraData,
   });
 
-  @override
   final String? title;
 
-  @override
   final String? description;
 
-  @override
   final String url;
 
-  @override
   final DemoCallToActionsResponseActionsExtraData extraData;
 
   factory DemoCallToActionsResponseActions.fromJson(Map<String, dynamic> json) =>
@@ -55,10 +50,8 @@ class DemoCallToActionsResponseActionsExtraData with _$DemoCallToActionsResponse
     @JsonKey(name: 'token_expires') required this.tokenExpires,
   });
 
-  @override
   final String apiToken;
 
-  @override
   final String tokenExpires;
 
   factory DemoCallToActionsResponseActionsExtraData.fromJson(Map<String, dynamic> json) =>

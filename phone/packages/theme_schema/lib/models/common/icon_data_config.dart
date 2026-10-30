@@ -31,7 +31,6 @@ class IconDataConfig with _$IconDataConfig {
   // Not a doc comment: the generator copies those into the schema, and the
   // reasoning for a shape belongs beside the code and not in what is published.
   /// The code point in hex, e.g. `e491`.
-  @override
   final String codePoint;
 
   /// The code point as `IconData` wants it.
@@ -42,10 +41,8 @@ class IconDataConfig with _$IconDataConfig {
   /// written before this cannot be asked to choose.
   int get codePointValue => int.parse(codePoint.replaceFirst(RegExp('^0[xX]'), ''), radix: 16);
 
-  @override
   final String fontFamily;
 
-  @override
   final bool matchTextDirection;
 
   factory IconDataConfig.fromJson(Map<String, dynamic> json) => _$IconDataConfigFromJson(json);

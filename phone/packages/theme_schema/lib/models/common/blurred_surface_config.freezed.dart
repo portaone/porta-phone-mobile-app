@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'blurred_surface_config.dart';
@@ -9,13 +9,14 @@ part of 'blurred_surface_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$BlurredSurfaceConfig {
 
- String? get color; double? get sigmaX; double? get sigmaY;
+
 /// Create a copy of BlurredSurfaceConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $BlurredSurfaceConfigCopyWith<BlurredSurfaceConfig> get copyWith => _$BlurredSur
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlurredSurfaceConfig&&(identical(other.color, color) || other.color == color)&&(identical(other.sigmaX, sigmaX) || other.sigmaX == sigmaX)&&(identical(other.sigmaY, sigmaY) || other.sigmaY == sigmaY));
+  final _this = this as BlurredSurfaceConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlurredSurfaceConfig&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.sigmaX, _this.sigmaX) || other.sigmaX == _this.sigmaX)&&(identical(other.sigmaY, _this.sigmaY) || other.sigmaY == _this.sigmaY));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,color,sigmaX,sigmaY);
+int get hashCode {
+  final _this = this as BlurredSurfaceConfig;
+  return Object.hash(runtimeType,_this.color,_this.sigmaX,_this.sigmaY);
+}
 
 @override
 String toString() {
-  return 'BlurredSurfaceConfig(color: $color, sigmaX: $sigmaX, sigmaY: $sigmaY)';
+  final _this = this as BlurredSurfaceConfig;
+  return 'BlurredSurfaceConfig(color: ${_this.color}, sigmaX: ${_this.sigmaX}, sigmaY: ${_this.sigmaY})';
 }
 
 

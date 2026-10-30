@@ -14,16 +14,12 @@ part 'raw_http_request.g.dart';
 class RawHttpRequest with _$RawHttpRequest {
   const RawHttpRequest({required this.method, required this.url, this.headers, this.data});
 
-  @override
   final String method;
 
-  @override
   final String url;
 
-  @override
   final Map<String, String>? headers;
 
-  @override
   final Map<String, dynamic>? data;
 
   factory RawHttpRequest.fromJson(Map<String, dynamic> json) => _$RawHttpRequestFromJson(json);

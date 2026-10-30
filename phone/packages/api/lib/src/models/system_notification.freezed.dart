@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'system_notification.dart';
@@ -9,13 +9,14 @@ part of 'system_notification.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$SystemNotification {
 
- int get id; String get title; String get content; bool get seen; SystemNotificationType get type; DateTime get createdAt; DateTime get updatedAt; DateTime? get readAt; DateTime? get deletedAt;
+
 /// Create a copy of SystemNotification
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $SystemNotificationCopyWith<SystemNotification> get copyWith => _$SystemNotifica
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotification&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.seen, seen) || other.seen == seen)&&(identical(other.type, type) || other.type == type)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.readAt, readAt) || other.readAt == readAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
+  final _this = this as SystemNotification;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotification&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.content, _this.content) || other.content == _this.content)&&(identical(other.seen, _this.seen) || other.seen == _this.seen)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.readAt, _this.readAt) || other.readAt == _this.readAt)&&(identical(other.deletedAt, _this.deletedAt) || other.deletedAt == _this.deletedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,content,seen,type,createdAt,updatedAt,readAt,deletedAt);
+int get hashCode {
+  final _this = this as SystemNotification;
+  return Object.hash(runtimeType,_this.id,_this.title,_this.content,_this.seen,_this.type,_this.createdAt,_this.updatedAt,_this.readAt,_this.deletedAt);
+}
 
 @override
 String toString() {
-  return 'SystemNotification(id: $id, title: $title, content: $content, seen: $seen, type: $type, createdAt: $createdAt, updatedAt: $updatedAt, readAt: $readAt, deletedAt: $deletedAt)';
+  final _this = this as SystemNotification;
+  return 'SystemNotification(id: ${_this.id}, title: ${_this.title}, content: ${_this.content}, seen: ${_this.seen}, type: ${_this.type}, createdAt: ${_this.createdAt}, updatedAt: ${_this.updatedAt}, readAt: ${_this.readAt}, deletedAt: ${_this.deletedAt})';
 }
 
 
@@ -209,7 +215,7 @@ case _:
 /// @nodoc
 mixin _$SystemNotificationResponce {
 
- List<SystemNotification> get items;
+
 /// Create a copy of SystemNotificationResponce
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -220,16 +226,21 @@ $SystemNotificationResponceCopyWith<SystemNotificationResponce> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotificationResponce&&const DeepCollectionEquality().equals(other.items, items));
+  final _this = this as SystemNotificationResponce;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotificationResponce&&const DeepCollectionEquality().equals(other.items, _this.items));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items));
+int get hashCode {
+  final _this = this as SystemNotificationResponce;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items));
+}
 
 @override
 String toString() {
-  return 'SystemNotificationResponce(items: $items)';
+  final _this = this as SystemNotificationResponce;
+  return 'SystemNotificationResponce(items: ${_this.items})';
 }
 
 
@@ -395,7 +406,7 @@ case _:
 /// @nodoc
 mixin _$SystemNotificationsDeleteResponse {
 
- List<int> get deletedIds;
+
 /// Create a copy of SystemNotificationsDeleteResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -406,16 +417,21 @@ $SystemNotificationsDeleteResponseCopyWith<SystemNotificationsDeleteResponse> ge
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotificationsDeleteResponse&&const DeepCollectionEquality().equals(other.deletedIds, deletedIds));
+  final _this = this as SystemNotificationsDeleteResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotificationsDeleteResponse&&const DeepCollectionEquality().equals(other.deletedIds, _this.deletedIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(deletedIds));
+int get hashCode {
+  final _this = this as SystemNotificationsDeleteResponse;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.deletedIds));
+}
 
 @override
 String toString() {
-  return 'SystemNotificationsDeleteResponse(deletedIds: $deletedIds)';
+  final _this = this as SystemNotificationsDeleteResponse;
+  return 'SystemNotificationsDeleteResponse(deletedIds: ${_this.deletedIds})';
 }
 
 

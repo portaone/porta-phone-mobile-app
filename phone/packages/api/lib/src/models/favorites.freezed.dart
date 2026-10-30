@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'favorites.dart';
@@ -9,12 +9,13 @@ part of 'favorites.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FavoritesGetResult {
 
- bool get notModified; String get etag; FavoritesListResponse? get data;
+
 /// Create a copy of FavoritesGetResult
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $FavoritesGetResultCopyWith<FavoritesGetResult> get copyWith => _$FavoritesGetRe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoritesGetResult&&(identical(other.notModified, notModified) || other.notModified == notModified)&&(identical(other.etag, etag) || other.etag == etag)&&(identical(other.data, data) || other.data == data));
+  final _this = this as FavoritesGetResult;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoritesGetResult&&(identical(other.notModified, _this.notModified) || other.notModified == _this.notModified)&&(identical(other.etag, _this.etag) || other.etag == _this.etag)&&(identical(other.data, _this.data) || other.data == _this.data));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,notModified,etag,data);
+int get hashCode {
+  final _this = this as FavoritesGetResult;
+  return Object.hash(runtimeType,_this.notModified,_this.etag,_this.data);
+}
 
 @override
 String toString() {
-  return 'FavoritesGetResult(notModified: $notModified, etag: $etag, data: $data)';
+  final _this = this as FavoritesGetResult;
+  return 'FavoritesGetResult(notModified: ${_this.notModified}, etag: ${_this.etag}, data: ${_this.data})';
 }
 
 
@@ -202,7 +208,7 @@ case _:
 /// @nodoc
 mixin _$FavoritesListResponse {
 
- List<FavoriteItem> get items;
+
 /// Create a copy of FavoritesListResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -213,16 +219,21 @@ $FavoritesListResponseCopyWith<FavoritesListResponse> get copyWith => _$Favorite
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoritesListResponse&&const DeepCollectionEquality().equals(other.items, items));
+  final _this = this as FavoritesListResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoritesListResponse&&const DeepCollectionEquality().equals(other.items, _this.items));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items));
+int get hashCode {
+  final _this = this as FavoritesListResponse;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items));
+}
 
 @override
 String toString() {
-  return 'FavoritesListResponse(items: $items)';
+  final _this = this as FavoritesListResponse;
+  return 'FavoritesListResponse(items: ${_this.items})';
 }
 
 
@@ -388,7 +399,7 @@ case _:
 /// @nodoc
 mixin _$FavoriteItem {
 
- String get number; FavoriteSourceType get sourceType; String get sourceId; String get label; int get position;
+
 /// Create a copy of FavoriteItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -399,16 +410,21 @@ $FavoriteItemCopyWith<FavoriteItem> get copyWith => _$FavoriteItemCopyWithImpl<F
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteItem&&(identical(other.number, number) || other.number == number)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.sourceId, sourceId) || other.sourceId == sourceId)&&(identical(other.label, label) || other.label == label)&&(identical(other.position, position) || other.position == position));
+  final _this = this as FavoriteItem;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteItem&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.sourceType, _this.sourceType) || other.sourceType == _this.sourceType)&&(identical(other.sourceId, _this.sourceId) || other.sourceId == _this.sourceId)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.position, _this.position) || other.position == _this.position));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,number,sourceType,sourceId,label,position);
+int get hashCode {
+  final _this = this as FavoriteItem;
+  return Object.hash(runtimeType,_this.number,_this.sourceType,_this.sourceId,_this.label,_this.position);
+}
 
 @override
 String toString() {
-  return 'FavoriteItem(number: $number, sourceType: $sourceType, sourceId: $sourceId, label: $label, position: $position)';
+  final _this = this as FavoriteItem;
+  return 'FavoriteItem(number: ${_this.number}, sourceType: ${_this.sourceType}, sourceId: ${_this.sourceId}, label: ${_this.label}, position: ${_this.position})';
 }
 
 
@@ -578,7 +594,7 @@ case _:
 /// @nodoc
 mixin _$FavoriteBatchAction {
 
- FavoriteBatchActionType get action; String get number; FavoriteSourceType get sourceType; String? get sourceId; String? get label; int? get position;
+
 /// Create a copy of FavoriteBatchAction
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -589,16 +605,21 @@ $FavoriteBatchActionCopyWith<FavoriteBatchAction> get copyWith => _$FavoriteBatc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteBatchAction&&(identical(other.action, action) || other.action == action)&&(identical(other.number, number) || other.number == number)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.sourceId, sourceId) || other.sourceId == sourceId)&&(identical(other.label, label) || other.label == label)&&(identical(other.position, position) || other.position == position));
+  final _this = this as FavoriteBatchAction;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteBatchAction&&(identical(other.action, _this.action) || other.action == _this.action)&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.sourceType, _this.sourceType) || other.sourceType == _this.sourceType)&&(identical(other.sourceId, _this.sourceId) || other.sourceId == _this.sourceId)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.position, _this.position) || other.position == _this.position));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,action,number,sourceType,sourceId,label,position);
+int get hashCode {
+  final _this = this as FavoriteBatchAction;
+  return Object.hash(runtimeType,_this.action,_this.number,_this.sourceType,_this.sourceId,_this.label,_this.position);
+}
 
 @override
 String toString() {
-  return 'FavoriteBatchAction(action: $action, number: $number, sourceType: $sourceType, sourceId: $sourceId, label: $label, position: $position)';
+  final _this = this as FavoriteBatchAction;
+  return 'FavoriteBatchAction(action: ${_this.action}, number: ${_this.number}, sourceType: ${_this.sourceType}, sourceId: ${_this.sourceId}, label: ${_this.label}, position: ${_this.position})';
 }
 
 
@@ -768,7 +789,7 @@ case _:
 /// @nodoc
 mixin _$FavoriteBatchSyncResult {
 
- FavoriteBatchSyncResponse get data; String get etag;
+
 /// Create a copy of FavoriteBatchSyncResult
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -779,16 +800,21 @@ $FavoriteBatchSyncResultCopyWith<FavoriteBatchSyncResult> get copyWith => _$Favo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteBatchSyncResult&&(identical(other.data, data) || other.data == data)&&(identical(other.etag, etag) || other.etag == etag));
+  final _this = this as FavoriteBatchSyncResult;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteBatchSyncResult&&(identical(other.data, _this.data) || other.data == _this.data)&&(identical(other.etag, _this.etag) || other.etag == _this.etag));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,data,etag);
+int get hashCode {
+  final _this = this as FavoriteBatchSyncResult;
+  return Object.hash(runtimeType,_this.data,_this.etag);
+}
 
 @override
 String toString() {
-  return 'FavoriteBatchSyncResult(data: $data, etag: $etag)';
+  final _this = this as FavoriteBatchSyncResult;
+  return 'FavoriteBatchSyncResult(data: ${_this.data}, etag: ${_this.etag})';
 }
 
 
@@ -955,7 +981,7 @@ case _:
 /// @nodoc
 mixin _$FavoriteBatchSyncResponse {
 
- List<FavoriteItem> get items; List<FavoriteBatchConflict> get conflicts;
+
 /// Create a copy of FavoriteBatchSyncResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -966,16 +992,21 @@ $FavoriteBatchSyncResponseCopyWith<FavoriteBatchSyncResponse> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteBatchSyncResponse&&const DeepCollectionEquality().equals(other.items, items)&&const DeepCollectionEquality().equals(other.conflicts, conflicts));
+  final _this = this as FavoriteBatchSyncResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteBatchSyncResponse&&const DeepCollectionEquality().equals(other.items, _this.items)&&const DeepCollectionEquality().equals(other.conflicts, _this.conflicts));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),const DeepCollectionEquality().hash(conflicts));
+int get hashCode {
+  final _this = this as FavoriteBatchSyncResponse;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items),const DeepCollectionEquality().hash(_this.conflicts));
+}
 
 @override
 String toString() {
-  return 'FavoriteBatchSyncResponse(items: $items, conflicts: $conflicts)';
+  final _this = this as FavoriteBatchSyncResponse;
+  return 'FavoriteBatchSyncResponse(items: ${_this.items}, conflicts: ${_this.conflicts})';
 }
 
 
@@ -1142,7 +1173,7 @@ case _:
 /// @nodoc
 mixin _$FavoriteBatchConflict {
 
- FavoriteBatchActionType get action; String get number; FavoriteSourceType get sourceType; FavoriteBatchConflictReason get reason;
+
 /// Create a copy of FavoriteBatchConflict
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1153,16 +1184,21 @@ $FavoriteBatchConflictCopyWith<FavoriteBatchConflict> get copyWith => _$Favorite
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteBatchConflict&&(identical(other.action, action) || other.action == action)&&(identical(other.number, number) || other.number == number)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.reason, reason) || other.reason == reason));
+  final _this = this as FavoriteBatchConflict;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoriteBatchConflict&&(identical(other.action, _this.action) || other.action == _this.action)&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.sourceType, _this.sourceType) || other.sourceType == _this.sourceType)&&(identical(other.reason, _this.reason) || other.reason == _this.reason));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,action,number,sourceType,reason);
+int get hashCode {
+  final _this = this as FavoriteBatchConflict;
+  return Object.hash(runtimeType,_this.action,_this.number,_this.sourceType,_this.reason);
+}
 
 @override
 String toString() {
-  return 'FavoriteBatchConflict(action: $action, number: $number, sourceType: $sourceType, reason: $reason)';
+  final _this = this as FavoriteBatchConflict;
+  return 'FavoriteBatchConflict(action: ${_this.action}, number: ${_this.number}, sourceType: ${_this.sourceType}, reason: ${_this.reason})';
 }
 
 

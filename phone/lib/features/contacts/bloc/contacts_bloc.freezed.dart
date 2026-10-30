@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'contacts_bloc.dart';
@@ -9,12 +9,13 @@ part of 'contacts_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ContactsState {
 
- String get search; ContactSourceType get sourceType; bool get favorites;
+
 /// Create a copy of ContactsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $ContactsStateCopyWith<ContactsState> get copyWith => _$ContactsStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactsState&&(identical(other.search, search) || other.search == search)&&(identical(other.sourceType, sourceType) || other.sourceType == sourceType)&&(identical(other.favorites, favorites) || other.favorites == favorites));
+  final _this = this as ContactsState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactsState&&(identical(other.search, _this.search) || other.search == _this.search)&&(identical(other.sourceType, _this.sourceType) || other.sourceType == _this.sourceType)&&(identical(other.favorites, _this.favorites) || other.favorites == _this.favorites));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,search,sourceType,favorites);
+int get hashCode {
+  final _this = this as ContactsState;
+  return Object.hash(runtimeType,_this.search,_this.sourceType,_this.favorites);
+}
 
 @override
 String toString() {
-  return 'ContactsState(search: $search, sourceType: $sourceType, favorites: $favorites)';
+  final _this = this as ContactsState;
+  return 'ContactsState(search: ${_this.search}, sourceType: ${_this.sourceType}, favorites: ${_this.favorites})';
 }
 
 

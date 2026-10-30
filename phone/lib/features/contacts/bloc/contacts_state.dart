@@ -4,10 +4,8 @@ part of 'contacts_bloc.dart';
 class ContactsState with _$ContactsState {
   const ContactsState({this.search = '', required this.sourceType, this.favorites = false});
 
-  @override
   final String search;
 
-  @override
   final ContactSourceType sourceType;
 
   /// Whether the favourites entry of the chooser is the one picked.
@@ -22,6 +20,5 @@ class ContactsState with _$ContactsState {
   /// opens on an address book, since favourites hold only what someone has
   /// starred (see `ContactsListSelectionsShown.shown`, which states that rule
   /// once for both arrangements).
-  @override
   final bool favorites;
 }

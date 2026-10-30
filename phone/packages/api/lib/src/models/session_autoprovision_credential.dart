@@ -18,16 +18,12 @@ class SessionAutoProvisionCredential with _$SessionAutoProvisionCredential {
     required this.configToken,
   });
 
-  @override
   final String? bundleId;
 
-  @override
   final AppType type;
 
-  @override
   final String identifier;
 
-  @override
   final String configToken;
 
   factory SessionAutoProvisionCredential.fromJson(Map<String, dynamic> json) =>

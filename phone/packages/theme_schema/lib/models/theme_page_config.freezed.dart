@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'theme_page_config.dart';
@@ -9,13 +9,14 @@ part of 'theme_page_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ThemePageConfig {
 
- LoginPageConfig get login; AboutPageConfig get about; CallPageConfig get dialing; KeypadPageConfig get keypad; SettingsPageConfig get settings; ContactsPageConfig get contacts; EmbeddedPageConfig get embedded; FavoritesPageConfig get favorites; ConversationsPageConfig get conversations; RecentsPageConfig get recents; NumberCdrsPageConfig get numberCdrs; VoicemailPageConfig get voicemail; CallCenterPageConfig get callCenter; SystemNotificationsPageConfig get systemNotifications;
+
 /// Create a copy of ThemePageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $ThemePageConfigCopyWith<ThemePageConfig> get copyWith => _$ThemePageConfigCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemePageConfig&&(identical(other.login, login) || other.login == login)&&(identical(other.about, about) || other.about == about)&&(identical(other.dialing, dialing) || other.dialing == dialing)&&(identical(other.keypad, keypad) || other.keypad == keypad)&&(identical(other.settings, settings) || other.settings == settings)&&(identical(other.contacts, contacts) || other.contacts == contacts)&&(identical(other.embedded, embedded) || other.embedded == embedded)&&(identical(other.favorites, favorites) || other.favorites == favorites)&&(identical(other.conversations, conversations) || other.conversations == conversations)&&(identical(other.recents, recents) || other.recents == recents)&&(identical(other.numberCdrs, numberCdrs) || other.numberCdrs == numberCdrs)&&(identical(other.voicemail, voicemail) || other.voicemail == voicemail)&&(identical(other.callCenter, callCenter) || other.callCenter == callCenter)&&(identical(other.systemNotifications, systemNotifications) || other.systemNotifications == systemNotifications));
+  final _this = this as ThemePageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemePageConfig&&(identical(other.login, _this.login) || other.login == _this.login)&&(identical(other.about, _this.about) || other.about == _this.about)&&(identical(other.dialing, _this.dialing) || other.dialing == _this.dialing)&&(identical(other.keypad, _this.keypad) || other.keypad == _this.keypad)&&(identical(other.settings, _this.settings) || other.settings == _this.settings)&&(identical(other.contacts, _this.contacts) || other.contacts == _this.contacts)&&(identical(other.embedded, _this.embedded) || other.embedded == _this.embedded)&&(identical(other.favorites, _this.favorites) || other.favorites == _this.favorites)&&(identical(other.conversations, _this.conversations) || other.conversations == _this.conversations)&&(identical(other.recents, _this.recents) || other.recents == _this.recents)&&(identical(other.numberCdrs, _this.numberCdrs) || other.numberCdrs == _this.numberCdrs)&&(identical(other.voicemail, _this.voicemail) || other.voicemail == _this.voicemail)&&(identical(other.callCenter, _this.callCenter) || other.callCenter == _this.callCenter)&&(identical(other.systemNotifications, _this.systemNotifications) || other.systemNotifications == _this.systemNotifications));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,login,about,dialing,keypad,settings,contacts,embedded,favorites,conversations,recents,numberCdrs,voicemail,callCenter,systemNotifications);
+int get hashCode {
+  final _this = this as ThemePageConfig;
+  return Object.hash(runtimeType,_this.login,_this.about,_this.dialing,_this.keypad,_this.settings,_this.contacts,_this.embedded,_this.favorites,_this.conversations,_this.recents,_this.numberCdrs,_this.voicemail,_this.callCenter,_this.systemNotifications);
+}
 
 @override
 String toString() {
-  return 'ThemePageConfig(login: $login, about: $about, dialing: $dialing, keypad: $keypad, settings: $settings, contacts: $contacts, embedded: $embedded, favorites: $favorites, conversations: $conversations, recents: $recents, numberCdrs: $numberCdrs, voicemail: $voicemail, callCenter: $callCenter, systemNotifications: $systemNotifications)';
+  final _this = this as ThemePageConfig;
+  return 'ThemePageConfig(login: ${_this.login}, about: ${_this.about}, dialing: ${_this.dialing}, keypad: ${_this.keypad}, settings: ${_this.settings}, contacts: ${_this.contacts}, embedded: ${_this.embedded}, favorites: ${_this.favorites}, conversations: ${_this.conversations}, recents: ${_this.recents}, numberCdrs: ${_this.numberCdrs}, voicemail: ${_this.voicemail}, callCenter: ${_this.callCenter}, systemNotifications: ${_this.systemNotifications})';
 }
 
 
@@ -214,7 +220,7 @@ case _:
 /// @nodoc
 mixin _$ThemeOverrideConfig {
 
- ThemeModeConfig get mode; bool get applyToAppBar;
+
 /// Create a copy of ThemeOverrideConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -225,16 +231,21 @@ $ThemeOverrideConfigCopyWith<ThemeOverrideConfig> get copyWith => _$ThemeOverrid
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemeOverrideConfig&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.applyToAppBar, applyToAppBar) || other.applyToAppBar == applyToAppBar));
+  final _this = this as ThemeOverrideConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemeOverrideConfig&&(identical(other.mode, _this.mode) || other.mode == _this.mode)&&(identical(other.applyToAppBar, _this.applyToAppBar) || other.applyToAppBar == _this.applyToAppBar));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,mode,applyToAppBar);
+int get hashCode {
+  final _this = this as ThemeOverrideConfig;
+  return Object.hash(runtimeType,_this.mode,_this.applyToAppBar);
+}
 
 @override
 String toString() {
-  return 'ThemeOverrideConfig(mode: $mode, applyToAppBar: $applyToAppBar)';
+  final _this = this as ThemeOverrideConfig;
+  return 'ThemeOverrideConfig(mode: ${_this.mode}, applyToAppBar: ${_this.applyToAppBar})';
 }
 
 
@@ -401,7 +412,7 @@ case _:
 /// @nodoc
 mixin _$LoginPageConfig {
 
- LoginModeSelectPageConfig get modeSelect; LoginSwitchPageConfig get switchPage; LoginOtpSigninPageConfig get otpSignin; LoginPasswordSigninPageConfig get passwordSignin; LoginOtpSigninVerifyScreenPageConfig get otpSigninVerify; LoginSignupVerifyScreenPageConfig get signupVerify; LoginCoreUrlAssignPageConfig get coreUrlAssign;
+
 /// Create a copy of LoginPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -412,16 +423,21 @@ $LoginPageConfigCopyWith<LoginPageConfig> get copyWith => _$LoginPageConfigCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginPageConfig&&(identical(other.modeSelect, modeSelect) || other.modeSelect == modeSelect)&&(identical(other.switchPage, switchPage) || other.switchPage == switchPage)&&(identical(other.otpSignin, otpSignin) || other.otpSignin == otpSignin)&&(identical(other.passwordSignin, passwordSignin) || other.passwordSignin == passwordSignin)&&(identical(other.otpSigninVerify, otpSigninVerify) || other.otpSigninVerify == otpSigninVerify)&&(identical(other.signupVerify, signupVerify) || other.signupVerify == signupVerify)&&(identical(other.coreUrlAssign, coreUrlAssign) || other.coreUrlAssign == coreUrlAssign));
+  final _this = this as LoginPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginPageConfig&&(identical(other.modeSelect, _this.modeSelect) || other.modeSelect == _this.modeSelect)&&(identical(other.switchPage, _this.switchPage) || other.switchPage == _this.switchPage)&&(identical(other.otpSignin, _this.otpSignin) || other.otpSignin == _this.otpSignin)&&(identical(other.passwordSignin, _this.passwordSignin) || other.passwordSignin == _this.passwordSignin)&&(identical(other.otpSigninVerify, _this.otpSigninVerify) || other.otpSigninVerify == _this.otpSigninVerify)&&(identical(other.signupVerify, _this.signupVerify) || other.signupVerify == _this.signupVerify)&&(identical(other.coreUrlAssign, _this.coreUrlAssign) || other.coreUrlAssign == _this.coreUrlAssign));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,modeSelect,switchPage,otpSignin,passwordSignin,otpSigninVerify,signupVerify,coreUrlAssign);
+int get hashCode {
+  final _this = this as LoginPageConfig;
+  return Object.hash(runtimeType,_this.modeSelect,_this.switchPage,_this.otpSignin,_this.passwordSignin,_this.otpSigninVerify,_this.signupVerify,_this.coreUrlAssign);
+}
 
 @override
 String toString() {
-  return 'LoginPageConfig(modeSelect: $modeSelect, switchPage: $switchPage, otpSignin: $otpSignin, passwordSignin: $passwordSignin, otpSigninVerify: $otpSigninVerify, signupVerify: $signupVerify, coreUrlAssign: $coreUrlAssign)';
+  final _this = this as LoginPageConfig;
+  return 'LoginPageConfig(modeSelect: ${_this.modeSelect}, switchPage: ${_this.switchPage}, otpSignin: ${_this.otpSignin}, passwordSignin: ${_this.passwordSignin}, otpSigninVerify: ${_this.otpSigninVerify}, signupVerify: ${_this.signupVerify}, coreUrlAssign: ${_this.coreUrlAssign})';
 }
 
 
@@ -593,7 +609,7 @@ case _:
 /// @nodoc
 mixin _$LoginOtpSigninPageConfig {
 
- TextFieldConfig? get refTextField;
+
 /// Create a copy of LoginOtpSigninPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -604,16 +620,21 @@ $LoginOtpSigninPageConfigCopyWith<LoginOtpSigninPageConfig> get copyWith => _$Lo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginOtpSigninPageConfig&&(identical(other.refTextField, refTextField) || other.refTextField == refTextField));
+  final _this = this as LoginOtpSigninPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginOtpSigninPageConfig&&(identical(other.refTextField, _this.refTextField) || other.refTextField == _this.refTextField));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,refTextField);
+int get hashCode {
+  final _this = this as LoginOtpSigninPageConfig;
+  return Object.hash(runtimeType,_this.refTextField);
+}
 
 @override
 String toString() {
-  return 'LoginOtpSigninPageConfig(refTextField: $refTextField)';
+  final _this = this as LoginOtpSigninPageConfig;
+  return 'LoginOtpSigninPageConfig(refTextField: ${_this.refTextField})';
 }
 
 
@@ -779,7 +800,7 @@ case _:
 /// @nodoc
 mixin _$LoginPasswordSigninPageConfig {
 
- TextFieldConfig? get refTextField; TextFieldConfig? get passwordTextField;
+
 /// Create a copy of LoginPasswordSigninPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -790,16 +811,21 @@ $LoginPasswordSigninPageConfigCopyWith<LoginPasswordSigninPageConfig> get copyWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginPasswordSigninPageConfig&&(identical(other.refTextField, refTextField) || other.refTextField == refTextField)&&(identical(other.passwordTextField, passwordTextField) || other.passwordTextField == passwordTextField));
+  final _this = this as LoginPasswordSigninPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginPasswordSigninPageConfig&&(identical(other.refTextField, _this.refTextField) || other.refTextField == _this.refTextField)&&(identical(other.passwordTextField, _this.passwordTextField) || other.passwordTextField == _this.passwordTextField));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,refTextField,passwordTextField);
+int get hashCode {
+  final _this = this as LoginPasswordSigninPageConfig;
+  return Object.hash(runtimeType,_this.refTextField,_this.passwordTextField);
+}
 
 @override
 String toString() {
-  return 'LoginPasswordSigninPageConfig(refTextField: $refTextField, passwordTextField: $passwordTextField)';
+  final _this = this as LoginPasswordSigninPageConfig;
+  return 'LoginPasswordSigninPageConfig(refTextField: ${_this.refTextField}, passwordTextField: ${_this.passwordTextField})';
 }
 
 
@@ -966,7 +992,7 @@ case _:
 /// @nodoc
 mixin _$LoginOtpSigninVerifyScreenPageConfig {
 
- int get countdownRepeatIntervalSeconds;
+
 /// Create a copy of LoginOtpSigninVerifyScreenPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -977,16 +1003,21 @@ $LoginOtpSigninVerifyScreenPageConfigCopyWith<LoginOtpSigninVerifyScreenPageConf
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginOtpSigninVerifyScreenPageConfig&&(identical(other.countdownRepeatIntervalSeconds, countdownRepeatIntervalSeconds) || other.countdownRepeatIntervalSeconds == countdownRepeatIntervalSeconds));
+  final _this = this as LoginOtpSigninVerifyScreenPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginOtpSigninVerifyScreenPageConfig&&(identical(other.countdownRepeatIntervalSeconds, _this.countdownRepeatIntervalSeconds) || other.countdownRepeatIntervalSeconds == _this.countdownRepeatIntervalSeconds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,countdownRepeatIntervalSeconds);
+int get hashCode {
+  final _this = this as LoginOtpSigninVerifyScreenPageConfig;
+  return Object.hash(runtimeType,_this.countdownRepeatIntervalSeconds);
+}
 
 @override
 String toString() {
-  return 'LoginOtpSigninVerifyScreenPageConfig(countdownRepeatIntervalSeconds: $countdownRepeatIntervalSeconds)';
+  final _this = this as LoginOtpSigninVerifyScreenPageConfig;
+  return 'LoginOtpSigninVerifyScreenPageConfig(countdownRepeatIntervalSeconds: ${_this.countdownRepeatIntervalSeconds})';
 }
 
 
@@ -1152,7 +1183,7 @@ case _:
 /// @nodoc
 mixin _$LoginSignupVerifyScreenPageConfig {
 
- int get countdownRepeatIntervalSeconds;
+
 /// Create a copy of LoginSignupVerifyScreenPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1163,16 +1194,21 @@ $LoginSignupVerifyScreenPageConfigCopyWith<LoginSignupVerifyScreenPageConfig> ge
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginSignupVerifyScreenPageConfig&&(identical(other.countdownRepeatIntervalSeconds, countdownRepeatIntervalSeconds) || other.countdownRepeatIntervalSeconds == countdownRepeatIntervalSeconds));
+  final _this = this as LoginSignupVerifyScreenPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginSignupVerifyScreenPageConfig&&(identical(other.countdownRepeatIntervalSeconds, _this.countdownRepeatIntervalSeconds) || other.countdownRepeatIntervalSeconds == _this.countdownRepeatIntervalSeconds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,countdownRepeatIntervalSeconds);
+int get hashCode {
+  final _this = this as LoginSignupVerifyScreenPageConfig;
+  return Object.hash(runtimeType,_this.countdownRepeatIntervalSeconds);
+}
 
 @override
 String toString() {
-  return 'LoginSignupVerifyScreenPageConfig(countdownRepeatIntervalSeconds: $countdownRepeatIntervalSeconds)';
+  final _this = this as LoginSignupVerifyScreenPageConfig;
+  return 'LoginSignupVerifyScreenPageConfig(countdownRepeatIntervalSeconds: ${_this.countdownRepeatIntervalSeconds})';
 }
 
 
@@ -1338,7 +1374,7 @@ case _:
 /// @nodoc
 mixin _$LoginModeSelectPageConfig {
 
- ThemeOverrideConfig get themeOverride; OverlayStyleModel? get systemUiOverlayStyle; ImageSource? get mainLogo; ElevatedButtonStyleType get buttonLoginStyleType; ElevatedButtonStyleType get buttonSignupStyleType; PageBackground? get background; TextStyleConfig? get greetingTextStyle; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of LoginModeSelectPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1349,16 +1385,21 @@ $LoginModeSelectPageConfigCopyWith<LoginModeSelectPageConfig> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginModeSelectPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.systemUiOverlayStyle, systemUiOverlayStyle) || other.systemUiOverlayStyle == systemUiOverlayStyle)&&(identical(other.mainLogo, mainLogo) || other.mainLogo == mainLogo)&&(identical(other.buttonLoginStyleType, buttonLoginStyleType) || other.buttonLoginStyleType == buttonLoginStyleType)&&(identical(other.buttonSignupStyleType, buttonSignupStyleType) || other.buttonSignupStyleType == buttonSignupStyleType)&&(identical(other.background, background) || other.background == background)&&(identical(other.greetingTextStyle, greetingTextStyle) || other.greetingTextStyle == greetingTextStyle)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as LoginModeSelectPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginModeSelectPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.systemUiOverlayStyle, _this.systemUiOverlayStyle) || other.systemUiOverlayStyle == _this.systemUiOverlayStyle)&&(identical(other.mainLogo, _this.mainLogo) || other.mainLogo == _this.mainLogo)&&(identical(other.buttonLoginStyleType, _this.buttonLoginStyleType) || other.buttonLoginStyleType == _this.buttonLoginStyleType)&&(identical(other.buttonSignupStyleType, _this.buttonSignupStyleType) || other.buttonSignupStyleType == _this.buttonSignupStyleType)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.greetingTextStyle, _this.greetingTextStyle) || other.greetingTextStyle == _this.greetingTextStyle)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,systemUiOverlayStyle,mainLogo,buttonLoginStyleType,buttonSignupStyleType,background,greetingTextStyle,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as LoginModeSelectPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.systemUiOverlayStyle,_this.mainLogo,_this.buttonLoginStyleType,_this.buttonSignupStyleType,_this.background,_this.greetingTextStyle,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'LoginModeSelectPageConfig(themeOverride: $themeOverride, systemUiOverlayStyle: $systemUiOverlayStyle, mainLogo: $mainLogo, buttonLoginStyleType: $buttonLoginStyleType, buttonSignupStyleType: $buttonSignupStyleType, background: $background, greetingTextStyle: $greetingTextStyle, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as LoginModeSelectPageConfig;
+  return 'LoginModeSelectPageConfig(themeOverride: ${_this.themeOverride}, systemUiOverlayStyle: ${_this.systemUiOverlayStyle}, mainLogo: ${_this.mainLogo}, buttonLoginStyleType: ${_this.buttonLoginStyleType}, buttonSignupStyleType: ${_this.buttonSignupStyleType}, background: ${_this.background}, greetingTextStyle: ${_this.greetingTextStyle}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -1532,7 +1573,7 @@ case _:
 /// @nodoc
 mixin _$LoginSwitchPageConfig {
 
- ThemeOverrideConfig get themeOverride; ImageSource? get mainLogo; PageBackground? get background; ButtonStyleConfig? get segmentButtonStyle; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of LoginSwitchPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1543,16 +1584,21 @@ $LoginSwitchPageConfigCopyWith<LoginSwitchPageConfig> get copyWith => _$LoginSwi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginSwitchPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.mainLogo, mainLogo) || other.mainLogo == mainLogo)&&(identical(other.background, background) || other.background == background)&&(identical(other.segmentButtonStyle, segmentButtonStyle) || other.segmentButtonStyle == segmentButtonStyle)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as LoginSwitchPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginSwitchPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.mainLogo, _this.mainLogo) || other.mainLogo == _this.mainLogo)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.segmentButtonStyle, _this.segmentButtonStyle) || other.segmentButtonStyle == _this.segmentButtonStyle)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,mainLogo,background,segmentButtonStyle,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as LoginSwitchPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.mainLogo,_this.background,_this.segmentButtonStyle,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'LoginSwitchPageConfig(themeOverride: $themeOverride, mainLogo: $mainLogo, background: $background, segmentButtonStyle: $segmentButtonStyle, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as LoginSwitchPageConfig;
+  return 'LoginSwitchPageConfig(themeOverride: ${_this.themeOverride}, mainLogo: ${_this.mainLogo}, background: ${_this.background}, segmentButtonStyle: ${_this.segmentButtonStyle}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -1723,7 +1769,7 @@ case _:
 /// @nodoc
 mixin _$AboutPageConfig {
 
- ImageSource? get mainLogo; Metadata get metadata; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of AboutPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1734,16 +1780,21 @@ $AboutPageConfigCopyWith<AboutPageConfig> get copyWith => _$AboutPageConfigCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AboutPageConfig&&(identical(other.mainLogo, mainLogo) || other.mainLogo == mainLogo)&&(identical(other.metadata, metadata) || other.metadata == metadata)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as AboutPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AboutPageConfig&&(identical(other.mainLogo, _this.mainLogo) || other.mainLogo == _this.mainLogo)&&(identical(other.metadata, _this.metadata) || other.metadata == _this.metadata)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,mainLogo,metadata,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as AboutPageConfig;
+  return Object.hash(runtimeType,_this.mainLogo,_this.metadata,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'AboutPageConfig(mainLogo: $mainLogo, metadata: $metadata, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as AboutPageConfig;
+  return 'AboutPageConfig(mainLogo: ${_this.mainLogo}, metadata: ${_this.metadata}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -1913,7 +1964,7 @@ case _:
 /// @nodoc
 mixin _$CallPageConfig {
 
- OverlayStyleModel? get systemUiOverlayStyle; AppBarConfig? get appBarStyle; CallPageInfoConfig? get callInfo; CallPageListConfig? get callList; CallPageHintConfig? get actingOnHint; CallPageActionsConfig? get actions; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface;
+
 /// Create a copy of CallPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1924,16 +1975,21 @@ $CallPageConfigCopyWith<CallPageConfig> get copyWith => _$CallPageConfigCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageConfig&&(identical(other.systemUiOverlayStyle, systemUiOverlayStyle) || other.systemUiOverlayStyle == systemUiOverlayStyle)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle)&&(identical(other.callInfo, callInfo) || other.callInfo == callInfo)&&(identical(other.callList, callList) || other.callList == callList)&&(identical(other.actingOnHint, actingOnHint) || other.actingOnHint == actingOnHint)&&(identical(other.actions, actions) || other.actions == actions)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface));
+  final _this = this as CallPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageConfig&&(identical(other.systemUiOverlayStyle, _this.systemUiOverlayStyle) || other.systemUiOverlayStyle == _this.systemUiOverlayStyle)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle)&&(identical(other.callInfo, _this.callInfo) || other.callInfo == _this.callInfo)&&(identical(other.callList, _this.callList) || other.callList == _this.callList)&&(identical(other.actingOnHint, _this.actingOnHint) || other.actingOnHint == _this.actingOnHint)&&(identical(other.actions, _this.actions) || other.actions == _this.actions)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,systemUiOverlayStyle,appBarStyle,callInfo,callList,actingOnHint,actions,background,appBarBlurredSurface);
+int get hashCode {
+  final _this = this as CallPageConfig;
+  return Object.hash(runtimeType,_this.systemUiOverlayStyle,_this.appBarStyle,_this.callInfo,_this.callList,_this.actingOnHint,_this.actions,_this.background,_this.appBarBlurredSurface);
+}
 
 @override
 String toString() {
-  return 'CallPageConfig(systemUiOverlayStyle: $systemUiOverlayStyle, appBarStyle: $appBarStyle, callInfo: $callInfo, callList: $callList, actingOnHint: $actingOnHint, actions: $actions, background: $background, appBarBlurredSurface: $appBarBlurredSurface)';
+  final _this = this as CallPageConfig;
+  return 'CallPageConfig(systemUiOverlayStyle: ${_this.systemUiOverlayStyle}, appBarStyle: ${_this.appBarStyle}, callInfo: ${_this.callInfo}, callList: ${_this.callList}, actingOnHint: ${_this.actingOnHint}, actions: ${_this.actions}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface})';
 }
 
 
@@ -2106,7 +2162,7 @@ case _:
 /// @nodoc
 mixin _$CallPageActionsConfig {
 
- ButtonStyleConfig get callStart; ButtonStyleConfig get hangup; ButtonStyleConfig get transfer; ButtonStyleConfig get camera; ButtonStyleConfig get muted; ButtonStyleConfig get speaker; ButtonStyleConfig get held; ButtonStyleConfig get swap; ButtonStyleConfig get key; TextStyleConfig? get keypadInputStyle;
+
 /// Create a copy of CallPageActionsConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2117,16 +2173,21 @@ $CallPageActionsConfigCopyWith<CallPageActionsConfig> get copyWith => _$CallPage
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageActionsConfig&&(identical(other.callStart, callStart) || other.callStart == callStart)&&(identical(other.hangup, hangup) || other.hangup == hangup)&&(identical(other.transfer, transfer) || other.transfer == transfer)&&(identical(other.camera, camera) || other.camera == camera)&&(identical(other.muted, muted) || other.muted == muted)&&(identical(other.speaker, speaker) || other.speaker == speaker)&&(identical(other.held, held) || other.held == held)&&(identical(other.swap, swap) || other.swap == swap)&&(identical(other.key, key) || other.key == key)&&(identical(other.keypadInputStyle, keypadInputStyle) || other.keypadInputStyle == keypadInputStyle));
+  final _this = this as CallPageActionsConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageActionsConfig&&(identical(other.callStart, _this.callStart) || other.callStart == _this.callStart)&&(identical(other.hangup, _this.hangup) || other.hangup == _this.hangup)&&(identical(other.transfer, _this.transfer) || other.transfer == _this.transfer)&&(identical(other.camera, _this.camera) || other.camera == _this.camera)&&(identical(other.muted, _this.muted) || other.muted == _this.muted)&&(identical(other.speaker, _this.speaker) || other.speaker == _this.speaker)&&(identical(other.held, _this.held) || other.held == _this.held)&&(identical(other.swap, _this.swap) || other.swap == _this.swap)&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.keypadInputStyle, _this.keypadInputStyle) || other.keypadInputStyle == _this.keypadInputStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,callStart,hangup,transfer,camera,muted,speaker,held,swap,key,keypadInputStyle);
+int get hashCode {
+  final _this = this as CallPageActionsConfig;
+  return Object.hash(runtimeType,_this.callStart,_this.hangup,_this.transfer,_this.camera,_this.muted,_this.speaker,_this.held,_this.swap,_this.key,_this.keypadInputStyle);
+}
 
 @override
 String toString() {
-  return 'CallPageActionsConfig(callStart: $callStart, hangup: $hangup, transfer: $transfer, camera: $camera, muted: $muted, speaker: $speaker, held: $held, swap: $swap, key: $key, keypadInputStyle: $keypadInputStyle)';
+  final _this = this as CallPageActionsConfig;
+  return 'CallPageActionsConfig(callStart: ${_this.callStart}, hangup: ${_this.hangup}, transfer: ${_this.transfer}, camera: ${_this.camera}, muted: ${_this.muted}, speaker: ${_this.speaker}, held: ${_this.held}, swap: ${_this.swap}, key: ${_this.key}, keypadInputStyle: ${_this.keypadInputStyle})';
 }
 
 
@@ -2301,7 +2362,7 @@ case _:
 /// @nodoc
 mixin _$CallPageInfoConfig {
 
- TextStyleConfig? get usernameTextStyle; TextStyleConfig? get numberTextStyle; TextStyleConfig? get callStatusTextStyle; TextStyleConfig? get processingStatusTextStyle;
+
 /// Create a copy of CallPageInfoConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2312,16 +2373,21 @@ $CallPageInfoConfigCopyWith<CallPageInfoConfig> get copyWith => _$CallPageInfoCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageInfoConfig&&(identical(other.usernameTextStyle, usernameTextStyle) || other.usernameTextStyle == usernameTextStyle)&&(identical(other.numberTextStyle, numberTextStyle) || other.numberTextStyle == numberTextStyle)&&(identical(other.callStatusTextStyle, callStatusTextStyle) || other.callStatusTextStyle == callStatusTextStyle)&&(identical(other.processingStatusTextStyle, processingStatusTextStyle) || other.processingStatusTextStyle == processingStatusTextStyle));
+  final _this = this as CallPageInfoConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageInfoConfig&&(identical(other.usernameTextStyle, _this.usernameTextStyle) || other.usernameTextStyle == _this.usernameTextStyle)&&(identical(other.numberTextStyle, _this.numberTextStyle) || other.numberTextStyle == _this.numberTextStyle)&&(identical(other.callStatusTextStyle, _this.callStatusTextStyle) || other.callStatusTextStyle == _this.callStatusTextStyle)&&(identical(other.processingStatusTextStyle, _this.processingStatusTextStyle) || other.processingStatusTextStyle == _this.processingStatusTextStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,usernameTextStyle,numberTextStyle,callStatusTextStyle,processingStatusTextStyle);
+int get hashCode {
+  final _this = this as CallPageInfoConfig;
+  return Object.hash(runtimeType,_this.usernameTextStyle,_this.numberTextStyle,_this.callStatusTextStyle,_this.processingStatusTextStyle);
+}
 
 @override
 String toString() {
-  return 'CallPageInfoConfig(usernameTextStyle: $usernameTextStyle, numberTextStyle: $numberTextStyle, callStatusTextStyle: $callStatusTextStyle, processingStatusTextStyle: $processingStatusTextStyle)';
+  final _this = this as CallPageInfoConfig;
+  return 'CallPageInfoConfig(usernameTextStyle: ${_this.usernameTextStyle}, numberTextStyle: ${_this.numberTextStyle}, callStatusTextStyle: ${_this.callStatusTextStyle}, processingStatusTextStyle: ${_this.processingStatusTextStyle})';
 }
 
 
@@ -2490,7 +2556,7 @@ case _:
 /// @nodoc
 mixin _$CallPageListConfig {
 
- String? get rowBackgroundColor; String? get rowFocusedBackgroundColor; String? get rowFocusedBorderColor; String? get dotRingingColor; String? get dotOnCallColor; String? get dotHeldColor;
+
 /// Create a copy of CallPageListConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2501,16 +2567,21 @@ $CallPageListConfigCopyWith<CallPageListConfig> get copyWith => _$CallPageListCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageListConfig&&(identical(other.rowBackgroundColor, rowBackgroundColor) || other.rowBackgroundColor == rowBackgroundColor)&&(identical(other.rowFocusedBackgroundColor, rowFocusedBackgroundColor) || other.rowFocusedBackgroundColor == rowFocusedBackgroundColor)&&(identical(other.rowFocusedBorderColor, rowFocusedBorderColor) || other.rowFocusedBorderColor == rowFocusedBorderColor)&&(identical(other.dotRingingColor, dotRingingColor) || other.dotRingingColor == dotRingingColor)&&(identical(other.dotOnCallColor, dotOnCallColor) || other.dotOnCallColor == dotOnCallColor)&&(identical(other.dotHeldColor, dotHeldColor) || other.dotHeldColor == dotHeldColor));
+  final _this = this as CallPageListConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageListConfig&&(identical(other.rowBackgroundColor, _this.rowBackgroundColor) || other.rowBackgroundColor == _this.rowBackgroundColor)&&(identical(other.rowFocusedBackgroundColor, _this.rowFocusedBackgroundColor) || other.rowFocusedBackgroundColor == _this.rowFocusedBackgroundColor)&&(identical(other.rowFocusedBorderColor, _this.rowFocusedBorderColor) || other.rowFocusedBorderColor == _this.rowFocusedBorderColor)&&(identical(other.dotRingingColor, _this.dotRingingColor) || other.dotRingingColor == _this.dotRingingColor)&&(identical(other.dotOnCallColor, _this.dotOnCallColor) || other.dotOnCallColor == _this.dotOnCallColor)&&(identical(other.dotHeldColor, _this.dotHeldColor) || other.dotHeldColor == _this.dotHeldColor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,rowBackgroundColor,rowFocusedBackgroundColor,rowFocusedBorderColor,dotRingingColor,dotOnCallColor,dotHeldColor);
+int get hashCode {
+  final _this = this as CallPageListConfig;
+  return Object.hash(runtimeType,_this.rowBackgroundColor,_this.rowFocusedBackgroundColor,_this.rowFocusedBorderColor,_this.dotRingingColor,_this.dotOnCallColor,_this.dotHeldColor);
+}
 
 @override
 String toString() {
-  return 'CallPageListConfig(rowBackgroundColor: $rowBackgroundColor, rowFocusedBackgroundColor: $rowFocusedBackgroundColor, rowFocusedBorderColor: $rowFocusedBorderColor, dotRingingColor: $dotRingingColor, dotOnCallColor: $dotOnCallColor, dotHeldColor: $dotHeldColor)';
+  final _this = this as CallPageListConfig;
+  return 'CallPageListConfig(rowBackgroundColor: ${_this.rowBackgroundColor}, rowFocusedBackgroundColor: ${_this.rowFocusedBackgroundColor}, rowFocusedBorderColor: ${_this.rowFocusedBorderColor}, dotRingingColor: ${_this.dotRingingColor}, dotOnCallColor: ${_this.dotOnCallColor}, dotHeldColor: ${_this.dotHeldColor})';
 }
 
 
@@ -2681,7 +2752,7 @@ case _:
 /// @nodoc
 mixin _$CallPageHintConfig {
 
- String? get backgroundColor; String? get affectedNameColor;
+
 /// Create a copy of CallPageHintConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2692,16 +2763,21 @@ $CallPageHintConfigCopyWith<CallPageHintConfig> get copyWith => _$CallPageHintCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageHintConfig&&(identical(other.backgroundColor, backgroundColor) || other.backgroundColor == backgroundColor)&&(identical(other.affectedNameColor, affectedNameColor) || other.affectedNameColor == affectedNameColor));
+  final _this = this as CallPageHintConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallPageHintConfig&&(identical(other.backgroundColor, _this.backgroundColor) || other.backgroundColor == _this.backgroundColor)&&(identical(other.affectedNameColor, _this.affectedNameColor) || other.affectedNameColor == _this.affectedNameColor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,backgroundColor,affectedNameColor);
+int get hashCode {
+  final _this = this as CallPageHintConfig;
+  return Object.hash(runtimeType,_this.backgroundColor,_this.affectedNameColor);
+}
 
 @override
 String toString() {
-  return 'CallPageHintConfig(backgroundColor: $backgroundColor, affectedNameColor: $affectedNameColor)';
+  final _this = this as CallPageHintConfig;
+  return 'CallPageHintConfig(backgroundColor: ${_this.backgroundColor}, affectedNameColor: ${_this.affectedNameColor})';
 }
 
 
@@ -2868,7 +2944,7 @@ case _:
 /// @nodoc
 mixin _$KeypadPageConfig {
 
- OverlayStyleModel? get systemUiOverlayStyle; TextFieldConfig? get textField; TextFieldConfig? get contactName; KeypadStyleConfig? get keypad; ActionPadWidgetConfig? get actionpad; PageBackground? get background; ThemeOverrideConfig get themeOverride; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of KeypadPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2879,16 +2955,21 @@ $KeypadPageConfigCopyWith<KeypadPageConfig> get copyWith => _$KeypadPageConfigCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is KeypadPageConfig&&(identical(other.systemUiOverlayStyle, systemUiOverlayStyle) || other.systemUiOverlayStyle == systemUiOverlayStyle)&&(identical(other.textField, textField) || other.textField == textField)&&(identical(other.contactName, contactName) || other.contactName == contactName)&&(identical(other.keypad, keypad) || other.keypad == keypad)&&(identical(other.actionpad, actionpad) || other.actionpad == actionpad)&&(identical(other.background, background) || other.background == background)&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as KeypadPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is KeypadPageConfig&&(identical(other.systemUiOverlayStyle, _this.systemUiOverlayStyle) || other.systemUiOverlayStyle == _this.systemUiOverlayStyle)&&(identical(other.textField, _this.textField) || other.textField == _this.textField)&&(identical(other.contactName, _this.contactName) || other.contactName == _this.contactName)&&(identical(other.keypad, _this.keypad) || other.keypad == _this.keypad)&&(identical(other.actionpad, _this.actionpad) || other.actionpad == _this.actionpad)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,systemUiOverlayStyle,textField,contactName,keypad,actionpad,background,themeOverride,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as KeypadPageConfig;
+  return Object.hash(runtimeType,_this.systemUiOverlayStyle,_this.textField,_this.contactName,_this.keypad,_this.actionpad,_this.background,_this.themeOverride,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'KeypadPageConfig(systemUiOverlayStyle: $systemUiOverlayStyle, textField: $textField, contactName: $contactName, keypad: $keypad, actionpad: $actionpad, background: $background, themeOverride: $themeOverride, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as KeypadPageConfig;
+  return 'KeypadPageConfig(systemUiOverlayStyle: ${_this.systemUiOverlayStyle}, textField: ${_this.textField}, contactName: ${_this.contactName}, keypad: ${_this.keypad}, actionpad: ${_this.actionpad}, background: ${_this.background}, themeOverride: ${_this.themeOverride}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -3061,7 +3142,7 @@ case _:
 /// @nodoc
 mixin _$ActionPadWidgetConfig {
 
- ButtonStyleConfig get callStart; ButtonStyleConfig get callTransfer; ButtonStyleConfig get backspace;
+
 /// Create a copy of ActionPadWidgetConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3072,16 +3153,21 @@ $ActionPadWidgetConfigCopyWith<ActionPadWidgetConfig> get copyWith => _$ActionPa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActionPadWidgetConfig&&(identical(other.callStart, callStart) || other.callStart == callStart)&&(identical(other.callTransfer, callTransfer) || other.callTransfer == callTransfer)&&(identical(other.backspace, backspace) || other.backspace == backspace));
+  final _this = this as ActionPadWidgetConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActionPadWidgetConfig&&(identical(other.callStart, _this.callStart) || other.callStart == _this.callStart)&&(identical(other.callTransfer, _this.callTransfer) || other.callTransfer == _this.callTransfer)&&(identical(other.backspace, _this.backspace) || other.backspace == _this.backspace));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,callStart,callTransfer,backspace);
+int get hashCode {
+  final _this = this as ActionPadWidgetConfig;
+  return Object.hash(runtimeType,_this.callStart,_this.callTransfer,_this.backspace);
+}
 
 @override
 String toString() {
-  return 'ActionPadWidgetConfig(callStart: $callStart, callTransfer: $callTransfer, backspace: $backspace)';
+  final _this = this as ActionPadWidgetConfig;
+  return 'ActionPadWidgetConfig(callStart: ${_this.callStart}, callTransfer: ${_this.callTransfer}, backspace: ${_this.backspace})';
 }
 
 
@@ -3249,7 +3335,7 @@ case _:
 /// @nodoc
 mixin _$SettingsPageConfig {
 
- ThemeOverrideConfig get themeOverride; String? get leadingIconsColor; String? get userIconColor; String? get logoutIconColor; GroupTitleListTileWidgetConfig? get groupTitleListTile; SeparatorStyleConfig? get separator; PageBackground? get background; TextStyleConfig? get itemTextStyle; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of SettingsPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3260,16 +3346,21 @@ $SettingsPageConfigCopyWith<SettingsPageConfig> get copyWith => _$SettingsPageCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.leadingIconsColor, leadingIconsColor) || other.leadingIconsColor == leadingIconsColor)&&(identical(other.userIconColor, userIconColor) || other.userIconColor == userIconColor)&&(identical(other.logoutIconColor, logoutIconColor) || other.logoutIconColor == logoutIconColor)&&(identical(other.groupTitleListTile, groupTitleListTile) || other.groupTitleListTile == groupTitleListTile)&&(identical(other.separator, separator) || other.separator == separator)&&(identical(other.background, background) || other.background == background)&&(identical(other.itemTextStyle, itemTextStyle) || other.itemTextStyle == itemTextStyle)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as SettingsPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.leadingIconsColor, _this.leadingIconsColor) || other.leadingIconsColor == _this.leadingIconsColor)&&(identical(other.userIconColor, _this.userIconColor) || other.userIconColor == _this.userIconColor)&&(identical(other.logoutIconColor, _this.logoutIconColor) || other.logoutIconColor == _this.logoutIconColor)&&(identical(other.groupTitleListTile, _this.groupTitleListTile) || other.groupTitleListTile == _this.groupTitleListTile)&&(identical(other.separator, _this.separator) || other.separator == _this.separator)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.itemTextStyle, _this.itemTextStyle) || other.itemTextStyle == _this.itemTextStyle)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,leadingIconsColor,userIconColor,logoutIconColor,groupTitleListTile,separator,background,itemTextStyle,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as SettingsPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.leadingIconsColor,_this.userIconColor,_this.logoutIconColor,_this.groupTitleListTile,_this.separator,_this.background,_this.itemTextStyle,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'SettingsPageConfig(themeOverride: $themeOverride, leadingIconsColor: $leadingIconsColor, userIconColor: $userIconColor, logoutIconColor: $logoutIconColor, groupTitleListTile: $groupTitleListTile, separator: $separator, background: $background, itemTextStyle: $itemTextStyle, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as SettingsPageConfig;
+  return 'SettingsPageConfig(themeOverride: ${_this.themeOverride}, leadingIconsColor: ${_this.leadingIconsColor}, userIconColor: ${_this.userIconColor}, logoutIconColor: ${_this.logoutIconColor}, groupTitleListTile: ${_this.groupTitleListTile}, separator: ${_this.separator}, background: ${_this.background}, itemTextStyle: ${_this.itemTextStyle}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -3444,7 +3535,7 @@ case _:
 /// @nodoc
 mixin _$ContactsPageConfig {
 
- ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of ContactsPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3455,16 +3546,21 @@ $ContactsPageConfigCopyWith<ContactsPageConfig> get copyWith => _$ContactsPageCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactsPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as ContactsPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactsPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as ContactsPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'ContactsPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as ContactsPageConfig;
+  return 'ContactsPageConfig(themeOverride: ${_this.themeOverride}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -3633,7 +3729,7 @@ case _:
 /// @nodoc
 mixin _$EmbeddedPageConfig {
 
- ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of EmbeddedPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3644,16 +3740,21 @@ $EmbeddedPageConfigCopyWith<EmbeddedPageConfig> get copyWith => _$EmbeddedPageCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as EmbeddedPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as EmbeddedPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'EmbeddedPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as EmbeddedPageConfig;
+  return 'EmbeddedPageConfig(themeOverride: ${_this.themeOverride}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -3822,7 +3923,7 @@ case _:
 /// @nodoc
 mixin _$FavoritesPageConfig {
 
- ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of FavoritesPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3833,16 +3934,21 @@ $FavoritesPageConfigCopyWith<FavoritesPageConfig> get copyWith => _$FavoritesPag
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoritesPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as FavoritesPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FavoritesPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as FavoritesPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'FavoritesPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as FavoritesPageConfig;
+  return 'FavoritesPageConfig(themeOverride: ${_this.themeOverride}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -4011,7 +4117,7 @@ case _:
 /// @nodoc
 mixin _$VoicemailPageConfig {
 
- ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of VoicemailPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4022,16 +4128,21 @@ $VoicemailPageConfigCopyWith<VoicemailPageConfig> get copyWith => _$VoicemailPag
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as VoicemailPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as VoicemailPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'VoicemailPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as VoicemailPageConfig;
+  return 'VoicemailPageConfig(themeOverride: ${_this.themeOverride}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -4200,7 +4311,7 @@ case _:
 /// @nodoc
 mixin _$CallCenterPageConfig {
 
- ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of CallCenterPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4211,16 +4322,21 @@ $CallCenterPageConfigCopyWith<CallCenterPageConfig> get copyWith => _$CallCenter
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallCenterPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as CallCenterPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallCenterPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as CallCenterPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'CallCenterPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as CallCenterPageConfig;
+  return 'CallCenterPageConfig(themeOverride: ${_this.themeOverride}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -4389,7 +4505,7 @@ case _:
 /// @nodoc
 mixin _$SystemNotificationsPageConfig {
 
- ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of SystemNotificationsPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4400,16 +4516,21 @@ $SystemNotificationsPageConfigCopyWith<SystemNotificationsPageConfig> get copyWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotificationsPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as SystemNotificationsPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SystemNotificationsPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as SystemNotificationsPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'SystemNotificationsPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as SystemNotificationsPageConfig;
+  return 'SystemNotificationsPageConfig(themeOverride: ${_this.themeOverride}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -4578,7 +4699,7 @@ case _:
 /// @nodoc
 mixin _$ConversationsPageConfig {
 
- ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of ConversationsPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4589,16 +4710,21 @@ $ConversationsPageConfigCopyWith<ConversationsPageConfig> get copyWith => _$Conv
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConversationsPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as ConversationsPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConversationsPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as ConversationsPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'ConversationsPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as ConversationsPageConfig;
+  return 'ConversationsPageConfig(themeOverride: ${_this.themeOverride}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -4767,7 +4893,7 @@ case _:
 /// @nodoc
 mixin _$RecentsPageConfig {
 
- ThemeOverrideConfig get themeOverride; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of RecentsPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4778,16 +4904,21 @@ $RecentsPageConfigCopyWith<RecentsPageConfig> get copyWith => _$RecentsPageConfi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as RecentsPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as RecentsPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'RecentsPageConfig(themeOverride: $themeOverride, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as RecentsPageConfig;
+  return 'RecentsPageConfig(themeOverride: ${_this.themeOverride}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -4956,7 +5087,7 @@ case _:
 /// @nodoc
 mixin _$LoginCoreUrlAssignPageConfig {
 
- ThemeOverrideConfig get themeOverride; OverlayStyleModel? get systemUiOverlayStyle; PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of LoginCoreUrlAssignPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4967,16 +5098,21 @@ $LoginCoreUrlAssignPageConfigCopyWith<LoginCoreUrlAssignPageConfig> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginCoreUrlAssignPageConfig&&(identical(other.themeOverride, themeOverride) || other.themeOverride == themeOverride)&&(identical(other.systemUiOverlayStyle, systemUiOverlayStyle) || other.systemUiOverlayStyle == systemUiOverlayStyle)&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as LoginCoreUrlAssignPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginCoreUrlAssignPageConfig&&(identical(other.themeOverride, _this.themeOverride) || other.themeOverride == _this.themeOverride)&&(identical(other.systemUiOverlayStyle, _this.systemUiOverlayStyle) || other.systemUiOverlayStyle == _this.systemUiOverlayStyle)&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,themeOverride,systemUiOverlayStyle,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as LoginCoreUrlAssignPageConfig;
+  return Object.hash(runtimeType,_this.themeOverride,_this.systemUiOverlayStyle,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'LoginCoreUrlAssignPageConfig(themeOverride: $themeOverride, systemUiOverlayStyle: $systemUiOverlayStyle, background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as LoginCoreUrlAssignPageConfig;
+  return 'LoginCoreUrlAssignPageConfig(themeOverride: ${_this.themeOverride}, systemUiOverlayStyle: ${_this.systemUiOverlayStyle}, background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 
@@ -5146,7 +5282,7 @@ case _:
 /// @nodoc
 mixin _$NumberCdrsPageConfig {
 
- PageBackground? get background; BlurredSurfaceConfig? get appBarBlurredSurface; AppBarConfig? get appBarStyle;
+
 /// Create a copy of NumberCdrsPageConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5157,16 +5293,21 @@ $NumberCdrsPageConfigCopyWith<NumberCdrsPageConfig> get copyWith => _$NumberCdrs
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NumberCdrsPageConfig&&(identical(other.background, background) || other.background == background)&&(identical(other.appBarBlurredSurface, appBarBlurredSurface) || other.appBarBlurredSurface == appBarBlurredSurface)&&(identical(other.appBarStyle, appBarStyle) || other.appBarStyle == appBarStyle));
+  final _this = this as NumberCdrsPageConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NumberCdrsPageConfig&&(identical(other.background, _this.background) || other.background == _this.background)&&(identical(other.appBarBlurredSurface, _this.appBarBlurredSurface) || other.appBarBlurredSurface == _this.appBarBlurredSurface)&&(identical(other.appBarStyle, _this.appBarStyle) || other.appBarStyle == _this.appBarStyle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,background,appBarBlurredSurface,appBarStyle);
+int get hashCode {
+  final _this = this as NumberCdrsPageConfig;
+  return Object.hash(runtimeType,_this.background,_this.appBarBlurredSurface,_this.appBarStyle);
+}
 
 @override
 String toString() {
-  return 'NumberCdrsPageConfig(background: $background, appBarBlurredSurface: $appBarBlurredSurface, appBarStyle: $appBarStyle)';
+  final _this = this as NumberCdrsPageConfig;
+  return 'NumberCdrsPageConfig(background: ${_this.background}, appBarBlurredSurface: ${_this.appBarBlurredSurface}, appBarStyle: ${_this.appBarStyle})';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'call_queue.dart';
@@ -9,13 +9,14 @@ part of 'call_queue.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$CallQueue {
 
- String get id; String get name; bool get loggedIn; int get agentsTotal; int get agentsLoggedIn; int? get callersWaiting;
+
 /// Create a copy of CallQueue
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $CallQueueCopyWith<CallQueue> get copyWith => _$CallQueueCopyWithImpl<CallQueue>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallQueue&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.loggedIn, loggedIn) || other.loggedIn == loggedIn)&&(identical(other.agentsTotal, agentsTotal) || other.agentsTotal == agentsTotal)&&(identical(other.agentsLoggedIn, agentsLoggedIn) || other.agentsLoggedIn == agentsLoggedIn)&&(identical(other.callersWaiting, callersWaiting) || other.callersWaiting == callersWaiting));
+  final _this = this as CallQueue;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallQueue&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.loggedIn, _this.loggedIn) || other.loggedIn == _this.loggedIn)&&(identical(other.agentsTotal, _this.agentsTotal) || other.agentsTotal == _this.agentsTotal)&&(identical(other.agentsLoggedIn, _this.agentsLoggedIn) || other.agentsLoggedIn == _this.agentsLoggedIn)&&(identical(other.callersWaiting, _this.callersWaiting) || other.callersWaiting == _this.callersWaiting));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,loggedIn,agentsTotal,agentsLoggedIn,callersWaiting);
+int get hashCode {
+  final _this = this as CallQueue;
+  return Object.hash(runtimeType,_this.id,_this.name,_this.loggedIn,_this.agentsTotal,_this.agentsLoggedIn,_this.callersWaiting);
+}
 
 @override
 String toString() {
-  return 'CallQueue(id: $id, name: $name, loggedIn: $loggedIn, agentsTotal: $agentsTotal, agentsLoggedIn: $agentsLoggedIn, callersWaiting: $callersWaiting)';
+  final _this = this as CallQueue;
+  return 'CallQueue(id: ${_this.id}, name: ${_this.name}, loggedIn: ${_this.loggedIn}, agentsTotal: ${_this.agentsTotal}, agentsLoggedIn: ${_this.agentsLoggedIn}, callersWaiting: ${_this.callersWaiting})';
 }
 
 

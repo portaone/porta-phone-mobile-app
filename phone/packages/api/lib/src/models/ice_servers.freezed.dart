@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'ice_servers.dart';
@@ -9,13 +9,14 @@ part of 'ice_servers.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$IceServersResponse {
 
- List<IceServer> get iceServers; int? get ttl; DateTime? get expiresAt;
+
 /// Create a copy of IceServersResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $IceServersResponseCopyWith<IceServersResponse> get copyWith => _$IceServersResp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IceServersResponse&&const DeepCollectionEquality().equals(other.iceServers, iceServers)&&(identical(other.ttl, ttl) || other.ttl == ttl)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  final _this = this as IceServersResponse;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IceServersResponse&&const DeepCollectionEquality().equals(other.iceServers, _this.iceServers)&&(identical(other.ttl, _this.ttl) || other.ttl == _this.ttl)&&(identical(other.expiresAt, _this.expiresAt) || other.expiresAt == _this.expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(iceServers),ttl,expiresAt);
+int get hashCode {
+  final _this = this as IceServersResponse;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.iceServers),_this.ttl,_this.expiresAt);
+}
 
 @override
 String toString() {
-  return 'IceServersResponse(iceServers: $iceServers, ttl: $ttl, expiresAt: $expiresAt)';
+  final _this = this as IceServersResponse;
+  return 'IceServersResponse(iceServers: ${_this.iceServers}, ttl: ${_this.ttl}, expiresAt: ${_this.expiresAt})';
 }
 
 
@@ -203,7 +209,7 @@ case _:
 /// @nodoc
 mixin _$IceServer {
 
- List<String> get urls; String? get username; String? get credential;
+
 /// Create a copy of IceServer
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -214,16 +220,21 @@ $IceServerCopyWith<IceServer> get copyWith => _$IceServerCopyWithImpl<IceServer>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IceServer&&const DeepCollectionEquality().equals(other.urls, urls)&&(identical(other.username, username) || other.username == username)&&(identical(other.credential, credential) || other.credential == credential));
+  final _this = this as IceServer;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IceServer&&const DeepCollectionEquality().equals(other.urls, _this.urls)&&(identical(other.username, _this.username) || other.username == _this.username)&&(identical(other.credential, _this.credential) || other.credential == _this.credential));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(urls),username,credential);
+int get hashCode {
+  final _this = this as IceServer;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.urls),_this.username,_this.credential);
+}
 
 @override
 String toString() {
-  return 'IceServer(urls: $urls, username: $username, credential: $credential)';
+  final _this = this as IceServer;
+  return 'IceServer(urls: ${_this.urls}, username: ${_this.username}, credential: ${_this.credential})';
 }
 
 

@@ -19,19 +19,15 @@ class BorderConfig with _$BorderConfig {
   /// - [`BorderTypeConfig.underline`]
   /// - [`BorderTypeConfig.outline`]
   /// - [`BorderTypeConfig.none`]
-  @override
   final BorderTypeConfig type;
 
   /// Corner radius for outline borders.
-  @override
   final double? borderRadius;
 
   /// Border color (hex string, e.g. `#000000`).
-  @override
   final String? borderColor;
 
   /// Stroke width of the border.
-  @override
   final double? borderWidth;
 
   factory BorderConfig.fromJson(Map<String, Object?> json) => _$BorderConfigFromJson(json);

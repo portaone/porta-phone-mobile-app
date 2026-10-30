@@ -11,10 +11,8 @@ part 'app_contact.g.dart';
 class AppContact with _$AppContact {
   const AppContact({required this.identifier, required this.phones});
 
-  @override
   final String identifier;
 
-  @override
   final List<String> phones;
 
   factory AppContact.fromJson(Map<String, dynamic> json) => _$AppContactFromJson(json);

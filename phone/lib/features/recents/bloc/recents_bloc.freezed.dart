@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'recents_bloc.dart';
@@ -9,12 +9,13 @@ part of 'recents_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RecentsState {
 
- List<Recent>? get recents; RecentsVisibilityFilter get filter; RecentsClearStatus get clearStatus;
+
 /// Create a copy of RecentsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,12 +26,16 @@ $RecentsStateCopyWith<RecentsState> get copyWith => _$RecentsStateCopyWithImpl<R
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsState&&const DeepCollectionEquality().equals(other.recents, recents)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.clearStatus, clearStatus) || other.clearStatus == clearStatus));
+  final _this = this as RecentsState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecentsState&&const DeepCollectionEquality().equals(other.recents, _this.recents)&&(identical(other.filter, _this.filter) || other.filter == _this.filter)&&(identical(other.clearStatus, _this.clearStatus) || other.clearStatus == _this.clearStatus));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(recents),filter,clearStatus);
+int get hashCode {
+  final _this = this as RecentsState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.recents),_this.filter,_this.clearStatus);
+}
 
 
 

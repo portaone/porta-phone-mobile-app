@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'embedded_cubit.dart';
@@ -9,12 +9,13 @@ part of 'embedded_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EmbeddedState {
 
- Map<String, dynamic> get payload; String get currentUrl; bool get canGoBack; EmbeddedIntents? get intent;
+
 /// Create a copy of EmbeddedState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $EmbeddedStateCopyWith<EmbeddedState> get copyWith => _$EmbeddedStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedState&&const DeepCollectionEquality().equals(other.payload, payload)&&(identical(other.currentUrl, currentUrl) || other.currentUrl == currentUrl)&&(identical(other.canGoBack, canGoBack) || other.canGoBack == canGoBack)&&(identical(other.intent, intent) || other.intent == intent));
+  final _this = this as EmbeddedState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EmbeddedState&&const DeepCollectionEquality().equals(other.payload, _this.payload)&&(identical(other.currentUrl, _this.currentUrl) || other.currentUrl == _this.currentUrl)&&(identical(other.canGoBack, _this.canGoBack) || other.canGoBack == _this.canGoBack)&&(identical(other.intent, _this.intent) || other.intent == _this.intent));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(payload),currentUrl,canGoBack,intent);
+int get hashCode {
+  final _this = this as EmbeddedState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.payload),_this.currentUrl,_this.canGoBack,_this.intent);
+}
 
 @override
 String toString() {
-  return 'EmbeddedState(payload: $payload, currentUrl: $currentUrl, canGoBack: $canGoBack, intent: $intent)';
+  final _this = this as EmbeddedState;
+  return 'EmbeddedState(payload: ${_this.payload}, currentUrl: ${_this.currentUrl}, canGoBack: ${_this.canGoBack}, intent: ${_this.intent})';
 }
 
 

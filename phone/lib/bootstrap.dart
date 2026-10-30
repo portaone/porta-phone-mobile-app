@@ -202,25 +202,6 @@ Future<AppDependencies> _bootstrap({
   deps.share(await trace.measure('push-environment', PushEnvironment.init));
   final appPath = deps.share(await trace.measure('app-path', AppPath.init));
 
-  // Spawn the shared DriftIsolate database server. All isolates (FCM background,
-  // WorkManager) connect to this single server via IsolateNameServer, eliminating
-  // write-write SQLite contention.
-  if (kIsWeb) {
-    // TODO(web): dart:isolate is unsupported on web, so there is no DriftIsolate
-    // server. The drift WasmDatabase is opened lazily on first access in main.dart
-    // (see AppDatabaseLifecycleHolder); nothing to register here.
-    Logger('bootstrap').warning('DriftIsolate server skipped on web; using lazy WasmDatabase connection');
-  } else {
-    final driftIsolate = await trace.measure(
-      'database-isolate',
-      () => IsolateDatabase.spawnServer(directoryPath: appPath.applicationDocumentsPath),
-    );
-    // The server isolate and its name-server mapping are process-wide - the
-    // background isolates find the database through that mapping - so the
-    // registry owns them and widgets only take client connections.
-    deps.share(DatabaseServer(driftIsolate));
-  }
-
   deps.share(
     await trace.measure(
       'app-permissions',
@@ -626,7 +607,7 @@ Future<void> _handleBackgroundMessage(RemoteMessage message, Logger logger) asyn
 
     final appPath = isolateContext.appPath;
     if (appPath != null) {
-      await DatabaseScope(appPath.applicationDocumentsPath)
+      await DatabaseScope(appPath)
           .onError((e, _) => logger.warning('MessagePush DB write failed: $e'))
           .execute((db) async => ActiveMessagePushsRepositoryDriftImpl(appDatabase: db).set(activeMessagePush))
           .run();
@@ -643,7 +624,7 @@ Future<String> _resolveContactDisplayNameWithFallback(PendingCallPush appPush, L
   if (appPath == null) return appPush.call.displayName;
 
   String? contactName;
-  await DatabaseScope(appPath.applicationDocumentsPath)
+  await DatabaseScope(appPath)
       .onError(
         (e, s) => logger.severe(
           'Failed to resolve contact name for handle: ${appPush.call.handle}. Fallback to push display name.',
@@ -772,7 +753,7 @@ void workManagerDispatcher() {
       final localPushRepo = LocalPushRepositoryFLNImpl();
 
       var taskSucceeded = false;
-      await DatabaseScope(appPath.applicationDocumentsPath)
+      await DatabaseScope(appPath)
           .onError((e, s) => logger.severe('System notifications task failed', e, s))
           .execute((db) async {
             final localRepo = SystemNotificationsLocalRepositoryDriftImpl(db);

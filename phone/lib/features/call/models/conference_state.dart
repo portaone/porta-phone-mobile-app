@@ -41,22 +41,17 @@ class ConferenceState with _$ConferenceState {
   });
 
   /// The room the server assigned, from the conference offer; `null` before it.
-  @override
   final int? room;
 
-  @override
   final ConferencePhase phase;
 
   /// The calls merged into the room, by call id, with the line each is on.
-  @override
   final Map<String, int> legs;
 
   /// The server's participant list as last sent. The host is not in it.
-  @override
   final List<ConferenceParticipant> participants;
 
   /// Whether the host's own microphone is muted towards the room.
-  @override
   final bool selfMuted;
 
   /// A room exists, whether still assembling or already active.

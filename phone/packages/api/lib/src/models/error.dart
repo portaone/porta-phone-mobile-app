@@ -11,10 +11,8 @@ part 'error.g.dart';
 class ErrorResponse with _$ErrorResponse {
   const ErrorResponse({this.code, this.message, this.details});
 
-  @override
   final String? code;
 
-  @override
   final String? message;
 
   /// The one detail this reads, whichever shape the backend sent.
@@ -24,7 +22,6 @@ class ErrorResponse with _$ErrorResponse {
   /// error body is not the place to be strict: a shape nobody expected used to
   /// throw out of the parse and take the failure itself with it, leaving the
   /// caller a cast error instead of the status the backend actually sent.
-  @override
   @JsonKey(fromJson: _detailFromJson)
   final ErrorDetail? details;
 
@@ -46,10 +43,8 @@ ErrorDetail? _detailFromJson(Object? json) => switch (json) {
 class ErrorDetail with _$ErrorDetail {
   const ErrorDetail({this.path, required this.reason});
 
-  @override
   final String? path;
 
-  @override
   final String reason;
 
   factory ErrorDetail.fromJson(Map<String, dynamic> json) => _$ErrorDetailFromJson(json);

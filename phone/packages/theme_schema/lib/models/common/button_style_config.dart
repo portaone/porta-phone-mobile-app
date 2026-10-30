@@ -87,102 +87,78 @@ class ButtonStyleConfig with _$ButtonStyleConfig {
   });
 
   /// The style for a button's text descendants.
-  @override
   final TextStyleConfig? textStyle;
 
   /// The button's background fill color in hex format.
-  @override
   final String? backgroundColor;
 
   /// The color for the button's text/icon descendants in hex format.
-  @override
   final String? foregroundColor;
 
   /// The button's background fill color in hex format while it is switched on.
   ///
   /// Only reaches the screen for a control that can be on or off - a mute or a
   /// camera button. Left empty, the switched-on look comes from the palette.
-  @override
   final String? selectedBackgroundColor;
 
   /// The color for the text/icon descendants in hex format while the button is switched on.
-  @override
   final String? selectedForegroundColor;
 
   /// The icon's color in hex format while the button is switched on.
-  @override
   final String? selectedIconColor;
 
   /// The button's background fill color in hex format when the button is disabled.
-  @override
   final String? disabledBackgroundColor;
 
   /// The color for the button's text/icon descendants in hex format when the button is disabled.
-  @override
   final String? disabledForegroundColor;
 
   /// The icon's color in hex format when the button is disabled.
-  @override
   final String? disabledIconColor;
 
   /// The shadow color in hex format when the button is disabled.
-  @override
   final String? disabledShadowColor;
 
   /// The highlight color for states (focused, hovered, pressed) in hex format.
-  @override
   final String? overlayColor;
 
   /// The shadow color in hex format.
-  @override
   final String? shadowColor;
 
   /// The surface tint color in hex format.
-  @override
   final String? surfaceTintColor;
 
   /// The elevation of the button.
-  @override
   final double? elevation;
 
   /// The padding between the button's boundary and its child.
-  @override
   final EdgeInsetsConfig? padding;
 
   /// The minimum size of the button.
-  @override
   final SizeConfig? minimumSize;
 
   /// The fixed size of the button.
-  @override
   final SizeConfig? fixedSize;
 
   /// The maximum size of the button.
-  @override
   final SizeConfig? maximumSize;
 
   /// The icon's color in hex format.
-  @override
   final String? iconColor;
 
   /// The icon's size.
-  @override
   final double? iconSize;
 
   /// The color and weight of the button's outline.
-  @override
   final BorderSideConfig? side;
 
   /// The shape of the button (e.g., rounded corners).
-  @override
   final ShapeBorderConfig? shape;
 
   /// Defines how compact the button's layout will be.
-  @override
   final VisualDensityConfig? visualDensity;
 
   /// The duration of animated changes in milliseconds.
-  @override
   final int? animationDuration;
 
   factory ButtonStyleConfig.fromJson(Map<String, Object?> json) => _$ButtonStyleConfigFromJson(json);

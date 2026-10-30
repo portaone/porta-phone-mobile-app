@@ -15,13 +15,10 @@ class ExternalPageAccessToken with _$ExternalPageAccessToken {
     @JsonKey(name: 'expires_at') required this.expiresAt,
   });
 
-  @override
   final String accessToken;
 
-  @override
   final String refreshToken;
 
-  @override
   final DateTime expiresAt;
 
   factory ExternalPageAccessToken.fromJson(Map<String, Object?> json) => _$ExternalPageAccessTokenFromJson(json);

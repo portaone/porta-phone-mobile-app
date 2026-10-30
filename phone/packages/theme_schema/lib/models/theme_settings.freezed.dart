@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'theme_settings.dart';
@@ -9,13 +9,14 @@ part of 'theme_settings.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ThemeSettings {
 
- ColorSchemeConfig get lightColorSchemeConfig; ColorSchemeConfig get darkColorSchemeConfig; ThemeWidgetConfig get themeWidgetLightConfig; ThemeWidgetConfig get themeWidgetDarkConfig; ThemePageConfig get themePageLightConfig; ThemePageConfig get themePageDarkConfig;
+
 /// Create a copy of ThemeSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $ThemeSettingsCopyWith<ThemeSettings> get copyWith => _$ThemeSettingsCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemeSettings&&(identical(other.lightColorSchemeConfig, lightColorSchemeConfig) || other.lightColorSchemeConfig == lightColorSchemeConfig)&&(identical(other.darkColorSchemeConfig, darkColorSchemeConfig) || other.darkColorSchemeConfig == darkColorSchemeConfig)&&(identical(other.themeWidgetLightConfig, themeWidgetLightConfig) || other.themeWidgetLightConfig == themeWidgetLightConfig)&&(identical(other.themeWidgetDarkConfig, themeWidgetDarkConfig) || other.themeWidgetDarkConfig == themeWidgetDarkConfig)&&(identical(other.themePageLightConfig, themePageLightConfig) || other.themePageLightConfig == themePageLightConfig)&&(identical(other.themePageDarkConfig, themePageDarkConfig) || other.themePageDarkConfig == themePageDarkConfig));
+  final _this = this as ThemeSettings;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ThemeSettings&&(identical(other.lightColorSchemeConfig, _this.lightColorSchemeConfig) || other.lightColorSchemeConfig == _this.lightColorSchemeConfig)&&(identical(other.darkColorSchemeConfig, _this.darkColorSchemeConfig) || other.darkColorSchemeConfig == _this.darkColorSchemeConfig)&&(identical(other.themeWidgetLightConfig, _this.themeWidgetLightConfig) || other.themeWidgetLightConfig == _this.themeWidgetLightConfig)&&(identical(other.themeWidgetDarkConfig, _this.themeWidgetDarkConfig) || other.themeWidgetDarkConfig == _this.themeWidgetDarkConfig)&&(identical(other.themePageLightConfig, _this.themePageLightConfig) || other.themePageLightConfig == _this.themePageLightConfig)&&(identical(other.themePageDarkConfig, _this.themePageDarkConfig) || other.themePageDarkConfig == _this.themePageDarkConfig));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,lightColorSchemeConfig,darkColorSchemeConfig,themeWidgetLightConfig,themeWidgetDarkConfig,themePageLightConfig,themePageDarkConfig);
+int get hashCode {
+  final _this = this as ThemeSettings;
+  return Object.hash(runtimeType,_this.lightColorSchemeConfig,_this.darkColorSchemeConfig,_this.themeWidgetLightConfig,_this.themeWidgetDarkConfig,_this.themePageLightConfig,_this.themePageDarkConfig);
+}
 
 @override
 String toString() {
-  return 'ThemeSettings(lightColorSchemeConfig: $lightColorSchemeConfig, darkColorSchemeConfig: $darkColorSchemeConfig, themeWidgetLightConfig: $themeWidgetLightConfig, themeWidgetDarkConfig: $themeWidgetDarkConfig, themePageLightConfig: $themePageLightConfig, themePageDarkConfig: $themePageDarkConfig)';
+  final _this = this as ThemeSettings;
+  return 'ThemeSettings(lightColorSchemeConfig: ${_this.lightColorSchemeConfig}, darkColorSchemeConfig: ${_this.darkColorSchemeConfig}, themeWidgetLightConfig: ${_this.themeWidgetLightConfig}, themeWidgetDarkConfig: ${_this.themeWidgetDarkConfig}, themePageLightConfig: ${_this.themePageLightConfig}, themePageDarkConfig: ${_this.themePageDarkConfig})';
 }
 
 

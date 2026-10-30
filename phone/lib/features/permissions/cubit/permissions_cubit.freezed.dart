@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'permissions_cubit.dart';
@@ -9,12 +9,13 @@ part of 'permissions_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PermissionsState {
 
- bool get initialRequestCompleted; bool get isRequesting; List<CallkeepSpecialPermissions> get missingSpecialPermissions; ManufacturerTip? get manufacturerTip; Object? get failure;
+
 /// Create a copy of PermissionsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $PermissionsStateCopyWith<PermissionsState> get copyWith => _$PermissionsStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PermissionsState&&(identical(other.initialRequestCompleted, initialRequestCompleted) || other.initialRequestCompleted == initialRequestCompleted)&&(identical(other.isRequesting, isRequesting) || other.isRequesting == isRequesting)&&const DeepCollectionEquality().equals(other.missingSpecialPermissions, missingSpecialPermissions)&&(identical(other.manufacturerTip, manufacturerTip) || other.manufacturerTip == manufacturerTip)&&const DeepCollectionEquality().equals(other.failure, failure));
+  final _this = this as PermissionsState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PermissionsState&&(identical(other.initialRequestCompleted, _this.initialRequestCompleted) || other.initialRequestCompleted == _this.initialRequestCompleted)&&(identical(other.isRequesting, _this.isRequesting) || other.isRequesting == _this.isRequesting)&&const DeepCollectionEquality().equals(other.missingSpecialPermissions, _this.missingSpecialPermissions)&&(identical(other.manufacturerTip, _this.manufacturerTip) || other.manufacturerTip == _this.manufacturerTip)&&const DeepCollectionEquality().equals(other.failure, _this.failure));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,initialRequestCompleted,isRequesting,const DeepCollectionEquality().hash(missingSpecialPermissions),manufacturerTip,const DeepCollectionEquality().hash(failure));
+int get hashCode {
+  final _this = this as PermissionsState;
+  return Object.hash(runtimeType,_this.initialRequestCompleted,_this.isRequesting,const DeepCollectionEquality().hash(_this.missingSpecialPermissions),_this.manufacturerTip,const DeepCollectionEquality().hash(_this.failure));
+}
 
 @override
 String toString() {
-  return 'PermissionsState(initialRequestCompleted: $initialRequestCompleted, isRequesting: $isRequesting, missingSpecialPermissions: $missingSpecialPermissions, manufacturerTip: $manufacturerTip, failure: $failure)';
+  final _this = this as PermissionsState;
+  return 'PermissionsState(initialRequestCompleted: ${_this.initialRequestCompleted}, isRequesting: ${_this.isRequesting}, missingSpecialPermissions: ${_this.missingSpecialPermissions}, manufacturerTip: ${_this.manufacturerTip}, failure: ${_this.failure})';
 }
 
 
@@ -202,7 +208,7 @@ case _:
 /// @nodoc
 mixin _$ManufacturerTip {
 
- Manufacturer get manufacturer; bool get shown;
+
 /// Create a copy of ManufacturerTip
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -213,16 +219,21 @@ $ManufacturerTipCopyWith<ManufacturerTip> get copyWith => _$ManufacturerTipCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ManufacturerTip&&(identical(other.manufacturer, manufacturer) || other.manufacturer == manufacturer)&&(identical(other.shown, shown) || other.shown == shown));
+  final _this = this as ManufacturerTip;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ManufacturerTip&&(identical(other.manufacturer, _this.manufacturer) || other.manufacturer == _this.manufacturer)&&(identical(other.shown, _this.shown) || other.shown == _this.shown));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,manufacturer,shown);
+int get hashCode {
+  final _this = this as ManufacturerTip;
+  return Object.hash(runtimeType,_this.manufacturer,_this.shown);
+}
 
 @override
 String toString() {
-  return 'ManufacturerTip(manufacturer: $manufacturer, shown: $shown)';
+  final _this = this as ManufacturerTip;
+  return 'ManufacturerTip(manufacturer: ${_this.manufacturer}, shown: ${_this.shown})';
 }
 
 

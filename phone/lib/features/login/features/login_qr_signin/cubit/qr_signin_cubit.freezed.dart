@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'qr_signin_cubit.dart';
@@ -9,12 +9,13 @@ part of 'qr_signin_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$QrSigninState {
 
- QrSigninStatus get status; bool get cameraPermanentlyDenied; QrSigninParseError? get parseError; QrSigninParseResult? get detection;
+
 /// Create a copy of QrSigninState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $QrSigninStateCopyWith<QrSigninState> get copyWith => _$QrSigninStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QrSigninState&&(identical(other.status, status) || other.status == status)&&(identical(other.cameraPermanentlyDenied, cameraPermanentlyDenied) || other.cameraPermanentlyDenied == cameraPermanentlyDenied)&&(identical(other.parseError, parseError) || other.parseError == parseError)&&(identical(other.detection, detection) || other.detection == detection));
+  final _this = this as QrSigninState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QrSigninState&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.cameraPermanentlyDenied, _this.cameraPermanentlyDenied) || other.cameraPermanentlyDenied == _this.cameraPermanentlyDenied)&&(identical(other.parseError, _this.parseError) || other.parseError == _this.parseError)&&(identical(other.detection, _this.detection) || other.detection == _this.detection));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,cameraPermanentlyDenied,parseError,detection);
+int get hashCode {
+  final _this = this as QrSigninState;
+  return Object.hash(runtimeType,_this.status,_this.cameraPermanentlyDenied,_this.parseError,_this.detection);
+}
 
 @override
 String toString() {
-  return 'QrSigninState(status: $status, cameraPermanentlyDenied: $cameraPermanentlyDenied, parseError: $parseError, detection: $detection)';
+  final _this = this as QrSigninState;
+  return 'QrSigninState(status: ${_this.status}, cameraPermanentlyDenied: ${_this.cameraPermanentlyDenied}, parseError: ${_this.parseError}, detection: ${_this.detection})';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'input_decoration_config.dart';
@@ -9,13 +9,14 @@ part of 'input_decoration_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$InputDecorationConfig {
 
- String? get hintText; TextStyleConfig? get hintStyle; String? get labelText; TextStyleConfig? get labelStyle; String? get helperText; TextStyleConfig? get helperStyle; TextStyleConfig? get errorStyle; String? get prefixText; TextStyleConfig? get prefixStyle; String? get suffixText; TextStyleConfig? get suffixStyle; String? get fillColor; bool? get filled; BorderConfig? get border; BorderConfig? get enabledBorder; BorderConfig? get focusedBorder; BorderConfig? get errorBorder; BorderConfig? get focusedErrorBorder; BorderConfig? get disabledBorder;
+
 /// Create a copy of InputDecorationConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $InputDecorationConfigCopyWith<InputDecorationConfig> get copyWith => _$InputDec
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputDecorationConfig&&(identical(other.hintText, hintText) || other.hintText == hintText)&&(identical(other.hintStyle, hintStyle) || other.hintStyle == hintStyle)&&(identical(other.labelText, labelText) || other.labelText == labelText)&&(identical(other.labelStyle, labelStyle) || other.labelStyle == labelStyle)&&(identical(other.helperText, helperText) || other.helperText == helperText)&&(identical(other.helperStyle, helperStyle) || other.helperStyle == helperStyle)&&(identical(other.errorStyle, errorStyle) || other.errorStyle == errorStyle)&&(identical(other.prefixText, prefixText) || other.prefixText == prefixText)&&(identical(other.prefixStyle, prefixStyle) || other.prefixStyle == prefixStyle)&&(identical(other.suffixText, suffixText) || other.suffixText == suffixText)&&(identical(other.suffixStyle, suffixStyle) || other.suffixStyle == suffixStyle)&&(identical(other.fillColor, fillColor) || other.fillColor == fillColor)&&(identical(other.filled, filled) || other.filled == filled)&&(identical(other.border, border) || other.border == border)&&(identical(other.enabledBorder, enabledBorder) || other.enabledBorder == enabledBorder)&&(identical(other.focusedBorder, focusedBorder) || other.focusedBorder == focusedBorder)&&(identical(other.errorBorder, errorBorder) || other.errorBorder == errorBorder)&&(identical(other.focusedErrorBorder, focusedErrorBorder) || other.focusedErrorBorder == focusedErrorBorder)&&(identical(other.disabledBorder, disabledBorder) || other.disabledBorder == disabledBorder));
+  final _this = this as InputDecorationConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputDecorationConfig&&(identical(other.hintText, _this.hintText) || other.hintText == _this.hintText)&&(identical(other.hintStyle, _this.hintStyle) || other.hintStyle == _this.hintStyle)&&(identical(other.labelText, _this.labelText) || other.labelText == _this.labelText)&&(identical(other.labelStyle, _this.labelStyle) || other.labelStyle == _this.labelStyle)&&(identical(other.helperText, _this.helperText) || other.helperText == _this.helperText)&&(identical(other.helperStyle, _this.helperStyle) || other.helperStyle == _this.helperStyle)&&(identical(other.errorStyle, _this.errorStyle) || other.errorStyle == _this.errorStyle)&&(identical(other.prefixText, _this.prefixText) || other.prefixText == _this.prefixText)&&(identical(other.prefixStyle, _this.prefixStyle) || other.prefixStyle == _this.prefixStyle)&&(identical(other.suffixText, _this.suffixText) || other.suffixText == _this.suffixText)&&(identical(other.suffixStyle, _this.suffixStyle) || other.suffixStyle == _this.suffixStyle)&&(identical(other.fillColor, _this.fillColor) || other.fillColor == _this.fillColor)&&(identical(other.filled, _this.filled) || other.filled == _this.filled)&&(identical(other.border, _this.border) || other.border == _this.border)&&(identical(other.enabledBorder, _this.enabledBorder) || other.enabledBorder == _this.enabledBorder)&&(identical(other.focusedBorder, _this.focusedBorder) || other.focusedBorder == _this.focusedBorder)&&(identical(other.errorBorder, _this.errorBorder) || other.errorBorder == _this.errorBorder)&&(identical(other.focusedErrorBorder, _this.focusedErrorBorder) || other.focusedErrorBorder == _this.focusedErrorBorder)&&(identical(other.disabledBorder, _this.disabledBorder) || other.disabledBorder == _this.disabledBorder));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,hintText,hintStyle,labelText,labelStyle,helperText,helperStyle,errorStyle,prefixText,prefixStyle,suffixText,suffixStyle,fillColor,filled,border,enabledBorder,focusedBorder,errorBorder,focusedErrorBorder,disabledBorder]);
+int get hashCode {
+  final _this = this as InputDecorationConfig;
+  return Object.hashAll([runtimeType,_this.hintText,_this.hintStyle,_this.labelText,_this.labelStyle,_this.helperText,_this.helperStyle,_this.errorStyle,_this.prefixText,_this.prefixStyle,_this.suffixText,_this.suffixStyle,_this.fillColor,_this.filled,_this.border,_this.enabledBorder,_this.focusedBorder,_this.errorBorder,_this.focusedErrorBorder,_this.disabledBorder]);
+}
 
 @override
 String toString() {
-  return 'InputDecorationConfig(hintText: $hintText, hintStyle: $hintStyle, labelText: $labelText, labelStyle: $labelStyle, helperText: $helperText, helperStyle: $helperStyle, errorStyle: $errorStyle, prefixText: $prefixText, prefixStyle: $prefixStyle, suffixText: $suffixText, suffixStyle: $suffixStyle, fillColor: $fillColor, filled: $filled, border: $border, enabledBorder: $enabledBorder, focusedBorder: $focusedBorder, errorBorder: $errorBorder, focusedErrorBorder: $focusedErrorBorder, disabledBorder: $disabledBorder)';
+  final _this = this as InputDecorationConfig;
+  return 'InputDecorationConfig(hintText: ${_this.hintText}, hintStyle: ${_this.hintStyle}, labelText: ${_this.labelText}, labelStyle: ${_this.labelStyle}, helperText: ${_this.helperText}, helperStyle: ${_this.helperStyle}, errorStyle: ${_this.errorStyle}, prefixText: ${_this.prefixText}, prefixStyle: ${_this.prefixStyle}, suffixText: ${_this.suffixText}, suffixStyle: ${_this.suffixStyle}, fillColor: ${_this.fillColor}, filled: ${_this.filled}, border: ${_this.border}, enabledBorder: ${_this.enabledBorder}, focusedBorder: ${_this.focusedBorder}, errorBorder: ${_this.errorBorder}, focusedErrorBorder: ${_this.focusedErrorBorder}, disabledBorder: ${_this.disabledBorder})';
 }
 
 

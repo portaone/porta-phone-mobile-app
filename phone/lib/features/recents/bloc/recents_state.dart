@@ -7,13 +7,10 @@ enum RecentsClearStatus { idle, clearing, cleared, failed }
 class RecentsState with _$RecentsState {
   const RecentsState({this.recents, required this.filter, this.clearStatus = RecentsClearStatus.idle});
 
-  @override
   final List<Recent>? recents;
 
-  @override
   final RecentsVisibilityFilter filter;
 
-  @override
   final RecentsClearStatus clearStatus;
 
   List<Recent>? get recentsFiltered {

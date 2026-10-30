@@ -31,20 +31,16 @@ class CallQueuesState with _$CallQueuesState {
         readFailed: snapshot.readFailed,
       );
 
-  @override
   final List<CallQueue> queues;
 
   /// Whether a read has completed at least once.
   ///
   /// Until it has, an empty list says nothing: the screen waits instead of
   /// announcing that the user has no queues.
-  @override
   final bool known;
 
-  @override
   final Set<String> pendingIds;
 
-  @override
   final bool allPending;
 
   /// Whether the last read failed.
@@ -52,7 +48,6 @@ class CallQueuesState with _$CallQueuesState {
   /// The queues already on screen stay: a failed read says nothing about them
   /// being wrong, and blanking the list would cost an agent the only view they
   /// have of their shift.
-  @override
   final bool readFailed;
 
   bool get isAgent => queues.isNotEmpty;

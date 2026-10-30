@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'call_to_actions_cubit.dart';
@@ -9,12 +9,13 @@ part of 'call_to_actions_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CallToActionsCubitState {
 
- Locale get locale; Map<MainFlavor, List<CallToAction>> get actions; bool get visible; MainFlavor? get flavor;
+
 /// Create a copy of CallToActionsCubitState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $CallToActionsCubitStateCopyWith<CallToActionsCubitState> get copyWith => _$Call
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallToActionsCubitState&&(identical(other.locale, locale) || other.locale == locale)&&const DeepCollectionEquality().equals(other.actions, actions)&&(identical(other.visible, visible) || other.visible == visible)&&(identical(other.flavor, flavor) || other.flavor == flavor));
+  final _this = this as CallToActionsCubitState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallToActionsCubitState&&(identical(other.locale, _this.locale) || other.locale == _this.locale)&&const DeepCollectionEquality().equals(other.actions, _this.actions)&&(identical(other.visible, _this.visible) || other.visible == _this.visible)&&(identical(other.flavor, _this.flavor) || other.flavor == _this.flavor));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,locale,const DeepCollectionEquality().hash(actions),visible,flavor);
+int get hashCode {
+  final _this = this as CallToActionsCubitState;
+  return Object.hash(runtimeType,_this.locale,const DeepCollectionEquality().hash(_this.actions),_this.visible,_this.flavor);
+}
 
 @override
 String toString() {
-  return 'CallToActionsCubitState(locale: $locale, actions: $actions, visible: $visible, flavor: $flavor)';
+  final _this = this as CallToActionsCubitState;
+  return 'CallToActionsCubitState(locale: ${_this.locale}, actions: ${_this.actions}, visible: ${_this.visible}, flavor: ${_this.flavor})';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'call_log_bloc.dart';
@@ -9,12 +9,13 @@ part of 'call_log_bloc.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CallLogState {
 
- String get number; Contact? get contact; List<CallLogEntry>? get callLog;
+
 /// Create a copy of CallLogState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,12 +26,16 @@ $CallLogStateCopyWith<CallLogState> get copyWith => _$CallLogStateCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallLogState&&(identical(other.number, number) || other.number == number)&&(identical(other.contact, contact) || other.contact == contact)&&const DeepCollectionEquality().equals(other.callLog, callLog));
+  final _this = this as CallLogState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallLogState&&(identical(other.number, _this.number) || other.number == _this.number)&&(identical(other.contact, _this.contact) || other.contact == _this.contact)&&const DeepCollectionEquality().equals(other.callLog, _this.callLog));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,number,contact,const DeepCollectionEquality().hash(callLog));
+int get hashCode {
+  final _this = this as CallLogState;
+  return Object.hash(runtimeType,_this.number,_this.contact,const DeepCollectionEquality().hash(_this.callLog));
+}
 
 
 

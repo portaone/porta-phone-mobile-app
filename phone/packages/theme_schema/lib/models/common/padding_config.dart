@@ -11,19 +11,15 @@ class PaddingConfig with _$PaddingConfig {
   const PaddingConfig({this.left = 0.0, this.top = 0.0, this.right = 0.0, this.bottom = 0.0});
 
   /// Left padding value.
-  @override
   final double left;
 
   /// Top padding value.
-  @override
   final double top;
 
   /// Right padding value.
-  @override
   final double right;
 
   /// Bottom padding value.
-  @override
   final double bottom;
 
   /// Deserializes a [PaddingConfig] from JSON.

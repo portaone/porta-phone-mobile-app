@@ -55,25 +55,18 @@ class TextFieldConfig with _$TextFieldConfig {
     this.inputValue,
   });
 
-  @override
   final InputDecorationConfig? decoration;
 
-  @override
   final TextStyleConfig? style;
 
-  @override
   final String textAlign;
 
-  @override
   final bool showCursor;
 
-  @override
   final String keyboardType;
 
-  @override
   final MaskConfig? mask;
 
-  @override
   final InputValueConfig? inputValue;
 
   factory TextFieldConfig.fromJson(Map<String, Object?> json) => _$TextFieldConfigFromJson(json);
@@ -104,10 +97,8 @@ class InputValueConfig with _$InputValueConfig {
     this.initialValue,
   });
 
-  @override
   final bool? includePrefixInData;
 
-  @override
   final String? initialValue;
 
   factory InputValueConfig.fromJson(Map<String, Object?> json) => _$InputValueConfigFromJson(json);

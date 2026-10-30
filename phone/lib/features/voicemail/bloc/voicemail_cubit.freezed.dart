@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'voicemail_cubit.dart';
@@ -9,12 +9,13 @@ part of 'voicemail_cubit.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$VoicemailState {
 
- VoicemailFilter get filter; List<VoicemailFilter> get filters; bool get forwardSupported; List<String> get selectedVoicemailsIds; List<String> get heardByListening; List<Voicemail> get trashedItems; VoicemailStatus get trashStatus; Object? get trashError; bool get busy;
+
 /// Create a copy of VoicemailState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,12 +26,16 @@ $VoicemailStateCopyWith<VoicemailState> get copyWith => _$VoicemailStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailState&&(identical(other.filter, filter) || other.filter == filter)&&const DeepCollectionEquality().equals(other.filters, filters)&&(identical(other.forwardSupported, forwardSupported) || other.forwardSupported == forwardSupported)&&const DeepCollectionEquality().equals(other.selectedVoicemailsIds, selectedVoicemailsIds)&&const DeepCollectionEquality().equals(other.heardByListening, heardByListening)&&const DeepCollectionEquality().equals(other.trashedItems, trashedItems)&&(identical(other.trashStatus, trashStatus) || other.trashStatus == trashStatus)&&const DeepCollectionEquality().equals(other.trashError, trashError)&&(identical(other.busy, busy) || other.busy == busy));
+  final _this = this as VoicemailState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VoicemailState&&(identical(other.filter, _this.filter) || other.filter == _this.filter)&&const DeepCollectionEquality().equals(other.filters, _this.filters)&&(identical(other.forwardSupported, _this.forwardSupported) || other.forwardSupported == _this.forwardSupported)&&const DeepCollectionEquality().equals(other.selectedVoicemailsIds, _this.selectedVoicemailsIds)&&const DeepCollectionEquality().equals(other.heardByListening, _this.heardByListening)&&const DeepCollectionEquality().equals(other.trashedItems, _this.trashedItems)&&(identical(other.trashStatus, _this.trashStatus) || other.trashStatus == _this.trashStatus)&&const DeepCollectionEquality().equals(other.trashError, _this.trashError)&&(identical(other.busy, _this.busy) || other.busy == _this.busy));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,filter,const DeepCollectionEquality().hash(filters),forwardSupported,const DeepCollectionEquality().hash(selectedVoicemailsIds),const DeepCollectionEquality().hash(heardByListening),const DeepCollectionEquality().hash(trashedItems),trashStatus,const DeepCollectionEquality().hash(trashError),busy);
+int get hashCode {
+  final _this = this as VoicemailState;
+  return Object.hash(runtimeType,_this.filter,const DeepCollectionEquality().hash(_this.filters),_this.forwardSupported,const DeepCollectionEquality().hash(_this.selectedVoicemailsIds),const DeepCollectionEquality().hash(_this.heardByListening),const DeepCollectionEquality().hash(_this.trashedItems),_this.trashStatus,const DeepCollectionEquality().hash(_this.trashError),_this.busy);
+}
 
 
 

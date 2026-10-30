@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'image_source.dart';
@@ -9,13 +9,14 @@ part of 'image_source.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$ImageSource {
 
- String? get id; String? get uri; String get refType; ImageRenderSpec? get render; Metadata get metadata;
+
 /// Create a copy of ImageSource
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $ImageSourceCopyWith<ImageSource> get copyWith => _$ImageSourceCopyWithImpl<Imag
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageSource&&(identical(other.id, id) || other.id == id)&&(identical(other.uri, uri) || other.uri == uri)&&(identical(other.refType, refType) || other.refType == refType)&&(identical(other.render, render) || other.render == render)&&(identical(other.metadata, metadata) || other.metadata == metadata));
+  final _this = this as ImageSource;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageSource&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.uri, _this.uri) || other.uri == _this.uri)&&(identical(other.refType, _this.refType) || other.refType == _this.refType)&&(identical(other.render, _this.render) || other.render == _this.render)&&(identical(other.metadata, _this.metadata) || other.metadata == _this.metadata));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,uri,refType,render,metadata);
+int get hashCode {
+  final _this = this as ImageSource;
+  return Object.hash(runtimeType,_this.id,_this.uri,_this.refType,_this.render,_this.metadata);
+}
 
 @override
 String toString() {
-  return 'ImageSource(id: $id, uri: $uri, refType: $refType, render: $render, metadata: $metadata)';
+  final _this = this as ImageSource;
+  return 'ImageSource(id: ${_this.id}, uri: ${_this.uri}, refType: ${_this.refType}, render: ${_this.render}, metadata: ${_this.metadata})';
 }
 
 
@@ -205,7 +211,7 @@ case _:
 /// @nodoc
 mixin _$ImageRenderSpec {
 
- double? get scale; PaddingConfig? get padding; AlignmentConfig? get alignment; BoxFitConfig? get fit;
+
 /// Create a copy of ImageRenderSpec
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -216,16 +222,21 @@ $ImageRenderSpecCopyWith<ImageRenderSpec> get copyWith => _$ImageRenderSpecCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageRenderSpec&&(identical(other.scale, scale) || other.scale == scale)&&(identical(other.padding, padding) || other.padding == padding)&&(identical(other.alignment, alignment) || other.alignment == alignment)&&(identical(other.fit, fit) || other.fit == fit));
+  final _this = this as ImageRenderSpec;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ImageRenderSpec&&(identical(other.scale, _this.scale) || other.scale == _this.scale)&&(identical(other.padding, _this.padding) || other.padding == _this.padding)&&(identical(other.alignment, _this.alignment) || other.alignment == _this.alignment)&&(identical(other.fit, _this.fit) || other.fit == _this.fit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,scale,padding,alignment,fit);
+int get hashCode {
+  final _this = this as ImageRenderSpec;
+  return Object.hash(runtimeType,_this.scale,_this.padding,_this.alignment,_this.fit);
+}
 
 @override
 String toString() {
-  return 'ImageRenderSpec(scale: $scale, padding: $padding, alignment: $alignment, fit: $fit)';
+  final _this = this as ImageRenderSpec;
+  return 'ImageRenderSpec(scale: ${_this.scale}, padding: ${_this.padding}, alignment: ${_this.alignment}, fit: ${_this.fit})';
 }
 
 

@@ -9,13 +9,10 @@ enum SipSubscriptionType { presence, blf }
 class SipSubscriptionsGetResult with _$SipSubscriptionsGetResult {
   const SipSubscriptionsGetResult({required this.notModified, required this.etag, this.data});
 
-  @override
   final bool notModified;
 
-  @override
   final String etag;
 
-  @override
   final SipSubscriptionsListResponse? data;
 }
 
@@ -24,7 +21,6 @@ class SipSubscriptionsGetResult with _$SipSubscriptionsGetResult {
 class SipSubscriptionsListResponse with _$SipSubscriptionsListResponse {
   const SipSubscriptionsListResponse({required this.subscriptions});
 
-  @override
   final List<SipSubscriptionItem> subscriptions;
 
   factory SipSubscriptionsListResponse.fromJson(Map<String, Object?> json) =>
@@ -43,16 +39,12 @@ class SipSubscriptionItem with _$SipSubscriptionItem {
     required this.subscribedAt,
   });
 
-  @override
   final SipSubscriptionType type;
 
-  @override
   final String number;
 
-  @override
   final String contactUserId;
 
-  @override
   final DateTime subscribedAt;
 
   factory SipSubscriptionItem.fromJson(Map<String, Object?> json) => _$SipSubscriptionItemFromJson(json);
@@ -73,19 +65,14 @@ class SipSubscriptionBatchAction with _$SipSubscriptionBatchAction {
     this.subscribedAt,
   });
 
-  @override
   final SipSubscriptionBatchActionType action;
 
-  @override
   final SipSubscriptionType type;
 
-  @override
   final String number;
 
-  @override
   final String contactUserId;
 
-  @override
   final DateTime? subscribedAt;
 
   factory SipSubscriptionBatchAction.fromJson(Map<String, Object?> json) => _$SipSubscriptionBatchActionFromJson(json);
@@ -97,10 +84,8 @@ class SipSubscriptionBatchAction with _$SipSubscriptionBatchAction {
 class SipSubscriptionBatchSyncResult with _$SipSubscriptionBatchSyncResult {
   const SipSubscriptionBatchSyncResult({required this.data, required this.etag});
 
-  @override
   final SipSubscriptionBatchSyncResponse data;
 
-  @override
   final String etag;
 }
 
@@ -109,10 +94,8 @@ class SipSubscriptionBatchSyncResult with _$SipSubscriptionBatchSyncResult {
 class SipSubscriptionBatchSyncResponse with _$SipSubscriptionBatchSyncResponse {
   const SipSubscriptionBatchSyncResponse({required this.subscriptions, required this.conflicts});
 
-  @override
   final List<SipSubscriptionItem> subscriptions;
 
-  @override
   final List<SipSubscriptionBatchConflict> conflicts;
 
   factory SipSubscriptionBatchSyncResponse.fromJson(Map<String, Object?> json) =>
@@ -132,19 +115,14 @@ class SipSubscriptionBatchConflict with _$SipSubscriptionBatchConflict {
     required this.reason,
   });
 
-  @override
   final SipSubscriptionBatchActionType action;
 
-  @override
   final SipSubscriptionType type;
 
-  @override
   final String number;
 
-  @override
   final String? contactUserId;
 
-  @override
   final SipSubscriptionBatchConflictReason reason;
 
   factory SipSubscriptionBatchConflict.fromJson(Map<String, Object?> json) =>

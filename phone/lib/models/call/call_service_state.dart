@@ -23,7 +23,6 @@ class CallServiceState with _$CallServiceState {
     this.lastSignalingDisconnectCode,
   });
 
-  @override
   final SignalingClientStatus signalingClientStatus;
 
   /// Represents the current registration status of the signaling client.
@@ -36,19 +35,14 @@ class CallServiceState with _$CallServiceState {
   /// - `UnregisteringEvent` / `UnregisteredEvent`: indicate ongoing or completed unregistration.
   ///
   /// The `registration` field reflects the most recent registration state of the signaling client.
-  @override
   final Registration? registration;
 
-  @override
   final NetworkStatus? networkStatus;
 
-  @override
   final Object? lastSignalingClientConnectError;
 
-  @override
   final Object? lastSignalingClientDisconnectError;
 
-  @override
   final int? lastSignalingDisconnectCode;
 
   /// The recognised reason behind a failed registration, if the refusal is one

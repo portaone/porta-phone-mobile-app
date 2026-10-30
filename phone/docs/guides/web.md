@@ -52,7 +52,7 @@ asked for with `d=404` on purpose, so that a missing picture falls back to the i
 
 ## Web assets
 
-`web/sqlite3.wasm` (sqlite3 3.3.2) and `web/drift_worker.js` (drift 2.33.0) back
+`web/sqlite3.wasm` (sqlite3 3.5.2) and `web/drift_worker.js` (drift 2.35.3) back
 the drift `WasmDatabase` and are served from the app root. Keep them version-matched
 to the `drift` / `sqlite3` dependencies.
 
@@ -76,8 +76,9 @@ Login, contacts, and audio+video calls (WebRTC + signaling over `wss`).
 - Signaling: federated `signaling_service_web` package runs the WebSocket
   signaling in the main isolate (same model as iOS), since web has no background
   service.
-- Database: `IsolateDatabase.openWeb()` opens the drift `WasmDatabase` directly
-  (no `DriftIsolate` server, `dart:isolate` spawning is unsupported on web).
+- Database: `IsolateDatabase.open()` opens the drift `WasmDatabase` through
+  `drift_flutter` (`sqlite3.wasm`, `drift_worker.js`); there is no shared server
+  isolate on web, `dart:isolate` spawning is unsupported there.
 - Networking: the internal `_web_socket_channel` / `_http_client` / `_tcp_proxy`
   packages select web implementations via conditional imports.
 - Remote Config renders from activated and locally cached values, then performs

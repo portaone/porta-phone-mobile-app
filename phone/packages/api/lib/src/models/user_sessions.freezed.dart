@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'user_sessions.dart';
@@ -9,13 +9,14 @@ part of 'user_sessions.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$UserSessionList {
 
- List<UserSession> get items; UserSessionsAutoTerminate? get autoTerminate;
+
 /// Create a copy of UserSessionList
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $UserSessionListCopyWith<UserSessionList> get copyWith => _$UserSessionListCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserSessionList&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.autoTerminate, autoTerminate) || other.autoTerminate == autoTerminate));
+  final _this = this as UserSessionList;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserSessionList&&const DeepCollectionEquality().equals(other.items, _this.items)&&(identical(other.autoTerminate, _this.autoTerminate) || other.autoTerminate == _this.autoTerminate));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),autoTerminate);
+int get hashCode {
+  final _this = this as UserSessionList;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items),_this.autoTerminate);
+}
 
 @override
 String toString() {
-  return 'UserSessionList(items: $items, autoTerminate: $autoTerminate)';
+  final _this = this as UserSessionList;
+  return 'UserSessionList(items: ${_this.items}, autoTerminate: ${_this.autoTerminate})';
 }
 
 
@@ -202,7 +208,7 @@ case _:
 /// @nodoc
 mixin _$UserSessionsAutoTerminate {
 
- int? get inactivityTimeoutDays; int? get installationMaxDays;
+
 /// Create a copy of UserSessionsAutoTerminate
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -213,16 +219,21 @@ $UserSessionsAutoTerminateCopyWith<UserSessionsAutoTerminate> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserSessionsAutoTerminate&&(identical(other.inactivityTimeoutDays, inactivityTimeoutDays) || other.inactivityTimeoutDays == inactivityTimeoutDays)&&(identical(other.installationMaxDays, installationMaxDays) || other.installationMaxDays == installationMaxDays));
+  final _this = this as UserSessionsAutoTerminate;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserSessionsAutoTerminate&&(identical(other.inactivityTimeoutDays, _this.inactivityTimeoutDays) || other.inactivityTimeoutDays == _this.inactivityTimeoutDays)&&(identical(other.installationMaxDays, _this.installationMaxDays) || other.installationMaxDays == _this.installationMaxDays));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,inactivityTimeoutDays,installationMaxDays);
+int get hashCode {
+  final _this = this as UserSessionsAutoTerminate;
+  return Object.hash(runtimeType,_this.inactivityTimeoutDays,_this.installationMaxDays);
+}
 
 @override
 String toString() {
-  return 'UserSessionsAutoTerminate(inactivityTimeoutDays: $inactivityTimeoutDays, installationMaxDays: $installationMaxDays)';
+  final _this = this as UserSessionsAutoTerminate;
+  return 'UserSessionsAutoTerminate(inactivityTimeoutDays: ${_this.inactivityTimeoutDays}, installationMaxDays: ${_this.installationMaxDays})';
 }
 
 

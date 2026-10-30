@@ -39,19 +39,14 @@ class PermissionsState with _$PermissionsState {
     this.failure,
   });
 
-  @override
   final bool initialRequestCompleted;
 
-  @override
   final bool isRequesting;
 
-  @override
   final List<CallkeepSpecialPermissions> missingSpecialPermissions;
 
-  @override
   final ManufacturerTip? manufacturerTip;
 
-  @override
   final Object? failure;
 
   bool get requiresSpecialPermissionsAction => missingSpecialPermissions.isNotEmpty;
@@ -68,9 +63,7 @@ class PermissionsState with _$PermissionsState {
 class ManufacturerTip with _$ManufacturerTip {
   const ManufacturerTip({required this.manufacturer, this.shown = false});
 
-  @override
   final Manufacturer manufacturer;
 
-  @override
   final bool shown;
 }

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'icon_data_config.dart';
@@ -9,13 +9,14 @@ part of 'icon_data_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$IconDataConfig {
 
- String get codePoint; String get fontFamily; bool get matchTextDirection;
+
 /// Create a copy of IconDataConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $IconDataConfigCopyWith<IconDataConfig> get copyWith => _$IconDataConfigCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IconDataConfig&&(identical(other.codePoint, codePoint) || other.codePoint == codePoint)&&(identical(other.fontFamily, fontFamily) || other.fontFamily == fontFamily)&&(identical(other.matchTextDirection, matchTextDirection) || other.matchTextDirection == matchTextDirection));
+  final _this = this as IconDataConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IconDataConfig&&(identical(other.codePoint, _this.codePoint) || other.codePoint == _this.codePoint)&&(identical(other.fontFamily, _this.fontFamily) || other.fontFamily == _this.fontFamily)&&(identical(other.matchTextDirection, _this.matchTextDirection) || other.matchTextDirection == _this.matchTextDirection));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,codePoint,fontFamily,matchTextDirection);
+int get hashCode {
+  final _this = this as IconDataConfig;
+  return Object.hash(runtimeType,_this.codePoint,_this.fontFamily,_this.matchTextDirection);
+}
 
 @override
 String toString() {
-  return 'IconDataConfig(codePoint: $codePoint, fontFamily: $fontFamily, matchTextDirection: $matchTextDirection)';
+  final _this = this as IconDataConfig;
+  return 'IconDataConfig(codePoint: ${_this.codePoint}, fontFamily: ${_this.fontFamily}, matchTextDirection: ${_this.matchTextDirection})';
 }
 
 

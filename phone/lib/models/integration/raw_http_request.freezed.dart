@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'raw_http_request.dart';
@@ -9,13 +9,14 @@ part of 'raw_http_request.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
 /// @nodoc
 mixin _$RawHttpRequest {
 
- String get method; String get url; Map<String, String>? get headers; Map<String, dynamic>? get data;
+
 /// Create a copy of RawHttpRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +27,21 @@ $RawHttpRequestCopyWith<RawHttpRequest> get copyWith => _$RawHttpRequestCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RawHttpRequest&&(identical(other.method, method) || other.method == method)&&(identical(other.url, url) || other.url == url)&&const DeepCollectionEquality().equals(other.headers, headers)&&const DeepCollectionEquality().equals(other.data, data));
+  final _this = this as RawHttpRequest;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RawHttpRequest&&(identical(other.method, _this.method) || other.method == _this.method)&&(identical(other.url, _this.url) || other.url == _this.url)&&const DeepCollectionEquality().equals(other.headers, _this.headers)&&const DeepCollectionEquality().equals(other.data, _this.data));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,method,url,const DeepCollectionEquality().hash(headers),const DeepCollectionEquality().hash(data));
+int get hashCode {
+  final _this = this as RawHttpRequest;
+  return Object.hash(runtimeType,_this.method,_this.url,const DeepCollectionEquality().hash(_this.headers),const DeepCollectionEquality().hash(_this.data));
+}
 
 @override
 String toString() {
-  return 'RawHttpRequest(method: $method, url: $url, headers: $headers, data: $data)';
+  final _this = this as RawHttpRequest;
+  return 'RawHttpRequest(method: ${_this.method}, url: ${_this.url}, headers: ${_this.headers}, data: ${_this.data})';
 }
 
 
