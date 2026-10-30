@@ -2136,4 +2136,63 @@ void main() {
       );
     });
   });
+  group('CallState.handOverFor', () {
+    final held = _makeCall(callId: 'b', line: 0, held: true, acceptedTime: DateTime(2024));
+    final live = _makeCall(callId: 'c', line: 1, acceptedTime: DateTime(2024));
+
+    List<String>? listed(CallState state, String focused) =>
+        state.handOverFor(focused)?.referorCalls.map((call) => call.callId).toList();
+
+    test('two calls placed separately: the held one goes to the live one on screen', () {
+      final state = CallState(linesCount: 3, activeCalls: [held, live]);
+      expect(listed(state, 'c'), ['b']);
+      expect(state.handOverFor('c')?.replaceCall.callId, 'c');
+    });
+
+    test('a held call on screen offers none', () {
+      expect(CallState(linesCount: 3, activeCalls: [held, live]).handOverFor('b'), isNull);
+    });
+
+    test('a held call that cannot be handed over is not listed', () {
+      // Each would send a transfer the server refuses, or a second one of a
+      // call already being handed over.
+      final cases = {
+        'video': held.copyWith(video: true),
+        'no line': held.copyWith(line: null),
+        'in a transfer': held.copyWith(transfer: const Transfer.blindTransferInitiated()),
+        'hung up': held.copyWith(hungUpTime: DateTime(2024)),
+        'disconnecting': held.copyWith(processingStatus: CallProcessingStatus.disconnecting),
+        'never answered': _makeCall(callId: 'b', line: 0, held: true, direction: CallDirection.outgoing),
+      };
+      for (final MapEntry(key: why, value: call) in cases.entries) {
+        expect(CallState(linesCount: 3, activeCalls: [call, live]).handOverFor('c'), isNull, reason: why);
+      }
+    });
+
+    test('a call on screen that cannot take one offers none', () {
+      expect(CallState(linesCount: 3, activeCalls: [held, live.copyWith(video: true)]).handOverFor('c'), isNull);
+    });
+
+    test('with an attended transfer linked only the call it was started for is listed', () {
+      final other = _makeCall(callId: 'd', line: 2, held: true, acceptedTime: DateTime(2024));
+      const link = LinkedCall(callId: 'c', anchorCallId: 'b', purpose: LinkedCallPurpose.attendedTransfer);
+      final state = CallState(linesCount: 3, activeCalls: [held, other, live], linkedCall: link);
+      expect(listed(state, 'b'), ['b']);
+      expect(state.handOverFor('b')?.replaceCall.callId, 'c');
+    });
+
+    test('a call placed to join keeps the held calls out', () {
+      const link = LinkedCall(callId: 'c', anchorCallId: 'b', purpose: LinkedCallPurpose.join);
+      expect(CallState(linesCount: 3, activeCalls: [held, live], linkedCall: link).handOverFor('c'), isNull);
+    });
+
+    test('a leg of the room is neither listed nor handed to', () {
+      final state = CallState(
+        linesCount: 3,
+        activeCalls: [held, live],
+        conference: const ConferenceState(phase: ConferencePhase.active, legs: {'b': 0}),
+      );
+      expect(state.handOverFor('c'), isNull);
+    });
+  });
 }

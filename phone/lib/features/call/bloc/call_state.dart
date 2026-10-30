@@ -186,6 +186,55 @@ class CallState with _$CallState {
         anchor.processingStatus != CallProcessingStatus.disconnecting;
   }
 
+  /// Whether [referorCallId] can be handed over to [replaceCallId] by an
+  /// attended transfer now: two different calls, each one a call could be
+  /// placed for ([_canAnchor]) - answered, audio, on a line, in no transfer
+  /// already, not on its way out and not a leg of the room.
+  ///
+  /// The menu lists by it and the bloc checks it again on the submit, with
+  /// the calls as they are then: a second tap on an entry finds the call in
+  /// the transfer the first one started, and a call that ended while the menu
+  /// was open is not there at all.
+  bool canHandOver(String referorCallId, String replaceCallId) =>
+      referorCallId != replaceCallId &&
+      _canAnchor(referorCallId, LinkedCallPurpose.attendedTransfer) &&
+      _canAnchor(replaceCallId, LinkedCallPurpose.attendedTransfer);
+
+  /// The hand-over the transfer menu of [focusedCallId] offers, or null when
+  /// there is none.
+  ///
+  /// With a call linked, it is the call the attended transfer was started for,
+  /// handed over to the linked call once that is answered, whichever row is
+  /// focused: an incoming call grabs the selection at ring time, so the held
+  /// original may stay focused through the whole transfer. A link of another
+  /// purpose offers none, so the call it is about is not handed elsewhere
+  /// halfway.
+  ///
+  /// With nothing linked - a second call dialled or answered the ordinary way -
+  /// every held call is listed, each picked by the person, and handed over to
+  /// the focused call while that is the live one: the entry connects the held
+  /// call "with this call". The call it goes to is never guessed from which
+  /// call happens to be live, which a third call answered meanwhile changes.
+  HandOver? handOverFor(String focusedCallId) {
+    final link = linkedCall;
+    final ActiveCall? replaceCall;
+    if (link != null) {
+      replaceCall = link.answeredTransferCallIn(activeCalls);
+    } else {
+      final focused = retrieveActiveCall(focusedCallId);
+      replaceCall = focused == null || focused.held ? null : focused;
+    }
+    if (replaceCall == null) return null;
+    final referorCalls = [
+      for (final call in activeCalls)
+        if (call.held &&
+            (link == null || call.callId == link.anchorCallId) &&
+            canHandOver(call.callId, replaceCall.callId))
+          call,
+    ];
+    return referorCalls.isEmpty ? null : HandOver(replaceCall: replaceCall, referorCalls: referorCalls);
+  }
+
   /// Whether [callId] is the call placed by the current link.
   bool isLinkedCall(String callId) => linkedCall?.callId == callId;
 
