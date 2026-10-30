@@ -15,6 +15,7 @@ export 'conference_request_result.dart';
 export 'conference_state.dart';
 export 'attended_transfer_purpose.dart';
 export 'conversation_target.dart';
+export 'hand_over.dart';
 export 'ice_connection_issue.dart';
 export 'jsep_value.dart';
 export 'linked_call.dart';

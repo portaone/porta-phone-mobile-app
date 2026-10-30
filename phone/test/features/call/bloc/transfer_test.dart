@@ -283,6 +283,36 @@ void main() {
 
       expect(_transferOf(h, 'b'), const Transfer.transfering(fromAttendedTransfer: true, fromBlindTransfer: false));
     });
+
+    test('a second submit of a call already being handed over is not sent', () async {
+      // The menu keeps the held call listed until the server ends both calls,
+      // so a second tap reaches the bloc with the pair it had.
+      h.seedEstablishedCall('b', line: 0, held: true);
+      h.seedEstablishedCall('c', line: 1, number: '300');
+      final b = h.bloc.state.retrieveActiveCall('b')!;
+      final c = h.bloc.state.retrieveActiveCall('c')!;
+      h.bloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: b, replaceCall: c));
+      await h.settle(() => _transferOf(h, 'b') != null);
+
+      h.bloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: b, replaceCall: c));
+      await h.settle(() => false);
+
+      expect(h.signaling.requests.whereType<TransferRequest>(), hasLength(1));
+    });
+
+    test('a call that ended while the menu was open is not handed over to', () async {
+      h.seedEstablishedCall('b', line: 0, held: true);
+      h.seedEstablishedCall('c', line: 1, number: '300');
+      final b = h.bloc.state.retrieveActiveCall('b')!;
+      final c = h.bloc.state.retrieveActiveCall('c')!;
+      h.signaling.emit(const HangupEvent(line: 1, callId: 'c', code: 200, reason: 'Normal'));
+      await h.settle(() => h.bloc.state.retrieveActiveCall('c') == null);
+
+      h.bloc.add(CallControlEvent.attendedTransferSubmitted(referorCall: b, replaceCall: c));
+      await h.settle(() => false);
+
+      expect(h.signaling.requests.whereType<TransferRequest>(), isEmpty);
+    });
   });
 
   group('attended transfer asked of this phone', () {
