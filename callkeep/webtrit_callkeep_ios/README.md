@@ -13,6 +13,10 @@ PushKit to deliver native call UI and background VoIP push handling.
 | Background / locked | System CallKit UI                                             |
 | Terminated          | PushKit wakes the app; CallKit UI shown after app initializes |
 
+With the incoming queue on (`queueIncomingWhileRinging`, off by default) a call that comes while
+another of ours rings stays out of CallKit and the application shows it - see
+[Incoming queue](#incoming-queue).
+
 PushKit delivers a VoIP push before the user interacts with anything, giving the app time to
 establish signaling and media before CallKit presents the call.
 
@@ -121,6 +125,27 @@ that ends on the far side as soon as CallKit reports it. They are the plugin's o
 fulfilled without reaching the delegate. For this the native side keeps its own copy of the
 membership, set by `setCallGroup`, emptied once CallKit has taken an ungrouping (a refused one
 leaves the group standing, and its hold with it), and by the end of a member.
+
+---
+
+## Incoming queue
+
+The option `queueIncomingWhileRinging` (off by default) keeps at most one of our incoming calls
+ringing in CallKit. The calls that come while it rings wait outside CallKit, in the application,
+which shows them; they enter CallKit as ordinary incoming calls as soon as nothing of ours rings
+there any more.
+
+Why the queue exists: with two of ours ringing in CallKit, the system's own Accept on one makes
+CallKit end the other, and the call the user did not touch is declined. The end comes in a
+transaction of its own, a millisecond before the answer, and carries no reason - it cannot be
+told from a decline the user made. The queue keeps the state from forming: whichever call the
+user takes, the other is kept.
+
+A waiting call the user takes changes places with the one that rings: that one is taken out of
+CallKit by the plugin and waits in turn, at the head of the queue, and the taken call enters
+CallKit alone and is answered. Several calls wait in the order they came. The VoIP push of a
+waiting call is still reported, under the UUID of a call of ours that lives in CallKit, which
+CallKit refuses as a duplicate - the obligation is met and nothing enters the registry.
 
 ---
 
