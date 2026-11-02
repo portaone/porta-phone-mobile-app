@@ -26,6 +26,7 @@ class CallkeepIOSOptions extends Equatable {
     this.driveIdleTimerDisabled = true,
     this.callWaitingToneOwnCallsOnly = true,
     this.queueIncomingWhileRinging = false,
+    this.holdActiveBeforeThirdIncoming = false,
   });
 
   final String localizedName;
@@ -54,6 +55,15 @@ class CallkeepIOSOptions extends Equatable {
   /// Accept on one ends the other.
   final bool queueIncomingWhileRinging;
 
+  /// iOS only: when an incoming call of this app comes while one of its calls is held and
+  /// another is active, put the active one on hold in CallKit only - not in the app, not on the
+  /// far side - until the new call is reported, and take it off hold again right after. iOS
+  /// builds the system screen of that call while nothing of ours is active, so it offers
+  /// `Hold & Accept`, which keeps all three calls, and `End & Accept` ends only the active call;
+  /// without it iOS offers `End & Accept` and `End Held & Accept`, and the latter silently ends
+  /// the oldest call. Off by default.
+  final bool holdActiveBeforeThirdIncoming;
+
   @override
   List<Object?> get props => [
     localizedName,
@@ -68,6 +78,7 @@ class CallkeepIOSOptions extends Equatable {
     driveIdleTimerDisabled,
     callWaitingToneOwnCallsOnly,
     queueIncomingWhileRinging,
+    holdActiveBeforeThirdIncoming,
   ];
 }
 

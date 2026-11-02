@@ -105,6 +105,7 @@ class _MainShellState extends State<MainShell> {
           maximumCallsPerCallGroup: 13,
           supportedHandleTypes: const {CallkeepHandleType.number},
           queueIncomingWhileRinging: EnvironmentConfig.IOS_QUEUE_INCOMING_WHILE_RINGING,
+          holdActiveBeforeThirdIncoming: EnvironmentConfig.IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING,
         ),
         android: CallkeepAndroidOptions(
           ringtoneSound: Assets.ringtones.incomingCall1,
