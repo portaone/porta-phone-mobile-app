@@ -27,7 +27,7 @@ void main() {
       final peer = h.seedEstablishedCall('call');
       h.signaling.failure = failure;
 
-      h.signaling.emitLifecycle(SignalingConnected());
+      h.reconnect();
       await pumpEventQueue();
 
       final firstUpdate = h.signaling.requests.whereType<UpdateRequest>().single;
@@ -38,7 +38,7 @@ void main() {
 
       h.signaling.failure = null;
       peer.signalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
-      h.signaling.emitLifecycle(SignalingConnected());
+      h.reconnect();
       await pumpEventQueue();
 
       final updates = h.signaling.requests.whereType<UpdateRequest>().toList();
@@ -61,7 +61,7 @@ void main() {
   test('replays the offer when signaling drops between its interim updating and the answer', () async {
     final peer = h.seedEstablishedCall('call');
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
     final firstUpdate = h.signaling.requests.whereType<UpdateRequest>().single;
     h.signaling.emit(
@@ -71,7 +71,7 @@ void main() {
     expect(h.bloc.state.retrieveActiveCall('call')?.updating, isTrue);
 
     peer.signalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
 
     final updates = h.signaling.requests.whereType<UpdateRequest>().toList();
@@ -94,7 +94,7 @@ void main() {
   test('forgets the offer once the answer to its interim updating arrives', () async {
     final peer = h.seedEstablishedCall('call');
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
     final firstUpdate = h.signaling.requests.whereType<UpdateRequest>().single;
     h.signaling.emit(
@@ -115,7 +115,7 @@ void main() {
     expect(h.bloc.state.retrieveActiveCall('call')?.updating, isFalse);
 
     peer.signalingStateValue = RTCSignalingState.RTCSignalingStateStable;
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
 
     // A fresh offer, not the answered one sent again.
@@ -132,7 +132,7 @@ void main() {
   test('applies a quick answer the cached signaling state does not know is due yet', () async {
     final peer = h.seedEstablishedCall('call');
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
     final firstUpdate = h.signaling.requests.whereType<UpdateRequest>().single;
     h.signaling.emit(
@@ -152,7 +152,7 @@ void main() {
     expect(peer.remoteDescriptions.map((description) => description.type), contains('answer'));
 
     peer.nativeSignalingStateValue = null;
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
 
     // The answered offer is done with: the reconnect makes a fresh one.
@@ -169,7 +169,7 @@ void main() {
   test('keeps the offer when the accepted event carries no answer', () async {
     final peer = h.seedEstablishedCall('call');
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
     final firstUpdate = h.signaling.requests.whereType<UpdateRequest>().single;
     h.signaling.emit(
@@ -180,7 +180,7 @@ void main() {
     await pumpEventQueue();
 
     peer.signalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
 
     final updates = h.signaling.requests.whereType<UpdateRequest>().toList();
@@ -200,13 +200,13 @@ void main() {
     final peer = h.seedEstablishedCall('call');
     h.signaling.failure = TimeoutException('update result was not received');
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
     final firstUpdate = h.signaling.requests.whereType<UpdateRequest>().single;
 
     h.signaling.failure = null;
     peer.nativeSignalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
 
     final updates = h.signaling.requests.whereType<UpdateRequest>().toList();
@@ -225,7 +225,7 @@ void main() {
     final peer = h.seedEstablishedCall('call');
     h.signaling.failure = TimeoutException('update result was not received');
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
 
     final firstUpdate = h.signaling.requests.whereType<UpdateRequest>().single;
@@ -257,13 +257,13 @@ void main() {
     final peer = h.seedEstablishedCall('call');
     h.signaling.failure = NotConnectedException('signaling disconnected');
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
     final firstUpdate = h.signaling.requests.whereType<UpdateRequest>().single;
 
     h.signaling.failure = null;
     peer.signalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
     final replay = h.signaling.requests.whereType<UpdateRequest>().last;
     expect(replay.jsep, firstUpdate.jsep);
@@ -301,7 +301,7 @@ void main() {
   test('does not send a new offer while the call is already updating', () async {
     h.seedEstablishedCall('call', updating: true);
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await Future<void>.delayed(const Duration(milliseconds: 1100));
     await pumpEventQueue();
 
@@ -320,7 +320,7 @@ void main() {
     );
     h.seedEstablishedCall('call', updating: true);
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
     for (var deferral = 0; deferral < 9; deferral++) {
       deferrals[deferral].complete();
@@ -349,7 +349,7 @@ void main() {
     final peer = h.seedEstablishedCall('call');
     h.signaling.failure = TimeoutException('update result was not received');
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
     final firstUpdate = h.signaling.requests.whereType<UpdateRequest>().single;
     peer.signalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;
@@ -392,7 +392,7 @@ void main() {
     h.seedEstablishedCall('call');
     h.signaling.failure = TimeoutException('update result was not received');
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
 
     expect(h.signaling.requests.whereType<UpdateRequest>(), hasLength(1));
@@ -411,13 +411,31 @@ void main() {
     final failure = StateError('invalid peer connection state');
     h.signaling.failure = failure;
 
-    h.signaling.emitLifecycle(SignalingConnected());
+    h.reconnect();
     await pumpEventQueue();
 
     expect(h.bloc.state.activeCalls, isEmpty);
     expect(h.callkeep.ended, ['call']);
     expect(peer.closes, 1);
     expect(h.errors.errors, [failure]);
+  });
+
+  test('a reconnect renegotiates its calls even when taking the handshake in fails', () async {
+    final errors = <Object>[];
+    late CallBlocHarness failing;
+    await runZonedGuarded(() async {
+      failing = CallBlocHarness(callkeepConnections: _FailingConnections());
+      failing.seedEstablishedCall('call');
+      failing.reconnect();
+      await pumpEventQueue();
+    }, (error, _) => errors.add(error));
+    addTearDown(failing.close);
+
+    expect(errors, isNotEmpty, reason: 'the callkeep read failed');
+    final offers = failing.signaling.requests.whereType<UpdateRequest>();
+    expect(offers, hasLength(1), reason: 'the offer the reconnect owes the call went all the same');
+    failing.signaling.emit(UpdatedEvent(line: 0, callId: 'call', transaction: offers.single.transaction));
+    await pumpEventQueue();
   });
 }
 
@@ -459,4 +477,13 @@ class _ManualTimer implements Timer {
 
   @override
   int get tick => _active ? 0 : 1;
+}
+
+/// Callkeep whose read of the connections fails.
+class _FailingConnections extends Fake implements CallkeepConnections {
+  @override
+  Future<List<CallkeepConnection>> getConnections() async => throw StateError('callkeep is gone');
+
+  @override
+  Future<CallkeepConnection?> getConnection(String callId) async => throw StateError('callkeep is gone');
 }
