@@ -359,6 +359,43 @@ restart goes out instead of being deferred for the rest of the call. While an of
 both the renegotiation guard and the answer guard of `accepted` ask the native peer connection
 for its signaling state instead of the Dart-side cache, which lags behind `setLocalDescription`.
 
+**An update missed while the socket was down** — a re-INVITE that reaches the server while the
+app has no connection is not sent again: the server keeps it in the call's log and waits for the
+answer. The handshake of the next connection carries the log, and the plan made from it
+(`HandshakeProcessor`) gives a call the BLoC already runs a `DeliverUpdateAction` when the newest
+update in its log has no answer of the client after it. The BLoC feeds that update to the handler a
+live `UpdatingCallEvent` takes.
+
+Three rules keep this safe; each is one small class in `features/call/utils/`.
+
+- **An update is named by its call and its number among the call's updates** (`CallUpdateHistory`).
+  The protocol gives an update no id, but the server's log of a call only grows until the call ends,
+  so "the third update of this call" is the same update in every handshake, however the entry is
+  parsed and whatever it offers. The BLoC counts the same way: a handshake sets the count of each
+  call to the updates its log shows - synchronously, before the handshake handler awaits anything -
+  and every update heard live adds one.
+- **An update is handled once** (`CallUpdateLedger`). Every update, live or from a log, enters
+  through `CallBloc._takeInUpdate`, which opens a `CallUpdateAttempt` for it. An update that is
+  being handled, or whose answer the server acknowledged, gets no second attempt: a log cannot say
+  what the client has done since the socket connected, and a second answer to one offer is refused
+  by the media server. The attempt travels with the events of both stages of the handler, and the
+  stage that ends it says how (`CallUpdateAnswer`). An attempt that ended without an acknowledged
+  answer - the update was dropped, carried no offer, the socket was down, the native report threw -
+  leaves the update free, so the next handshake that still shows it hands it over again.
+- **The answer goes out before the client's own offer** (`RenegotiationCoordinator`). A reconnect
+  owes every call that lived through it a renegotiation, since an ICE restart made while the socket
+  was down was dropped. That offer is made from the handshake (`handshakeReceived`), not from the
+  connected event, after the handshake's missed updates are taken in. The coordinator counts every
+  offer of the far end from its arrival until it is answered or left (`serverOfferReceived`,
+  `serverOfferAnswered`, `serverOfferLeft`), and a renegotiation of a call with one open is put off
+  until it is settled (`holdRenegotiation`): the media server holds every offer of the client back
+  behind an unanswered update. The same count holds a pulled call's resume back.
+
+What this rests on: the server appends to a call's log and never trims it while the call is up,
+and sends an event and logs it in one step, so an update is either in the handshake's log or
+delivered after the handshake, never both and never neither. Not covered: a call restored after an
+app restart takes the `RestoreCallAction` path above and is not handed its unanswered update.
+
 **Blind transfer** — `CallControlEvent.blindTransferInitiated` creates a new outgoing
 `ActiveCall` with status `outgoingCreatedFromRefer`, linked to the original call via `fromReferId`.
 The transfer target follows the normal outgoing flow from that status onward. Picking that target
@@ -496,7 +533,7 @@ have call context:
 
 | Path                         | Where                                                                                                                                                                   | Behaviour                                                                                                                                        |
 |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| Survive-and-recover          | `__onSignalingClientEventConnected` (`safeRenegotiate`), `_onConnectivityResultChanged` / `__onMutationIceConnectionFailed` (`restartIce`), the silent disconnect codes | keep the call in `activeCalls` across the outage and recover it on reconnect instead of finalizing it                                            |
+| Survive-and-recover          | `_renegotiateAfterReconnect` from the handshake (`safeRenegotiate`), `_onConnectivityResultChanged` / `__onMutationIceConnectionFailed` (`restartIce`), the silent disconnect codes | keep the call in `activeCalls` across the outage and recover it on reconnect instead of finalizing it                                            |
 | Signaling lost mid-call      | `isTransientSignalingFailure` in renegotiate and around trickle, end of candidates and hold                                                                             | a loss of signaling keeps the call (and an installed offer, replayed on reconnect or by retry); any other error ends the call                    |
 | Remote hangup                | `__onCallSignalingEventHangup` -> `__onMutationSignalingHangup` -> `callkeep.reportEndCall`                                                                             | when signaling reconnects and the server tore the leg down, its hangup ends the call authoritatively                                             |
 | `requestCallIdError` cleanup | `__onSignalingClientEventDisconnected`                                                                                                                                  | for calls already marked `wasHungUp`, completes them once the disconnect confirms the call id is gone                                            |
