@@ -145,6 +145,53 @@ class CallBlocHarness {
   /// Everything the bloc asked the user to see, in order.
   final List<Notification> notifications = [];
 
+  /// A reconnect as the real module delivers it: the session comes up, then
+  /// its handshake reports every call of the bloc, and its conference room,
+  /// as the server still holding them, with nothing new in a call's log.
+  ///
+  /// The calls that lived through a reconnect are renegotiated from that
+  /// handshake, not from the connected event alone.
+  void reconnect() {
+    signaling.emitLifecycle(SignalingConnected());
+    final calls = bloc.state.activeCalls;
+    final conference = bloc.state.conference;
+    final lineCount = calls.map((call) => (call.line ?? 0) + 1).fold(0, (a, b) => a > b ? a : b);
+    signaling.emitHandshake(
+      StateHandshake(
+        keepaliveInterval: const Duration(seconds: 30),
+        timestamp: 1,
+        registration: const Registration(status: RegistrationStatus.registered),
+        lines: [
+          for (var line = 0; line < lineCount; line++)
+            switch (calls.where((call) => (call.line ?? 0) == line).firstOrNull) {
+              final call? => Line(
+                callId: call.callId,
+                callLogs: [
+                  CallEventLog(
+                    timestamp: 1,
+                    callEvent: AcceptedEvent(line: line, callId: call.callId),
+                  ),
+                ],
+              ),
+              null => null,
+            },
+        ],
+        presenceInfos: const [],
+        dialogInfos: const [],
+        guestLine: null,
+        conference: switch (conference.room) {
+          final room? => ConferenceInfo(
+            room: room,
+            participants: [
+              for (final leg in conference.legs.entries) ConferenceParticipant(line: leg.value, callId: leg.key),
+            ],
+          ),
+          null => null,
+        },
+      ),
+    );
+  }
+
   /// Puts an answered call into the state with a peer connection the manager
   /// already holds for it, the way the bloc leaves a call once it is up:
   /// its microphone on the connection's audio sender, the far end's audio
