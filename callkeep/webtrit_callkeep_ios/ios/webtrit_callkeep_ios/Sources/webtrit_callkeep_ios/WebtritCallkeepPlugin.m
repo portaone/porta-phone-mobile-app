@@ -79,6 +79,15 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
   // return.
   CallPresentations *_presentations;
   NSMutableDictionary<NSUUID *, CXCallUpdate *> *_incomingUpdates;
+  // The hold before a third call (holdActiveBeforeThirdIncoming) - see "Hold before a third call".
+  // For each incoming call whose report waits for this plugin to hold an active call of ours, by
+  // the incoming call's CallKit UUID: the call it held, to take off hold again once CallKit has
+  // the report.
+  BOOL _holdActiveBeforeThirdIncoming;
+  NSMutableDictionary<NSUUID *, NSUUID *> *_heldForIncoming;
+  // The hold changes of the hold before a third call: CallKit's only, fulfilled without asking
+  // the application.
+  NSMutableSet<NSUUID *> *_screenHoldActionUuids;
 }
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
@@ -119,6 +128,8 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
     _admittedIncomingUuids = [NSMutableSet set];
     _presentations = [[CallPresentations alloc] init];
     _incomingUpdates = [NSMutableDictionary dictionary];
+    _heldForIncoming = [NSMutableDictionary dictionary];
+    _screenHoldActionUuids = [NSMutableSet set];
     _callWaitingToneOwnCallsOnly = YES;
   }
   return self;
@@ -169,6 +180,8 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
         iosOptions.callWaitingToneOwnCallsOnly == nil || iosOptions.callWaitingToneOwnCallsOnly.boolValue;
     _queueIncomingWhileRinging =
         iosOptions.queueIncomingWhileRinging != nil && iosOptions.queueIncomingWhileRinging.boolValue;
+    _holdActiveBeforeThirdIncoming =
+        iosOptions.holdActiveBeforeThirdIncoming != nil && iosOptions.holdActiveBeforeThirdIncoming.boolValue;
 
     if (iosOptions.ringbackSound != nil) {
       _ringback = [self createRingbackPlayer:iosOptions.ringbackSound];
@@ -232,6 +245,8 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
         iosOptions.callWaitingToneOwnCallsOnly == nil || iosOptions.callWaitingToneOwnCallsOnly.boolValue;
     _queueIncomingWhileRinging =
         iosOptions.queueIncomingWhileRinging != nil && iosOptions.queueIncomingWhileRinging.boolValue;
+    _holdActiveBeforeThirdIncoming =
+        iosOptions.holdActiveBeforeThirdIncoming != nil && iosOptions.holdActiveBeforeThirdIncoming.boolValue;
     
     if (_ringback == nil && iosOptions.ringbackSound != nil) {
       _ringback = [self createRingbackPlayer:iosOptions.ringbackSound];
@@ -265,6 +280,8 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
   [_videoCallUuids removeAllObjects];
   [self refreshIdleTimer];
   [self forgetIncomingQueue];
+  [_heldForIncoming removeAllObjects];
+  [_screenHoldActionUuids removeAllObjects];
   if (_provider != nil) {
     [_provider invalidate];
     _provider = nil;
@@ -309,29 +326,32 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
     [self admitIncomingCallUUID:callUuid];
     _incomingUpdates[logicalUuid] = callUpdate;
   }
-  [_provider reportNewIncomingCallWithUUID:callUuid
-                                    update:callUpdate
-                                completion:^(NSError *error) {
-                                  dispatch_async(dispatch_get_main_queue(), ^{
-                                    [self settleAdmittedIncomingCallUUID:callUuid afterReportError:error];
-                                    [self releaseQueuedIncomingIfNothingRings];
-                                  });
-                                  if (error == nil) {
-                                    // Only for a call that is still ours: this completion can run
-                                    // after the call ended, was reset or torn down, and must not
-                                    // bring its video state back then.
-                                    if ([self isLiveOwnCallUUID:callUuid]) {
-                                      [self setVideo:callUpdate.hasVideo forCallUUID:callUuid];
-                                    }
-                                    completion(nil, nil);
-                                  } else if ([error.domain isEqualToString:CXErrorDomainIncomingCall]) {
-                                    completion([WTPIncomingCallError makeWithValue:CXErrorCodeIncomingCallErrorToPigeon((CXErrorCodeIncomingCallError) error.code)], nil);
-                                  } else {
-                                    completion(nil, [FlutterError errorWithCode:error.domain
-                                                                        message:[error description]
-                                                                        details:nil]);
-                                  }
-                                }];
+  [self holdActiveBeforeReportingIncomingCallUUID:callUuid then:^{
+    [self->_provider reportNewIncomingCallWithUUID:callUuid
+                                            update:callUpdate
+                                        completion:^(NSError *error) {
+                                          dispatch_async(dispatch_get_main_queue(), ^{
+                                            [self settleAdmittedIncomingCallUUID:callUuid afterReportError:error];
+                                            [self resumeCallHeldForReportedIncomingCallUUID:callUuid];
+                                            [self releaseQueuedIncomingIfNothingRings];
+                                          });
+                                          if (error == nil) {
+                                            // Only for a call that is still ours: this completion can run
+                                            // after the call ended, was reset or torn down, and must not
+                                            // bring its video state back then.
+                                            if ([self isLiveOwnCallUUID:callUuid]) {
+                                              [self setVideo:callUpdate.hasVideo forCallUUID:callUuid];
+                                            }
+                                            completion(nil, nil);
+                                          } else if ([error.domain isEqualToString:CXErrorDomainIncomingCall]) {
+                                            completion([WTPIncomingCallError makeWithValue:CXErrorCodeIncomingCallErrorToPigeon((CXErrorCodeIncomingCallError) error.code)], nil);
+                                          } else {
+                                            completion(nil, [FlutterError errorWithCode:error.domain
+                                                                                message:[error description]
+                                                                                details:nil]);
+                                          }
+                                        }];
+  }];
 }
 
 - (void)reportConnectingOutgoingCall:(NSString *)uuidString
@@ -1127,44 +1147,47 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   _incomingUpdates[logicalUuid] = update;
   [_ownCallUuids addObject:uuid];
   [self admitIncomingCallUUID:uuid];
-  [_provider reportNewIncomingCallWithUUID:uuid
-                                    update:update
-                                completion:^(NSError *error) {
-                                  dispatch_async(dispatch_get_main_queue(), ^{
-                                    [self settleAdmittedIncomingCallUUID:uuid afterReportError:error];
-                                    // What follows is this presentation's business only while it is
-                                    // the one the call lives under: the call may have been taken out
-                                    // again, ended or reset while the report was on its way, and a
-                                    // late answer to it must not touch what came after.
-                                    BOOL live = [self->_presentations isLive:presentation];
-                                    if (!live) {
-                                      WTPLog(@"[Callkeep][queue] a late answer to the report of %@ - not its call's presentation any more",
-                                            uuid.UUIDString);
-                                    } else if (error == nil) {
-                                      if ([self isLiveOwnCallUUID:uuid]) {
-                                        [self setVideo:update.hasVideo forCallUUID:uuid];
-                                      }
-                                    } else if (keep) {
-                                      WTPLog(@"[Callkeep][queue] CallKit refused the waiting call %@: %@ - it goes on waiting",
-                                            logicalUuid.UUIDString, error);
-                                      // The UUID was refused; the call is shown under another one
-                                      // the next time it is let in.
-                                      [self->_presentations withdrawLivePresentationOfLogicalUUID:logicalUuid];
-                                      [self forgetCall:uuid];
-                                    } else {
-                                      WTPLog(@"[Callkeep][queue] CallKit refused the waiting call %@: %@ - ending it",
-                                            logicalUuid.UUIDString, error);
-                                      [self forgetCall:uuid];
-                                      [self->_delegateFlutterApi performEndCall:logicalUuid.UUIDString
-                                                                        endedBy:WTPEndedByEnumSystem
-                                                                     completion:^(NSNumber *fulfill, FlutterError *e) {}];
-                                    }
-                                    if (done != nil) {
-                                      done(error, live ? presentation : nil);
-                                    }
-                                    [self releaseQueuedIncomingIfNothingRings];
-                                  });
-                                }];
+  [self holdActiveBeforeReportingIncomingCallUUID:uuid then:^{
+    [self->_provider reportNewIncomingCallWithUUID:uuid
+                                            update:update
+                                        completion:^(NSError *error) {
+                                          dispatch_async(dispatch_get_main_queue(), ^{
+                                            [self settleAdmittedIncomingCallUUID:uuid afterReportError:error];
+                                            [self resumeCallHeldForReportedIncomingCallUUID:uuid];
+                                            // What follows is this presentation's business only while it is
+                                            // the one the call lives under: the call may have been taken out
+                                            // again, ended or reset while the report was on its way, and a
+                                            // late answer to it must not touch what came after.
+                                            BOOL live = [self->_presentations isLive:presentation];
+                                            if (!live) {
+                                              WTPLog(@"[Callkeep][queue] a late answer to the report of %@ - not its call's presentation any more",
+                                                    uuid.UUIDString);
+                                            } else if (error == nil) {
+                                              if ([self isLiveOwnCallUUID:uuid]) {
+                                                [self setVideo:update.hasVideo forCallUUID:uuid];
+                                              }
+                                            } else if (keep) {
+                                              WTPLog(@"[Callkeep][queue] CallKit refused the waiting call %@: %@ - it goes on waiting",
+                                                    logicalUuid.UUIDString, error);
+                                              // The UUID was refused; the call is shown under another one
+                                              // the next time it is let in.
+                                              [self->_presentations withdrawLivePresentationOfLogicalUUID:logicalUuid];
+                                              [self forgetCall:uuid];
+                                            } else {
+                                              WTPLog(@"[Callkeep][queue] CallKit refused the waiting call %@: %@ - ending it",
+                                                    logicalUuid.UUIDString, error);
+                                              [self forgetCall:uuid];
+                                              [self->_delegateFlutterApi performEndCall:logicalUuid.UUIDString
+                                                                                endedBy:WTPEndedByEnumSystem
+                                                                             completion:^(NSNumber *fulfill, FlutterError *e) {}];
+                                            }
+                                            if (done != nil) {
+                                              done(error, live ? presentation : nil);
+                                            }
+                                            [self releaseQueuedIncomingIfNothingRings];
+                                          });
+                                        }];
+  }];
 }
 
 /// The user takes a waiting call while another of ours rings in CallKit.
@@ -1245,6 +1268,123 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
 }
 
 #pragma mark - WTPHostApi - helpers
+
+#pragma mark - Hold before a third call
+
+/// The hold before a third call (holdActiveBeforeThirdIncoming), run before an incoming call of
+/// ours is reported to CallKit.
+///
+/// With one call of ours held and another active, iOS builds the system screen of a third call
+/// without `Hold & Accept`: it offers `End & Accept` and `End Held & Accept`, and both end a call -
+/// a tap on `End Held & Accept` silently ends the oldest one (WT-2093). With nothing of ours
+/// active it offers `Hold & Accept`. So when a held call and an active one are both there, the
+/// active one is put on hold first, and the report waits for that transaction.
+///
+/// The hold is CallKit's only and lasts until CallKit has the report: the active call is taken
+/// off hold again as soon as the call observer lists the incoming call, or in the report's
+/// completion if that comes first, and neither change reaches the application or the far side.
+/// The completion alone is too late: measured on an iPhone (iOS 27), it was still pending while
+/// the system screen was up and the user had tapped `End & Accept` on it. iOS keeps the screen it built for the report (measured on an iPhone, iOS 27), so
+/// the user meets `Hold & Accept`, `End & Accept` and `Decline` with the call still active, and
+/// each does what it says: `Hold & Accept` holds the active call and answers, `End & Accept`
+/// ends the active call only. Left held, both of ours would be held at the tap, and iOS reads
+/// `End & Accept` as ending them all (a transaction of two ends and the answer).
+///
+/// Taking the call off hold needs this plugin's main queue, and iOS can keep that queue busy
+/// while its screen covers the app: measured on an iPhone (iOS 27), the action mostly reached the
+/// delegate 70-350 ms after the hold, once 1.2 s, and a tap on `End & Accept` in that time ends
+/// both calls. Refusing the extra end does not help: CallKit drops the call anyway while the app
+/// keeps it.
+///
+/// [report] is always called, on the main queue; a hold CallKit refused still lets the call in.
+- (void)holdActiveBeforeReportingIncomingCallUUID:(NSUUID *)incoming then:(void (^)(void))report {
+  NSUUID *active = _holdActiveBeforeThirdIncoming && incoming != nil ? [self activeOwnCallToHoldBeforeIncomingCallUUID:incoming] : nil;
+  if (active == nil) {
+    report();
+    return;
+  }
+  WTPLog(@"[Callkeep][hold-before-third] holding %@ before %@ is reported", active.UUIDString, incoming.UUIDString);
+  CXSetHeldCallAction *hold = [[CXSetHeldCallAction alloc] initWithCallUUID:active onHold:YES];
+  [_screenHoldActionUuids addObject:hold.UUID];
+  __weak typeof(self) weakSelf = self;
+  [self requestTransaction:[[CXTransaction alloc] initWithAction:hold] completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      typeof(self) strongSelf = weakSelf;
+      if (strongSelf == nil) {
+        return;
+      }
+      BOOL held = error == nil && flutterError == nil;
+      if (held) {
+        strongSelf->_heldForIncoming[incoming] = active;
+      } else {
+        [strongSelf->_screenHoldActionUuids removeObject:hold.UUID];
+        WTPLog(@"[Callkeep][hold-before-third] CallKit refused to hold %@: %@ %@ - %@ is reported anyway",
+              active.UUIDString, error, flutterError, incoming.UUIDString);
+      }
+      report();
+    });
+  }];
+}
+
+/// The active call of ours to hold before [incoming] is reported, or nil: only when another call
+/// of ours is already on hold - the third-call screen. Beside a single active call iOS offers
+/// `Hold & Accept` by itself, and nothing is held early.
+- (NSUUID *)activeOwnCallToHoldBeforeIncomingCallUUID:(NSUUID *)incoming {
+  NSUUID *active = nil;
+  BOOL someHeld = NO;
+  for (CXCall *call in _callController.callObserver.calls) {
+    if (call.hasEnded || !call.hasConnected || [call.UUID isEqual:incoming] || ![_ownCallUuids containsObject:call.UUID]) {
+      continue;
+    }
+    if (call.isOnHold) {
+      someHeld = YES;
+    } else if (active == nil) {
+      active = call.UUID;
+    }
+  }
+  return someHeld ? active : nil;
+}
+
+/// CallKit has the report of [incoming] - the call observer lists it, or the report's completion
+/// came, whichever is first: the call held for it goes off hold again, if it is still ours and
+/// live. Called on the main queue, whether the report was taken or not.
+///
+/// The call observer is not asked whether the call is on hold: it lags behind the transaction -
+/// measured on an iPhone (iOS 27), it still showed the call active 300 ms after its hold was
+/// fulfilled. Taking off hold a call that is not held changes nothing, and neither change reaches
+/// the application.
+- (void)resumeCallHeldForReportedIncomingCallUUID:(NSUUID *)incoming {
+  NSUUID *held = incoming != nil ? _heldForIncoming[incoming] : nil;
+  if (held == nil) {
+    return;
+  }
+  [_heldForIncoming removeObjectForKey:incoming];
+  BOOL live = NO;
+  for (CXCall *call in _callController.callObserver.calls) {
+    if ([call.UUID isEqual:held] && !call.hasEnded && [_ownCallUuids containsObject:call.UUID]) {
+      live = YES;
+    }
+  }
+  if (!live) {
+    return;
+  }
+  WTPLog(@"[Callkeep][hold-before-third] %@ is reported, taking %@ off hold", incoming.UUIDString, held.UUIDString);
+  CXSetHeldCallAction *resume = [[CXSetHeldCallAction alloc] initWithCallUUID:held onHold:NO];
+  [_screenHoldActionUuids addObject:resume.UUID];
+  __weak typeof(self) weakSelf = self;
+  [self requestTransaction:[[CXTransaction alloc] initWithAction:resume] completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+    if (error != nil || flutterError != nil) {
+      WTPLog(@"[Callkeep][hold-before-third] CallKit refused to take %@ off hold: %@ %@", held.UUIDString, error, flutterError);
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf forgetScreenHoldActionUUID:resume.UUID];
+      });
+    }
+  }];
+}
+
+- (void)forgetScreenHoldActionUUID:(NSUUID *)uuid {
+  [_screenHoldActionUuids removeObject:uuid];
+}
 
 - (void)requestTransaction:(CXTransaction *)transaction completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
   [_callController requestTransaction:transaction completion:^(NSError *error) {
@@ -1464,39 +1604,44 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
   _incomingUpdates[uuid] = callUpdate;
   [_ownCallUuids addObject:pushPresentedUuid];
   [self admitIncomingCallUUID:pushPresentedUuid];
-  [_provider reportNewIncomingCallWithUUID:pushPresentedUuid
-                                    update:callUpdate
-                                completion:^(NSError *error) {
-                                  dispatch_async(dispatch_get_main_queue(), ^{
-                                    [self settleAdmittedIncomingCallUUID:pushPresentedUuid afterReportError:error];
-                                    [self releaseQueuedIncomingIfNothingRings];
-                                  });
-                                  WTPIncomingCallError *incomingCallError = nil;
-                                  if (error != nil) {
-                                    if ([error.domain isEqualToString:CXErrorDomainIncomingCall]) {
-                                      incomingCallError = [WTPIncomingCallError makeWithValue:CXErrorCodeIncomingCallErrorToPigeon((CXErrorCodeIncomingCallError) error.code)];
-                                    } else {
-                                      WTPLog(@"[Callkeep][didReceiveIncomingPushWithPayloadForPushTypeVoIP:withCompletionHandler:][reportNewIncomingCallWithUUID] error = %@", error);
-                                      incomingCallError = [WTPIncomingCallError makeWithValue:WTPIncomingCallErrorEnumInternal];
-                                    }
-                                  } else if ([self isLiveOwnCallUUID:pushPresentedUuid]) {
-                                    // CallKit took the call: its video state counts from here, and only
-                                    // here. A call CallKit refused never keeps the screen awake, and one
-                                    // that ended or was reset before this completion ran is not brought
-                                    // back into the set by it.
-                                    [self setVideo:callUpdate.hasVideo forCallUUID:pushPresentedUuid];
-                                  }
+  // The push path is the one the third call took in the reproduction of WT-2093: the push reaches
+  // CallKit before the application knows of the call, so the hold is made here, not in the app.
+  [self holdActiveBeforeReportingIncomingCallUUID:pushPresentedUuid then:^{
+    [self->_provider reportNewIncomingCallWithUUID:pushPresentedUuid
+                                            update:callUpdate
+                                        completion:^(NSError *error) {
+                                          dispatch_async(dispatch_get_main_queue(), ^{
+                                            [self settleAdmittedIncomingCallUUID:pushPresentedUuid afterReportError:error];
+                                            [self resumeCallHeldForReportedIncomingCallUUID:pushPresentedUuid];
+                                            [self releaseQueuedIncomingIfNothingRings];
+                                          });
+                                          WTPIncomingCallError *incomingCallError = nil;
+                                          if (error != nil) {
+                                            if ([error.domain isEqualToString:CXErrorDomainIncomingCall]) {
+                                              incomingCallError = [WTPIncomingCallError makeWithValue:CXErrorCodeIncomingCallErrorToPigeon((CXErrorCodeIncomingCallError) error.code)];
+                                            } else {
+                                              WTPLog(@"[Callkeep][didReceiveIncomingPushWithPayloadForPushTypeVoIP:withCompletionHandler:][reportNewIncomingCallWithUUID] error = %@", error);
+                                              incomingCallError = [WTPIncomingCallError makeWithValue:WTPIncomingCallErrorEnumInternal];
+                                            }
+                                          } else if ([self isLiveOwnCallUUID:pushPresentedUuid]) {
+                                            // CallKit took the call: its video state counts from here, and only
+                                            // here. A call CallKit refused never keeps the screen awake, and one
+                                            // that ended or was reset before this completion ran is not brought
+                                            // back into the set by it.
+                                            [self setVideo:callUpdate.hasVideo forCallUUID:pushPresentedUuid];
+                                          }
 
-                                  [self->_delegateFlutterApi didPresentIncomingCallHandle:[callUpdate.remoteHandle toPigeon]
-                                                                           displayName:callUpdate.localizedCallerName
-                                                                                 video:callUpdate.hasVideo
-                                                                                callId:callId
-                                                                                  uuid:[uuid UUIDString]
-                                                                                 error:incomingCallError
-                                                                            completion:^(FlutterError *error) {
-                                                                              completion();
-                                                                            }];
-                                }];
+                                          [self->_delegateFlutterApi didPresentIncomingCallHandle:[callUpdate.remoteHandle toPigeon]
+                                                                                   displayName:callUpdate.localizedCallerName
+                                                                                         video:callUpdate.hasVideo
+                                                                                        callId:callId
+                                                                                          uuid:[uuid UUIDString]
+                                                                                         error:incomingCallError
+                                                                                    completion:^(FlutterError *error) {
+                                                                                      completion();
+                                                                                    }];
+                                        }];
+  }];
 }
 
 /// Prepares the AVAudioSession for an incoming call.
@@ -1542,6 +1687,11 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
   if (call.hasConnected) {
     // Answered: it rings no more, and its place among the admitted incoming calls is free.
     [_admittedIncomingUuids removeObject:call.UUID];
+  }
+  if (_heldForIncoming[call.UUID] != nil) {
+    // CallKit lists the incoming call, and has built its system screen: the hold before a third
+    // call has done its work.
+    [self resumeCallHeldForReportedIncomingCallUUID:call.UUID];
   }
   [self syncCallWaitingTone:callObserver];
   [self releaseQueuedIncomingIfNothingRings];
@@ -1686,6 +1836,14 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #ifdef DEBUG
   NSLog(@"[Callkeep][CXProviderDelegate][provider:performSetHeldCallAction:]");
 #endif
+  // The hold before a third call - see "Hold before a third call": CallKit's only.
+  if ([_screenHoldActionUuids containsObject:action.UUID]) {
+    [_screenHoldActionUuids removeObject:action.UUID];
+    WTPLog(@"[Callkeep][hold-before-third] %@ %@ in CallKit", action.onHold ? @"holding" : @"taking off hold",
+          action.callUUID.UUIDString);
+    [action fulfill];
+    return;
+  }
   // The plugin's own hold on the members of a group - see "Group hold".
   if ([_groupHoldActionUuids containsObject:action.UUID]) {
     [_groupHoldActionUuids removeObject:action.UUID];
