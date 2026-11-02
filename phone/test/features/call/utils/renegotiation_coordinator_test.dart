@@ -40,14 +40,129 @@ void main() {
     });
   });
 
-  test('signaling reconnect returns renegotiation for every connected call', () {
+  test('a reconnect renegotiates every connected call from its handshake, once', () {
+    final commands = <RenegotiationCommand>[];
+    final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+    coordinator.signalingConnected(['a', 'b']);
+    expect(commands, isEmpty, reason: 'nothing goes out before the handshake');
+
+    final fromHandshake = coordinator.handshakeReceived([
+      (callId: 'a', lineId: 1),
+      (callId: 'b', lineId: 2),
+    ], connection: coordinator.connection).toList();
+
+    expect(fromHandshake, hasLength(2));
+    expect(fromHandshake[0], isA<Renegotiate>().having((command) => command.callId, 'callId', 'a'));
+    expect(fromHandshake[1], isA<Renegotiate>().having((command) => command.lineId, 'lineId', 2));
+    expect(
+      coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: coordinator.connection),
+      isEmpty,
+      reason: 'a second handshake of the same connection owes nothing',
+    );
+  });
+
+  test('a handshake without a reconnect, or for a call not owed, renegotiates nothing', () {
     final coordinator = RenegotiationCoordinator(onCommand: (_) {});
 
-    final commands = coordinator.signalingConnected([(callId: 'a', lineId: 1), (callId: 'b', lineId: 2)]).toList();
+    expect(coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: coordinator.connection), isEmpty);
 
-    expect(commands, hasLength(2));
-    expect(commands[0], isA<Renegotiate>().having((command) => command.callId, 'callId', 'a'));
-    expect(commands[1], isA<Renegotiate>().having((command) => command.callId, 'callId', 'b'));
+    coordinator.signalingConnected(['a']);
+    expect(coordinator.handshakeReceived([(callId: 'b', lineId: 2)], connection: coordinator.connection), isEmpty);
+    expect(
+      coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: coordinator.connection),
+      isEmpty,
+      reason: 'what was owed went',
+    );
+  });
+
+  test('a handshake of an earlier connection leaves what is owed to the current one', () {
+    final coordinator = RenegotiationCoordinator(onCommand: (_) {});
+
+    coordinator.signalingConnected(['a']);
+    final first = coordinator.connection;
+    coordinator.signalingConnected(['a']);
+
+    expect(coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: first), isEmpty);
+    expect(coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: coordinator.connection), hasLength(1));
+  });
+
+  group('server offers', () {
+    test('a renegotiation goes at once while the call has no server offer', () {
+      final coordinator = RenegotiationCoordinator(onCommand: (_) {});
+
+      expect(coordinator.holdRenegotiation('a', 1), isFalse);
+    });
+
+    test('a renegotiation is put off behind a server offer and made once it is answered', () {
+      final commands = <RenegotiationCommand>[];
+      final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+      coordinator.serverOfferReceived('a');
+      expect(coordinator.holdRenegotiation('a', 3), isTrue);
+      expect(commands, isEmpty);
+
+      coordinator.serverOfferAnswered('a');
+
+      expect(
+        commands.single,
+        isA<Renegotiate>().having((c) => c.callId, 'callId', 'a').having((c) => c.lineId, 'lineId', 3),
+      );
+      expect(coordinator.hasServerOffer('a'), isFalse);
+    });
+
+    test('a server offer left unanswered lets the renegotiation go too', () {
+      final commands = <RenegotiationCommand>[];
+      final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+      coordinator.serverOfferReceived('a');
+      coordinator.holdRenegotiation('a', 1);
+      coordinator.serverOfferLeft('a');
+
+      expect(commands.single, isA<Renegotiate>());
+    });
+
+    test('a server offer the server refused the answer to drops the renegotiation put off behind it', () {
+      final commands = <RenegotiationCommand>[];
+      final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+      coordinator.serverOfferReceived('a');
+      coordinator.holdRenegotiation('a', 1);
+      coordinator.serverOfferLeft('a', refused: true);
+
+      expect(commands, isEmpty, reason: 'the refusal\'s own randomized retry renegotiates the call');
+      expect(coordinator.hasServerOffer('a'), isFalse);
+    });
+
+    test('the renegotiation waits for every open server offer of its call, and only of its call', () {
+      final commands = <RenegotiationCommand>[];
+      final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+      coordinator.serverOfferReceived('a');
+      coordinator.serverOfferReceived('a');
+      coordinator.serverOfferReceived('b');
+      coordinator.holdRenegotiation('a', 1);
+
+      coordinator.serverOfferAnswered('b');
+      coordinator.serverOfferAnswered('a');
+      expect(commands, isEmpty);
+
+      coordinator.serverOfferAnswered('a');
+      expect(commands.single.callId, 'a');
+    });
+
+    test('a renegotiation put off is dropped with its call', () {
+      final commands = <RenegotiationCommand>[];
+      final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+      coordinator.serverOfferReceived('a');
+      coordinator.holdRenegotiation('a', 1);
+      coordinator.callRemoved('a');
+      coordinator.serverOfferAnswered('a');
+
+      expect(commands, isEmpty);
+      expect(coordinator.hasServerOffer('a'), isFalse);
+    });
   });
 
   test('updating retry waits and returns the same call', () async {
@@ -124,7 +239,7 @@ void main() {
     for (var attempt = 0; attempt < 4; attempt++) {
       coordinator.keepOffer('call', offer, signalingConnected: true);
     }
-    coordinator.signalingConnected([(callId: 'call', lineId: 1)]);
+    coordinator.signalingConnected(['call']);
     coordinator.keepOffer('call', offer, signalingConnected: true);
     coordinator.dispose();
 
@@ -171,7 +286,11 @@ void main() {
 
       expect(coordinator.replayableOffer('call'), same(offer));
       expect(commands, isEmpty);
-      expect(coordinator.signalingConnected([(callId: 'call', lineId: 1)]), contains(isA<Renegotiate>()));
+      coordinator.signalingConnected(['call']);
+      expect(
+        coordinator.handshakeReceived([(callId: 'call', lineId: 1)], connection: coordinator.connection),
+        contains(isA<Renegotiate>()),
+      );
     });
   });
 
@@ -189,7 +308,11 @@ void main() {
       expect(coordinator.hasKeptOffer('call'), isTrue);
       expect(commands, isEmpty, reason: 'the replay timer of the earlier failure is cancelled');
 
-      expect(coordinator.signalingConnected([(callId: 'call', lineId: 1)]), contains(isA<Renegotiate>()));
+      coordinator.signalingConnected(['call']);
+      expect(
+        coordinator.handshakeReceived([(callId: 'call', lineId: 1)], connection: coordinator.connection),
+        contains(isA<Renegotiate>()),
+      );
       expect(coordinator.replayableOffer('call'), same(offer));
     });
   });
@@ -230,7 +353,7 @@ void main() {
 
         coordinator.pullAccepted('a');
         async.elapse(const Duration(milliseconds: 1000));
-        coordinator.pullServerOfferAnswered('a');
+        coordinator.serverOfferAnswered('a');
         async.elapse(const Duration(milliseconds: 1000));
         expect(commands, isEmpty);
 
@@ -246,13 +369,13 @@ void main() {
 
         coordinator.pullAccepted('a');
         async.elapse(const Duration(seconds: 1));
-        coordinator.pullServerOfferReceived('a');
+        coordinator.serverOfferReceived('a');
         async.elapse(const Duration(seconds: 5));
         coordinator.pullResumeDeferred('a');
         async.elapse(const Duration(seconds: 5));
         expect(commands, isEmpty);
 
-        coordinator.pullServerOfferAnswered('a');
+        coordinator.serverOfferAnswered('a');
         async.elapse(const Duration(milliseconds: 2500));
         expect(commands.single, isA<ResumePulledCall>());
       });
@@ -266,7 +389,7 @@ void main() {
         coordinator.pullAccepted('a');
         async.elapse(const Duration(seconds: 3));
         final command = commands.single as ResumePulledCall;
-        coordinator.pullServerOfferReceived('a');
+        coordinator.serverOfferReceived('a');
 
         expect(coordinator.isPullResumeCurrent('a', command.attempt), isFalse);
       });
@@ -278,13 +401,13 @@ void main() {
         final coordinator = RenegotiationCoordinator(onCommand: commands.add);
 
         coordinator.pullAccepted('a');
-        coordinator.pullServerOfferReceived('a');
-        coordinator.pullServerOfferReceived('a');
-        coordinator.pullServerOfferAnswered('a');
+        coordinator.serverOfferReceived('a');
+        coordinator.serverOfferReceived('a');
+        coordinator.serverOfferAnswered('a');
         async.elapse(const Duration(seconds: 5));
         expect(commands, isEmpty);
 
-        coordinator.pullServerOfferLeft('a');
+        coordinator.serverOfferLeft('a');
         async.elapse(const Duration(milliseconds: 2500));
         expect(commands.single, isA<ResumePulledCall>());
       });
@@ -338,7 +461,7 @@ void main() {
 
         coordinator.pullResumeSent('a', (commands.last as ResumePulledCall).attempt);
         coordinator.pullResumeRejected('a', 488);
-        coordinator.pullServerOfferAnswered('a');
+        coordinator.serverOfferAnswered('a');
         async.elapse(const Duration(seconds: 10));
         expect(commands, hasLength(2));
       });
@@ -356,7 +479,7 @@ void main() {
           if (last is ResumePulledCall && coordinator.isPullResumeCurrent('a', last.attempt)) {
             coordinator.pullResumeSent('a', last.attempt);
           }
-          coordinator.pullServerOfferAnswered('a');
+          coordinator.serverOfferAnswered('a');
         }
 
         expect(commands, hasLength(2));
@@ -372,7 +495,7 @@ void main() {
         async.elapse(const Duration(seconds: 2));
         coordinator.pullResumeSent('a', (commands.last as ResumePulledCall).attempt);
         async.elapse(const Duration(seconds: 30));
-        coordinator.pullServerOfferAnswered('a');
+        coordinator.serverOfferAnswered('a');
         async.elapse(const Duration(seconds: 5));
 
         expect(commands, hasLength(1));
@@ -388,7 +511,7 @@ void main() {
         async.elapse(const Duration(seconds: 2));
         coordinator.pullResumeSent('a', (commands.last as ResumePulledCall).attempt);
         async.elapse(const Duration(seconds: 27));
-        coordinator.pullServerOfferAnswered('a');
+        coordinator.serverOfferAnswered('a');
         async.elapse(const Duration(seconds: 2));
 
         expect(commands, hasLength(2));
@@ -402,11 +525,11 @@ void main() {
         final coordinator = RenegotiationCoordinator(onCommand: commands.add);
 
         coordinator.pullAccepted('a');
-        coordinator.pullServerOfferAnswered('a', sendRecv: false);
+        coordinator.serverOfferAnswered('a', sendRecv: false);
         async.elapse(const Duration(seconds: 5));
         expect(commands, isEmpty);
 
-        coordinator.pullServerOfferAnswered('a');
+        coordinator.serverOfferAnswered('a');
         async.elapse(const Duration(seconds: 2));
         expect(commands.single, isA<ResumePulledCall>());
       });
@@ -453,7 +576,7 @@ void main() {
 
         coordinator.pullAccepted('a');
         coordinator.cancelPullResume('a');
-        coordinator.pullServerOfferAnswered('a');
+        coordinator.serverOfferAnswered('a');
         async.elapse(const Duration(seconds: 5));
 
         expect(commands, isEmpty);
