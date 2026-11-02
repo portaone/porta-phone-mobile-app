@@ -12,6 +12,7 @@ export 'offer_holds.dart';
 export 'outgoing_ringback_controller.dart';
 export 'peer_connection_factory.dart';
 export 'call_peer_connection_manager.dart';
+export 'call_update_history.dart';
 export 'call_update_ledger.dart';
 export 'peer_connection_policy_applier.dart';
 export 'pulled_call_resumer.dart';
