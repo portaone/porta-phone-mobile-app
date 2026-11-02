@@ -464,6 +464,23 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   /// Delivers [handshake] to the bloc as if the session had just (re)connected.
   void emitHandshake(StateHandshake handshake) => _add(SignalingHandshakeReceived(handshake: handshake));
 
+  /// While true, a protocol event is folded into the session at once but its
+  /// delivery to the bloc waits for [releaseProtocolEvents]: the real module
+  /// brings the session up to date ahead of the delivery, and a plan made in
+  /// between reads a session the bloc has not heard all of.
+  bool holdProtocolEvents = false;
+  final _heldProtocolEvents = <SignalingModuleEvent>[];
+
+  /// Delivers the protocol events held since [holdProtocolEvents] was set,
+  /// in order, and stops holding.
+  void releaseProtocolEvents() {
+    holdProtocolEvents = false;
+    final held = List.of(_heldProtocolEvents);
+    _heldProtocolEvents.clear();
+    if (_events.isClosed) return;
+    held.forEach(_events.add);
+  }
+
   void _add(SignalingModuleEvent event) {
     _session.onEvent(event);
     // A real module that nobody listens to any more keeps what the server
@@ -471,7 +488,11 @@ class FakeSignalingModule extends Fake implements SignalingModule {
     // closed the harness, and an event that arrives after that would be a
     // fault of the fake, not of the bloc.
     if (_events.isClosed) return;
-    _events.add(event);
+    if (holdProtocolEvents && event is SignalingProtocolEvent) {
+      _heldProtocolEvents.add(event);
+    } else {
+      _events.add(event);
+    }
   }
 
   /// The session as a real module keeps it: the handshake folded with every
