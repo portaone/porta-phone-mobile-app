@@ -102,7 +102,20 @@ final _cases = <_Case>[
       jsep: _offer,
     ),
     '_CallSignalingEventCallUpdating',
-    [0, 'c1', '200', '100', 'Ann', '300', 'r1', true, _jsep('offer', 'v=0')],
+    [
+      0,
+      'c1',
+      '200',
+      '100',
+      'Ann',
+      '300',
+      'r1',
+      true,
+      _jsep('offer', 'v=0'),
+      // The attempt the ledger of updates opened for it: the first update
+      // of this call.
+      isA<CallUpdateAttempt>().having((a) => a.callId, 'callId', 'c1').having((a) => a.ordinal, 'ordinal', 1),
+    ],
   ),
   _Case(UpdatingEvent(line: 0, callId: 'c1'), '_CallSignalingEventUpdating', [0, 'c1']),
   _Case(UpdatedEvent(line: 0, callId: 'c1'), '_CallSignalingEventUpdated', [0, 'c1']),

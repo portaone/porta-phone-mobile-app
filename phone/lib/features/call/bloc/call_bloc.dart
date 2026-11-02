@@ -147,6 +147,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// events escalate severity). Cleared when the indicator is hidden.
   final Map<String, int> _slowlinkHits = {};
 
+  /// Which updates of the far end have been taken in, and what became of each.
+  final _updateLedger = CallUpdateLedger();
+
   /// Signaling error code meaning the call no longer exists on the server.
   ///
   /// Named because two handlers read it and a bare 410 says nothing: it is the
@@ -313,13 +316,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         case SignalingHandshakeReceived(:final handshake):
           _handleHandshakeReceived(handshake);
         case SignalingProtocolEvent(:final event):
-          if (event.toCallEvent(activeCalls: state.activeCalls) case final callEvent?) {
-            // On arrival, not in the handler: the offer may queue behind other events.
-            if (callEvent is _CallSignalingEventCallUpdating) {
-              _renegotiationCoordinator.serverOfferReceived(callEvent.callId);
-            }
-            add(callEvent);
-          }
+          // TODO: this listener should only turn module events into bloc
+          // events. An update of the far end is numbered here because the
+          // handshake, taken in directly, sets the count of updates as it
+          // arrives, and a number given in a queued handler would come after
+          // it; rework once the handshake goes through the bloc's queue.
+          _handleSignalingEvent(event);
       }
     });
 
@@ -390,6 +392,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     _slowlinkDebounce.dispose();
     _slowlinkHits.clear();
+    _updateLedger.clear();
 
     await _signalingSubscription.cancel();
 
@@ -416,6 +419,55 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // a call whose signaling is lost is handled by the disconnect/hangup/ICE paths.
     // See docs/features/call_arch.md, section
     // "Signaling edges (onChange / onError)" > "Call finalization on signaling loss (onError)".
+  }
+
+  /// Starts the count of each call's updates from what the handshake's log
+  /// shows, before anything heard after it is counted on top.
+  void _countUpdatesIn(StateHandshake handshake) {
+    for (final line in [...handshake.lines, handshake.guestLine].whereType<Line>()) {
+      _updateLedger.setObservedUpdateCount(line.callId, CallUpdateHistory(line.callLogs).count);
+    }
+  }
+
+  /// Takes in an event the signaling session sends while it is up: turns it
+  /// into the bloc's own event and adds it, which queues it for its handler.
+  /// An update of the far end goes through [_takeInUpdate], numbered as the
+  /// next one of its call.
+  void _handleSignalingEvent(Event event) {
+    if (event is UpdatingCallEvent) {
+      _takeInUpdate(event, ordinal: _updateLedger.nextLiveUpdateOrdinal(event.callId));
+    } else if (event.toCallEvent(activeCalls: state.activeCalls) case final callEvent?) {
+      add(callEvent);
+    }
+  }
+
+  /// The one way an update of the far end gets to its handler, heard live or
+  /// found unanswered in a handshake's log: opens an attempt for it in the
+  /// ledger and queues the update with that attempt, which both stages of
+  /// the handler carry and the last one ends.
+  ///
+  /// Null when the update is being handled or was answered already, and then
+  /// nothing is queued. Both ways can bring the same update: a plan reads
+  /// the session, which is brought up to date ahead of the delivery of the
+  /// live event, and a handshake's log cannot say what the client has done
+  /// since the socket connected. Handling it a second time would answer one
+  /// offer twice.
+  ///
+  /// [fromLog] when a handshake's log shows the update unanswered: if its
+  /// attempt is still open - an answer waiting for its reply on the session
+  /// that is gone - the ledger keeps it, and the attempt hands it over again
+  /// should it end without an answer.
+  CallUpdateAttempt? _takeInUpdate(UpdatingCallEvent event, {required int ordinal, bool fromLog = false}) {
+    final attempt = _updateLedger.begin(event.callId, ordinal);
+    if (attempt == null) {
+      _logger.info('_takeInUpdate: update $ordinal of call ${event.callId} is handled already, skipping');
+      if (fromLog) _updateLedger.askAgain(event.callId, ordinal, event);
+      return null;
+    }
+    // On arrival, not in the handler: the offer may queue behind other events.
+    _renegotiationCoordinator.serverOfferReceived(event.callId);
+    add(event.toCallEvent(attempt: attempt));
+    return attempt;
   }
 
   @override
@@ -904,6 +956,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _offerHolds.callRemoved(event.callId);
     _slowlinkDebounce.cancel(event.callId);
     _slowlinkHits.remove(event.callId);
+    _updateLedger.forget(event.callId);
     await _ringback.stop(event.callId);
 
     try {
@@ -1628,8 +1681,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (accepted) {
         _logger.info('__onCallSignalingEventCallUpdating: update of call ${event.callId} passed on to be answered');
       } else {
-        _renegotiationCoordinator.serverOfferLeft(event.callId);
+        // Dropped or failed before the mutation that answers it was queued:
+        // the attempt ends here, the second stage will not see it.
         _logger.warning('__onCallSignalingEventCallUpdating: update of call ${event.callId} dropped');
+        _endUpdateAttempt(event.attempt, CallUpdateAnswer.notSent);
+        _renegotiationCoordinator.serverOfferLeft(event.callId);
       }
     }
   }
@@ -1671,6 +1727,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         callee: event.callee,
         callerDisplayName: displayName,
         jsep: event.jsep,
+        attempt: event.attempt,
       ),
     );
     return true;
@@ -3948,31 +4005,56 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _CallMutationEventSignalingCallUpdating event,
     Emitter<CallState> emit,
   ) async {
-    var answered = false;
+    var answer = CallUpdateAnswer.notSent;
     try {
-      answered = await _answerCallUpdate(event, emit);
+      answer = await _answerCallUpdate(event, emit);
     } finally {
-      if (answered) {
-        _renegotiationCoordinator.serverOfferAnswered(
-          event.callId,
-          sendRecv: PulledCallResumer.offersSendRecv(event.jsep?.sdp),
-        );
-        _logger.info('__onMutationSignalingCallUpdating: answer to the update of call ${event.callId} sent');
-      } else {
-        _renegotiationCoordinator.serverOfferLeft(event.callId);
-        _logger.warning('__onMutationSignalingCallUpdating: update of call ${event.callId} left unanswered');
+      // Also when the native call report below throws, which happens before
+      // any of the handler's own error handling. Before the offer is settled
+      // below: an update handed over again is counted first, so what waits
+      // behind it keeps waiting.
+      _endUpdateAttempt(event.attempt, answer);
+      switch (answer) {
+        case CallUpdateAnswer.acknowledged:
+          _renegotiationCoordinator.serverOfferAnswered(
+            event.callId,
+            sendRecv: PulledCallResumer.offersSendRecv(event.jsep?.sdp),
+          );
+          _logger.info('__onMutationSignalingCallUpdating: answer to the update of call ${event.callId} sent');
+        case CallUpdateAnswer.notSent || CallUpdateAnswer.refused:
+          _renegotiationCoordinator.serverOfferLeft(event.callId, refused: answer == CallUpdateAnswer.refused);
+          _logger.warning('__onMutationSignalingCallUpdating: update of call ${event.callId} left unanswered');
       }
     }
   }
 
-  /// Applies the far end's offer and sends the answer. True once the answer
-  /// has been sent.
-  Future<bool> _answerCallUpdate(_CallMutationEventSignalingCallUpdating event, Emitter<CallState> emit) async {
-    var answerSent = false;
+  /// The state once no exchange of the call is in flight any more: the
+  /// `updating` flag the first stage set does not hold the call's own offers
+  /// back.
+  CallState _updateSettled(String callId) =>
+      state.copyWithMappedActiveCall(callId, (call) => call.copyWith(updating: false));
+
+  /// Ends an attempt to handle an update. Left without an answer, the update
+  /// is free to be handed over again by the next handshake - or at once, when
+  /// a handshake already showed it unanswered while the attempt was open.
+  void _endUpdateAttempt(CallUpdateAttempt attempt, CallUpdateAnswer answer) {
+    final again = _updateLedger.finish(attempt, answer);
+    if (again == null) return;
+    _logger.warning('_endUpdateAttempt: handing $attempt over again, the new session still waits for it');
+    _takeInUpdate(again, ordinal: attempt.ordinal);
+  }
+
+  /// Applies the far end's offer and sends the answer. Says whether the
+  /// server acknowledged the answer.
+  Future<CallUpdateAnswer> _answerCallUpdate(
+    _CallMutationEventSignalingCallUpdating event,
+    Emitter<CallState> emit,
+  ) async {
+    var answer = CallUpdateAnswer.notSent;
     final handle = CallkeepHandle.number(event.caller);
     final displayName = event.callerDisplayName;
     final activeCall = state.retrieveActiveCall(event.callId);
-    if (activeCall == null) return false;
+    if (activeCall == null) return answer;
 
     await callkeep.reportUpdateCall(
       event.callId,
@@ -4053,8 +4135,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             await peerConnection.setLocalDescription(localDescription);
 
             final transaction = WebtritSignalingClient.generateTransactionId();
+            final sentOn = _renegotiationCoordinator.connection;
 
-            await _signalingModule.execute(
+            final acknowledgement = _signalingModule.execute(
               UpdateRequest(
                 transaction: transaction,
                 line: activeCall.line,
@@ -4062,29 +4145,67 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
                 jsep: localDescription.toMap(),
               ),
             );
-            answerSent = true;
+            if (acknowledgement == null) {
+              // The socket went down on the way here. Nothing was sent and
+              // nothing will come back for this transaction: the update stays
+              // unanswered, and the handshake of the next connection hands it
+              // over again.
+              _logger.warning('__onMutationSignalingCallUpdating: not connected, the answer was not sent');
+              emit(_updateSettled(activeCall.callId));
+              return;
+            }
+            // A completed request is not yet a taken answer: the queue
+            // completes one whose connection was replaced on the way without
+            // an error. Only the server's reply below says it got the answer.
+            // A failure is survived only when the session that carried the
+            // answer is gone: the update is still owed and the next session's
+            // handshake hands it over again. On a session that lives on
+            // nothing will, and the media server holds every offer of ours
+            // behind the update, so the call ends.
+            bool sessionLost() => !_signalingModule.isConnected || _renegotiationCoordinator.connection != sentOn;
+            try {
+              await acknowledgement;
+            } catch (e) {
+              if (!_renegotiationCoordinator.isTransientSignalingFailure(e) || !sessionLost()) rethrow;
+              _logger.warning('__onMutationSignalingCallUpdating: the answer was lost with the signaling ($e)');
+              emit(_updateSettled(activeCall.callId));
+              return;
+            }
 
             // Some events have double comfirmation like this,
             // so lets wait for the final result to make sure the update request is processed, and only then pass mutation queue to next event
-            final result = await _signalingModule.events
-                .firstWhere((event) {
-                  if (event is SignalingProtocolEvent && event.event is SessionEvent) {
-                    final sessionEvent = event.event as SessionEvent;
-                    if (sessionEvent.transaction == transaction) return true;
-                  }
-                  return false;
-                })
-                .then((event) => (event as SignalingProtocolEvent).event)
-                .timeout(const Duration(seconds: 10));
+            final Event result;
+            try {
+              result = await _signalingModule.events
+                  .firstWhere((event) {
+                    if (event is SignalingProtocolEvent && event.event is SessionEvent) {
+                      final sessionEvent = event.event as SessionEvent;
+                      if (sessionEvent.transaction == transaction) return true;
+                    }
+                    return false;
+                  })
+                  .then((event) => (event as SignalingProtocolEvent).event)
+                  .timeout(const Duration(seconds: 10));
+            } on TimeoutException {
+              // No reply because the session that carried the answer is gone:
+              // the call is not lost, the update is still owed.
+              if (!sessionLost()) rethrow;
+              _logger.warning('__onMutationSignalingCallUpdating: the signaling went down before the answer was taken');
+              emit(_updateSettled(activeCall.callId));
+              return;
+            }
 
             _logger.info('__onMutationSignalingCallUpdating: received response for update request: $result');
 
             if (result is UpdatedEvent) {
-              emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: false)));
+              answer = CallUpdateAnswer.acknowledged;
+              emit(_updateSettled(activeCall.callId));
             } else if (result is UpdatingEvent) {
+              answer = CallUpdateAnswer.acknowledged;
               emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: true)));
             } else if (result is CallErrorEvent) {
-              emit(state.copyWithMappedActiveCall(activeCall.callId, (call) => call.copyWith(updating: false)));
+              answer = CallUpdateAnswer.refused;
+              emit(_updateSettled(activeCall.callId));
               _logger.warning(
                 '__onCallSignalingEventCallError: received CallErrorEvent for update request: code=${result.code} reason="${result.reason}"',
               );
@@ -4107,13 +4228,16 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             }
           }
         });
+      } else {
+        // Nothing to answer: no exchange is left in flight either.
+        emit(_updateSettled(event.callId));
       }
     } catch (e, s) {
       callErrorReporter.handle(e, s, '__onMutationSignalingCallUpdating && jsep error:');
       _callPeerConnectionManager.completeError(event.callId, e);
       add(_ResetStateEvent.completeCall(event.callId));
     }
-    return answerSent;
+    return answer;
   }
 
   /// Performs a safe renegotiation by first checking if the active call and peer connection still exist before proceeding and no "updating" state is detected on the call.
@@ -4894,6 +5018,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // The connection this handshake belongs to: a reconnect while its callkeep
     // reads are in flight makes it stale for the renegotiation below.
     final connection = _renegotiationCoordinator.connection;
+    // Before anything below is awaited: an update heard while the callkeep
+    // reads are in flight is counted on top of what this handshake's log shows.
+    _countUpdatesIn(stateHandshake);
     try {
       await _applyHandshake(stateHandshake);
     } finally {
@@ -5030,6 +5157,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             _logger.info('_handleHandshakeReceived: offer for ${action.event.callId} no longer needed, skipping');
           }
 
+        case DeliverUpdateAction():
+          final attempt = _takeInUpdate(action.event, ordinal: action.ordinal, fromLog: true);
+          if (attempt != null) _logger.warning('_handleHandshakeReceived: delivering the unanswered $attempt');
+
         case EndLocalCallAction():
           unawaited(callkeep.endCall(action.callId));
 
@@ -5066,9 +5197,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   /// Renegotiates the calls that lived through a reconnect, once per
   /// connection, from its handshake (see
-  /// [RenegotiationCoordinator.signalingConnected]). A call with an offer of
-  /// the far end still unanswered has its renegotiation put off until that
-  /// is settled ([RenegotiationCoordinator.holdRenegotiation]).
+  /// [RenegotiationCoordinator.signalingConnected]). A call with a missed
+  /// update handed over just now has it counted, so its renegotiation waits
+  /// for the answer ([RenegotiationCoordinator.holdRenegotiation]).
   void _renegotiateAfterReconnect(int connection) {
     for (final command in _renegotiationCoordinator.handshakeReceived(
       state.connectedCalls.map((call) => (callId: call.callId, lineId: call.line)),
@@ -6580,6 +6711,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _renegotiationCoordinator.callRemoved(callId);
     _roomCodecs.callRemoved(callId);
     _offerHolds.callRemoved(callId);
+    _updateLedger.forget(callId);
     emit(state.copyWithPopActiveCall(callId));
   }
 

@@ -766,6 +766,139 @@ void main() {
     });
   });
 
+  group('update of the far end left unanswered', () {
+    const offer = {'type': 'offer', 'sdp': 'v=0\r\nm=audio 9 RTP/AVP 8 0\r\n'};
+    const answer = {'type': 'answer', 'sdp': 'v=0\r\nm=audio 9 RTP/AVP 8\r\n'};
+    const ownOffer = {'type': 'offer', 'sdp': 'v=0\r\nm=audio 9 RTP/AVP 8\r\na=ice-ufrag:new\r\n'};
+    final incoming = CallEventLog(timestamp: 1, callEvent: _makeIncomingEvent());
+    final accepted = CallEventLog(timestamp: 2, callEvent: _makeAcceptedEvent());
+    final updating = CallEventLog(
+      timestamp: 10,
+      callEvent: const UpdatingCallEvent(line: _kLine, callId: _kCallId, callee: 'callee', caller: '1234', jsep: offer),
+    );
+    CallRequestLog update(int timestamp, Map<String, dynamic> jsep) => CallRequestLog(
+      timestamp: timestamp,
+      callRequest: UpdateRequest(transaction: 't-$timestamp', line: _kLine, callId: _kCallId, jsep: jsep),
+    );
+
+    // The log is newest first.
+    test('a running call gets the update that came while the socket was down', () async {
+      final line = _makeLine(callLogs: [updating, accepted, incoming]);
+
+      final actions = processor.process(lines: [line], guestLine: null, activeCalls: [_tracked()]);
+
+      final delivered = actions.whereType<DeliverUpdateAction>().single;
+      expect(delivered.event.jsep, offer);
+      expect(delivered.ordinal, 1);
+      expect(actions.whereType<RestoreCallAction>(), isEmpty, reason: 'the call is already tracked');
+    });
+
+    test('an update the client answered is not delivered again', () async {
+      final line = _makeLine(callLogs: [update(11, answer), updating, accepted, incoming]);
+
+      final actions = processor.process(lines: [line], guestLine: null, activeCalls: [_tracked()]);
+
+      expect(actions.whereType<DeliverUpdateAction>(), isEmpty);
+    });
+
+    test('an offer the client sent itself does not count as the answer', () async {
+      // What the log holds after the outage without this action: the client's ICE-restart
+      // offer went out, the server held it back and said so, and the update is still open.
+      final line = _makeLine(
+        callLogs: [
+          const CallEventLog(
+            timestamp: 13,
+            callEvent: UpdatingEvent(line: _kLine, callId: _kCallId),
+          ),
+          update(12, ownOffer),
+          updating,
+          accepted,
+          incoming,
+        ],
+      );
+
+      final actions = processor.process(lines: [line], guestLine: null, activeCalls: [_tracked()]);
+
+      expect(actions.whereType<DeliverUpdateAction>().single.ordinal, 1);
+    });
+
+    test('of two updates only the newest is looked at', () async {
+      final second = CallEventLog(
+        timestamp: 20,
+        callEvent: const UpdatingCallEvent(
+          line: _kLine,
+          callId: _kCallId,
+          callee: 'callee',
+          caller: '1234',
+          jsep: offer,
+        ),
+      );
+
+      final answeredThenOpen = processor.process(
+        lines: [
+          _makeLine(callLogs: [second, update(11, answer), updating, accepted, incoming]),
+        ],
+        guestLine: null,
+        activeCalls: [_tracked()],
+      );
+      final bothAnswered = processor.process(
+        lines: [
+          _makeLine(callLogs: [update(21, answer), second, update(11, answer), updating, accepted, incoming]),
+        ],
+        guestLine: null,
+        activeCalls: [_tracked()],
+      );
+
+      expect(
+        answeredThenOpen.whereType<DeliverUpdateAction>().single.ordinal,
+        2,
+        reason: 'the second update of the call',
+      );
+      expect(bothAnswered.whereType<DeliverUpdateAction>(), isEmpty);
+    });
+
+    test('a call the BLoC does not run is restored, not handed an update', () async {
+      final line = _makeLine(callLogs: [updating, accepted, incoming]);
+
+      final actions = processor.process(lines: [line], guestLine: null, activeCalls: const []);
+
+      expect(actions.whereType<DeliverUpdateAction>(), isEmpty);
+      expect(actions.whereType<RestoreCallAction>(), hasLength(1));
+    });
+
+    test('a call the server already ended gets nothing', () async {
+      final line = _makeLine(
+        callLogs: [
+          const CallEventLog(
+            timestamp: 30,
+            callEvent: HangupEvent(line: _kLine, callId: _kCallId, code: 408, reason: 'Request Timeout'),
+          ),
+          updating,
+          accepted,
+          incoming,
+        ],
+      );
+
+      final actions = processor.process(lines: [line], guestLine: null, activeCalls: [_tracked()]);
+
+      expect(actions.whereType<DeliverUpdateAction>(), isEmpty);
+    });
+
+    test('a session being torn down gets no update', () async {
+      final line = _makeLine(callLogs: [updating, accepted, incoming]);
+
+      final actions = processor.process(
+        lines: [line],
+        guestLine: null,
+        activeCalls: [_tracked()],
+        lineConnections: {_kCallId: _makeConnection(state: CallkeepConnectionState.stateDisconnected)},
+      );
+
+      expect(actions.whereType<HangupSignalingAction>(), hasLength(1));
+      expect(actions.whereType<DeliverUpdateAction>(), isEmpty);
+    });
+  });
+
   group('conference block', () {
     test('a room the server reports is hung up first, ahead of the per-line actions', () async {
       // The client keeps no room, so one the server has is one it cannot rejoin.
