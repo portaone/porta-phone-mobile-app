@@ -10,6 +10,14 @@
 #import "Converters.h"
 #import "NSUUID+v5.h"
 #import "CallWaitingTonePlayer.h"
+#import <os/log.h>
+
+// The plugin's lines that reach the device log of a release build. NSLog's arguments are shown as
+// <private> there, so the UUIDs of the calls and the errors of CallKit could not be read; os_log
+// with the whole message public keeps them. The UUIDs are derived from the server's callId - no
+// number or name is written.
+#define WTPLog(fmt, ...) \
+  os_log(OS_LOG_DEFAULT, "%{public}s", [[NSString stringWithFormat:(fmt), ##__VA_ARGS__] UTF8String])
 #import "CallPresentations.h"
 
 static NSString *const OptionsKey = @"WebtritCallkeepPluginOptions";
@@ -443,7 +451,7 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
 
         [center addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
           if (error != nil) {
-            NSLog(@"[Callkeep][reportEndCall] Error adding notification: %@", error);
+            WTPLog(@"[Callkeep][reportEndCall] Error adding notification: %@", error);
           }
         }];
     }
@@ -1007,7 +1015,7 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
 
 - (void)queueIncomingCallUUID:(NSUUID *)uuid update:(CXCallUpdate *)update {
   if (![_queuedIncomingUuids containsObject:uuid]) {
-    NSLog(@"[Callkeep][queue] %@ waits behind a ringing call (%lu waiting)", uuid.UUIDString,
+    WTPLog(@"[Callkeep][queue] %@ waits behind a ringing call (%lu waiting)", uuid.UUIDString,
           (unsigned long)_queuedIncomingUuids.count + 1);
     [_queuedIncomingUuids addObject:uuid];
   }
@@ -1046,14 +1054,14 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
                                       // The shield ended in between and CallKit took the report for
                                       // a new call under the shield's UUID: it is taken straight
                                       // back out, and the queue lets the waiting call in instead.
-                                      NSLog(@"[Callkeep][queue] the call %@ was reported behind had ended - taking the entry back",
+                                      WTPLog(@"[Callkeep][queue] the call %@ was reported behind had ended - taking the entry back",
                                             shield.UUIDString);
                                       [self->_provider reportCallWithUUID:shield
                                                               endedAtDate:nil
                                                                    reason:CXCallEndedReasonAnsweredElsewhere];
                                     } else if (!([error.domain isEqualToString:CXErrorDomainIncomingCall] &&
                                                  error.code == CXErrorCodeIncomingCallErrorCallUUIDAlreadyExists)) {
-                                      NSLog(@"[Callkeep][queue] the push of %@ was reported with an unexpected error %@",
+                                      WTPLog(@"[Callkeep][queue] the push of %@ was reported with an unexpected error %@",
                                             uuid.UUIDString, error);
                                     }
                                     [self releaseQueuedIncomingIfNothingRings];
@@ -1079,7 +1087,7 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   NSUUID *uuid = _queuedIncomingUuids.firstObject;
   CXCallUpdate *update = _queuedIncomingUpdates[uuid];
   [self dequeueIncomingCallUUID:uuid];
-  NSLog(@"[Callkeep][queue] nothing rings - letting %@ in", uuid.UUIDString);
+  WTPLog(@"[Callkeep][queue] nothing rings - letting %@ in", uuid.UUIDString);
   [self reportQueuedIncomingCallUUID:uuid update:update keepWhenRefused:NO completion:nil];
 }
 
@@ -1103,7 +1111,7 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   // there - and the application goes on naming it by its own.
   CallPresentation *presentation = [_presentations presentationToReportForLogicalUUID:logicalUuid];
   NSUUID *uuid = presentation.callKitUUID;
-  NSLog(@"[Callkeep][queue] %@ enters CallKit as %@ (presentation %lu)", logicalUuid.UUIDString, uuid.UUIDString,
+  WTPLog(@"[Callkeep][queue] %@ enters CallKit as %@ (presentation %lu)", logicalUuid.UUIDString, uuid.UUIDString,
         (unsigned long)presentation.generation);
   _incomingUpdates[logicalUuid] = update;
   [_ownCallUuids addObject:uuid];
@@ -1119,21 +1127,21 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
                                     // late answer to it must not touch what came after.
                                     BOOL live = [self->_presentations isLive:presentation];
                                     if (!live) {
-                                      NSLog(@"[Callkeep][queue] a late answer to the report of %@ - not its call's presentation any more",
+                                      WTPLog(@"[Callkeep][queue] a late answer to the report of %@ - not its call's presentation any more",
                                             uuid.UUIDString);
                                     } else if (error == nil) {
                                       if ([self isLiveOwnCallUUID:uuid]) {
                                         [self setVideo:update.hasVideo forCallUUID:uuid];
                                       }
                                     } else if (keep) {
-                                      NSLog(@"[Callkeep][queue] CallKit refused the waiting call %@: %@ - it goes on waiting",
+                                      WTPLog(@"[Callkeep][queue] CallKit refused the waiting call %@: %@ - it goes on waiting",
                                             logicalUuid.UUIDString, error);
                                       // The UUID was refused; the call is shown under another one
                                       // the next time it is let in.
                                       [self->_presentations withdrawLivePresentationOfLogicalUUID:logicalUuid];
                                       [self forgetCall:uuid];
                                     } else {
-                                      NSLog(@"[Callkeep][queue] CallKit refused the waiting call %@: %@ - ending it",
+                                      WTPLog(@"[Callkeep][queue] CallKit refused the waiting call %@: %@ - ending it",
                                             logicalUuid.UUIDString, error);
                                       [self forgetCall:uuid];
                                       [self->_delegateFlutterApi performEndCall:logicalUuid.UUIDString
@@ -1175,7 +1183,7 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
       // Not a presentation a call lives under: nothing of ours to keep for later.
       continue;
     }
-    NSLog(@"[Callkeep][queue] taking the ringing %@ out of CallKit: %@ is answered first", logical.UUIDString,
+    WTPLog(@"[Callkeep][queue] taking the ringing %@ out of CallKit: %@ is answered first", logical.UUIDString,
           uuid.UUIDString);
     [_queuedIncomingUuids insertObject:logical atIndex:place++];
     _queuedIncomingUpdates[logical] = _incomingUpdates[logical] ?: [[CXCallUpdate alloc] init];
@@ -1372,7 +1380,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
                                       update:callUpdate
                                   completion:^(NSError *error) {
                                     if (error != nil) {
-                                      NSLog(@"[Callkeep][didReceiveIncomingPushWithPayloadForPushTypeVoIP:withCompletionHandler:][reportNewIncomingCallWithUUID] payload wrong format error = %@",
+                                      WTPLog(@"[Callkeep][didReceiveIncomingPushWithPayloadForPushTypeVoIP:withCompletionHandler:][reportNewIncomingCallWithUUID] payload wrong format error = %@",
                                             error);
                                     } else {
                                       [_provider reportCallWithUUID:uuid
@@ -1400,7 +1408,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
       hasVideo = @(NO);
   }
   // Log the value of hasVideo after initialization
-  NSLog(@"hasVideo after initialization: %@", hasVideo);
+  WTPLog(@"hasVideo after initialization: %@", hasVideo);
 
   NSString *callId = callIdObject;
 
@@ -1448,7 +1456,7 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
                                     if ([error.domain isEqualToString:CXErrorDomainIncomingCall]) {
                                       incomingCallError = [WTPIncomingCallError makeWithValue:CXErrorCodeIncomingCallErrorToPigeon((CXErrorCodeIncomingCallError) error.code)];
                                     } else {
-                                      NSLog(@"[Callkeep][didReceiveIncomingPushWithPayloadForPushTypeVoIP:withCompletionHandler:][reportNewIncomingCallWithUUID] error = %@", error);
+                                      WTPLog(@"[Callkeep][didReceiveIncomingPushWithPayloadForPushTypeVoIP:withCompletionHandler:][reportNewIncomingCallWithUUID] error = %@", error);
                                       incomingCallError = [WTPIncomingCallError makeWithValue:WTPIncomingCallErrorEnumInternal];
                                     }
                                   } else if ([self isLiveOwnCallUUID:pushPresentedUuid]) {
@@ -1490,12 +1498,12 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
                             withOptions:AVAudioSessionCategoryOptionAllowBluetooth
                                   error:&error];
     if (!success) {
-        NSLog(@"[Callkeep] Failed to set category: %@", error);
+        WTPLog(@"[Callkeep] Failed to set category: %@", error);
     }
 
     success = [session setMode:AVAudioSessionModeVoiceChat error:&error];
     if (!success) {
-        NSLog(@"[Callkeep] Failed to set mode: %@", error);
+        WTPLog(@"[Callkeep] Failed to set mode: %@", error);
     }
 }
 
