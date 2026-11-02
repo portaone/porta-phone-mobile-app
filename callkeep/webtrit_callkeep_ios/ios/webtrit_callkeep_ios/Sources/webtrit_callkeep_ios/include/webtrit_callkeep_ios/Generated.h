@@ -132,7 +132,8 @@ typedef NS_ENUM(NSUInteger, WTPEndedByEnum) {
     includesCallsInRecents:(BOOL )includesCallsInRecents
     driveIdleTimerDisabled:(BOOL )driveIdleTimerDisabled
     callWaitingToneOwnCallsOnly:(nullable NSNumber *)callWaitingToneOwnCallsOnly
-    queueIncomingWhileRinging:(nullable NSNumber *)queueIncomingWhileRinging;
+    queueIncomingWhileRinging:(nullable NSNumber *)queueIncomingWhileRinging
+    holdActiveBeforeThirdIncoming:(nullable NSNumber *)holdActiveBeforeThirdIncoming;
 @property(nonatomic, copy) NSString * localizedName;
 @property(nonatomic, copy, nullable) NSString * ringtoneSound;
 @property(nonatomic, copy, nullable) NSString * ringbackSound;
@@ -147,6 +148,7 @@ typedef NS_ENUM(NSUInteger, WTPEndedByEnum) {
 @property(nonatomic, assign) BOOL  driveIdleTimerDisabled;
 @property(nonatomic, strong, nullable) NSNumber * callWaitingToneOwnCallsOnly;
 @property(nonatomic, strong, nullable) NSNumber * queueIncomingWhileRinging;
+@property(nonatomic, strong, nullable) NSNumber * holdActiveBeforeThirdIncoming;
 @end
 
 @interface WTPAndroidOptions : NSObject

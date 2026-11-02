@@ -155,6 +155,7 @@ class PIOSOptions {
     required this.driveIdleTimerDisabled,
     this.callWaitingToneOwnCallsOnly,
     this.queueIncomingWhileRinging,
+    this.holdActiveBeforeThirdIncoming,
   });
 
   String localizedName;
@@ -185,6 +186,8 @@ class PIOSOptions {
 
   bool? queueIncomingWhileRinging;
 
+  bool? holdActiveBeforeThirdIncoming;
+
   List<Object?> _toList() {
     return <Object?>[
       localizedName,
@@ -201,6 +204,7 @@ class PIOSOptions {
       driveIdleTimerDisabled,
       callWaitingToneOwnCallsOnly,
       queueIncomingWhileRinging,
+      holdActiveBeforeThirdIncoming,
     ];
   }
 
@@ -225,6 +229,7 @@ class PIOSOptions {
       driveIdleTimerDisabled: result[11]! as bool,
       callWaitingToneOwnCallsOnly: result[12] as bool?,
       queueIncomingWhileRinging: result[13] as bool?,
+      holdActiveBeforeThirdIncoming: result[14] as bool?,
     );
   }
 
@@ -250,7 +255,8 @@ class PIOSOptions {
         _deepEquals(includesCallsInRecents, other.includesCallsInRecents) &&
         _deepEquals(driveIdleTimerDisabled, other.driveIdleTimerDisabled) &&
         _deepEquals(callWaitingToneOwnCallsOnly, other.callWaitingToneOwnCallsOnly) &&
-        _deepEquals(queueIncomingWhileRinging, other.queueIncomingWhileRinging);
+        _deepEquals(queueIncomingWhileRinging, other.queueIncomingWhileRinging) &&
+        _deepEquals(holdActiveBeforeThirdIncoming, other.holdActiveBeforeThirdIncoming);
   }
 
   @override
@@ -259,7 +265,7 @@ class PIOSOptions {
 
   @override
   String toString() {
-    return 'PIOSOptions(localizedName: $localizedName, ringtoneSound: $ringtoneSound, ringbackSound: $ringbackSound, iconTemplateImageAssetName: $iconTemplateImageAssetName, maximumCallGroups: $maximumCallGroups, maximumCallsPerCallGroup: $maximumCallsPerCallGroup, supportsHandleTypeGeneric: $supportsHandleTypeGeneric, supportsHandleTypePhoneNumber: $supportsHandleTypePhoneNumber, supportsHandleTypeEmailAddress: $supportsHandleTypeEmailAddress, supportsVideo: $supportsVideo, includesCallsInRecents: $includesCallsInRecents, driveIdleTimerDisabled: $driveIdleTimerDisabled, callWaitingToneOwnCallsOnly: $callWaitingToneOwnCallsOnly, queueIncomingWhileRinging: $queueIncomingWhileRinging)';
+    return 'PIOSOptions(localizedName: $localizedName, ringtoneSound: $ringtoneSound, ringbackSound: $ringbackSound, iconTemplateImageAssetName: $iconTemplateImageAssetName, maximumCallGroups: $maximumCallGroups, maximumCallsPerCallGroup: $maximumCallsPerCallGroup, supportsHandleTypeGeneric: $supportsHandleTypeGeneric, supportsHandleTypePhoneNumber: $supportsHandleTypePhoneNumber, supportsHandleTypeEmailAddress: $supportsHandleTypeEmailAddress, supportsVideo: $supportsVideo, includesCallsInRecents: $includesCallsInRecents, driveIdleTimerDisabled: $driveIdleTimerDisabled, callWaitingToneOwnCallsOnly: $callWaitingToneOwnCallsOnly, queueIncomingWhileRinging: $queueIncomingWhileRinging, holdActiveBeforeThirdIncoming: $holdActiveBeforeThirdIncoming)';
   }
 }
 

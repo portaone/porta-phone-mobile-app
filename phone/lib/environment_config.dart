@@ -192,6 +192,15 @@ class EnvironmentConfig {
     const bool.fromEnvironment(IOS_QUEUE_INCOMING_WHILE_RINGING__NAME, defaultValue: false),
   );
 
+  // iOS: with one call held and another active, an incoming call is reported to CallKit only
+  // after the active one is put on hold, so the system screen offers `Hold & Accept` and no
+  // button that ends a call (the callkeep plugin's hold before a third call). Off by default.
+  static const IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING__NAME = 'WEBTRIT_APP_IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING';
+  static bool get IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING => _env.boolean(
+    IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING__NAME,
+    const bool.fromEnvironment(IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING__NAME, defaultValue: false),
+  );
+
   // SMS-based incoming call trigger mechanism (fallback).
   // If enabled, the app listens for specially formatted incoming SMS messages to trigger incoming calls.
   static const CALL_TRIGGER_MECHANISM_SMS__NAME = 'WEBTRIT_CALL_TRIGGER_MECHANISM_SMS';
