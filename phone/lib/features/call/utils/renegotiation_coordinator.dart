@@ -110,23 +110,93 @@ class RenegotiationCoordinator {
   final Map<String, int> _updatingDeferrals = {};
   final Map<String, _PullResume> _pullResumes = {};
 
+  /// Offers of the server per call that have arrived and are not answered
+  /// yet. While a call has one, the media server holds back every offer of
+  /// the client's own behind it, so none is sent.
+  final Map<String, int> _serverOffers = {};
+
+  /// Renegotiations of calls put off behind an unanswered server offer, with
+  /// the line each was asked for. Each is made once its call has no server
+  /// offer left.
+  final Map<String, int?> _heldRenegotiations = {};
+
+  /// Calls that lived through a reconnect and are owed a renegotiation, made
+  /// from the handshake of the new connection ([handshakeReceived]).
+  final Set<String> _owedAfterReconnect = {};
+
+  int _connection = 0;
+
+  /// Which connection of the signaling session is the current one, counted
+  /// by [signalingConnected]. A handshake reads it as it arrives, so one
+  /// taken in while the session reconnected again is told apart.
+  int get connection => _connection;
+
   void networkAvailable(String callId) {
     _iceRestarts.schedule(callId, () => _onCommand(RestartIce(callId)));
   }
 
-  List<RenegotiationCommand> signalingConnected(Iterable<({String callId, int? lineId})> calls) {
-    final commands = <RenegotiationCommand>[];
-    for (final call in calls) {
-      _replayTimers.remove(call.callId)?.cancel();
+  /// The signaling session connected again. The calls that lived through it
+  /// are owed a renegotiation: an ICE restart made while the socket was down
+  /// was dropped. It is not made here but from the handshake of this
+  /// connection ([handshakeReceived]): what the far end asked for while the
+  /// socket was down is known only there, and an offer of the far end that
+  /// nobody answered holds back every offer of the client.
+  void signalingConnected(Iterable<String> callIds) {
+    _connection++;
+    for (final callId in callIds) {
+      _replayTimers.remove(callId)?.cancel();
       // The session that would have delivered the answer is gone, so the
       // installed offer is now only recoverable by sending it again.
-      _awaitingAnswer.remove(call.callId);
+      _awaitingAnswer.remove(callId);
       // Failures on the new session are counted from the start again, so it
       // gets the quick retries before any backoff.
-      _replayAttempts.remove(call.callId);
-      commands.add(Renegotiate(call.callId, call.lineId));
+      _replayAttempts.remove(callId);
+      _owedAfterReconnect.add(callId);
     }
+  }
+
+  /// The handshake of [connection] was taken in: the far end's offers it
+  /// carried unanswered are counted ([serverOfferReceived]) by now. Gives the
+  /// renegotiations the reconnect owes [calls], once per connection; a call
+  /// the reconnect owed nothing gets none, and one that is no longer among
+  /// [calls] loses what it was owed. A handshake of an earlier connection
+  /// gives nothing and leaves what is owed to the handshake of the current
+  /// one, which has not counted its missed offers yet.
+  List<RenegotiationCommand> handshakeReceived(
+    Iterable<({String callId, int? lineId})> calls, {
+    required int connection,
+  }) {
+    if (connection != _connection) return const [];
+    final commands = [
+      for (final call in calls)
+        if (_owedAfterReconnect.contains(call.callId)) Renegotiate(call.callId, call.lineId),
+    ];
+    _owedAfterReconnect.clear();
     return commands;
+  }
+
+  /// Whether the call has an offer of the server it has not answered yet.
+  bool hasServerOffer(String callId) => (_serverOffers[callId] ?? 0) > 0;
+
+  /// Puts a renegotiation of the call off while it has an unanswered offer of
+  /// the server. True when it was put off: it is made once the call has no
+  /// server offer left, answered or not. False when it can go now.
+  bool holdRenegotiation(String callId, int? lineId) {
+    if (!hasServerOffer(callId)) return false;
+    _heldRenegotiations[callId] = lineId;
+    return true;
+  }
+
+  void _serverOfferEnded(String callId, {bool renegotiate = true}) {
+    final left = (_serverOffers[callId] ?? 0) - 1;
+    if (left > 0) {
+      _serverOffers[callId] = left;
+      return;
+    }
+    _serverOffers.remove(callId);
+    if (!_heldRenegotiations.containsKey(callId)) return;
+    final lineId = _heldRenegotiations.remove(callId);
+    if (renegotiate) _onCommand(Renegotiate(callId, lineId));
   }
 
   Future<RenegotiationCommand> retryAfterUpdating(String callId, int? lineId) async {
@@ -236,13 +306,16 @@ class RenegotiationCoordinator {
     _armPullResume(callId, pullResumeSettle);
   }
 
-  /// Holds the resume back from the moment a server offer arrives until it is
-  /// answered or left: the offer can wait in the event queue for a while, and
-  /// a resume sent meanwhile would collide with it.
-  void pullServerOfferReceived(String callId) {
+  /// An offer of the server for the call arrived. From now until it is
+  /// answered or left, no offer of the client's own goes out for the call: a
+  /// renegotiation is put off ([holdRenegotiation]) and a pulled call's resume
+  /// is held back. Counted on arrival, not in the handler: the offer can wait
+  /// in the event queue for a while, and an offer sent meanwhile would
+  /// collide with it.
+  void serverOfferReceived(String callId) {
+    _serverOffers[callId] = (_serverOffers[callId] ?? 0) + 1;
     final resume = _pullResumes[callId];
     if (resume == null || resume.closed) return;
-    resume.serverOffers++;
     resume.settle?.cancel();
     resume.settle = null;
     resume.attempt = null;
@@ -254,10 +327,13 @@ class RenegotiationCoordinator {
   /// An offer that holds the call ([sendRecv] false), the far end's hold or a
   /// transfer, puts a pending resume off instead: a sendrecv offer of ours
   /// would only run into it. Its later sendrecv offer arms the resume again.
-  void pullServerOfferAnswered(String callId, {bool sendRecv = true}) {
+  ///
+  /// A renegotiation put off behind it is made now, once no other server
+  /// offer of the call is open.
+  void serverOfferAnswered(String callId, {bool sendRecv = true}) {
+    _serverOfferEnded(callId);
     final resume = _pullResumes[callId];
     if (resume == null || resume.closed) return;
-    if (resume.serverOffers > 0) resume.serverOffers--;
     if (!sendRecv) {
       resume.settle?.cancel();
       resume.settle = null;
@@ -269,11 +345,18 @@ class RenegotiationCoordinator {
     _armPullResume(callId, pullResumeSettle);
   }
 
-  /// A server offer that was not answered no longer holds the resume back.
-  void pullServerOfferLeft(String callId) {
+  /// A server offer that was not answered no longer holds the client's own
+  /// offers back: a renegotiation put off behind it is made, and a pulled
+  /// call's resume is armed again.
+  ///
+  /// [refused] when the server turned the answer down: the bloc then retries
+  /// the call's negotiation after a random delay of its own, so a
+  /// renegotiation put off here is dropped rather than made at once into the
+  /// same collision.
+  void serverOfferLeft(String callId, {bool refused = false}) {
+    _serverOfferEnded(callId, renegotiate: !refused);
     final resume = _pullResumes[callId];
     if (resume == null || resume.closed) return;
-    if (resume.serverOffers > 0) resume.serverOffers--;
     if (resume.window == null || resume.sent >= maxPullResumes) return;
     _armPullResume(callId, pullResumeSettle);
   }
@@ -354,7 +437,7 @@ class RenegotiationCoordinator {
     resume.settle?.cancel();
     resume.settle = null;
     // Answering the server offer that holds it back arms it again.
-    if (resume.serverOffers > 0) {
+    if (hasServerOffer(callId)) {
       resume.attempt = null;
       return;
     }
@@ -381,6 +464,9 @@ class RenegotiationCoordinator {
     _updatingDeferrals.remove(callId);
     callEnding(callId);
     _pullResumes.remove(callId);
+    _serverOffers.remove(callId);
+    _heldRenegotiations.remove(callId);
+    _owedAfterReconnect.remove(callId);
     offerCompleted(callId);
   }
 
@@ -398,6 +484,9 @@ class RenegotiationCoordinator {
       callEnding(callId);
     }
     _pullResumes.clear();
+    _serverOffers.clear();
+    _heldRenegotiations.clear();
+    _owedAfterReconnect.clear();
   }
 }
 
@@ -408,8 +497,6 @@ class _PullResume {
   int sent = 0;
   int deferrals = 0;
 
-  /// Server offers that have arrived and are not answered yet.
-  int serverOffers = 0;
   bool closed = false;
   final Completer<void> ending = Completer<void>();
 }
