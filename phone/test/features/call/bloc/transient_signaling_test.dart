@@ -136,9 +136,11 @@ void main() {
   }
 
   group("the answer to the far end's update", () {
-    // Kept as it was: a lost answer still ends the call. The media server waits
-    // for that answer with no timer of its own and holds back any offer of this
-    // side until it comes, so a call kept up would hang without audio.
+    // Kept as it was while the session lives on: a lost answer still ends the
+    // call. The media server waits for that answer with no timer of its own and
+    // holds back any offer of this side until it comes, so a call kept up would
+    // hang without audio. A session that is lost instead leaves the update to
+    // the handshake of the next one (update_from_handshake_test.dart).
     for (final failure in _transient) {
       test('lost with $failure still ends the call', () async {
         h.seedEstablishedCall('call');
