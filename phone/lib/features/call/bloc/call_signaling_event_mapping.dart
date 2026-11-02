@@ -65,18 +65,11 @@ extension _SignalingEventMapping on Event {
       // A change of media in a call that is up: the far end's offer and the
       // server's replies to ours.
       case UpdatingCallEvent():
-        _logger.info('toCallEvent: UpdatingCallEvent');
-        return _CallSignalingEvent.callUpdating(
-          line: event.line,
-          callId: event.callId,
-          callee: event.callee,
-          caller: event.caller,
-          callerDisplayName: event.callerDisplayName,
-          referredBy: event.referredBy,
-          replaceCallId: event.replaceCallId,
-          isFocus: event.isFocus,
-          jsep: JsepValue.fromOptional(event.jsep),
-        );
+        // An update of the far end is taken in by [CallBloc._takeInUpdate],
+        // which gives it the attempt its handler reports on; it is mapped by
+        // [_UpdatingCallEventMapping] below and has no way through here.
+        _logger.warning('toCallEvent: UpdatingCallEvent callId=${event.callId} - not taken in, unhandled');
+        return null;
       case UpdatingEvent():
         _logger.info('toCallEvent: UpdatingEvent');
         return _CallSignalingEvent.updating(line: event.line, callId: event.callId);
@@ -230,8 +223,8 @@ extension _SignalingEventMapping on Event {
   }
 }
 
-// The two events below need something the event itself does not carry, so
-// each takes it as a parameter.
+// The events below need something the event itself does not carry, so each
+// takes it as a parameter.
 
 extension _IncomingCallEventMapping on IncomingCallEvent {
   /// [remoteVideo] is the caller's camera as a log last reported it, which
@@ -249,6 +242,26 @@ extension _IncomingCallEventMapping on IncomingCallEvent {
       jsep: JsepValue.fromOptional(jsep),
       remoteVideo: remoteVideo,
       offeredAt: offeredAt,
+    );
+  }
+}
+
+extension _UpdatingCallEventMapping on UpdatingCallEvent {
+  /// [attempt] is the attempt to handle this update that the ledger of
+  /// updates has opened for it.
+  CallEvent toCallEvent({required CallUpdateAttempt attempt}) {
+    _logger.info('toCallEvent: UpdatingCallEvent');
+    return _CallSignalingEvent.callUpdating(
+      line: line,
+      callId: callId,
+      callee: callee,
+      caller: caller,
+      callerDisplayName: callerDisplayName,
+      referredBy: referredBy,
+      replaceCallId: replaceCallId,
+      isFocus: isFocus,
+      jsep: JsepValue.fromOptional(jsep),
+      attempt: attempt,
     );
   }
 }
