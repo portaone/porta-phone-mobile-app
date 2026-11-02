@@ -160,6 +160,7 @@ extension CallkeepIOSOptionsConverter on CallkeepIOSOptions {
       driveIdleTimerDisabled: driveIdleTimerDisabled,
       callWaitingToneOwnCallsOnly: callWaitingToneOwnCallsOnly,
       queueIncomingWhileRinging: queueIncomingWhileRinging,
+      holdActiveBeforeThirdIncoming: holdActiveBeforeThirdIncoming,
     );
   }
 }
