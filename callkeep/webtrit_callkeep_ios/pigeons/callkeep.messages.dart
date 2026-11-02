@@ -23,6 +23,7 @@ class PIOSOptions {
   late bool driveIdleTimerDisabled;
   late bool? callWaitingToneOwnCallsOnly;
   late bool? queueIncomingWhileRinging;
+  late bool? holdActiveBeforeThirdIncoming;
 }
 
 class PAndroidOptions {
