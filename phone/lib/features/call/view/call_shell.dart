@@ -9,6 +9,7 @@ import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/features/orientations/orientations.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/utils/utils.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 import 'package:webtrit_phone/app/constants.dart';
 
 import '../call.dart';
@@ -127,6 +128,14 @@ class _CallShellState extends State<CallShell> {
 
   void _updateOverlayContent(BuildContext context, CallState state, StackRouter router) {
     final hasActiveCalls = state.activeCalls.isNotEmpty;
+
+    // A floating thumbnail would cover a third of a watch face, and so would
+    // the camera preview: the hub shows a call to go back to instead, and the
+    // camera is switched under the call's More.
+    if (context.formFactor == FormFactor.watch) {
+      _hideOverlay();
+      return;
+    }
 
     if (!hasActiveCalls || state.display == CallDisplay.none || state.display == CallDisplay.noneScreen) {
       _hideOverlay();
