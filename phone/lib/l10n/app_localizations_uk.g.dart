@@ -1409,6 +1409,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get login_TextFieldLabelText_coreUrlAssign => 'Введіть URL вашого Cloud Backend';
 
   @override
+  String get login_TextFieldLabelText_coreUrlAssignShort => 'URL';
+
+  @override
   String get login_TextFieldLabelText_otpSigninCode => 'Введіть код підтвердження';
 
   @override

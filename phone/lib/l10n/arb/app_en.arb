@@ -1382,6 +1382,10 @@
   "@login_Text_coreUrlAssignPreDescription": {},
   "login_TextFieldLabelText_coreUrlAssign": "Enter your Cloud Backend URL",
   "@login_TextFieldLabelText_coreUrlAssign": {},
+  "login_TextFieldLabelText_coreUrlAssignShort": "URL",
+  "@login_TextFieldLabelText_coreUrlAssignShort": {
+    "description": "The label of the core URL field where only a short word fits (a watch face); the full prompt is shown above the field there."
+  },
   "login_TextFieldLabelText_otpSigninCode": "Enter the verification code",
   "@login_TextFieldLabelText_otpSigninCode": {},
   "login_TextFieldLabelText_otpSigninUserRef": "Enter your phone number or email",

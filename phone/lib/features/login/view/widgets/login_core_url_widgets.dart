@@ -42,7 +42,7 @@ class LoginCoreUrlProceedButton extends StatelessWidget {
 
   final LoginCoreUrlAssignParams params;
 
-  /// The style to draw the button with.
+  /// The theme's style, with whatever the arrangement lays over it.
   final ButtonStyle? style;
 
   @override
