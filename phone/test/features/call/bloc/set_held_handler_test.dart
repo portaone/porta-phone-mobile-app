@@ -97,4 +97,54 @@ void main() {
     expect(h.bloc.state.activeCalls.single.held, isFalse);
     expect(h.callkeep.ended, isEmpty);
   });
+
+  group('a hold or unhold the gateway drops (WT-2093)', () {
+    // The gateway drops a hold or unhold that comes during the re-INVITE of
+    // the call's previous one: the server acknowledges it, the gateway never
+    // answers with `holding` or `resuming`, and the call stays as it was.
+    Future<void> waitFor(bool Function() done) async {
+      for (var i = 0; i < 100 && !done(); i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+      await pumpEventQueue();
+    }
+
+    test('an unhold the gateway dropped is sent again until it answers', () async {
+      h.seedEstablishedCall('a', held: true);
+      h.signaling.dropHolds = 1;
+
+      await h.bloc.performSetHeld('a', false);
+      await waitFor(() => h.signaling.requests.length == 2);
+
+      expect(h.signaling.requests, [isA<UnholdRequest>(), isA<UnholdRequest>()]);
+      expect(
+        (h.signaling.requests.last as UnholdRequest).transaction,
+        isNot((h.signaling.requests.first as UnholdRequest).transaction),
+        reason: 'a new transaction, not a repeat of the acknowledged one',
+      );
+      expect(h.bloc.state.activeCalls.single.held, isFalse);
+    });
+
+    test('an answered hold is sent once', () async {
+      h.seedEstablishedCall('a');
+
+      await h.bloc.performSetHeld('a', true);
+      await pumpEventQueue();
+
+      expect(h.signaling.requests, [isA<HoldRequest>()]);
+      expect(h.bloc.state.activeCalls.single.held, isTrue);
+    });
+
+    test('a hold never answered is sent three times in all and the call is still held', () async {
+      h.seedEstablishedCall('a');
+      h.signaling.dropHolds = 3;
+
+      await h.bloc.performSetHeld('a', true);
+      await waitFor(() => h.bloc.state.activeCalls.single.held);
+
+      expect(h.signaling.requests, [isA<HoldRequest>(), isA<HoldRequest>(), isA<HoldRequest>()]);
+      expect(h.bloc.state.activeCalls.single.held, isTrue, reason: 'as before, the server took the request');
+      expect(h.callkeep.ended, isEmpty);
+    });
+  });
 }
