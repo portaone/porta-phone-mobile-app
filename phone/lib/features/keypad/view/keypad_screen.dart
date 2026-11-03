@@ -21,19 +21,25 @@ class KeypadScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeData = Theme.of(context);
     final effectiveStyle = style ?? themeData.extension<KeypadScreenStyles>()?.primary;
+    // A watch shows the name and the account on the hub it came from; the
+    // face is the keys'.
+    final watch = context.formFactor == FormFactor.watch;
     return ThemedScaffold(
       background: effectiveStyle?.background,
       contentThemeOverride: effectiveStyle?.contentThemeOverride,
       applyToAppBar: effectiveStyle?.applyToAppBar ?? true,
       appBarTheme: effectiveStyle?.appBarTheme,
-      extendBodyBehindAppBar: true,
-      appBar: MainAppBar(
-        title: title,
-        context: context,
-        flexibleSpace: BlurredSurface.fromStyle(effectiveStyle?.appBarBlurredSurface),
-      ),
+      extendBodyBehindAppBar: !watch,
+      appBar: watch
+          ? null
+          : MainAppBar(
+              title: title,
+              context: context,
+              flexibleSpace: BlurredSurface.fromStyle(effectiveStyle?.appBarBlurredSurface),
+            ),
+      // The edge button sits on the bezel itself: no inset under it on a watch.
       body: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+        padding: EdgeInsets.only(bottom: watch ? 0 : MediaQuery.of(context).padding.bottom),
         child: KeypadView(videoEnabled: videoEnabled, transferEnabled: transferEnabled, style: effectiveStyle),
       ),
     );

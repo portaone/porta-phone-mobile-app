@@ -28,9 +28,10 @@ class MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {}
 class MockCallRoutingCubit extends MockCubit<CallRoutingState?> implements CallRoutingCubit {}
 
 class KeypadHarness {
-  KeypadHarness() {
+  /// [contact] is what any typed number resolves to; none by default.
+  KeypadHarness({Contact? contact}) {
     final contactResolver = MockContactResolver();
-    when(() => contactResolver.resolve(any())).thenAnswer((_) async => null);
+    when(() => contactResolver.resolve(any())).thenAnswer((_) async => contact);
     keypadCubit = KeypadCubit(contactResolver);
     when(() => callBloc.state).thenReturn(const CallState());
     when(() => routingCubit.state).thenReturn(null);
@@ -39,6 +40,7 @@ class KeypadHarness {
   late final KeypadCubit keypadCubit;
   final MockCallBloc callBloc = MockCallBloc();
   final MockCallRoutingCubit routingCubit = MockCallRoutingCubit();
+  final MockCallController callController = MockCallController();
 
   /// What the view asked the clipboard, in order, by platform method name.
   final List<String> clipboardCalls = [];
@@ -84,7 +86,7 @@ class KeypadHarness {
         appBar: appBar,
         bottomNavigationBar: bottomNavigationBar,
         body: CallControllerScope(
-          controller: MockCallController(),
+          controller: callController,
           child: MultiBlocProvider(
             providers: [
               BlocProvider<KeypadCubit>.value(value: keypadCubit),
