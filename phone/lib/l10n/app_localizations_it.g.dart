@@ -2817,6 +2817,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Può essere utilizzato per regolare la qualità audio per esigenze o ambienti specifici. Come la registrazione in studio o un microfono esterno. \n\nBypass elaborazione vocale: indica al sistema di non applicare l\'elaborazione vocale hardware (richiede il riavvio dell\'app).';
 
   @override
+  String get settings_audioProcessing_Section_VNR_title => 'Riduzione del rumore della voce (RNNoise)';
+
+  @override
   String get settings_audioProcessing_Section_VP_title => 'Bypassare l\'elaborazione vocale';
 
   @override

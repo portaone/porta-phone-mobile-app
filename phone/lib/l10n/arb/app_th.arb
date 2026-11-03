@@ -2467,6 +2467,8 @@
   "@settings_audioProcessing_Section_title": {},
   "settings_audioProcessing_Section_tooltip": "สามารถใช้เพื่อปรับคุณภาพเสียงสำหรับความต้องการหรือสภาพแวดล้อมเฉพาะ เช่น การบันทึกในสตูดิโอ หรือไมโครโฟนภายนอก \n\nข้ามการประมวลผลเสียง - สั่งให้ระบบไม่ใช้การประมวลผลเสียงด้วยฮาร์ดแวร์ (ต้องรีสตาร์ทแอป)",
   "@settings_audioProcessing_Section_tooltip": {},
+  "settings_audioProcessing_Section_VNR_title": "ลดเสียงรบกวนรอบเสียงพูด (RNNoise)",
+  "@settings_audioProcessing_Section_VNR_title": {},
   "settings_audioProcessing_Section_VP_title": "ข้ามการประมวลผลเสียง",
   "@settings_audioProcessing_Section_VP_title": {},
   "settings_call_codecs_preferred_audio_default": "อัตโนมัติ",

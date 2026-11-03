@@ -2771,6 +2771,9 @@ class AppLocalizationsTh extends AppLocalizations {
       'สามารถใช้เพื่อปรับคุณภาพเสียงสำหรับความต้องการหรือสภาพแวดล้อมเฉพาะ เช่น การบันทึกในสตูดิโอ หรือไมโครโฟนภายนอก \n\nข้ามการประมวลผลเสียง - สั่งให้ระบบไม่ใช้การประมวลผลเสียงด้วยฮาร์ดแวร์ (ต้องรีสตาร์ทแอป)';
 
   @override
+  String get settings_audioProcessing_Section_VNR_title => 'ลดเสียงรบกวนรอบเสียงพูด (RNNoise)';
+
+  @override
   String get settings_audioProcessing_Section_VP_title => 'ข้ามการประมวลผลเสียง';
 
   @override

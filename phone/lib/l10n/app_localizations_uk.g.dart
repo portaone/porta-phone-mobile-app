@@ -2841,6 +2841,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Можна використовувати для налаштування якості аудіо для певних потреб або умов. Як-от студійний запис або зовнішній мікрофон. \n\nОбійти обробку голосу — повідомляє системі не застосовувати апаратну обробку голосу (потрібно перезапустити застосунок).';
 
   @override
+  String get settings_audioProcessing_Section_VNR_title => 'Шумозаглушення голосу (RNNoise)';
+
+  @override
   String get settings_audioProcessing_Section_VP_title => 'Обхід обробки голосу';
 
   @override

@@ -1208,6 +1208,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         settings_audioProcessing_Section_title,
       'settings_audioProcessing_Section_tooltip' =>
         settings_audioProcessing_Section_tooltip,
+      'settings_audioProcessing_Section_VNR_title' =>
+        settings_audioProcessing_Section_VNR_title,
       'settings_audioProcessing_Section_VP_title' =>
         settings_audioProcessing_Section_VP_title,
       'settings_call_codecs_preferred_audio_default' =>

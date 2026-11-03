@@ -167,11 +167,16 @@ dependencies:
   signaling_service:
     path: ./packages/signaling_service/signaling_service
 
-  # Git forks, sorted by name.
-  flutter_webrtc:
+  # The flutter_webrtc API the app and its plugins are written for; what is built is the fork
+  # under dependency_overrides below.
+  flutter_webrtc: ^1.6.3
+
+  # flutter_webrtc add-on: RNNoise in its capture post-processing slot (the voice noise reduction
+  # switch). It needs upstream flutter_webrtc ^1.6.3; the override below gives it the fork.
+  flutter_webrtc_noise_suppression:
     git:
-      url: https://github.com/portaone/flutter-webrtc.git
-      ref: po/1.6.3-1
+      url: https://github.com/SERDUN/flutter_webrtc_noise_suppression.git
+      ref: c37f3fcd2e7756cc0987a6f259fc0221ec3c0980
 
 dev_dependencies:
   # Reached directly by the hub replay tests, which drive the Android hub and the
@@ -211,6 +216,16 @@ dev_dependencies:
   # dev dependencies from iOS release builds (flutter/flutter#163874), so shipping it
   # makes the app reference XCTest and Apple rejects it (guideline 2.5.1). Provision
   # for tests with: flutter pub add dev:patrol:^4.6.1
+
+# Git forks, sorted by name. A fork goes here rather than under dependencies: a plugin that needs
+# the upstream package from pub.dev (flutter_webrtc_noise_suppression) cannot share it with a git
+# dependency, while an override serves the fork to all of them. It also switches off pub's version
+# check for the package: the fork has to keep the upstream API the constraint above names.
+dependency_overrides:
+  flutter_webrtc:
+    git:
+      url: https://github.com/portaone/flutter-webrtc.git
+      ref: po/1.6.3-1
 
 flutter:
   generate: true

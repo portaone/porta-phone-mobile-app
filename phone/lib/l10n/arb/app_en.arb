@@ -2654,6 +2654,10 @@
   "@settings_audioProcessing_Section_title": {},
   "settings_audioProcessing_Section_tooltip": "Can be used to tune audio quality for specific needs or environments. Like studio recording, or external microphone. \n\nBypass voice processing - tells system to not apply hardware voice processing (Requires app restart).",
   "@settings_audioProcessing_Section_tooltip": {},
+  "settings_audioProcessing_Section_VNR_title": "Voice noise reduction (RNNoise)",
+  "@settings_audioProcessing_Section_VNR_title": {
+    "description": "Opt-in switch for RNNoise on the outgoing voice, after the platform processing"
+  },
   "settings_audioProcessing_Section_VP_title": "Bypass voice processing",
   "@settings_audioProcessing_Section_VP_title": {},
   "settings_call_codecs_preferred_audio_default": "Auto",

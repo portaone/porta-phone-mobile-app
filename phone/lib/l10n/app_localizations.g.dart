@@ -5053,6 +5053,12 @@ abstract class AppLocalizations {
   /// **'Can be used to tune audio quality for specific needs or environments. Like studio recording, or external microphone. \n\nBypass voice processing - tells system to not apply hardware voice processing (Requires app restart).'**
   String get settings_audioProcessing_Section_tooltip;
 
+  /// Opt-in switch for RNNoise on the outgoing voice, after the platform processing
+  ///
+  /// In en, this message translates to:
+  /// **'Voice noise reduction (RNNoise)'**
+  String get settings_audioProcessing_Section_VNR_title;
+
   /// No description provided for @settings_audioProcessing_Section_VP_title.
   ///
   /// In en, this message translates to:
