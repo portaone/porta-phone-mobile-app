@@ -7,6 +7,7 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/main/widgets/widgets.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -84,11 +85,22 @@ class _Hub extends StatelessWidget {
     final onChosen = this.onChosen;
     final pick = this.pick;
     final onCancel = pick?.onCancel;
+    // A call that left the screen is shown in the title's place, to go back to.
+    final call = context.select<CallBloc, ActiveCall?>(
+      (bloc) => bloc.state.display == CallDisplay.overlay && bloc.state.activeCalls.isNotEmpty
+          ? bloc.state.activeCalls.current
+          : null,
+    );
+    // What is being chosen comes first: it is what the person is in the
+    // middle of, and giving it up - Cancel, below - returns to the call.
+    final header = pick != null
+        ? _PickHeader(announcement: pick.announcement)
+        : call != null
+        ? _CallInProgress(call: call)
+        : null;
     return WatchIconGrid(
-      // What is being chosen takes the name's place, read out when it
-      // arrives.
-      title: pick == null ? EnvironmentConfig.APP_NAME : null,
-      header: pick == null ? null : _PickHeader(announcement: pick.announcement),
+      title: header == null ? EnvironmentConfig.APP_NAME : null,
+      header: header,
       items: [
         for (final (index, tab) in tabs.indexed)
           WatchIconGridItem(
@@ -244,6 +256,67 @@ class _PickBanner extends StatelessWidget {
                     padding: EdgeInsets.zero,
                   ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The call going on while the hub is shown: a green pill with how long it
+/// has lasted and who it is with, which returns to it.
+class _CallInProgress extends StatelessWidget {
+  const _CallInProgress({required this.call});
+
+  final ActiveCall call;
+
+  @override
+  Widget build(BuildContext context) {
+    final themeData = Theme.of(context);
+    final name = call.nameOrNumber;
+    // The scheme colour the call screen's Answer falls back to, so a brand
+    // recolours both.
+    final background = themeData.colorScheme.tertiary;
+
+    // Narrower than the face where it stands: the top of a round face is
+    // its narrowest part.
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.56),
+      child: SemanticAction(
+        label: context.l10n.callThumbnail_SemanticsLabel_returnToCall,
+        identifier: callActiveThumbnailId,
+        child: Material(
+          color: background,
+          shape: const StadiumBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => context.router.navigate(const CallScreenPageRoute()),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 28),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: ExcludeSemantics(
+                  child: CallDuration(
+                    since: call.acceptedTime,
+                    builder: (context, elapsed) => Text(
+                      [
+                        if (elapsed != null) elapsed.format(),
+                        if (call.held) context.l10n.call_description_held,
+                        name,
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: themeData.textTheme.labelMedium?.copyWith(
+                        color: themeData.colorScheme.onTertiary,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
