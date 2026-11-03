@@ -200,8 +200,8 @@ class _CallInfoState extends State<CallInfo> {
 /// and after it the first that holds of a transfer under way, a hold, what
 /// the other side reports, and otherwise the [duration] it has lasted.
 ///
-/// One owner for every place that says what a call is doing, so no two of
-/// them say different things about the same call.
+/// One owner for the phone's info block and the watch's call face, so the
+/// two never say different things about the same call.
 String callDescription(
   BuildContext context, {
   required Duration? duration,
