@@ -1478,6 +1478,22 @@
   "@login_Button_qrSigninOpenSettings": {},
   "login_Text_qrSigninInvalidCodeError": "This QR code cannot be used to sign in.",
   "@login_Text_qrSigninInvalidCodeError": {},
+  "loginType_otpSigninShort": "OTP",
+  "@loginType_otpSigninShort": {
+    "description": "The way in on a watch, under its round button: a word or two."
+  },
+  "loginType_passwordSigninShort": "Password",
+  "@loginType_passwordSigninShort": {
+    "description": "The way in on a watch, under its round button: a word or two."
+  },
+  "loginType_qrSigninShort": "QR code",
+  "@loginType_qrSigninShort": {
+    "description": "The way in on a watch, under its round button: a word or two."
+  },
+  "loginType_signupShort": "Sign up",
+  "@loginType_signupShort": {
+    "description": "The way in on a watch, under its round button: a word or two."
+  },
   "loginType_otpSignin": "OTP sign in",
   "@loginType_otpSignin": {},
   "loginType_passwordSignin": "Password sign in",

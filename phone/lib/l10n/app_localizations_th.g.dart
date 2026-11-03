@@ -1482,6 +1482,18 @@ class AppLocalizationsTh extends AppLocalizations {
   String get login_Text_qrSigninInvalidCodeError => 'คิวอาร์โค้ดนี้ใช้เข้าสู่ระบบไม่ได้';
 
   @override
+  String get loginType_otpSigninShort => 'OTP';
+
+  @override
+  String get loginType_passwordSigninShort => 'รหัสผ่าน';
+
+  @override
+  String get loginType_qrSigninShort => 'คิวอาร์';
+
+  @override
+  String get loginType_signupShort => 'สมัคร';
+
+  @override
   String get loginType_otpSignin => 'เข้าสู่ระบบด้วย OTP';
 
   @override

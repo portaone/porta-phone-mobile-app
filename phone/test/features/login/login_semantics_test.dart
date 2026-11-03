@@ -15,6 +15,7 @@ import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 
 import '../../helpers/helpers.dart';
+import '../../helpers/screen_presets.dart';
 
 class _MockAuthRepository extends Mock implements AuthRepository {}
 
@@ -162,7 +163,10 @@ void main() {
   });
 
   group('login type switch', () {
-    Widget switchScreen({List<LoginType> supported = const [LoginType.otpSignin, LoginType.passwordSignin]}) {
+    Widget switchScreen({
+      List<LoginType> supported = const [LoginType.otpSignin, LoginType.passwordSignin],
+      ValueChanged<LoginType>? onLoginTypeChanged,
+    }) {
       return wrap(
         ownScaffold: true,
         LoginSwitchScreen(
@@ -171,8 +175,36 @@ void main() {
           body: const SizedBox.shrink(),
           currentLoginType: LoginType.otpSignin,
           supportedLoginTypes: supported,
+          onLoginTypeChanged: onLoginTypeChanged,
         ),
       );
+    }
+
+    for (final preset in watchPresets) {
+      testWidgets('on $preset a way in carries its full name, its id and its action on one node', (tester) async {
+        final handle = tester.ensureSemantics();
+        preset.apply(tester);
+        LoginType? chosen;
+
+        await tester.pumpWidget(switchScreen(onLoginTypeChanged: (type) => chosen = type));
+        await tester.pumpAndSettle();
+
+        // The caption under the button is a short word; the node speaks the
+        // name the phone's segment shows, under the same id.
+        final l10n = AppLocalizations.of(tester.element(find.byType(LoginSwitchScreen)))!;
+        expectTapTargetSemantics(
+          tester,
+          find.bySemanticsIdentifier(loginTypeSegmentPasswordSigninId),
+          label: l10n.loginType_passwordSignin,
+          identifier: loginTypeSegmentPasswordSigninId,
+          pressArea: find.byKey(LoginType.passwordSignin.toLoginSegmentKey()),
+        );
+
+        await tapViaSemantics(tester, find.bySemanticsIdentifier(loginTypeSegmentPasswordSigninId));
+        expect(chosen, LoginType.passwordSignin);
+
+        handle.dispose();
+      });
     }
 
     testWidgets('a segment carries its id, its selected state and its action on one node', (tester) async {

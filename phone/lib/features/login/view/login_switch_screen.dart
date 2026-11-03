@@ -4,6 +4,8 @@ import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'login_switch_watch.dart';
+
 class LoginSwitchScreen extends StatelessWidget {
   const LoginSwitchScreen({
     super.key,
@@ -21,6 +23,34 @@ class LoginSwitchScreen extends StatelessWidget {
   final LoginType currentLoginType;
   final List<LoginType> supportedLoginTypes;
   final ValueChanged<LoginType>? onLoginTypeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return AdaptiveLayout(
+      handset: (_) => _Handset(screen: this),
+      watch: (_) => LoginSwitchWatch(
+        body: body,
+        currentLoginType: currentLoginType,
+        supportedLoginTypes: supportedLoginTypes,
+        onLoginTypeChanged: onLoginTypeChanged,
+      ),
+    );
+  }
+}
+
+/// The sign-in forms on a phone: logo, the ways in as segments, the chosen
+/// form below.
+class _Handset extends StatelessWidget {
+  const _Handset({required this.screen});
+
+  final LoginSwitchScreen screen;
+
+  PreferredSizeWidget? get appBar => screen.appBar;
+  Widget? get header => screen.header;
+  Widget get body => screen.body;
+  LoginType get currentLoginType => screen.currentLoginType;
+  List<LoginType> get supportedLoginTypes => screen.supportedLoginTypes;
+  ValueChanged<LoginType>? get onLoginTypeChanged => screen.onLoginTypeChanged;
 
   @override
   Widget build(BuildContext context) {
