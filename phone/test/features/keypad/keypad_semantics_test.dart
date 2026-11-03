@@ -1,7 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:mocktail/mocktail.dart';
+
 import 'package:webtrit_phone/app/keys.dart';
 
+import '../../helpers/screen_presets.dart';
+import '../../helpers/semantics.dart';
 import 'keypad_harness.dart';
 
 void main() {
@@ -32,6 +36,42 @@ void main() {
       await teardownKeypad(tester);
       semantics.dispose();
     });
+
+    for (final preset in watchPresets) {
+      testWidgets('on $preset the keys, backspace and the call work through semantics', (tester) async {
+        final semantics = tester.ensureSemantics();
+        preset.apply(tester);
+        await tester.pumpWidget(harness.build());
+
+        for (final key in ['1', '2', '3']) {
+          await tapViaSemantics(tester, find.bySemanticsIdentifier(keypadKeyId(key)));
+        }
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(numberField(tester).getSemanticsData().value, '123');
+
+        expectTapTargetSemantics(
+          tester,
+          find.bySemanticsIdentifier(actionPadBackspaceId),
+          label: 'Backspace',
+          identifier: actionPadBackspaceId,
+        );
+        await tapViaSemantics(tester, find.bySemanticsIdentifier(actionPadBackspaceId));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(numberField(tester).getSemanticsData().value, '12');
+
+        expectTapTargetSemantics(
+          tester,
+          find.bySemanticsIdentifier(actionPadVoiceCallId),
+          label: 'Audio call',
+          identifier: actionPadVoiceCallId,
+        );
+        await tapViaSemantics(tester, find.bySemanticsIdentifier(actionPadVoiceCallId));
+        verify(() => harness.callController.createCall(destination: '12')).called(1);
+
+        await teardownKeypad(tester);
+        semantics.dispose();
+      });
+    }
 
     testWidgets('nothing on the screen offers a press without saying what it does', (tester) async {
       final semantics = tester.ensureSemantics();

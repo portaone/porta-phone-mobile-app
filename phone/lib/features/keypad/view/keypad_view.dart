@@ -1,22 +1,20 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/call/call.dart';
-import 'package:webtrit_phone/features/call_routing/call_routing.dart';
-import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
-import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/utils/debounce.dart';
 
 import '../cubit/keypad_cubit.dart';
 import '../utils/utils.dart';
-import '../widgets/widgets.dart';
 import 'keypad_screen_style.dart';
+import 'keypad_view_handset.dart';
+import 'keypad_view_params.dart';
+import 'keypad_view_parts.dart';
+import 'keypad_view_watch.dart';
 
 // NOTES:
 // - do not use ValueListenableBuilder to watch number change because of huge perfomance impact on low-end devices
@@ -77,125 +75,30 @@ class KeypadViewState extends State<KeypadView> {
 
   @override
   Widget build(BuildContext context) {
-    final scaledInset = MediaQuery.of(context).size.height > 800 ? 16.0 : 8.0;
-    final themeData = Theme.of(context);
+    // Built above the switch, so both arrangements act on the one number.
+    final params = KeypadViewParams(
+      style: widget.style,
+      videoEnabled: widget.videoEnabled,
+      transferEnabled: widget.transferEnabled,
+      fieldKey: _keypadTextFieldKey,
+      controller: _textController,
+      focusNode: _focusNode,
+      onPaste: _pasteNumber,
+      onShowInputMenu: _showInputContextMenu,
+      onKey: _addChar,
+      onKeyHeld: _exchangeEntry,
+      onBackspace: _removeLastChar,
+      onClear: _cleanInput,
+      onCall: () => _callController.createCall(destination: _popNumber()),
+      onVideoCall: () => _callController.createCall(destination: _popNumber(), video: true),
+      onCallFrom: (number) => _callController.createCall(destination: _popNumber(), fromNumber: number),
+      onTransfer: _transferCall,
+      onPick: _pickTyped,
+    );
 
-    final inputField = widget.style?.inputField;
-    final contactField = widget.style?.contactNameField;
-    final actionpadStyle = widget.style?.actionpadStyle;
-
-    return Column(
-      children: [
-        Expanded(
-          // The input is intentionally invisible (blends with the background), so its own hit
-          // target is a tiny box in the center. Catch long-presses across the whole upper region
-          // and surface the input's context menu (paste/copy) from anywhere on the background.
-          // Translucent (not opaque) so pointers still reach the field's own gesture handlers
-          // instead of being fully absorbed by this background detector.
-          //
-          // It says nothing to assistive technology: an unnamed long press on an
-          // invisible half of the screen is not something anyone can find, and
-          // its annotation merged into the field below, stretching that field
-          // over the whole region. The same thing is offered on the field
-          // itself, as an action with a name.
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            excludeFromSemantics: true,
-            onLongPress: _showInputContextMenu,
-            child: Container(
-              margin: EdgeInsets.symmetric(horizontal: scaledInset),
-              // The screen draws its body behind the app bar, so the top of this
-              // region lies under it. The number is centred in what is left below
-              // the bar: on a short screen the middle of the whole region is
-              // still behind the bar.
-              padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _NumberField(
-                    fieldKey: _keypadTextFieldKey,
-                    controller: _textController,
-                    focusNode: _focusNode,
-                    onPaste: _pasteNumber,
-                    fieldStyle: inputField,
-                    style: inputField?.textStyle ?? themeData.textTheme.headlineLarge,
-                  ),
-                  _ContactName(
-                    style: contactField?.textStyle ?? themeData.textTheme.bodyMedium,
-                    textAlign: contactField?.textAlign,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        RepaintBoundary(
-          child: Keypad(onKeypadPressed: _addChar, onKeypadHeld: _exchangeEntry, style: widget.style?.keypadStyle),
-        ),
-        SizedBox(height: scaledInset),
-        RepaintBoundary(
-          child: BlocBuilder<KeypadCubit, KeypadState>(
-            // The whole value, not just whether there is one: what is typed
-            // decides whether it can be chosen, so two different nonempty
-            // numbers are not the same state.
-            buildWhen: (p, c) => p.value != c.value,
-            builder: (context, keypadState) {
-              // Two questions, as everywhere else. Whether this section can
-              // answer the purpose at all - somewhere to forward a message to
-              // cannot be typed - and whether what is typed right now is an
-              // answer it would take.
-              final purpose = context.pickPurpose;
-              final typed = DestinationCandidate(number: _sanitized(keypadState.value));
-              final picking = purpose != null && purpose.offeredBy(MainFlavor.keypad);
-              // What the typed number offers is asked the way every list asks
-              // it. With nothing typed there is no number to name, so the
-              // control is called after the choice itself rather than read as
-              // a sentence missing its end.
-              final offer = picking && typed.number != null ? context.pickOfferFor(typed) : null;
-
-              return BlocBuilder<CallBloc, CallState>(
-                buildWhen: (p, c) => p.activeCalls != c.activeCalls,
-                builder: (context, callState) {
-                  final activeCalls = callState.activeCalls;
-
-                  return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
-                    builder: (context, callRoutingState) {
-                      bool canCall = keypadState.noValue == false;
-
-                      return Actionpad(
-                        actionsEnabled: canCall,
-                        onBackspacePressed: _removeLastChar,
-                        onBackspaceLongPress: _cleanInput,
-                        onAudioCallPressed: () => _callController.createCall(destination: _popNumber()),
-                        onVideoCallPressed: widget.videoEnabled
-                            ? () => _callController.createCall(destination: _popNumber(), video: true)
-                            : null,
-                        onTransferPressed: widget.transferEnabled && activeCalls.isNotEmpty ? _transferCall : null,
-                        // Not gated on the transfer configuration: that is
-                        // permission to hand a call over, not permission to
-                        // answer whatever is being asked.
-                        // Shown for as long as the choice is being made, from
-                        // the first key: an empty pad that looked like the
-                        // ordinary dialer gave no sign it was choosing.
-                        onInitiatedTransferPressed: picking ? () => _pickTyped(purpose) : null,
-                        pickEnabled: offer?.isAnswer ?? false,
-                        pickIcon: picking ? purpose.pickIcon : null,
-                        pickLabel: picking ? offer?.label ?? purpose.announcement : null,
-                        callNumbers: callRoutingState?.allNumbers ?? [],
-                        onCallFrom: (number) =>
-                            _callController.createCall(destination: _popNumber(), fromNumber: number),
-                        style: actionpadStyle,
-                      );
-                    },
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        SizedBox(height: scaledInset),
-      ],
+    return AdaptiveLayout(
+      handset: (_) => KeypadViewHandset(params: params),
+      watch: (_) => KeypadViewWatch(params: params),
     );
   }
 
@@ -259,14 +162,6 @@ class KeypadViewState extends State<KeypadView> {
     }
   }
 
-  /// What is typed, in the form anything downstream would use it in.
-  static String? _sanitized(String? value) {
-    if (value == null || value.isEmpty) return null;
-
-    final number = PhoneNormalizingFormatter.sanitize(value);
-    return number.isEmpty ? null : number;
-  }
-
   String _popNumber() {
     final number = PhoneNormalizingFormatter.sanitize(_textController.text);
     _textController.clear();
@@ -288,7 +183,7 @@ class KeypadViewState extends State<KeypadView> {
   /// No pop afterwards, unlike a list: the keypad is where somebody already
   /// was, not somewhere they were sent, so there is nothing to come back from.
   void _pickTyped(DestinationPickPurpose purpose) {
-    final candidate = DestinationCandidate(number: _sanitized(_textController.text));
+    final candidate = DestinationCandidate(number: TypedPick.sanitize(_textController.text));
     if (!submitDestination(context, purpose, candidate)) return;
 
     _focusNode.unfocus();
@@ -397,79 +292,4 @@ class _KeypadEntry {
 
   /// Whether [value] is still the number and the caret this entry left.
   bool stillAsEntered(TextEditingValue value) => value.text == text && value.selection == selection;
-}
-
-/// The number being typed. The controller, focus and key belong to the
-/// view's state, so the number outlives a rebuild of the field.
-///
-/// Name, id and the paste action sit on the field's own node: an identifier
-/// makes a boundary of its own, and anything beside the field would be
-/// announced apart from it. The number needs no naming - the field publishes
-/// what it holds as its value.
-class _NumberField extends StatelessWidget {
-  const _NumberField({
-    required this.fieldKey,
-    required this.controller,
-    required this.focusNode,
-    required this.onPaste,
-    required this.fieldStyle,
-    required this.style,
-  });
-
-  /// The view reaches the field's text selection through it, for paste.
-  final GlobalKey fieldKey;
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final VoidCallback onPaste;
-
-  /// The theme's field: alignment, cursor, keyboard, decoration.
-  final TextFieldStyle? fieldStyle;
-
-  /// The digits' type.
-  final TextStyle? style;
-
-  @override
-  Widget build(BuildContext context) {
-    final fieldStyle = this.fieldStyle;
-    return MergeSemantics(
-      child: Semantics(
-        label: context.l10n.keypad_SemanticsLabel_number,
-        identifier: keypadNumberInputId,
-        customSemanticsActions: {CustomSemanticsAction(label: context.l10n.keypad_SemanticsAction_paste): onPaste},
-        child: TextField(
-          key: fieldKey,
-          controller: controller,
-          focusNode: focusNode,
-          decoration: fieldStyle?.decoration ?? Theme.of(context).extension<InputDecorations>()?.keypad,
-          style: style,
-          textAlign: fieldStyle?.textAlign ?? TextAlign.center,
-          showCursor: fieldStyle?.showCursor ?? true,
-          keyboardType: fieldStyle?.keyboardType ?? TextInputType.none,
-          cursorColor: fieldStyle?.cursorColor,
-          inputFormatters: [PhoneNormalizingFormatter()],
-        ),
-      ),
-    );
-  }
-}
-
-/// The name of the contact the typed number matches, under the number.
-class _ContactName extends StatelessWidget {
-  const _ContactName({required this.style, this.textAlign});
-
-  final TextStyle? style;
-  final TextAlign? textAlign;
-
-  @override
-  Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: BlocBuilder<KeypadCubit, KeypadState>(
-        buildWhen: (p, c) => (p.contact?.maybeName ?? '') != (c.contact?.maybeName ?? ''),
-        builder: (context, state) {
-          final name = state.contact?.maybeName ?? '';
-          return Text(name, style: style, textAlign: textAlign ?? TextAlign.center);
-        },
-      ),
-    );
-  }
 }
