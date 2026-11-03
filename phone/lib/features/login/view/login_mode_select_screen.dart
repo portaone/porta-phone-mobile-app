@@ -2,14 +2,14 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/theme.dart';
-import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../login.dart';
+import 'login_mode_select_handset.dart';
+import 'login_mode_select_params.dart';
 
 export 'login_mode_select_screen_style.dart';
 export 'login_mode_select_screen_styles.dart';
@@ -30,123 +30,62 @@ class LoginModeSelectScreen extends StatelessWidget {
 
     final localStyle = style ?? loginPageStyles?.primary;
 
-    final onboardingStyle = localStyle?.onboardingTextStyle;
-    final titleStyle = themeData.textTheme.displayMedium?.merge(onboardingStyle?.textStyle);
-    final dividerHeight = (titleStyle?.fontSize ?? 0) / 3;
-
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (previous, current) => previous.processing != current.processing,
       builder: (context, state) {
         // TODO(Serdun): Looks like we can move logic with enabling demo mode to the app config
         final isDemoModeEnabled = context.read<LoginCubit>().isDemoModeEnabled;
+        final shouldProcess = state.processing;
 
-        return ThemedScaffold(
-          background: localStyle?.background,
-          contentThemeOverride: localStyle?.contentThemeOverride,
-          applyToAppBar: localStyle?.applyToAppBar ?? true,
-          appBarTheme: localStyle?.appBarTheme,
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            flexibleSpace: BlurredSurface.fromStyle(localStyle?.appBarBlurredSurface),
-            systemOverlayStyle: localStyle?.systemUiOverlayStyle,
-            actions: isDemoModeEnabled
-                ? [
-                    // The tooltip alone does not name the button: it lands in a
-                    // separate semantics property, so the control still
-                    // announces as an anonymous icon and cannot be targeted.
-                    SemanticAction(
-                      label: context.l10n.login_ButtonTooltip_signInToYourInstance,
-                      identifier: loginModeScreenUrlButtonId,
-                      // The tooltip keeps its long-press hint but stays out of
-                      // the semantics, otherwise the merged node would carry
-                      // the same sentence twice.
-                      child: Tooltip(
-                        message: context.l10n.login_ButtonTooltip_signInToYourInstance,
-                        excludeFromSemantics: true,
-                        child: IconButton(
-                          key: loginModeScreenUrlButtonKey,
-                          icon: Icon(
-                            Icons.link,
-                            // color set here because of https://github.com/flutter/flutter/issues/110878
-                            color: themeData.colorScheme.onPrimary,
-                          ),
-                          onPressed: state.processing ? null : () => _onCustomCoreLogin(context),
-                        ),
-                      ),
-                    ),
-                  ]
-                : null,
-          ),
-          body: SemanticId(
-            identifier: loginModeScreenId,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(kInset, 0, kInset, kInset),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Spacer(),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ConfigurableThemeImage(style: localStyle?.pictureLogoStyle),
-                        if (appGreetingL10n != null) ...[
-                          SizedBox(height: dividerHeight),
-                          ExtendedText(
-                            context.parseL10n(appGreetingL10n!),
-                            extendedStyle: onboardingStyle?.copyWith(textStyle: titleStyle),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ],
-                    ),
-                    const Spacer(),
-                    const Spacer(),
-                    ...launchButtons.map<Widget>((button) {
-                      final shouldProcess = state.processing;
-
-                      // Determine if the button should show a loading state:
-                      // - If the app is processing:
-                      //   - For non-embedded buttons: show loading only when no embedded switch is active
-                      //   - For embedded buttons: show loading only if the active embedded config matches this button
-                      final processing =
-                          shouldProcess &&
-                          switch (button) {
-                            LoginEmbeddedModeButton(:final customLoginFeature) => state.embedded == customLoginFeature,
-                            _ => state.embedded == null,
-                          };
-
-                      // Use a stable key for integration tests:
-                      // - assign the dedicated test key for the sign-up flavor
-                      // - otherwise generate a unique ValueKey from the button
-                      final buttonKey = button.flavor == LoginFlavor.login
-                          ? loginModeScreenSignUpButtonKey
-                          : ValueKey(button.hashCode);
-
-                      final actionButton = LoginModeActionButton(
-                        key: buttonKey,
-                        processing: processing,
-                        isDemoModeEnabled: isDemoModeEnabled,
-                        onPressed: shouldProcess ? null : () => _onActionPressed(context, button),
-                        style: elevatedButtonStyles?.getStyle(localStyle?.signUpTypeButton),
-                        title: context.parseL10n(button.titleL10n),
-                      );
-
-                      // Only the sign-up flavor has a stable anchor; the rest are
-                      // configured per brand and their ids would not survive a
-                      // config change.
-                      return button.flavor == LoginFlavor.login
-                          ? SemanticAction(identifier: loginModeScreenSignUpButtonId, child: actionButton)
-                          : actionButton;
-                    }),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        final params = LoginModeSelectParams(
+          style: localStyle,
+          buttonStyle: elevatedButtonStyles?.getStyle(localStyle?.signUpTypeButton),
+          greeting: appGreetingL10n != null ? context.parseL10n(appGreetingL10n!) : null,
+          entries: launchButtons.map((button) => _entry(context, state, button)).toList(growable: false),
+          customCoreEntry: isDemoModeEnabled
+              ? LoginModeSelectEntry(
+                  title: context.l10n.login_ButtonTooltip_signInToYourInstance,
+                  processing: false,
+                  onPressed: shouldProcess ? null : () => _onCustomCoreLogin(context),
+                  buttonKey: loginModeScreenUrlButtonKey,
+                )
+              : null,
         );
+
+        // Both arrangements read the same params, built above the switch, so
+        // a resize across a class boundary loses nothing.
+        return LoginModeSelectHandset(params: params);
       },
+    );
+  }
+
+  LoginModeSelectEntry _entry(BuildContext context, LoginState state, LoginModeAction button) {
+    final shouldProcess = state.processing;
+
+    // Determine if the button should show a loading state:
+    // - If the app is processing:
+    //   - For non-embedded buttons: show loading only when no embedded switch is active
+    //   - For embedded buttons: show loading only if the active embedded config matches this button
+    final processing =
+        shouldProcess &&
+        switch (button) {
+          LoginEmbeddedModeButton(:final customLoginFeature) => state.embedded == customLoginFeature,
+          _ => state.embedded == null,
+        };
+
+    // Use a stable key for integration tests:
+    // - assign the dedicated test key for the sign-up flavor
+    // - otherwise generate a unique ValueKey from the button
+    final buttonKey = button.flavor == LoginFlavor.login ? loginModeScreenSignUpButtonKey : ValueKey(button.hashCode);
+
+    return LoginModeSelectEntry(
+      title: context.parseL10n(button.titleL10n),
+      processing: processing,
+      onPressed: shouldProcess ? null : () => _onActionPressed(context, button),
+      buttonKey: buttonKey,
+      // Only the sign-up flavor has a stable anchor; the rest are configured
+      // per brand and their ids would not survive a config change.
+      semanticsId: button.flavor == LoginFlavor.login ? loginModeScreenSignUpButtonId : null,
     );
   }
 

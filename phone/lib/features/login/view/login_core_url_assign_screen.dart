@@ -1,16 +1,14 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:webtrit_phone/app/constants.dart';
-import 'package:webtrit_phone/app/keys.dart';
-import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/theme/theme.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../login.dart';
+import 'login_core_url_assign_handset.dart';
+import 'login_core_url_assign_parts.dart';
 
 class LoginCoreUrlAssignScreen extends StatefulWidget {
   const LoginCoreUrlAssignScreen({super.key});
@@ -30,98 +28,30 @@ class _LoginCoreUrlAssignScreenState extends State<LoginCoreUrlAssignScreen> {
     // The logo is still borrowed from the switch screen style; the bar and
     // status bar are owned by this screen's own style.
     final LoginSwitchScreenStyles? loginPageStyles = themeData.extension<LoginSwitchScreenStyles>();
-    final LoginSwitchScreenStyle? localStyle = loginPageStyles?.primary;
     final ownStyle = themeData.extension<LoginCoreUrlAssignScreenStyles>()?.primary;
 
     return BlocBuilder<LoginCubit, LoginState>(
       buildWhen: (previous, current) => whenLoginCoreUrlAssignScreenPageActive(current),
-      builder: (context, state) => LoginScaffold(
-        contentThemeOverride: ownStyle?.contentThemeOverride,
-        applyToAppBar: ownStyle?.applyToAppBar,
-        appBarTheme: ownStyle?.appBarTheme,
-        appBar: AppBar(
-          leading: ExtBackButton(disabled: state.processing),
-          flexibleSpace: BlurredSurface.fromStyle(ownStyle?.appBarBlurredSurface),
-          // Themes saved before this screen had its own style get the historic
-          // dark status icons over the light login background.
-          systemOverlayStyle: ownStyle?.systemUiOverlayStyle ?? SystemUiOverlayStyle.dark,
-        ),
-        body: SemanticId(
-          identifier: loginCoreUrlScreenId,
-          child: SafeArea(
-            top: false,
-            child: Column(
-              children: [
-                ConfigurableThemeImage(style: localStyle?.pictureLogoStyle),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(kInset, kInset / 2, kInset, kInset),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (context.l10n.login_Text_coreUrlAssignPreDescription.isNotEmpty) ...[
-                          Description(text: context.l10n.login_Text_coreUrlAssignPreDescription),
-                          const SizedBox(height: kInset / 2),
-                        ],
-                        SemanticId(
-                          identifier: coreUrlInputId,
-                          child: HistoryAutocompleteField(
-                            storageKey: 'recent_core_urls',
-                            labelText: context.l10n.login_TextFieldLabelText_coreUrlAssign,
-                            key: coreUrlInputKey,
-                            controller: _historyController,
-                            initialValue: state.coreUrlInput.value,
-                            errorText:
-                                state.coreUrlInput.displayError?.l10n(context) ??
-                                (state.coreUrlAssignError != null
-                                    ? context.l10n.login_validationCoreUrlUnreachableError
-                                    : null),
-                            keyboardType: TextInputType.url,
-                            textInputAction: TextInputAction.done,
-                            autofillHints: const [AutofillHints.url],
-                            enabled: !state.processing,
-                            onChanged: context.read<LoginCubit>().coreUrlInputChanged,
-                            onSubmit: !state.coreUrlInput.isValid ? null : () => _onCoreUrlAssignSubmitted(context),
-                          ),
-                        ),
-                        if (context.l10n
-                            .login_Text_coreUrlAssignPostDescription(EnvironmentConfig.SALES_EMAIL)
-                            .isNotEmpty) ...[
-                          const SizedBox(height: kInset / 8),
-                          Description(
-                            text: context.l10n.login_Text_coreUrlAssignPostDescription(EnvironmentConfig.SALES_EMAIL),
-                            launchLinkableElement: true,
-                          ),
-                        ],
-                        const Spacer(),
-                        const SizedBox(height: kInset),
-                        SemanticAction(
-                          identifier: coreUrlButtonId,
-                          child: ElevatedButton(
-                            key: coreUrlButtonKey,
-                            onPressed: state.processing || !state.coreUrlInput.isValid
-                                ? null
-                                : () => _onCoreUrlAssignSubmitted(context),
-                            style: elevatedButtonStyles?.primary,
-                            child: !state.processing
-                                ? Text(context.l10n.login_Button_coreUrlAssignProceed)
-                                : SizedCircularProgressIndicator(
-                                    size: 16,
-                                    strokeWidth: 2,
-                                    color: elevatedButtonStyles?.primary?.foregroundColor?.resolve({}),
-                                    semanticsLabel: context.l10n.common_SemanticsLabel_loading,
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      builder: (context, state) {
+        final params = LoginCoreUrlAssignParams(
+          style: ownStyle,
+          logoStyle: loginPageStyles?.primary?.pictureLogoStyle,
+          buttonStyle: elevatedButtonStyles?.primary,
+          historyController: _historyController,
+          initialValue: state.coreUrlInput.value,
+          errorText:
+              state.coreUrlInput.displayError?.l10n(context) ??
+              (state.coreUrlAssignError != null ? context.l10n.login_validationCoreUrlUnreachableError : null),
+          processing: state.processing,
+          onChanged: context.read<LoginCubit>().coreUrlInputChanged,
+          onSubmit: !state.coreUrlInput.isValid ? null : () => _onCoreUrlAssignSubmitted(context),
+        );
+
+        // Both arrangements read the same params and the same controller,
+        // built above the switch, so a resize across a class boundary keeps
+        // what was typed.
+        return LoginCoreUrlAssignHandset(params: params);
+      },
     );
   }
 

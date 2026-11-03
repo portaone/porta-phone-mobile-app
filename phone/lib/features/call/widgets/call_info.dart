@@ -174,35 +174,17 @@ class _CallInfoState extends State<CallInfo> {
     );
   }
 
-  String _buildStatusMessage(BuildContext context) {
-    final duration = this.duration;
-
-    if (duration == null) {
-      if (widget.inviteToAttendedTransfer) {
-        return context.l10n.call_description_inviteToAttendedTransfer;
-      } else if (widget.requestToAttendedTransfer) {
-        return context.l10n.call_description_requestToAttendedTransfer;
-      } else if (widget.isIncoming) {
-        return context.l10n.call_description_incoming;
-      } else {
-        return context.l10n.call_description_outgoing;
-      }
-    } else if (widget.transfering) {
-      return context.l10n.call_description_transferProcessing;
-    } else if (widget.held) {
-      return context.l10n.call_description_held;
-    } else if (widget.peerReportedConferenceMute ?? false) {
-      // Above the duration, because a person who cannot be heard needs to
-      // know that before they need to know how long they have been talking.
-      return context.l10n.call_description_peerReportsMuted;
-    } else if (widget.peerReportedConferenceHostAway ?? false) {
-      // Below the mute, which is the stronger thing to know: a mute keeps them
-      // from being heard by everyone and outlasts the host's return.
-      return context.l10n.call_description_peerReportsHostAway;
-    } else {
-      return duration.format();
-    }
-  }
+  String _buildStatusMessage(BuildContext context) => callDescription(
+    context,
+    duration: duration,
+    transfering: widget.transfering,
+    requestToAttendedTransfer: widget.requestToAttendedTransfer,
+    inviteToAttendedTransfer: widget.inviteToAttendedTransfer,
+    isIncoming: widget.isIncoming,
+    held: widget.held,
+    peerReportedConferenceMute: widget.peerReportedConferenceMute ?? false,
+    peerReportedConferenceHostAway: widget.peerReportedConferenceHostAway ?? false,
+  );
 
   TextStyle? _resolveStyle(
     TextStyle? customStyle,
@@ -212,4 +194,37 @@ class _CallInfoState extends State<CallInfo> {
   ) {
     return customStyle ?? fallback?.copyWith(color: fallbackColor, fontFeatures: fallbackFontFeatures);
   }
+}
+
+/// The line under a call's name: what the call is before it is answered,
+/// and after it the first that holds of a transfer under way, a hold, what
+/// the other side reports, and otherwise the [duration] it has lasted.
+///
+/// One owner for the phone's info block and the watch's call face, so the
+/// two never say different things about the same call.
+String callDescription(
+  BuildContext context, {
+  required Duration? duration,
+  required bool transfering,
+  required bool requestToAttendedTransfer,
+  required bool inviteToAttendedTransfer,
+  required bool isIncoming,
+  required bool held,
+  required bool peerReportedConferenceMute,
+  required bool peerReportedConferenceHostAway,
+}) {
+  if (duration == null) {
+    if (inviteToAttendedTransfer) return context.l10n.call_description_inviteToAttendedTransfer;
+    if (requestToAttendedTransfer) return context.l10n.call_description_requestToAttendedTransfer;
+    return isIncoming ? context.l10n.call_description_incoming : context.l10n.call_description_outgoing;
+  }
+  if (transfering) return context.l10n.call_description_transferProcessing;
+  if (held) return context.l10n.call_description_held;
+  // Above the duration, because a person who cannot be heard needs to know
+  // that before they need to know how long they have been talking.
+  if (peerReportedConferenceMute) return context.l10n.call_description_peerReportsMuted;
+  // Below the mute, which is the stronger thing to know: a mute keeps them
+  // from being heard by everyone and outlasts the host's return.
+  if (peerReportedConferenceHostAway) return context.l10n.call_description_peerReportsHostAway;
+  return duration.format();
 }

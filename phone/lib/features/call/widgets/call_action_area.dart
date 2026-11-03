@@ -2,9 +2,9 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/l10n/l10n.dart';
 
-import '../models/models.dart';
 import '../view/call_screen_styles.dart';
 import 'active_call_actions.dart';
+import 'call_action_availability.dart';
 import 'call_controls.dart';
 import 'focused_action_hint.dart';
 import 'incoming_call_actions.dart';
@@ -36,32 +36,14 @@ class CallActionArea extends StatelessWidget {
 
     final activeCalls = params.activeCalls;
     final focusedCall = params.focusedCall;
-    final callConfig = params.callConfig;
     final interactionsEnabled = params.interactionsEnabled;
+    // What the focused call allows, decided once for the phone and the watch.
+    final actions = CallActionAvailability(params);
 
-    final nonIncomingRingingCalls = activeCalls.nonIncomingRinging;
-    final nonIncomingRingingCanBeHolded = nonIncomingRingingCalls.where((call) => call.wasAccepted == true).toList();
+    final nonIncomingRingingCalls = actions.othersOnAnswer;
+    final nonIncomingRingingCanBeHolded = actions.heldOnAnswer;
 
     final focusedIsRinging = focusedCall.isIncomingRinging;
-    final focusedTransfer = focusedCall.transfer;
-
-    // A leg of the room is not a call the grid can act on: the server refuses
-    // a hold or a transfer of one, and the microphone it would mute is the
-    // room's - one track shared by every call - so muting it there would
-    // silence the whole conference. The grid acts on the room instead.
-    final focusedIsLeg = params.conference.isLeg(focusedCall.callId);
-
-    // Which calls the menu lists and which two calls each entry connects come
-    // from the state as one hand-over (see [CallState.handOverFor]), never a
-    // leg of the room: the server refuses a transfer that involves one.
-    final handOver = params.handOver;
-
-    // A pick sends the transfer of its entry, read from the same hand-over the
-    // menu was built from, never guessed from which call happens to be live.
-    void submitHandOver(ActiveCall listedCall) {
-      final entry = handOver?.entryOf(listedCall);
-      if (entry != null) params.onAttendedTransferSubmitted(entry.referorCall, entry.replaceCall);
-    }
 
     if (!focusedIsRinging) {
       return ActiveCallActions(
@@ -75,42 +57,28 @@ class CallActionArea extends StatelessWidget {
         // False during: interaction debounce, signaling not ready, SDP renegotiation.
         enableInteractions: interactionsEnabled,
         cameraValue: focusedCall.isCameraActive,
-        cameraPermissionDenied: callConfig.isVideoCallEnabled && focusedCall.videoPermissionDenied,
+        cameraPermissionDenied: actions.cameraPermissionDenied,
         onCameraPermissionDeniedPressed: params.onCameraPermissionDeniedPressed,
-        onCameraChanged: callConfig.isVideoCallEnabled ? params.onCameraChanged : null,
-        // What it shows is the room's mute; what it does is the ordinary
-        // mute of the focused call, which the bloc routes to the room for a
-        // leg. That keeps the operating system's own mute state in step with
-        // the room instead of leaving the two to disagree.
-        mutedValue: focusedIsLeg ? params.conference.selfMuted : focusedCall.muted,
+        onCameraChanged: actions.onCameraChanged,
+        mutedValue: actions.muted,
         onMutedChanged: params.onMutedChanged,
         audioDevice: params.audioDevice,
         availableAudioDevices: params.availableAudioDevices,
         onAudioDeviceChanged: params.onAudioDeviceChanged,
-        // A leg is neither a call to hand over nor one to hand a call to: the
-        // server refuses a transfer of one, from whichever side. For a leg the
-        // menu is only the way to invite somebody into the room.
-        transferableCalls: focusedIsLeg ? const [] : handOver?.listedCalls ?? const [],
-        onBlindTransferInitiated: callConfig.isBlindTransferEnabled && !focusedIsLeg
-            ? (!focusedCall.wasAccepted || focusedTransfer != null ? null : params.onBlindTransferInitiated)
-            : null,
-        // TODO (Serdun): Simplify complex condition in the widget tree.
-        onAttendedTransferInitiated: callConfig.isAttendedTransferEnabled && params.canStartAttendedTransfer
-            ? params.onAttendedTransferInitiated
-            : null,
-        onAttendedTransferSubmitted: callConfig.isAttendedTransferEnabled && handOver != null && focusedTransfer == null
-            ? submitHandOver
-            : null,
+        transferableCalls: actions.transferableCalls,
+        onBlindTransferInitiated: actions.onBlindTransfer,
+        onAttendedTransferInitiated: actions.onAttendedTransferStart,
+        onAttendedTransferSubmitted: actions.onHandOver,
         heldValue: focusedCall.held,
         // Hold pauses just the focused call; Resume brings it
         // back as the only live one (the other live calls are
         // put on hold first). Switching lines = focus the other
         // row and press Resume - there is no separate swap.
-        onHeldChanged: focusedIsLeg ? null : params.onHeldChanged,
+        onHeldChanged: actions.onHeldChanged,
         onHangupPressed: params.onHangup,
         // It is the room the hangup ends while one stands, and it is the only
         // control that ends it, so it says so rather than "hang up".
-        hangupLabel: focusedIsLeg ? context.l10n.call_SemanticsLabel_conferenceEnd : null,
+        hangupLabel: actions.focusedIsLeg ? context.l10n.call_SemanticsLabel_conferenceEnd : null,
 
         onKeyPressed: params.onKeyPressed,
         addParticipantAvailability: params.addParticipantAvailability,
@@ -158,7 +126,7 @@ class CallActionArea extends StatelessWidget {
           // Answering with other calls present mutates them
           // (hold/end), so it is gated by the interactions
           // debounce like any signaling-dependent action.
-          onAcceptPressed: nonIncomingRingingCalls.isNotEmpty && !interactionsEnabled ? null : params.onAccept,
+          onAcceptPressed: actions.onAccept,
         ),
       ],
     );

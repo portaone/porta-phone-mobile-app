@@ -28,57 +28,50 @@ class LoginSignupRequestScreen extends StatelessWidget {
 
         return SemanticId(
           identifier: loginSignupRequestScreenId,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(kInset, kInset / 2, kInset, kInset),
-            color: themeData.scaffoldBackgroundColor,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (signupRequestPreDescriptionText.isNotEmpty) ...[
-                  Description(text: signupRequestPreDescriptionText),
-                  const SizedBox(height: kInset / 2),
-                ],
-                SemanticId(
-                  identifier: signupEmailInputId,
-                  child: TextFormField(
-                    key: signupEmailInputKey,
-                    enabled: !state.processing,
-                    initialValue: state.signupEmailInput.value,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.login_TextFieldLabelText_signupEmail,
-                      helperText: '', // reserve space for validator message
-                      errorText: state.signupEmailInput.displayError?.l10n(context),
-                      errorMaxLines: 3,
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.email],
-                    onChanged: context.read<LoginCubit>().signupEmailInputChanged,
-                    onFieldSubmitted: !state.signupEmailInput.isValid ? null : (_) => _onSubmitted(context),
-                  ),
-                ),
-                if (signupRequestPostDescriptionText.isNotEmpty) ...[
-                  const SizedBox(height: kInset / 2),
-                  Description(text: signupRequestPostDescriptionText),
-                ],
-                const Spacer(),
-                const SizedBox(height: kInset),
-                SemanticAction(
-                  identifier: signupEmailButtonId,
-                  child: ElevatedButton(
-                    key: signupEmailButtonKey,
-                    onPressed: state.processing || !state.signupEmailInput.isValid ? null : () => _onSubmitted(context),
-                    style: elevatedButtonStyles?.primary,
-                    child: !state.processing
-                        ? Text(context.l10n.login_Button_signupRequestProceed)
-                        : SizedCircularProgressIndicator(
-                            size: 16,
-                            strokeWidth: 2,
-                            color: elevatedButtonStyles?.primary?.foregroundColor?.resolve({}),
-                            semanticsLabel: context.l10n.common_SemanticsLabel_loading,
-                          ),
-                  ),
-                ),
+          child: LoginFormLayout(
+            content: [
+              if (signupRequestPreDescriptionText.isNotEmpty) ...[
+                Description(text: signupRequestPreDescriptionText),
+                const SizedBox(height: kInset / 2),
               ],
+              SemanticId(
+                identifier: signupEmailInputId,
+                child: TextFormField(
+                  key: signupEmailInputKey,
+                  enabled: !state.processing,
+                  initialValue: state.signupEmailInput.value,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.login_TextFieldLabelText_signupEmail,
+                    helperText: '', // reserve space for validator message
+                    errorText: state.signupEmailInput.displayError?.l10n(context),
+                    errorMaxLines: 3,
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [AutofillHints.email],
+                  onChanged: context.read<LoginCubit>().signupEmailInputChanged,
+                  onFieldSubmitted: !state.signupEmailInput.isValid ? null : (_) => _onSubmitted(context),
+                ),
+              ),
+              if (signupRequestPostDescriptionText.isNotEmpty) ...[
+                const SizedBox(height: kInset / 2),
+                Description(text: signupRequestPostDescriptionText),
+              ],
+            ],
+            primary: (overlay) => SemanticAction(
+              identifier: signupEmailButtonId,
+              child: ElevatedButton(
+                key: signupEmailButtonKey,
+                onPressed: state.processing || !state.signupEmailInput.isValid ? null : () => _onSubmitted(context),
+                style: overlay?.merge(elevatedButtonStyles?.primary) ?? elevatedButtonStyles?.primary,
+                child: !state.processing
+                    ? Text(context.l10n.login_Button_signupRequestProceed)
+                    : SizedCircularProgressIndicator(
+                        size: 16,
+                        strokeWidth: 2,
+                        color: elevatedButtonStyles?.primary?.foregroundColor?.resolve({}),
+                        semanticsLabel: context.l10n.common_SemanticsLabel_loading,
+                      ),
+              ),
             ),
           ),
         );

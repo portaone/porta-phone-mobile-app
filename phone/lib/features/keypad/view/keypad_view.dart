@@ -86,7 +86,52 @@ class KeypadViewState extends State<KeypadView> {
     final contactField = widget.style?.contactNameField;
     final actionpadStyle = widget.style?.actionpadStyle;
 
-    return Column(
+    // One field and one name line for both arrangements, so the number typed
+    // and its state live in this state whichever face shows them; only the
+    // size of their type differs.
+    Widget numberField(TextStyle? style, {InputDecoration? decoration}) {
+      return MergeSemantics(
+        child: Semantics(
+          label: context.l10n.keypad_SemanticsLabel_number,
+          identifier: keypadNumberInputId,
+          customSemanticsActions: {
+            CustomSemanticsAction(label: context.l10n.keypad_SemanticsAction_paste): _pasteNumber,
+          },
+          child: TextField(
+            key: _keypadTextFieldKey,
+            controller: _textController,
+            focusNode: _focusNode,
+            decoration: decoration ?? inputField?.decoration ?? baseInputDecorations?.keypad,
+            style: style,
+            textAlign: inputField?.textAlign ?? TextAlign.center,
+            showCursor: inputField?.showCursor ?? true,
+            keyboardType: inputField?.keyboardType ?? TextInputType.none,
+            cursorColor: inputField?.cursorColor,
+            inputFormatters: [PhoneNormalizingFormatter()],
+          ),
+        ),
+      );
+    }
+
+    Widget contactName(TextStyle? style, {bool collapseWhenEmpty = false}) {
+      return RepaintBoundary(
+        child: BlocBuilder<KeypadCubit, KeypadState>(
+          buildWhen: (p, c) {
+            final pName = p.contact?.maybeName ?? '';
+            final cName = c.contact?.maybeName ?? '';
+            return pName != cName;
+          },
+          builder: (context, state) {
+            final name = state.contact?.maybeName ?? '';
+            // A watch has no line to spare for a name that is not there.
+            if (collapseWhenEmpty && name.isEmpty) return const SizedBox.shrink();
+            return Text(name, style: style, textAlign: contactField?.textAlign ?? TextAlign.center);
+          },
+        ),
+      );
+    }
+
+    final handset = Column(
       children: [
         Expanded(
           // The input is intentionally invisible (blends with the background), so its own hit
@@ -120,41 +165,8 @@ class KeypadViewState extends State<KeypadView> {
                   // sitting beside the field would be announced apart from it.
                   // The number itself needs no naming - the field publishes
                   // what it holds as its value.
-                  MergeSemantics(
-                    child: Semantics(
-                      label: context.l10n.keypad_SemanticsLabel_number,
-                      identifier: keypadNumberInputId,
-                      customSemanticsActions: {
-                        CustomSemanticsAction(label: context.l10n.keypad_SemanticsAction_paste): _pasteNumber,
-                      },
-                      child: TextField(
-                        key: _keypadTextFieldKey,
-                        controller: _textController,
-                        focusNode: _focusNode,
-                        decoration: inputField?.decoration ?? baseInputDecorations?.keypad,
-                        style: inputField?.textStyle ?? themeData.textTheme.headlineLarge,
-                        textAlign: inputField?.textAlign ?? TextAlign.center,
-                        showCursor: inputField?.showCursor ?? true,
-                        keyboardType: inputField?.keyboardType ?? TextInputType.none,
-                        cursorColor: inputField?.cursorColor,
-                        inputFormatters: [PhoneNormalizingFormatter()],
-                      ),
-                    ),
-                  ),
-                  RepaintBoundary(
-                    child: BlocBuilder<KeypadCubit, KeypadState>(
-                      buildWhen: (p, c) {
-                        final pName = p.contact?.maybeName ?? '';
-                        final cName = c.contact?.maybeName ?? '';
-                        return pName != cName;
-                      },
-                      builder: (context, state) => Text(
-                        state.contact?.maybeName ?? '',
-                        style: contactField?.textStyle ?? themeData.textTheme.bodyMedium,
-                        textAlign: contactField?.textAlign ?? TextAlign.center,
-                      ),
-                    ),
-                  ),
+                  numberField(inputField?.textStyle ?? themeData.textTheme.headlineLarge),
+                  contactName(contactField?.textStyle ?? themeData.textTheme.bodyMedium),
                 ],
               ),
             ),
@@ -227,6 +239,8 @@ class KeypadViewState extends State<KeypadView> {
         SizedBox(height: scaledInset),
       ],
     );
+
+    return handset;
   }
 
   Future<void> _showInputContextMenu() async {

@@ -7,17 +7,20 @@ class LoginModeActionButton extends StatelessWidget {
   const LoginModeActionButton({
     super.key,
     required this.processing,
-    required this.isDemoModeEnabled,
     required this.onPressed,
     required this.style,
     required this.title,
+    this.maxLines,
   });
 
   final bool processing;
-  final bool isDemoModeEnabled;
   final VoidCallback? onPressed;
   final ButtonStyle? style;
   final String title;
+
+  /// Lines the title may take before it ends in an ellipsis; unlimited when
+  /// null.
+  final int? maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +28,12 @@ class LoginModeActionButton extends StatelessWidget {
       onPressed: processing ? null : onPressed,
       style: style,
       child: !processing
-          ? Text(title)
+          ? Text(
+              title,
+              maxLines: maxLines,
+              overflow: maxLines != null ? TextOverflow.ellipsis : null,
+              textAlign: maxLines != null ? TextAlign.center : null,
+            )
           : SizedCircularProgressIndicator(
               size: 16,
               strokeWidth: 2,
