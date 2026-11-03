@@ -57,9 +57,10 @@ class LoginHarness {
   Widget wrap(Widget screen) => wrapCubit(cubit, screen);
 
   /// [wrap] for a test that brings its own [LoginCubit], a mock of it say.
-  static Widget wrapCubit(LoginCubit cubit, Widget screen) {
+  /// [history] stands in for the stored history, which is empty otherwise.
+  static Widget wrapCubit(LoginCubit cubit, Widget screen, {AutocompleteHistoryRepository? history}) {
     return Provider<AutocompleteHistoryRepository>.value(
-      value: _NoHistory(),
+      value: history ?? _NoHistory(),
       child: withShippedTheme(withRootStackRouter(BlocProvider<LoginCubit>.value(value: cubit, child: screen))),
     );
   }

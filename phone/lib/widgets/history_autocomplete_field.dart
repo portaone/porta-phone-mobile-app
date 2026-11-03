@@ -18,8 +18,11 @@ class HistoryAutocompleteController {
     _saveCallback = callback;
   }
 
-  void _detach() {
-    _saveCallback = null;
+  /// Lets go of [callback] only if it is still the one attached: when one
+  /// field replaces another under the same controller, the new field
+  /// attaches before the old one is disposed.
+  void _detach(VoidCallback callback) {
+    if (_saveCallback == callback) _saveCallback = null;
   }
 }
 
@@ -40,6 +43,7 @@ class HistoryAutocompleteField extends StatefulWidget {
     this.autofillHints,
     this.onChanged,
     this.onSubmit,
+    this.suggestHistory = true,
   });
 
   /// The key used to store the history.
@@ -78,6 +82,10 @@ class HistoryAutocompleteField extends StatefulWidget {
   /// Callback for when the field is submitted (e.g., "Done" on keyboard).
   final VoidCallback? onSubmit;
 
+  /// Whether a list of earlier values drops down while typing. Off where there
+  /// is no room for it (a watch face); the history is still saved.
+  final bool suggestHistory;
+
   @override
   State<HistoryAutocompleteField> createState() => _HistoryAutocompleteFieldState();
 }
@@ -99,7 +107,7 @@ class _HistoryAutocompleteFieldState extends State<HistoryAutocompleteField> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.controller != oldWidget.controller) {
-      oldWidget.controller?._detach();
+      oldWidget.controller?._detach(_saveToHistory);
       widget.controller?._attach(_saveToHistory);
     }
 
@@ -119,7 +127,7 @@ class _HistoryAutocompleteFieldState extends State<HistoryAutocompleteField> {
 
   @override
   void dispose() {
-    widget.controller?._detach();
+    widget.controller?._detach(_saveToHistory);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -127,7 +135,7 @@ class _HistoryAutocompleteFieldState extends State<HistoryAutocompleteField> {
 
   Future<List<String>> _getSuggestions(TextEditingValue textEditingValue) async {
     final query = textEditingValue.text.trim();
-    if (query.isEmpty) return [];
+    if (query.isEmpty || !widget.suggestHistory) return [];
 
     final history = _historyRepository.getHistory(widget.storageKey);
     return history.where((item) => item.toLowerCase().contains(query.toLowerCase())).toList();

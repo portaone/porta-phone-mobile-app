@@ -1306,6 +1306,8 @@
   "@login_Text_coreUrlAssignPreDescription": {},
   "login_TextFieldLabelText_coreUrlAssign": "Inserisci l'URL del tuo Cloud Backend",
   "@login_TextFieldLabelText_coreUrlAssign": {},
+  "login_TextFieldLabelText_coreUrlAssignShort": "URL",
+  "@login_TextFieldLabelText_coreUrlAssignShort": {},
   "login_TextFieldLabelText_otpSigninCode": "Inserisci il codice di verifica",
   "@login_TextFieldLabelText_otpSigninCode": {},
   "login_TextFieldLabelText_otpSigninUserRef": "Inserisci il tuo numero di telefono o la tua email",

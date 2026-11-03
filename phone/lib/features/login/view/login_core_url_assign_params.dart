@@ -6,7 +6,8 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'login_core_url_assign_screen_style.dart';
 
-/// Everything the custom-core screen shows, built once by the screen.
+/// Everything both arrangements of the custom-core screen show, built once by
+/// the screen, so a watch and a phone cannot drift apart in what they offer.
 @immutable
 class LoginCoreUrlAssignParams {
   const LoginCoreUrlAssignParams({
@@ -30,8 +31,10 @@ class LoginCoreUrlAssignParams {
   /// The theme's style of Proceed.
   final ButtonStyle? buttonStyle;
 
-  /// Owned by the screen's state, so the typed URL and its history outlive
-  /// a rebuild of the layout.
+  /// Owned by the screen, above the arrangement switch, so whichever field is
+  /// mounted saves to history when Proceed is pressed. The typed URL itself
+  /// survives a change of arrangement through [initialValue], which the cubit
+  /// keeps; focus and the caret do not.
   final HistoryAutocompleteController historyController;
 
   /// The URL the field opens with: the one used last.
