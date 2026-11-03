@@ -125,6 +125,15 @@ const callFrontCameraPreviewKey = Key(callFrontCameraPreviewId);
 const String callActiveThumbnailId = 'callActiveThumbnail';
 const String callControlsToggleId = 'callControlsToggle';
 const String callRowId = 'callRow';
+
+/// The state of a row of the list of calls: exactly one of the three is a
+/// child of each row (`callRow`, `callRow2`, ...), so a flow can pick the call
+/// that rings or the one on hold without reading the translated badge. As with
+/// the connection status of the main screen, the state is the id itself, on a
+/// node with nothing to say.
+const String callRowStateRingingId = 'callRowStateRinging';
+const String callRowStateOnHoldId = 'callRowStateOnHold';
+const String callRowStateOnCallId = 'callRowStateOnCall';
 const String callMergeButtonId = 'callMergeButton';
 const String callAddToConferenceButtonId = 'callAddToConferenceButton';
 const String conferenceSelfMuteId = 'conferenceSelfMute';
