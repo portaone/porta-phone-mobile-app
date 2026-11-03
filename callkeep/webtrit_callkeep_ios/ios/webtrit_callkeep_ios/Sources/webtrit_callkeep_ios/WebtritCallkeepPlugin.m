@@ -527,7 +527,18 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   NSMutableArray<CXAction *> *actions = [[self holdActionsForGroup:_groupMemberUuids onHold:YES] mutableCopy];
   [actions addObject:action];
 
-  [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:actions] completion:completion];
+  // Answering from this request on, not from the provider's perform: the queue must not take the
+  // call out of CallKit while the answer is on its way - see answerQueuedIncomingCallUUID.
+  [_answeringCallUuids addObject:uuid];
+  __weak typeof(self) weakSelf = self;
+  [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:actions]
+                         completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+    typeof(self) strongSelf = weakSelf;
+    if (strongSelf != nil && (error != nil || flutterError != nil)) {
+      [strongSelf->_answeringCallUuids removeObject:uuid];
+    }
+    completion(error, flutterError);
+  }];
 }
 
 - (void)setSpeaker:(NSString *)uuidString
@@ -1166,6 +1177,11 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
 /// call once nothing of ours rings: beside the answered call, as any call that waited, under a new
 /// UUID. iOS may show its call-waiting screen for it only for a moment or not at all (a call
 /// reported right after an answer made in the app); the application's own list offers it either way.
+///
+/// A ringing call whose answer is on its way stays: nothing would answer it when it came back, and
+/// it would ring alone under its new UUID while the application counts it as answered. That is how
+/// two calls restored after a cold restart meet here, both answered by the application at once.
+/// Only the system's own Accept makes CallKit end the other ringing call, so the two can pass.
 - (void)answerQueuedIncomingCallUUID:(NSUUID *)uuid
                           completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
   CXCallUpdate *update = _queuedIncomingUpdates[uuid];
@@ -1176,6 +1192,10 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
       // The user declined this one and the application is ending it: it stays where it is until
       // that is done, and has no turn to come back for. Should the application refuse the end,
       // the call goes on ringing in CallKit beside the answered one, as a call that came second.
+      continue;
+    }
+    if ([_answeringCallUuids containsObject:ringing]) {
+      WTPLog(@"[Callkeep][queue] keeping the ringing %@ in CallKit: its answer is on its way", ringing.UUIDString);
       continue;
     }
     NSUUID *logical = [_presentations logicalUUIDForCallKitUUID:ringing];
