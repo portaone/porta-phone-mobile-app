@@ -6,10 +6,12 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/theme.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../login.dart';
 import 'login_mode_select_handset.dart';
 import 'login_mode_select_params.dart';
+import 'login_mode_select_watch.dart';
 
 export 'login_mode_select_screen_style.dart';
 export 'login_mode_select_screen_styles.dart';
@@ -48,12 +50,18 @@ class LoginModeSelectScreen extends StatelessWidget {
                   processing: false,
                   onPressed: shouldProcess ? null : () => _onCustomCoreLogin(context),
                   buttonKey: loginModeScreenUrlButtonKey,
+                  semanticsId: loginModeScreenUrlButtonId,
                 )
               : null,
+          customCoreShortTitle: context.l10n.login_Button_customCoreShort,
         );
 
-        // The layout reads the params built here, once per build.
-        return LoginModeSelectHandset(params: params);
+        // Both arrangements read the same params, built above the switch, so
+        // a resize across a class boundary loses nothing.
+        return AdaptiveLayout(
+          handset: (_) => LoginModeSelectHandset(params: params),
+          watch: (_) => LoginModeSelectWatch(params: params),
+        );
       },
     );
   }

@@ -1291,6 +1291,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get login_ButtonTooltip_signInToYourInstance => 'Accedi al tuo Cloud Backend';
 
   @override
+  String get login_Button_customCoreShort => 'Cloud Backend';
+
+  @override
   String login_CoreVersionUnsupportedExceptionError(String actual, String supportedConstraint) {
     return 'È stata fornita una versione di richiesta incompatibile, contattare l\'amministratore del sistema (actual:$actual, supported:$supportedConstraint)';
   }

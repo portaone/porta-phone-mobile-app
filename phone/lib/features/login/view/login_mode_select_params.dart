@@ -28,7 +28,8 @@ class LoginModeSelectEntry {
   final String? semanticsId;
 }
 
-/// Everything the landing shows, built once by the screen.
+/// Everything both arrangements of the landing show, built once by the
+/// screen so a watch and a phone cannot drift apart in what they offer.
 @immutable
 class LoginModeSelectParams {
   const LoginModeSelectParams({
@@ -37,6 +38,7 @@ class LoginModeSelectParams {
     required this.greeting,
     required this.entries,
     required this.customCoreEntry,
+    required this.customCoreShortTitle,
   });
 
   final LoginModeSelectScreenStyle? style;
@@ -52,4 +54,7 @@ class LoginModeSelectParams {
 
   /// The sign-in to a custom instance, offered only by a demo build.
   final LoginModeSelectEntry? customCoreEntry;
+
+  /// [customCoreEntry]'s title where only one short line fits (a watch face).
+  final String customCoreShortTitle;
 }
