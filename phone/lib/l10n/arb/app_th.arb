@@ -1178,6 +1178,8 @@
   },
   "login_ButtonTooltip_signInToYourInstance": "เข้าสู่ระบบ Cloud Backend ของคุณ",
   "@login_ButtonTooltip_signInToYourInstance": {},
+  "login_Button_customCoreShort": "Cloud Backend",
+  "@login_Button_customCoreShort": {},
   "login_CoreVersionUnsupportedExceptionError": "เวอร์ชันอินสแตนซ์ที่ระบุไม่รองรับ โปรดติดต่อผู้ดูแลระบบของคุณ (ปัจจุบัน: {actual}, ที่รองรับ: {supportedConstraint})",
   "@login_CoreVersionUnsupportedExceptionError": {
     "description": "Shown during login when the app detects that the backend instance version is incompatible. Context: user tries to sign in. Condition: provided backend version does not match the supported version range (actual: {actual}, supported: {supportedConstraint}).",

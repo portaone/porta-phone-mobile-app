@@ -2302,6 +2302,12 @@ abstract class AppLocalizations {
   /// **'Sign in to your Cloud Backend'**
   String get login_ButtonTooltip_signInToYourInstance;
 
+  /// The custom-core sign-in where only one short line fits (a watch face). The product name, kept in English like the full phrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Backend'**
+  String get login_Button_customCoreShort;
+
   /// Shown during login when the app detects that the backend instance version is incompatible. Context: user tries to sign in. Condition: provided backend version does not match the supported version range (actual: {actual}, supported: {supportedConstraint}).
   ///
   /// In en, this message translates to:

@@ -12,9 +12,14 @@ class LoginModeSelectEntry {
     required this.onPressed,
     required this.buttonKey,
     this.semanticsId,
+    this.shortTitle,
   });
 
   final String title;
+
+  /// The title where only one short line fits (a watch face); [title] when
+  /// null.
+  final String? shortTitle;
 
   /// Shows progress in place of the title.
   final bool processing;
@@ -28,7 +33,8 @@ class LoginModeSelectEntry {
   final String? semanticsId;
 }
 
-/// Everything the landing shows, built once by the screen.
+/// Everything both arrangements of the landing show, built once by the
+/// screen so a watch and a phone cannot drift apart in what they offer.
 @immutable
 class LoginModeSelectParams {
   const LoginModeSelectParams({
