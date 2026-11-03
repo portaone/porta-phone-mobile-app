@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
@@ -81,6 +82,71 @@ void main() {
 
       await tapViaSemantics(tester, second);
       expect(tapped, ['on-call']);
+
+      await tester.pumpWidget(const SizedBox());
+      semantics.dispose();
+    });
+
+    testWidgets('every row carries its state as the id of its one child', (tester) async {
+      final semantics = tester.ensureSemantics();
+      final held = _makeCall(
+        callId: 'held',
+        displayName: 'Chen Wu',
+        acceptedTime: DateTime.now().subtract(const Duration(seconds: 5)),
+      ).copyWith(held: true);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: CallList(calls: [ringing, onCall, held], focusedCallId: 'ringing', onCallTap: (_) {}),
+          ),
+        ),
+      );
+
+      List<String> childIds(String rowId) {
+        final row = tester.getSemantics(find.bySemanticsIdentifier(rowId));
+        final ids = <String>[];
+        row.visitChildren((child) {
+          ids.add(child.getSemanticsData().identifier);
+          return true;
+        });
+        return ids;
+      }
+
+      expect(childIds(callRowId), [callRowStateRingingId]);
+      expect(childIds(numberedId(callRowId, 1)), [callRowStateOnCallId]);
+      expect(childIds(numberedId(callRowId, 2)), [callRowStateOnHoldId]);
+      // The state says nothing: a screen reader reads the row, not its state's id.
+      final state = tester.getSemantics(find.bySemanticsIdentifier(callRowStateRingingId)).getSemanticsData();
+      expect(state.label, isEmpty);
+      expect(state.hasAction(SemanticsAction.tap), isFalse);
+      expect(tester.getSemantics(find.bySemanticsIdentifier(callRowId)).getSemanticsData().label, contains('Ringing'));
+
+      await tester.pumpWidget(const SizedBox());
+      semantics.dispose();
+    });
+
+    testWidgets('a row whose call changes state gets a new state node', (tester) async {
+      // iOS keeps the identifier an element was created with: the state must
+      // come on a node of its own, not as a new id on the old one.
+      final semantics = tester.ensureSemantics();
+      Widget subject(ActiveCall call) => MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CallList(calls: [call], focusedCallId: call.callId, onCallTap: (_) {}),
+        ),
+      );
+      await tester.pumpWidget(subject(ringing));
+      final before = tester.getSemantics(find.bySemanticsIdentifier(callRowStateRingingId)).id;
+
+      await tester.pumpWidget(subject(ringing.copyWith(acceptedTime: DateTime.now())));
+      expect(find.bySemanticsIdentifier(callRowStateRingingId), findsNothing);
+      final after = tester.getSemantics(find.bySemanticsIdentifier(callRowStateOnCallId)).id;
+      expect(after, isNot(before));
 
       await tester.pumpWidget(const SizedBox());
       semantics.dispose();
