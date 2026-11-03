@@ -61,21 +61,18 @@ class CallList extends StatelessWidget {
         // merge. A list that says what it is carries its header either way.
         if (header != null || calls.length > 1)
           CallRowHeader(label: header ?? context.l10n.call_CallList_header(calls.length), action: action, style: style),
-        // Each row is one control: the badge, the name and the duration are
-        // its content, and the id is numbered because there are several of
-        // them and a call id is not something a test can know in advance.
+        // The id is numbered because there are several rows and a call id is
+        // not something a test can know in advance.
         for (final (index, call) in calls.indexed)
-          SemanticAction.button(
+          CallRow(
+            key: ValueKey('CallRow-${call.callId}'),
             identifier: numberedId(callRowId, index),
-            child: CallRow(
-              key: ValueKey('CallRow-${call.callId}'),
-              call: call,
-              focused: call.callId == focusedCallId,
-              onTap: () => onCallTap(call.callId),
-              contactResolver: contactResolver,
-              style: style,
-              listStyle: listStyle,
-            ),
+            call: call,
+            focused: call.callId == focusedCallId,
+            onTap: () => onCallTap(call.callId),
+            contactResolver: contactResolver,
+            style: style,
+            listStyle: listStyle,
           ),
       ],
     );
@@ -84,9 +81,19 @@ class CallList extends StatelessWidget {
 
 /// One call in the [CallList]: status badge, name/number and a live duration
 /// for answered calls (or the call direction while it is still ringing).
+///
+/// The row is one control: a node that says who the call is with and in what
+/// state, carries [identifier] and the press, with the drawn content kept out
+/// of it. Its one child is an empty node whose id is the call's state
+/// ([callRowStateRingingId], [callRowStateOnHoldId], [callRowStateOnCallId]):
+/// merging the row's subtree, as [SemanticAction] does, would fold that node
+/// into the row and lose it. On iOS a node with a child is shown as a
+/// container holding the node and its child side by side, so there the state
+/// is a sibling of the row's element in that container.
 class CallRow extends StatelessWidget {
   const CallRow({
     super.key,
+    required this.identifier,
     required this.call,
     required this.focused,
     required this.onTap,
@@ -94,6 +101,9 @@ class CallRow extends StatelessWidget {
     this.style,
     this.listStyle,
   });
+
+  /// Stable, non-localized automation id of the row.
+  final String identifier;
 
   final ActiveCall call;
   final bool focused;
@@ -106,6 +116,15 @@ class CallRow extends StatelessWidget {
     if (!call.wasAccepted) return context.l10n.callProcessingStatus_ringing;
     if (call.held) return context.l10n.call_description_held;
     return context.l10n.call_CallList_statusOnCall;
+  }
+
+  /// Stable, non-localized automation id of the row's state, the one [_statusBadge] shows in words:
+  /// a flow on the device finds the row of a ringing or held call by it, without reading a
+  /// translation.
+  String get _stateId {
+    if (!call.wasAccepted) return callRowStateRingingId;
+    if (call.held) return callRowStateOnHoldId;
+    return callRowStateOnCallId;
   }
 
   /// Status dot from the themed call-list palette (CallListStyle, fed by the
@@ -121,10 +140,39 @@ class CallRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusStyle = style?.callStatus ?? const TextStyle();
     final base = CallRowFrame.baseColor(context, style);
+    final name = call.displayName ?? call.handle.value;
+    final status = _statusBadge(context);
 
+    return Semantics(
+      container: true,
+      identifier: identifier,
+      button: true,
+      label: '$name, $status',
+      onTap: onTap,
+      child: Stack(
+        children: [
+          // A node of its own for each state: iOS keeps the identifier an
+          // element was created with, so a state that changed on the same
+          // node would still read as the first one (seen on an iPhone: a held
+          // row still said it rang).
+          Positioned.fill(
+            child: Semantics(
+              key: ValueKey(_stateId),
+              container: true,
+              identifier: _stateId,
+              child: const SizedBox.expand(),
+            ),
+          ),
+          ExcludeSemantics(child: _frame(context, name, status, statusStyle, base)),
+        ],
+      ),
+    );
+  }
+
+  Widget _frame(BuildContext context, String name, String status, TextStyle statusStyle, Color base) {
     return CallRowFrame(
-      name: call.displayName ?? call.handle.value,
-      status: _statusBadge(context),
+      name: name,
+      status: status,
       focused: focused,
       onTap: onTap,
       style: style,
