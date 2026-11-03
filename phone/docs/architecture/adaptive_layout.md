@@ -1,30 +1,154 @@
 # Adaptive layout: giving a screen a second arrangement
 
-How to add a landscape arrangement to a screen, distilled from the first
-screen that got one - the active call screen (see
+How to give a screen another arrangement - for a watch, a tablet or a phone
+lying down. The landscape half is distilled from the first screen that got
+one, the active call screen (see
 [`features/call_ux.md`](../features/call_ux.md), section "Landscape", for the
 reference implementation). Follow this playbook for the next screens instead
 of inventing the shape again.
 
-Last reviewed: 2026-09-04.
+Last reviewed: 2026-11-03.
 
-## The adaptation axis
+## The adaptation axes
 
-The axis the app adapts on today is **window orientation**, and it is decided
-in exactly one place: `lib/widgets/orientation_layout_selector.dart`
-(`OrientationLayoutSelector`). A screen hands it both arrangements and never
-reads the orientation itself:
+A screen adapts on two axes, and each is decided in exactly one place. A
+screen hands the decider its arrangements and never reads the window size or
+orientation itself:
+
+| Axis | Values | Decided by | Decides |
+|---|---|---|---|
+| Device class | `watch`, `handset`, `large` | `AdaptiveLayout` (`lib/widgets/adaptive/`) | what the screen is made of |
+| Orientation | portrait, landscape | `OrientationLayoutSelector` | how a handset screen is arranged |
 
 ```dart
-OrientationLayoutSelector(
-  portrait: MyScreenPortrait(params: params),
-  landscape: MyScreenLandscape(params: params),
+AdaptiveLayout(
+  handset: (_) => OrientationLayoutSelector(
+    portrait: MyScreenPortrait(params: params),
+    landscape: MyScreenLandscape(params: params),
+  ),
+  watch: (_) => MyScreenWatch(params: params),
 )
 ```
 
-If the axis ever changes - window size classes once tablet or desktop
-arrangements exist - only the selector changes, and every screen follows.
-Do not scatter `MediaQuery.orientation` checks through screens or blocks.
+Do not scatter `MediaQuery.size` or `MediaQuery.orientation` checks through
+screens or blocks.
+
+### Device class
+
+`FormFactor.fromSize` (`lib/widgets/adaptive/form_factor.dart`) reads the
+window size, and the numbers live only in `FormFactorBreakpoints`:
+
+- `watch` - both sides under 300: every watch the configurator previews
+  (round 192 and 227, Apple Watch 162x197 and 208x248);
+- `large` - shortest side 600 or more, Material's tablet threshold;
+- `handset` - everything else, a phone either way up.
+
+It is decided by size, never by platform: the same build runs on Wear OS, on
+plain Android in a watch body that reports no watch feature, and in the
+configurator's device preview, where the platform is the browser.
+
+`handset` is the only required arrangement. A class without its own falls
+back to it, so screens move to a watch layout one at a time and every other
+screen keeps working as before. Values follow the same rule:
+`context.formFactor.resolve(handset: 24, watch: 8)`; spacing comes from
+`context.adaptiveMetrics` (inset, gap, tap floor), whose handset values are
+the ones the app always used.
+
+Crossing a class boundary swaps the subtree under `AdaptiveLayout`, so the
+bloc, controllers and anything the user typed live above it - the same rule
+as "State stays on the screen" below.
+
+### Screens with a watch arrangement
+
+| Screen | Watch arrangement |
+|---|---|
+
+The watch parts of the kit, in `lib/widgets/adaptive/`. A screen's watch arrangement says what
+to show; how it sits on a face comes from these.
+
+Screen shapes:
+
+- `WatchActionLayout` - a screen with one main action: content scrolling in a short column, an
+  optional secondary action at its end, the main action as the edge button, the column fading
+  out above it. Descriptions and plain text take the small body size, outlined fields the
+  pill shape. `title:` opens the column with a `WatchTitle`; the main action is a
+  `WatchAction` (a label, a callback, the screen's style, an automation id) or, when the
+  button shows more than a label (a spinner), a `primary:` builder. The sign-in forms, the
+  custom-core screen and the consent screens are built on it.
+- `WatchScrollList` - a screen that is only a list (a menu, a list of choices): the padding a
+  face needs and a fade into the bottom edge; with `bottom`, the choices sit on the bottom of
+  the face and the rest is centred above them. As a page opened over another screen it takes
+  a `title`, a `spacing` between its rows, and `opaque` for the page's own background.
+- `WatchEdgeLayout` - a screen whose content stays put above one main action along the bottom
+  (a call, a keypad): the body gets the face less the edge button's room, an optional
+  `backdrop` fills the face behind it. The scrolling counterpart is `WatchActionLayout`.
+- `WatchIconGrid` - a screen of round buttons with captions under a short title, three to a
+  row (fewer, and larger, when there are fewer). On a round face the grid keeps to two thirds
+  of the face, centred, the title above it, so the corner captions clear the bezel. A `header`
+  widget can take the title's place; a cell without `onPressed` is shown disabled. The main
+  hub, the ways in and a call's More are built on it.
+- `WatchDrillIn` - a menu first; a choice opens the content on the whole face, going back
+  returns to the menu. The ways in and the main hub are built on it.
+- `WatchEdgeButton` - a screen's one action along the bottom of the face (of a screen that
+  fills the window, with nothing under it). Its builder gets the style to merge over the
+  button's own (`overlay.merge(themeStyle)`): the outline - `WatchEdgeButtonBorder`, a rounded
+  top cut by the face circle, on a round face, a `StadiumBorder` on a rectangular one - and the
+  label padding. `compact: true` is the thinner one a keypad uses. The content above leaves
+  `WatchEdgeButton.reservedHeight(context)` free.
+
+Parts:
+
+- `WatchPill.style` - a full-width button inside a column (a list entry, a secondary action, a
+  link): a pill at the 48-point tap floor, merged over the button's own style.
+- `WatchRoundButton` - a round button with a short caption under it, one node named by its
+  label: filled, tonal or outlined (`WatchRoundEmphasis`), on a light page or over the call
+  (`WatchRoundTone.onDark`: light, translucent, solid when on). A screen's own style, such as
+  a hangup's colours, wins. The grid's cells and a call's controls are built on it.
+- `WatchKeyGrid` - twelve keys in four rows sharing the height, with no gaps; a held key enters
+  its alternate (0 for +) unless `alternates` is off, as for a call's tones.
+- `WatchTitle` - a screen's short centred title, in place of an icon or an app bar.
+- `WatchListTile` - one row of a watch list (a device, a call, a way to transfer): a pill at
+  the tap floor with an icon, a title of up to two lines, a one-line subtitle and a trailing
+  mark; one button for assistive technology. `selected` tints it, `outlined` marks the row
+  the screen acts on.
+- `WatchLink` - a link inside a column (a page to read): an underlined label at the tap floor,
+  not a second pill competing with the screen's action.
+- `WatchToggleChip` - a consent or a setting as one full-width pill with a small switch; one
+  semantics node with the label, the state and the tap.
+- `WatchLogo` - a themed logo fitted into a height, without the paddings the theme gives it
+  for a phone. Only the landing shows a logo on a watch; the screens after it give the room to
+  their content.
+- `WatchFadeMask`, `WatchStadiumFields` - the fade and the pill fields the layouts above apply.
+
+Geometry:
+
+- `context.isRoundScreen` - a round watch face. Android answers it (`Configuration.isScreenRound`,
+  asked once at startup through the `com.webtrit.phone/screen_shape` channel and shared as
+  `ScreenShape`); where nothing answers - the configurator's preview, tests - a watch whose window
+  is square counts as round. `roundSafeInset(diameter)` keeps content inside the square inscribed
+  in the face.
+- `context.isSmallWatch` - a face below `FormFactorBreakpoints.smallWatchMaxShortestSide` (200);
+  every size that differs between the small and the large faces switches on it.
+- `context.watchContentPadding()` - the padding of content that does not scroll (the keypad, the
+  landing's brand); `context.watchListPadding(minBottom:)` - of a scrolling list.
+- `watchResizesForKeyboard` - false: the watch keyboard covers the whole face, so a watch
+  scaffold does not shrink for it.
+
+A screen's watch arrangement is built from stock widgets plus these; anything that needs a
+painter of its own (text along the bezel, a bezel scroll indicator) is left out.
+
+### Does it fit
+
+`test/helpers/screen_presets.dart` holds the configurator's devices
+(`watchPresets`, `handsetPresets`, `largePresets`) and
+`pumpCollectingOverflows`, which returns every overflow of a pumped screen
+instead of failing on the first. A fit test runs a screen on every preset
+with the shipped theme (`withShippedTheme` in `test/helpers/shipped_theme.dart`:
+without it the logos and type that make a screen tall are missing) and keeps the screens it
+does not fit yet in a known-overflow list; a preset leaves the list in the
+change that makes the screen fit. The tests so far:
+`test/features/login/login_mode_select_fit_test.dart` (fits everywhere, watches included),
+`test/features/keypad/keypad_fit_test.dart` (watches still on the known-overflow list).
 
 ## Step 0: rotation is a product decision
 
