@@ -210,7 +210,20 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   /// hiding them would leave the screen empty, with no hint of how to get
   /// them back.
   bool get _autoHide =>
-      _remotePictureShown && widget.activeCalls.shouldAutoHideControls(keepControlsVisible: widget.keepControlsVisible);
+      !_watchPageOpen &&
+      _remotePictureShown &&
+      widget.activeCalls.shouldAutoHideControls(keepControlsVisible: widget.keepControlsVisible);
+
+  /// Whether a watch has a page or the keypad over the call: it is being read,
+  /// so the controls neither hide on their own nor on a tap.
+  bool _watchPageOpen = false;
+
+  void _onWatchPageOpenChanged(bool open) {
+    if (!mounted || open == _watchPageOpen) return;
+    _watchPageOpen = open;
+    _syncAutoHide(reason: open ? 'a watch page is open' : 'the watch page closed');
+    if (open) _compactController.setCompact(false, reason: 'a watch page is open');
+  }
 
   /// Turns the auto-hide of the call controls on or off.
   void _syncAutoHide({required String reason}) {
@@ -226,7 +239,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
   /// off, the controller refuses to hide and the tap changes nothing: no
   /// video check is needed here, and none belongs here.
   void _toggleControls() {
-    if (widget.keepControlsVisible) {
+    if (widget.keepControlsVisible || _watchPageOpen) {
       _compactController.setCompact(false, reason: 'the controls are required to stay');
     } else {
       _compactController.toggle();
@@ -371,6 +384,56 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
     final MediaQueryData mediaQueryData = MediaQuery.of(context);
     final style = Theme.of(context).extension<CallScreenStyles>()?.primary;
 
+    // One set of values for whichever arrangement shows them.
+    final controlsParams = CallControlsParams(
+      activeCalls: widget.activeCalls,
+      focusedCall: widget.focusedCall,
+      audioDevice: widget.audioDevice,
+      availableAudioDevices: widget.availableAudioDevices,
+      callConfig: widget.callConfig,
+      contactResolver: widget.contactResolver,
+      keypadShown: _inCallKeypadShown,
+      dtmfInput: _dtmfInput,
+      // Blocks everything that talks to the server: while a
+      // previous action is still settling, while signaling is
+      // not ready, and while a call is being renegotiated.
+      interactionsEnabled:
+          interactionsDebounceActive == false &&
+          widget.callStatus == CallStatus.ready &&
+          widget.activeCalls.any((call) => call.updating) == false,
+      remotePictureShown: _remotePictureShown,
+      onCallSelected: (callId) => _callBloc.add(CallControlEvent.callSelected(callId)),
+      onKeypadToggle: _toggleKeypad,
+      onCameraChanged: _toggleFocusedCamera,
+      onCameraPermissionDeniedPressed: _onCameraPermissionDeniedPressed,
+      onMutedChanged: (value) => _callBloc.add(CallControlEvent.setMuted(widget.focusedCall.callId, value)),
+      onAudioDeviceChanged: (device) =>
+          _callBloc.add(CallControlEvent.audioDeviceSet(widget.focusedCall.callId, device)),
+      onBlindTransferInitiated: () => _callBloc.add(CallControlEvent.blindTransferInitiated(widget.focusedCall.callId)),
+      onAttendedTransferInitiated: _startAttendedTransfer,
+      onAttendedTransferSubmitted: _submitAttendedTransfer,
+      linkedCall: widget.linkedCall,
+      handOver: widget.handOver,
+      canStartAttendedTransfer: widget.canStartAttendedTransfer,
+      onHeldChanged: _toggleFocusedHeld,
+      onKeyPressed: _sendDtmfKey,
+      onHangup: _hangupFocused,
+      onAccept: _answerFocused,
+      onMerge: widget.canMerge ? _mergeCalls : null,
+      onConferenceAdd: widget.canAdd ? _addToConference : null,
+      conference: widget.conference,
+      conferenceParked: widget.conferenceParked,
+      onConversationSwitched: (callId) => _callBloc.add(CallControlEvent.conversationSwitched(callId)),
+      onConferenceSelfMuted: (muted) => _callBloc.add(CallControlEvent.conferenceSelfMuted(muted)),
+      onConferenceParticipantMuted: (callId, muted) =>
+          _callBloc.add(CallControlEvent.conferenceParticipantMuted(callId, muted)),
+      onConferenceParticipantHangup: (callId) =>
+          _callBloc.add(CallControlEvent.ended(callId, endedBy: CallkeepEndedBy.user)),
+      addParticipantAvailability: widget.addParticipantAvailability,
+      onAddParticipant: _addParticipant,
+      onAddParticipantCancelled: _cancelAddParticipant,
+    );
+
     // One gesture owns showing and hiding the controls, and it wraps the whole
     // screen rather than sitting inside it: a layer under the controls would
     // never see a tap on the toolbar, which paints over it and swallows it.
@@ -441,58 +504,17 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                   animation: _compactController,
                   builder: (context, child) =>
                       HideableLayer(hidden: _compactController.compact, padding: mediaQueryData.padding, child: child!),
-                  child: CallControls(
-                    callStatus: widget.callStatus,
-                    popupMenuItems: _buildPopupMenuItems,
-                    params: CallControlsParams(
-                      activeCalls: widget.activeCalls,
-                      focusedCall: widget.focusedCall,
-                      audioDevice: widget.audioDevice,
-                      availableAudioDevices: widget.availableAudioDevices,
-                      callConfig: widget.callConfig,
-                      contactResolver: widget.contactResolver,
-                      keypadShown: _inCallKeypadShown,
-                      dtmfInput: _dtmfInput,
-                      // Blocks everything that talks to the server: while a
-                      // previous action is still settling, while signaling is
-                      // not ready, and while a call is being renegotiated.
-                      interactionsEnabled:
-                          interactionsDebounceActive == false &&
-                          widget.callStatus == CallStatus.ready &&
-                          widget.activeCalls.any((call) => call.updating) == false,
-                      remotePictureShown: _remotePictureShown,
-                      onCallSelected: (callId) => _callBloc.add(CallControlEvent.callSelected(callId)),
-                      onKeypadToggle: _toggleKeypad,
-                      onCameraChanged: _toggleFocusedCamera,
-                      onCameraPermissionDeniedPressed: _onCameraPermissionDeniedPressed,
-                      onMutedChanged: (value) =>
-                          _callBloc.add(CallControlEvent.setMuted(widget.focusedCall.callId, value)),
-                      onAudioDeviceChanged: (device) =>
-                          _callBloc.add(CallControlEvent.audioDeviceSet(widget.focusedCall.callId, device)),
-                      onBlindTransferInitiated: () =>
-                          _callBloc.add(CallControlEvent.blindTransferInitiated(widget.focusedCall.callId)),
-                      onAttendedTransferInitiated: _startAttendedTransfer,
-                      onAttendedTransferSubmitted: _submitAttendedTransfer,
-                      linkedCall: widget.linkedCall,
-                      handOver: widget.handOver,
-                      canStartAttendedTransfer: widget.canStartAttendedTransfer,
-                      onHeldChanged: _toggleFocusedHeld,
-                      onKeyPressed: _sendDtmfKey,
-                      onHangup: _hangupFocused,
-                      onAccept: _answerFocused,
-                      onMerge: widget.canMerge ? _mergeCalls : null,
-                      onConferenceAdd: widget.canAdd ? _addToConference : null,
-                      conference: widget.conference,
-                      conferenceParked: widget.conferenceParked,
-                      onConversationSwitched: (callId) => _callBloc.add(CallControlEvent.conversationSwitched(callId)),
-                      onConferenceSelfMuted: (muted) => _callBloc.add(CallControlEvent.conferenceSelfMuted(muted)),
-                      onConferenceParticipantMuted: (callId, muted) =>
-                          _callBloc.add(CallControlEvent.conferenceParticipantMuted(callId, muted)),
-                      onConferenceParticipantHangup: (callId) =>
-                          _callBloc.add(CallControlEvent.ended(callId, endedBy: CallkeepEndedBy.user)),
-                      addParticipantAvailability: widget.addParticipantAvailability,
-                      onAddParticipant: _addParticipant,
-                      onAddParticipantCancelled: _cancelAddParticipant,
+                  child: AdaptiveLayout(
+                    handset: (_) => CallControls(
+                      callStatus: widget.callStatus,
+                      popupMenuItems: _buildPopupMenuItems,
+                      params: controlsParams,
+                    ),
+                    watch: (_) => CallControlsWatch(
+                      onPageOpenChanged: _onWatchPageOpenChanged,
+                      callStatus: widget.callStatus,
+                      params: controlsParams,
+                      video: _watchVideoOptions,
                     ),
                   ),
                 ),
@@ -503,6 +525,23 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
       ),
     );
   }
+
+  /// The picture and camera choices a watch face offers under More, which
+  /// the phone keeps in its toolbar menu and its preview.
+  CallWatchVideoOptions get _watchVideoOptions {
+    final activeCall = widget.activeCalls.current;
+    return CallWatchVideoOptions(
+      fit: _videoFit,
+      onFitToggled: _onVideoFitTogglePressed,
+      backgroundMode: _backgroundMode,
+      onBackgroundToggled: _onBlurTogglePressed,
+      // The phone switches the camera on its preview, which a face has no
+      // room for.
+      onCameraSwitched: activeCall.isCameraActive && activeCall.frontCamera != null ? _switchCamera : null,
+    );
+  }
+
+  void _switchCamera() => _callBloc.add(CallControlEvent.cameraSwitched(widget.activeCalls.current.callId));
 
   /// Merges every call that can join a room. The set is read at the moment
   /// the button is pressed rather than captured with the callback: a call may

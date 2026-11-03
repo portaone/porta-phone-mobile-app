@@ -501,6 +501,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call_ToolbarStatus_reconnecting => 'Reconnecting...';
 
   @override
+  String get call_Watch_more => 'More';
+
+  @override
+  String get call_Watch_mute => 'Mute';
+
+  @override
+  String get call_Watch_speaker => 'Speaker';
+
+  @override
+  String get call_Watch_audio => 'Audio';
+
+  @override
+  String get call_Watch_keypad => 'Keypad';
+
+  @override
+  String get call_Watch_hold => 'Hold';
+
+  @override
+  String get call_Watch_resume => 'Resume';
+
+  @override
+  String get call_Watch_transfer => 'Transfer';
+
+  @override
+  String get call_Watch_camera => 'Camera';
+
+  @override
+  String get call_Watch_switchCamera => 'Switch';
+
+  @override
+  String get call_Watch_blur => 'Blur';
+
+  @override
+  String get call_Watch_calls => 'Calls';
+
+  @override
+  String get call_Watch_conference => 'Group';
+
+  @override
+  String get call_Watch_drop => 'Drop';
+
+  @override
   String get call_description_held => 'On hold';
 
   @override

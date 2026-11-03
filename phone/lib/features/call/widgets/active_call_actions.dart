@@ -407,14 +407,14 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
             style: widget.style?.speaker,
             onSelected: onAudioDeviceChanged,
             items: _buildAudioDeviceItems(themeData),
-            child: Icon(switch (audioDevice?.type) {
-              CallAudioDeviceType.speaker => Icons.volume_up,
-              CallAudioDeviceType.bluetooth => Icons.bluetooth_audio,
-              CallAudioDeviceType.wiredHeadset => Icons.headset,
-              CallAudioDeviceType.earpiece => Icons.phone_in_talk,
-              CallAudioDeviceType.streaming => Icons.usb,
-              _ => Icons.volume_off,
-            }, size: actionPadIconSize),
+            // No device, or one the system cannot name, reads as no sound
+            // route rather than as a question mark on the button itself.
+            child: Icon(
+              audioDevice == null || audioDevice.type == CallAudioDeviceType.unknown
+                  ? Icons.volume_off
+                  : audioDevice.type.icon,
+              size: actionPadIconSize,
+            ),
           ),
         // delimiter
         const SizedBox(),
@@ -548,29 +548,10 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
   List<PopupMenuEntry<CallAudioDevice>> _buildAudioDeviceItems(ThemeData themeData) {
     return widget.availableAudioDevices
         .map((device) {
-          final CallAudioDevice(:name, :type, :id) = device;
           return CallPopupMenuItem<CallAudioDevice>(
             value: device,
-            text: switch (type) {
-              CallAudioDeviceType.speaker => context.l10n.call_CallActionsTooltip_device_speaker,
-              CallAudioDeviceType.earpiece => context.l10n.call_CallActionsTooltip_device_earpiece,
-              CallAudioDeviceType.wiredHeadset => context.l10n.call_CallActionsTooltip_device_wiredHeadset,
-              CallAudioDeviceType.bluetooth => name ?? context.l10n.call_CallActionsTooltip_device_bluetooth,
-              CallAudioDeviceType.streaming => name ?? context.l10n.call_CallActionsTooltip_device_streaming,
-              _ => name ?? context.l10n.call_CallActionsTooltip_device_unknown,
-            },
-            icon: Icon(
-              switch (type) {
-                CallAudioDeviceType.speaker => Icons.volume_up,
-                CallAudioDeviceType.bluetooth => Icons.bluetooth_audio,
-                CallAudioDeviceType.wiredHeadset => Icons.headset,
-                CallAudioDeviceType.earpiece => Icons.phone_in_talk,
-                CallAudioDeviceType.streaming => Icons.usb,
-                _ => Icons.device_unknown,
-              },
-              size: 20,
-              color: themeData.textTheme.bodyMedium!.color,
-            ),
+            text: device.l10n(context),
+            icon: Icon(device.type.icon, size: 20, color: themeData.textTheme.bodyMedium!.color),
             textStyle: themeData.textTheme.bodyMedium,
           );
         })
@@ -596,7 +577,7 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
             // Transfer is signaling-dependent, disable during renegotiation.
             enabled: widget.enableInteractions,
             onTap: () => onAttendedTransferSubmitted.call(call),
-            text: call.displayName ?? call.handle.value,
+            text: call.nameOrNumber,
             // The name is the entry's own; the second line says what happens.
             subtitle: context.l10n.call_CallActionsTooltip_transferToCallHint,
             icon: Icon(

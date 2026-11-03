@@ -7,6 +7,7 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/main/main.dart';
 import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -14,6 +15,7 @@ import 'package:webtrit_phone/models/models.dart';
 
 import '../../helpers/screen_presets.dart';
 import '../../helpers/stack_router.dart';
+import '../call/view/call_active_scaffold_harness.dart';
 
 void main() {
   const tabs = <BottomMenuTab>[
@@ -53,6 +55,13 @@ void main() {
   int? selected;
   late _MockSessionStatusCubit sessionStatus;
 
+  /// The calls the hub sees: none unless a test puts one aside.
+  CallBloc calls([CallState state = const CallState()]) {
+    final bloc = _MockCallBloc();
+    whenListen(bloc, const Stream<CallState>.empty(), initialState: state);
+    return bloc;
+  }
+
   setUp(() {
     sessionStatus = _MockSessionStatusCubit();
     when(() => sessionStatus.state).thenReturn(const SessionStatusState());
@@ -64,6 +73,7 @@ void main() {
     bool wired = true,
     DestinationPickPurpose? pickPurpose,
     VoidCallback? onCancelPick,
+    CallState callState = const CallState(),
   }) {
     selected = null;
     // The counts the bar shows travel with the decorator; the hub shows them
@@ -71,29 +81,32 @@ void main() {
     Widget decorate(BottomMenuTab tab, Widget icon) =>
         tab is MessagingBottomMenuTab ? Badge(label: const Text('3'), child: icon) : icon;
 
-    return MaterialApp(
-      localizationsDelegates: appLocalizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('en'),
-      home: BlocProvider<SessionStatusCubit>.value(
-        value: sessionStatus,
-        child: withRootStackRouter(
-          Builder(
-            builder: (context) => MainScreen(
-              body:
-                  body ??
-                  MainHub(
-                    tabs: tabs,
-                    decorateTabIcon: decorate,
-                    pick: MainScreenPick.of(context, pickPurpose, onCancelPick),
-                    onChosen: wired ? (index) => selected = index : null,
-                  ),
-              tabs: tabs,
-              currentIndex: currentIndex,
-              onTabSelected: wired ? (index) => selected = index : null,
-              decorateTabIcon: decorate,
-              pickPurpose: pickPurpose,
-              onCancelPick: onCancelPick,
+    return BlocProvider<CallBloc>.value(
+      value: calls(callState),
+      child: MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('en'),
+        home: BlocProvider<SessionStatusCubit>.value(
+          value: sessionStatus,
+          child: withRootStackRouter(
+            Builder(
+              builder: (context) => MainScreen(
+                body:
+                    body ??
+                    MainHub(
+                      tabs: tabs,
+                      decorateTabIcon: decorate,
+                      pick: MainScreenPick.of(context, pickPurpose, onCancelPick),
+                      onChosen: wired ? (index) => selected = index : null,
+                    ),
+                tabs: tabs,
+                currentIndex: currentIndex,
+                onTabSelected: wired ? (index) => selected = index : null,
+                decorateTabIcon: decorate,
+                pickPurpose: pickPurpose,
+                onCancelPick: onCancelPick,
+              ),
             ),
           ),
         ),
@@ -162,6 +175,26 @@ void main() {
     handle.dispose();
   });
 
+  for (final preset in watchPresets) {
+    testWidgets('on $preset a call put aside takes the title, to go back to', (tester) async {
+      final handle = tester.ensureSemantics();
+      preset.apply(tester);
+      final call = makeCall(acceptedTime: DateTime.now(), displayName: 'Thomas Anderson');
+      expect(
+        await pumpCollectingOverflows(tester, shell(callState: CallState(activeCalls: [call], minimized: true))),
+        isEmpty,
+      );
+
+      expect(find.bySemanticsIdentifier(callActiveThumbnailId), findsOneWidget);
+      expect(find.textContaining('Thomas Anderson').hitTestable(), findsOneWidget);
+      // Every section still fits beside it.
+      for (final tab in tabs) {
+        expect(find.byKey(tab.navBarKey), findsOneWidget);
+      }
+      handle.dispose();
+    });
+  }
+
   testWidgets('a phone keeps its tab bar', (tester) async {
     handsetPresets.first.apply(tester);
     await pumpCollectingOverflows(tester, shell());
@@ -169,6 +202,8 @@ void main() {
     expect(find.byType(BottomNavigationBar), findsOneWidget);
   });
 }
+
+class _MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {}
 
 class _MockSessionStatusCubit extends MockCubit<SessionStatusState> implements SessionStatusCubit {}
 
