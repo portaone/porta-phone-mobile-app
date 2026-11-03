@@ -2680,6 +2680,24 @@ abstract class AppLocalizations {
   /// **'This QR code cannot be used to sign in.'**
   String get login_Text_qrSigninInvalidCodeError;
 
+  /// The way in on a watch, under its round button: a word or two.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP'**
+  String get loginType_otpSigninShort;
+
+  /// The way in on a watch, under its round button: a word or two.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get loginType_passwordSigninShort;
+
+  /// The way in on a watch, under its round button: a word or two.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get loginType_signupShort;
+
   /// No description provided for @loginType_otpSignin.
   ///
   /// In en, this message translates to:

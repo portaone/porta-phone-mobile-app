@@ -651,6 +651,9 @@ extension AppLocalizationsExtension on AppLocalizations {
       'login_Button_qrSigninOpenSettings' => login_Button_qrSigninOpenSettings,
       'login_Text_qrSigninInvalidCodeError' =>
         login_Text_qrSigninInvalidCodeError,
+      'loginType_otpSigninShort' => loginType_otpSigninShort,
+      'loginType_passwordSigninShort' => loginType_passwordSigninShort,
+      'loginType_signupShort' => loginType_signupShort,
       'loginType_otpSignin' => loginType_otpSignin,
       'loginType_passwordSignin' => loginType_passwordSignin,
       'loginType_qrSignin' => loginType_qrSignin,

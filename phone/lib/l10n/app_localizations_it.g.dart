@@ -1511,6 +1511,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get login_Text_qrSigninInvalidCodeError => 'Questo codice QR non può essere utilizzato per accedere.';
 
   @override
+  String get loginType_otpSigninShort => 'OTP';
+
+  @override
+  String get loginType_passwordSigninShort => 'Password';
+
+  @override
+  String get loginType_signupShort => 'Iscrizione';
+
+  @override
   String get loginType_otpSignin => 'Accesso con OTP';
 
   @override

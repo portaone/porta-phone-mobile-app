@@ -1521,6 +1521,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get login_Text_qrSigninInvalidCodeError => 'Цей QR-код не можна використати для входу.';
 
   @override
+  String get loginType_otpSigninShort => 'OTP';
+
+  @override
+  String get loginType_passwordSigninShort => 'Пароль';
+
+  @override
+  String get loginType_signupShort => 'Реєстрація';
+
+  @override
   String get loginType_otpSignin => 'Увійти за OTP';
 
   @override

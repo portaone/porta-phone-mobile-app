@@ -19,6 +19,37 @@ extension LoginTypeL10n on LoginType {
   }
 }
 
+extension LoginTypeWatch on LoginType {
+  /// Whether a watch offers this way in. QR sign-in reads the code through a
+  /// camera, and watches have none.
+  bool get availableOnWatch {
+    return switch (this) {
+      LoginType.otpSignin || LoginType.passwordSignin || LoginType.signup => true,
+      LoginType.qrSignin => false,
+    };
+  }
+
+  /// The name under the way in's button on a watch: a word or two.
+  String shortL10n(BuildContext context) {
+    return switch (this) {
+      LoginType.otpSignin => context.l10n.loginType_otpSigninShort,
+      LoginType.passwordSignin => context.l10n.loginType_passwordSigninShort,
+      LoginType.signup => context.l10n.loginType_signupShort,
+      // Never on a watch (see [availableOnWatch]).
+      LoginType.qrSignin => context.l10n.loginType_qrSignin,
+    };
+  }
+
+  IconData get watchIcon {
+    return switch (this) {
+      LoginType.otpSignin => Icons.sms_outlined,
+      LoginType.passwordSignin => Icons.password,
+      LoginType.signup => Icons.person_add_alt,
+      LoginType.qrSignin => Icons.qr_code,
+    };
+  }
+}
+
 extension LoginTypePageRouteInfo on LoginType {
   PageRouteInfo toPageRouteInfo() {
     return switch (this) {
