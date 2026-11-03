@@ -19,6 +19,7 @@ mixin AudioProcessingSettingsJsonMapper {
       noiseSuppression: map['noiseSuppression'] as bool?,
       highpassFilter: map['highpassFilter'] as bool?,
       audioMirroring: map['audioMirroring'] as bool?,
+      voiceNoiseReduction: map['voiceNoiseReduction'] as bool?,
     );
   }
 
@@ -30,6 +31,7 @@ mixin AudioProcessingSettingsJsonMapper {
       'noiseSuppression': settings.noiseSuppression,
       'highpassFilter': settings.highpassFilter,
       'audioMirroring': settings.audioMirroring,
+      'voiceNoiseReduction': settings.voiceNoiseReduction,
     };
   }
 }

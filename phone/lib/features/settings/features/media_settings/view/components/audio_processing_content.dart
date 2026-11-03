@@ -77,6 +77,22 @@ class AudioProcessingContent extends StatelessWidget {
                   cubit.setAudioProcessingSettings(audioProcessingSettings.copyWithNoiseSuppression(option)),
             ),
             InlineChoosableSection<bool>(
+              title: context.l10n.settings_audioProcessing_Section_VNR_title,
+              sectionId: 'audioProcessingVnr',
+              // Two choices, off and on: there is no platform default to show as "auto", so the
+              // section's leading null choice stands for off.
+              optionIdValue: (option) => option == true ? 'on' : 'off',
+              buildOptionTitle: (option) => Text(
+                option == true
+                    ? context.l10n.settings_encoding_Section_value_on
+                    : context.l10n.settings_encoding_Section_value_off,
+              ),
+              options: const [true],
+              selected: audioProcessingSettings.voiceNoiseReduction == true ? true : null,
+              onSelect: (option) =>
+                  cubit.setAudioProcessingSettings(audioProcessingSettings.copyWithVoiceNoiseReduction(option)),
+            ),
+            InlineChoosableSection<bool>(
               title: context.l10n.settings_audioProcessing_Section_HPF_title,
               sectionId: 'audioProcessingHpf',
               buildOptionTitle: (option) {

@@ -2468,6 +2468,8 @@
   "@settings_audioProcessing_Section_title": {},
   "settings_audioProcessing_Section_tooltip": "Può essere utilizzato per regolare la qualità audio per esigenze o ambienti specifici. Come la registrazione in studio o un microfono esterno. \n\nBypass elaborazione vocale: indica al sistema di non applicare l'elaborazione vocale hardware (richiede il riavvio dell'app).",
   "@settings_audioProcessing_Section_tooltip": {},
+  "settings_audioProcessing_Section_VNR_title": "Riduzione del rumore della voce (RNNoise)",
+  "@settings_audioProcessing_Section_VNR_title": {},
   "settings_audioProcessing_Section_VP_title": "Bypassare l'elaborazione vocale",
   "@settings_audioProcessing_Section_VP_title": {},
   "settings_call_codecs_preferred_audio_default": "Predefinito",
