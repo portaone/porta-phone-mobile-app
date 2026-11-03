@@ -15,9 +15,13 @@ import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/features/keypad/keypad.dart';
 import 'package:webtrit_phone/features/keypad/view/keypad_view.dart';
+import 'package:webtrit_phone/features/keypad/view/keypad_view_handset.dart';
+import 'package:webtrit_phone/features/keypad/view/keypad_view_watch.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
+
+import '../../helpers/shipped_theme.dart';
 
 class MockContactResolver extends Mock implements ContactResolver {}
 
@@ -28,9 +32,10 @@ class MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {}
 class MockCallRoutingCubit extends MockCubit<CallRoutingState?> implements CallRoutingCubit {}
 
 class KeypadHarness {
-  KeypadHarness() {
+  /// [contact] is what any typed number resolves to; none by default.
+  KeypadHarness({Contact? contact}) {
     final contactResolver = MockContactResolver();
-    when(() => contactResolver.resolve(any())).thenAnswer((_) async => null);
+    when(() => contactResolver.resolve(any())).thenAnswer((_) async => contact);
     keypadCubit = KeypadCubit(contactResolver);
     when(() => callBloc.state).thenReturn(const CallState());
     when(() => routingCubit.state).thenReturn(null);
@@ -39,6 +44,7 @@ class KeypadHarness {
   late final KeypadCubit keypadCubit;
   final MockCallBloc callBloc = MockCallBloc();
   final MockCallRoutingCubit routingCubit = MockCallRoutingCubit();
+  final MockCallController callController = MockCallController();
 
   /// What the view asked the clipboard, in order, by platform method name.
   final List<String> clipboardCalls = [];
@@ -83,20 +89,41 @@ class KeypadHarness {
         extendBodyBehindAppBar: appBar != null,
         appBar: appBar,
         bottomNavigationBar: bottomNavigationBar,
-        body: CallControllerScope(
-          controller: MockCallController(),
-          child: MultiBlocProvider(
-            providers: [
-              BlocProvider<KeypadCubit>.value(value: keypadCubit),
-              BlocProvider<CallBloc>.value(value: callBloc),
-              BlocProvider<CallRoutingCubit>.value(value: routingCubit),
-            ],
-            child: DestinationPicking(
-              purpose: purpose,
-              child: KeypadView(videoEnabled: true, transferEnabled: transferEnabled, style: null),
+        body: _scope(
+          purpose: purpose,
+          child: KeypadView(
+            videoEnabled: true,
+            transferEnabled: transferEnabled,
+            style: null,
+            // The screen picks the arrangement in the app; a test of the bare
+            // view picks it by the window the same way.
+            arrangement: (params) => AdaptiveLayout(
+              handset: (_) => KeypadViewHandset(params: params),
+              watch: (_) => KeypadViewWatch(params: params),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// The whole [KeypadScreen], as the app shows it, in the shipped theme its
+  /// scaffold reads - for a watch, where it has no app bar and so needs
+  /// nothing beyond what the view reads.
+  Widget buildScreen() {
+    return withShippedTheme(_scope(child: const KeypadScreen(videoEnabled: true, transferEnabled: false)));
+  }
+
+  Widget _scope({DestinationPickPurpose? purpose, required Widget child}) {
+    return CallControllerScope(
+      controller: callController,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<KeypadCubit>.value(value: keypadCubit),
+          BlocProvider<CallBloc>.value(value: callBloc),
+          BlocProvider<CallRoutingCubit>.value(value: routingCubit),
+        ],
+        child: DestinationPicking(purpose: purpose, child: child),
       ),
     );
   }
