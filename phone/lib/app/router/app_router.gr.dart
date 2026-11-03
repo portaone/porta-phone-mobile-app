@@ -279,6 +279,147 @@ class CallToActionsWebPageRouteArgs {
 }
 
 /// generated route for
+/// [CallWatchAudioScreenPage]
+class CallWatchAudioScreenPageRoute extends PageRouteInfo<void> {
+  const CallWatchAudioScreenPageRoute({List<PageRouteInfo>? children})
+    : super(CallWatchAudioScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'CallWatchAudioScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return CallWatchAudioScreenPage();
+    },
+  );
+}
+
+/// generated route for
+/// [CallWatchCallsScreenPage]
+class CallWatchCallsScreenPageRoute extends PageRouteInfo<void> {
+  const CallWatchCallsScreenPageRoute({List<PageRouteInfo>? children})
+    : super(CallWatchCallsScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'CallWatchCallsScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return CallWatchCallsScreenPage();
+    },
+  );
+}
+
+/// generated route for
+/// [CallWatchConferenceScreenPage]
+class CallWatchConferenceScreenPageRoute extends PageRouteInfo<void> {
+  const CallWatchConferenceScreenPageRoute({List<PageRouteInfo>? children})
+    : super(CallWatchConferenceScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'CallWatchConferenceScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return CallWatchConferenceScreenPage();
+    },
+  );
+}
+
+/// generated route for
+/// [CallWatchFaceScreenPage]
+class CallWatchFaceScreenPageRoute extends PageRouteInfo<void> {
+  const CallWatchFaceScreenPageRoute({List<PageRouteInfo>? children})
+    : super(CallWatchFaceScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'CallWatchFaceScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return CallWatchFaceScreenPage();
+    },
+  );
+}
+
+/// generated route for
+/// [CallWatchMoreScreenPage]
+class CallWatchMoreScreenPageRoute extends PageRouteInfo<void> {
+  const CallWatchMoreScreenPageRoute({List<PageRouteInfo>? children})
+    : super(CallWatchMoreScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'CallWatchMoreScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return CallWatchMoreScreenPage();
+    },
+  );
+}
+
+/// generated route for
+/// [CallWatchParticipantScreenPage]
+class CallWatchParticipantScreenPageRoute
+    extends PageRouteInfo<CallWatchParticipantScreenPageRouteArgs> {
+  CallWatchParticipantScreenPageRoute({
+    required String callId,
+    List<PageRouteInfo>? children,
+  }) : super(
+         CallWatchParticipantScreenPageRoute.name,
+         args: CallWatchParticipantScreenPageRouteArgs(callId: callId),
+         initialChildren: children,
+       );
+
+  static const String name = 'CallWatchParticipantScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<CallWatchParticipantScreenPageRouteArgs>();
+      return CallWatchParticipantScreenPage(callId: args.callId);
+    },
+  );
+}
+
+class CallWatchParticipantScreenPageRouteArgs {
+  const CallWatchParticipantScreenPageRouteArgs({required this.callId});
+
+  final String callId;
+
+  @override
+  String toString() {
+    return 'CallWatchParticipantScreenPageRouteArgs{callId: $callId}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! CallWatchParticipantScreenPageRouteArgs) return false;
+    return callId == other.callId;
+  }
+
+  @override
+  int get hashCode => callId.hashCode;
+}
+
+/// generated route for
+/// [CallWatchTransferScreenPage]
+class CallWatchTransferScreenPageRoute extends PageRouteInfo<void> {
+  const CallWatchTransferScreenPageRoute({List<PageRouteInfo>? children})
+    : super(CallWatchTransferScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'CallWatchTransferScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return CallWatchTransferScreenPage();
+    },
+  );
+}
+
+/// generated route for
 /// [CallerIdSettingsScreenPage]
 class CallerIdSettingsScreenPageRoute extends PageRouteInfo<void> {
   const CallerIdSettingsScreenPageRoute({List<PageRouteInfo>? children})

@@ -360,11 +360,23 @@ void main() {
     });
 
     testWidgets('a window too narrow for the isolated zone folds the hangup back into the grid', (tester) async {
-      tester.view.physicalSize = const Size(900, 600); // 300x200 logical
+      // A phone's window split narrow: the window stays a phone's - one
+      // narrower than FormFactorBreakpoints.watchMaxSide is a watch face, with
+      // a call screen of its own - and the call gets a 300x200 part of it.
+      tester.view.physicalSize = const Size(2100, 600); // 700x200 logical
       tester.view.devicePixelRatio = 3;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active));
+      await tester.pumpWidget(
+        Align(
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: 300,
+            height: 200,
+            child: buildCallScaffold(callBloc, activeCalls: [active], focusedCall: active),
+          ),
+        ),
+      );
       await tester.pump();
       expect(tester.takeException(), isNull);
 

@@ -41,3 +41,9 @@ extension ActiveCallListAutoCompact on List<ActiveCall> {
   /// counts as such a demand is up to the caller.
   bool shouldAutoHideControls({required bool keepControlsVisible}) => !keepControlsVisible && shouldAutoCompact;
 }
+
+extension ActiveCallName on ActiveCall {
+  /// Who the call is with as the person sees it: the name the call carries,
+  /// or its number.
+  String get nameOrNumber => displayName ?? handle.value;
+}

@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/l10n/l10n.dart';
 
+import '../extensions/extensions.dart';
 import '../view/call_screen_styles.dart';
 import 'active_call_actions.dart';
 import 'call_action_availability.dart';
@@ -37,7 +38,7 @@ class CallActionArea extends StatelessWidget {
     final activeCalls = params.activeCalls;
     final focusedCall = params.focusedCall;
     final interactionsEnabled = params.interactionsEnabled;
-    // What the focused call allows, decided once for every layout of the call.
+    // What the focused call allows, decided once for the phone and the watch.
     final actions = CallActionAvailability(params);
 
     final nonIncomingRingingCalls = actions.othersOnAnswer;
@@ -104,16 +105,16 @@ class CallActionArea extends StatelessWidget {
       children: [
         if (activeCalls.length > 1)
           FocusedActionHint(
-            focusedName: focusedCall.displayName ?? focusedCall.handle.value,
+            focusedName: focusedCall.nameOrNumber,
             willBeHeldNames: nonIncomingRingingCanBeHolded.isEmpty
                 ? const []
                 : [
                     for (final call in nonIncomingRingingCanBeHolded)
-                      if (!call.held) call.displayName ?? call.handle.value,
+                      if (!call.held) call.nameOrNumber,
                   ],
             willBeEndedNames: nonIncomingRingingCanBeHolded.isNotEmpty
                 ? const []
-                : [for (final call in nonIncomingRingingCalls) call.displayName ?? call.handle.value],
+                : [for (final call in nonIncomingRingingCalls) call.nameOrNumber],
             style: style?.callInfo,
             hintStyle: style?.hint,
           ),
