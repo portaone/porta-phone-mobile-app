@@ -728,6 +728,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Я погоджуюсь дозволити застосунку доступ до моїх контактів для покращення досвіду користувача.';
 
   @override
+  String get contacts_agreement_toggle_text => 'Дозволити доступ до контактів';
+
+  @override
   String get contacts_agreement_description =>
       'З вашого дозволу застосунок показує контакти вашого телефона у вкладці «Контакти». Ви можете поділитися всіма контактами або лише вибраними. \n\nДані контактів тимчасово зберігаються локально на вашому пристрої для забезпечення функцій, таких як здійснення дзвінків прямо зі застосунку. \n\nЦі дані не збираються, не передаються та не поширюються за межами застосунку.';
 
@@ -2208,6 +2211,9 @@ class AppLocalizationsUk extends AppLocalizations {
       'Для забезпечення найкращого досвіду користувача застосунок потребує наступні дозволи: мікрофон для аудіодзвінків, камера для відеодзвінків та доступ до контактів для спрощення їх використання в застосунку.\n\nДозволи можуть бути змінені у майбутньому.';
 
   @override
+  String get permission_Text_title => 'Дозволи';
+
+  @override
   String get persistentConnectionReminderContent =>
       'Потрібно вручну запустити застосунок щонайменше один раз після перезавантаження телефону, щоб відновити постійне з\'єднання й отримувати вхідні дзвінки.';
 
@@ -3619,6 +3625,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get user_agreement_button_text => 'Продовжити';
+
+  @override
+  String get user_agreement_terms_button_text => 'Прочитати умови';
+
+  @override
+  String get user_agreement_toggle_text => 'Я прочитав умови й приймаю їх';
 
   @override
   String user_agreement_checkbox_text(Object url) {

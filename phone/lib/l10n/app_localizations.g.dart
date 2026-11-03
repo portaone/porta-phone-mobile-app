@@ -1246,6 +1246,12 @@ abstract class AppLocalizations {
   /// **'I agree to allow the app to access my contacts to enhance my user experience.'**
   String get contacts_agreement_checkbox_text;
 
+  /// The contacts consent where only a short label fits (a watch face); the full sentence is the checkbox text on a phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access to contacts'**
+  String get contacts_agreement_toggle_text;
+
   /// No description provided for @contacts_agreement_description.
   ///
   /// In en, this message translates to:
@@ -3925,6 +3931,12 @@ abstract class AppLocalizations {
   /// **'To ensure the best user experience, the app needs to be granted the following permissions: microphone for audio calls, camera for video calls, and contacts to simplify reaching them from the app.\n\nPermissions could be changed at any time in the future.'**
   String get permission_Text_description;
 
+  /// The title of the permissions screen where its icon does not fit (a watch face).
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get permission_Text_title;
+
   /// Content of a dialog explaining that the app must be manually opened after reboot to keep receiving calls using persistent connection.
   ///
   /// In en, this message translates to:
@@ -6462,6 +6474,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get user_agreement_button_text;
+
+  /// Opens the terms where the link cannot sit inside the consent sentence (a watch face).
+  ///
+  /// In en, this message translates to:
+  /// **'Read the terms'**
+  String get user_agreement_terms_button_text;
+
+  /// The terms consent where only a short label fits (a watch face); the full sentence with the link is the checkbox text on a phone. It keeps the statement that the terms were read.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and accept the terms'**
+  String get user_agreement_toggle_text;
 
   /// No description provided for @user_agreement_checkbox_text.
   ///

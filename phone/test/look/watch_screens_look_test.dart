@@ -8,10 +8,16 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' show SessionOtpProvisional;
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/environment_config.dart';
+import 'package:webtrit_phone/features/contacts_agreement/contacts_agreement.dart';
 import 'package:webtrit_phone/features/login/login.dart';
+import 'package:webtrit_phone/features/permissions/permissions.dart';
+import 'package:webtrit_phone/features/permissions/widgets/permission_tips.dart';
+import 'package:webtrit_phone/features/user_agreement/user_agreement.dart';
 import 'package:webtrit_phone/models/models.dart';
 
+import '../features/consent_harness.dart';
 import '../features/login/login_harness.dart';
 import '../helpers/look.dart';
 import '../helpers/screen_presets.dart';
@@ -157,4 +163,40 @@ void main() {
       const Scaffold(body: LoginSignupVerifyScreen(bodySafeAreaSides: {})),
     );
   });
+
+  // Consent
+  Widget consent(Widget screen) => ConsentHarness().wrap(screen);
+  const terms = UserAgreementScreen(appTermsAndConditionsUrl: 'https://example.com/terms', appName: 'WebTrit');
+  looks('terms', (_) async => consent(terms));
+  looks(
+    'terms_accepted',
+    (_) async => consent(terms),
+    act: (tester) async {
+      await tester.tap(find.byKey(userAgreementCheckboxKey));
+      await tester.pump();
+    },
+  );
+  looks('contacts-consent', (_) async => consent(const ContactsAgreementScreen()));
+  looks(
+    'contacts-consent_end',
+    (_) async => consent(const ContactsAgreementScreen()),
+    act: (tester) async {
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+    },
+  );
+  looks('permissions', (_) async => consent(const PermissionsScreen()));
+  looks(
+    'permission-tips',
+    (_) async => consent(
+      PermissionTips(
+        title: 'Manage Full-Screen Notification Permissions',
+        instruction: const ['Open the app settings', 'Allow full-screen notifications'],
+        onGoToAppSettings: () {},
+        onPop: () {},
+        note: 'You can continue without this.',
+        dismissLabel: 'Not now',
+      ),
+    ),
+  );
 }

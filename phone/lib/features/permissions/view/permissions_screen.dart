@@ -78,43 +78,49 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
             final button = isRequesting
                 ? SizedCircularProgressIndicator(size: 16, strokeWidth: 2, color: foregroundColor)
                 : Text(context.l10n.permission_Button_request);
+            final onContinue = _onRequestPermissions(context, isRequesting, isFlowCompleted);
 
-            final body = Padding(
-              padding: const EdgeInsets.all(kInset),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: kInset * 2),
-                  const AppIcon(Icons.settings_suggest, size: kInset * 6),
-                  const SizedBox(height: kInset * 2),
-                  Text(
-                    context.l10n.permission_Text_description,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const Spacer(),
-                  const SizedBox(height: kInset),
-                  SemanticAction(
-                    identifier: permissionsInitButtonId,
-                    child: OutlinedButton(
-                      key: permissionsInitButtonKey,
-                      onPressed: _onRequestPermissions(context, isRequesting, isFlowCompleted),
-                      style: elevatedButtonStyles?.primary,
-                      child: button,
+            return AdaptiveLayout(
+              watch: (context) =>
+                  _PermissionsWatch(onContinue: onContinue, buttonStyle: elevatedButtonStyles?.primary, child: button),
+              handset: (context) => LayoutBuilder(
+                builder: (context, viewportConstraints) {
+                  final body = Padding(
+                    padding: const EdgeInsets.all(kInset),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: kInset * 2),
+                        const AppIcon(Icons.settings_suggest, size: kInset * 6),
+                        const SizedBox(height: kInset * 2),
+                        Text(
+                          context.l10n.permission_Text_description,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        const Spacer(),
+                        const SizedBox(height: kInset),
+                        SemanticAction(
+                          identifier: permissionsInitButtonId,
+                          child: OutlinedButton(
+                            key: permissionsInitButtonKey,
+                            onPressed: onContinue,
+                            style: elevatedButtonStyles?.primary,
+                            child: button,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  );
+
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: viewportConstraints.maxHeight),
+                      child: IntrinsicHeight(child: InertSafeArea(bottom: true, child: body)),
+                    ),
+                  );
+                },
               ),
-            );
-            return LayoutBuilder(
-              builder: (context, viewportConstraints) {
-                return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: viewportConstraints.maxHeight),
-                    child: IntrinsicHeight(child: InertSafeArea(bottom: true, child: body)),
-                  ),
-                );
-              },
             );
           },
         ),
@@ -127,16 +133,19 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
 
   /// Returns a callback to handle the request permissions button press.
   VoidCallback? _onRequestPermissions(BuildContext context, bool isRequesting, bool isFlowCompleted) {
-    _logger.info(
-      'On request permissions button pressed - isRequesting: $isRequesting, isFlowCompleted: $isFlowCompleted',
-    );
     // Prevents PlatformException(error, A request for permissions is already running, null, null)
     // by disabling button interaction, as the permission_handler throws an exception on concurrent requests.
     if (isRequesting) return null;
 
-    if (isFlowCompleted) return () => _navigateToMain();
-
-    return () => context.read<PermissionsCubit>().initiatePermissionFlow();
+    // Logged on the press itself: the callback is built on every rebuild.
+    return () {
+      _logger.info('On request permissions button pressed - isFlowCompleted: $isFlowCompleted');
+      if (isFlowCompleted) {
+        _navigateToMain();
+      } else {
+        context.read<PermissionsCubit>().initiatePermissionFlow();
+      }
+    };
   }
 
   /// Shows a screen with tips for a specific manufacturer.
@@ -203,5 +212,35 @@ class _PermissionsScreenState extends State<PermissionsScreen> with WidgetsBindi
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+}
+
+/// The permissions step on a watch face: a title instead of the icon, the
+/// explanation in small text that scrolls, and Continue - which starts the
+/// system prompts - as the edge button.
+class _PermissionsWatch extends StatelessWidget {
+  const _PermissionsWatch({required this.onContinue, required this.buttonStyle, required this.child});
+
+  final VoidCallback? onContinue;
+  final ButtonStyle? buttonStyle;
+
+  /// The button's label, or its progress while the prompts run.
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return WatchActionLayout(
+      title: context.l10n.permission_Text_title,
+      content: [Text(context.l10n.permission_Text_description, textAlign: TextAlign.center)],
+      primary: (overlay) => SemanticAction(
+        identifier: permissionsInitButtonId,
+        child: OutlinedButton(
+          key: permissionsInitButtonKey,
+          onPressed: onContinue,
+          style: overlay.merge(buttonStyle),
+          child: child,
+        ),
+      ),
+    );
   }
 }

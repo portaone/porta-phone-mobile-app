@@ -100,5 +100,24 @@ void main() {
       expect(pressed, 1);
       handle.dispose();
     });
+
+    testWidgets('carries its automation id on the node with its label and its tap', (tester) async {
+      final handle = tester.ensureSemantics();
+      watchPresets.first.apply(tester);
+      await pumpCollectingOverflows(
+        tester,
+        wrap(
+          Center(
+            child: WatchLink(label: 'Read the terms', onPressed: () {}, identifier: 'termsLink'),
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.bySemanticsIdentifier('termsLink')),
+        isSemantics(label: 'Read the terms', identifier: 'termsLink', hasTapAction: true),
+      );
+      handle.dispose();
+    });
   });
 }

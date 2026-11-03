@@ -67,6 +67,7 @@ as "State stays on the screen" below.
 | Custom-core URL (`features/login/view/login_core_url_assign_*.dart`) | Proceed as the edge button; above it a short scrolling column - the field's prompt, the field (label `URL`), the sales contact - fading out over the button. No app bar (a watch goes back with a swipe), no logo. |
 | Ways in (`features/login/view/login_switch_*.dart`) | No segments: the configured ways in as a `WatchIconGrid`, like the main hub - round buttons with short captions (`loginType_*Short`), in the brand's order, the first filled, each with its segment's automation id and full name; a choice opens its form on the whole face, going back returns to the grid and waits while the form's request is in flight; a single way in opens directly. No QR sign-in: it reads the code through a camera, and watches have none (`LoginTypeWatch.availableOnWatch`). No logo, no app bar; `LoginScaffold.watch` keeps the screen's status bar style. |
 | Sign-in forms - OTP, password, sign-up and both code screens (`features/login/widgets/login_form_layout.dart`) | `LoginFormLayout` is the one decision point for all five: the content scrolls in a short column with the secondary action (Resend) at its end, the primary action is the edge button, the column fades out above it. Descriptions take the small body size. |
+| Terms, contacts consent, permissions and permission tips (`features/user_agreement`, `features/contacts_agreement`, `features/permissions`) | `WatchActionLayout`: a short title instead of the icon, the text in the small body size scrolling, the consent as a `WatchToggleChip` with a short label that still says the terms were read, the terms as a `WatchLink`, Continue as the edge button. The contacts toggle sits right under the title, in view beside Continue, because continuing without it declines, as on a phone. The tips are left with the edge button (the phone's main button there too); Open settings follows the steps. |
 
 The watch parts of the kit, in `packages/adaptive_kit`. A screen's watch arrangement says what
 to show; how it sits on a face comes from these.
@@ -119,7 +120,7 @@ Parts:
   mark; one button for assistive technology. `selected` tints it, `outlined` marks the row
   the screen acts on.
 - `WatchLink` - a link inside a column (a page to read): an underlined label at the tap floor,
-  not a second pill competing with the screen's action.
+  not a second pill competing with the screen's action; it takes an automation id.
 - `WatchToggleChip` - a consent or a setting as one full-width pill with a small switch; one
   semantics node with the label, the state and the tap.
 - `WatchLogo` (in the app, it needs the theme's images) - a themed logo fitted into a height,
