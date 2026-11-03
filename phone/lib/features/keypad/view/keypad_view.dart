@@ -17,6 +17,7 @@ import '../cubit/keypad_cubit.dart';
 import '../utils/utils.dart';
 import '../widgets/widgets.dart';
 import 'keypad_screen_style.dart';
+import 'keypad_view_watch.dart';
 
 // NOTES:
 // - do not use ValueListenableBuilder to watch number change because of huge perfomance impact on low-end devices
@@ -84,7 +85,7 @@ class KeypadViewState extends State<KeypadView> {
     final contactField = widget.style?.contactNameField;
     final actionpadStyle = widget.style?.actionpadStyle;
 
-    return Column(
+    final handset = Column(
       children: [
         Expanded(
           // The input is intentionally invisible (blends with the background), so its own hit
@@ -196,6 +197,69 @@ class KeypadViewState extends State<KeypadView> {
         ),
         SizedBox(height: scaledInset),
       ],
+    );
+
+    return AdaptiveLayout(
+      handset: (_) => handset,
+      watch: (_) => RepaintBoundary(
+        child: BlocBuilder<KeypadCubit, KeypadState>(
+          buildWhen: (p, c) => p.value != c.value,
+          builder: (context, keypadState) {
+            final purpose = context.pickPurpose;
+            final typed = DestinationCandidate(number: _sanitized(keypadState.value));
+            final picking = purpose != null && purpose.offeredBy(MainFlavor.keypad);
+            final offer = picking && typed.number != null ? context.pickOfferFor(typed) : null;
+            final canCall = keypadState.noValue == false;
+            final callStyle = (actionpadStyle ?? themeData.extension<ActionpadStyles>()?.primary)?.primary?.style;
+
+            return KeypadViewWatch(
+              numberField: _NumberField(
+                fieldKey: _keypadTextFieldKey,
+                controller: _textController,
+                focusNode: _focusNode,
+                onPaste: _pasteNumber,
+                fieldStyle: inputField,
+                style: (inputField?.textStyle ?? themeData.textTheme.titleLarge)?.copyWith(
+                  fontSize: context.isSmallWatch ? 16 : 19,
+                ),
+                // The theme's keypad field pads the number for a phone screen;
+                // on a face every point goes to the keys.
+                decoration: const InputDecoration.collapsed(hintText: null),
+              ),
+              contactName: _ContactName(
+                style: themeData.textTheme.bodySmall,
+                textAlign: contactField?.textAlign,
+                collapseWhenEmpty: true,
+              ),
+              onKeyPressed: _addChar,
+              onBackspace: _removeLastChar,
+              onClear: _cleanInput,
+              // The choice being made, when the pad is asked for one; the call
+              // otherwise. Video, transfer and the caller-id menu stay on the
+              // phone for now.
+              action: (overlay) => picking
+                  ? SemanticAction(
+                      label: offer?.label ?? purpose.announcement,
+                      identifier: actionPadTransferId,
+                      child: TextButton(
+                        onPressed: canCall && (offer?.isAnswer ?? false) ? () => _pickTyped(purpose) : null,
+                        style: overlay.merge(callStyle),
+                        child: Icon(purpose.pickIcon),
+                      ),
+                    )
+                  : SemanticAction(
+                      label: context.l10n.numberActions_audioCall,
+                      identifier: actionPadVoiceCallId,
+                      child: TextButton(
+                        onPressed: canCall ? () => _callController.createCall(destination: _popNumber()) : null,
+                        style: overlay.merge(callStyle),
+                        child: const Icon(Icons.call),
+                      ),
+                    ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -399,8 +463,8 @@ class _KeypadEntry {
   bool stillAsEntered(TextEditingValue value) => value.text == text && value.selection == selection;
 }
 
-/// The number being typed. The controller, focus and key belong to the
-/// view's state, so the number outlives a rebuild of the field.
+/// The number being typed: one field for every arrangement, so the number
+/// and its state live in the view's state whichever face shows them.
 ///
 /// Name, id and the paste action sit on the field's own node: an identifier
 /// makes a boundary of its own, and anything beside the field would be
@@ -414,6 +478,7 @@ class _NumberField extends StatelessWidget {
     required this.onPaste,
     required this.fieldStyle,
     required this.style,
+    this.decoration,
   });
 
   /// The view reaches the field's text selection through it, for paste.
@@ -425,8 +490,11 @@ class _NumberField extends StatelessWidget {
   /// The theme's field: alignment, cursor, keyboard, decoration.
   final TextFieldStyle? fieldStyle;
 
-  /// The digits' type.
+  /// The digits' type, which each arrangement sizes for itself.
   final TextStyle? style;
+
+  /// In place of the theme's decoration, where its padding does not fit.
+  final InputDecoration? decoration;
 
   @override
   Widget build(BuildContext context) {
@@ -440,7 +508,7 @@ class _NumberField extends StatelessWidget {
           key: fieldKey,
           controller: controller,
           focusNode: focusNode,
-          decoration: fieldStyle?.decoration ?? Theme.of(context).extension<InputDecorations>()?.keypad,
+          decoration: decoration ?? fieldStyle?.decoration ?? Theme.of(context).extension<InputDecorations>()?.keypad,
           style: style,
           textAlign: fieldStyle?.textAlign ?? TextAlign.center,
           showCursor: fieldStyle?.showCursor ?? true,
@@ -455,10 +523,13 @@ class _NumberField extends StatelessWidget {
 
 /// The name of the contact the typed number matches, under the number.
 class _ContactName extends StatelessWidget {
-  const _ContactName({required this.style, this.textAlign});
+  const _ContactName({required this.style, this.textAlign, this.collapseWhenEmpty = false});
 
   final TextStyle? style;
   final TextAlign? textAlign;
+
+  /// Takes no line while nothing matches, where there is no line to spare.
+  final bool collapseWhenEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -467,6 +538,7 @@ class _ContactName extends StatelessWidget {
         buildWhen: (p, c) => (p.contact?.maybeName ?? '') != (c.contact?.maybeName ?? ''),
         builder: (context, state) {
           final name = state.contact?.maybeName ?? '';
+          if (collapseWhenEmpty && name.isEmpty) return const SizedBox.shrink();
           return Text(name, style: style, textAlign: textAlign ?? TextAlign.center);
         },
       ),

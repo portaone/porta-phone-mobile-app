@@ -18,9 +18,11 @@ import 'package:webtrit_phone/features/user_agreement/user_agreement.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 import '../features/consent_harness.dart';
+import '../features/keypad/keypad_harness.dart';
 import '../features/login/login_harness.dart';
 import '../helpers/look.dart';
 import '../helpers/screen_presets.dart';
+import '../helpers/shipped_theme.dart';
 
 class _MockLoginCubit extends MockCubit<LoginState> implements LoginCubit {}
 
@@ -198,5 +200,25 @@ void main() {
         dismissLabel: 'Not now',
       ),
     ),
+  );
+
+  // Keypad
+  Future<Widget> keypad(WidgetTester tester) async {
+    final harness = KeypadHarness();
+    addTearDown(harness.release);
+    return withShippedTheme((harness.build() as MaterialApp).home!);
+  }
+
+  looks('keypad', keypad);
+  looks(
+    'keypad_typed',
+    keypad,
+    act: (tester) async {
+      await tester.longPress(find.bySemanticsIdentifier(keypadKeyId('0')));
+      for (final digit in '12025550142'.split('')) {
+        await tester.tap(find.bySemanticsIdentifier(keypadKeyId(digit)));
+      }
+      await tester.pump(const Duration(milliseconds: 300));
+    },
   );
 }
