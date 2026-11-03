@@ -64,6 +64,7 @@ as "State stays on the screen" below.
 | Screen | Watch arrangement |
 |---|---|
 | Login landing (`features/login/view/login_mode_select_*.dart`) | One launch button in a branded build: logo and greeting in the middle, the button filling the bottom edge (`WatchEdgeButton`). A demo build or several buttons: the brand in the middle, the buttons on the bottom of the face, the custom-core sign-in last. Nothing at the top of the face. |
+| Custom-core URL (`features/login/view/login_core_url_assign_*.dart`) | Proceed as the edge button; above it a short scrolling column - the field's prompt, the field (label `URL`), the sales contact - fading out over the button. No app bar (a watch goes back with a swipe), no logo. |
 
 The watch parts of the kit, in `packages/adaptive_kit`. A screen's watch arrangement says what
 to show; how it sits on a face comes from these.

@@ -14,6 +14,16 @@ class _NoHistory implements AutocompleteHistoryRepository {
   Future<void> addToHistory(String key, String value, {int maxItems = 8}) async {}
 }
 
+class _RecordedHistory implements AutocompleteHistoryRepository {
+  final saved = <String>[];
+
+  @override
+  List<String> getHistory(String key) => saved;
+
+  @override
+  Future<void> addToHistory(String key, String value, {int maxItems = 8}) async => saved.add(value);
+}
+
 void main() {
   Widget field(String value) {
     return MaterialApp(
@@ -38,6 +48,52 @@ void main() {
     await tester.pump();
 
     expect(find.text('http://192.168.0.2:4000'), findsOneWidget);
+  });
+
+  testWidgets('a field that replaces another under one controller still saves', (tester) async {
+    final history = _RecordedHistory();
+    final controller = HistoryAutocompleteController();
+    Widget host(Key key) => MaterialApp(
+      home: Scaffold(
+        body: Provider<AutocompleteHistoryRepository>.value(
+          value: history,
+          child: HistoryAutocompleteField(
+            key: key,
+            storageKey: 'recent',
+            labelText: 'Address',
+            controller: controller,
+            initialValue: 'https://core.example.com',
+          ),
+        ),
+      ),
+    );
+
+    // A screen that switches arrangement mounts the new field before it
+    // disposes the old one; the old one must not take the controller along.
+    await tester.pumpWidget(host(const ValueKey('phone')));
+    await tester.pumpWidget(host(const ValueKey('watch')));
+    controller.saveToHistory();
+
+    expect(history.saved, ['https://core.example.com']);
+  });
+
+  testWidgets('without suggestions no list drops down, typing as usual', (tester) async {
+    final history = _RecordedHistory()..saved.add('https://core.example.com');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Provider<AutocompleteHistoryRepository>.value(
+            value: history,
+            child: const HistoryAutocompleteField(storageKey: 'recent', labelText: 'Address', suggestHistory: false),
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextFormField), 'core');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNothing);
   });
 
   testWidgets('a value set from outside still lands while the field is idle', (tester) async {
