@@ -15,6 +15,7 @@ class LoginActionButton extends StatelessWidget {
     required this.style,
     this.identifier,
     this.buttonKey,
+    this.maxLines,
   });
 
   final String title;
@@ -25,8 +26,8 @@ class LoginActionButton extends StatelessWidget {
   /// Null disables the button.
   final VoidCallback? onPressed;
 
-  /// The style to draw the button with; the spinner takes its colour from
-  /// it too.
+  /// The theme's style with whatever the arrangement lays over it; the
+  /// spinner takes its colour from it too.
   final ButtonStyle? style;
 
   /// The automation id of the button.
@@ -35,6 +36,10 @@ class LoginActionButton extends StatelessWidget {
   /// The key of the button itself, for the tests that reach it.
   final Key? buttonKey;
 
+  /// Lines the title may take before it ends in an ellipsis; unlimited when
+  /// null.
+  final int? maxLines;
+
   @override
   Widget build(BuildContext context) {
     final button = ElevatedButton(
@@ -42,7 +47,12 @@ class LoginActionButton extends StatelessWidget {
       onPressed: processing ? null : onPressed,
       style: style,
       child: !processing
-          ? Text(title)
+          ? Text(
+              title,
+              maxLines: maxLines,
+              overflow: maxLines != null ? TextOverflow.ellipsis : null,
+              textAlign: maxLines != null ? TextAlign.center : null,
+            )
           : SizedCircularProgressIndicator(
               size: 16,
               strokeWidth: 2,

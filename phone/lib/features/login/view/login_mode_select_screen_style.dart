@@ -11,6 +11,7 @@ class LoginModeSelectScreenStyle with Diagnosticable {
     this.background,
     this.signInTypeButton,
     this.signUpTypeButton,
+    this.secondaryActionColor,
     this.systemUiOverlayStyle,
     this.pictureLogoStyle,
     this.onboardingTextStyle,
@@ -23,6 +24,11 @@ class LoginModeSelectScreenStyle with Diagnosticable {
   final BackgroundStyle? background;
   final ElevatedButtonStyleType? signInTypeButton;
   final ElevatedButtonStyleType? signUpTypeButton;
+
+  /// A borderless or outlined action that sits directly on the page's
+  /// background, so its colour answers that background rather than a button's
+  /// or the greeting's own plate.
+  final Color? secondaryActionColor;
   final SystemUiOverlayStyle? systemUiOverlayStyle;
   final ThemeImageStyle? pictureLogoStyle;
   final ExtendedTextStyle? onboardingTextStyle;
@@ -35,6 +41,7 @@ class LoginModeSelectScreenStyle with Diagnosticable {
     BackgroundStyle? background,
     ElevatedButtonStyleType? signInTypeButton,
     ElevatedButtonStyleType? signUpTypeButton,
+    Color? secondaryActionColor,
     SystemUiOverlayStyle? systemUiOverlayStyle,
     ThemeImageStyle? pictureLogoStyle,
     ExtendedTextStyle? onboardingTextStyle,
@@ -47,6 +54,7 @@ class LoginModeSelectScreenStyle with Diagnosticable {
       background: background ?? this.background,
       signInTypeButton: signInTypeButton ?? this.signInTypeButton,
       signUpTypeButton: signUpTypeButton ?? this.signUpTypeButton,
+      secondaryActionColor: secondaryActionColor ?? this.secondaryActionColor,
       systemUiOverlayStyle: systemUiOverlayStyle ?? this.systemUiOverlayStyle,
       pictureLogoStyle: pictureLogoStyle ?? this.pictureLogoStyle,
       onboardingTextStyle: onboardingTextStyle ?? this.onboardingTextStyle,
@@ -65,6 +73,7 @@ class LoginModeSelectScreenStyle with Diagnosticable {
       background: b.background ?? a.background,
       signInTypeButton: b.signInTypeButton ?? a.signInTypeButton,
       signUpTypeButton: b.signUpTypeButton ?? a.signUpTypeButton,
+      secondaryActionColor: b.secondaryActionColor ?? a.secondaryActionColor,
       systemUiOverlayStyle: b.systemUiOverlayStyle ?? a.systemUiOverlayStyle,
       pictureLogoStyle: ThemeImageStyle.merge(a.pictureLogoStyle, b.pictureLogoStyle),
       onboardingTextStyle: ExtendedTextStyle.merge(a.onboardingTextStyle, b.onboardingTextStyle),
@@ -80,6 +89,7 @@ class LoginModeSelectScreenStyle with Diagnosticable {
       background: BackgroundStyle.lerp(a?.background, b?.background, t),
       signInTypeButton: LerpTools.lerpButtonStyleType(a?.signInTypeButton, b?.signInTypeButton, t),
       signUpTypeButton: LerpTools.lerpButtonStyleType(a?.signUpTypeButton, b?.signUpTypeButton, t),
+      secondaryActionColor: Color.lerp(a?.secondaryActionColor, b?.secondaryActionColor, t),
       systemUiOverlayStyle: b?.systemUiOverlayStyle ?? a?.systemUiOverlayStyle,
       pictureLogoStyle: ThemeImageStyle.lerp(a?.pictureLogoStyle, b?.pictureLogoStyle, t),
       onboardingTextStyle: ExtendedTextStyle.lerp(a?.onboardingTextStyle, b?.onboardingTextStyle, t),
@@ -96,6 +106,7 @@ class LoginModeSelectScreenStyle with Diagnosticable {
     properties.add(DiagnosticsProperty<BackgroundStyle?>('background', background));
     properties.add(DiagnosticsProperty<ElevatedButtonStyleType?>('signInTypeButton', signInTypeButton));
     properties.add(DiagnosticsProperty<ElevatedButtonStyleType?>('signUpTypeButton', signUpTypeButton));
+    properties.add(ColorProperty('secondaryActionColor', secondaryActionColor));
     properties.add(DiagnosticsProperty<SystemUiOverlayStyle?>('systemUiOverlayStyle', systemUiOverlayStyle));
     properties.add(DiagnosticsProperty<ThemeImageStyle?>('pictureLogoStyle', pictureLogoStyle));
     properties.add(DiagnosticsProperty<ExtendedTextStyle?>('onboardingTextStyle', onboardingTextStyle));

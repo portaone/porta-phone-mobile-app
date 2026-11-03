@@ -5,8 +5,8 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 import '../../widgets/login_action_button.dart';
 import '../login_mode_select_params.dart';
 
-/// The landing's scaffold, themed from its style: the configured
-/// background, theme override and app bar theme.
+/// The landing's scaffold, themed the same in every arrangement: the
+/// configured background, theme override and app bar theme.
 class LoginModeSelectScaffold extends StatelessWidget {
   const LoginModeSelectScaffold({
     super.key,
@@ -19,7 +19,7 @@ class LoginModeSelectScaffold extends StatelessWidget {
   final LoginModeSelectParams params;
   final Widget body;
 
-  /// The bar over the landing, if any.
+  /// The phone's bar; none on a face.
   final PreferredSizeWidget? appBar;
   final bool extendBodyBehindAppBar;
 
@@ -40,12 +40,15 @@ class LoginModeSelectScaffold extends StatelessWidget {
 
 /// A launch button of the landing, with the automation id its entry carries.
 class LoginModeSelectEntryButton extends StatelessWidget {
-  const LoginModeSelectEntryButton({super.key, required this.entry, required this.style});
+  const LoginModeSelectEntryButton({super.key, required this.entry, required this.style, this.maxLines});
 
   final LoginModeSelectEntry entry;
 
-  /// The style to draw the button with.
+  /// The theme's button style, with whatever the arrangement lays over it.
   final ButtonStyle? style;
+
+  /// Lines the title may take; unlimited when null.
+  final int? maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +59,7 @@ class LoginModeSelectEntryButton extends StatelessWidget {
       onPressed: entry.onPressed,
       style: style,
       title: entry.title,
+      maxLines: maxLines,
     );
   }
 }

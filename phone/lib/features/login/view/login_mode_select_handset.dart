@@ -36,7 +36,7 @@ class LoginModeSelectHandset extends StatelessWidget {
                 // announces as an anonymous icon and cannot be targeted.
                 SemanticAction(
                   label: customCore.title,
-                  identifier: loginModeScreenUrlButtonId,
+                  identifier: customCore.semanticsId,
                   // The tooltip keeps its long-press hint but stays out of
                   // the semantics, otherwise the merged node would carry
                   // the same sentence twice.
