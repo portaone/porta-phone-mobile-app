@@ -132,6 +132,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   late final RenegotiationCoordinator _renegotiationCoordinator;
 
   final _offerHolds = OfferHolds();
+  final _holdConfirmations = HoldConfirmations();
 
   /// Auto-hides the slowlink network-quality indicator once events stop, and
   /// drives the brief "recovered" confirmation. Keyed by callId; rescheduling
@@ -301,6 +302,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         case SignalingHandshakeReceived(:final handshake):
           _handleHandshakeReceived(handshake);
         case SignalingProtocolEvent(:final event):
+          // On arrival: the hold or unhold that waits for it holds the queue.
+          if (event case HoldingEvent(:final callId)) _holdConfirmations.confirmed(callId, onHold: true);
+          if (event case ResumingEvent(:final callId)) _holdConfirmations.confirmed(callId, onHold: false);
           if (event.toCallEvent(activeCalls: state.activeCalls) case final callEvent?) {
             // On arrival, not in the handler: the offer may queue behind other events.
             if (callEvent is _CallSignalingEventCallUpdating) {
@@ -881,6 +885,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // would otherwise fire for a call that is gone.
     _renegotiationCoordinator.callRemoved(event.callId);
     _offerHolds.callRemoved(event.callId);
+    _holdConfirmations.callRemoved(event.callId);
     _slowlinkDebounce.cancel(event.callId);
     _slowlinkHits.remove(event.callId);
     await _ringback.stop(event.callId);
@@ -3010,30 +3015,51 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         case OfferHoldStep.send:
           break;
       }
-      final transaction = WebtritSignalingClient.generateTransactionId();
-      final request = event.onHold
-          ? HoldRequest(
-              transaction: transaction,
-              line: activeCall.line,
-              callId: activeCall.callId,
-              direction: HoldDirection.inactive,
-            )
-          : UnholdRequest(transaction: transaction, line: activeCall.line, callId: activeCall.callId);
-      final pending = _signalingModule.execute(request);
-      // No future means nothing was sent, not an acknowledged transition.
-      // In particular, it must not release a former leg's local isolation.
-      if (pending == null) return;
-      try {
-        await pending;
-      } catch (e) {
-        if (!_renegotiationCoordinator.isTransientSignalingFailure(e)) rethrow;
-        // Lost with the signaling, the hold is treated as one that did not
-        // happen: the call stays and keeps its state. The request may still have
-        // reached the server, so the two can differ until the next hold or
-        // unhold, which the server answers either way - the same as a reply
-        // that timed out always did.
-        _logger.warning('__onMutationPerformSetHeld: ${e.runtimeType}, let call survive');
-        return;
+      // The gateway drops a hold or unhold that comes during the re-INVITE of
+      // the call's previous one, with only the server's ack: such a request is
+      // sent again until the gateway answers it (HoldConfirmations).
+      for (var attempt = 1; ; attempt++) {
+        final transaction = WebtritSignalingClient.generateTransactionId();
+        final request = event.onHold
+            ? HoldRequest(
+                transaction: transaction,
+                line: activeCall.line,
+                callId: activeCall.callId,
+                direction: HoldDirection.inactive,
+              )
+            : UnholdRequest(transaction: transaction, line: activeCall.line, callId: activeCall.callId);
+        final confirmation = _holdConfirmations.expect(event.callId, onHold: event.onHold);
+        final pending = _signalingModule.execute(request);
+        // No future means nothing was sent, not an acknowledged transition.
+        // In particular, it must not release a former leg's local isolation.
+        if (pending == null) {
+          confirmation.cancel();
+          return;
+        }
+        try {
+          await pending;
+        } catch (e) {
+          confirmation.cancel();
+          if (!_renegotiationCoordinator.isTransientSignalingFailure(e)) rethrow;
+          // Lost with the signaling, the hold is treated as one that did not
+          // happen: the call stays and keeps its state. The request may still have
+          // reached the server, so the two can differ until the next hold or
+          // unhold, which the server answers either way - the same as a reply
+          // that timed out always did.
+          _logger.warning('__onMutationPerformSetHeld: ${e.runtimeType}, let call survive');
+          return;
+        }
+        if (await confirmation.received) break;
+        if (state.retrieveActiveCall(event.callId) == null) return;
+        if (attempt >= _holdConfirmations.attempts) {
+          _logger.warning(
+            '__onMutationPerformSetHeld: ${event.callId} onHold=${event.onHold} not answered by the gateway after $attempt attempts',
+          );
+          break;
+        }
+        _logger.info(
+          '__onMutationPerformSetHeld: ${event.callId} onHold=${event.onHold} not answered by the gateway, sending again',
+        );
       }
 
       emit(
@@ -6527,6 +6553,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     _renegotiationCoordinator.callRemoved(callId);
     _roomCodecs.callRemoved(callId);
     _offerHolds.callRemoved(callId);
+    _holdConfirmations.callRemoved(callId);
     emit(state.copyWithPopActiveCall(callId));
   }
 
