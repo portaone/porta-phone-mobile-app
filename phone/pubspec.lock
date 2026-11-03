@@ -843,6 +843,15 @@ packages:
       url: "https://github.com/portaone/flutter-webrtc.git"
     source: git
     version: "1.6.3"
+  flutter_webrtc_noise_suppression:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: c37f3fcd2e7756cc0987a6f259fc0221ec3c0980
+      resolved-ref: c37f3fcd2e7756cc0987a6f259fc0221ec3c0980
+      url: "https://github.com/SERDUN/flutter_webrtc_noise_suppression.git"
+    source: git
+    version: "0.0.1"
   formz:
     dependency: "direct main"
     description:

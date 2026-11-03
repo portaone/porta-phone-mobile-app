@@ -1,0 +1,102 @@
+import 'package:flutter/services.dart';
+
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:flutter_webrtc_noise_suppression/flutter_webrtc_noise_suppression.dart';
+
+import 'package:webtrit_phone/features/call/utils/voice_noise_reduction.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  const channel = MethodChannel('test/voice_noise_reduction');
+  late List<String> calls;
+  late Object? Function(String method) answer;
+
+  setUp(() {
+    calls = [];
+    answer = (_) => true;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call.method);
+      final result = answer(call.method);
+      if (result is Exception) throw result;
+      return result;
+    });
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+  });
+
+  test('does not reach the platform when the user left it off', () async {
+    final subject = VoiceNoiseReduction(
+      isEnabled: () => false,
+      bridge: const WebrtcNoiseSuppressionBridge(channel: channel),
+    );
+
+    await subject.onAudioTrackAcquired();
+    await subject.onAudioTrackReleased();
+
+    expect(calls, isEmpty);
+  });
+
+  test('attaches on acquire and detaches on release when on', () async {
+    final subject = VoiceNoiseReduction(
+      isEnabled: () => true,
+      bridge: const WebrtcNoiseSuppressionBridge(channel: channel),
+    );
+
+    await subject.onAudioTrackAcquired();
+    await subject.onAudioTrackReleased();
+
+    expect(calls, ['attach', 'detach']);
+  });
+
+  test('detaches what it attached even if the user turned it off during the call', () async {
+    var enabled = true;
+    final subject = VoiceNoiseReduction(
+      isEnabled: () => enabled,
+      bridge: const WebrtcNoiseSuppressionBridge(channel: channel),
+    );
+
+    await subject.onAudioTrackAcquired();
+    enabled = false;
+    await subject.onAudioTrackReleased();
+
+    expect(calls, ['attach', 'detach']);
+  });
+
+  test('does not detach when the platform could not attach', () async {
+    answer = (_) => false;
+    final subject = VoiceNoiseReduction(
+      isEnabled: () => true,
+      bridge: const WebrtcNoiseSuppressionBridge(channel: channel),
+    );
+
+    await subject.onAudioTrackAcquired();
+    await subject.onAudioTrackReleased();
+
+    expect(calls, ['attach']);
+  });
+
+  test('a platform failure does not reach the call', () async {
+    answer = (method) => PlatformException(code: 'boom');
+    final subject = VoiceNoiseReduction(
+      isEnabled: () => true,
+      bridge: const WebrtcNoiseSuppressionBridge(channel: channel),
+    );
+
+    await expectLater(subject.onAudioTrackAcquired(), completes);
+    await expectLater(subject.onAudioTrackReleased(), completes);
+  });
+
+  test('a missing bridge does not reach the call', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    final subject = VoiceNoiseReduction(
+      isEnabled: () => true,
+      bridge: const WebrtcNoiseSuppressionBridge(channel: channel),
+    );
+
+    await expectLater(subject.onAudioTrackAcquired(), completes);
+  });
+}

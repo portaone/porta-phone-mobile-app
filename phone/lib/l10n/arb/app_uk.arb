@@ -2468,6 +2468,8 @@
   "@settings_audioProcessing_Section_title": {},
   "settings_audioProcessing_Section_tooltip": "Можна використовувати для налаштування якості аудіо для певних потреб або умов. Як-от студійний запис або зовнішній мікрофон. \n\nОбійти обробку голосу — повідомляє системі не застосовувати апаратну обробку голосу (потрібно перезапустити застосунок).",
   "@settings_audioProcessing_Section_tooltip": {},
+  "settings_audioProcessing_Section_VNR_title": "Шумозаглушення голосу (RNNoise)",
+  "@settings_audioProcessing_Section_VNR_title": {},
   "settings_audioProcessing_Section_VP_title": "Обхід обробки голосу",
   "@settings_audioProcessing_Section_VP_title": {},
   "settings_call_codecs_preferred_audio_default": "Автоматично",
