@@ -82,4 +82,19 @@ void main() {
     addTearDown(harness.release);
     return harness.wrap(const LoginModeSelectScreen(appGreetingL10n: 'WebTrit', launchButtons: [_signUp]));
   });
+
+  // Custom core
+  looks('core-url', (_) async {
+    final harness = LoginHarness();
+    addTearDown(harness.release);
+    return harness.wrap(const LoginCoreUrlAssignScreen());
+  });
+  looks('core-url_unreachable', (_) async {
+    return withLoginCubit(
+      mockLogin(
+        LoginState(coreUrlInput: const UrlInput.dirty('https://cloud.exmple.com'), coreUrlAssignError: Exception()),
+      ),
+      const LoginCoreUrlAssignScreen(),
+    );
+  });
 }
