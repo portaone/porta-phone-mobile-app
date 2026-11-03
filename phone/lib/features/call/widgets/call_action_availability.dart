@@ -6,8 +6,8 @@ import '../models/models.dart';
 import 'call_controls.dart';
 
 /// Which of the call's actions the focused call allows now, and what each
-/// does - decided once for every layout that offers them, starting with the
-/// phone's action area.
+/// does - decided once for every layout that offers them: the phone's action
+/// area and the watch's call face and menus.
 ///
 /// A null callback is an action that exists but cannot be taken now; the
 /// layouts show it disabled. Whether an action is there at all is decided

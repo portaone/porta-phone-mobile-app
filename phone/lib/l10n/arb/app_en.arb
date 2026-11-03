@@ -572,6 +572,66 @@
   "@call_ToolbarStatus_reconnecting": {
     "description": "Suffix on the call screen toolbar status line while the signaling connection is being re-established."
   },
+  "call_Watch_more": "More",
+  "@call_Watch_more": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_mute": "Mute",
+  "@call_Watch_mute": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_speaker": "Speaker",
+  "@call_Watch_speaker": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_audio": "Audio",
+  "@call_Watch_audio": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_keypad": "Keypad",
+  "@call_Watch_keypad": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_hold": "Hold",
+  "@call_Watch_hold": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_resume": "Resume",
+  "@call_Watch_resume": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_transfer": "Transfer",
+  "@call_Watch_transfer": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_camera": "Camera",
+  "@call_Watch_camera": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_switchCamera": "Switch",
+  "@call_Watch_switchCamera": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_blur": "Blur",
+  "@call_Watch_blur": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_calls": "Calls",
+  "@call_Watch_calls": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_conference": "Group",
+  "@call_Watch_conference": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_muteForAll": "Mute all",
+  "@call_Watch_muteForAll": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
+  "call_Watch_drop": "Drop",
+  "@call_Watch_drop": {
+    "description": "On a watch, the caption under a round call button: one short word."
+  },
   "call_description_held": "On hold",
   "@call_description_held": {},
   "call_description_peerReportsMuted": "The other side says you are muted",
