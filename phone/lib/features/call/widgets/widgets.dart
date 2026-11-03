@@ -27,3 +27,4 @@ export 'rtc_stream_view.dart';
 export 'stream_thumbnail.dart';
 export 'thumbnail_frame.dart';
 export 'thumbnail_overlay_manager.dart';
+export 'call_action_availability.dart';

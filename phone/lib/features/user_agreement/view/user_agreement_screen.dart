@@ -55,9 +55,7 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
                       agreementLink: widget.appTermsAndConditionsUrl,
                       userAgreementAccepted: agreementStatus.isAccepted,
                       onChanged: _handleAgreementStatusChange,
-                      onAgreementLinkTap: () => context.router.navigate(
-                        TermsConditionsScreenPageRoute(initialUriQueryParam: widget.appTermsAndConditionsUrl),
-                      ),
+                      onAgreementLinkTap: _openTerms,
                     ),
                     const SizedBox(height: kInset / 2),
                     SemanticAction(
@@ -89,6 +87,10 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
   void _handleAgreementStatusChange(bool value) {
     agreementStatus = value ? AgreementStatus.accepted : AgreementStatus.declined;
     setState(() {});
+  }
+
+  void _openTerms() {
+    context.router.navigate(TermsConditionsScreenPageRoute(initialUriQueryParam: widget.appTermsAndConditionsUrl));
   }
 
   void _submitAgreement() {

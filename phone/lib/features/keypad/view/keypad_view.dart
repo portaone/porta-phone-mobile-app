@@ -80,8 +80,6 @@ class KeypadViewState extends State<KeypadView> {
     final scaledInset = MediaQuery.of(context).size.height > 800 ? 16.0 : 8.0;
     final themeData = Theme.of(context);
 
-    final InputDecorations? baseInputDecorations = themeData.extension<InputDecorations>();
-
     final inputField = widget.style?.inputField;
     final contactField = widget.style?.contactNameField;
     final actionpadStyle = widget.style?.actionpadStyle;
@@ -115,45 +113,17 @@ class KeypadViewState extends State<KeypadView> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name, id and action are merged onto the field's own node:
-                  // an identifier makes a boundary of its own, and anything
-                  // sitting beside the field would be announced apart from it.
-                  // The number itself needs no naming - the field publishes
-                  // what it holds as its value.
-                  MergeSemantics(
-                    child: Semantics(
-                      label: context.l10n.keypad_SemanticsLabel_number,
-                      identifier: keypadNumberInputId,
-                      customSemanticsActions: {
-                        CustomSemanticsAction(label: context.l10n.keypad_SemanticsAction_paste): _pasteNumber,
-                      },
-                      child: TextField(
-                        key: _keypadTextFieldKey,
-                        controller: _textController,
-                        focusNode: _focusNode,
-                        decoration: inputField?.decoration ?? baseInputDecorations?.keypad,
-                        style: inputField?.textStyle ?? themeData.textTheme.headlineLarge,
-                        textAlign: inputField?.textAlign ?? TextAlign.center,
-                        showCursor: inputField?.showCursor ?? true,
-                        keyboardType: inputField?.keyboardType ?? TextInputType.none,
-                        cursorColor: inputField?.cursorColor,
-                        inputFormatters: [PhoneNormalizingFormatter()],
-                      ),
-                    ),
+                  _NumberField(
+                    fieldKey: _keypadTextFieldKey,
+                    controller: _textController,
+                    focusNode: _focusNode,
+                    onPaste: _pasteNumber,
+                    fieldStyle: inputField,
+                    style: inputField?.textStyle ?? themeData.textTheme.headlineLarge,
                   ),
-                  RepaintBoundary(
-                    child: BlocBuilder<KeypadCubit, KeypadState>(
-                      buildWhen: (p, c) {
-                        final pName = p.contact?.maybeName ?? '';
-                        final cName = c.contact?.maybeName ?? '';
-                        return pName != cName;
-                      },
-                      builder: (context, state) => Text(
-                        state.contact?.maybeName ?? '',
-                        style: contactField?.textStyle ?? themeData.textTheme.bodyMedium,
-                        textAlign: contactField?.textAlign ?? TextAlign.center,
-                      ),
-                    ),
+                  _ContactName(
+                    style: contactField?.textStyle ?? themeData.textTheme.bodyMedium,
+                    textAlign: contactField?.textAlign,
                   ),
                 ],
               ),
@@ -427,4 +397,79 @@ class _KeypadEntry {
 
   /// Whether [value] is still the number and the caret this entry left.
   bool stillAsEntered(TextEditingValue value) => value.text == text && value.selection == selection;
+}
+
+/// The number being typed. The controller, focus and key belong to the
+/// view's state, so the number outlives a rebuild of the field.
+///
+/// Name, id and the paste action sit on the field's own node: an identifier
+/// makes a boundary of its own, and anything beside the field would be
+/// announced apart from it. The number needs no naming - the field publishes
+/// what it holds as its value.
+class _NumberField extends StatelessWidget {
+  const _NumberField({
+    required this.fieldKey,
+    required this.controller,
+    required this.focusNode,
+    required this.onPaste,
+    required this.fieldStyle,
+    required this.style,
+  });
+
+  /// The view reaches the field's text selection through it, for paste.
+  final GlobalKey fieldKey;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final VoidCallback onPaste;
+
+  /// The theme's field: alignment, cursor, keyboard, decoration.
+  final TextFieldStyle? fieldStyle;
+
+  /// The digits' type.
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final fieldStyle = this.fieldStyle;
+    return MergeSemantics(
+      child: Semantics(
+        label: context.l10n.keypad_SemanticsLabel_number,
+        identifier: keypadNumberInputId,
+        customSemanticsActions: {CustomSemanticsAction(label: context.l10n.keypad_SemanticsAction_paste): onPaste},
+        child: TextField(
+          key: fieldKey,
+          controller: controller,
+          focusNode: focusNode,
+          decoration: fieldStyle?.decoration ?? Theme.of(context).extension<InputDecorations>()?.keypad,
+          style: style,
+          textAlign: fieldStyle?.textAlign ?? TextAlign.center,
+          showCursor: fieldStyle?.showCursor ?? true,
+          keyboardType: fieldStyle?.keyboardType ?? TextInputType.none,
+          cursorColor: fieldStyle?.cursorColor,
+          inputFormatters: [PhoneNormalizingFormatter()],
+        ),
+      ),
+    );
+  }
+}
+
+/// The name of the contact the typed number matches, under the number.
+class _ContactName extends StatelessWidget {
+  const _ContactName({required this.style, this.textAlign});
+
+  final TextStyle? style;
+  final TextAlign? textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: BlocBuilder<KeypadCubit, KeypadState>(
+        buildWhen: (p, c) => (p.contact?.maybeName ?? '') != (c.contact?.maybeName ?? ''),
+        builder: (context, state) {
+          final name = state.contact?.maybeName ?? '';
+          return Text(name, style: style, textAlign: textAlign ?? TextAlign.center);
+        },
+      ),
+    );
+  }
 }
