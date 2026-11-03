@@ -11,6 +11,7 @@ import 'package:api/api.dart' show SessionOtpProvisional;
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/environment_config.dart';
+import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/contacts_agreement/contacts_agreement.dart';
 import 'package:webtrit_phone/features/login/login.dart';
 import 'package:webtrit_phone/features/main/main.dart';
@@ -21,6 +22,8 @@ import 'package:webtrit_phone/features/user_agreement/user_agreement.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 import '../features/consent_harness.dart';
+import '../features/call/view/call_active_scaffold_harness.dart';
+import '../features/call/widgets/call_watch_harness.dart';
 import '../features/keypad/keypad_harness.dart';
 import '../features/login/login_harness.dart';
 import '../helpers/look.dart';
@@ -29,6 +32,8 @@ import '../helpers/shipped_theme.dart';
 import '../helpers/stack_router.dart';
 
 class _MockLoginCubit extends MockCubit<LoginState> implements LoginCubit {}
+
+class _MockCallBloc extends MockBloc<CallEvent, CallState> implements CallBloc {}
 
 const _signUp = LoginDefaultModeAction(titleL10n: 'login_Button_signUpToDemoInstance', flavor: LoginFlavor.login);
 
@@ -100,21 +105,6 @@ void main() {
     return harness.wrap(const LoginModeSelectScreen(appGreetingL10n: 'WebTrit', launchButtons: [_signUp]));
   });
 
-  // Custom core
-  looks('core-url', (_) async {
-    final harness = LoginHarness();
-    addTearDown(harness.release);
-    return harness.wrap(const LoginCoreUrlAssignScreen());
-  });
-  looks('core-url_unreachable', (_) async {
-    return withLoginCubit(
-      mockLogin(
-        LoginState(coreUrlInput: const UrlInput.dirty('https://cloud.exmple.com'), coreUrlAssignError: Exception()),
-      ),
-      const LoginCoreUrlAssignScreen(),
-    );
-  });
-
   // Ways in and the forms
   for (final (name, types) in [
     ('ways-in', const [LoginType.passwordSignin, LoginType.otpSignin, LoginType.signup]),
@@ -170,6 +160,21 @@ void main() {
     );
   });
 
+  // Custom core
+  looks('core-url', (_) async {
+    final harness = LoginHarness();
+    addTearDown(harness.release);
+    return harness.wrap(const LoginCoreUrlAssignScreen());
+  });
+  looks('core-url_unreachable', (_) async {
+    return withLoginCubit(
+      mockLogin(
+        LoginState(coreUrlInput: const UrlInput.dirty('https://cloud.exmple.com'), coreUrlAssignError: Exception()),
+      ),
+      const LoginCoreUrlAssignScreen(),
+    );
+  });
+
   // Consent
   Widget consent(Widget screen) => ConsentHarness().wrap(screen);
   const terms = UserAgreementScreen(appTermsAndConditionsUrl: 'https://example.com/terms', appName: 'WebTrit');
@@ -206,6 +211,112 @@ void main() {
     ),
   );
 
+  // Call
+  final callActive = watchActiveCall();
+  final callHeld = watchActiveCall(callId: 'held', name: 'Anna Ross', held: true);
+  final callRinging = makeCall(
+    callId: 'ringing',
+    processingStatus: CallProcessingStatus.incomingFromOffer,
+    displayName: 'Thomas Anderson',
+  );
+  final callOutgoing = makeCall(
+    callId: 'outgoing',
+    direction: CallDirection.outgoing,
+    processingStatus: CallProcessingStatus.outgoingRinging,
+    displayName: 'Thomas Anderson',
+  );
+  final legA = watchActiveCall(callId: 'a');
+  final legB = watchActiveCall(callId: 'b', name: 'Anna Ross');
+  const room = ConferenceState(phase: ConferencePhase.active, legs: {'a': 0, 'b': 1});
+  const conferences = CallCapabilitiesConfig(isConferenceEnabled: true);
+
+  Widget call(Widget face) => withShippedTheme(CallWatchBackground(child: face));
+  Future<void> tapIcon(WidgetTester tester, IconData icon) async {
+    await tester.ensureVisible(find.byIcon(icon));
+    await tester.tap(find.byIcon(icon));
+    await tester.pumpAndSettle();
+  }
+
+  looks('call_incoming', (_) async => call(callWatchFace(calls: [callRinging], sent: CallWatchSent())));
+  looks(
+    'call_incoming_over-a-call',
+    (_) async => call(callWatchFace(calls: [callActive, callRinging], focused: callRinging, sent: CallWatchSent())),
+  );
+  looks('call_outgoing', (_) async => call(callWatchFace(calls: [callOutgoing], sent: CallWatchSent())));
+  looks('call_active', (_) async => call(callWatchFace(calls: [callActive], sent: CallWatchSent())));
+  looks(
+    'call_active_muted',
+    (_) async => call(callWatchFace(calls: [callActive.copyWith(muted: true)], sent: CallWatchSent())),
+  );
+  looks('call_held', (_) async => call(callWatchFace(calls: [callHeld], sent: CallWatchSent())));
+  looks(
+    'call_bluetooth',
+    (_) async => call(
+      callWatchFace(
+        calls: [callActive],
+        devices: const [watchBuds, watchEarpiece, watchSpeaker],
+        audioDevice: watchBuds,
+        sent: CallWatchSent(),
+      ),
+    ),
+  );
+  looks(
+    'call_more',
+    (_) async => call(callWatchFace(calls: [callActive, callHeld], callConfig: conferences, sent: CallWatchSent())),
+    act: (tester) async => tapIcon(tester, Icons.more_horiz),
+  );
+  looks(
+    'call_audio',
+    (_) async => call(
+      callWatchFace(
+        calls: [callActive],
+        devices: const [watchBuds, watchEarpiece, watchSpeaker],
+        audioDevice: watchBuds,
+        sent: CallWatchSent(),
+      ),
+    ),
+    act: (tester) async => tapIcon(tester, Icons.bluetooth_audio),
+  );
+  looks(
+    'call_transfer',
+    (_) async => call(callWatchFace(calls: [callActive], sent: CallWatchSent())),
+    act: (tester) async {
+      await tapIcon(tester, Icons.more_horiz);
+      await tapIcon(tester, Icons.phone_forwarded);
+    },
+  );
+  looks(
+    'call_calls',
+    (_) async => call(callWatchFace(calls: [callActive, callHeld], callConfig: conferences, sent: CallWatchSent())),
+    act: (tester) async {
+      await tapIcon(tester, Icons.more_horiz);
+      await tapIcon(tester, Icons.call_split);
+    },
+  );
+  looks(
+    'call_conference',
+    (_) async =>
+        call(callWatchFace(calls: [legA, legB], callConfig: conferences, conference: room, sent: CallWatchSent())),
+    act: (tester) async {
+      await tapIcon(tester, Icons.more_horiz);
+      await tapIcon(tester, Icons.groups);
+    },
+  );
+  looks(
+    'call_participant',
+    (_) async =>
+        call(callWatchFace(calls: [legA, legB], callConfig: conferences, conference: room, sent: CallWatchSent())),
+    act: (tester) async {
+      await tapIcon(tester, Icons.more_horiz);
+      await tapIcon(tester, Icons.groups);
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -200));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Anna Ross'));
+      await tester.pumpAndSettle();
+    },
+  );
+  looks('call_keypad', (_) async => call(callWatchFace(calls: [callActive], keypadShown: true, sent: CallWatchSent())));
+
   // Main screen and keypad
   const tabs = <BottomMenuTab>[
     RecentsBottomMenuTab(
@@ -240,11 +351,20 @@ void main() {
       icon: Icons.voicemail,
     ),
   ];
-  Widget hub({DestinationPickPurpose? pickPurpose}) {
+  CallBloc calls(CallState state) {
+    final bloc = _MockCallBloc();
+    whenListen(bloc, const Stream<CallState>.empty(), initialState: state);
+    return bloc;
+  }
+
+  Widget hub({CallState callState = const CallState(), DestinationPickPurpose? pickPurpose}) {
     final sessionStatus = _MockSessionStatusCubit();
     when(() => sessionStatus.state).thenReturn(const SessionStatusState());
-    return BlocProvider<SessionStatusCubit>.value(
-      value: sessionStatus,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<SessionStatusCubit>.value(value: sessionStatus),
+        BlocProvider<CallBloc>.value(value: calls(callState)),
+      ],
       child: withShippedTheme(
         withRootStackRouter(
           MainScreen(
@@ -266,6 +386,7 @@ void main() {
   }
 
   looks('hub', (_) async => hub());
+  looks('hub_in-call', (_) async => hub(callState: CallState(activeCalls: [watchActiveCall()], minimized: true)));
   looks('hub_picking', (_) async => hub(pickPurpose: _LookPurpose()));
 
   Future<Widget> keypad(WidgetTester tester) async {

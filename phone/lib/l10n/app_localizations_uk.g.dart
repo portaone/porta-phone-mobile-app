@@ -523,6 +523,51 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_ToolbarStatus_reconnecting => 'Перепідключення...';
 
   @override
+  String get call_Watch_more => 'Ще';
+
+  @override
+  String get call_Watch_mute => 'Без звуку';
+
+  @override
+  String get call_Watch_speaker => 'Динамік';
+
+  @override
+  String get call_Watch_audio => 'Звук';
+
+  @override
+  String get call_Watch_keypad => 'Клавіші';
+
+  @override
+  String get call_Watch_hold => 'Утримати';
+
+  @override
+  String get call_Watch_resume => 'Відновити';
+
+  @override
+  String get call_Watch_transfer => 'Переадр.';
+
+  @override
+  String get call_Watch_camera => 'Камера';
+
+  @override
+  String get call_Watch_switchCamera => 'Змінити';
+
+  @override
+  String get call_Watch_blur => 'Розмиття';
+
+  @override
+  String get call_Watch_calls => 'Дзвінки';
+
+  @override
+  String get call_Watch_conference => 'Група';
+
+  @override
+  String get call_Watch_muteForAll => 'Тиша всім';
+
+  @override
+  String get call_Watch_drop => 'Відключити';
+
+  @override
   String get call_description_held => 'На утриманні';
 
   @override

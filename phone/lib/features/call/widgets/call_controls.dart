@@ -157,7 +157,7 @@ class CallControlsParams {
     final linked = linkedCall;
     if (linked == null || linked.purpose != LinkedCallPurpose.join) return null;
     for (final call in activeCalls) {
-      if (call.callId == linked.callId) return call.wasAccepted ? null : call.displayName ?? call.handle.value;
+      if (call.callId == linked.callId) return call.wasAccepted ? null : call.nameOrNumber;
     }
     return null;
   }

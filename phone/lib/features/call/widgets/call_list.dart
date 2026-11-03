@@ -5,6 +5,7 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../bloc/call_bloc.dart';
+import '../extensions/extensions.dart';
 import '../models/models.dart';
 import '../view/call_screen_style.dart';
 import '../utils/contact_resolver.dart';
@@ -123,7 +124,7 @@ class CallRow extends StatelessWidget {
     final base = CallRowFrame.baseColor(context, style);
 
     return CallRowFrame(
-      name: call.displayName ?? call.handle.value,
+      name: call.nameOrNumber,
       status: _statusBadge(context),
       focused: focused,
       onTap: onTap,
