@@ -24,6 +24,7 @@ import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/common/common.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/theme/theme.dart';
+import 'package:webtrit_phone/widgets/adaptive/screen_shape.dart';
 import 'package:webtrit_phone/push_notification/push_notifications.dart';
 import 'package:webtrit_phone/features/system_notifications/services/services.dart';
 
@@ -108,6 +109,9 @@ Future<AppDependencies> _bootstrap({
   // print('bootstrap: secureStorage token: ${token != null ? '***' : 'null'}');
   final appPreferences = deps.share(roots.appPreferences);
   deps.share<UserLocalDatasource>(UserLocalDatasourcePrefsImpl(appPreferences));
+  // Asked once: a watch face does not change shape while the app runs, and
+  // the answer decides how watch screens are laid out from the first frame.
+  deps.share(await ScreenShape.query());
 
   // Network clients
   final appCertificates = deps.share(roots.appCertificates);

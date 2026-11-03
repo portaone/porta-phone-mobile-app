@@ -11,6 +11,7 @@ workspace:
   - packages/store_info_extractor
   - packages/theme_schema
   - packages/device_auto_rotate
+  - packages/screen_shape
   - packages/data/app_database
   - packages/_http_client
   - packages/_web_socket_channel
@@ -137,6 +138,8 @@ dependencies:
     path: ./packages/data/app_database
   device_auto_rotate:
     path: ./packages/device_auto_rotate
+  screen_shape:
+    path: ./packages/screen_shape
   durable_device_id: ^0.1.0
   pjsua_companion:
     path: ./packages/pjsua_companion
