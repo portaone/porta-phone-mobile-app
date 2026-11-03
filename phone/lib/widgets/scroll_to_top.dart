@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
-import 'package:webtrit_phone/widgets/semantic_action.dart';
+import 'package:adaptive_kit/adaptive_kit.dart';
 
 class ScrollToTopOverlay extends StatelessWidget {
   const ScrollToTopOverlay({required this.child, required this.scrolledAway, required this.onScrollToTop, super.key});
