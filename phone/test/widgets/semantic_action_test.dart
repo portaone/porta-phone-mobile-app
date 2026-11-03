@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:webtrit_phone/widgets/semantic_action.dart';
+import 'package:adaptive_kit/adaptive_kit.dart';
 
 import '../helpers/helpers.dart';
 

@@ -128,7 +128,7 @@ UI (a control shipped without this is a defect):
 | change a table or a column | `packages/data/AGENTS.md`, [schema_changes.md](packages/data/docs/schema_changes.md), [query_traps.md](packages/data/docs/query_traps.md) | `drift-schema-change` |
 | add or change a string, run a generator or the formatter | [localization.md](docs/guides/localization.md), [format_and_codegen.md](docs/guides/format_and_codegen.md) | `codegen-l10n` |
 | use a Material widget, write a dialog or a widget test | [material_ui.md](docs/guides/material_ui.md) | |
-| lay a screen out for landscape | [adaptive_layout.md](docs/architecture/adaptive_layout.md) | |
+| lay a screen out for a watch, a tablet or landscape | [adaptive_layout.md](docs/architecture/adaptive_layout.md) | |
 | refactor without changing behaviour | [refactor_equivalence.md](docs/guides/refactor_equivalence.md) | |
 | raise a minimum OS or SDK version | [platform_versions.md](docs/reference/platform_versions.md) | |
 | change the call plugin | `../callkeep/AGENTS.md` | `callkeep-android-change`, `callkeep-ios-change` |
@@ -139,7 +139,7 @@ UI (a control shipped without this is a defect):
 
 - `fvm dart format`, `fvm flutter analyze` and `fvm flutter test` are clean in every package
   you touched. The pre-push gate runs analyze and the tests of `phone/` itself, and the tests
-  of `text_entities` and `link_preview`; the tests of every other package (`theme_schema`,
+  of `text_entities`, `link_preview` and `adaptive_kit`; the tests of every other package (`theme_schema`,
   `phone_number`, `app_database` with its migrations, ...) run only in Jenkins - run them in
   the package by hand.
 - What the gate does not prove:

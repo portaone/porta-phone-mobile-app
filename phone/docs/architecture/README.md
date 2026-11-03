@@ -4,7 +4,7 @@ Why the app is shaped this way: the mechanisms a feature is built on.
 
 | Page | What it holds |
 | --- | --- |
-| [adaptive_layout.md](adaptive_layout.md) | Giving a screen a second arrangement (landscape) |
+| [adaptive_layout.md](adaptive_layout.md) | Giving a screen another arrangement: device class (watch, handset, large) and orientation |
 | [bloc_async_state.md](bloc_async_state.md) | Loading several things at once in a Cubit or Bloc: stale `state` after `await`, emit after `close()` |
 | [core_error_codes.md](core_error_codes.md) | How Core translates adapter refusals, and which codes the app turns into a logout |
 | [data_refresh.md](data_refresh.md) | How a user asks a list to fetch again, screen by screen |

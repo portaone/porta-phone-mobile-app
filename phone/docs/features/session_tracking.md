@@ -66,7 +66,7 @@ that format and is also called directly in `bootstrap`, which builds the API
 client factory before the provider exists (the provider needs `featureAccess`).
 
 `DeviceName` is the name a person knows the device by (`Samsung Galaxy XCover
-5`, `iPhone 12 mini`), read by the `device_display_name` plugin into
+5`, `iPhone 12 mini`), read by the `device_profile` plugin into
 `DeviceInfo.displayName`; the platform model (`SM-G525F`, `iPhone`) is sent only
 where the plugin gives no name. The name the user gave the device is never
 used: it can carry a person's name, and the core stores and logs the header.

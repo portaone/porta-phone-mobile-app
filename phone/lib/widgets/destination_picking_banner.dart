@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
-import 'package:webtrit_phone/widgets/semantic_action.dart';
+import 'package:adaptive_kit/adaptive_kit.dart';
 
 /// Says, across every section the person walks through, that somebody is being
 /// chosen and what for.

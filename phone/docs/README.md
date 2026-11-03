@@ -39,7 +39,7 @@ has its own `README.md` saying what belongs there; this page lists everything at
 
 | Page | What it holds |
 | --- | --- |
-| [adaptive_layout.md](architecture/adaptive_layout.md) | Giving a screen a second arrangement (landscape) |
+| [adaptive_layout.md](architecture/adaptive_layout.md) | Giving a screen another arrangement: device class (watch, handset, large) and orientation |
 | [bloc_async_state.md](architecture/bloc_async_state.md) | Loading several things at once in a Cubit or Bloc: stale `state` after `await`, emit after `close()` |
 | [core_error_codes.md](architecture/core_error_codes.md) | How Core translates adapter refusals, and which codes the app turns into a logout |
 | [data_refresh.md](architecture/data_refresh.md) | How a user asks a list to fetch again, screen by screen |

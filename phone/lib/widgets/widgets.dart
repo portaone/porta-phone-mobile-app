@@ -1,3 +1,5 @@
+export 'package:adaptive_kit/adaptive_kit.dart';
+
 export 'acknowledge_dialog.dart';
 export 'call/call.dart';
 export 'ago_ticker.dart';
@@ -46,7 +48,6 @@ export 'safe_network_image.dart';
 export 'screen_reader_builder.dart';
 export 'scroll_to_bottom.dart';
 export 'scroll_to_top.dart';
-export 'semantic_action.dart';
 export 'semantic_id.dart';
 export 'semantic_id_of_ancestor.dart';
 export 'session_tile.dart';
@@ -59,4 +60,6 @@ export 'text_buttons_table.dart';
 export 'themed_scaffold.dart';
 export 'destination_picking_banner.dart';
 export 'unfocuser.dart';
+export 'watch_dial_keys.dart';
+export 'watch_logo.dart';
 export 'webview/webview.dart';
