@@ -340,7 +340,9 @@ class _ManualTimer implements Timer {
 
 /// The signaling module as the test wants it: every request is recorded, and
 /// answered with an ack unless [failure] is set, after [gate] releases it when
-/// one is set. Events reach the bloc through [emit].
+/// one is set. Events reach the bloc through [emit]. A hold or unhold that is
+/// acknowledged is also answered as the gateway does, with `holding` or
+/// `resuming`, unless [dropHolds] says the gateway drops it.
 class FakeSignalingModule extends Fake implements SignalingModule {
   final _events = StreamController<SignalingModuleEvent>.broadcast();
   final _session = SignalingEventBuffer();
@@ -354,6 +356,10 @@ class FakeSignalingModule extends Fake implements SignalingModule {
 
   /// Thrown by [execute] instead of an ack while set.
   Object? failure;
+
+  /// How many of the next holds and unholds the gateway drops: acknowledged by
+  /// the server, never answered with `holding` or `resuming` (WT-2093).
+  int dropHolds = 0;
 
   /// While set, [execute] records the request and then waits for this to
   /// complete before answering - to interleave something with a request in
@@ -402,6 +408,15 @@ class FakeSignalingModule extends Fake implements SignalingModule {
     answered.add(request);
     final error = failure;
     if (error != null) throw error;
+    if (request is HoldRequest || request is UnholdRequest) {
+      if (dropHolds > 0) {
+        dropHolds--;
+      } else if (request case HoldRequest(:final line, :final callId)) {
+        emit(HoldingEvent(line: line, callId: callId));
+      } else if (request case UnholdRequest(:final line, :final callId)) {
+        emit(ResumingEvent(line: line, callId: callId));
+      }
+    }
   }
 
   /// Delivers [event] to the bloc as if the server sent it.
