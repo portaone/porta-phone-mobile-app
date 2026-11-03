@@ -314,22 +314,22 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
     // choosing who else the call is about, and a separate control for it had
     // no place in the grid. Where the deployment offers no conferences the
     // button stays the plain transfer it always was.
-    final inviteShown = widget.addParticipantPendingName != null || widget.addParticipantAvailability.shown;
+    final inviteShown = CallActionAvailability.inviteShownFor(
+      widget.addParticipantPendingName,
+      widget.addParticipantAvailability,
+    );
     // The button opens the menu only for an entry that acts, or that says why
-    // it cannot (every line taken): a menu holding one inert entry with no
-    // reason - a call still ringing, a video call - is a dead end, and the
-    // button stays disabled as the plain transfer did.
-    final inviteOffered =
-        widget.addParticipantPendingName != null ||
-        widget.addParticipantAvailability == AddParticipantAvailability.available ||
-        widget.addParticipantAvailability == AddParticipantAvailability.noFreeLine;
-    final transferInitAvailable =
-        onBlindTransferInitiated != null || onAttendedTransferInitiated != null || inviteOffered;
-    final transferToCallAvailable =
-        onBlindTransferInitiated != null ||
-        widget.onAttendedTransferSubmitted != null ||
-        onAttendedTransferInitiated != null ||
-        inviteOffered;
+    // it cannot; the rule is the one every layout of the call uses.
+    final transferMenuEnabled = CallActionAvailability.transferMenuEnabledFor(
+      hasTransferableCalls: widget.transferableCalls.isNotEmpty,
+      blind: onBlindTransferInitiated != null,
+      attendedStart: onAttendedTransferInitiated != null,
+      handOver: widget.onAttendedTransferSubmitted != null,
+      inviteOffered: CallActionAvailability.inviteOfferedFor(
+        widget.addParticipantPendingName,
+        widget.addParticipantAvailability,
+      ),
+    );
     final transferMenuLabel = inviteShown
         ? context.l10n.call_CallActionsTooltip_addOrTransfer
         : context.l10n.call_CallActionsTooltip_transfer;
@@ -345,11 +345,8 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
     final foregroundColor =
         widget.style?.key?.foregroundColor?.resolve(const <WidgetState>{}) ?? Theme.of(context).colorScheme.surface;
 
-    final keypadTextStyle = DefaultTextStyle.of(context).style.copyWith(
-      fontSize: Theme.of(context).textTheme.headlineLarge?.fontSize,
-      height: 1.0,
-      color: foregroundColor,
-    );
+    final keypadTextStyle = DefaultTextStyle.of(context).style
+        .copyWith(fontSize: Theme.of(context).textTheme.headlineLarge?.fontSize, height: 1.0, color: foregroundColor);
 
     final subKeypadTextStyle = DefaultTextStyle.of(context).style.copyWith(
       fontSize: Theme.of(context).textTheme.bodyMedium?.fontSize,
@@ -428,7 +425,7 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
             key: callActionsTransferMenuKey,
             identifier: callActionsTransferMenuId,
             label: transferMenuLabel,
-            enabled: transferToCallAvailable,
+            enabled: transferMenuEnabled,
             offset: Offset(_dimension + 8, 0),
             style: widget.style?.transfer,
             items: _withInviteItems(_buildTransferToCallItems(themeData), themeData),
@@ -439,7 +436,7 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
             key: callActionsTransferMenuKey,
             identifier: callActionsTransferMenuId,
             label: transferMenuLabel,
-            enabled: transferInitAvailable,
+            enabled: transferMenuEnabled,
             offset: Offset(_dimension + 8, 0),
             style: widget.style?.transfer,
             items: _withInviteItems(_buildTransferInitItems(themeData), themeData),
