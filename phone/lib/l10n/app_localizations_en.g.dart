@@ -1387,6 +1387,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_TextFieldLabelText_coreUrlAssign => 'Enter your Cloud Backend URL';
 
   @override
+  String get login_TextFieldLabelText_coreUrlAssignShort => 'URL';
+
+  @override
   String get login_TextFieldLabelText_otpSigninCode => 'Enter the verification code';
 
   @override

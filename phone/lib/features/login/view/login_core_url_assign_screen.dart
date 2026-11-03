@@ -9,6 +9,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 import '../login.dart';
 import 'login_core_url_assign_handset.dart';
 import 'login_core_url_assign_params.dart';
+import 'login_core_url_assign_watch.dart';
 
 class LoginCoreUrlAssignScreen extends StatefulWidget {
   const LoginCoreUrlAssignScreen({super.key});
@@ -47,9 +48,14 @@ class _LoginCoreUrlAssignScreenState extends State<LoginCoreUrlAssignScreen> {
           onSubmit: !state.coreUrlInput.isValid ? null : () => _onCoreUrlAssignSubmitted(context),
         );
 
-        // The layout reads the params and the controller the state keeps,
-        // so a rebuild of it keeps what was typed.
-        return LoginCoreUrlAssignHandset(params: params);
+        // Both arrangements read the same params and the same history
+        // controller, built above the switch: after a resize across a class
+        // boundary the typed URL comes back from the cubit and Proceed still
+        // saves it to history.
+        return AdaptiveLayout(
+          handset: (_) => LoginCoreUrlAssignHandset(params: params),
+          watch: (_) => LoginCoreUrlAssignWatch(params: params),
+        );
       },
     );
   }

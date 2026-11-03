@@ -1371,6 +1371,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get login_TextFieldLabelText_coreUrlAssign => 'ป้อน URL ของ Cloud Backend ของคุณ';
 
   @override
+  String get login_TextFieldLabelText_coreUrlAssignShort => 'URL';
+
+  @override
   String get login_TextFieldLabelText_otpSigninCode => 'กรอกรหัสยืนยัน';
 
   @override
