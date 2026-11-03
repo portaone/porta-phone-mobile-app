@@ -547,6 +547,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'login_Button_signupVerifyRepeat' => login_Button_signupVerifyRepeat,
       'login_ButtonTooltip_signInToYourInstance' =>
         login_ButtonTooltip_signInToYourInstance,
+      'login_Button_customCoreShort' => login_Button_customCoreShort,
       'login_RequestFailureAddonRequiredError' =>
         login_RequestFailureAddonRequiredError,
       'login_RequestFailureDeliveryChannelUnspecifiedError' =>

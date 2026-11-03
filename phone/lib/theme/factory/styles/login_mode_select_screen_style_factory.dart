@@ -40,9 +40,29 @@ class LoginModeSelectScreenStyleFactory implements ThemeStyleFactory<LoginModeSe
         onboardingTextStyle: ExtendedTextStyle(textStyle: textStyle, decoration: backgroundDecoration),
         signInTypeButton: config?.buttonSignupStyleType,
         signUpTypeButton: config?.buttonLoginStyleType,
+        secondaryActionColor: _secondaryActionColor(textStyle, backgroundDecoration, backgroundStyle),
         appBarBlurredSurface: config?.appBarBlurredSurface?.toStyle(),
         appBarTheme: appBarTheme,
       ),
     );
+  }
+
+  /// Without a plate of its own the greeting's colour is the one the brand
+  /// set against the page, so an action on the page takes it too. On a plate
+  /// that colour answers the plate: a solid page then gets whichever of the
+  /// scheme's pair stands out on it, and a gradient or an image the phone
+  /// landing's own colour for what sits on the page.
+  Color _secondaryActionColor(TextStyle greeting, ExtendedTextDecoration? plate, BackgroundStyle? background) {
+    final hasPlate = plate != null || greeting.backgroundColor != null;
+    final greetingColor = greeting.color;
+    if (!hasPlate && greetingColor != null) return greetingColor;
+
+    if (background is SolidBackgroundStyle) {
+      final page = background.color.computeLuminance();
+      final dark = (colors.onSurface.computeLuminance() - page).abs();
+      final light = (colors.surface.computeLuminance() - page).abs();
+      return dark >= light ? colors.onSurface : colors.surface;
+    }
+    return colors.onPrimary;
   }
 }
