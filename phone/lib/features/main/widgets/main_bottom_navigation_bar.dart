@@ -10,6 +10,15 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 /// decoration reads - the bar itself takes no part in that.
 typedef TabIconDecorator = Widget Function(BottomMenuTab tab, Widget icon);
 
+/// A tab's icon as every place that shows the tabs draws it - the bar on a
+/// phone, the hub on a watch - with what [decorate] adds over it.
+extension TabIconX on BottomMenuTab {
+  Widget decoratedIcon(TabIconDecorator? decorate) {
+    final icon = Icon(this.icon);
+    return decorate?.call(this, icon) ?? icon;
+  }
+}
+
 /// One decorator out of several, each wrapping what the ones before it built.
 ///
 /// The bar takes a single decorator on purpose - it is not the place that knows
@@ -70,8 +79,7 @@ class MainBottomNavigationBar extends StatelessWidget {
   }
 
   BottomNavigationBarItem _item(BuildContext context, BottomMenuTab tab) {
-    Widget icon = Icon(tab.icon);
-    icon = decorateIcon?.call(tab, icon) ?? icon;
+    final icon = tab.decoratedIcon(decorateIcon);
 
     return BottomNavigationBarItem(
       key: tab.navBarKey,

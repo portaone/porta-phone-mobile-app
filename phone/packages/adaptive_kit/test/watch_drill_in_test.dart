@@ -83,4 +83,81 @@ void main() {
 
     expect(find.byKey(contentKey), findsOneWidget);
   });
+
+  group('keeping the content', () {
+    Widget keeping({Object? openOn}) => MaterialApp(
+      home: Scaffold(
+        body: WatchDrillIn(
+          menuFirst: true,
+          keepContent: true,
+          openOn: openOn,
+          menu: (context, open) => TextButton(
+            key: openKey,
+            onPressed: open,
+            child: const Text('menu', key: menuKey),
+          ),
+          content: const _Counter(key: contentKey),
+        ),
+      ),
+    );
+
+    testWidgets('the content keeps its state across a trip to the menu', (tester) async {
+      await tester.pumpWidget(keeping());
+      await tester.tap(find.byKey(openKey));
+      await tester.pump();
+      await tester.tap(find.byKey(contentKey));
+      await tester.pump();
+      expect(find.text('1'), findsOneWidget);
+
+      await goBack(tester);
+      expect(find.byKey(menuKey), findsOneWidget);
+      expect(find.text('1'), findsNothing, reason: 'hidden under the menu');
+
+      await tester.tap(find.byKey(openKey));
+      await tester.pump();
+      expect(find.text('1'), findsOneWidget);
+    });
+
+    testWidgets('a change of openOn opens the content', (tester) async {
+      await tester.pumpWidget(keeping(openOn: 'a'));
+      expect(find.byKey(menuKey), findsOneWidget);
+
+      await tester.pumpWidget(keeping(openOn: 'b'));
+      expect(find.text('0'), findsOneWidget);
+      expect(find.byKey(menuKey), findsNothing);
+    });
+
+    testWidgets('the content knows going back belongs to the drill-in', (tester) async {
+      late bool owned;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WatchDrillIn(
+            menuFirst: false,
+            menu: (context, open) => const SizedBox(),
+            content: Builder(
+              builder: (context) {
+                owned = WatchDrillIn.ownsBack(context);
+                return const SizedBox();
+              },
+            ),
+          ),
+        ),
+      );
+      expect(owned, isTrue);
+    });
+  });
+}
+
+class _Counter extends StatefulWidget {
+  const _Counter({super.key});
+
+  @override
+  State<_Counter> createState() => _CounterState();
+}
+
+class _CounterState extends State<_Counter> {
+  var _count = 0;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(onTap: () => setState(() => _count++), child: Text('$_count'));
 }

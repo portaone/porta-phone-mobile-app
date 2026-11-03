@@ -5,6 +5,10 @@ import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'main_screen_handset.dart';
+import 'main_screen_params.dart';
+import 'main_screen_watch.dart';
+
 class MainScreen extends StatelessWidget {
   const MainScreen({
     Key? key,
@@ -62,56 +66,25 @@ class MainScreen extends StatelessWidget {
     // a transfer is left by returning to the call, a message looking for a
     // recipient has no such screen behind it.
     final cancels = pickPurpose?.cancellable ?? false;
-    final pickingBanner = announces
-        ? DestinationPickingBanner(
-            pickPurpose!.announcement,
-            onCancel: cancels ? onCancelPick : null,
-            cancelLabel: context.l10n.main_Button_cancelPicking,
-          )
-        : null;
-
-    // The screen is the one home of the bar-visibility rule for every host,
-    // the previews included: a menu of one section shows no bar - there is
-    // nothing to switch to - and the section's own scaffolding fills the
-    // screen. The banner still has to be said, and with no bar of ours to
-    // float over it there is nothing to keep it clear of.
-    if (tabs.length < 2) {
-      if (pickingBanner == null) return body;
-      return Scaffold(
-        body: body,
-        bottomNavigationBar: BlurredSurface(sigmaX: 10.0, sigmaY: 10.0, child: pickingBanner),
-      );
-    }
-
-    return Scaffold(
-      extendBody: true,
+    final params = MainScreenParams(
       body: body,
-      // Above the bar, not behind it, and under one pane of glass with it:
-      // both belong to this screen, so they are a single bottom-of-the-screen
-      // widget the body is inset by. Blurring them apart would show the seam,
-      // two filters sampling different backdrops.
-      bottomNavigationBar: BlurredSurface(
-        sigmaX: 10.0,
-        sigmaY: 10.0,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          // Both are bars across the screen. Left to itself a Column hands
-          // each child only the width it asks for, and the banner - a box
-          // around a line of text - would sit centred and half as wide as
-          // the bar under it, reading as a label rather than as the state of
-          // the screen.
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ?pickingBanner,
-            MainBottomNavigationBar(
-              tabs: tabs,
-              currentIndex: currentIndex,
-              onTap: onTabSelected,
-              decorateIcon: decorateTabIcon,
+      tabs: tabs,
+      currentIndex: currentIndex,
+      onTabSelected: onTabSelected,
+      decorateTabIcon: decorateTabIcon,
+      pick: pickPurpose == null
+          ? null
+          : MainScreenPick(
+              announcement: pickPurpose!.announcement,
+              onCancel: cancels ? onCancelPick : null,
+              cancelLabel: context.l10n.main_Button_cancelPicking,
             ),
-          ],
-        ),
-      ),
+      pickOfferedHere: announces,
+    );
+
+    return AdaptiveLayout(
+      handset: (_) => MainScreenHandset(params: params),
+      watch: (_) => MainScreenWatch(params: params),
     );
   }
 }

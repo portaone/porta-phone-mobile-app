@@ -1575,6 +1575,10 @@
   "@main_BottomNavigationBarItemLabel_recents": {},
   "main_BottomNavigationBarItemLabel_voicemail": "Voicemail",
   "@main_BottomNavigationBarItemLabel_voicemail": {},
+  "main_Button_settings": "Settings",
+  "@main_Button_settings": {
+    "description": "The caption of the settings button on the watch hub, where the full account name does not fit."
+  },
   "main_CompatibilityIssueDialogActions_logout": "Logout",
   "@main_CompatibilityIssueDialogActions_logout": {},
   "main_CompatibilityIssueDialogActions_update": "Update",

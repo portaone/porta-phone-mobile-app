@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:api/api.dart' show SessionOtpProvisional;
@@ -12,8 +13,10 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/features/contacts_agreement/contacts_agreement.dart';
 import 'package:webtrit_phone/features/login/login.dart';
+import 'package:webtrit_phone/features/main/main.dart';
 import 'package:webtrit_phone/features/permissions/permissions.dart';
 import 'package:webtrit_phone/features/permissions/widgets/permission_tips.dart';
+import 'package:webtrit_phone/features/session_status/session_status.dart';
 import 'package:webtrit_phone/features/user_agreement/user_agreement.dart';
 import 'package:webtrit_phone/models/models.dart';
 
@@ -23,6 +26,7 @@ import '../features/login/login_harness.dart';
 import '../helpers/look.dart';
 import '../helpers/screen_presets.dart';
 import '../helpers/shipped_theme.dart';
+import '../helpers/stack_router.dart';
 
 class _MockLoginCubit extends MockCubit<LoginState> implements LoginCubit {}
 
@@ -202,7 +206,68 @@ void main() {
     ),
   );
 
-  // Keypad
+  // Main screen and keypad
+  const tabs = <BottomMenuTab>[
+    RecentsBottomMenuTab(
+      supportsCallHistory: false,
+      enabled: true,
+      initial: false,
+      titleL10n: 'main_BottomNavigationBarItemLabel_recents',
+      icon: Icons.history,
+    ),
+    FavoritesBottomMenuTab(
+      enabled: true,
+      initial: false,
+      titleL10n: 'main_BottomNavigationBarItemLabel_contacts',
+      icon: Icons.account_circle_outlined,
+    ),
+    KeypadBottomMenuTab(
+      enabled: true,
+      initial: true,
+      titleL10n: 'main_BottomNavigationBarItemLabel_keypad',
+      icon: Icons.dialpad,
+    ),
+    MessagingBottomMenuTab(
+      enabled: true,
+      initial: false,
+      titleL10n: 'main_BottomNavigationBarItemLabel_chats',
+      icon: Icons.chat_bubble_outline,
+    ),
+    VoicemailBottomMenuTab(
+      enabled: true,
+      initial: false,
+      titleL10n: 'main_BottomNavigationBarItemLabel_voicemail',
+      icon: Icons.voicemail,
+    ),
+  ];
+  Widget hub({DestinationPickPurpose? pickPurpose}) {
+    final sessionStatus = _MockSessionStatusCubit();
+    when(() => sessionStatus.state).thenReturn(const SessionStatusState());
+    return BlocProvider<SessionStatusCubit>.value(
+      value: sessionStatus,
+      child: withShippedTheme(
+        withRootStackRouter(
+          MainScreen(
+            body: const SizedBox.shrink(),
+            tabs: tabs,
+            currentIndex: 2,
+            onTabSelected: (_) {},
+            decorateTabIcon: (tab, icon) => switch (tab) {
+              MessagingBottomMenuTab() => Badge(label: const Text('3'), child: icon),
+              RecentsBottomMenuTab() => Badge(label: const Text('2'), child: icon),
+              _ => icon,
+            },
+            pickPurpose: pickPurpose,
+            onCancelPick: pickPurpose == null ? null : () {},
+          ),
+        ),
+      ),
+    );
+  }
+
+  looks('hub', (_) async => hub());
+  looks('hub_picking', (_) async => hub(pickPurpose: _LookPurpose()));
+
   Future<Widget> keypad(WidgetTester tester) async {
     final harness = KeypadHarness();
     addTearDown(harness.release);
@@ -221,4 +286,35 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
     },
   );
+}
+
+class _MockSessionStatusCubit extends MockCubit<SessionStatusState> implements SessionStatusCubit {}
+
+class _LookPurpose implements DestinationPickPurpose {
+  @override
+  String get announcement => 'Choose who to transfer the call to';
+
+  @override
+  bool offeredBy(MainFlavor flavor) => true;
+
+  @override
+  bool accepts(DestinationCandidate candidate) => true;
+
+  @override
+  bool get closedByChoice => true;
+
+  @override
+  DestinationPickPrecedence get precedence => DestinationPickPrecedence.ordinary;
+
+  @override
+  bool get cancellable => true;
+
+  @override
+  IconData get pickIcon => Icons.phone_forwarded;
+
+  @override
+  String pickLabel(DestinationCandidate candidate) => 'Transfer to ${candidate.number}';
+
+  @override
+  void submit(DestinationCandidate candidate) {}
 }

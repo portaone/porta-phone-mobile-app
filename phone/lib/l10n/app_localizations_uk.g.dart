@@ -1624,6 +1624,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get main_BottomNavigationBarItemLabel_voicemail => 'Голосова пошта';
 
   @override
+  String get main_Button_settings => 'Налаштування';
+
+  @override
   String get main_CompatibilityIssueDialogActions_logout => 'Вийти';
 
   @override
