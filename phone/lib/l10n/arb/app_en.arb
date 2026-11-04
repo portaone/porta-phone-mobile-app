@@ -2652,13 +2652,13 @@
   "@settings_audioProcessing_Section_EC_title": {},
   "settings_audioProcessing_Section_HPF_title": "High pass filter",
   "@settings_audioProcessing_Section_HPF_title": {},
-  "settings_audioProcessing_Section_NS_title": "Noise suppression",
+  "settings_audioProcessing_Section_NS_title": "System noise suppression",
   "@settings_audioProcessing_Section_NS_title": {},
   "settings_audioProcessing_Section_title": "Audio pre-processing",
   "@settings_audioProcessing_Section_title": {},
   "settings_audioProcessing_Section_tooltip": "Can be used to tune audio quality for specific needs or environments. Like studio recording, or external microphone. \n\nBypass voice processing - tells system to not apply hardware voice processing (Requires app restart).",
   "@settings_audioProcessing_Section_tooltip": {},
-  "settings_audioProcessing_Section_VNR_title": "Voice noise reduction (RNNoise)",
+  "settings_audioProcessing_Section_VNR_title": "Extra noise reduction (RNNoise)",
   "@settings_audioProcessing_Section_VNR_title": {
     "description": "Opt-in switch for RNNoise on the outgoing voice, after the platform processing"
   },

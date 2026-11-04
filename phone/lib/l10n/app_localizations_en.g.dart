@@ -2781,7 +2781,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_audioProcessing_Section_HPF_title => 'High pass filter';
 
   @override
-  String get settings_audioProcessing_Section_NS_title => 'Noise suppression';
+  String get settings_audioProcessing_Section_NS_title => 'System noise suppression';
 
   @override
   String get settings_audioProcessing_Section_title => 'Audio pre-processing';
@@ -2791,7 +2791,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Can be used to tune audio quality for specific needs or environments. Like studio recording, or external microphone. \n\nBypass voice processing - tells system to not apply hardware voice processing (Requires app restart).';
 
   @override
-  String get settings_audioProcessing_Section_VNR_title => 'Voice noise reduction (RNNoise)';
+  String get settings_audioProcessing_Section_VNR_title => 'Extra noise reduction (RNNoise)';
 
   @override
   String get settings_audioProcessing_Section_VP_title => 'Bypass voice processing';
