@@ -396,8 +396,20 @@ Three rules keep this safe; each is one small class in `features/call/utils/`.
 
 What this rests on: the server appends to a call's log and never trims it while the call is up,
 and sends an event and logs it in one step, so an update is either in the handshake's log or
-delivered after the handshake, never both and never neither. Not covered: a call restored after an
-app restart takes the `RestoreCallAction` path above and is not handed its unanswered update.
+delivered after the handshake, never both and never neither.
+
+A call restored after an app restart (`RestoreCallAction`) carries the unanswered update of its log
+(`pendingUpdate`): the restored call answers it on its new peer connection instead of making an
+offer of its own, which the media server would hold behind the update. For an answer from a new
+connection the media server makes a new DTLS stack and restarts its own ICE checks, so the client
+does not restart ICE. The call's own offer goes only if the update is left without an answer
+(`offerUnlessServerOfferAnswered`); nothing else would negotiate the new connection then.
+
+The log a restore reads must show the client's answers too. The session snapshot every replay
+boundary keeps (`SessionSnapshot`) folds an `update` request carrying an answer into its call's log
+as the server logs it (`applyRequest`), and the FGS hub's codec carries the client's requests in
+the logs it relays. Without that, a screen made again while the service kept the socket would take
+an update answered earlier for one still owed and answer it a second time.
 
 **Blind transfer** — `CallControlEvent.blindTransferInitiated` creates a new outgoing
 `ActiveCall` with status `outgoingCreatedFromRefer`, linked to the original call via `fromReferId`.
