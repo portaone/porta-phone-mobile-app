@@ -111,6 +111,61 @@ void main() {
     await _confirmLastAnswer(harness);
   });
 
+  group('a call restored after the app was gone', () {
+    List<String> sent(CallBlocHarness harness) =>
+        harness.signaling.requests.whereType<UpdateRequest>().map((r) => r.jsep['type'] as String).toList();
+
+    test('answers the update left unanswered instead of making an offer of its own', () async {
+      final harness = CallBlocHarness();
+      addTearDown(harness.close);
+
+      harness.signaling.emitHandshake(_handshake(updateUnanswered: true));
+      await pumpEventQueue();
+
+      expect(harness.bloc.state.retrieveActiveCall(_callId), isNotNull);
+      expect(sent(harness), ['answer'], reason: 'an offer of its own would wait behind the update for good');
+      await _confirmLastAnswer(harness);
+    });
+
+    test('makes no ICE restart of its own after the answer', () {
+      fakeAsync((async) {
+        final harness = CallBlocHarness();
+        harness.signaling.emitHandshake(_handshake(updateUnanswered: true));
+        async.flushMicrotasks();
+        expect(_answers(harness), hasLength(1));
+
+        async.elapse(const Duration(seconds: 3));
+        expect(harness.peerFactory.created.single.iceRestarts, 0, reason: 'the answer is not taken yet');
+
+        // The media server restarts its own ICE checks for an answer from a
+        // new connection: a restart of ours would be one more renegotiation.
+        harness.signaling.emit(UpdatedEvent(line: 0, callId: _callId, transaction: _answers(harness).last.transaction));
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 3));
+        expect(harness.peerFactory.created.single.iceRestarts, 0);
+        expect(_answers(harness), hasLength(1));
+
+        harness.close();
+        async.flushMicrotasks();
+      });
+    });
+
+    test('with nothing missed makes the offer of a restored call', () async {
+      final harness = CallBlocHarness();
+      addTearDown(harness.close);
+
+      harness.seedSignalingReady();
+      harness.signaling.emitHandshake(_handshake());
+      await pumpEventQueue();
+
+      expect(sent(harness), ['offer']);
+      expect(harness.peerFactory.created.single.iceRestarts, 0);
+      final offer = harness.signaling.requests.whereType<UpdateRequest>().single;
+      harness.signaling.emit(UpdatedEvent(line: 0, callId: _callId, transaction: offer.transaction));
+      await pumpEventQueue();
+    });
+  });
+
   test('after a reconnect the answer to the missed update goes out before the client\'s own offer', () async {
     final harness = CallBlocHarness();
     addTearDown(harness.close);
