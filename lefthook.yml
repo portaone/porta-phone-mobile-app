@@ -93,6 +93,11 @@ pre-push:
       glob: "phone/packages/link_preview/**"
       run: flutter test
 
+    adaptive-kit-test:
+      root: phone/packages/adaptive_kit/
+      glob: "phone/packages/adaptive_kit/**"
+      run: flutter test
+
     tools-analyze:
       root: tools/
       glob: "tools/**"
