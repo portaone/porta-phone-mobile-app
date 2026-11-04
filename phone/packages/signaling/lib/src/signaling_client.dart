@@ -302,6 +302,7 @@ class WebtritSignalingClient {
   void _startKeepaliveTimer() {
     final interval = _keepaliveInterval ?? const Duration(seconds: 30);
     _logger.fine('$_id keepalive timer scheduled: $interval');
+    _keepaliveTimer?.cancel();
     _keepaliveTimer = Timer(interval, _onKeepalive);
   }
 
@@ -310,7 +311,6 @@ class WebtritSignalingClient {
   }
 
   void _restartKeepaliveTimer() {
-    _stopKeepaliveTimer();
     _logger.fine('$_id keepalive timer restarted');
     _startKeepaliveTimer();
   }
