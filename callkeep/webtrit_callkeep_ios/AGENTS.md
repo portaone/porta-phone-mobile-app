@@ -28,8 +28,11 @@ what CallKit itself needs - it has no native tests.
   screen of its own. The exception is the incoming queue (`queueIncomingWhileRinging`): with it
   on, at most one of our incoming calls rings in CallKit and the calls that come while it rings
   wait outside CallKit, in the application, which shows them. A waiting call enters CallKit as an
-  ordinary incoming call as soon as nothing of ours rings there any more. The queue is off by
-  default; see the section "Incoming queue" of the plugin.
+  ordinary incoming call as soon as nothing of ours rings there any more. With
+  `keepIncomingInAppInFront` as well, a call also waits there while the application is in front
+  and a call of ours is in conversation, and a waiting call taken there enters CallKit as
+  outgoing. Both
+  are off by default; see the section "Incoming queue" of the plugin.
 - A VoIP push is reported to CallKit natively, in `didReceiveIncomingPushWithPayloadForPushTypeVoIP`,
   from the payload keys `callId`, `handleType`, `handleValue`, `displayName`, `hasVideo`; Dart
   learns of it from `CallkeepDelegate.didPresentIncomingCall`. A malformed payload is still
