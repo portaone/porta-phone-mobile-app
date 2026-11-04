@@ -5044,7 +5044,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_audioProcessing_Section_NS_title.
   ///
   /// In en, this message translates to:
-  /// **'Noise suppression'**
+  /// **'System noise suppression'**
   String get settings_audioProcessing_Section_NS_title;
 
   /// No description provided for @settings_audioProcessing_Section_title.
@@ -5062,7 +5062,7 @@ abstract class AppLocalizations {
   /// Opt-in switch for RNNoise on the outgoing voice, after the platform processing
   ///
   /// In en, this message translates to:
-  /// **'Voice noise reduction (RNNoise)'**
+  /// **'Extra noise reduction (RNNoise)'**
   String get settings_audioProcessing_Section_VNR_title;
 
   /// No description provided for @settings_audioProcessing_Section_VP_title.
