@@ -1473,6 +1473,7 @@ class _RestoreAcceptedCall extends CallEvent {
     this.incomingCallEvent,
     this.remoteCameraEnabled,
     this.held = false,
+    this.pendingUpdate,
   });
 
   final int line;
@@ -1487,8 +1488,21 @@ class _RestoreAcceptedCall extends CallEvent {
   /// The call is on hold on the server.
   final bool held;
 
+  /// An update of the far end the restored call answers, see
+  /// [RestoreCallAction.pendingUpdate].
+  final PendingCallUpdate? pendingUpdate;
+
   @override
-  List<Object?> get props => [line, callId, acceptedEvent, acceptedTime, incomingCallEvent, remoteCameraEnabled, held];
+  List<Object?> get props => [
+    line,
+    callId,
+    acceptedEvent,
+    acceptedTime,
+    incomingCallEvent,
+    remoteCameraEnabled,
+    held,
+    pendingUpdate,
+  ];
 }
 
 // ─── Mutation events ────────────────────────────────────────────────────────
@@ -1599,6 +1613,7 @@ sealed class _CallMutationEvent extends CallEvent {
     IncomingCallEvent? incomingCallEvent,
     required AcceptedEvent acceptedEvent,
     bool held,
+    PendingCallUpdate? pendingUpdate,
   }) = _CallMutationEventRestoreCall;
 
   // conference: the host's intents, then what the server says of the room
@@ -2015,6 +2030,7 @@ class _CallMutationEventRestoreCall extends _CallMutationEvent {
     this.incomingCallEvent,
     required this.acceptedEvent,
     this.held = false,
+    this.pendingUpdate,
   });
   final String callId;
   final int line;
@@ -2022,8 +2038,9 @@ class _CallMutationEventRestoreCall extends _CallMutationEvent {
   final IncomingCallEvent? incomingCallEvent;
   final AcceptedEvent acceptedEvent;
   final bool held;
+  final PendingCallUpdate? pendingUpdate;
   @override
-  List<Object?> get props => [callId, line, acceptedTime, incomingCallEvent, acceptedEvent, held];
+  List<Object?> get props => [callId, line, acceptedTime, incomingCallEvent, acceptedEvent, held, pendingUpdate];
 }
 
 class _CallMutationEventControlMerge extends _CallMutationEvent {

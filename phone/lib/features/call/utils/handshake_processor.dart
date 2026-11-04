@@ -61,6 +61,7 @@ final class RestoreCallAction extends HandshakeAction {
     this.incomingCallEvent,
     this.mediaState,
     this.held = false,
+    this.pendingUpdate,
   });
 
   final int line;
@@ -76,6 +77,11 @@ final class RestoreCallAction extends HandshakeAction {
   /// caller may have turned the camera off while nobody here was listening.
   final MediaStatePeerMessageEvent? mediaState;
 
+  /// An update of the far end the log shows unanswered: the restored call
+  /// answers it instead of making an offer of its own, which the media
+  /// server would hold behind the update for good.
+  final PendingCallUpdate? pendingUpdate;
+
   /// The same restore, of a call that is to come back on hold. Every field is
   /// passed on: a field added here has to be added there too.
   RestoreCallAction asHeld() => RestoreCallAction(
@@ -86,6 +92,7 @@ final class RestoreCallAction extends HandshakeAction {
     incomingCallEvent: incomingCallEvent,
     mediaState: mediaState,
     held: true,
+    pendingUpdate: pendingUpdate,
   );
 }
 
@@ -533,6 +540,7 @@ class HandshakeProcessor {
       incomingCallEvent: earliest is IncomingCallEvent ? earliest : null,
       mediaState: log.mediaState,
       held: log.held,
+      pendingUpdate: log.updates.pending,
     );
   }
 
