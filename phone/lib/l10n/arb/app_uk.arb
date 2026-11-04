@@ -1178,6 +1178,8 @@
   },
   "login_ButtonTooltip_signInToYourInstance": "Увійти до свого Cloud Backend",
   "@login_ButtonTooltip_signInToYourInstance": {},
+  "login_Button_customCoreShort": "Cloud Backend",
+  "@login_Button_customCoreShort": {},
   "login_CoreVersionUnsupportedExceptionError": "Непідтримувана версія екземпляра, будь ласка, зверніться до адміністратора вашої системи (фактична: {actual}, підтримувана: {supportedConstraint})",
   "@login_CoreVersionUnsupportedExceptionError": {
     "description": "Shown during login when the app detects that the backend instance version is incompatible. Context: user tries to sign in. Condition: provided backend version does not match the supported version range (actual: {actual}, supported: {supportedConstraint}).",

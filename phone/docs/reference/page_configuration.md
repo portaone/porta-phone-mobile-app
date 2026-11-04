@@ -110,6 +110,14 @@ Top-level keys inside `login`:
 - `mainLogo` — image descriptor for the primary logo
 - `greetingTextStyle` — text style for the greeting/onboarding text (see [TextStyleConfig](#text-style-textstyleconfig-shape)); when `backgroundColor` is combined with `backgroundBorderRadius` or `backgroundPadding`, a rounded decorated background is rendered behind the text
 - `buttonLoginStyleType`, `buttonSignupStyleType` — enum style presets
+- On a watch (window under 300 dp on both sides) the same settings draw a different arrangement:
+  the logo is limited by height (46 dp, 56 dp from a 200 dp face), the greeting keeps the colour,
+  weight and background of `greetingTextStyle` at 16-18 dp, and a single launch button fills the
+  bottom edge of the face; several buttons, or a demo build's custom-core sign-in, become a list
+  under a small header (logo 28 dp, greeting 13 dp). The custom-core entry there sits on the page,
+  so it takes the greeting's colour, or a colour that stands out on `background` when the greeting
+  has a `backgroundColor` of its own. The edge button's title keeps to one line.
+  See [adaptive_layout.md](../architecture/adaptive_layout.md#screens-with-a-watch-arrangement).
 
 ---
 
