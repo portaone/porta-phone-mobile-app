@@ -95,6 +95,29 @@ void main() {
     });
   });
 
+  group('Transaction.abandon', () {
+    test('stops the timeout without completing the future', () {
+      final uncaught = <Object>[];
+      runZonedGuarded(() {
+        fakeAsync((async) {
+          final tx = Transaction(signalingClientId: clientId, timeoutDuration: timeout);
+          tx.abandon();
+          async.elapse(timeout * 2);
+          async.flushMicrotasks();
+        });
+      }, (error, _) => uncaught.add(error));
+
+      expect(uncaught, isEmpty);
+    });
+
+    test('is a no-op after the transaction was resolved', () async {
+      final tx = Transaction(signalingClientId: clientId, timeoutDuration: timeout);
+      tx.handleResponse({'response': 'ack'});
+      tx.abandon();
+      expect(await tx.future, {'response': 'ack'});
+    });
+  });
+
   group('Transaction timeout', () {
     test('completes future with timeout error after duration elapses', () {
       fakeAsync((async) {

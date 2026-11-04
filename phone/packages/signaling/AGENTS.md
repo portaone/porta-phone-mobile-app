@@ -111,6 +111,8 @@ do not copy them.
   carries one, default timeout `defaultExecuteTransactionTimeoutDuration`, 10 s) and resolves on
   the matching `AckResponse`, throws `WebtritSignalingErrorException` on `ErrorResponse`. A
   response for a transaction already gone (timed out) is logged and ignored.
+- A request that could not be sent ends its `Transaction` with `abandon()`: the timer stops and
+  the future stays uncompleted, so its timeout cannot reach the zone with no listener.
 - Keepalive: a one-shot timer, started after `StateHandshake` with its `keepaliveInterval`
   (30 s when the handshake has none), restarted by every `execute`, and scheduled again after
   each keepalive answer while the socket is open. Timing out raises

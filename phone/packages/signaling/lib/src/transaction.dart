@@ -16,6 +16,9 @@ final _logger = Logger('Transaction');
 /// - [terminateByDisconnect] — the WebSocket closed before a reply arrived.
 /// - The internal timeout timer fires (after [timeoutDuration]).
 ///
+/// A request that could not be sent is ended by [abandon] instead: its [future]
+/// never completes, as nobody awaits it.
+///
 /// Only the **first** terminal event takes effect. Subsequent calls to any of
 /// the three completion paths are logged at [Level.WARNING] and ignored via
 /// the [_isDone] guard, preventing a `StateError: Future already completed`
@@ -100,6 +103,16 @@ class Transaction {
     _completer.completeError(
       WebtritSignalingTransactionTerminateByDisconnectException(signalingClientId, id, closeCode, closeReason),
     );
+  }
+
+  /// Called when the request could not be sent, so nobody awaits [future].
+  ///
+  /// Stops the timeout timer and leaves [future] uncompleted: an error completed
+  /// on it would have no listener and reach the zone as an uncaught error. No-op
+  /// if the transaction has already been resolved.
+  void abandon() {
+    if (_isDone) return;
+    _finish();
   }
 
   void _onTimeout() {

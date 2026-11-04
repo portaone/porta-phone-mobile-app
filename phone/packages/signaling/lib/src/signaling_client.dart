@@ -264,6 +264,7 @@ class WebtritSignalingClient {
       return responseJson;
     } catch (e) {
       _transactions.remove(transaction.id);
+      transaction.abandon();
       rethrow;
     }
   }
