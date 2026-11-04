@@ -115,7 +115,7 @@ do not copy them.
   the future stays uncompleted, so its timeout cannot reach the zone with no listener.
 - Keepalive: a one-shot timer, started after `StateHandshake` with its `keepaliveInterval`
   (30 s when the handshake has none), restarted by every `execute`, and scheduled again after
-  each keepalive answer while the socket is open. Timing out raises
+  each keepalive answer while the socket is open. There is one timer: scheduling replaces it. Timing out raises
   `WebtritSignalingKeepaliveTransactionTimeoutException` through `onError`; a write to a closed
   socket (`WebtritSignalingBadStateException`) just ends the loop.
 - `disconnect([code, reason])` stops the timer, terminates open transactions with

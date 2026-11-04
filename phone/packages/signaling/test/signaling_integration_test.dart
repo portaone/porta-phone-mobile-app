@@ -116,6 +116,41 @@ void main() {
       expect(uncaught, isEmpty);
     });
 
+    test('keeps one keepalive timer when a request goes out during a keepalive', () {
+      fakeAsync((async) {
+        final client = WebtritSignalingClient.inner(mockChannel);
+        client.listen(onStateHandshake: (_) {}, onEvent: (_) {}, onError: (_, _) {}, onDisconnect: (_, _) {});
+
+        final sent = <Map<String, dynamic>>[];
+        when(() => mockSink.add(any())).thenAnswer((invocation) {
+          sent.add(jsonDecode(invocation.positionalArguments.first as String) as Map<String, dynamic>);
+        });
+
+        streamController.add(_handshakeJson());
+        async.flushMicrotasks();
+
+        // The keepalive is out, its answer has not come.
+        async.elapse(_kKeepaliveInterval);
+        final keepalive = sent.single;
+
+        unawaited(client.execute(HangupRequest(transaction: 'hangup', line: 0, callId: 'call')));
+        async.flushMicrotasks();
+
+        streamController
+          ..add(jsonEncode({'handshake': 'keepalive', 'transaction': keepalive['transaction']}))
+          ..add(jsonEncode({'response': 'ack', 'transaction': 'hangup'}));
+        async.flushMicrotasks();
+
+        unawaited(client.disconnect());
+        async.flushMicrotasks();
+        sent.clear();
+
+        async.elapse(_kKeepaliveInterval * 3);
+
+        expect(sent, isEmpty, reason: 'a keepalive timer outlived disconnect');
+      });
+    });
+
     test('should not restart keepalive timer when closeCode is set after successful keepalive', () {
       fakeAsync((async) {
         final client = WebtritSignalingClient.inner(mockChannel);
