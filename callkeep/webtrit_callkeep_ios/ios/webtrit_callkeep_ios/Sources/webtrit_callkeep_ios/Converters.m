@@ -165,6 +165,7 @@ extern CXHandleType WTPHandleTypeEnumToCallKit(WTPHandleTypeEnum value) {
   id callWaitingToneOwnCallsOnly = dict[@"callWaitingToneOwnCallsOnly"];
   id queueIncomingWhileRinging = dict[@"queueIncomingWhileRinging"];
   id holdActiveBeforeThirdIncoming = dict[@"holdActiveBeforeThirdIncoming"];
+  id keepIncomingInAppInFront = dict[@"keepIncomingInAppInFront"];
 
   return [WTPIOSOptions makeWithLocalizedName:localizedName
                                 ringtoneSound:(ringtoneSound == [NSNull null]) ? nil : ringtoneSound
@@ -180,7 +181,8 @@ extern CXHandleType WTPHandleTypeEnumToCallKit(WTPHandleTypeEnum value) {
                        driveIdleTimerDisabled:[driveIdleTimerDisabled boolValue]
                   callWaitingToneOwnCallsOnly:(callWaitingToneOwnCallsOnly == [NSNull null]) ? nil : callWaitingToneOwnCallsOnly
                     queueIncomingWhileRinging:(queueIncomingWhileRinging == [NSNull null]) ? nil : queueIncomingWhileRinging
-                holdActiveBeforeThirdIncoming:(holdActiveBeforeThirdIncoming == [NSNull null]) ? nil : holdActiveBeforeThirdIncoming];
+                holdActiveBeforeThirdIncoming:(holdActiveBeforeThirdIncoming == [NSNull null]) ? nil : holdActiveBeforeThirdIncoming
+                     keepIncomingInAppInFront:(keepIncomingInAppInFront == [NSNull null]) ? nil : keepIncomingInAppInFront];
 }
 - (NSDictionary *)toMap {
   return @{
@@ -199,6 +201,7 @@ extern CXHandleType WTPHandleTypeEnumToCallKit(WTPHandleTypeEnum value) {
     @"callWaitingToneOwnCallsOnly": (self.callWaitingToneOwnCallsOnly ?: [NSNull null]),
     @"queueIncomingWhileRinging": (self.queueIncomingWhileRinging ?: [NSNull null]),
     @"holdActiveBeforeThirdIncoming": (self.holdActiveBeforeThirdIncoming ?: [NSNull null]),
+    @"keepIncomingInAppInFront": (self.keepIncomingInAppInFront ?: [NSNull null]),
   };
 }
 - (CXProviderConfiguration *)toCallKitWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {

@@ -24,6 +24,7 @@ class PIOSOptions {
   late bool? callWaitingToneOwnCallsOnly;
   late bool? queueIncomingWhileRinging;
   late bool? holdActiveBeforeThirdIncoming;
+  late bool? keepIncomingInAppInFront;
 }
 
 class PAndroidOptions {

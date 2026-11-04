@@ -18,7 +18,33 @@ CallkeepIOSOptions _options({bool? holdActiveBeforeThirdIncoming}) => holdActive
         holdActiveBeforeThirdIncoming: holdActiveBeforeThirdIncoming,
       );
 
+const _plain = CallkeepIOSOptions(
+  localizedName: 'app',
+  maximumCallGroups: 13,
+  maximumCallsPerCallGroup: 13,
+  supportedHandleTypes: {CallkeepHandleType.number},
+);
+
+const _keeping = CallkeepIOSOptions(
+  localizedName: 'app',
+  maximumCallGroups: 13,
+  maximumCallsPerCallGroup: 13,
+  supportedHandleTypes: {CallkeepHandleType.number},
+  keepIncomingInAppInFront: true,
+);
+
 void main() {
+  test('an incoming call is kept in the app in front only when the app asks for it', () {
+    expect(_plain.keepIncomingInAppInFront, isFalse);
+    expect(_plain.toPigeon().keepIncomingInAppInFront, isFalse);
+    expect(_keeping.toPigeon().keepIncomingInAppInFront, isTrue);
+    expect(
+      _keeping,
+      isNot(_plain),
+      reason: 'the option is part of the options equality, so a change of it re-runs setUp',
+    );
+  });
+
   test('the hold before a third call is off unless the app asks for it', () {
     expect(_options().holdActiveBeforeThirdIncoming, isFalse);
     expect(_options().toPigeon().holdActiveBeforeThirdIncoming, isFalse);
