@@ -11,6 +11,7 @@ extension _RestoreCallActionMapping on RestoreCallAction {
       incomingCallEvent: incomingCallEvent,
       remoteCameraEnabled: mediaState?.video,
       held: held,
+      pendingUpdate: pendingUpdate,
     );
   }
 }

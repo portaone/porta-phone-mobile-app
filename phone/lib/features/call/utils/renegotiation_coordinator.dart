@@ -117,8 +117,9 @@ class RenegotiationCoordinator {
 
   /// Renegotiations of calls put off behind an unanswered server offer, with
   /// the line each was asked for. Each is made once its call has no server
-  /// offer left.
-  final Map<String, int?> _heldRenegotiations = {};
+  /// offer left - one asked only for an offer left unanswered
+  /// ([offerUnlessServerOfferAnswered]) is dropped when the offer is answered.
+  final Map<String, ({int? lineId, bool unlessAnswered})> _heldRenegotiations = {};
 
   /// Calls that lived through a reconnect and are owed a renegotiation, made
   /// from the handshake of the new connection ([handshakeReceived]).
@@ -183,20 +184,28 @@ class RenegotiationCoordinator {
   /// server offer left, answered or not. False when it can go now.
   bool holdRenegotiation(String callId, int? lineId) {
     if (!hasServerOffer(callId)) return false;
-    _heldRenegotiations[callId] = lineId;
+    _heldRenegotiations[callId] = (lineId: lineId, unlessAnswered: false);
     return true;
   }
 
-  void _serverOfferEnded(String callId, {bool renegotiate = true}) {
+  /// A renegotiation the call needs only if its server offer goes
+  /// unanswered: a new connection that answers the offer is negotiated by
+  /// that answer, and without one nothing else negotiates it. Made once the
+  /// call has no server offer left, unless the last one was answered.
+  void offerUnlessServerOfferAnswered(String callId, int? lineId) {
+    _heldRenegotiations.putIfAbsent(callId, () => (lineId: lineId, unlessAnswered: true));
+  }
+
+  void _serverOfferEnded(String callId, {required bool answered, bool renegotiate = true}) {
     final left = (_serverOffers[callId] ?? 0) - 1;
     if (left > 0) {
       _serverOffers[callId] = left;
       return;
     }
     _serverOffers.remove(callId);
-    if (!_heldRenegotiations.containsKey(callId)) return;
-    final lineId = _heldRenegotiations.remove(callId);
-    if (renegotiate) _onCommand(Renegotiate(callId, lineId));
+    final held = _heldRenegotiations.remove(callId);
+    if (held == null || !renegotiate || (answered && held.unlessAnswered)) return;
+    _onCommand(Renegotiate(callId, held.lineId));
   }
 
   Future<RenegotiationCommand> retryAfterUpdating(String callId, int? lineId) async {
@@ -331,7 +340,7 @@ class RenegotiationCoordinator {
   /// A renegotiation put off behind it is made now, once no other server
   /// offer of the call is open.
   void serverOfferAnswered(String callId, {bool sendRecv = true}) {
-    _serverOfferEnded(callId);
+    _serverOfferEnded(callId, answered: true);
     final resume = _pullResumes[callId];
     if (resume == null || resume.closed) return;
     if (!sendRecv) {
@@ -354,7 +363,7 @@ class RenegotiationCoordinator {
   /// renegotiation put off here is dropped rather than made at once into the
   /// same collision.
   void serverOfferLeft(String callId, {bool refused = false}) {
-    _serverOfferEnded(callId, renegotiate: !refused);
+    _serverOfferEnded(callId, answered: false, renegotiate: !refused);
     final resume = _pullResumes[callId];
     if (resume == null || resume.closed) return;
     if (resume.window == null || resume.sent >= maxPullResumes) return;

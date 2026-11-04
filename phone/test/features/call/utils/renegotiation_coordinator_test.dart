@@ -134,6 +134,33 @@ void main() {
       expect(coordinator.hasServerOffer('a'), isFalse);
     });
 
+    test('an offer needed only without an answer is dropped by the answer and made without one', () {
+      final commands = <RenegotiationCommand>[];
+      final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+      coordinator.serverOfferReceived('a');
+      coordinator.offerUnlessServerOfferAnswered('a', 2);
+      coordinator.serverOfferAnswered('a');
+      expect(commands, isEmpty);
+
+      coordinator.serverOfferReceived('a');
+      coordinator.offerUnlessServerOfferAnswered('a', 2);
+      coordinator.serverOfferLeft('a');
+      expect(commands.single, isA<Renegotiate>().having((c) => c.lineId, 'lineId', 2));
+    });
+
+    test('a renegotiation asked for outright is not turned into one needed only without an answer', () {
+      final commands = <RenegotiationCommand>[];
+      final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+      coordinator.serverOfferReceived('a');
+      coordinator.holdRenegotiation('a', 1);
+      coordinator.offerUnlessServerOfferAnswered('a', 1);
+      coordinator.serverOfferAnswered('a');
+
+      expect(commands.single, isA<Renegotiate>());
+    });
+
     test('the renegotiation waits for every open server offer of its call, and only of its call', () {
       final commands = <RenegotiationCommand>[];
       final coordinator = RenegotiationCoordinator(onCommand: commands.add);
