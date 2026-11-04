@@ -23,10 +23,8 @@ class LoginCoreUrlAssignHandset extends StatelessWidget {
     final preDescription = context.l10n.login_Text_coreUrlAssignPreDescription;
     final postDescription = context.l10n.login_Text_coreUrlAssignPostDescription(EnvironmentConfig.SALES_EMAIL);
 
-    return LoginScaffold(
-      contentThemeOverride: style?.contentThemeOverride,
-      applyToAppBar: style?.applyToAppBar,
-      appBarTheme: style?.appBarTheme,
+    return LoginCoreUrlAssignScaffold(
+      style: style,
       appBar: AppBar(
         leading: ExtBackButton(disabled: params.processing),
         flexibleSpace: BlurredSurface.fromStyle(style?.appBarBlurredSurface),

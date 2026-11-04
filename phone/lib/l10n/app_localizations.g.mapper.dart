@@ -598,6 +598,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         login_Text_coreUrlAssignPreDescription,
       'login_TextFieldLabelText_coreUrlAssign' =>
         login_TextFieldLabelText_coreUrlAssign,
+      'login_TextFieldLabelText_coreUrlAssignShort' =>
+        login_TextFieldLabelText_coreUrlAssignShort,
       'login_TextFieldLabelText_otpSigninCode' =>
         login_TextFieldLabelText_otpSigninCode,
       'login_TextFieldLabelText_otpSigninUserRef' =>

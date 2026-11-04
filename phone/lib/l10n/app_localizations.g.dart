@@ -2482,6 +2482,12 @@ abstract class AppLocalizations {
   /// **'Enter your Cloud Backend URL'**
   String get login_TextFieldLabelText_coreUrlAssign;
 
+  /// The label of the core URL field where only a short word fits (a watch face); the full prompt is shown above the field there.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get login_TextFieldLabelText_coreUrlAssignShort;
+
   /// No description provided for @login_TextFieldLabelText_otpSigninCode.
   ///
   /// In en, this message translates to:
