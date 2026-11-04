@@ -515,6 +515,9 @@ class FakeCallkeep extends Fake implements Callkeep {
   final List<(String, DateTime?)> incomingReports = [];
 
   @override
+  Future<CallkeepCallRequestError?> answerCall(String callId) async => null;
+
+  @override
   Future<CallkeepIncomingCallError?> reportNewIncomingCall(
     String callId,
     CallkeepHandle handle, {
@@ -747,6 +750,11 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   @override
   Future<RTCSessionDescription?> getRemoteDescription() async =>
       remoteDescriptions.isEmpty ? null : remoteDescriptions.last;
+
+  /// How many times ICE was restarted on this connection.
+  int iceRestarts = 0;
+  @override
+  Future<void> restartIce() async => iceRestarts++;
   @override
   Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async {
     offerConstraints.add(constraints);
