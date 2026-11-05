@@ -49,9 +49,10 @@ enum FormFactor {
 /// next begins; the only place these numbers live.
 abstract final class FormFactorBreakpoints {
   /// Every watch the app is previewed on fits under it (round 192 and 227,
-  /// rectangular 162x197 and 208x248); no phone does, its long side is above
-  /// 500 even on the narrowest ones.
-  static const double watchMaxSide = 300;
+  /// rectangular 162x197 and 208x248, and 320x240, a watch phone worn wider
+  /// than tall); no phone does, its long side is above 500 even on the
+  /// narrowest ones.
+  static const double watchMaxSide = 340;
 
   /// Within the watch class, the faces too small for the larger sizes: the
   /// 192 round and the 162x197 rectangular sit below it, the 227 round and
