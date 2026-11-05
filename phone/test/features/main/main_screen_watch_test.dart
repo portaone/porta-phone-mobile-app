@@ -59,13 +59,18 @@ void main() {
   });
 
   Widget shell({
-    Widget body = const Scaffold(body: Text('the section', key: Key('section'))),
-    int currentIndex = 0,
+    Widget? body,
+    int? currentIndex,
     bool wired = true,
     DestinationPickPurpose? pickPurpose,
     VoidCallback? onCancelPick,
   }) {
     selected = null;
+    // The counts the bar shows travel with the decorator; the hub shows them
+    // the same way.
+    Widget decorate(BottomMenuTab tab, Widget icon) =>
+        tab is MessagingBottomMenuTab ? Badge(label: const Text('3'), child: icon) : icon;
+
     return MaterialApp(
       localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -73,17 +78,23 @@ void main() {
       home: BlocProvider<SessionStatusCubit>.value(
         value: sessionStatus,
         child: withRootStackRouter(
-          MainScreen(
-            body: body,
-            tabs: tabs,
-            currentIndex: currentIndex,
-            onTabSelected: wired ? (index) => selected = index : null,
-            // The counts the bar shows travel with the decorator; the hub shows
-            // them the same way.
-            decorateTabIcon: (tab, icon) =>
-                tab is MessagingBottomMenuTab ? Badge(label: const Text('3'), child: icon) : icon,
-            pickPurpose: pickPurpose,
-            onCancelPick: onCancelPick,
+          Builder(
+            builder: (context) => MainScreen(
+              body:
+                  body ??
+                  MainHub(
+                    tabs: tabs,
+                    decorateTabIcon: decorate,
+                    pick: MainScreenPick.of(context, pickPurpose, onCancelPick),
+                    onChosen: wired ? (index) => selected = index : null,
+                  ),
+              tabs: tabs,
+              currentIndex: currentIndex,
+              onTabSelected: wired ? (index) => selected = index : null,
+              decorateTabIcon: decorate,
+              pickPurpose: pickPurpose,
+              onCancelPick: onCancelPick,
+            ),
           ),
         ),
       ),
@@ -97,7 +108,6 @@ void main() {
 
       expect(await pumpCollectingOverflows(tester, shell()), isEmpty);
       expect(find.byType(BottomNavigationBar), findsNothing);
-      expect(find.byKey(const Key('section')), findsNothing, reason: 'the hub comes first');
       for (final tab in tabs) {
         expect(find.bySemanticsIdentifier(tab.navBarId), findsOneWidget, reason: tab.titleL10n);
       }
@@ -109,46 +119,14 @@ void main() {
     });
   }
 
-  testWidgets('choosing a section opens it, and going back returns to the hub', (tester) async {
+  testWidgets('choosing a section hands it on', (tester) async {
     watchPresets.first.apply(tester);
     await pumpCollectingOverflows(tester, shell());
 
     await tester.tap(find.byKey(tabs[3].navBarKey));
-    await tester.pumpAndSettle();
+    await tester.pump();
+
     expect(selected, 3);
-    expect(find.byKey(const Key('section')), findsOneWidget);
-
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('section')), findsNothing);
-    expect(find.byKey(tabs.first.navBarKey), findsOneWidget);
-  });
-
-  testWidgets('a section keeps what it holds across a trip to the hub', (tester) async {
-    watchPresets.first.apply(tester);
-    await pumpCollectingOverflows(tester, shell(body: const Scaffold(body: _Counter())));
-
-    await tester.tap(find.byKey(tabs[1].navBarKey));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(_Counter));
-    await tester.pump();
-    expect(find.text('taps 1'), findsOneWidget);
-
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(tabs[1].navBarKey));
-    await tester.pumpAndSettle();
-    expect(find.text('taps 1'), findsOneWidget);
-  });
-
-  testWidgets('a section opened from elsewhere shows on the face, not behind the hub', (tester) async {
-    watchPresets.first.apply(tester);
-    await pumpCollectingOverflows(tester, shell());
-    expect(find.byKey(const Key('section')), findsNothing);
-
-    await tester.pumpWidget(shell(currentIndex: 2));
-    await tester.pump();
-    expect(find.byKey(const Key('section')), findsOneWidget);
   });
 
   for (final preset in watchPresets) {

@@ -242,18 +242,19 @@ void main() {
       value: sessionStatus,
       child: withShippedTheme(
         withRootStackRouter(
-          MainScreen(
-            body: const SizedBox.shrink(),
-            tabs: tabs,
-            currentIndex: 2,
-            onTabSelected: (_) {},
-            decorateTabIcon: (tab, icon) => switch (tab) {
-              MessagingBottomMenuTab() => Badge(label: const Text('3'), child: icon),
-              RecentsBottomMenuTab() => Badge(label: const Text('2'), child: icon),
-              _ => icon,
-            },
-            pickPurpose: pickPurpose,
-            onCancelPick: pickPurpose == null ? null : () {},
+          Builder(
+            builder: (context) => Scaffold(
+              body: MainHub(
+                tabs: tabs,
+                onChosen: (_) {},
+                decorateTabIcon: (tab, icon) => switch (tab) {
+                  MessagingBottomMenuTab() => Badge(label: const Text('3'), child: icon),
+                  RecentsBottomMenuTab() => Badge(label: const Text('2'), child: icon),
+                  _ => icon,
+                },
+                pick: MainScreenPick.of(context, pickPurpose, pickPurpose == null ? null : () {}),
+              ),
+            ),
           ),
         ),
       ),
