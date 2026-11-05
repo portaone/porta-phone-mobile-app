@@ -186,6 +186,7 @@ String destinationNumberOptionId(int index) => 'destinationNumberOption-$index';
 const String loginCoreUrlScreenId = 'loginCoreUrlScreen';
 const String loginDeviceLimitScreenId = 'loginDeviceLimitScreen';
 const String loginModeScreenId = 'loginModeScreen';
+const String loginModeScreenGreetingId = 'loginModeScreenGreeting';
 const String loginOtpRequestScreenId = 'loginOtpRequestScreen';
 const String loginOtpVerifyScreenId = 'loginOtpVerifyScreen';
 const String loginPasswordScreenId = 'loginPasswordScreen';

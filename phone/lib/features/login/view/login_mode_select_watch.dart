@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
@@ -34,6 +36,9 @@ class LoginModeSelectWatch extends StatelessWidget {
 }
 
 /// The brand in the middle of the face, the one way in along its bottom.
+///
+/// A greeting the face cuts short opens whole on a page of its own, and going
+/// back returns to the landing.
 class _EdgeLayout extends StatelessWidget {
   const _EdgeLayout({required this.params});
 
@@ -41,15 +46,21 @@ class _EdgeLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WatchEdgeLayout(
-      body: _Brand(params: params, logoHeight: context.isSmallWatch ? 46 : 56),
-      edge: (context, overlay) => LoginModeSelectEntryButton(
-        entry: params.entries.single,
-        style: overlay.merge(params.buttonStyle),
-        // One line: the edge narrows with the face, so a second line would
-        // run past its curve.
-        maxLines: 1,
+    return WatchDrillIn(
+      // The landing is the menu: the greeting's page opens only from the
+      // greeting itself.
+      menuFirst: true,
+      menu: (context, open) => WatchEdgeLayout(
+        body: _Brand(params: params, logoHeight: context.isSmallWatch ? 46 : 56, onMore: open),
+        edge: (context, overlay) => LoginModeSelectEntryButton(
+          entry: params.entries.single,
+          style: overlay.merge(params.buttonStyle),
+          // One line: the edge narrows with the face, so a second line would
+          // run past its curve.
+          maxLines: 1,
+        ),
       ),
+      content: _GreetingPage(params: params),
     );
   }
 }
@@ -82,7 +93,7 @@ class _ListLayout extends StatelessWidget {
         ],
       ],
       children: [
-        _Brand(params: params, logoHeight: 28, compact: true),
+        _Brand(params: params, logoHeight: _GreetingSize.logoHeight, compact: true),
         SizedBox(height: gap * 2),
       ],
     );
@@ -129,9 +140,90 @@ class _CustomCoreButton extends StatelessWidget {
   }
 }
 
+/// The greeting's sizes on a watch: the brand's colour, weight and plate at
+/// a size a face can hold - the phone's display size would not fit a word.
+abstract final class _GreetingSize {
+  /// A greeting the brand area holds whole, as a name or a slogan.
+  static double whole(BuildContext context) => context.isSmallWatch ? 16 : 18;
+
+  /// A greeting read as text: the list header and the greeting's own page.
+  static const read = 13.0;
+
+  /// A greeting too long for [whole], on the landing.
+  static const small = 11.0;
+
+  /// The logo over a greeting read as text, so the text gets the room.
+  static const logoHeight = 28.0;
+
+  static ExtendedTextStyle style(BuildContext context, LoginModeSelectParams params, double size) {
+    final onboardingStyle = params.style?.onboardingTextStyle;
+    // Text set tighter than a title's line, so a paragraph shows more of it.
+    final textStyle = Theme.of(context).textTheme.titleMedium
+        ?.merge(onboardingStyle?.textStyle)
+        .copyWith(fontSize: size, height: size > read ? null : 1.3);
+    return (onboardingStyle ?? const ExtendedTextStyle()).copyWith(textStyle: textStyle);
+  }
+}
+
+/// How the greeting goes into the brand area: whole at [size], or cut to
+/// [maxLines] with a way to the rest. Below its whole size the logo steps
+/// down to [_GreetingSize.logoHeight].
+class _GreetingFit {
+  const _GreetingFit(this.size, {this.maxLines});
+
+  final double size;
+  final int? maxLines;
+
+  bool get whole => size > _GreetingSize.read;
+
+  static const _chevronSize = 16.0;
+
+  /// The largest of the greeting's sizes that holds it whole in [area]
+  /// under its logo, else its small size cut to the lines left. [logoRoom]
+  /// is the room a logo of the height given takes, gap included.
+  static _GreetingFit measure(
+    BuildContext context, {
+    required String greeting,
+    required LoginModeSelectParams params,
+    required Size area,
+    required double wholeLogoHeight,
+    required double Function(double logoHeight) logoRoom,
+  }) {
+    final padding = params.style?.onboardingTextStyle?.decoration?.padding ?? EdgeInsets.zero;
+    final width = area.width - padding.horizontal;
+    double height(double size) {
+      final logo = size > _GreetingSize.read ? wholeLogoHeight : _GreetingSize.logoHeight;
+      return area.height - logoRoom(logo) - padding.vertical;
+    }
+
+    TextPainter laidOut(double size, double width) {
+      return TextPainter(
+        text: TextSpan(text: greeting, style: _GreetingSize.style(context, params, size).textStyle),
+        textAlign: TextAlign.center,
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout(maxWidth: width);
+    }
+
+    for (final size in [_GreetingSize.whole(context), _GreetingSize.small]) {
+      final painter = laidOut(size, width);
+      final fits = painter.height <= height(size);
+      painter.dispose();
+      if (fits) return _GreetingFit(size);
+    }
+
+    final painter = laidOut(_GreetingSize.small, width - _chevronSize - ExtendedText.trailingGap);
+    final lines = painter.computeLineMetrics();
+    final lineHeight = painter.height / lines.length;
+    painter.dispose();
+    final maxLines = (height(_GreetingSize.small) / lineHeight).floor();
+    return _GreetingFit(_GreetingSize.small, maxLines: math.max(1, maxLines));
+  }
+}
+
 /// The logo and the greeting, sized for a watch.
 class _Brand extends StatelessWidget {
-  const _Brand({required this.params, required this.logoHeight, this.compact = false});
+  const _Brand({required this.params, required this.logoHeight, this.compact = false, this.onMore});
 
   final LoginModeSelectParams params;
   final double logoHeight;
@@ -140,46 +232,150 @@ class _Brand extends StatelessWidget {
   /// scrolls.
   final bool compact;
 
+  /// Opens the greeting whole; given, a greeting the room cuts short says so
+  /// and opens with a tap.
+  final VoidCallback? onMore;
+
   @override
   Widget build(BuildContext context) {
-    final themeData = Theme.of(context);
-    final onboardingStyle = params.style?.onboardingTextStyle;
-    // The brand's colour, weight and decoration, at a size a watch can hold:
-    // the phone's display size would not fit the word on the face.
-    final greetingStyle = themeData.textTheme.titleMedium
-        ?.merge(onboardingStyle?.textStyle)
-        .copyWith(fontSize: compact ? 13 : (context.isSmallWatch ? 16 : 18));
     final greeting = params.greeting;
+    final logoStyle = params.style?.pictureLogoStyle;
+    final gap = context.adaptiveMetrics.gap;
 
-    final content = Column(
+    if (compact) {
+      return _BrandColumn(
+        logo: WatchLogo(style: logoStyle, height: logoHeight),
+        greeting: greeting == null
+            ? null
+            : ExtendedText(
+                greeting,
+                extendedStyle: _GreetingSize.style(context, params, _GreetingSize.read),
+                textAlign: TextAlign.center,
+              ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fit = greeting == null
+            ? null
+            : _GreetingFit.measure(
+                context,
+                greeting: greeting,
+                params: params,
+                area: constraints.biggest,
+                wholeLogoHeight: logoHeight,
+                logoRoom: (height) => logoStyle == null ? 0 : height + gap,
+              );
+        final onMore = this.onMore;
+
+        final content = _BrandColumn(
+          logo: WatchLogo(style: logoStyle, height: fit == null || fit.whole ? logoHeight : _GreetingSize.logoHeight),
+          greeting: greeting == null || fit == null
+              ? null
+              : fit.maxLines != null && onMore != null
+              ? _GreetingTeaser(
+                  greeting: greeting,
+                  style: _GreetingSize.style(context, params, fit.size),
+                  maxLines: fit.maxLines!,
+                  onTap: onMore,
+                )
+              : ExtendedText(
+                  greeting,
+                  extendedStyle: _GreetingSize.style(context, params, fit.size),
+                  textAlign: TextAlign.center,
+                ),
+        );
+
+        // A guard for the window nobody designed for (a raised font scale on
+        // the smallest face): the brand block shrinks, the button below never
+        // does.
+        return Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+              child: content,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// The logo over the greeting.
+class _BrandColumn extends StatelessWidget {
+  const _BrandColumn({required this.logo, required this.greeting});
+
+  final Widget logo;
+  final Widget? greeting;
+
+  @override
+  Widget build(BuildContext context) {
+    final greeting = this.greeting;
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        WatchLogo(style: params.style?.pictureLogoStyle, height: logoHeight),
-        if (greeting != null) ...[
-          SizedBox(height: context.adaptiveMetrics.gap),
-          ExtendedText(
-            greeting,
-            extendedStyle: (onboardingStyle ?? const ExtendedTextStyle()).copyWith(textStyle: greetingStyle),
-            textAlign: TextAlign.center,
-          ),
-        ],
+        logo,
+        if (greeting != null) ...[SizedBox(height: context.adaptiveMetrics.gap), greeting],
       ],
     );
+  }
+}
 
-    if (compact) return content;
+/// The greeting's first lines and a chevron; a tap opens it whole.
+///
+/// Assistive technology reads the whole greeting here, so nothing of it is
+/// lost to the cut.
+class _GreetingTeaser extends StatelessWidget {
+  const _GreetingTeaser({required this.greeting, required this.style, required this.maxLines, required this.onTap});
 
-    // A guard for the window nobody designed for (a raised font scale on the
-    // smallest face): the brand block shrinks, the button below never does.
-    return LayoutBuilder(
-      builder: (context, constraints) => Center(
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: constraints.maxWidth),
-            child: content,
+  final String greeting;
+  final ExtendedTextStyle style;
+  final int maxLines;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SemanticAction.button(
+      label: greeting,
+      identifier: loginModeScreenGreetingId,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ExcludeSemantics(
+          child: ExtendedText(
+            greeting,
+            extendedStyle: style,
+            textAlign: TextAlign.center,
+            maxLines: maxLines,
+            trailing: Icon(Icons.chevron_right, size: _GreetingFit._chevronSize, color: style.textStyle?.color),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The greeting whole, on a page that scrolls.
+class _GreetingPage extends StatelessWidget {
+  const _GreetingPage({required this.params});
+
+  final LoginModeSelectParams params;
+
+  @override
+  Widget build(BuildContext context) {
+    final greeting = params.greeting;
+    if (greeting == null) return const SizedBox.shrink();
+    return WatchScrollList(
+      children: [
+        ExtendedText(
+          greeting,
+          extendedStyle: _GreetingSize.style(context, params, _GreetingSize.read),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }
