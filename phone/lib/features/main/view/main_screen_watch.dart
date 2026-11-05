@@ -18,14 +18,10 @@ import 'main_screen_params.dart';
 /// The main screen on a watch face.
 ///
 /// A bar of five tabs takes a quarter of a 192-point face and its captions do
-/// not fit, so the watch opens on a hub instead: the configured sections as a
-/// grid of round buttons, each with the count its tab shows, and Settings
-/// last, with the connection state the phone's account button carries.
-/// Choosing one opens the section on the whole face; going back returns to
-/// the hub. A section is kept, hidden, while the hub shows, as a phone keeps
-/// its tabs; one opened from elsewhere opens on the face.
-///
-/// The hub stays even with a single section: it is where Settings lives.
+/// not fit, so the watch has no bar: a section fills the face, under what is
+/// being chosen when something is. Going back from a section returns to
+/// [MainHub], the tab in front of the sections; the app starts on a section,
+/// as a phone does.
 class MainScreenWatch extends StatelessWidget {
   const MainScreenWatch({super.key, required this.params});
 
@@ -33,44 +29,26 @@ class MainScreenWatch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final onTabSelected = params.onTabSelected;
     final sectionPick = params.pickInSection;
-    return WatchDrillIn(
-      menuFirst: true,
-      keepContent: true,
-      // A section opened from elsewhere - a notification, a link - shows on
-      // the face rather than behind the hub.
-      openOn: params.currentIndex,
-      menu: (context, open) => Scaffold(
-        body: _Hub(
-          tabs: params.tabs,
-          decorateTabIcon: params.decorateTabIcon,
-          pick: params.pick,
-          onChosen: onTabSelected == null
-              ? null
-              : (index) {
-                  onTabSelected(index);
-                  open();
-                },
-        ),
-      ),
-      content: Scaffold(
-        body: Column(
-          children: [
-            if (sectionPick != null) _PickBanner(pick: sectionPick),
-            Expanded(child: params.body),
-          ],
-        ),
+    return Scaffold(
+      body: Column(
+        children: [
+          if (sectionPick != null) _PickBanner(pick: sectionPick),
+          Expanded(child: params.body),
+        ],
       ),
     );
   }
 }
 
-/// The sections and Settings, last, as a grid of round buttons, under what
-/// is being chosen when something is - so a choice that starts while the hub
-/// shows is said where the person is.
-class _Hub extends StatelessWidget {
-  const _Hub({required this.tabs, required this.decorateTabIcon, required this.pick, required this.onChosen});
+/// The configured sections, each with the count its tab shows, and Settings
+/// last, with the connection state the phone's account button carries, as a
+/// grid of round buttons, under what is being chosen when something is - so a
+/// choice that starts while the hub shows is said where the person is.
+///
+/// It stays even with a single section: it is where Settings lives.
+class MainHub extends StatelessWidget {
+  const MainHub({super.key, required this.tabs, this.decorateTabIcon, this.pick, required this.onChosen});
 
   final List<BottomMenuTab> tabs;
   final TabIconDecorator? decorateTabIcon;

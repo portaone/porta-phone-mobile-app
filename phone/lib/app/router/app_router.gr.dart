@@ -1325,6 +1325,22 @@ class LoginTypeSelectScreenPageRouteArgs {
 }
 
 /// generated route for
+/// [MainHubScreenPage]
+class MainHubScreenPageRoute extends PageRouteInfo<void> {
+  const MainHubScreenPageRoute({List<PageRouteInfo>? children})
+    : super(MainHubScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'MainHubScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return MainHubScreenPage();
+    },
+  );
+}
+
+/// generated route for
 /// [MainScreenPage]
 class MainScreenPageRoute extends PageRouteInfo<void> {
   const MainScreenPageRoute({List<PageRouteInfo>? children})

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
-import 'package:webtrit_phone/features/main/widgets/widgets.dart';
+import 'package:webtrit_phone/features/features.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 
 /// What somebody is being sent to the sections to choose, as the screen says
@@ -14,6 +15,19 @@ class MainScreenPick {
   /// Null where the person cannot give up on the choice from here.
   final VoidCallback? onCancel;
   final String cancelLabel;
+
+  /// The pick [purpose] asks for, or null when nothing is being chosen. The way
+  /// out is offered only where the purpose says a person needs one: a transfer
+  /// is left by returning to the call, a message looking for a recipient has no
+  /// such screen behind it.
+  static MainScreenPick? of(BuildContext context, DestinationPickPurpose? purpose, VoidCallback? onCancel) {
+    if (purpose == null) return null;
+    return MainScreenPick(
+      announcement: purpose.announcement,
+      onCancel: purpose.cancellable ? onCancel : null,
+      cancelLabel: context.l10n.main_Button_cancelPicking,
+    );
+  }
 }
 
 /// Everything both arrangements of the main screen show and dispatch, built
@@ -34,8 +48,9 @@ class MainScreenParams {
   final Widget body;
   final List<BottomMenuTab> tabs;
 
-  /// Position of the open tab in [tabs].
-  final int currentIndex;
+  /// Position of the open tab in [tabs]; null while a watch shows its hub,
+  /// which is a tab of no section.
+  final int? currentIndex;
 
   /// Null leaves the sections inert - a static preview shows them without
   /// wiring.
