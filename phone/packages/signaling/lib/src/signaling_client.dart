@@ -219,8 +219,14 @@ class WebtritSignalingClient {
       final eventJson = messageJson;
 
       try {
-        final event = Event.fromJson(eventJson);
-        _onEvent(event);
+        final event = Event.tryFromJson(eventJson);
+        if (event == null && eventJson[Event.typeKey] != ErrorEvent.typeValue) {
+          // Core can be newer than the app. An event type the app does not know
+          // says nothing about the connection, so it must not fail it.
+          _logger.warning('$_id _onMessage: ignoring unknown event ${eventJson[Event.typeKey]}');
+        } else {
+          _onEvent(event ?? Event.fromJson(eventJson));
+        }
       } catch (error, stackTrace) {
         _onError(error, stackTrace);
       }
