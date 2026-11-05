@@ -85,10 +85,11 @@ Inbound messages, as `_onMessage` tells them apart:
   counterpart) with `typeValue`, `fromJson`, `toJson` and `props`; export it from that level's
   barrel (`call_events.dart`, `line_requests.dart`, ...).
 - Register `typeValue: X.fromJson` in that level's decoder map. An unregistered event type is
-  unknown: `Event.fromJson` throws `ArgumentError`, the client hands it to `onError`, and
-  `SignalingModuleImpl` treats any `onError` as a failed connection (`SignalingConnectionFailed`)
-  and drops the client. An event the server sends before the app knows it therefore costs a
-  reconnect; so does a `fromJson` that throws on a field.
+  unknown: `Event.fromJson` throws `UnknownEventTypeError`, the client logs the type once and goes
+  on, and the connection stays up. Everything else that fails to parse reaches `onError` - a
+  `fromJson` that throws on a field, an `event` that is not a string, an `error` event of no known
+  shape - and `SignalingModuleImpl` treats any `onError` as a failed connection
+  (`SignalingConnectionFailed`) and drops the client, so each of those costs a reconnect.
 - An unregistered request is not caught here, since the client only calls `toJson()`. It fails
   on Android: the foreground-service hub decodes every request it receives from the app isolate
   with `Request.fromJson` (`signaling_hub.dart`) and answers the execute with the error.
