@@ -53,8 +53,8 @@ void main() {
 
   // The landing as the shipped theme and config show it: the logo, the
   // greeting and the configured buttons.
-  Widget landing({List<LoginModeAction> launchButtons = const [_signUp]}) {
-    return harness.wrap(LoginModeSelectScreen(appGreetingL10n: 'WebTrit', launchButtons: launchButtons));
+  Widget landing({List<LoginModeAction> launchButtons = const [_signUp], String greeting = 'WebTrit'}) {
+    return harness.wrap(LoginModeSelectScreen(appGreetingL10n: greeting, launchButtons: launchButtons));
   }
 
   group('one way in', () {
@@ -161,6 +161,110 @@ void main() {
         expect(tester.getRect(find.byKey(loginModeScreenSignUpButtonKey)), button);
         final brand = tester.getRect(find.byType(FittedBox).first);
         expect(brand.bottom, lessThanOrEqualTo(button.top), reason: 'the brand stays above the button');
+      });
+    }
+  });
+
+  group('a greeting that is a paragraph', () {
+    // A brand's dialing note, as one ships it in place of a greeting.
+    const note =
+        'NOTE: To make an Xphone-to-Xphone call, start dialing with 234. To make an Xphone to regular network '
+        'call, start dialing with 0. To top up your account, change password, or roam for international calling, '
+        'use Command App.';
+
+    Finder noteText() => find.byWidgetPredicate((widget) => widget is Text && widget.data == note);
+
+    // The faces the note does not fit whole at the small size; a wide face
+    // holds it, with nothing to open.
+    final cutting = watchPresets.where((preset) => preset.size.width < 300);
+
+    for (final preset in watchPresets.where((preset) => !cutting.contains(preset))) {
+      testWidgets('on $preset it shows whole at the small size, with nothing to open', (tester) async {
+        preset.apply(tester);
+
+        expect(await pumpCollectingOverflows(tester, landing(greeting: note)), isEmpty);
+
+        final text = tester.widget<Text>(noteText());
+        expect(text.style?.fontSize, 11);
+        expect(text.maxLines, isNull);
+        expect(find.byIcon(Icons.chevron_right), findsNothing);
+        expect(find.bySemanticsIdentifier(loginModeScreenGreetingId), findsNothing);
+        final button = tester.getRect(find.byKey(loginModeScreenSignUpButtonKey));
+        expect(tester.getRect(noteText()).bottom, lessThanOrEqualTo(button.top));
+      });
+    }
+
+    for (final preset in cutting) {
+      testWidgets('on $preset its first lines stay above the button at their own size', (tester) async {
+        preset.apply(tester);
+
+        expect(await pumpCollectingOverflows(tester, landing(greeting: note)), isEmpty);
+
+        final button = tester.getRect(find.byKey(loginModeScreenSignUpButtonKey));
+        expect(tester.getRect(noteText()).bottom, lessThanOrEqualTo(button.top));
+        final text = tester.widget<Text>(noteText());
+        expect(text.style?.fontSize, 11, reason: 'smaller than a greeting that fits');
+        expect(text.maxLines, greaterThanOrEqualTo(3), reason: 'as many lines as the room holds');
+        final brand = find.byType(FittedBox).first;
+        final content = find.descendant(of: brand, matching: find.byType(ConstrainedBox)).first;
+        expect(tester.getSize(content).height, tester.getSize(brand).height, reason: 'measured to fit, not shrunk');
+      });
+
+      testWidgets('on $preset it opens whole from its first lines and goes back to the landing', (tester) async {
+        preset.apply(tester);
+        await pumpCollectingOverflows(tester, landing(greeting: note));
+
+        await tester.tap(find.byIcon(Icons.chevron_right));
+        await tester.pumpAndSettle();
+        expect(find.byKey(loginModeScreenSignUpButtonKey), findsNothing);
+        final whole = tester.widget<Text>(noteText());
+        expect(whole.maxLines, isNull);
+        expect(whole.style?.fontSize, 13);
+        await tester.scrollUntilVisible(noteText(), 40);
+
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(find.byKey(loginModeScreenSignUpButtonKey), findsOneWidget);
+        expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      });
+
+      testWidgets('on $preset assistive technology reads it whole', (tester) async {
+        final handle = tester.ensureSemantics();
+        preset.apply(tester);
+        await pumpCollectingOverflows(tester, landing(greeting: note));
+
+        expectTapTargetSemantics(
+          tester,
+          find.bySemanticsIdentifier(loginModeScreenGreetingId),
+          label: note,
+          identifier: loginModeScreenGreetingId,
+        );
+        handle.dispose();
+      });
+    }
+
+    for (final preset in watchPresets) {
+      testWidgets('on $preset a doubled font scale keeps the button and the face whole', (tester) async {
+        preset.apply(tester);
+        await pumpCollectingOverflows(tester, landing(greeting: note));
+        final button = tester.getRect(find.byKey(loginModeScreenSignUpButtonKey));
+
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+        expect(await pumpCollectingOverflows(tester, landing(greeting: note)), isEmpty);
+        expect(tester.getRect(find.byKey(loginModeScreenSignUpButtonKey)), button);
+        expect(tester.getRect(noteText()).bottom, lessThanOrEqualTo(button.top));
+      });
+
+      testWidgets('on $preset a greeting that fits keeps its size and has no way on', (tester) async {
+        preset.apply(tester);
+        await pumpCollectingOverflows(tester, landing());
+
+        final text = tester.widget<Text>(find.text('WebTrit'));
+        expect(text.style?.fontSize, preset.size.width < 200 ? 16 : 18);
+        expect(text.maxLines, isNull);
+        expect(find.byIcon(Icons.chevron_right), findsNothing);
       });
     }
   });

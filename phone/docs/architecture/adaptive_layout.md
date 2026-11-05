@@ -8,7 +8,7 @@ the first screen that got a second arrangement, the active call screen (see
 reference implementation). The next screens follow them rather than invent
 the shape again.
 
-Last reviewed: 2026-11-03.
+Last reviewed: 2026-11-05.
 
 ## The adaptation axes
 
@@ -63,7 +63,7 @@ as "State stays on the screen" below.
 
 | Screen | Watch arrangement |
 |---|---|
-| Login landing (`features/login/view/login_mode_select_*.dart`) | One launch button in a branded build: logo and greeting in the middle, the button filling the bottom edge (`WatchEdgeButton`). A demo build or several buttons: the brand in the middle, the buttons on the bottom of the face, the custom-core sign-in last. Nothing at the top of the face. |
+| Login landing (`features/login/view/login_mode_select_*.dart`) | One launch button in a branded build: logo and greeting in the middle, the button filling the bottom edge (`WatchEdgeButton`). The greeting is measured against the room above the button: one that fits keeps its size; a longer one - a brand's paragraph - is set smaller under a smaller logo, cut to the lines the room holds with a chevron, and a tap opens it whole on a page that scrolls (`WatchDrillIn`), going back returning to the landing; assistive technology reads it whole from the cut one. A demo build or several buttons: the brand in the middle, the buttons on the bottom of the face, the custom-core sign-in last. Nothing at the top of the face. |
 | Custom-core URL (`features/login/view/login_core_url_assign_*.dart`) | Proceed as the edge button; above it a short scrolling column - the field's prompt, the field (label `URL`), the sales contact - fading out over the button. No app bar (a watch goes back with a swipe), no logo. |
 | Ways in (`features/login/view/login_switch_*.dart`) | No segments: the configured ways in as a `WatchIconGrid`, like the main hub - round buttons with short captions (`loginType_*Short`), in the brand's order, the first filled, each with its segment's automation id and full name; a choice opens its form on the whole face, going back returns to the grid and waits while the form's request is in flight; a single way in opens directly. No QR sign-in: it reads the code through a camera, and watches have none (`LoginTypeWatch.availableOnWatch`). No logo, no app bar; `LoginScaffold.watch` keeps the screen's status bar style. |
 | Sign-in forms - OTP, password, sign-up and both code screens (`features/login/widgets/login_form_layout.dart`) | `LoginFormLayout` is the one decision point for all five: the content scrolls in a short column with the secondary action (Resend) at its end, the primary action is the edge button, the column fades out above it. Descriptions take the small body size. |
@@ -100,7 +100,7 @@ Screen shapes:
   the face while the content waits on a request. `keepContent` keeps the content built, hidden
   and paused, under the menu; a change of `openOn` opens it. Back inside the content belongs to
   the drill-in (`WatchDrillIn.ownsBack`), so a section that steps back on its own - the
-  embedded page - leaves it alone. The ways in and the main hub are built on it.
+  embedded page - leaves it alone. The login landing, the ways in and the main hub are built on it.
 - `WatchEdgeButton` - a screen's one action along the bottom of the face (of a screen that
   fills the window, with nothing under it). Its builder gets the style to merge over the
   button's own (`overlay.merge(themeStyle)`): the outline - `WatchEdgeButtonBorder`, a rounded
