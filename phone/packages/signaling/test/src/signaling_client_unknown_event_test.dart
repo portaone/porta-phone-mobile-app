@@ -81,6 +81,21 @@ void main() {
     expect(errors, hasLength(1));
   });
 
+  test('a new value of an enum reaches the app as unknown', () async {
+    await receive({'event': 'ice_media', 'line': 0, 'mid': '0', 'type': 'screen', 'receiving': true});
+
+    expect(events.single, isA<IceMediaEvent>().having((e) => e.type, 'type', IceMediaType.unknown));
+    expect(errors, isEmpty);
+  });
+
+  test('a message of no known kind is skipped', () async {
+    await receive({'handshake': 'future_handshake'});
+    await receive({'something': 'else'});
+
+    expect(events, isEmpty);
+    expect(errors, isEmpty);
+  });
+
   for (final type in [null, 5]) {
     test('an event type of $type stays a failure', () async {
       await receive({'event': type});
