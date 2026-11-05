@@ -175,8 +175,9 @@ dependencies:
   # switch). It needs upstream flutter_webrtc ^1.6.3; the override below gives it the fork.
   flutter_webrtc_noise_suppression:
     git:
-      url: https://github.com/SERDUN/flutter_webrtc_noise_suppression.git
-      ref: c37f3fcd2e7756cc0987a6f259fc0221ec3c0980
+      url: https://github.com/portaone/porta-flutter-plugins.git
+      path: packages/flutter_webrtc_noise_suppression
+      ref: flutter_webrtc_noise_suppression-v0.1.0
 
 dev_dependencies:
   # Reached directly by the hub replay tests, which drive the Android hub and the
