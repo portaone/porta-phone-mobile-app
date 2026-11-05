@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:logging/logging.dart';
 
 import '../events/events.dart';
 import '../requests/requests.dart';
@@ -61,6 +62,16 @@ class ResponseLog extends CallLog {
 
   @override
   List<Object?> get props => [...super.props, response];
+}
+
+/// An event in a call's log whose type this app has no decoder for.
+class UnknownCallEventLog extends CallLog {
+  const UnknownCallEventLog({required super.timestamp, required this.eventType});
+
+  final String eventType;
+
+  @override
+  List<Object?> get props => [...super.props, eventType];
 }
 
 class CallEventLog extends CallLog {
@@ -126,23 +137,10 @@ class StateHandshake extends Handshake {
       code: registrationMessage['code'],
       reason: registrationMessage['reason'],
     );
-    // TODO: an unrecognized/malformed entry in a line's or the guest line's
-    // call_logs below throws and fails this whole handshake. Since this
-    // handshake is replayed on every reconnect, one bad entry becomes a
-    // reconnect loop for as long as the call carrying it stays alive - not
-    // just a one-off failure. A prior attempt made per-entry parsing
-    // resilient (log + skip instead of throw), but that alone silently
-    // breaks a real invariant: consumers (e.g. the "latest call event"
-    // lookups in the call-restoration and push-isolate handshake handlers)
-    // assume call_logs is newest-first and complete, and use firstOrNull/
-    // lastOrNull to read the latest/earliest event - dropping an entry can
-    // make a server-terminated call look active or vice versa. A correct fix
-    // needs to either preserve position for unparseable entries (so
-    // consumers can detect "the newest entry was unparseable" and treat the
-    // read as inconclusive) or otherwise flag that entries were dropped, and
-    // should narrow the catch to the specific unrecognized-type case so a
-    // genuine parsing bug in an already-known type still fails loudly - not
-    // done here; see git history for a prior (closed) attempt.
+    // An entry of a known kind that fails to decode fails this whole handshake, and since
+    // the handshake is replayed on every reconnect it loops for as long as the call lives.
+    // An event type the app does not know stays in place as an UnknownCallEventLog: the logs
+    // are read newest-first, and the app can no more act on it here than when it came live.
     final linesJson = json['lines'] as List<dynamic>;
     final lines = linesJson
         .asMap()
@@ -177,10 +175,7 @@ class StateHandshake extends Handshake {
                 } else if (requestOrResponseOrEventJson.containsKey(Response.typeKey)) {
                   return ResponseLog(timestamp: timestamp, response: Response.fromJson(requestOrResponseOrEventJson));
                 } else if (requestOrResponseOrEventJson.containsKey(Event.typeKey)) {
-                  return CallEventLog(
-                    timestamp: timestamp,
-                    callEvent: CallEvent.fromJson(requestOrResponseOrEventJson),
-                  );
+                  return _eventLog(timestamp, requestOrResponseOrEventJson);
                 } else {
                   throw ArgumentError.value(
                     requestOrResponseOrEventJson,
@@ -220,7 +215,7 @@ class StateHandshake extends Handshake {
               } else if (requestOrResponseOrEventJson.containsKey(Response.typeKey)) {
                 return ResponseLog(timestamp: timestamp, response: Response.fromJson(requestOrResponseOrEventJson));
               } else if (requestOrResponseOrEventJson.containsKey(Event.typeKey)) {
-                return CallEventLog(timestamp: timestamp, callEvent: CallEvent.fromJson(requestOrResponseOrEventJson));
+                return _eventLog(timestamp, requestOrResponseOrEventJson);
               } else {
                 throw ArgumentError.value(
                   requestOrResponseOrEventJson,
@@ -248,5 +243,15 @@ class StateHandshake extends Handshake {
       guestLine: guestLine,
       conference: conference,
     );
+  }
+
+  static CallLog _eventLog(int timestamp, Map<String, dynamic> eventJson) {
+    final eventType = eventJson[Event.typeKey];
+    final callEvent = CallEvent.tryFromJson(eventJson);
+    if (callEvent == null && eventType is String && eventType != ErrorEvent.typeValue) {
+      Logger('StateHandshake').warning('call log: unknown event $eventType');
+      return UnknownCallEventLog(timestamp: timestamp, eventType: eventType);
+    }
+    return CallEventLog(timestamp: timestamp, callEvent: callEvent ?? CallEvent.fromJson(eventJson));
   }
 }

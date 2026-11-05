@@ -146,7 +146,7 @@ class ReferNotifyEvent extends NotifyEvent with EquatableMixin {
       line: json['line'],
       callId: json['call_id'],
       subscriptionState: json['subscription_state'] != null
-          ? SubscriptionState.values.byName(json['subscription_state'])
+          ? SubscriptionState.values.asNameMap()[json['subscription_state']] ?? SubscriptionState.unknown
           : null,
       state: ReferNotifyState.fromContent(contentStr),
     );
@@ -197,7 +197,7 @@ class UnknownNotifyEvent extends NotifyEvent with EquatableMixin {
       callId: json['call_id'],
       notify: json['notify'],
       subscriptionState: json['subscription_state'] != null
-          ? SubscriptionState.values.byName(json['subscription_state'])
+          ? SubscriptionState.values.asNameMap()[json['subscription_state']] ?? SubscriptionState.unknown
           : null,
       content: json['content'],
       contentType: json['content_type'],
