@@ -242,22 +242,25 @@ class WebtritSignalingClient {
   }
 
   Future<Map<String, dynamic>> _executeTransaction(Map<String, dynamic> requestJson, Duration timeoutDuration) async {
+    final isIdGenerate = requestJson['transaction'] == null;
+    if (isIdGenerate) {
+      requestJson['transaction'] = Transaction.generateId();
+    }
+
+    // Sent before the transaction exists, so a failed write starts no timeout.
+    // The answer cannot overtake it: the socket stream delivers it asynchronously.
+    _addMessage(requestJson);
+
     final transaction = Transaction(
       signalingClientId: _id,
       id: requestJson['transaction'],
       timeoutDuration: timeoutDuration,
     );
-
     _transactions[transaction.id] = transaction;
-    if (transaction.isIdGenerate) {
-      requestJson['transaction'] = transaction.id;
-    }
 
     try {
-      _addMessage(requestJson);
-
       final responseJson = await transaction.future;
-      if (transaction.isIdGenerate) {
+      if (isIdGenerate) {
         responseJson.remove('transaction');
       }
 

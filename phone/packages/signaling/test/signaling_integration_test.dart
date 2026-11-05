@@ -91,6 +91,39 @@ void main() {
       });
     });
 
+    test('leaves no timeout behind when the keepalive could not be sent', () {
+      final uncaught = <Object>[];
+      runZonedGuarded(() {
+        fakeAsync((async) {
+          final errors = <Object>[];
+          final client = WebtritSignalingClient.inner(mockChannel);
+          client.listen(
+            onStateHandshake: (_) {},
+            onEvent: (_) {},
+            onError: (error, _) => errors.add(error),
+            onDisconnect: (_, _) {},
+          );
+
+          var isPhysicalSocketClosed = false;
+          when(() => mockSink.add(any())).thenAnswer((_) {
+            if (isPhysicalSocketClosed) throw StateError('Cannot add event after closing.');
+          });
+
+          streamController.add(_handshakeJson());
+          async.flushMicrotasks();
+
+          isPhysicalSocketClosed = true;
+          async.elapse(_kKeepaliveInterval);
+          async.elapse(WebtritSignalingClient.defaultExecuteTransactionTimeoutDuration * 2);
+          async.flushMicrotasks();
+
+          expect(errors, isEmpty, reason: 'a write to a closed socket only ends the keepalive loop');
+        });
+      }, (error, _) => uncaught.add(error));
+
+      expect(uncaught, isEmpty);
+    });
+
     test('should not restart keepalive timer when closeCode is set after successful keepalive', () {
       fakeAsync((async) {
         final client = WebtritSignalingClient.inner(mockChannel);
