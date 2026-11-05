@@ -25,6 +25,18 @@ void main() {
     home: face(menuFirst: menuFirst, canGoBack: canGoBack),
   );
 
+  testWidgets('a scope starts it on the content, and back still returns to the menu', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: WatchDrillInOpen(child: face(menuFirst: true))));
+
+    expect(find.byKey(contentKey), findsOneWidget);
+    expect(find.byKey(menuKey), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+
+    expect(find.byKey(menuKey), findsOneWidget);
+  });
+
   // A page under the drill-in, so leaving it shows on the navigator.
   Widget pushed(Widget page) => MaterialApp(
     home: Builder(

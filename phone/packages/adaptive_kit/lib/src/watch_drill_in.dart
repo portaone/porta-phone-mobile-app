@@ -51,7 +51,7 @@ class WatchDrillIn extends StatefulWidget {
 }
 
 class _WatchDrillInState extends State<WatchDrillIn> {
-  late bool _onMenu = widget.menuFirst;
+  late bool _onMenu = widget.menuFirst && context.getInheritedWidgetOfExactType<WatchDrillInOpen>() == null;
 
   @override
   void didUpdateWidget(WatchDrillIn oldWidget) {
@@ -91,6 +91,17 @@ class _WatchDrillInState extends State<WatchDrillIn> {
   }
 
   void _open() => setState(() => _onMenu = false);
+}
+
+/// Starts every [WatchDrillIn] below it on its content rather than its menu.
+///
+/// A page behind a menu is reached by a choice, which a picture of the screen
+/// cannot make, so without this every snapshot of such a screen is its menu.
+class WatchDrillInOpen extends InheritedWidget {
+  const WatchDrillInOpen({super.key, required super.child});
+
+  @override
+  bool updateShouldNotify(WatchDrillInOpen oldWidget) => false;
 }
 
 class _BackOwner extends InheritedWidget {
