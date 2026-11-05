@@ -141,11 +141,14 @@ class WebtritSignalingServiceAndroid extends SignalingServicePlatform {
   @override
   Future<void> execute(Request request) async {
     if (_currentMode == SignalingServiceMode.pushBound) {
-      return _directService.execute(request);
+      await _directService.execute(request);
+      _eventBuffer.onRequest(request);
+      return;
     }
     if (_hubManager.isConnected) {
       _logger.fine('execute ${request.runtimeType}');
       await _hubManager.execute(request)!;
+      _eventBuffer.onRequest(request);
       return;
     }
     _logger.warning('execute called but not connected (${request.runtimeType})');

@@ -21,6 +21,10 @@ import 'package:signaling/signaling.dart';
 ///   missed call frees it - the line keeps its position, since the position is
 ///   the line's number. A call without a line number is the guest call and
 ///   lives in the guest slot, which counts as a line for every purpose here;
+/// - the client's answers to the far end's updates: an `update` request
+///   carrying an answer is prepended to its call's log as the server logs it,
+///   so a late subscriber does not take an update answered by an earlier one
+///   for one still owed;
 /// - the conference block: the room a `conference_offer` announced, with the
 ///   participants the last list carried, until the room ends. A room that came
 ///   and went while nobody was subscribed leaves nothing behind, and one that
@@ -90,6 +94,20 @@ class SessionSnapshot {
     }
   }
 
+  /// Folds a request the client sent, once it went out, into the snapshot.
+  /// Only an answer to an update is kept: the rest of the client's requests
+  /// change nothing a late subscriber plans from.
+  void applyRequest(Request request) {
+    if (request is! UpdateRequest || request.jsep['type'] != 'answer') return;
+    final log = CallRequestLog(timestamp: _now(), callRequest: request);
+    final index = _lines.indexWhere((line) => line?.callId == request.callId);
+    if (index >= 0) {
+      _lines[index] = _lines[index]!._prepending(log);
+    } else if (_guestLine?.callId == request.callId) {
+      _guestLine = _guestLine!._prepending(log);
+    }
+  }
+
   void _applyCallEvent(CallEvent event) {
     final ended = event is HangupEvent || event is MissedCallEvent;
     final index = _lines.indexWhere((line) => line?.callId == event.callId);
@@ -120,5 +138,5 @@ class SessionSnapshot {
 }
 
 extension on Line {
-  Line _prepending(CallEventLog log) => Line(callId: callId, callLogs: [log, ...callLogs]);
+  Line _prepending(CallLog log) => Line(callId: callId, callLogs: [log, ...callLogs]);
 }

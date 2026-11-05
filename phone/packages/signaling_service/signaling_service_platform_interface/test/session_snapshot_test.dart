@@ -235,4 +235,34 @@ void main() {
 
     expect(snapshot.toHandshake(), before);
   });
+
+  group('the client\'s answers', () {
+    UpdateRequest update(String callId, String type) =>
+        UpdateRequest(transaction: 't', line: 0, callId: callId, jsep: {'type': type, 'sdp': 'v=0'});
+    StateHandshake withCall() => _handshake(
+      lines: [
+        Line(
+          callId: 'a',
+          callLogs: const [CallEventLog(timestamp: 1, callEvent: AcceptedEvent(line: 0, callId: 'a'))],
+        ),
+      ],
+    );
+
+    test('an answer to an update is logged first in its call, as the server logs it', () {
+      final snapshot = snapshotOf(withCall());
+      snapshot.applyRequest(update('a', 'answer'));
+      final logs = snapshot.toHandshake().lines.single!.callLogs;
+      expect(logs, hasLength(2));
+      expect((logs.first as CallRequestLog).callRequest, update('a', 'answer'));
+    });
+
+    test('an offer of the client\'s own and a call nobody knows leave the snapshot as it was', () {
+      final snapshot = snapshotOf(withCall());
+      snapshot.applyRequest(update('a', 'offer'));
+      snapshot.applyRequest(update('b', 'answer'));
+      snapshot.applyRequest(HangupRequest(transaction: 't', line: 0, callId: 'a'));
+      expect(snapshot.toHandshake().lines.single!.callLogs, hasLength(1));
+      expect(snapshot.toHandshake().lines, hasLength(1));
+    });
+  });
 }
