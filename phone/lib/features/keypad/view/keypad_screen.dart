@@ -2,9 +2,10 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/widgets/widgets.dart';
 
-import './keypad_view.dart';
+import 'keypad_screen_handset.dart';
 import 'keypad_screen_style.dart';
 import 'keypad_screen_styles.dart';
+import 'keypad_screen_watch.dart';
 
 export 'keypad_screen_style.dart';
 export 'keypad_screen_styles.dart';
@@ -19,23 +20,16 @@ class KeypadScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeData = Theme.of(context);
-    final effectiveStyle = style ?? themeData.extension<KeypadScreenStyles>()?.primary;
-    return ThemedScaffold(
-      background: effectiveStyle?.background,
-      contentThemeOverride: effectiveStyle?.contentThemeOverride,
-      applyToAppBar: effectiveStyle?.applyToAppBar ?? true,
-      appBarTheme: effectiveStyle?.appBarTheme,
-      extendBodyBehindAppBar: true,
-      appBar: MainAppBar(
+    final effectiveStyle = style ?? Theme.of(context).extension<KeypadScreenStyles>()?.primary;
+    return AdaptiveLayout(
+      handset: (_) => KeypadScreenHandset(
         title: title,
-        context: context,
-        flexibleSpace: BlurredSurface.fromStyle(effectiveStyle?.appBarBlurredSurface),
+        videoEnabled: videoEnabled,
+        transferEnabled: transferEnabled,
+        style: effectiveStyle,
       ),
-      body: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-        child: KeypadView(videoEnabled: videoEnabled, transferEnabled: transferEnabled, style: effectiveStyle),
-      ),
+      watch: (_) =>
+          KeypadScreenWatch(videoEnabled: videoEnabled, transferEnabled: transferEnabled, style: effectiveStyle),
     );
   }
 }
