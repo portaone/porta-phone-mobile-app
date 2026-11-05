@@ -1273,6 +1273,58 @@ class LoginSwitchScreenPageRouteArgs {
 }
 
 /// generated route for
+/// [LoginWaysInScreenPage]
+class LoginWaysInScreenPageRoute
+    extends PageRouteInfo<LoginWaysInScreenPageRouteArgs> {
+  LoginWaysInScreenPageRoute({
+    required List<LoginType> supportedLoginTypes,
+    List<PageRouteInfo>? children,
+  }) : super(
+         LoginWaysInScreenPageRoute.name,
+         args: LoginWaysInScreenPageRouteArgs(
+           supportedLoginTypes: supportedLoginTypes,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'LoginWaysInScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<LoginWaysInScreenPageRouteArgs>();
+      return LoginWaysInScreenPage(
+        supportedLoginTypes: args.supportedLoginTypes,
+      );
+    },
+  );
+}
+
+class LoginWaysInScreenPageRouteArgs {
+  const LoginWaysInScreenPageRouteArgs({required this.supportedLoginTypes});
+
+  final List<LoginType> supportedLoginTypes;
+
+  @override
+  String toString() {
+    return 'LoginWaysInScreenPageRouteArgs{supportedLoginTypes: $supportedLoginTypes}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! LoginWaysInScreenPageRouteArgs) return false;
+    return const ListEquality<LoginType>().equals(
+      supportedLoginTypes,
+      other.supportedLoginTypes,
+    );
+  }
+
+  @override
+  int get hashCode => const ListEquality<LoginType>().hash(supportedLoginTypes);
+}
+
+/// generated route for
 /// [MainScreenPage]
 class MainScreenPageRoute extends PageRouteInfo<void> {
   const MainScreenPageRoute({List<PageRouteInfo>? children})

@@ -29,6 +29,14 @@ extension LoginTypeWatch on LoginType {
     };
   }
 
+  /// Whether a watch shows [supported] as a grid of ways in before a form: when
+  /// it has a choice, and when the brand's first way in is one a watch does not
+  /// offer, so the face never opens on its form.
+  static bool opensOnWaysIn(List<LoginType> supported) {
+    final offered = supported.where((type) => type.availableOnWatch);
+    return offered.length > 1 || !offered.contains(supported.first);
+  }
+
   /// The name under the way in's button on a watch: a word or two.
   String shortL10n(BuildContext context) {
     return switch (this) {

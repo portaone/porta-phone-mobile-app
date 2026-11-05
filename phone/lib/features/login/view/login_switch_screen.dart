@@ -4,8 +4,6 @@ import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
-import 'login_switch_watch.dart';
-
 class LoginSwitchScreen extends StatelessWidget {
   const LoginSwitchScreen({
     super.key,
@@ -33,13 +31,7 @@ class LoginSwitchScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AdaptiveLayout(
       handset: (_) => _Handset(screen: this),
-      watch: (_) => LoginSwitchWatch(
-        body: body,
-        currentLoginType: currentLoginType,
-        supportedLoginTypes: supportedLoginTypes,
-        onLoginTypeChanged: onLoginTypeChanged,
-        processing: processing,
-      ),
+      watch: (_) => LoginSwitchWatch(body: body),
     );
   }
 }
