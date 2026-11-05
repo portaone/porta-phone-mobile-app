@@ -2866,6 +2866,12 @@ abstract class AppLocalizations {
   /// **'Voicemail'**
   String get main_BottomNavigationBarItemLabel_voicemail;
 
+  /// The caption of the settings button on the watch hub, where the full account name does not fit.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get main_Button_settings;
+
   /// No description provided for @main_CompatibilityIssueDialogActions_logout.
   ///
   /// In en, this message translates to:

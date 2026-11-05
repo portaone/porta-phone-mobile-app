@@ -1487,6 +1487,8 @@
   "@main_BottomNavigationBarItemLabel_recents": {},
   "main_BottomNavigationBarItemLabel_voicemail": "Голосова пошта",
   "@main_BottomNavigationBarItemLabel_voicemail": {},
+  "main_Button_settings": "Налаштування",
+  "@main_Button_settings": {},
   "main_CompatibilityIssueDialogActions_logout": "Вийти",
   "@main_CompatibilityIssueDialogActions_logout": {},
   "main_CompatibilityIssueDialogActions_update": "Оновити",
