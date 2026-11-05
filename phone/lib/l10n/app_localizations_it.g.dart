@@ -1367,6 +1367,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get login_RequestFailurePhoneNotFoundError => 'Numero di telefono non trovato';
 
   @override
+  String get login_RequestFailureAmbiguousUserRefError =>
+      'Questa email è usata da più account. Accedi con l\'ID dell\'account (numero di telefono).';
+
+  @override
   String get login_RequestFailureIncorrectCredentialsError => 'Nome utente o password non corretti';
 
   @override
