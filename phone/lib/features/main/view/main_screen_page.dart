@@ -16,7 +16,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 
 /// Every badge the bottom menu can carry, each drawn by the feature it belongs
 /// to and silent where its section is not configured or its state not provided.
-final _decorateTabIcon = composeTabIconDecorators([MessagingFlavorOverlay.forTab, VoicemailFlavorOverlay.forTab]);
+final mainTabIconDecorator = composeTabIconDecorators([MessagingFlavorOverlay.forTab, VoicemailFlavorOverlay.forTab]);
 
 @RoutePage()
 class MainScreenPage extends StatefulWidget {
@@ -49,13 +49,19 @@ class _MainScreenPageState extends State<MainScreenPage> {
     final systemNotificationsFeature = featureAccess.systemNotificationsConfig;
     final systemNotificationsEnabled = systemNotificationsFeature.systemNotificationsSupport;
 
+    // On a watch the hub is the first tab, in front of the sections.
+    final hasHub = context.formFactor == FormFactor.watch;
+    final firstSection = hasHub ? 1 : 0;
+
     final autoTabsRouter = AutoTabsRouter(
-      routes: _buildRoutePages(tabs),
+      routes: [if (hasHub) const MainHubScreenPageRoute(), ..._buildRoutePages(tabs)],
+      homeIndex: hasHub ? 0 : -1,
       duration: Duration.zero,
       builder: (context, child) {
         final tabsRouter = AutoTabsRouter.of(context);
+        final section = tabsRouter.activeIndex - firstSection;
 
-        _restoreActiveTabAfterConfigChange(tabsRouter, tabs);
+        _restoreActiveTabAfterConfigChange(tabsRouter, tabs, firstSection);
 
         if (callToActionsEnabled) {
           final isRouteActive = context.router.isRouteActive(MainScreenPageRoute.name);
@@ -65,7 +71,7 @@ class _MainScreenPageState extends State<MainScreenPage> {
           // than the enum has values. Looked up softly: a configuration
           // reload can shrink the tab set while the router still reports the
           // old index for a frame, and the cubit accepts a null flavor.
-          final flavor = tabs.elementAtOrNull(tabsRouter.activeIndex)?.flavor;
+          final flavor = section < 0 ? null : tabs.elementAtOrNull(section)?.flavor;
 
           context.read<CallToActionsCubit>()
             ..getActions(flavor)
@@ -97,15 +103,20 @@ class _MainScreenPageState extends State<MainScreenPage> {
           pickPurpose: pickPurpose,
           onCancelPick: context.read<DestinationPickingCubit>().cancel,
           // The shell above provides the unread state this reads.
-          decorateTabIcon: _decorateTabIcon,
+          decorateTabIcon: mainTabIconDecorator,
           // Be aware to use activeIndex from tabsRouter, not from bottomMenuManager
           // to handle navigation changes correctly, especially when the user navigates by url.
           // e.g router.navigate(const MainScreenPageRoute(['favorites']));
           // Clamped for the same one-frame window as the flavor above:
           // the bar asserts its index is within the entries it draws.
-          currentIndex: tabsRouter.activeIndex.clamp(0, tabs.length - 1),
-          onTabSelected: (index) =>
-              BottomMenuTabHandler.handleTap(context, index: index, tabs: tabs, tabsRouter: tabsRouter),
+          currentIndex: section < 0 ? null : section.clamp(0, tabs.length - 1),
+          onTabSelected: (index) => BottomMenuTabHandler.handleTap(
+            context,
+            index: index,
+            tabs: tabs,
+            tabsRouter: tabsRouter,
+            firstSection: firstSection,
+          ),
         );
       },
       navigatorObservers: () => [MainScreenNavigatorObserver(mainScreenRouteStateRepository)],
@@ -137,21 +148,22 @@ class _MainScreenPageState extends State<MainScreenPage> {
   /// shares one - the user landed on the first of them whichever was open.
   /// Reactivate the tab that was open, identified by its path, once the
   /// frame settles.
-  void _restoreActiveTabAfterConfigChange(TabsRouter tabsRouter, List<BottomMenuTab> tabs) {
+  void _restoreActiveTabAfterConfigChange(TabsRouter tabsRouter, List<BottomMenuTab> tabs, int firstSection) {
+    final section = tabsRouter.activeIndex - firstSection;
     final index = BottomMenuTabHandler.reactivationIndex(
       previousTabs: _lastTabs,
       previousPath: _lastActivePath,
       tabs: tabs,
-      activeIndex: tabsRouter.activeIndex,
+      activeIndex: section,
     );
     _lastTabs = tabs;
     if (index != null) {
       _lastActivePath = tabs[index].routePath;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) tabsRouter.setActiveIndex(index);
+        if (mounted) tabsRouter.setActiveIndex(index + firstSection);
       });
-    } else if (tabsRouter.activeIndex < tabs.length) {
-      _lastActivePath = tabs[tabsRouter.activeIndex].routePath;
+    } else if (section >= 0 && section < tabs.length) {
+      _lastActivePath = tabs[section].routePath;
     }
   }
 
@@ -179,6 +191,28 @@ class _MainScreenPageState extends State<MainScreenPage> {
   }
 }
 
+/// The hub on a watch face, the tab in front of the sections.
+@RoutePage()
+class MainHubScreenPage extends StatelessWidget {
+  // ignore: use_key_in_widget_constructors
+  const MainHubScreenPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = context.read<FeatureAccess>().bottomMenuConfig.tabs;
+    final tabsRouter = AutoTabsRouter.of(context);
+    final purpose = context.select<DestinationPickingCubit, DestinationPickPurpose?>((cubit) => cubit.state.purpose);
+
+    return MainHub(
+      tabs: tabs,
+      decorateTabIcon: mainTabIconDecorator,
+      pick: MainScreenPick.of(context, purpose, context.read<DestinationPickingCubit>().cancel),
+      onChosen: (index) =>
+          BottomMenuTabHandler.handleTap(context, index: index, tabs: tabs, tabsRouter: tabsRouter, firstSection: 1),
+    );
+  }
+}
+
 /// Handles the logic for bottom menu tab interactions and persistence.
 abstract final class BottomMenuTabHandler {
   /// Processes a tab tap by persisting the selection and updating the UI router.
@@ -187,6 +221,7 @@ abstract final class BottomMenuTabHandler {
     required int index,
     required List<BottomMenuTab> tabs,
     required TabsRouter tabsRouter,
+    int firstSection = 0,
   }) {
     final tappedTab = tabs[index];
 
@@ -195,7 +230,7 @@ abstract final class BottomMenuTabHandler {
     context.read<ActiveMainTabRepository>().setActiveTabPath(tappedTab.routePath);
 
     // Update the actual UI state via AutoRoute
-    tabsRouter.setActiveIndex(index);
+    tabsRouter.setActiveIndex(index + firstSection);
   }
 
   /// Index of the tab to reactivate after the configured tab set changed, or

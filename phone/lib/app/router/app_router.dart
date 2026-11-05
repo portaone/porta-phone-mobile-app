@@ -212,6 +212,7 @@ class AppRouter extends RootStackRouter {
               page: MainScreenPageRoute.page,
               path: '',
               children: [
+                AutoRoute(page: MainHubScreenPageRoute.page, path: 'hub'),
                 AutoRoute(
                   page: FavoritesRouterPageRoute.page,
                   path: MainFlavor.favorites.name,
