@@ -81,4 +81,31 @@ void main() {
     final padding = tester.widget<Padding>(find.byType(Padding));
     expect(padding.padding, EdgeInsets.zero);
   });
+
+  testWidgets('cuts the text to maxLines with an ellipsis', (tester) async {
+    await tester.pumpWidget(wrapWithMaterial(const ExtendedText('Cut', maxLines: 2)));
+
+    final text = tester.widget<Text>(find.text('Cut'));
+    expect(text.maxLines, 2);
+    expect(text.overflow, TextOverflow.ellipsis);
+  });
+
+  testWidgets('draws trailing after the text inside the decoration', (tester) async {
+    await tester.pumpWidget(
+      wrapWithMaterial(
+        const ExtendedText(
+          'More',
+          extendedStyle: ExtendedTextStyle(decoration: ExtendedTextDecoration(color: Colors.indigo)),
+          trailing: Icon(Icons.chevron_right),
+        ),
+      ),
+    );
+
+    final plate = find.byType(DecoratedBox);
+    expect(find.descendant(of: plate, matching: find.byIcon(Icons.chevron_right)), findsOneWidget);
+    expect(
+      tester.getRect(find.byIcon(Icons.chevron_right)).left,
+      greaterThanOrEqualTo(tester.getRect(find.text('More')).right + ExtendedText.trailingGap),
+    );
+  });
 }

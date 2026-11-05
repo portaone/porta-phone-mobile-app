@@ -24,8 +24,8 @@ void main() {
     return cubit;
   }
 
-  Widget landing(LoginCubit cubit) =>
-      LoginHarness.wrapCubit(cubit, const LoginModeSelectScreen(appGreetingL10n: 'WebTrit', launchButtons: [_signUp]));
+  Widget landing(LoginCubit cubit, {String greeting = 'WebTrit'}) =>
+      LoginHarness.wrapCubit(cubit, LoginModeSelectScreen(appGreetingL10n: greeting, launchButtons: const [_signUp]));
 
   for (final preset in [...watchPresets, handsetPresets.first]) {
     testWidgets('on $preset the launch button acts through semantics', (tester) async {
@@ -56,6 +56,25 @@ void main() {
 
       verify(() => cubit.loginModeSelectSubmitted(LoginMode.customCore)).called(1);
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      handle.dispose();
+    });
+  }
+
+  for (final preset in watchPresets) {
+    testWidgets('on $preset a greeting cut short opens whole through semantics', (tester) async {
+      const note =
+          'NOTE: To make an Xphone-to-Xphone call, start dialing with 234. To make an Xphone to regular network '
+          'call, start dialing with 0. To top up your account, change password, or roam for international calling, '
+          'use Command App.';
+      final handle = tester.ensureSemantics();
+      preset.apply(tester);
+      await pumpCollectingOverflows(tester, landing(login(demo: false), greeting: note));
+
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      await tapViaSemantics(tester, find.bySemanticsIdentifier(loginModeScreenGreetingId));
+
+      expect(find.byKey(loginModeScreenSignUpButtonKey), findsNothing);
+      expect(find.byKey(loginModeScreenGreetingKey), findsNothing);
       handle.dispose();
     });
   }
