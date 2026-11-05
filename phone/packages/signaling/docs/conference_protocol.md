@@ -100,11 +100,10 @@ caused them, or unprompted.
 { "event": "conference_updated", "room": 4242, "participants": [ ... ] }
 ```
 
-Parsing. `Event.fromJson` throws `ArgumentError` on an unknown `event` value, and
-`WebtritSignalingClient` routes that into its error handler, which the app treats
-as a connection failure. The five conference events are registered in
-`SessionEvent._sessionEventFromJsonDecoders`; a future Core event not listed there
-would still drop the connection, so this table must grow with Core.
+Parsing. `WebtritSignalingClient` logs an unknown `event` value and goes on. The five
+conference events are registered in `SessionEvent._sessionEventFromJsonDecoders`; a
+future Core event not listed there is ignored by the app, so this table must grow with
+Core for the app to act on it.
 
 ## 3. Dart mapping
 
