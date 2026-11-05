@@ -1380,6 +1380,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get login_RequestFailurePhoneNotFoundError => 'Номер телефону не знайдено';
 
   @override
+  String get login_RequestFailureAmbiguousUserRefError =>
+      'Цю електронну адресу використовують кілька облікових записів. Увійдіть за ідентифікатором облікового запису (номером телефону).';
+
+  @override
   String get login_RequestFailureIncorrectCredentialsError => 'Невірне ім\'я користувача або пароль';
 
   @override

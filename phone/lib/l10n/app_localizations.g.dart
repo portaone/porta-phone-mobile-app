@@ -2434,6 +2434,12 @@ abstract class AppLocalizations {
   /// **'Phone number not found'**
   String get login_RequestFailurePhoneNotFoundError;
 
+  /// Shown on the sign-in screen after a verification code was requested by email. Condition: several accounts share the entered email, so no code was sent and the user has to sign in with the account ID (phone number).
+  ///
+  /// In en, this message translates to:
+  /// **'Several accounts use this email. Sign in with your account ID (phone number) instead.'**
+  String get login_RequestFailureAmbiguousUserRefError;
+
   /// Shown during password login when the provided username or password is incorrect. Condition: the backend returns incorrect_credentials in response to POST /session.
   ///
   /// In en, this message translates to:

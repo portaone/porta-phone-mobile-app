@@ -1356,6 +1356,10 @@
   "@login_RequestFailurePhoneNotFoundError": {
     "description": "Shown during login or signup when the user provides a phone number that cannot be found in the system. Condition: the entered phone number does not exist or is not recognized by the backend."
   },
+  "login_RequestFailureAmbiguousUserRefError": "Several accounts use this email. Sign in with your account ID (phone number) instead.",
+  "@login_RequestFailureAmbiguousUserRefError": {
+    "description": "Shown on the sign-in screen after a verification code was requested by email. Condition: several accounts share the entered email, so no code was sent and the user has to sign in with the account ID (phone number)."
+  },
   "login_RequestFailureIncorrectCredentialsError": "Incorrect username or password",
   "@login_RequestFailureIncorrectCredentialsError": {
     "description": "Shown during password login when the provided username or password is incorrect. Condition: the backend returns incorrect_credentials in response to POST /session."

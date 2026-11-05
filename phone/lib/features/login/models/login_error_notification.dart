@@ -25,6 +25,7 @@ Notification? loginErrorNotification(
     'otp_verification_attempts_exceeded' => const LoginOtpVerificationAttemptsExceededNotification(),
     'otp_already_verified' => const LoginOtpAlreadyVerifiedNotification(),
     'phone_not_found' => const LoginPhoneNotFoundNotification(),
+    'ambiguous_user_ref' => const LoginAmbiguousUserRefNotification(),
     'incorrect_credentials' => const LoginIncorrectCredentialsNotification(),
     'user_not_found' => const LoginUserNotFoundNotification(),
     'unconfigured_bundle_id' => const LoginUnconfiguredBundleIdNotification(),

@@ -585,6 +585,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         login_RequestFailureParametersApplyIssueError,
       'login_RequestFailurePhoneNotFoundError' =>
         login_RequestFailurePhoneNotFoundError,
+      'login_RequestFailureAmbiguousUserRefError' =>
+        login_RequestFailureAmbiguousUserRefError,
       'login_RequestFailureIncorrectCredentialsError' =>
         login_RequestFailureIncorrectCredentialsError,
       'login_RequestFailureUserNotFoundError' =>
