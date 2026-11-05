@@ -89,31 +89,9 @@ void main() {
   }
 
   group('the ways in on a watch', () {
-    LoginType? chosen;
-
-    Widget ways(List<LoginType> supported, {bool processing = false, bool handled = true}) {
-      chosen = null;
-      return LoginSwitchScreen(
-        appBar: null,
-        header: null,
-        body: const Text('the form', key: Key('form')),
-        currentLoginType: supported.first,
-        supportedLoginTypes: supported,
-        onLoginTypeChanged: handled ? (type) => chosen = type : null,
-        processing: processing,
-      );
-    }
-
-    Widget switchScreen(List<LoginType> supported, {bool handled = true}) =>
-        harness.wrap(ways(supported, handled: handled));
-
-    // A page under the ways in, so leaving them shows on the navigator.
-    Widget pushedOver(Widget screen) => harness.wrap(
-      Builder(
-        builder: (context) => TextButton(
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen)),
-          child: const Text('push'),
-        ),
+    Widget switchScreen(List<LoginType> supported, {bool handled = true}) => harness.wrap(
+      LoginSwitchWatch(
+        body: LoginTypeSelectScreen(supportedLoginTypes: supported, onChosen: handled ? (_) {} : null),
       ),
     );
 
@@ -126,7 +104,6 @@ void main() {
 
         expect(await pumpCollectingOverflows(tester, switchScreen(all)), isEmpty);
         expect(find.byType(SegmentedButton<LoginType>), findsNothing);
-        expect(find.byKey(const Key('form')), findsNothing, reason: 'the grid comes first');
         for (final type in all) {
           await tester.scrollUntilVisible(find.byKey(type.toLoginSegmentKey()), 40);
           expect(find.bySemanticsIdentifier(type.toLoginSegmentId()), findsOneWidget);
@@ -136,21 +113,6 @@ void main() {
       });
     }
 
-    testWidgets('choosing one opens its form, and going back returns to the grid', (tester) async {
-      watchPresets.first.apply(tester);
-      await pumpCollectingOverflows(tester, switchScreen(all));
-
-      await tester.tap(find.byKey(LoginType.otpSignin.toLoginSegmentKey()));
-      await tester.pumpAndSettle();
-      expect(chosen, LoginType.otpSignin);
-      expect(find.byKey(const Key('form')), findsOneWidget);
-
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('form')), findsNothing);
-      expect(find.byKey(LoginType.passwordSignin.toLoginSegmentKey()), findsOneWidget);
-    });
-
     testWidgets('QR sign-in is not offered: a watch has no camera', (tester) async {
       watchPresets.first.apply(tester);
       await pumpCollectingOverflows(tester, switchScreen(const [...all, LoginType.qrSignin]));
@@ -159,55 +121,16 @@ void main() {
       expect(find.byKey(LoginType.passwordSignin.toLoginSegmentKey()), findsOneWidget);
     });
 
-    testWidgets('a brand that leads with QR still opens on the grid, not on the QR form', (tester) async {
-      watchPresets.first.apply(tester);
-      await pumpCollectingOverflows(tester, switchScreen(const [LoginType.qrSignin, LoginType.passwordSignin]));
-
-      expect(find.byKey(const Key('form')), findsNothing);
-      expect(find.byKey(LoginType.passwordSignin.toLoginSegmentKey()), findsOneWidget);
-    });
-
-    testWidgets('while a request is in flight going back keeps the form', (tester) async {
-      watchPresets.first.apply(tester);
-      await pumpCollectingOverflows(tester, pushedOver(ways(all, processing: true)));
-      await tester.tap(find.text('push'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(LoginType.otpSignin.toLoginSegmentKey()));
-      await tester.pumpAndSettle();
-
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('form')), findsOneWidget);
-    });
-
-    testWidgets('while a request is in flight a single way in does not leave', (tester) async {
-      watchPresets.first.apply(tester);
-      await pumpCollectingOverflows(tester, pushedOver(ways(const [LoginType.passwordSignin], processing: true)));
-      await tester.tap(find.text('push'));
-      await tester.pumpAndSettle();
-
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('form')), findsOneWidget);
-    });
-
     testWidgets('without a handler the ways in are disabled', (tester) async {
       watchPresets.first.apply(tester);
       await pumpCollectingOverflows(tester, switchScreen(all, handled: false));
 
-      await tester.tap(find.byKey(LoginType.otpSignin.toLoginSegmentKey()));
-      await tester.pumpAndSettle();
-
-      expect(find.byKey(const Key('form')), findsNothing);
-    });
-
-    testWidgets('with a single way in the form opens directly', (tester) async {
-      watchPresets.first.apply(tester);
-      await pumpCollectingOverflows(tester, switchScreen(const [LoginType.passwordSignin]));
-
-      expect(find.byKey(const Key('form')), findsOneWidget);
+      final button = tester.widget<WatchRoundButton>(
+        find
+            .ancestor(of: find.byKey(LoginType.otpSignin.toLoginSegmentKey()), matching: find.byType(WatchRoundButton))
+            .first,
+      );
+      expect(button.onPressed, isNull);
     });
   });
 }

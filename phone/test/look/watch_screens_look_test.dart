@@ -124,13 +124,8 @@ void main() {
       final harness = LoginHarness();
       addTearDown(harness.release);
       return harness.wrap(
-        LoginSwitchScreen(
-          appBar: null,
-          header: null,
-          body: const SizedBox.shrink(),
-          currentLoginType: types.first,
-          supportedLoginTypes: types,
-          onLoginTypeChanged: (_) {},
+        LoginSwitchWatch(
+          body: LoginTypeSelectScreen(supportedLoginTypes: types, onChosen: (_) {}),
         ),
       );
     });

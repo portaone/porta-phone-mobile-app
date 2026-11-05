@@ -11,4 +11,5 @@ export 'view/login_mode_select_screen_page.dart';
 export 'view/login_router_page.dart';
 export 'view/login_switch_screen.dart';
 export 'view/login_switch_screen_page.dart';
+export 'view/login_switch_watch.dart';
 export 'widgets/widgets.dart';
