@@ -43,6 +43,8 @@ const watchPresets = [
   ScreenPreset('Wear OS large round', Size(227, 227), devicePixelRatio: 2),
   ScreenPreset('Apple Watch SE 3 40mm', Size(162, 197), devicePixelRatio: 2),
   ScreenPreset('Apple Watch Series 12 46mm', Size(208, 248), devicePixelRatio: 2),
+  ScreenPreset('Lokmat APPLLP 7 MAX', Size(205, 251), devicePixelRatio: 2),
+  ScreenPreset('Lokmat APPLLP 5 MAX', Size(320, 240), devicePixelRatio: 2),
 ];
 
 /// The phones, from the smallest still in use to a current large one.
