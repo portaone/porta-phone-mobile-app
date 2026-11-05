@@ -39,8 +39,8 @@ screens or blocks.
 `FormFactor.fromSize` (`adaptive_kit`) reads the
 window size, and the numbers live only in `FormFactorBreakpoints`:
 
-- `watch` - both sides under 300: every watch the configurator previews
-  (round 192 and 227, Apple Watch 162x197 and 208x248);
+- `watch` - both sides under 340: every watch the configurator previews
+  (round 192 and 227, Apple Watch 162x197 and 208x248, a wide 320x240);
 - `large` - shortest side 600 or more, Material's tablet threshold;
 - `handset` - everything else, a phone either way up.
 
