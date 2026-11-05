@@ -183,6 +183,7 @@ class SignalingHub {
       final request = Request.fromJson(reqMap);
       if (!_signalingModule.isConnected) throw NotConnectedException('ghost state: hub isConnected=false');
       await _signalingModule.execute(request)!;
+      _session.onRequest(request);
       replyPort.send(encodeExecuteResult(correlationId, null));
     } catch (e) {
       _logger.warning('Hub execute error: $e, corr=$correlationId');

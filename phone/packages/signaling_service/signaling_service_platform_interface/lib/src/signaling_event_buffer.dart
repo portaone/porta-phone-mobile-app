@@ -16,6 +16,8 @@ import 'session_snapshot.dart';
 ///   event that changes session state (registration, a call's events), and
 ///   replayed as the handshake the server would send now - a ringing call as a
 ///   line whose log carries the offer, an ended call gone;
+/// - the client's answers to updates are folded into the snapshot as well
+///   ([onRequest]), the way the server logs them;
 /// - protocol events themselves are never replayed: what they changed is in
 ///   the snapshot, and the rest (ICE candidates, DTMF, a media state that a
 ///   live call already applied) is not actionable later.
@@ -56,6 +58,10 @@ class SignalingEventBuffer {
         _lifecycle.add(event);
     }
   }
+
+  /// Records a request the client sent, once it went out, into the session
+  /// (see [SessionSnapshot.applyRequest]).
+  void onRequest(Request request) => _session?.applyRequest(request);
 
   /// A snapshot of what to replay to a new subscriber: the lifecycle events,
   /// with the handshake rendered from the session as it stands now.

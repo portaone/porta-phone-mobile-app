@@ -290,10 +290,16 @@ Object? _decodeExecuteError(Object? encodedError) {
 
 Map<String, dynamic>? _encodeLine(Line? line) {
   if (line == null) return null;
-  final encodedLogs = line.callLogs
-      .whereType<CallEventLog>()
-      .map((log) => [log.timestamp, log.callEvent.toJson()])
-      .toList();
+  // The client's own requests stay in the log: an `update` request carrying an
+  // answer is what tells an update the client answered from one it still owes.
+  // The server's responses have no JSON form here and nothing reads them back.
+  final encodedLogs = [
+    for (final log in line.callLogs)
+      if (log is CallEventLog)
+        [log.timestamp, log.callEvent.toJson()]
+      else if (log is CallRequestLog)
+        [log.timestamp, log.callRequest.toJson()],
+  ];
   return {'call_id': line.callId, 'call_logs': encodedLogs};
 }
 
