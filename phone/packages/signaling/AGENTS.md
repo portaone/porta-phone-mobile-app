@@ -111,11 +111,14 @@ do not copy them.
   carries one, default timeout `defaultExecuteTransactionTimeoutDuration`, 10 s) and resolves on
   the matching `AckResponse`, throws `WebtritSignalingErrorException` on `ErrorResponse`. A
   response for a transaction already gone (timed out) is logged and ignored.
+- The request is written before its `Transaction` is created: a write that fails throws to the
+  caller and leaves no timeout behind to reach the zone with no listener.
 - Keepalive: a one-shot timer, started after `StateHandshake` with its `keepaliveInterval`
   (30 s when the handshake has none), restarted by every `execute`, and scheduled again after
-  each keepalive answer while the socket is open. Timing out raises
-  `WebtritSignalingKeepaliveTransactionTimeoutException` through `onError`; a write to a closed
-  socket (`WebtritSignalingBadStateException`) just ends the loop.
+  each keepalive answer while the client is connected and the socket is open. There is one timer:
+  scheduling replaces it.
+  Timing out raises `WebtritSignalingKeepaliveTransactionTimeoutException` through `onError`; a
+  write to a closed socket (`WebtritSignalingBadStateException`) just ends the loop.
 - `disconnect([code, reason])` stops the timer, terminates open transactions with
   `WebtritSignalingTransactionTerminateByDisconnectException`, cancels the subscription (so
   `onDisconnect` is not called) and closes the sink.
