@@ -8,7 +8,7 @@ final _logger = Logger('VoiceNoiseReduction');
 
 /// Turns RNNoise on the outgoing voice on while the microphone is open, when the user chose it.
 ///
-/// The work is native, in the flutter_webrtc_noise_suppression plugin (github.com/SERDUN/flutter_webrtc_noise_suppression):
+/// The work is native, in the flutter_webrtc_noise_suppression plugin (github.com/portaone/porta-flutter-plugins):
 /// it puts the noise_suppression plugin's suppressor into flutter_webrtc's capture
 /// post-processing slot, after the platform's own echo cancellation and noise suppression. This
 /// class only says when.

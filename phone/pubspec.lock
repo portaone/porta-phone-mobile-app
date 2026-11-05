@@ -846,12 +846,12 @@ packages:
   flutter_webrtc_noise_suppression:
     dependency: "direct main"
     description:
-      path: "."
-      ref: c37f3fcd2e7756cc0987a6f259fc0221ec3c0980
-      resolved-ref: c37f3fcd2e7756cc0987a6f259fc0221ec3c0980
-      url: "https://github.com/SERDUN/flutter_webrtc_noise_suppression.git"
+      path: "packages/flutter_webrtc_noise_suppression"
+      ref: "flutter_webrtc_noise_suppression-v0.1.0"
+      resolved-ref: "3cad234144a7b3e592a2f314c20a453a8f3b35f0"
+      url: "https://github.com/portaone/porta-flutter-plugins.git"
     source: git
-    version: "0.0.1"
+    version: "0.1.0"
   formz:
     dependency: "direct main"
     description:
