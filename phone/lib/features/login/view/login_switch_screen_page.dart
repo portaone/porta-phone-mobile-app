@@ -45,31 +45,37 @@ class LoginSwitchScreenPage extends StatelessWidget {
           duration: Duration.zero,
           builder: (context, child) {
             final tabsRouter = AutoTabsRouter.of(context);
-            return LoginSwitchScreen(
-              appBar: isAppBarVisible
-                  ? AppBar(
-                      leading: ExtBackButton(disabled: state.processing),
-                      flexibleSpace: BlurredSurface.fromStyle(localStyle?.appBarBlurredSurface),
-                    )
-                  : null,
-              header: isLogoVisible
-                  ? Column(
-                      children: [
-                        ConfigurableThemeImage(style: localStyle?.pictureLogoStyle),
-                        const SizedBox(height: kInset),
-                      ],
-                    )
-                  : null,
-              body: SafeArea(
-                top: bodySafeAreaSides.contains(SafeAreaSide.top),
-                bottom: bodySafeAreaSides.contains(SafeAreaSide.bottom),
-                left: bodySafeAreaSides.contains(SafeAreaSide.left),
-                right: bodySafeAreaSides.contains(SafeAreaSide.right),
-                child: child,
+            // The outer builder rebuilds only when the ways in change, so the
+            // request's progress is read on its own.
+            return BlocSelector<LoginCubit, LoginState, bool>(
+              selector: (state) => state.processing,
+              builder: (context, processing) => LoginSwitchScreen(
+                appBar: isAppBarVisible
+                    ? AppBar(
+                        leading: ExtBackButton(disabled: processing),
+                        flexibleSpace: BlurredSurface.fromStyle(localStyle?.appBarBlurredSurface),
+                      )
+                    : null,
+                header: isLogoVisible
+                    ? Column(
+                        children: [
+                          ConfigurableThemeImage(style: localStyle?.pictureLogoStyle),
+                          const SizedBox(height: kInset),
+                        ],
+                      )
+                    : null,
+                body: SafeArea(
+                  top: bodySafeAreaSides.contains(SafeAreaSide.top),
+                  bottom: bodySafeAreaSides.contains(SafeAreaSide.bottom),
+                  left: bodySafeAreaSides.contains(SafeAreaSide.left),
+                  right: bodySafeAreaSides.contains(SafeAreaSide.right),
+                  child: child,
+                ),
+                currentLoginType: supportedLoginTypes[tabsRouter.activeIndex],
+                supportedLoginTypes: supportedLoginTypes,
+                onLoginTypeChanged: (loginType) => tabsRouter.setActiveIndex(supportedLoginTypes.indexOf(loginType)),
+                processing: processing,
               ),
-              currentLoginType: supportedLoginTypes[tabsRouter.activeIndex],
-              supportedLoginTypes: supportedLoginTypes,
-              onLoginTypeChanged: (loginType) => tabsRouter.setActiveIndex(supportedLoginTypes.indexOf(loginType)),
             );
           },
         );

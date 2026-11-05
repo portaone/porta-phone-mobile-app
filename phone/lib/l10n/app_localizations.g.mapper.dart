@@ -258,6 +258,7 @@ extension AppLocalizationsExtension on AppLocalizations {
         contacts_ContactsScreen_sourceSemanticsLabel,
       'contacts_agreement_button_text' => contacts_agreement_button_text,
       'contacts_agreement_checkbox_text' => contacts_agreement_checkbox_text,
+      'contacts_agreement_toggle_text' => contacts_agreement_toggle_text,
       'contacts_agreement_description' => contacts_agreement_description,
       'contacts_agreement_title' => contacts_agreement_title,
       'contacts_DestinationNumberPicker_title' =>
@@ -651,6 +652,9 @@ extension AppLocalizationsExtension on AppLocalizations {
       'login_Button_qrSigninOpenSettings' => login_Button_qrSigninOpenSettings,
       'login_Text_qrSigninInvalidCodeError' =>
         login_Text_qrSigninInvalidCodeError,
+      'loginType_otpSigninShort' => loginType_otpSigninShort,
+      'loginType_passwordSigninShort' => loginType_passwordSigninShort,
+      'loginType_signupShort' => loginType_signupShort,
       'loginType_otpSignin' => loginType_otpSignin,
       'loginType_passwordSignin' => loginType_passwordSignin,
       'loginType_qrSignin' => loginType_qrSignin,
@@ -973,6 +977,7 @@ extension AppLocalizationsExtension on AppLocalizations {
       'permission_manufacturer_Text_xiaomi_tip3' =>
         permission_manufacturer_Text_xiaomi_tip3,
       'permission_Text_description' => permission_Text_description,
+      'permission_Text_title' => permission_Text_title,
       'persistentConnectionReminderContent' =>
         persistentConnectionReminderContent,
       'persistentConnectionReminderTitle' => persistentConnectionReminderTitle,
@@ -1634,6 +1639,8 @@ extension AppLocalizationsExtension on AppLocalizations {
         undefined_stackScreenNotSupported_title,
       'user_agreement_agrement_link' => user_agreement_agrement_link,
       'user_agreement_button_text' => user_agreement_button_text,
+      'user_agreement_terms_button_text' => user_agreement_terms_button_text,
+      'user_agreement_toggle_text' => user_agreement_toggle_text,
       'validationBlankError' => validationBlankError,
       'voicemail_Cache_description' => voicemail_Cache_description,
       'voicemail_Cache_title' => voicemail_Cache_title,

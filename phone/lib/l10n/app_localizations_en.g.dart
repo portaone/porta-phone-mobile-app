@@ -706,6 +706,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'I agree to allow the app to access my contacts to enhance my user experience.';
 
   @override
+  String get contacts_agreement_toggle_text => 'Allow access to contacts';
+
+  @override
   String get contacts_agreement_description =>
       'With your permission, the app shows the contacts from your phone in its Contacts tab. You can share all of them or only the ones you choose. \n\nThe contact data is temporarily stored locally on your device to enable features like making calls directly from the app. \n\nThis data is not collected, transmitted, or shared outside the app.';
 
@@ -1499,6 +1502,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_Text_qrSigninInvalidCodeError => 'This QR code cannot be used to sign in.';
 
   @override
+  String get loginType_otpSigninShort => 'OTP';
+
+  @override
+  String get loginType_passwordSigninShort => 'Password';
+
+  @override
+  String get loginType_signupShort => 'Sign up';
+
+  @override
   String get loginType_otpSignin => 'OTP sign in';
 
   @override
@@ -2163,6 +2175,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get permission_Text_description =>
       'To ensure the best user experience, the app needs to be granted the following permissions: microphone for audio calls, camera for video calls, and contacts to simplify reaching them from the app.\n\nPermissions could be changed at any time in the future.';
+
+  @override
+  String get permission_Text_title => 'Permissions';
 
   @override
   String get persistentConnectionReminderContent =>
@@ -3548,6 +3563,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get user_agreement_button_text => 'Continue';
+
+  @override
+  String get user_agreement_terms_button_text => 'Read the terms';
+
+  @override
+  String get user_agreement_toggle_text => 'I have read and accept the terms';
 
   @override
   String user_agreement_checkbox_text(Object url) {

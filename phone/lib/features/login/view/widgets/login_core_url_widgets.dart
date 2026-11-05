@@ -1,5 +1,4 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -38,12 +37,12 @@ class LoginCoreUrlAssignScaffold extends StatelessWidget {
         body: body,
       );
     }
-    return ThemedScaffold(
+    return LoginScaffold.watch(
       contentThemeOverride: style?.contentThemeOverride,
-      applyToAppBar: style?.applyToAppBar ?? true,
+      applyToAppBar: style?.applyToAppBar,
       appBarTheme: style?.appBarTheme,
-      resizeToAvoidBottomInset: watchResizesForKeyboard,
-      body: AnnotatedRegion<SystemUiOverlayStyle>(value: loginCoreUrlAssignOverlayStyle(style), child: body),
+      systemUiOverlayStyle: loginCoreUrlAssignOverlayStyle(style),
+      body: body,
     );
   }
 }

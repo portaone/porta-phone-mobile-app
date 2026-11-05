@@ -695,6 +695,9 @@ class AppLocalizationsTh extends AppLocalizations {
       'ฉันยินยอมให้แอปเข้าถึงรายชื่อผู้ติดต่อของฉันเพื่อยกระดับประสบการณ์การใช้งาน';
 
   @override
+  String get contacts_agreement_toggle_text => 'อนุญาตให้เข้าถึงรายชื่อติดต่อ';
+
+  @override
   String get contacts_agreement_description =>
       'เมื่อคุณอนุญาต แอปจะแสดงรายชื่อผู้ติดต่อจากโทรศัพท์ของคุณในแท็บผู้ติดต่อ คุณสามารถแชร์ทั้งหมดหรือเฉพาะรายชื่อที่คุณเลือกได้ \n\nข้อมูลผู้ติดต่อจะถูกจัดเก็บไว้ชั่วคราวในเครื่องของคุณ เพื่อเปิดใช้คุณสมบัติต่าง ๆ เช่น การโทรออกจากแอปได้โดยตรง \n\nข้อมูลนี้จะไม่ถูกเก็บรวบรวม ส่งต่อ หรือแชร์ออกไปนอกแอป';
 
@@ -1482,6 +1485,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get login_Text_qrSigninInvalidCodeError => 'คิวอาร์โค้ดนี้ใช้เข้าสู่ระบบไม่ได้';
 
   @override
+  String get loginType_otpSigninShort => 'OTP';
+
+  @override
+  String get loginType_passwordSigninShort => 'รหัสผ่าน';
+
+  @override
+  String get loginType_signupShort => 'สมัคร';
+
+  @override
   String get loginType_otpSignin => 'เข้าสู่ระบบด้วย OTP';
 
   @override
@@ -2150,6 +2162,9 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get permission_Text_description =>
       'เพื่อมอบประสบการณ์การใช้งานที่ดีที่สุด แอปจำเป็นต้องได้รับสิทธิ์ต่อไปนี้: ไมโครโฟนสำหรับการโทรด้วยเสียง กล้องสำหรับการโทรวิดีโอ และรายชื่อติดต่อเพื่อให้ติดต่อได้ง่ายจากแอป\n\nคุณสามารถเปลี่ยนสิทธิ์เหล่านี้ได้ตลอดเวลาในภายหลัง';
+
+  @override
+  String get permission_Text_title => 'สิทธิ์';
 
   @override
   String get persistentConnectionReminderContent =>
@@ -3519,6 +3534,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get user_agreement_button_text => 'ดำเนินการต่อ';
+
+  @override
+  String get user_agreement_terms_button_text => 'อ่านข้อกำหนด';
+
+  @override
+  String get user_agreement_toggle_text => 'ฉันได้อ่านและยอมรับข้อกำหนดแล้ว';
 
   @override
   String user_agreement_checkbox_text(Object url) {

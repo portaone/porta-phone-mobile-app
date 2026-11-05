@@ -58,11 +58,15 @@ const String userAgreementCheckboxId = 'userAgreementCheckbox';
 const userAgreementCheckboxKey = Key(userAgreementCheckboxId);
 const String userAgreementAcceptButtonId = 'userAgreementAcceptButton';
 const userAgreementAcceptButtonKey = Key(userAgreementAcceptButtonId);
+const String userAgreementTermsLinkId = 'userAgreementTermsLink';
+const userAgreementTermsLinkKey = Key(userAgreementTermsLinkId);
 
 const String permissionsInitButtonId = 'permissionsProcessButton';
 const permissionsInitButtonKey = Key(permissionsInitButtonId);
 const String permissionTipsButtonId = 'permissionTipsButton';
 const permissionTipsButtonKey = Key(permissionTipsButtonId);
+const String permissionTipsSettingsButtonId = 'permissionTipsSettingsButton';
+const permissionTipsSettingsButtonKey = Key(permissionTipsSettingsButtonId);
 
 const String mainAppBarId = 'mainAppBar';
 const mainAppBarKey = Key(mainAppBarId);

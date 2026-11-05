@@ -4,6 +4,8 @@ import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
+import 'login_switch_watch.dart';
+
 class LoginSwitchScreen extends StatelessWidget {
   const LoginSwitchScreen({
     super.key,
@@ -13,6 +15,7 @@ class LoginSwitchScreen extends StatelessWidget {
     required this.currentLoginType,
     required this.supportedLoginTypes,
     this.onLoginTypeChanged,
+    this.processing = false,
   });
 
   final PreferredSizeWidget? appBar;
@@ -22,8 +25,36 @@ class LoginSwitchScreen extends StatelessWidget {
   final List<LoginType> supportedLoginTypes;
   final ValueChanged<LoginType>? onLoginTypeChanged;
 
+  /// A request of the current form is in flight: the way back stays shut
+  /// until it answers.
+  final bool processing;
+
   @override
   Widget build(BuildContext context) {
+    return AdaptiveLayout(
+      handset: (_) => _Handset(screen: this),
+      watch: (_) => LoginSwitchWatch(
+        body: body,
+        currentLoginType: currentLoginType,
+        supportedLoginTypes: supportedLoginTypes,
+        onLoginTypeChanged: onLoginTypeChanged,
+        processing: processing,
+      ),
+    );
+  }
+}
+
+/// The sign-in forms on a phone: logo, the ways in as segments, the chosen
+/// form below.
+class _Handset extends StatelessWidget {
+  const _Handset({required this.screen});
+
+  final LoginSwitchScreen screen;
+
+  @override
+  Widget build(BuildContext context) {
+    final LoginSwitchScreen(:appBar, :header, :body, :currentLoginType, :supportedLoginTypes, :onLoginTypeChanged) =
+        screen;
     final themeData = Theme.of(context);
     final LoginSwitchScreenStyles? loginStyles = themeData.extension<LoginSwitchScreenStyles>();
     final localStyle = loginStyles?.primary;

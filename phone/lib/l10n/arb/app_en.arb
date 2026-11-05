@@ -769,6 +769,10 @@
   "@contacts_agreement_button_text": {},
   "contacts_agreement_checkbox_text": "I agree to allow the app to access my contacts to enhance my user experience.",
   "@contacts_agreement_checkbox_text": {},
+  "contacts_agreement_toggle_text": "Allow access to contacts",
+  "@contacts_agreement_toggle_text": {
+    "description": "The contacts consent where only a short label fits (a watch face); the full sentence is the checkbox text on a phone."
+  },
   "contacts_agreement_description": "With your permission, the app shows the contacts from your phone in its Contacts tab. You can share all of them or only the ones you choose. \n\nThe contact data is temporarily stored locally on your device to enable features like making calls directly from the app. \n\nThis data is not collected, transmitted, or shared outside the app.",
   "@contacts_agreement_description": {},
   "contacts_agreement_title": "Data collection",
@@ -1478,6 +1482,18 @@
   "@login_Button_qrSigninOpenSettings": {},
   "login_Text_qrSigninInvalidCodeError": "This QR code cannot be used to sign in.",
   "@login_Text_qrSigninInvalidCodeError": {},
+  "loginType_otpSigninShort": "OTP",
+  "@loginType_otpSigninShort": {
+    "description": "The way in on a watch, under its round button: a word or two."
+  },
+  "loginType_passwordSigninShort": "Password",
+  "@loginType_passwordSigninShort": {
+    "description": "The way in on a watch, under its round button: a word or two."
+  },
+  "loginType_signupShort": "Sign up",
+  "@loginType_signupShort": {
+    "description": "The way in on a watch, under its round button: a word or two."
+  },
   "loginType_otpSignin": "OTP sign in",
   "@loginType_otpSignin": {},
   "loginType_passwordSignin": "Password sign in",
@@ -2094,6 +2110,10 @@
   "@permission_manufacturer_Text_xiaomi_tip3": {},
   "permission_Text_description": "To ensure the best user experience, the app needs to be granted the following permissions: microphone for audio calls, camera for video calls, and contacts to simplify reaching them from the app.\n\nPermissions could be changed at any time in the future.",
   "@permission_Text_description": {},
+  "permission_Text_title": "Permissions",
+  "@permission_Text_title": {
+    "description": "The title of the permissions screen where its icon does not fit (a watch face)."
+  },
   "persistentConnectionReminderContent": "You have to manually launch the app after your phone restarted at least once to re-establish the persistent connection and receive incoming calls.",
   "@persistentConnectionReminderContent": {
     "type": "text",
@@ -3283,6 +3303,14 @@
   },
   "user_agreement_button_text": "Continue",
   "@user_agreement_button_text": {},
+  "user_agreement_terms_button_text": "Read the terms",
+  "@user_agreement_terms_button_text": {
+    "description": "Opens the terms where the link cannot sit inside the consent sentence (a watch face)."
+  },
+  "user_agreement_toggle_text": "I have read and accept the terms",
+  "@user_agreement_toggle_text": {
+    "description": "The terms consent where only a short label fits (a watch face); the full sentence with the link is the checkbox text on a phone. It keeps the statement that the terms were read."
+  },
   "user_agreement_checkbox_text": "I have read the {url} and consent to its terms.",
   "@user_agreement_checkbox_text": {},
   "user_agreement_description": "Welcome to {appName}",

@@ -711,6 +711,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Accetto di consentire all\'app di accedere ai miei contatti per migliorare la mia esperienza d\'uso.';
 
   @override
+  String get contacts_agreement_toggle_text => 'Consenti l\'accesso ai contatti';
+
+  @override
   String get contacts_agreement_description =>
       'Con il tuo permesso, l\'app mostra i contatti del tuo telefono nella scheda Contatti. Puoi condividerli tutti o solo quelli che scegli. \n\nI dati dei contatti vengono memorizzati temporaneamente sul tuo dispositivo per abilitare funzioni come le chiamate direttamente dall\'app. \n\nQuesti dati non vengono raccolti, trasmessi né condivisi al di fuori dell\'app.';
 
@@ -1511,6 +1514,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get login_Text_qrSigninInvalidCodeError => 'Questo codice QR non può essere utilizzato per accedere.';
 
   @override
+  String get loginType_otpSigninShort => 'OTP';
+
+  @override
+  String get loginType_passwordSigninShort => 'Password';
+
+  @override
+  String get loginType_signupShort => 'Iscrizione';
+
+  @override
   String get loginType_otpSignin => 'Accesso con OTP';
 
   @override
@@ -2190,6 +2202,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get permission_Text_description =>
       'Per garantire la migliore esperienza utente, all\'app devono essere concesse le seguenti autorizzazioni: microfono per le chiamate audio, fotocamera per le videochiamate e contatti per semplificare il raggiungimento degli utenti dall\'app.\n\nLe autorizzazioni possono essere modificate in qualsiasi momento anche successivamente.';
+
+  @override
+  String get permission_Text_title => 'Autorizzazioni';
 
   @override
   String get persistentConnectionReminderContent =>
@@ -3584,6 +3599,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get user_agreement_button_text => 'Continua';
+
+  @override
+  String get user_agreement_terms_button_text => 'Leggi i termini';
+
+  @override
+  String get user_agreement_toggle_text => 'Ho letto e accetto i termini';
 
   @override
   String user_agreement_checkbox_text(Object url) {
