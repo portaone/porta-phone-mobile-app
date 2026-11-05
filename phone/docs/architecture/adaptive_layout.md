@@ -100,7 +100,8 @@ Screen shapes:
   the face while the content waits on a request. `keepContent` keeps the content built, hidden
   and paused, under the menu; a change of `openOn` opens it. Back inside the content belongs to
   the drill-in (`WatchDrillIn.ownsBack`), so a section that steps back on its own - the
-  embedded page - leaves it alone. The login landing, the ways in and the main hub are built on it.
+  embedded page - leaves it alone. The login landing and the main hub are built on it. The ways in
+  are a tab of the sign-in routes on a watch instead, `LoginWaysIn`.
 - `WatchEdgeButton` - a screen's one action along the bottom of the face (of a screen that
   fills the window, with nothing under it). Its builder gets the style to merge over the
   button's own (`overlay.merge(themeStyle)`): the outline - `WatchEdgeButtonBorder`, a rounded

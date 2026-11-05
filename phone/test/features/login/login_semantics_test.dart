@@ -186,12 +186,22 @@ void main() {
         preset.apply(tester);
         LoginType? chosen;
 
-        await tester.pumpWidget(switchScreen(onLoginTypeChanged: (type) => chosen = type));
+        await tester.pumpWidget(
+          wrap(
+            ownScaffold: true,
+            LoginSwitchWatch(
+              body: LoginWaysIn(
+                supportedLoginTypes: const [LoginType.otpSignin, LoginType.passwordSignin],
+                onChosen: (type) => chosen = type,
+              ),
+            ),
+          ),
+        );
         await tester.pumpAndSettle();
 
         // The caption under the button is a short word; the node speaks the
         // name the phone's segment shows, under the same id.
-        final l10n = AppLocalizations.of(tester.element(find.byType(LoginSwitchScreen)))!;
+        final l10n = AppLocalizations.of(tester.element(find.byType(LoginWaysIn)))!;
         expectTapTargetSemantics(
           tester,
           find.bySemanticsIdentifier(loginTypeSegmentPasswordSigninId),
