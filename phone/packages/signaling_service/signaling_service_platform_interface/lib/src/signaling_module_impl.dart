@@ -201,14 +201,14 @@ class SignalingModuleImpl implements SignalingModule {
   @override
   Future<void>? execute(Request request) {
     final client = _client;
-    if (client != null) {
-      return _requestQueue.executeNow(
-        execute: client.execute,
-        request: request,
-        isActive: () => identical(_client, client),
-      );
-    }
-    return _requestQueue.enqueue(request);
+    final sent = client != null
+        ? _requestQueue.executeNow(
+            execute: client.execute,
+            request: request,
+            isActive: () => identical(_client, client),
+          )
+        : _requestQueue.enqueue(request);
+    return sent.then((_) => _eventBuffer.onRequest(request));
   }
 
   /// Initiates a connection. Fire-and-forget -- result arrives via [events].
