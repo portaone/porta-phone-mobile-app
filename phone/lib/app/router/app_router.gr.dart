@@ -1966,3 +1966,79 @@ class VoicemailTabPageRoute extends PageRouteInfo<void> {
     },
   );
 }
+
+/// generated route for
+/// [WatchTextScreenPage]
+class WatchTextScreenPageRoute
+    extends PageRouteInfo<WatchTextScreenPageRouteArgs> {
+  WatchTextScreenPageRoute({
+    required String text,
+    ExtendedTextStyle? style,
+    BackgroundStyle? background,
+    ThemeMode contentThemeOverride = ThemeMode.system,
+    List<PageRouteInfo>? children,
+  }) : super(
+         WatchTextScreenPageRoute.name,
+         args: WatchTextScreenPageRouteArgs(
+           text: text,
+           style: style,
+           background: background,
+           contentThemeOverride: contentThemeOverride,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'WatchTextScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<WatchTextScreenPageRouteArgs>();
+      return WatchTextScreenPage(
+        text: args.text,
+        style: args.style,
+        background: args.background,
+        contentThemeOverride: args.contentThemeOverride,
+      );
+    },
+  );
+}
+
+class WatchTextScreenPageRouteArgs {
+  const WatchTextScreenPageRouteArgs({
+    required this.text,
+    this.style,
+    this.background,
+    this.contentThemeOverride = ThemeMode.system,
+  });
+
+  final String text;
+
+  final ExtendedTextStyle? style;
+
+  final BackgroundStyle? background;
+
+  final ThemeMode contentThemeOverride;
+
+  @override
+  String toString() {
+    return 'WatchTextScreenPageRouteArgs{text: $text, style: $style, background: $background, contentThemeOverride: $contentThemeOverride}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! WatchTextScreenPageRouteArgs) return false;
+    return text == other.text &&
+        style == other.style &&
+        background == other.background &&
+        contentThemeOverride == other.contentThemeOverride;
+  }
+
+  @override
+  int get hashCode =>
+      text.hashCode ^
+      style.hashCode ^
+      background.hashCode ^
+      contentThemeOverride.hashCode;
+}

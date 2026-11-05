@@ -39,6 +39,12 @@ void main() {
     expect(AppShell.isNotificationInScope(const _AnyNotification(), active), isTrue);
   });
 
+  test('the text page a watch opens over any screen counts too', () {
+    final active = activeRoutes({WatchTextScreenPageRoute.name});
+
+    expect(AppShell.isNotificationInScope(const _AnyNotification(), active), isTrue);
+  });
+
   test('a route belonging to none of the scopes is not', () {
     // Nothing of the app's own is on screen - a notification here would land on
     // whatever the person is looking at instead.
