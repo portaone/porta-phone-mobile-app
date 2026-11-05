@@ -9,6 +9,8 @@ const String loginModeScreenSignUpButtonId = 'loginModeScreenSignUpButton';
 const loginModeScreenSignUpButtonKey = Key(loginModeScreenSignUpButtonId);
 const String loginModeScreenUrlButtonId = 'loginModeScreenUrlButton';
 const loginModeScreenUrlButtonKey = Key(loginModeScreenUrlButtonId);
+const String loginModeScreenGreetingId = 'loginModeScreenGreeting';
+const loginModeScreenGreetingKey = Key(loginModeScreenGreetingId);
 
 const String coreUrlInputId = 'coreUrlInput';
 const coreUrlInputKey = Key(coreUrlInputId);

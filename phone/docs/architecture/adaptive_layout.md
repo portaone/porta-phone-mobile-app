@@ -8,7 +8,7 @@ the first screen that got a second arrangement, the active call screen (see
 reference implementation). The next screens follow them rather than invent
 the shape again.
 
-Last reviewed: 2026-11-03.
+Last reviewed: 2026-11-05.
 
 ## The adaptation axes
 
@@ -63,7 +63,7 @@ as "State stays on the screen" below.
 
 | Screen | Watch arrangement |
 |---|---|
-| Login landing (`features/login/view/login_mode_select_*.dart`) | One launch button in a branded build: logo and greeting in the middle, the button filling the bottom edge (`WatchEdgeButton`). A demo build or several buttons: the brand in the middle, the buttons on the bottom of the face, the custom-core sign-in last. Nothing at the top of the face. |
+| Login landing (`features/login/view/login_mode_select_*.dart`) | One launch button in a branded build: logo and greeting in the middle, the button filling the bottom edge (`WatchEdgeButton`). The greeting is measured against the room above the button: one that fits keeps its size; a longer one - a brand's paragraph - is set smaller under a smaller logo, cut to the lines the room holds with a chevron, and a tap opens it whole on a page that scrolls (`WatchDrillIn`), going back returning to the landing; assistive technology reads it whole from the cut one. A demo build or several buttons: the brand in the middle, the buttons on the bottom of the face, the custom-core sign-in last. Nothing at the top of the face. |
 
 The watch parts of the kit, in `packages/adaptive_kit`. A screen's watch arrangement says what
 to show; how it sits on a face comes from these.
@@ -90,7 +90,7 @@ Screen shapes:
   widget can take the title's place; a cell without `onPressed` is shown disabled. The main
   hub, the ways in and a call's More are built on it.
 - `WatchDrillIn` - a menu first; a choice opens the content on the whole face, going back
-  returns to the menu. The ways in and the main hub are built on it.
+  returns to the menu. The login landing, the ways in and the main hub are built on it.
 - `WatchEdgeButton` - a screen's one action along the bottom of the face (of a screen that
   fills the window, with nothing under it). Its builder gets the style to merge over the
   button's own (`overlay.merge(themeStyle)`): the outline - `WatchEdgeButtonBorder`, a rounded
