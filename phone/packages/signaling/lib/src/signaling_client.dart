@@ -321,8 +321,9 @@ class WebtritSignalingClient {
       final elapsed = await _executeKeepaliveTransaction(defaultExecuteTransactionTimeoutDuration);
       _logger.finest('$_id handshake keepalive latency: $elapsed');
 
-      // Stop the keepalive loop if the socket was closed between send and response.
-      if (_wsc.closeCode == null) {
+      // Stop the keepalive loop if the client was disconnected or the socket was closed between
+      // send and response; disconnect() leaves closeCode unset until the peer's close frame comes.
+      if (_wscStreamSubscription != null && _wsc.closeCode == null) {
         _startKeepaliveTimer();
       }
     } on WebtritSignalingTransactionTimeoutException catch (e, stackTrace) {

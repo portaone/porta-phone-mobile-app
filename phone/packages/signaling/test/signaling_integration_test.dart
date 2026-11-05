@@ -159,6 +159,35 @@ void main() {
       });
     });
 
+    test('schedules no keepalive after a disconnect that follows the keepalive answer', () {
+      fakeAsync((async) {
+        final client = WebtritSignalingClient.inner(mockChannel);
+        client.listen(onStateHandshake: (_) {}, onEvent: (_) {}, onError: (_, _) {}, onDisconnect: (_, _) {});
+
+        final sent = <Map<String, dynamic>>[];
+        when(() => mockSink.add(any())).thenAnswer((invocation) {
+          sent.add(jsonDecode(invocation.positionalArguments.first as String) as Map<String, dynamic>);
+        });
+
+        streamController.add(_handshakeJson());
+        async.flushMicrotasks();
+
+        async.elapse(_kKeepaliveInterval);
+        final keepalive = sent.single;
+
+        // The answer is handled, then the client disconnects before the keepalive loop resumes.
+        // The socket has no close code yet: the peer's close frame has not come back.
+        streamController.add(jsonEncode({'handshake': 'keepalive', 'transaction': keepalive['transaction']}));
+        scheduleMicrotask(() => unawaited(client.disconnect()));
+        async.flushMicrotasks();
+        sent.clear();
+
+        async.elapse(_kKeepaliveInterval * 3);
+
+        expect(sent, isEmpty, reason: 'a keepalive timer outlived disconnect');
+      });
+    });
+
     test('should not restart keepalive timer when closeCode is set after successful keepalive', () {
       fakeAsync((async) {
         final client = WebtritSignalingClient.inner(mockChannel);
