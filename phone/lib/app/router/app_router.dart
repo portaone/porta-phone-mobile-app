@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:material_ui/material_ui.dart';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
@@ -13,6 +15,8 @@ import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 import 'package:webtrit_phone/resolvers/resolvers.dart';
+import 'package:webtrit_phone/theme/theme.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'deeplinks.dart';
 
@@ -127,6 +131,8 @@ class AppRouter extends RootStackRouter {
 
   @override
   List<AutoRoute> get routes => [
+    // Over every other route, as a text can be opened from any screen.
+    AutoRoute(page: WatchTextScreenPageRoute.page, path: '/watch-text'),
     AutoRoute(
       page: AppShellRoute.page,
       path: '/',

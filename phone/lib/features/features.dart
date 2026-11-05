@@ -30,3 +30,4 @@ export 'user_agreement/user_agreement.dart';
 export 'user_info/user_info.dart';
 export 'version_gate/version_gate.dart';
 export 'voicemail/voicemail.dart';
+export 'watch_text/watch_text.dart';

@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 
+import 'package:auto_route/auto_route.dart';
+
 import 'package:webtrit_phone/app/keys.dart';
+import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 import 'login_mode_select_params.dart';
@@ -37,8 +41,8 @@ class LoginModeSelectWatch extends StatelessWidget {
 
 /// The brand in the middle of the face, the one way in along its bottom.
 ///
-/// A greeting the face cuts short opens whole on a page of its own, and going
-/// back returns to the landing.
+/// A greeting the face cuts short opens whole on the watch's text page, and
+/// going back returns to the landing.
 class _EdgeLayout extends StatelessWidget {
   const _EdgeLayout({required this.params});
 
@@ -46,21 +50,28 @@ class _EdgeLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WatchDrillIn(
-      // The landing is the menu: the greeting's page opens only from the
-      // greeting itself.
-      menuFirst: true,
-      menu: (context, open) => WatchEdgeLayout(
-        body: _Brand(params: params, logoHeight: context.isSmallWatch ? 46 : 56, onMore: open),
-        edge: (context, overlay) => LoginModeSelectEntryButton(
-          entry: params.entries.single,
-          style: overlay.merge(params.buttonStyle),
-          // One line: the edge narrows with the face, so a second line would
-          // run past its curve.
-          maxLines: 1,
+    return WatchEdgeLayout(
+      body: _Brand(
+        params: params,
+        logoHeight: context.isSmallWatch ? 46 : 56,
+        onMore: () => unawaited(
+          context.router.root.push(
+            WatchTextScreenPageRoute(
+              text: params.greeting!,
+              style: _GreetingSize.style(context, params, _GreetingSize.read),
+              background: params.style?.background,
+              contentThemeOverride: params.style?.contentThemeOverride ?? ThemeMode.system,
+            ),
+          ),
         ),
       ),
-      content: _GreetingPage(params: params),
+      edge: (context, overlay) => LoginModeSelectEntryButton(
+        entry: params.entries.single,
+        style: overlay.merge(params.buttonStyle),
+        // One line: the edge narrows with the face, so a second line would
+        // run past its curve.
+        maxLines: 1,
+      ),
     );
   }
 }
@@ -146,7 +157,7 @@ abstract final class _GreetingSize {
   /// A greeting the brand area holds whole, as a name or a slogan.
   static double whole(BuildContext context) => context.isSmallWatch ? 16 : 18;
 
-  /// A greeting read as text: the list header and the greeting's own page.
+  /// A greeting read as text: the list header and the whole of it.
   static const read = 13.0;
 
   /// A greeting too long for [whole], on the landing.
@@ -369,28 +380,6 @@ class _GreetingTeaser extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// The greeting whole, on a page that scrolls.
-class _GreetingPage extends StatelessWidget {
-  const _GreetingPage({required this.params});
-
-  final LoginModeSelectParams params;
-
-  @override
-  Widget build(BuildContext context) {
-    final greeting = params.greeting;
-    if (greeting == null) return const SizedBox.shrink();
-    return WatchScrollList(
-      children: [
-        ExtendedText(
-          greeting,
-          extendedStyle: _GreetingSize.style(context, params, _GreetingSize.read),
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
 }
