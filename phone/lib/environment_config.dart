@@ -201,6 +201,15 @@ class EnvironmentConfig {
     const bool.fromEnvironment(IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING__NAME, defaultValue: false),
   );
 
+  // iOS, with the incoming queue on: while the app is in front and a call is in conversation, an
+  // incoming call waits in the app and iOS shows nothing over it; answered there, it enters
+  // CallKit as an outgoing call (the callkeep plugin's keepIncomingInAppInFront). Off by default.
+  static const IOS_KEEP_INCOMING_IN_APP_IN_FRONT__NAME = 'WEBTRIT_APP_IOS_KEEP_INCOMING_IN_APP_IN_FRONT';
+  static bool get IOS_KEEP_INCOMING_IN_APP_IN_FRONT => _env.boolean(
+    IOS_KEEP_INCOMING_IN_APP_IN_FRONT__NAME,
+    const bool.fromEnvironment(IOS_KEEP_INCOMING_IN_APP_IN_FRONT__NAME, defaultValue: false),
+  );
+
   // SMS-based incoming call trigger mechanism (fallback).
   // If enabled, the app listens for specially formatted incoming SMS messages to trigger incoming calls.
   static const CALL_TRIGGER_MECHANISM_SMS__NAME = 'WEBTRIT_CALL_TRIGGER_MECHANISM_SMS';
