@@ -198,6 +198,7 @@ sealed class _CallSignalingEvent extends CallEvent {
     required String callId,
     required String callee,
     required String caller,
+    required CallUpdateAttempt attempt,
     String? callerDisplayName,
     String? referredBy,
     String? replaceCallId,
@@ -453,6 +454,7 @@ class _CallSignalingEventCallUpdating extends _CallSignalingEvent {
     required this.callId,
     required this.callee,
     required this.caller,
+    required this.attempt,
     this.callerDisplayName,
     this.referredBy,
     this.replaceCallId,
@@ -478,6 +480,9 @@ class _CallSignalingEventCallUpdating extends _CallSignalingEvent {
 
   final JsepValue? jsep;
 
+  /// The attempt to handle this update, which the handler reports on.
+  final CallUpdateAttempt attempt;
+
   @override
   List<Object?> get props => [
     line,
@@ -489,6 +494,7 @@ class _CallSignalingEventCallUpdating extends _CallSignalingEvent {
     replaceCallId,
     isFocus,
     jsep,
+    attempt,
   ];
 }
 
@@ -1561,6 +1567,7 @@ sealed class _CallMutationEvent extends CallEvent {
     required String callId,
     required String caller,
     required String callee,
+    required CallUpdateAttempt attempt,
     String? callerDisplayName,
     JsepValue? jsep,
   }) = _CallMutationEventSignalingCallUpdating;
@@ -1906,6 +1913,7 @@ class _CallMutationEventSignalingCallUpdating extends _CallMutationEvent {
     required this.callId,
     required this.caller,
     required this.callee,
+    required this.attempt,
     this.callerDisplayName,
     this.jsep,
   });
@@ -1914,8 +1922,11 @@ class _CallMutationEventSignalingCallUpdating extends _CallMutationEvent {
   final String callee;
   final String? callerDisplayName;
   final JsepValue? jsep;
+
+  /// The attempt this stage ends.
+  final CallUpdateAttempt attempt;
   @override
-  List<Object?> get props => [callId, caller, callee, callerDisplayName, jsep];
+  List<Object?> get props => [callId, caller, callee, callerDisplayName, jsep, attempt];
 }
 
 // ── peer connection / ICE variants ───────────────────────────────────────────

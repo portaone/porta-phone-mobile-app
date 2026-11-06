@@ -490,6 +490,17 @@ void main() {
   // CallState — copyWithPopActiveCall clears a dangling selection
   // ---------------------------------------------------------------------------
 
+  group('CallState.connectedCalls', () {
+    test('holds only the calls whose media is up', () {
+      final up = _makeCall(callId: 'up');
+      final ringing = _makeCall(callId: 'ringing', processingStatus: CallProcessingStatus.incomingFromOffer);
+      final ending = _makeCall(callId: 'ending', processingStatus: CallProcessingStatus.disconnecting);
+      final state = CallState(activeCalls: [ringing, up, ending]);
+
+      expect(state.connectedCalls.map((call) => call.callId), ['up']);
+    });
+  });
+
   group('CallState.copyWithPopActiveCall — selection clamp', () {
     test('clears selectedCallId when the selected call is removed and none is ringing', () {
       final c1 = _makeCall(callId: 'c1');

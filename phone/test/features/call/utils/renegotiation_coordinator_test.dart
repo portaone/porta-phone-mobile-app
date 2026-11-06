@@ -40,14 +40,51 @@ void main() {
     });
   });
 
-  test('signaling reconnect returns renegotiation for every connected call', () {
+  test('a reconnect renegotiates every connected call from its handshake, once', () {
+    final commands = <RenegotiationCommand>[];
+    final coordinator = RenegotiationCoordinator(onCommand: commands.add);
+
+    coordinator.signalingConnected(['a', 'b']);
+    expect(commands, isEmpty, reason: 'nothing goes out before the handshake');
+
+    final fromHandshake = coordinator.handshakeReceived([
+      (callId: 'a', lineId: 1),
+      (callId: 'b', lineId: 2),
+    ], connection: coordinator.connection).toList();
+
+    expect(fromHandshake, hasLength(2));
+    expect(fromHandshake[0], isA<Renegotiate>().having((command) => command.callId, 'callId', 'a'));
+    expect(fromHandshake[1], isA<Renegotiate>().having((command) => command.lineId, 'lineId', 2));
+    expect(
+      coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: coordinator.connection),
+      isEmpty,
+      reason: 'a second handshake of the same connection owes nothing',
+    );
+  });
+
+  test('a handshake without a reconnect, or for a call not owed, renegotiates nothing', () {
     final coordinator = RenegotiationCoordinator(onCommand: (_) {});
 
-    final commands = coordinator.signalingConnected([(callId: 'a', lineId: 1), (callId: 'b', lineId: 2)]).toList();
+    expect(coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: coordinator.connection), isEmpty);
 
-    expect(commands, hasLength(2));
-    expect(commands[0], isA<Renegotiate>().having((command) => command.callId, 'callId', 'a'));
-    expect(commands[1], isA<Renegotiate>().having((command) => command.callId, 'callId', 'b'));
+    coordinator.signalingConnected(['a']);
+    expect(coordinator.handshakeReceived([(callId: 'b', lineId: 2)], connection: coordinator.connection), isEmpty);
+    expect(
+      coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: coordinator.connection),
+      isEmpty,
+      reason: 'what was owed went',
+    );
+  });
+
+  test('a handshake of an earlier connection leaves what is owed to the current one', () {
+    final coordinator = RenegotiationCoordinator(onCommand: (_) {});
+
+    coordinator.signalingConnected(['a']);
+    final first = coordinator.connection;
+    coordinator.signalingConnected(['a']);
+
+    expect(coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: first), isEmpty);
+    expect(coordinator.handshakeReceived([(callId: 'a', lineId: 1)], connection: coordinator.connection), hasLength(1));
   });
 
   test('updating retry waits and returns the same call', () async {
@@ -124,7 +161,7 @@ void main() {
     for (var attempt = 0; attempt < 4; attempt++) {
       coordinator.keepOffer('call', offer, signalingConnected: true);
     }
-    coordinator.signalingConnected([(callId: 'call', lineId: 1)]);
+    coordinator.signalingConnected(['call']);
     coordinator.keepOffer('call', offer, signalingConnected: true);
     coordinator.dispose();
 
@@ -171,7 +208,11 @@ void main() {
 
       expect(coordinator.replayableOffer('call'), same(offer));
       expect(commands, isEmpty);
-      expect(coordinator.signalingConnected([(callId: 'call', lineId: 1)]), contains(isA<Renegotiate>()));
+      coordinator.signalingConnected(['call']);
+      expect(
+        coordinator.handshakeReceived([(callId: 'call', lineId: 1)], connection: coordinator.connection),
+        contains(isA<Renegotiate>()),
+      );
     });
   });
 
@@ -189,7 +230,11 @@ void main() {
       expect(coordinator.hasKeptOffer('call'), isTrue);
       expect(commands, isEmpty, reason: 'the replay timer of the earlier failure is cancelled');
 
-      expect(coordinator.signalingConnected([(callId: 'call', lineId: 1)]), contains(isA<Renegotiate>()));
+      coordinator.signalingConnected(['call']);
+      expect(
+        coordinator.handshakeReceived([(callId: 'call', lineId: 1)], connection: coordinator.connection),
+        contains(isA<Renegotiate>()),
+      );
       expect(coordinator.replayableOffer('call'), same(offer));
     });
   });
