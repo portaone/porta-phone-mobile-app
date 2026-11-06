@@ -161,6 +161,7 @@ extension CallkeepIOSOptionsConverter on CallkeepIOSOptions {
       callWaitingToneOwnCallsOnly: callWaitingToneOwnCallsOnly,
       queueIncomingWhileRinging: queueIncomingWhileRinging,
       holdActiveBeforeThirdIncoming: holdActiveBeforeThirdIncoming,
+      keepIncomingInAppInFront: keepIncomingInAppInFront,
     );
   }
 }

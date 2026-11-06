@@ -27,6 +27,7 @@ class CallkeepIOSOptions extends Equatable {
     this.callWaitingToneOwnCallsOnly = true,
     this.queueIncomingWhileRinging = false,
     this.holdActiveBeforeThirdIncoming = false,
+    this.keepIncomingInAppInFront = false,
   });
 
   final String localizedName;
@@ -64,6 +65,15 @@ class CallkeepIOSOptions extends Equatable {
   /// the oldest call. Off by default.
   final bool holdActiveBeforeThirdIncoming;
 
+  /// iOS only, together with [queueIncomingWhileRinging]: while the app is in front and one of its
+  /// calls is in conversation, an incoming call waits in the app, outside CallKit, so iOS shows
+  /// nothing over the app; the call-waiting tone plays. Answered in the app, it enters CallKit as
+  /// an outgoing call, which brings up no system screen either (iOS's call history then lists it
+  /// as outgoing). It enters CallKit as an ordinary incoming call once the app goes to the
+  /// background or the screen locks, or once no call of the app is in conversation. Off by
+  /// default.
+  final bool keepIncomingInAppInFront;
+
   @override
   List<Object?> get props => [
     localizedName,
@@ -79,6 +89,7 @@ class CallkeepIOSOptions extends Equatable {
     callWaitingToneOwnCallsOnly,
     queueIncomingWhileRinging,
     holdActiveBeforeThirdIncoming,
+    keepIncomingInAppInFront,
   ];
 }
 
