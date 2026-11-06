@@ -65,6 +65,7 @@ class WebtritSignalingClient {
 
   final int _id;
   final Logger _logger;
+  final Set<String> _ignoredTypes = {};
 
   final WebSocketChannel _wsc;
   StreamSubscription? _wscStreamSubscription;
@@ -221,6 +222,13 @@ class WebtritSignalingClient {
       try {
         final event = Event.fromJson(eventJson);
         _onEvent(event);
+      } on UnknownEventTypeError catch (error) {
+        // Core can be newer than the app. An event type the app does not know
+        // says nothing about the connection, so it must not fail it. The same
+        // type can come often, so it is logged once per client.
+        if (_ignoredTypes.add(error.type)) {
+          _logger.warning('$_id _onMessage: ignoring unknown event ${error.type}');
+        }
       } catch (error, stackTrace) {
         _onError(error, stackTrace);
       }
@@ -237,7 +245,11 @@ class WebtritSignalingClient {
         _onError(error, stackTrace);
       }
     } else {
-      _onError(WebtritSignalingUnknownMessageException(_id, messageJson), StackTrace.current);
+      // A kind of message the app does not know says nothing about the connection.
+      final type = '${messageJson[Handshake.typeKey]}';
+      if (_ignoredTypes.add(type)) {
+        _logger.warning('$_id _onMessage: ignoring unknown message of ${messageJson.keys} ($type)');
+      }
     }
   }
 

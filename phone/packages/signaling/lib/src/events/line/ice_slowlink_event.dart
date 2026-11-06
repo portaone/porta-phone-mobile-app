@@ -40,7 +40,7 @@ class IceSlowLinkEvent extends LineEvent {
       transaction: json['transaction'],
       mid: json['mid'],
       line: json['line'],
-      media: IceMediaType.values.byName(json['media']),
+      media: IceMediaType.values.asNameMap()[json['media']] ?? IceMediaType.unknown,
       uplink: json['uplink'],
       lost: json['lost'],
     );

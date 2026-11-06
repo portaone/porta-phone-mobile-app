@@ -188,4 +188,52 @@ void main() {
       ),
     );
   });
+
+  group('$StateHandshake call_logs', () {
+    Map<String, dynamic> handshakeWith(List<dynamic> callLogs) =>
+        json.decode(
+              json.encode({
+                'handshake': 'state',
+                'keepalive_interval': 30000,
+                'timestamp': 1662114679648,
+                'registration': {'status': 'registered'},
+                'lines': [
+                  {'call_id': 'c1', 'call_logs': callLogs},
+                ],
+                'guest_line': {'call_id': null, 'call_logs': []},
+              }),
+            )
+            as Map<String, dynamic>;
+    final ringing = {'event': 'ringing'};
+
+    test('an unknown event type keeps its place', () {
+      final handshake = StateHandshake.fromJson(
+        handshakeWith([
+          [
+            2,
+            {'event': 'future_call_event'},
+          ],
+          [1, ringing],
+        ]),
+      );
+
+      final logs = handshake.lines.single!.callLogs;
+      expect(logs.first, const UnknownCallEventLog(timestamp: 2, eventType: 'future_call_event'));
+      expect(logs.last, isA<CallEventLog>());
+    });
+
+    test('a known event that fails to parse still fails the handshake', () {
+      expect(
+        () => StateHandshake.fromJson(
+          handshakeWith([
+            [
+              1,
+              {'event': 'hangup', 'code': 'not a number'},
+            ],
+          ]),
+        ),
+        throwsA(anything),
+      );
+    });
+  });
 }

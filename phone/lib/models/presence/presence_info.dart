@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 
 import 'presence_activity.dart';
 
-enum PresenceInfoSource { sip, direct }
+enum PresenceInfoSource { sip, direct, unknown }
 
 class PresenceInfo extends Equatable {
   const PresenceInfo({

@@ -85,10 +85,13 @@ Inbound messages, as `_onMessage` tells them apart:
   counterpart) with `typeValue`, `fromJson`, `toJson` and `props`; export it from that level's
   barrel (`call_events.dart`, `line_requests.dart`, ...).
 - Register `typeValue: X.fromJson` in that level's decoder map. An unregistered event type is
-  unknown: `Event.fromJson` throws `ArgumentError`, the client hands it to `onError`, and
+  unknown: `Event.fromJson` throws `UnknownEventTypeError`, the client logs the type once and goes
+  on, and the connection stays up; in a state handshake the entry stays in `call_logs` as an
+  `UnknownCallEventLog`. A message of no known kind is logged and skipped. Everything else that
+  fails to parse reaches `onError` - a `fromJson` that throws on a field, an `event` that is not a
+  string, an `error` event of no known shape, a state handshake that fails to decode - and
   `SignalingModuleImpl` treats any `onError` as a failed connection (`SignalingConnectionFailed`)
-  and drops the client. An event the server sends before the app knows it therefore costs a
-  reconnect; so does a `fromJson` that throws on a field.
+  and drops the client, so each of those costs a reconnect.
 - An unregistered request is not caught here, since the client only calls `toJson()`. It fails
   on Android: the foreground-service hub decodes every request it receives from the app isolate
   with `Request.fromJson` (`signaling_hub.dart`) and answers the execute with the error.
@@ -101,9 +104,8 @@ Inbound messages, as `_onMessage` tells them apart:
 A value the server may extend gets a fallback: `X.values.asNameMap()[raw] ?? X.unknown`, as
 `SignalingDialogState` in [events/global/dialog_info.dart](lib/src/events/global/dialog_info.dart).
 Never `X.values.byName(raw)`: an unknown value throws inside `fromJson`, which, as above, fails
-the connection. Several decoders still use `byName` (`state_handshake.dart`, `hold_request.dart`,
-`notify_event.dart`, `ice_media_event.dart`, `ice_slowlink_event.dart`, `presence_info.dart`);
-do not copy them.
+the connection. Two decoders still use `byName` (`state_handshake.dart` for the registration
+status, `hold_request.dart`); do not copy them.
 
 ## Key internals
 
@@ -133,7 +135,8 @@ All extend `WebtritSignalingException`:
 
 - `WebtritSignalingErrorException` - the server answered with an error code
 - `WebtritSignalingDisconnectedException` - `execute()` with no live subscription
-- `WebtritSignalingUnknownMessageException` - an inbound message of no known kind
+- `WebtritSignalingUnknownMessageException` - an inbound message of no known kind; the client no
+  longer raises it, the hub codec still carries it
 - `WebtritSignalingUnknownResponseException` - a response that is neither ack nor error
 - `WebtritSignalingBadStateException` - a write to a closed socket
 - `WebtritSignalingTransactionException` (abstract)

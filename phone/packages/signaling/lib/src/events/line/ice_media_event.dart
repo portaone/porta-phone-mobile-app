@@ -32,7 +32,7 @@ class IceMediaEvent extends LineEvent {
       transaction: json['transaction'],
       line: json['line'],
       mid: json['mid'],
-      type: IceMediaType.values.byName(json['type']),
+      type: IceMediaType.values.asNameMap()[json['type']] ?? IceMediaType.unknown,
       receiving: json['receiving'],
     );
   }

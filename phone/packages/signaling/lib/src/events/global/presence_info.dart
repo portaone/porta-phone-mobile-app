@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum SignalingPresenceInfoSource { sip, direct }
+enum SignalingPresenceInfoSource { sip, direct, unknown }
 
 class SignalingPresenceInfo extends Equatable {
   const SignalingPresenceInfo({
@@ -42,7 +42,7 @@ class SignalingPresenceInfo extends Equatable {
       timestamp: json['timestamp'],
       activities: activities,
       arrivalTime: DateTime.parse(json['arrival_time'] as String),
-      source: SignalingPresenceInfoSource.values.byName(json['source'] as String),
+      source: SignalingPresenceInfoSource.values.asNameMap()[json['source']] ?? SignalingPresenceInfoSource.unknown,
     );
   }
 
