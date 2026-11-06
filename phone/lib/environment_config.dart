@@ -182,6 +182,16 @@ class EnvironmentConfig {
         _REMOTE_LOGZIO_LOGGING_BUFFER_SIZE__KB,
   );
 
+  // iOS: keep at most one incoming call ringing in CallKit - one that comes while another rings
+  // waits outside CallKit until that one is answered or ends (the callkeep plugin's incoming
+  // queue, the order the Android core keeps). Off by default: every incoming call registers with
+  // CallKit at once, as before.
+  static const IOS_QUEUE_INCOMING_WHILE_RINGING__NAME = 'WEBTRIT_APP_IOS_QUEUE_INCOMING_WHILE_RINGING';
+  static bool get IOS_QUEUE_INCOMING_WHILE_RINGING => _env.boolean(
+    IOS_QUEUE_INCOMING_WHILE_RINGING__NAME,
+    const bool.fromEnvironment(IOS_QUEUE_INCOMING_WHILE_RINGING__NAME, defaultValue: false),
+  );
+
   // SMS-based incoming call trigger mechanism (fallback).
   // If enabled, the app listens for specially formatted incoming SMS messages to trigger incoming calls.
   static const CALL_TRIGGER_MECHANISM_SMS__NAME = 'WEBTRIT_CALL_TRIGGER_MECHANISM_SMS';
