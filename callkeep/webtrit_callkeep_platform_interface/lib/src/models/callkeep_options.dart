@@ -25,6 +25,7 @@ class CallkeepIOSOptions extends Equatable {
     this.includesCallsInRecents = true,
     this.driveIdleTimerDisabled = true,
     this.callWaitingToneOwnCallsOnly = true,
+    this.queueIncomingWhileRinging = false,
   });
 
   final String localizedName;
@@ -43,6 +44,16 @@ class CallkeepIOSOptions extends Equatable {
   /// other VoIP apps) also count towards the connected/ringing combination.
   final bool callWaitingToneOwnCallsOnly;
 
+  /// iOS only: keep at most one of this app's incoming calls ringing in CallKit. A call that
+  /// arrives while another one rings waits outside CallKit - the app has it, the system does
+  /// not show it - and enters CallKit as an ordinary incoming call once the ringing one is
+  /// answered (then it rings beside it) or ends. Answering a waiting call makes the two change
+  /// places: the ringing one waits in turn and comes back once the taken call is connected, so
+  /// whichever call the user picks, the other is kept. Off by default: every incoming call
+  /// registers with CallKit at once, as before - and with two ringing there, the system's own
+  /// Accept on one ends the other.
+  final bool queueIncomingWhileRinging;
+
   @override
   List<Object?> get props => [
     localizedName,
@@ -56,6 +67,7 @@ class CallkeepIOSOptions extends Equatable {
     includesCallsInRecents,
     driveIdleTimerDisabled,
     callWaitingToneOwnCallsOnly,
+    queueIncomingWhileRinging,
   ];
 }
 
