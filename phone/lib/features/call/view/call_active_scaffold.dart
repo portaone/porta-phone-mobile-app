@@ -22,6 +22,7 @@ class CallActiveScaffold extends StatefulWidget {
   const CallActiveScaffold({
     super.key,
     required this.callStatus,
+    this.voiceNoiseReductionFailed = false,
     required this.activeCalls,
     required this.focusedCall,
     required this.audioDevice,
@@ -42,6 +43,10 @@ class CallActiveScaffold extends StatefulWidget {
   });
 
   final CallStatus callStatus;
+
+  /// Whether the voice noise reduction asked for did not start on the open microphone.
+  final bool voiceNoiseReductionFailed;
+
   final List<ActiveCall> activeCalls;
 
   /// The call the info block and the action area act on (see
@@ -445,6 +450,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                     callStatus: widget.callStatus,
                     popupMenuItems: _buildPopupMenuItems,
                     params: CallControlsParams(
+                      voiceNoiseReductionFailed: widget.voiceNoiseReductionFailed,
                       activeCalls: widget.activeCalls,
                       focusedCall: widget.focusedCall,
                       audioDevice: widget.audioDevice,

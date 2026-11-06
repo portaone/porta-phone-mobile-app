@@ -183,6 +183,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_SemanticsLabel_merge' => call_SemanticsLabel_merge,
       'call_CallList_statusOnCall' => call_CallList_statusOnCall,
       'call_ToolbarStatus_connecting' => call_ToolbarStatus_connecting,
+      'call_ToolbarStatus_noiseReductionOff' =>
+        call_ToolbarStatus_noiseReductionOff,
       'call_ToolbarStatus_reconnecting' => call_ToolbarStatus_reconnecting,
       'call_description_held' => call_description_held,
       'call_description_peerReportsMuted' => call_description_peerReportsMuted,

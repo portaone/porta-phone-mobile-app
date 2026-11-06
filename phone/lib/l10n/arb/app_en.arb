@@ -568,6 +568,10 @@
   "@call_ToolbarStatus_connecting": {
     "description": "Toolbar status line while the very first signaling connection is being established (turns into Reconnecting once a connection has existed)."
   },
+  "call_ToolbarStatus_noiseReductionOff": "Noise reduction is off",
+  "@call_ToolbarStatus_noiseReductionOff": {
+    "description": "Call screen toolbar status line when extra noise reduction was on in media settings and did not start. Also added to the name of the mute control."
+  },
   "call_ToolbarStatus_reconnecting": "Reconnecting...",
   "@call_ToolbarStatus_reconnecting": {
     "description": "Suffix on the call screen toolbar status line while the signaling connection is being re-established."

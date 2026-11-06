@@ -1,11 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/styles/styles.dart';
 import 'package:webtrit_phone/utils/utils.dart';
+import 'package:webtrit_phone/widgets/widgets.dart';
 
 import '../extensions/extensions.dart';
 import '../models/models.dart';
@@ -22,6 +24,9 @@ import 'call_network_quality_meter.dart';
 /// 2. a real media failure ([IceConnectionIssue]) - warning glyph + message;
 /// 3. media degradation ([CallNetworkQuality], worst across calls) - signal
 ///    bars + direction arrow + an always-visible label.
+/// 4. the voice noise reduction that was asked for and did not start: the call
+///    is fine and only sounds as it would without the setting, so anything
+///    above takes the line first.
 /// Renders nothing while everything is healthy. Status flaps during reconnect
 /// backoff are debounced the same way the old in-info message was.
 class CallToolbarStatus extends StatefulWidget {
@@ -30,12 +35,14 @@ class CallToolbarStatus extends StatefulWidget {
     required this.callStatus,
     this.networkQuality,
     this.iceConnectionIssue,
+    this.voiceNoiseReductionFailed = false,
     this.style,
   });
 
   final CallStatus callStatus;
   final CallNetworkQuality? networkQuality;
   final IceConnectionIssue? iceConnectionIssue;
+  final bool voiceNoiseReductionFailed;
   final CallInfoStyle? style;
 
   @override
@@ -154,6 +161,26 @@ class _CallToolbarStatusState extends State<CallToolbarStatus> {
             ),
           ),
         ],
+      );
+    } else if (widget.voiceNoiseReductionFailed) {
+      content = SemanticId(
+        key: const ValueKey('toolbar-noise-reduction'),
+        identifier: callToolbarNoiseReductionOffId,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StatusDot(color: warningColor, pulsing: false),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                context.l10n.call_ToolbarStatus_noiseReductionOff,
+                style: baseStyle?.copyWith(fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       );
     } else {
       content = const SizedBox.shrink(key: ValueKey('toolbar-none'));

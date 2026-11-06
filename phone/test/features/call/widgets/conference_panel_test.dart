@@ -55,6 +55,7 @@ void main() {
     List<ActiveCall>? calls,
     bool scrollable = false,
     bool roomParked = false,
+    bool noiseReductionFailed = false,
   }) => MaterialApp(
     locale: const Locale('en'),
     localizationsDelegates: appLocalizationsDelegates,
@@ -68,6 +69,7 @@ void main() {
           conference: conference ?? _room(),
           calls: calls ?? [_call('a', displayName: 'Anna Marchenko'), _call('b', line: 1, displayName: 'Boris Klein')],
           roomParked: roomParked,
+          noiseReductionFailed: noiseReductionFailed,
           onSwitchToConference: switched.add,
           onSelfMutedChanged: selfMutes.add,
           onParticipantMutedChanged: (callId, muted) => participantMutes.add((callId: callId, muted: muted)),
@@ -78,6 +80,13 @@ void main() {
   );
 
   group('ConferencePanel', () {
+    testWidgets('marks the host microphone when the noise reduction did not start', (tester) async {
+      await tester.pumpWidget(subject(noiseReductionFailed: true));
+
+      expect(find.byKey(const ValueKey('call-attention-dot')), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('lists the host and every leg, by line', (tester) async {
       await tester.pumpWidget(subject());
       final context = tester.element(find.byType(ConferencePanel));

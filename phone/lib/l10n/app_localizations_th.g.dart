@@ -488,6 +488,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_ToolbarStatus_connecting => 'กำลังเชื่อมต่อ...';
 
   @override
+  String get call_ToolbarStatus_noiseReductionOff => 'ปิดการลดเสียงรบกวนแล้ว';
+
+  @override
   String get call_ToolbarStatus_reconnecting => 'กำลังเชื่อมต่อใหม่...';
 
   @override
