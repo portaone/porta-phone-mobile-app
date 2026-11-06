@@ -607,6 +607,7 @@ abstract final class CallMapper {
       audio: CallAudioConfig(
         speakerOnMinimize: audioConfig.speakerOnMinimize,
         speakerOnMinimizeConfigurable: audioConfig.speakerOnMinimizeConfigurable,
+        voiceNoiseReduction: audioConfig.voiceNoiseReduction,
       ),
       peerConnection: PeerConnectionSettings(
         negotiationSettings: NegotiationSettings(

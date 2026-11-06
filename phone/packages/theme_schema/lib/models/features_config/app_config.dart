@@ -387,7 +387,11 @@ class AppConfigIce with _$AppConfigIce {
 @freezed
 @JsonSerializable(explicitToJson: true)
 class AppConfigCallAudio with _$AppConfigCallAudio {
-  const AppConfigCallAudio({this.speakerOnMinimize = true, this.speakerOnMinimizeConfigurable = false});
+  const AppConfigCallAudio({
+    this.speakerOnMinimize = true,
+    this.speakerOnMinimizeConfigurable = false,
+    this.voiceNoiseReduction = false,
+  });
 
   /// Whether an audio call moves to the loudspeaker when its screen is left
   /// and back to the earpiece when the screen is opened again.
@@ -399,6 +403,13 @@ class AppConfigCallAudio with _$AppConfigCallAudio {
   /// Whether media settings offers the control, so a person can change
   /// [speakerOnMinimize] on their own device.
   final bool speakerOnMinimizeConfigurable;
+
+  /// Whether RNNoise runs on the voice a person sends, for a person who has not
+  /// chosen on their own device.
+  ///
+  /// Media settings always offers the switch, and a choice made there wins. A
+  /// phone the noise reduction cannot run on ignores this.
+  final bool voiceNoiseReduction;
 
   factory AppConfigCallAudio.fromJson(Map<String, Object?> json) => _$AppConfigCallAudioFromJson(json);
 

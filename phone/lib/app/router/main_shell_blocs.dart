@@ -146,7 +146,8 @@ class MainShellBlocs extends StatelessWidget {
               audioTrackLifecycle: VoiceNoiseReduction.isSupported
                   ? VoiceNoiseReduction(
                       isEnabled: () =>
-                          audioProcessingSettingsRepository.getAudioProcessingSettings().voiceNoiseReduction == true,
+                          audioProcessingSettingsRepository.getAudioProcessingSettings().voiceNoiseReduction ??
+                          featureAccess.callConfig.audio.voiceNoiseReduction,
                     )
                   : null,
               videoConstraintsBuilder: VideoConstraintsWithAppSettingsBuilder(videoCapturingSettingsRepository),

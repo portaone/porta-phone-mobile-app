@@ -79,8 +79,9 @@ class AudioProcessingContent extends StatelessWidget {
             InlineChoosableSection<bool>(
               title: context.l10n.settings_audioProcessing_Section_VNR_title,
               sectionId: 'audioProcessingVnr',
-              // Two choices, off and on: there is no platform default to show as "auto", so the
-              // section's leading null choice stands for off.
+              // Two choices, off and on: the default is the deployment's, not the platform's, so
+              // there is no "auto" to show. The section's leading null choice stands for off and
+              // stores an explicit false, so a person's off is not read as the deployment's on.
               optionIdValue: (option) => option == true ? 'on' : 'off',
               buildOptionTitle: (option) => Text(
                 option == true
@@ -88,9 +89,10 @@ class AudioProcessingContent extends StatelessWidget {
                     : context.l10n.settings_encoding_Section_value_off,
               ),
               options: const [true],
-              selected: audioProcessingSettings.voiceNoiseReduction == true ? true : null,
-              onSelect: (option) =>
-                  cubit.setAudioProcessingSettings(audioProcessingSettings.copyWithVoiceNoiseReduction(option)),
+              selected: (audioProcessingSettings.voiceNoiseReduction ?? cubit.voiceNoiseReductionDefault) ? true : null,
+              onSelect: (option) => cubit.setAudioProcessingSettings(
+                audioProcessingSettings.copyWithVoiceNoiseReduction(option ?? false),
+              ),
             ),
             InlineChoosableSection<bool>(
               title: context.l10n.settings_audioProcessing_Section_HPF_title,
