@@ -8,6 +8,7 @@ class AudioProcessingSettings extends Equatable {
     this.noiseSuppression,
     this.highpassFilter,
     this.audioMirroring,
+    this.voiceNoiseReduction,
   });
 
   final bool? bypassVoiceProcessing;
@@ -17,6 +18,10 @@ class AudioProcessingSettings extends Equatable {
   final bool? highpassFilter;
   final bool? audioMirroring;
 
+  /// RNNoise on the outgoing voice, after the platform's own processing. Null and false both
+  /// mean off: unlike the fields above it has no platform default to fall back to.
+  final bool? voiceNoiseReduction;
+
   @override
   List<Object?> get props => [
     bypassVoiceProcessing,
@@ -25,11 +30,12 @@ class AudioProcessingSettings extends Equatable {
     noiseSuppression,
     highpassFilter,
     audioMirroring,
+    voiceNoiseReduction,
   ];
 
   @override
   String toString() {
-    return 'AudioProcessingSettings{bypassVoiceProcessing: $bypassVoiceProcessing, echoCancellation: $echoCancellation, autoGainControl: $autoGainControl, noiseSuppression: $noiseSuppression, highpassFilter: $highpassFilter, audioMirroring: $audioMirroring}';
+    return 'AudioProcessingSettings{bypassVoiceProcessing: $bypassVoiceProcessing, echoCancellation: $echoCancellation, autoGainControl: $autoGainControl, noiseSuppression: $noiseSuppression, highpassFilter: $highpassFilter, audioMirroring: $audioMirroring, voiceNoiseReduction: $voiceNoiseReduction}';
   }
 
   factory AudioProcessingSettings.blank() => const AudioProcessingSettings();
@@ -42,6 +48,7 @@ class AudioProcessingSettings extends Equatable {
       noiseSuppression: noiseSuppression,
       highpassFilter: highpassFilter,
       audioMirroring: audioMirroring,
+      voiceNoiseReduction: voiceNoiseReduction,
     );
   }
 
@@ -53,6 +60,7 @@ class AudioProcessingSettings extends Equatable {
       noiseSuppression: noiseSuppression,
       highpassFilter: highpassFilter,
       audioMirroring: audioMirroring,
+      voiceNoiseReduction: voiceNoiseReduction,
     );
   }
 
@@ -64,6 +72,7 @@ class AudioProcessingSettings extends Equatable {
       noiseSuppression: noiseSuppression,
       highpassFilter: highpassFilter,
       audioMirroring: audioMirroring,
+      voiceNoiseReduction: voiceNoiseReduction,
     );
   }
 
@@ -75,6 +84,7 @@ class AudioProcessingSettings extends Equatable {
       noiseSuppression: noiseSuppression,
       highpassFilter: highpassFilter,
       audioMirroring: audioMirroring,
+      voiceNoiseReduction: voiceNoiseReduction,
     );
   }
 
@@ -86,6 +96,7 @@ class AudioProcessingSettings extends Equatable {
       noiseSuppression: noiseSuppression,
       highpassFilter: highpassFilter,
       audioMirroring: audioMirroring,
+      voiceNoiseReduction: voiceNoiseReduction,
     );
   }
 
@@ -97,6 +108,19 @@ class AudioProcessingSettings extends Equatable {
       noiseSuppression: noiseSuppression,
       highpassFilter: highpassFilter,
       audioMirroring: audioMirroring,
+      voiceNoiseReduction: voiceNoiseReduction,
+    );
+  }
+
+  AudioProcessingSettings copyWithVoiceNoiseReduction(bool? voiceNoiseReduction) {
+    return AudioProcessingSettings(
+      bypassVoiceProcessing: bypassVoiceProcessing,
+      echoCancellation: echoCancellation,
+      autoGainControl: autoGainControl,
+      noiseSuppression: noiseSuppression,
+      highpassFilter: highpassFilter,
+      audioMirroring: audioMirroring,
+      voiceNoiseReduction: voiceNoiseReduction,
     );
   }
 }

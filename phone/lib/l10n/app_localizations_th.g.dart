@@ -2765,7 +2765,7 @@ class AppLocalizationsTh extends AppLocalizations {
   String get settings_audioProcessing_Section_HPF_title => 'ตัวกรองความถี่สูงผ่าน';
 
   @override
-  String get settings_audioProcessing_Section_NS_title => 'การลดเสียงรบกวน';
+  String get settings_audioProcessing_Section_NS_title => 'การลดเสียงรบกวนของระบบ';
 
   @override
   String get settings_audioProcessing_Section_title => 'การประมวลผลเสียงเบื้องต้น';
@@ -2773,6 +2773,9 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get settings_audioProcessing_Section_tooltip =>
       'สามารถใช้เพื่อปรับคุณภาพเสียงสำหรับความต้องการหรือสภาพแวดล้อมเฉพาะ เช่น การบันทึกในสตูดิโอ หรือไมโครโฟนภายนอก \n\nข้ามการประมวลผลเสียง - สั่งให้ระบบไม่ใช้การประมวลผลเสียงด้วยฮาร์ดแวร์ (ต้องรีสตาร์ทแอป)';
+
+  @override
+  String get settings_audioProcessing_Section_VNR_title => 'การลดเสียงรบกวนเพิ่มเติม (RNNoise)';
 
   @override
   String get settings_audioProcessing_Section_VP_title => 'ข้ามการประมวลผลเสียง';

@@ -12,6 +12,16 @@ class MockMediaStreamTrack extends Mock implements MediaStreamTrack {}
 
 class FakeMediaStreamTrack extends Fake implements MediaStreamTrack {}
 
+class _RecordingLifecycle implements AudioTrackLifecycle {
+  final events = <String>[];
+
+  @override
+  Future<void> onAudioTrackAcquired() async => events.add('acquired');
+
+  @override
+  Future<void> onAudioTrackReleased() async => events.add('released');
+}
+
 class _TestMediaStreamFactory {
   int _counter = 0;
 
@@ -95,11 +105,42 @@ void main() {
     fakeCreateLocalStream = (_) async => localStreamFactory.create();
   });
 
-  DefaultUserMediaBuilder builder({Future<bool> Function()? isCameraPermissionGranted}) => DefaultUserMediaBuilder(
+  DefaultUserMediaBuilder builder({
+    Future<bool> Function()? isCameraPermissionGranted,
+    AudioTrackLifecycle? audioTrackLifecycle,
+  }) => DefaultUserMediaBuilder(
     isCameraPermissionGranted: isCameraPermissionGranted,
     getUserMedia: fakeGetUserMedia,
     createLocalStream: fakeCreateLocalStream,
+    audioTrackLifecycle: audioTrackLifecycle,
   );
+
+  group('DefaultUserMediaBuilder - audio track lifecycle', () {
+    test('reports one acquire and one release per pooled track, not per stream', () async {
+      final lifecycle = _RecordingLifecycle();
+      final subject = builder(audioTrackLifecycle: lifecycle);
+
+      final first = await subject.build(video: false);
+      final second = await subject.build(video: false);
+      expect(lifecycle.events, ['acquired']);
+
+      await subject.release(first);
+      expect(lifecycle.events, ['acquired']);
+
+      await subject.release(second);
+      expect(lifecycle.events, ['acquired', 'released']);
+    });
+
+    test('reports a fresh acquire after the track was released', () async {
+      final lifecycle = _RecordingLifecycle();
+      final subject = builder(audioTrackLifecycle: lifecycle);
+
+      await subject.release(await subject.build(video: false));
+      await subject.build(video: false);
+
+      expect(lifecycle.events, ['acquired', 'released', 'acquired']);
+    });
+  });
 
   group('DefaultUserMediaBuilder — pooling', () {
     test('reuses pooled audio track for multiple streams', () async {

@@ -2811,7 +2811,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_audioProcessing_Section_HPF_title => 'Filtro passa-alto';
 
   @override
-  String get settings_audioProcessing_Section_NS_title => 'Soppressione del rumore';
+  String get settings_audioProcessing_Section_NS_title => 'Soppressione del rumore di sistema';
 
   @override
   String get settings_audioProcessing_Section_title => 'Pre-elaborazione audio';
@@ -2819,6 +2819,9 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get settings_audioProcessing_Section_tooltip =>
       'Può essere utilizzato per regolare la qualità audio per esigenze o ambienti specifici. Come la registrazione in studio o un microfono esterno. \n\nBypass elaborazione vocale: indica al sistema di non applicare l\'elaborazione vocale hardware (richiede il riavvio dell\'app).';
+
+  @override
+  String get settings_audioProcessing_Section_VNR_title => 'Riduzione del rumore aggiuntiva (RNNoise)';
 
   @override
   String get settings_audioProcessing_Section_VP_title => 'Bypassare l\'elaborazione vocale';

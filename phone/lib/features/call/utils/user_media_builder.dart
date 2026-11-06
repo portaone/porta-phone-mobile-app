@@ -18,6 +18,16 @@ abstract class UserMediaBuilder {
   Future<void> release(MediaStream stream);
 }
 
+/// Told when the shared microphone track is opened fresh and when it is stopped.
+///
+/// Called inside the builder's serial queue, once per track, not once per borrowed stream, so an
+/// acquire and a release never overlap. An implementation must not throw.
+abstract interface class AudioTrackLifecycle {
+  Future<void> onAudioTrackAcquired();
+
+  Future<void> onAudioTrackReleased();
+}
+
 class DefaultUserMediaBuilder implements UserMediaBuilder {
   DefaultUserMediaBuilder({
     this.audioConstraintsBuilder,
@@ -25,6 +35,7 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
     this.isCameraPermissionGranted,
     this.getUserMedia,
     this.createLocalStream,
+    this.audioTrackLifecycle,
   });
 
   final AudioConstraintsBuilder? audioConstraintsBuilder;
@@ -48,6 +59,9 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
   /// Defaults to the real platform API when [null].
   @visibleForTesting
   final Future<MediaStream> Function(String label)? createLocalStream;
+
+  /// Observer of the shared microphone track, such as the voice noise reduction.
+  final AudioTrackLifecycle? audioTrackLifecycle;
 
   final Map<String, _BorrowedStreamLease> _borrowedStreams = {};
   _PooledTrack? _audioTrack;
@@ -185,6 +199,7 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
     }
 
     _audioTrack = _PooledTrack(track: track, sourceStream: sourceStream)..references = 1;
+    await audioTrackLifecycle?.onAudioTrackAcquired();
     return track;
   }
 
@@ -223,6 +238,7 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
     _audioTrack = null;
     await pooledTrack.track.stop();
     await pooledTrack.sourceStream.dispose();
+    await audioTrackLifecycle?.onAudioTrackReleased();
   }
 
   Future<void> _releaseVideoTrack(String? trackId) async {

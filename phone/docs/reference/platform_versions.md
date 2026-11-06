@@ -53,10 +53,11 @@ they would build with an older toolchain.
 - **Flutter.** Flutter 3.47 builds Android apps from API 24 (`minSdkVersion` in
   `FlutterExtension.kt` of `flutter_tools`). Flutter raised its floor from 21 to 24 in 3.35;
   the last release line that builds API 21-23 is 3.32. Going below 24 means freezing Flutter.
-- **WebRTC.** The `flutter_webrtc` fork (`po/1.6.3-1` in `phone/pubspec.yaml`)
-  declares `minSdkVersion 21`, so it does not hold the floor. A declared floor of a dependency
-  is not proof, though: a plugin can declare 21 and still call an API 26 method on the call
-  path. Neither lint nor a grep finds that; only a run on an API 24 device or emulator does.
+- **WebRTC.** The `flutter_webrtc` fork (`po/1.6.3-1`, under `dependency_overrides` in
+  `phone/pubspec.yaml`) declares `minSdkVersion 21`, so it does not hold the floor. A declared
+  floor of a dependency is not proof, though: a plugin can declare 21 and still call an API 26
+  method on the call path. Neither lint nor a grep finds that; only a run on an API 24 device
+  or emulator does.
 - **Telecom.** The app is a VoIP app, not the system dialer, so on the Telecom path callkeep
   needs a self-managed `PhoneAccount` (`PhoneAccount.CAPABILITY_SELF_MANAGED`, API 26).
   `ConnectionService` itself exists from API 23, but without the self-managed capability the

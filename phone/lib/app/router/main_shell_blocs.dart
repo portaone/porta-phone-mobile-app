@@ -143,6 +143,12 @@ class MainShellBlocs extends StatelessWidget {
             final appPermissions = context.read<AppPermissions>();
             final userMediaBuilder = DefaultUserMediaBuilder(
               audioConstraintsBuilder: AudioConstraintsWithAppSettingsBuilder(audioProcessingSettingsRepository),
+              audioTrackLifecycle: VoiceNoiseReduction.isSupported
+                  ? VoiceNoiseReduction(
+                      isEnabled: () =>
+                          audioProcessingSettingsRepository.getAudioProcessingSettings().voiceNoiseReduction == true,
+                    )
+                  : null,
               videoConstraintsBuilder: VideoConstraintsWithAppSettingsBuilder(videoCapturingSettingsRepository),
               isCameraPermissionGranted: () => appPermissions.isPermissionGranted(Permission.camera),
             );
