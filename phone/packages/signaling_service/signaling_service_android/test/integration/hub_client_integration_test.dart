@@ -585,6 +585,56 @@ void main() {
       expect(events.whereType<SignalingHandshakeReceived>(), hasLength(1));
     });
 
+    test('late subscriber sees the answer an earlier one gave to an update', () async {
+      fakeClient.injectHandshake(
+        StateHandshake(
+          keepaliveInterval: const Duration(seconds: 30),
+          timestamp: 1705322000000,
+          registration: const Registration(status: RegistrationStatus.registered),
+          lines: [
+            Line(
+              callId: 'call-u',
+              callLogs: [const CallEventLog(timestamp: 1, callEvent: AcceptedEvent(line: 0, callId: 'call-u'))],
+            ),
+          ],
+          presenceInfos: const [],
+          dialogInfos: const [],
+          guestLine: null,
+        ),
+      );
+      fakeClient.injectEvent(
+        const UpdatingCallEvent(
+          line: 0,
+          callId: 'call-u',
+          caller: 'alice',
+          callee: 'bob',
+          jsep: {'type': 'offer', 'sdp': 'v=0'},
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final first = await _subscribeClient('answering');
+      addTearDown(first.dispose);
+      await first
+          .execute(
+            UpdateRequest(transaction: 'tx-answer', line: 0, callId: 'call-u', jsep: {'type': 'answer', 'sdp': 'v=0'}),
+          )
+          .timeout(const Duration(seconds: 2));
+
+      // A subscriber that comes later (the app's screen made again while the
+      // service kept the socket) reads the session from the replayed handshake.
+      final late = await _subscribeClient('late-after-answer');
+      addTearDown(late.dispose);
+      final events = <SignalingModuleEvent>[];
+      late.events.listen(events.add);
+      await Future<void>.delayed(Duration.zero);
+
+      final logs = events.whereType<SignalingHandshakeReceived>().single.handshake.lines.single!.callLogs;
+      expect(logs.first, isA<CallRequestLog>(), reason: 'the update is answered: it must not be answered again');
+      expect(((logs.first as CallRequestLog).callRequest as UpdateRequest).jsep['type'], 'answer');
+      expect(logs[1], isA<CallEventLog>().having((l) => l.callEvent, 'event', isA<UpdatingCallEvent>()));
+    });
+
     test('new session clears buffer -- late subscriber sees only new session', () async {
       // Session 1: connect, handshake, then disconnect.
       fakeClient.injectHandshake(_kHandshake);

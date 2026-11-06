@@ -256,6 +256,51 @@ void main() {
       expect((guest!.callLogs.single as CallEventLog).callEvent, isA<AcceptedEvent>());
     });
 
+    test('roundtrip keeps the client\'s requests in a call\'s log', () {
+      final handshake = StateHandshake(
+        keepaliveInterval: const Duration(seconds: 30),
+        timestamp: 1,
+        registration: const Registration(status: RegistrationStatus.registered),
+        lines: [
+          Line(
+            callId: 'a',
+            callLogs: [
+              CallRequestLog(
+                timestamp: 7,
+                callRequest: UpdateRequest(
+                  transaction: 't',
+                  line: 0,
+                  callId: 'a',
+                  jsep: const {'type': 'answer', 'sdp': 'v=0'},
+                ),
+              ),
+              const CallEventLog(
+                timestamp: 6,
+                callEvent: UpdatingCallEvent(
+                  line: 0,
+                  callId: 'a',
+                  caller: '1',
+                  callee: '2',
+                  jsep: {'type': 'offer', 'sdp': 'v=0'},
+                ),
+              ),
+            ],
+          ),
+        ],
+        presenceInfos: const [],
+        dialogInfos: const [],
+        guestLine: null,
+      );
+      final decoded = decodeHubEvent(encodeHubEvent(SignalingHandshakeReceived(handshake: handshake)));
+      final logs = (decoded as SignalingHandshakeReceived).handshake.lines.single!.callLogs;
+      // The answer is what tells an update the client answered from one it still owes.
+      expect(logs, hasLength(2));
+      final answer = (logs.first as CallRequestLog).callRequest as UpdateRequest;
+      expect(answer.jsep['type'], 'answer');
+      expect(answer.callId, 'a');
+      expect(logs.first.timestamp, 7);
+    });
+
     test('roundtrip preserves a running conference', () {
       const conference = ConferenceInfo(
         room: 4242,
