@@ -1273,6 +1273,74 @@ class LoginSwitchScreenPageRouteArgs {
 }
 
 /// generated route for
+/// [LoginTypeSelectScreenPage]
+class LoginTypeSelectScreenPageRoute
+    extends PageRouteInfo<LoginTypeSelectScreenPageRouteArgs> {
+  LoginTypeSelectScreenPageRoute({
+    required List<LoginType> supportedLoginTypes,
+    List<PageRouteInfo>? children,
+  }) : super(
+         LoginTypeSelectScreenPageRoute.name,
+         args: LoginTypeSelectScreenPageRouteArgs(
+           supportedLoginTypes: supportedLoginTypes,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'LoginTypeSelectScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<LoginTypeSelectScreenPageRouteArgs>();
+      return LoginTypeSelectScreenPage(
+        supportedLoginTypes: args.supportedLoginTypes,
+      );
+    },
+  );
+}
+
+class LoginTypeSelectScreenPageRouteArgs {
+  const LoginTypeSelectScreenPageRouteArgs({required this.supportedLoginTypes});
+
+  final List<LoginType> supportedLoginTypes;
+
+  @override
+  String toString() {
+    return 'LoginTypeSelectScreenPageRouteArgs{supportedLoginTypes: $supportedLoginTypes}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! LoginTypeSelectScreenPageRouteArgs) return false;
+    return const ListEquality<LoginType>().equals(
+      supportedLoginTypes,
+      other.supportedLoginTypes,
+    );
+  }
+
+  @override
+  int get hashCode => const ListEquality<LoginType>().hash(supportedLoginTypes);
+}
+
+/// generated route for
+/// [MainHubScreenPage]
+class MainHubScreenPageRoute extends PageRouteInfo<void> {
+  const MainHubScreenPageRoute({List<PageRouteInfo>? children})
+    : super(MainHubScreenPageRoute.name, initialChildren: children);
+
+  static const String name = 'MainHubScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      return MainHubScreenPage();
+    },
+  );
+}
+
+/// generated route for
 /// [MainScreenPage]
 class MainScreenPageRoute extends PageRouteInfo<void> {
   const MainScreenPageRoute({List<PageRouteInfo>? children})
@@ -1913,4 +1981,80 @@ class VoicemailTabPageRoute extends PageRouteInfo<void> {
       return VoicemailTabPage();
     },
   );
+}
+
+/// generated route for
+/// [WatchTextScreenPage]
+class WatchTextScreenPageRoute
+    extends PageRouteInfo<WatchTextScreenPageRouteArgs> {
+  WatchTextScreenPageRoute({
+    required String text,
+    ExtendedTextStyle? style,
+    BackgroundStyle? background,
+    ThemeMode contentThemeOverride = ThemeMode.system,
+    List<PageRouteInfo>? children,
+  }) : super(
+         WatchTextScreenPageRoute.name,
+         args: WatchTextScreenPageRouteArgs(
+           text: text,
+           style: style,
+           background: background,
+           contentThemeOverride: contentThemeOverride,
+         ),
+         initialChildren: children,
+       );
+
+  static const String name = 'WatchTextScreenPageRoute';
+
+  static PageInfo page = PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<WatchTextScreenPageRouteArgs>();
+      return WatchTextScreenPage(
+        text: args.text,
+        style: args.style,
+        background: args.background,
+        contentThemeOverride: args.contentThemeOverride,
+      );
+    },
+  );
+}
+
+class WatchTextScreenPageRouteArgs {
+  const WatchTextScreenPageRouteArgs({
+    required this.text,
+    this.style,
+    this.background,
+    this.contentThemeOverride = ThemeMode.system,
+  });
+
+  final String text;
+
+  final ExtendedTextStyle? style;
+
+  final BackgroundStyle? background;
+
+  final ThemeMode contentThemeOverride;
+
+  @override
+  String toString() {
+    return 'WatchTextScreenPageRouteArgs{text: $text, style: $style, background: $background, contentThemeOverride: $contentThemeOverride}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! WatchTextScreenPageRouteArgs) return false;
+    return text == other.text &&
+        style == other.style &&
+        background == other.background &&
+        contentThemeOverride == other.contentThemeOverride;
+  }
+
+  @override
+  int get hashCode =>
+      text.hashCode ^
+      style.hashCode ^
+      background.hashCode ^
+      contentThemeOverride.hashCode;
 }

@@ -31,8 +31,10 @@ class AppShell extends StatelessWidget {
   /// notification raised from a screen it leads to - voicemail, network,
   /// diagnostics - was judged out of scope and dropped without a word.
   static const Map<NotificationScope, List<String>> _scopeRoutes = {
-    NotificationScope.login: [LoginRouterPageRoute.name],
-    NotificationScope.main: [MainScreenPageRoute.name, SettingsRouterPageRoute.name],
+    // The watch's text page lies over every other route, so whatever opened it
+    // stops counting as active while the person is reading.
+    NotificationScope.login: [LoginRouterPageRoute.name, WatchTextScreenPageRoute.name],
+    NotificationScope.main: [MainScreenPageRoute.name, SettingsRouterPageRoute.name, WatchTextScreenPageRoute.name],
     NotificationScope.call: [CallScreenPageRoute.name],
   };
 

@@ -88,9 +88,8 @@ class _LoginQrSigninScreenState extends State<LoginQrSigninScreen> with WidgetsB
         // The code carries no password: let the user finish on the password tab.
         loginCubit.passwordSigninUserRefInputChanged(userRef);
         final supportedLoginTypes = loginCubit.state.supportedLoginTypes ?? const [];
-        final passwordTabIndex = supportedLoginTypes.indexOf(LoginType.passwordSignin);
-        if (context.mounted && passwordTabIndex != -1) {
-          AutoTabsRouter.of(context).setActiveIndex(passwordTabIndex);
+        if (context.mounted && supportedLoginTypes.contains(LoginType.passwordSignin)) {
+          AutoTabsRouter.of(context).navigate(LoginType.passwordSignin.toPageRouteInfo());
         }
       case QrSigninParseFailure():
         break; // Failures are reported via [QrSigninState.parseError], not here.

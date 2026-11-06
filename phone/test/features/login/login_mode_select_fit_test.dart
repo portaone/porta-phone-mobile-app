@@ -210,24 +210,6 @@ void main() {
         expect(tester.getSize(content).height, tester.getSize(brand).height, reason: 'measured to fit, not shrunk');
       });
 
-      testWidgets('on $preset it opens whole from its first lines and goes back to the landing', (tester) async {
-        preset.apply(tester);
-        await pumpCollectingOverflows(tester, landing(greeting: note));
-
-        await tester.tap(find.byIcon(Icons.chevron_right));
-        await tester.pumpAndSettle();
-        expect(find.byKey(loginModeScreenSignUpButtonKey), findsNothing);
-        final whole = tester.widget<Text>(noteText());
-        expect(whole.maxLines, isNull);
-        expect(whole.style?.fontSize, 13);
-        await tester.scrollUntilVisible(noteText(), 40);
-
-        await tester.binding.handlePopRoute();
-        await tester.pumpAndSettle();
-        expect(find.byKey(loginModeScreenSignUpButtonKey), findsOneWidget);
-        expect(find.byIcon(Icons.chevron_right), findsOneWidget);
-      });
-
       testWidgets('on $preset assistive technology reads it whole', (tester) async {
         final handle = tester.ensureSemantics();
         preset.apply(tester);

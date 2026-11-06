@@ -95,15 +95,10 @@ class _EmbeddedScreenState extends State<EmbeddedScreen> {
       appBar: widget.appBar,
       body: BlocConsumer<EmbeddedCubit, EmbeddedState>(
         builder: (context, state) {
-          // Inside a watch's drill-in, back returns to its menu; stepping
-          // back in the page as well would spend one press on two things.
-          final drillInOwnsBack = WatchDrillIn.ownsBack(context);
-          final forwardPop = widget.shouldForwardPop && state.canGoBack && !drillInOwnsBack;
+          final forwardPop = widget.shouldForwardPop && state.canGoBack;
 
           return PopScope(
-            onPopInvokedWithResult: (_, _) {
-              if (!drillInOwnsBack) _webViewController.goBackInPage();
-            },
+            onPopInvokedWithResult: (_, _) => _webViewController.goBackInPage(),
             canPop: forwardPop == false,
             child: WebViewContainer(
               initialUri: widget.initialUri,

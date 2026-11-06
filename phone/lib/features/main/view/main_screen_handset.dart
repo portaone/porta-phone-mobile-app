@@ -55,7 +55,7 @@ class MainScreenHandset extends StatelessWidget {
             ?banner,
             MainBottomNavigationBar(
               tabs: params.tabs,
-              currentIndex: params.currentIndex,
+              currentIndex: params.currentIndex ?? 0,
               onTap: params.onTabSelected,
               decorateIcon: params.decorateTabIcon,
             ),
