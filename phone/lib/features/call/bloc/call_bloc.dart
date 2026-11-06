@@ -4742,7 +4742,17 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _callPeerConnectionManager.complete(event.callId, peerConnection);
       peerConnection = null;
 
-      add(_PeerConnectionEvent.renegotiationNeeded(event.callId, event.line));
+      // An update the far end sent while the app was gone is answered on the
+      // new connection; an offer of our own would wait behind it at the
+      // media server, unanswered, for as long as the update does.
+      final pending = event.pendingUpdate;
+      final attempt = pending == null ? null : _remoteUpdates.restoredWith(pending.event, pending.ordinal, event.line);
+      if (attempt != null) {
+        _logger.warning('__onMutationRestoreCall: answering the unanswered $attempt');
+        _queueUpdate(pending!.event, attempt);
+      } else {
+        add(_PeerConnectionEvent.renegotiationNeeded(event.callId, event.line));
+      }
 
       // In CallKit as well; held by its offer, the call sends no hold for it.
       if (event.held) {
@@ -5262,6 +5272,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         incomingCallEvent: event.incomingCallEvent,
         acceptedEvent: event.acceptedEvent,
         held: event.held,
+        pendingUpdate: event.pendingUpdate,
       ),
     );
   }
