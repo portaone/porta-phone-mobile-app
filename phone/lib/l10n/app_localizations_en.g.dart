@@ -498,6 +498,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call_ToolbarStatus_connecting => 'Connecting...';
 
   @override
+  String get call_ToolbarStatus_noiseReductionOff => 'Noise reduction is off';
+
+  @override
   String get call_ToolbarStatus_reconnecting => 'Reconnecting...';
 
   @override

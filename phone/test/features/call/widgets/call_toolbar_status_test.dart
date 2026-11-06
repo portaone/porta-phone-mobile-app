@@ -10,6 +10,7 @@ Widget _buildSubject({
   required CallStatus callStatus,
   CallNetworkQuality? networkQuality,
   IceConnectionIssue? iceConnectionIssue,
+  bool voiceNoiseReductionFailed = false,
 }) {
   return MaterialApp(
     localizationsDelegates: appLocalizationsDelegates,
@@ -19,6 +20,7 @@ Widget _buildSubject({
         callStatus: callStatus,
         networkQuality: networkQuality,
         iceConnectionIssue: iceConnectionIssue,
+        voiceNoiseReductionFailed: voiceNoiseReductionFailed,
       ),
     ),
   );
@@ -32,6 +34,46 @@ const _quality = CallNetworkQuality(
 
 void main() {
   group('CallToolbarStatus', () {
+    testWidgets('says so when the noise reduction did not start', (tester) async {
+      await tester.pumpWidget(_buildSubject(callStatus: CallStatus.ready, voiceNoiseReductionFailed: true));
+      final context = tester.element(find.byType(CallToolbarStatus));
+
+      expect(find.text(context.l10n.call_ToolbarStatus_noiseReductionOff), findsOneWidget);
+      expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
+    });
+
+    testWidgets('a connection problem takes the line from the noise reduction', (tester) async {
+      await tester.pumpWidget(_buildSubject(callStatus: CallStatus.connectivityNone, voiceNoiseReductionFailed: true));
+      final context = tester.element(find.byType(CallToolbarStatus));
+
+      expect(find.text(context.l10n.callStatus_connectivityNone), findsOneWidget);
+      expect(find.text(context.l10n.call_ToolbarStatus_noiseReductionOff), findsNothing);
+    });
+
+    testWidgets('a media failure takes the line from the noise reduction', (tester) async {
+      await tester.pumpWidget(
+        _buildSubject(
+          callStatus: CallStatus.ready,
+          iceConnectionIssue: IceConnectionIssue.iceFail,
+          voiceNoiseReductionFailed: true,
+        ),
+      );
+      final context = tester.element(find.byType(CallToolbarStatus));
+
+      expect(find.text(context.l10n.iceConnectionIssue_iceFail), findsOneWidget);
+      expect(find.text(context.l10n.call_ToolbarStatus_noiseReductionOff), findsNothing);
+    });
+
+    testWidgets('weak network quality takes the line from the noise reduction', (tester) async {
+      await tester.pumpWidget(
+        _buildSubject(callStatus: CallStatus.ready, networkQuality: _quality, voiceNoiseReductionFailed: true),
+      );
+      final context = tester.element(find.byType(CallToolbarStatus));
+
+      expect(find.text(context.l10n.callNetworkQuality_yourAudioWeak), findsOneWidget);
+      expect(find.text(context.l10n.call_ToolbarStatus_noiseReductionOff), findsNothing);
+    });
+
     testWidgets('renders nothing while everything is healthy', (tester) async {
       await tester.pumpWidget(_buildSubject(callStatus: CallStatus.ready));
       expect(find.byType(Text), findsNothing);

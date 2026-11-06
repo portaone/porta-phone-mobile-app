@@ -520,6 +520,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get call_ToolbarStatus_connecting => 'Підключення...';
 
   @override
+  String get call_ToolbarStatus_noiseReductionOff => 'Шумозаглушення вимкнено';
+
+  @override
   String get call_ToolbarStatus_reconnecting => 'Перепідключення...';
 
   @override

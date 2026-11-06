@@ -27,6 +27,7 @@ class CallInfoBlock extends StatelessWidget {
     required this.onCallSelected,
     this.conference = const ConferenceState(),
     this.conferenceParked = false,
+    this.voiceNoiseReductionFailed = false,
     this.onConversationSwitched,
     this.onSelfMutedChanged,
     this.onParticipantMutedChanged,
@@ -47,6 +48,7 @@ class CallInfoBlock extends StatelessWidget {
       onCallSelected = params.onCallSelected,
       conference = params.conference,
       conferenceParked = params.conferenceParked,
+      voiceNoiseReductionFailed = params.voiceNoiseReductionFailed,
       onConversationSwitched = params.onConversationSwitched,
       onSelfMutedChanged = params.onConferenceSelfMuted,
       onParticipantMutedChanged = params.onConferenceParticipantMuted,
@@ -68,6 +70,9 @@ class CallInfoBlock extends StatelessWidget {
 
   /// Whether that room has stood aside for a call outside it.
   final bool conferenceParked;
+
+  /// Whether the voice noise reduction asked for did not start on the open microphone.
+  final bool voiceNoiseReductionFailed;
 
   /// Moves the user between the room and a call outside it. While a room
   /// stands, a row is tapped to go to that conversation rather than merely to
@@ -113,6 +118,7 @@ class CallInfoBlock extends StatelessWidget {
             conference: conference,
             calls: activeCalls,
             roomParked: conferenceParked,
+            noiseReductionFailed: voiceNoiseReductionFailed,
             onSwitchToConference: onConversationSwitched,
             onSelfMutedChanged: onSelfMutedChanged ?? (_) {},
             onParticipantMutedChanged: onParticipantMutedChanged ?? (_, _) {},
