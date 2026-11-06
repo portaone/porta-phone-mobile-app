@@ -110,22 +110,67 @@ class RenegotiationCoordinator {
   final Map<String, int> _updatingDeferrals = {};
   final Map<String, _PullResume> _pullResumes = {};
 
+  /// Calls that lived through a reconnect and are owed a renegotiation, made
+  /// from the handshake of the new connection ([handshakeReceived]).
+  final Set<String> _owedAfterReconnect = {};
+
+  int _connection = 0;
+
+  /// Which connection of the signaling session is the current one, counted
+  /// by [signalingConnected]. A handshake reads it as it arrives, so one
+  /// taken in while the session reconnected again is told apart.
+  int get connection => _connection;
+
+  int _handshakeTaken = 0;
+
+  /// Whether the current connection's handshake is still to be taken in
+  /// ([handshakeReceived]): until then, what the far end still waits for on
+  /// this connection is not known.
+  bool get awaitingHandshake => _handshakeTaken != _connection;
+
   void networkAvailable(String callId) {
     _iceRestarts.schedule(callId, () => _onCommand(RestartIce(callId)));
   }
 
-  List<RenegotiationCommand> signalingConnected(Iterable<({String callId, int? lineId})> calls) {
-    final commands = <RenegotiationCommand>[];
-    for (final call in calls) {
-      _replayTimers.remove(call.callId)?.cancel();
+  /// The signaling session connected again. The calls that lived through it
+  /// are owed a renegotiation: an ICE restart made while the socket was down
+  /// was dropped. It is not made here but from the handshake of this
+  /// connection ([handshakeReceived]): what the far end asked for while the
+  /// socket was down is known only there, and an offer of the far end that
+  /// nobody answered holds back every offer of the client.
+  void signalingConnected(Iterable<String> callIds) {
+    _connection++;
+    for (final callId in callIds) {
+      _replayTimers.remove(callId)?.cancel();
       // The session that would have delivered the answer is gone, so the
       // installed offer is now only recoverable by sending it again.
-      _awaitingAnswer.remove(call.callId);
+      _awaitingAnswer.remove(callId);
       // Failures on the new session are counted from the start again, so it
       // gets the quick retries before any backoff.
-      _replayAttempts.remove(call.callId);
-      commands.add(Renegotiate(call.callId, call.lineId));
+      _replayAttempts.remove(callId);
+      _owedAfterReconnect.add(callId);
     }
+  }
+
+  /// The handshake of [connection] was taken in: the far end's updates it
+  /// showed unanswered are handed over by now, so a renegotiation given here
+  /// waits behind them (see [RemoteUpdateNegotiation]). Gives the
+  /// renegotiations the reconnect owes [calls], once per connection; a call
+  /// the reconnect owed nothing gets none, and one that is no longer among
+  /// [calls] loses what it was owed. A handshake of an earlier connection
+  /// gives nothing and leaves what is owed to the handshake of the current
+  /// one, which has not counted its missed offers yet.
+  List<RenegotiationCommand> handshakeReceived(
+    Iterable<({String callId, int? lineId})> calls, {
+    required int connection,
+  }) {
+    if (connection != _connection) return const [];
+    _handshakeTaken = connection;
+    final commands = [
+      for (final call in calls)
+        if (_owedAfterReconnect.contains(call.callId)) Renegotiate(call.callId, call.lineId),
+    ];
+    _owedAfterReconnect.clear();
     return commands;
   }
 
@@ -381,6 +426,7 @@ class RenegotiationCoordinator {
     _updatingDeferrals.remove(callId);
     callEnding(callId);
     _pullResumes.remove(callId);
+    _owedAfterReconnect.remove(callId);
     offerCompleted(callId);
   }
 
@@ -398,6 +444,7 @@ class RenegotiationCoordinator {
       callEnding(callId);
     }
     _pullResumes.clear();
+    _owedAfterReconnect.clear();
   }
 }
 

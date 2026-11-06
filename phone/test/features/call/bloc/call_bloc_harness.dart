@@ -145,6 +145,53 @@ class CallBlocHarness {
   /// Everything the bloc asked the user to see, in order.
   final List<Notification> notifications = [];
 
+  /// A reconnect as the real module delivers it: the session comes up, then
+  /// its handshake reports every call of the bloc, and its conference room,
+  /// as the server still holding them, with nothing new in a call's log.
+  ///
+  /// The calls that lived through a reconnect are renegotiated from that
+  /// handshake, not from the connected event alone.
+  void reconnect() {
+    signaling.emitLifecycle(SignalingConnected());
+    final calls = bloc.state.activeCalls;
+    final conference = bloc.state.conference;
+    final lineCount = calls.map((call) => (call.line ?? 0) + 1).fold(0, (a, b) => a > b ? a : b);
+    signaling.emitHandshake(
+      StateHandshake(
+        keepaliveInterval: const Duration(seconds: 30),
+        timestamp: 1,
+        registration: const Registration(status: RegistrationStatus.registered),
+        lines: [
+          for (var line = 0; line < lineCount; line++)
+            switch (calls.where((call) => (call.line ?? 0) == line).firstOrNull) {
+              final call? => Line(
+                callId: call.callId,
+                callLogs: [
+                  CallEventLog(
+                    timestamp: 1,
+                    callEvent: AcceptedEvent(line: line, callId: call.callId),
+                  ),
+                ],
+              ),
+              null => null,
+            },
+        ],
+        presenceInfos: const [],
+        dialogInfos: const [],
+        guestLine: null,
+        conference: switch (conference.room) {
+          final room? => ConferenceInfo(
+            room: room,
+            participants: [
+              for (final leg in conference.legs.entries) ConferenceParticipant(line: leg.value, callId: leg.key),
+            ],
+          ),
+          null => null,
+        },
+      ),
+    );
+  }
+
   /// Puts an answered call into the state with a peer connection the manager
   /// already holds for it, the way the bloc leaves a call once it is up:
   /// its microphone on the connection's audio sender, the far end's audio
@@ -420,6 +467,23 @@ class FakeSignalingModule extends Fake implements SignalingModule {
   /// Delivers [handshake] to the bloc as if the session had just (re)connected.
   void emitHandshake(StateHandshake handshake) => _add(SignalingHandshakeReceived(handshake: handshake));
 
+  /// While true, a protocol event is folded into the session at once but its
+  /// delivery to the bloc waits for [releaseProtocolEvents]: the real module
+  /// brings the session up to date ahead of the delivery, and a plan made in
+  /// between reads a session the bloc has not heard all of.
+  bool holdProtocolEvents = false;
+  final _heldProtocolEvents = <SignalingModuleEvent>[];
+
+  /// Delivers the protocol events held since [holdProtocolEvents] was set,
+  /// in order, and stops holding.
+  void releaseProtocolEvents() {
+    holdProtocolEvents = false;
+    final held = List.of(_heldProtocolEvents);
+    _heldProtocolEvents.clear();
+    if (_events.isClosed) return;
+    held.forEach(_events.add);
+  }
+
   void _add(SignalingModuleEvent event) {
     _session.onEvent(event);
     // A real module that nobody listens to any more keeps what the server
@@ -427,7 +491,11 @@ class FakeSignalingModule extends Fake implements SignalingModule {
     // closed the harness, and an event that arrives after that would be a
     // fault of the fake, not of the bloc.
     if (_events.isClosed) return;
-    _events.add(event);
+    if (holdProtocolEvents && event is SignalingProtocolEvent) {
+      _heldProtocolEvents.add(event);
+    } else {
+      _events.add(event);
+    }
   }
 
   /// The session as a real module keeps it: the handshake folded with every
@@ -702,6 +770,11 @@ class FakePeerConnection extends Fake implements RTCPeerConnection {
   @override
   Future<RTCSessionDescription?> getRemoteDescription() async =>
       remoteDescriptions.isEmpty ? null : remoteDescriptions.last;
+
+  /// How many times ICE was restarted on this connection.
+  int iceRestarts = 0;
+  @override
+  Future<void> restartIce() async => iceRestarts++;
   @override
   Future<RTCSessionDescription> createOffer([Map<String, dynamic>? constraints]) async {
     offerConstraints.add(constraints);

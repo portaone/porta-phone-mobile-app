@@ -329,7 +329,7 @@ void main() {
     /// Has the signalling session start again, which renegotiates the one
     /// call that is up, and returns the audio line of that offer.
     Future<String> renegotiatedAudio() async {
-      h.signaling.emitLifecycle(SignalingConnected());
+      h.reconnect();
       await h.settle(() => h.signaling.requests.whereType<UpdateRequest>().isNotEmpty);
       final update = h.signaling.requests.whereType<UpdateRequest>().single;
       // The server takes it, so nothing is left waiting on the answer.
