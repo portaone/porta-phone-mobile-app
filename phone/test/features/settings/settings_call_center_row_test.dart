@@ -6,6 +6,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/features/call_center/call_center.dart';
 import 'package:webtrit_phone/features/register_status/register_status.dart';
@@ -86,6 +87,7 @@ void main() {
     WidgetTester tester, {
     required bool configured,
     required CallQueuesSnapshot snapshot,
+    List<SettingItem> items = const [callCenterItem],
   }) async {
     repository = FakeCallQueuesRepository(initial: snapshot);
 
@@ -120,11 +122,7 @@ void main() {
                   presenceViaSipSupport: false,
                   child: SettingsScreen(
                     sections: [
-                      if (configured)
-                        SettingsSection(
-                          titleL10n: 'settings_ListViewTileTitle_features',
-                          items: const [callCenterItem],
-                        ),
+                      if (configured) SettingsSection(titleL10n: 'settings_ListViewTileTitle_features', items: items),
                     ],
                     sessionsEnabled: false,
                   ),
@@ -184,5 +182,25 @@ void main() {
     );
 
     expect(find.text('Call center'), findsNothing);
+  });
+  testWidgets('the media settings row can be reached by its id', (tester) async {
+    final handle = tester.ensureSemantics();
+
+    await pumpSettings(
+      tester,
+      configured: true,
+      snapshot: const CallQueuesSnapshot(),
+      items: const [
+        SettingItem(
+          titleL10n: 'settings_ListViewTileTitle_mediaSettings',
+          icon: Icons.perm_camera_mic_outlined,
+          flavor: SettingsFlavor.mediaSettings,
+        ),
+      ],
+    );
+
+    expect(tester.getSemantics(find.bySemanticsIdentifier(settingsMediaTileId)), isSemantics(hasTapAction: true));
+
+    handle.dispose();
   });
 }

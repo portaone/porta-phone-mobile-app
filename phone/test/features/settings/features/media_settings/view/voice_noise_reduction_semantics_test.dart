@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
@@ -14,6 +15,8 @@ import 'package:webtrit_phone/models/models.dart';
 import '../../../../../helpers/helpers.dart';
 
 class _MockMediaSettingsCubit extends MockCubit<MediaSettingsState> implements MediaSettingsCubit {}
+
+class _MockStackRouter extends Mock implements StackRouter {}
 
 MediaSettingsState _state(AudioProcessingSettings audioProcessingSettings) => MediaSettingsState(
   encodingSettings: EncodingSettings.blank(),
@@ -50,6 +53,49 @@ void main() {
 
   final offId = settingsOptionId(mediaSettingsOptionIdPrefix, 'audioProcessingVnrOff');
   final onId = settingsOptionId(mediaSettingsOptionIdPrefix, 'audioProcessingVnrOn');
+
+  testWidgets('the audio processing section opens through semantics and shows the switch', (tester) async {
+    final handle = tester.ensureSemantics();
+    when(() => cubit.state).thenReturn(_state(AudioProcessingSettings.blank()));
+    final router = _MockStackRouter();
+    when(
+      () => router.canPop(
+        ignoreChildRoutes: any(named: 'ignoreChildRoutes'),
+        ignoreParentRoutes: any(named: 'ignoreParentRoutes'),
+        ignorePagelessRoutes: any(named: 'ignorePagelessRoutes'),
+      ),
+    ).thenReturn(false);
+    when(() => router.topPage).thenReturn(null);
+    when(() => router.pagelessRoutesObserver).thenReturn(PagelessRoutesObserver());
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: RouterScope(
+          controller: router,
+          inheritableObserversBuilder: () => const [],
+          stateHash: 0,
+          navigatorObservers: const [],
+          child: StackRouterScope(
+            controller: router,
+            stateHash: 0,
+            child: BlocProvider<MediaSettingsCubit>.value(value: cubit, child: const MediaSettingsScreen()),
+          ),
+        ),
+      ),
+    );
+    final section = find.bySemanticsIdentifier(mediaSettingsAudioProcessingSectionId);
+    expect(section, findsOneWidget);
+    expect(find.bySemanticsIdentifier(offId), findsNothing);
+
+    await tapViaSemantics(tester, section);
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsIdentifier(offId), findsOneWidget);
+
+    handle.dispose();
+  });
 
   testWidgets('voice noise reduction is off until chosen and has only off and on', (tester) async {
     final handle = tester.ensureSemantics();
