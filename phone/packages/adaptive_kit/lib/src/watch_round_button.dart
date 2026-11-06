@@ -116,6 +116,9 @@ class WatchRoundButton extends StatelessWidget {
 
   Widget _onLight(double side) {
     final constraints = BoxConstraints.tightFor(width: side, height: side);
+    // The button's own padding is more than a small face's button has room
+    // for: it would squeeze the icon, and a squeezed glyph draws off centre.
+    final style = (this.style ?? const ButtonStyle()).merge(IconButton.styleFrom(padding: EdgeInsets.zero));
     return switch (emphasis) {
       WatchRoundEmphasis.filled => IconButton.filled(
         key: buttonKey,
