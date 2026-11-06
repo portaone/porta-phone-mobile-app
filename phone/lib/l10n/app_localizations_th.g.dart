@@ -499,6 +499,48 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_ToolbarStatus_reconnecting => 'กำลังเชื่อมต่อใหม่...';
 
   @override
+  String get call_Watch_more => 'เพิ่มเติม';
+
+  @override
+  String get call_Watch_mute => 'ปิดเสียง';
+
+  @override
+  String get call_Watch_speaker => 'ลำโพง';
+
+  @override
+  String get call_Watch_audio => 'เสียง';
+
+  @override
+  String get call_Watch_keypad => 'แป้น';
+
+  @override
+  String get call_Watch_hold => 'พักสาย';
+
+  @override
+  String get call_Watch_resume => 'ต่อสาย';
+
+  @override
+  String get call_Watch_transfer => 'โอนสาย';
+
+  @override
+  String get call_Watch_camera => 'กล้อง';
+
+  @override
+  String get call_Watch_switchCamera => 'สลับ';
+
+  @override
+  String get call_Watch_blur => 'เบลอ';
+
+  @override
+  String get call_Watch_calls => 'สาย';
+
+  @override
+  String get call_Watch_conference => 'กลุ่ม';
+
+  @override
+  String get call_Watch_drop => 'ตัดสาย';
+
+  @override
   String get call_description_held => 'พักสาย';
 
   @override

@@ -886,6 +886,90 @@ abstract class AppLocalizations {
   /// **'Reconnecting...'**
   String get call_ToolbarStatus_reconnecting;
 
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get call_Watch_more;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get call_Watch_mute;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get call_Watch_speaker;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get call_Watch_audio;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Keypad'**
+  String get call_Watch_keypad;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold'**
+  String get call_Watch_hold;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get call_Watch_resume;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get call_Watch_transfer;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get call_Watch_camera;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get call_Watch_switchCamera;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Blur'**
+  String get call_Watch_blur;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls'**
+  String get call_Watch_calls;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get call_Watch_conference;
+
+  /// On a watch, the caption under a round call button: one short word.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop'**
+  String get call_Watch_drop;
+
   /// No description provided for @call_description_held.
   ///
   /// In en, this message translates to:

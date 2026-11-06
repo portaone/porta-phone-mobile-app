@@ -4,6 +4,7 @@ import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 
+import '../extensions/extensions.dart';
 import '../models/models.dart';
 import '../view/call_screen_style.dart';
 import '../utils/contact_resolver.dart';
@@ -209,7 +210,7 @@ class _ParticipantRow extends StatelessWidget {
     final statusStyle = style?.callStatus ?? const TextStyle();
     final acceptedTime = call?.acceptedTime;
 
-    final name = call?.displayName ?? call?.handle.value ?? callId;
+    final name = call?.nameOrNumber ?? callId;
     final status = muted
         ? context.l10n.call_ConferencePanel_participantMuted
         : context.l10n.call_ConferencePanel_participantStatus;

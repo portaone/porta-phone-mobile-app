@@ -313,6 +313,7 @@ class AppRouter extends RootStackRouter {
               path: 'call',
               fullscreenDialog: true,
               transitionsBuilder: TransitionsBuilders.fadeIn,
+              children: callWatchRoutes,
             ),
             AutoRoute(page: SystemNotificationsPageRoute.page, path: 'system-notifications', fullscreenDialog: true),
             AutoRoute(
@@ -690,3 +691,16 @@ class FeatureGuard implements AutoRouteGuard {
     }
   }
 }
+
+/// The pages a call opens on a watch face, under the call screen: the face
+/// first, each other page the whole face, back returning to the one before.
+/// A phone has no router under its call screen, so it never opens them.
+final List<AutoRoute> callWatchRoutes = [
+  AutoRoute(page: CallWatchFaceScreenPageRoute.page, path: '', initial: true),
+  AutoRoute(page: CallWatchMoreScreenPageRoute.page, path: 'more'),
+  AutoRoute(page: CallWatchAudioScreenPageRoute.page, path: 'audio'),
+  AutoRoute(page: CallWatchTransferScreenPageRoute.page, path: 'transfer'),
+  AutoRoute(page: CallWatchCallsScreenPageRoute.page, path: 'calls'),
+  AutoRoute(page: CallWatchConferenceScreenPageRoute.page, path: 'conference'),
+  AutoRoute(page: CallWatchParticipantScreenPageRoute.page, path: 'participant'),
+];
