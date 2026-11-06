@@ -1,6 +1,7 @@
 export 'package:app_database/app_database.dart';
 
 export 'app_certificates.dart';
+export 'aps_environment.dart';
 export 'app_info.dart';
 export 'app_lifecycle.dart';
 export 'app_logger.dart';
