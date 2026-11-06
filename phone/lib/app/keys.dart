@@ -299,6 +299,12 @@ const String settingsUserInfoNumberId = 'settingsUserInfoNumber';
 /// The About row of the settings list.
 const String settingsAboutTileId = 'settingsAboutTile';
 
+/// The Media settings row of the settings list.
+const String settingsMediaTileId = 'settingsMediaTile';
+
+/// The header of the audio processing section of the media settings.
+const String mediaSettingsAudioProcessingSectionId = 'mediaSettingsAudioProcessingSection';
+
 /// Values on the About screen: the Core address the app is connected to and
 /// the identifier of this app's session.
 const String aboutCoreUrlId = 'aboutCoreUrl';
