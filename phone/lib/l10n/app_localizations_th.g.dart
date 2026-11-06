@@ -488,6 +488,14 @@ class AppLocalizationsTh extends AppLocalizations {
   String get call_ToolbarStatus_connecting => 'กำลังเชื่อมต่อ...';
 
   @override
+  String call_SemanticsLabel_noiseReductionOff(String action) {
+    return '$action ปิดการลดเสียงรบกวนแล้ว';
+  }
+
+  @override
+  String get call_ToolbarStatus_noiseReductionOff => 'ปิดการลดเสียงรบกวนแล้ว';
+
+  @override
   String get call_ToolbarStatus_reconnecting => 'กำลังเชื่อมต่อใหม่...';
 
   @override

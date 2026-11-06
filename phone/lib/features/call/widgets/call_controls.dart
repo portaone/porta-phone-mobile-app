@@ -42,6 +42,7 @@ class CallControlsParams {
     required this.onHangup,
     required this.onAccept,
     required this.dtmfInput,
+    this.voiceNoiseReductionFailed = false,
     this.conference = const ConferenceState(),
     this.conferenceParked = false,
     this.onConversationSwitched,
@@ -62,6 +63,9 @@ class CallControlsParams {
   });
 
   final List<ActiveCall> activeCalls;
+
+  /// Whether the voice noise reduction asked for did not start on the open microphone.
+  final bool voiceNoiseReductionFailed;
 
   /// The call the info block and the action area act on; the roster highlights
   /// its row.
@@ -242,6 +246,7 @@ class CallControls extends StatelessWidget {
             callStatus: callStatus,
             networkQuality: activeCalls.worstNetworkQuality,
             iceConnectionIssue: activeCalls.firstIceConnectionIssue,
+            voiceNoiseReductionFailed: params.voiceNoiseReductionFailed,
             style: style?.callInfo,
           ),
           actions: [

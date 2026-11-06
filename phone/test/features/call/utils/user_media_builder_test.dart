@@ -131,6 +131,17 @@ void main() {
       expect(lifecycle.events, ['acquired', 'released']);
     });
 
+    test('reports the release when stopping the track throws', () async {
+      final lifecycle = _RecordingLifecycle();
+      final subject = builder(audioTrackLifecycle: lifecycle);
+      when(() => audioTrack.stop()).thenThrow(Exception('stop failed'));
+
+      final stream = await subject.build(video: false);
+      await expectLater(subject.release(stream), throwsException);
+
+      expect(lifecycle.events, ['acquired', 'released']);
+    });
+
     test('reports a fresh acquire after the track was released', () async {
       final lifecycle = _RecordingLifecycle();
       final subject = builder(audioTrackLifecycle: lifecycle);

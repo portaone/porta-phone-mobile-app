@@ -39,9 +39,11 @@ class CallActiveScaffold extends StatefulWidget {
     this.linkedCall,
     this.handOver,
     this.addParticipantAvailability = AddParticipantAvailability.hidden,
+    this.voiceNoiseReductionFailed = false,
   });
 
   final CallStatus callStatus;
+
   final List<ActiveCall> activeCalls;
 
   /// The call the info block and the action area act on (see
@@ -78,6 +80,9 @@ class CallActiveScaffold extends StatefulWidget {
   /// Whether somebody can be called into the conversation on the screen
   /// (see [CallState.addParticipantAvailability]).
   final AddParticipantAvailability addParticipantAvailability;
+
+  /// Whether the voice noise reduction asked for did not start on the open microphone.
+  final bool voiceNoiseReductionFailed;
 
   /// Whether the room has stood aside for a call outside it
   /// ([CallState.conferenceMustPark]).
@@ -445,6 +450,7 @@ class CallActiveScaffoldState extends State<CallActiveScaffold> {
                     callStatus: widget.callStatus,
                     popupMenuItems: _buildPopupMenuItems,
                     params: CallControlsParams(
+                      voiceNoiseReductionFailed: widget.voiceNoiseReductionFailed,
                       activeCalls: widget.activeCalls,
                       focusedCall: widget.focusedCall,
                       audioDevice: widget.audioDevice,

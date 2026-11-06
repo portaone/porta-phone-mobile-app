@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../view/call_screen_style.dart';
 import '../utils/contact_resolver.dart';
 import 'call_action_button.dart';
+import 'call_attention_dot.dart';
 import 'call_row_frame.dart';
 
 /// The conference room: who is in it, who is muted for everyone, and the way
@@ -31,6 +32,7 @@ class ConferencePanel extends StatelessWidget {
     required this.onSelfMutedChanged,
     required this.onParticipantMutedChanged,
     required this.onParticipantHangup,
+    this.noiseReductionFailed = false,
     this.contactResolver,
     this.style,
     this.listStyle,
@@ -58,6 +60,9 @@ class ConferencePanel extends StatelessWidget {
   /// told; it is the local microphone, not a room-wide mute.
   final ValueChanged<bool> onSelfMutedChanged;
 
+  /// Marks the host's microphone: the noise reduction asked for did not start on it.
+  final bool noiseReductionFailed;
+
   /// Mutes a participant for everyone in the room. The outcome arrives as the
   /// server's next participant list, so nothing is assumed here.
   final void Function(String callId, bool muted) onParticipantMutedChanged;
@@ -74,6 +79,15 @@ class ConferencePanel extends StatelessWidget {
   /// The screen's own button styles; the room's destructive controls take the
   /// hangup one so they read as what they are and stay themeable.
   final CallScreenActionsStyle? actionsStyle;
+
+  /// The name of the host's mute control, with the words beside the dot for whoever cannot see it.
+  String _selfMuteLabel(BuildContext context) {
+    final label = conference.selfMuted || roomParked
+        ? context.l10n.call_SemanticsLabel_conferenceSelfUnmute
+        : context.l10n.call_SemanticsLabel_conferenceSelfMute;
+    if (!noiseReductionFailed) return label;
+    return context.l10n.call_SemanticsLabel_noiseReductionOff(label);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,18 +112,19 @@ class ConferencePanel extends StatelessWidget {
           focused: !roomParked,
           leading: CallRowSelfAvatar(style: style),
           trailing: [
-            _MuteToggle(
-              // A room that has stood aside hears nothing of the host either
-              // way, so the icon says so rather than reporting an intent the
-              // room is not acting on. The intent itself is not touched: it
-              // comes back as it was when he does.
-              muted: conference.selfMuted || roomParked,
-              identifier: conferenceSelfMuteId,
-              label: conference.selfMuted || roomParked
-                  ? context.l10n.call_SemanticsLabel_conferenceSelfUnmute
-                  : context.l10n.call_SemanticsLabel_conferenceSelfMute,
-              onPressed: roomParked ? null : () => onSelfMutedChanged(!conference.selfMuted),
-              style: statusStyle,
+            CallAttentionDot(
+              shown: noiseReductionFailed,
+              child: _MuteToggle(
+                // A room that has stood aside hears nothing of the host either
+                // way, so the icon says so rather than reporting an intent the
+                // room is not acting on. The intent itself is not touched: it
+                // comes back as it was when he does.
+                muted: conference.selfMuted || roomParked,
+                identifier: conferenceSelfMuteId,
+                label: _selfMuteLabel(context),
+                onPressed: roomParked ? null : () => onSelfMutedChanged(!conference.selfMuted),
+                style: statusStyle,
+              ),
             ),
           ],
         ),

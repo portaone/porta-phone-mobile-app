@@ -22,6 +22,7 @@ class ActiveCallActions extends StatefulWidget {
     this.onCameraPermissionDeniedPressed,
     this.onCameraChanged,
     required this.mutedValue,
+    this.noiseReductionFailed = false,
     this.onMutedChanged,
     required this.audioDevice,
     required this.availableAudioDevices,
@@ -61,6 +62,10 @@ class ActiveCallActions extends StatefulWidget {
   final VoidCallback? onCameraPermissionDeniedPressed;
   final ValueChanged<bool>? onCameraChanged;
   final bool mutedValue;
+
+  /// Marks the microphone: the noise reduction asked for did not start on it.
+  final bool noiseReductionFailed;
+
   final ValueChanged<bool>? onMutedChanged;
   final CallAudioDevice? audioDevice;
   final List<CallAudioDevice> availableAudioDevices;
@@ -362,16 +367,17 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
     } else {
       actions = [
         // row
-        CallActionButton(
-          key: callActionsMuteKey,
-          identifier: callActionsMuteId,
-          label: widget.mutedValue
-              ? context.l10n.call_CallActionsTooltip_unmute
-              : context.l10n.call_CallActionsTooltip_mute,
-          onPressed: onMutedChanged != null ? () => onMutedChanged(!widget.mutedValue) : null,
-          statesController: _mutedStatesController..update(WidgetState.selected, widget.mutedValue),
-          style: widget.style?.muted,
-          child: Icon(widget.mutedValue ? Icons.mic_off : Icons.mic, size: actionPadIconSize),
+        CallAttentionDot(
+          shown: widget.noiseReductionFailed,
+          child: CallActionButton(
+            key: callActionsMuteKey,
+            identifier: callActionsMuteId,
+            label: _muteLabel(context),
+            onPressed: onMutedChanged != null ? () => onMutedChanged(!widget.mutedValue) : null,
+            statesController: _mutedStatesController..update(WidgetState.selected, widget.mutedValue),
+            style: widget.style?.muted,
+            child: Icon(widget.mutedValue ? Icons.mic_off : Icons.mic, size: actionPadIconSize),
+          ),
         ),
         CallActionButton(
           key: callActionsVideoCallKey,
@@ -513,6 +519,16 @@ class _ActiveCallActionsState extends State<ActiveCallActions> {
         ),
       ),
     );
+  }
+
+  /// The name of the mute control. The words beside the dot, for whoever cannot see the dot or the
+  /// toolbar: this label is also what a long press shows.
+  String _muteLabel(BuildContext context) {
+    final label = widget.mutedValue
+        ? context.l10n.call_CallActionsTooltip_unmute
+        : context.l10n.call_CallActionsTooltip_mute;
+    if (!widget.noiseReductionFailed) return label;
+    return context.l10n.call_SemanticsLabel_noiseReductionOff(label);
   }
 
   /// The 12 DTMF keys, three per row with the row delimiters in between.

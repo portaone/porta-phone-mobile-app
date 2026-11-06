@@ -127,6 +127,10 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   final VoidCallback? onCallEnded;
   final OnDiagnosticReportRequested onDiagnosticReportRequested;
 
+  /// Whether the voice noise reduction failed to start on the open microphone; absent where the
+  /// platform has none.
+  final ValueListenable<bool>? voiceNoiseReductionFailed;
+
   StreamSubscription<ConnectivityResult>? _connectivityChangedSubscription;
   StreamSubscription<void>? _foregroundCallPushSubscription;
   late final RenegotiationCoordinator _renegotiationCoordinator;
@@ -216,6 +220,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     required CallPeerConnectionManager callPeerConnectionManager,
     required ConnectivityService connectivityService,
     this.onCallEnded,
+    this.voiceNoiseReductionFailed,
     Stream<void>? foregroundCallPushSignal,
     this.conferenceAssemblyTimeout = const Duration(seconds: 20),
     bool Function()? speakerOnMinimize,
@@ -279,6 +284,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           _logger.info('signaling presence changed: isAvailable=$isAvailable'),
     );
 
+    voiceNoiseReductionFailed?.addListener(_onVoiceNoiseReductionFailed);
+
     _foregroundCallPushSubscription = foregroundCallPushSignal?.listen(
       (_) => _reconnectController.notifyForceReconnect(),
     );
@@ -314,6 +321,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     on<CallStarted>(_onCallStarted, transformer: sequential());
     on<_AppLifecycleStateChanged>(_onAppLifecycleStateChanged, transformer: sequential());
     on<_ConnectivityResultChanged>(_onConnectivityResultChanged, transformer: sequential());
+    on<_VoiceNoiseReductionFailedChanged>(_onVoiceNoiseReductionFailedChanged, transformer: sequential());
     on<_NavigatorMediaDevicesChange>(_onNavigatorMediaDevicesChange, transformer: debounce());
     on<_IceRestartTriggered>(_onIceRestartTriggered, transformer: sequential());
     on<_RegistrationChange>(_onRegistrationChange, transformer: droppable());
@@ -356,6 +364,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     WidgetsBinding.instance.removeObserver(this);
     navigator.mediaDevices.ondevicechange = null;
+
+    voiceNoiseReductionFailed?.removeListener(_onVoiceNoiseReductionFailed);
 
     await _connectivityChangedSubscription?.cancel();
     await _foregroundCallPushSubscription?.cancel();
@@ -777,6 +787,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     } else if (appLifecycleState == AppLifecycleState.resumed) {
       _reconnectController.notifyAppResumed();
     }
+  }
+
+  void _onVoiceNoiseReductionFailed() => add(_VoiceNoiseReductionFailedChanged(voiceNoiseReductionFailed!.value));
+
+  void _onVoiceNoiseReductionFailedChanged(_VoiceNoiseReductionFailedChanged event, Emitter<CallState> emit) {
+    emit(state.copyWith(voiceNoiseReductionFailed: event.failed));
   }
 
   Future<void> _onConnectivityResultChanged(_ConnectivityResultChanged event, Emitter<CallState> emit) async {

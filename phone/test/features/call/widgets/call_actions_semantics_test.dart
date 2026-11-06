@@ -41,6 +41,7 @@ void main() {
     ValueChanged<ActiveCall>? onAttendedTransferSubmitted,
     void Function(String)? onKeyPressed,
     bool mutedValue = false,
+    bool noiseReductionFailed = false,
     bool keypadShown = false,
     ValueChanged<bool>? onKeypadToggle,
     AddParticipantAvailability addParticipantAvailability = AddParticipantAvailability.hidden,
@@ -56,6 +57,7 @@ void main() {
       cameraValue: false,
       dtmfInput: ValueNotifier(''),
       mutedValue: mutedValue,
+      noiseReductionFailed: noiseReductionFailed,
       onMutedChanged: onMutedChanged,
       audioDevice: const CallAudioDevice(type: CallAudioDeviceType.earpiece),
       availableAudioDevices: const [
@@ -78,6 +80,38 @@ void main() {
       addParticipantIntoRoom: addParticipantIntoRoom,
     );
   }
+
+  group('noise reduction failed', () {
+    testWidgets('marks the microphone and adds the words to its name', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(wrap(buildActive(noiseReductionFailed: true, onMutedChanged: (_) {})));
+
+      expect(find.byKey(const ValueKey('call-attention-dot')), findsOneWidget);
+      expectTapTargetSemantics(
+        tester,
+        find.bySemanticsIdentifier(callActionsMuteId),
+        label: 'Mute microphone. Noise reduction is off',
+        identifier: callActionsMuteId,
+      );
+
+      handle.dispose();
+    });
+
+    testWidgets('a tap on the marked microphone still mutes', (tester) async {
+      final muted = <bool>[];
+      await tester.pumpWidget(wrap(buildActive(noiseReductionFailed: true, onMutedChanged: muted.add)));
+
+      await tester.tap(find.byKey(callActionsMuteKey));
+
+      expect(muted, [true]);
+    });
+
+    testWidgets('nothing marks the microphone otherwise', (tester) async {
+      await tester.pumpWidget(wrap(buildActive()));
+
+      expect(find.byKey(const ValueKey('call-attention-dot')), findsNothing);
+    });
+  });
 
   group('ActiveCallActions accessibility', () {
     testWidgets('mute, hold and hangup announce themselves and activate through semantics', (tester) async {

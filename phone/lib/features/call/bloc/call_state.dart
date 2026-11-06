@@ -16,6 +16,7 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
     this.placedCallFocus,
     this.conference = const ConferenceState(),
     this.linkedCall,
+    this.voiceNoiseReductionFailed = false,
   });
 
   final CallServiceState callServiceState;
@@ -27,6 +28,10 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
   final List<ActiveCall> activeCalls;
 
   final bool? minimized;
+
+  /// Whether the voice noise reduction was asked for and did not start on the open microphone.
+  /// Of the microphone, so of every call on it, and gone when it closes.
+  final bool voiceNoiseReductionFailed;
 
   /// The route in use, as the platform last reported it.
   final CallAudioDevice? audioDevice;

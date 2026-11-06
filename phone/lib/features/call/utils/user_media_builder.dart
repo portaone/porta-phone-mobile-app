@@ -236,9 +236,12 @@ class DefaultUserMediaBuilder implements UserMediaBuilder {
     // native layer has already removed from localTracks, causing the subsequent
     // stream.addTrack() to fail with "track is null".
     _audioTrack = null;
-    await pooledTrack.track.stop();
-    await pooledTrack.sourceStream.dispose();
-    await audioTrackLifecycle?.onAudioTrackReleased();
+    try {
+      await pooledTrack.track.stop();
+      await pooledTrack.sourceStream.dispose();
+    } finally {
+      await audioTrackLifecycle?.onAudioTrackReleased();
+    }
   }
 
   Future<void> _releaseVideoTrack(String? trackId) async {
