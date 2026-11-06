@@ -183,6 +183,8 @@ extension AppLocalizationsExtension on AppLocalizations {
       'call_SemanticsLabel_merge' => call_SemanticsLabel_merge,
       'call_CallList_statusOnCall' => call_CallList_statusOnCall,
       'call_ToolbarStatus_connecting' => call_ToolbarStatus_connecting,
+      'call_ToolbarStatus_noiseReductionOff' =>
+        call_ToolbarStatus_noiseReductionOff,
       'call_ToolbarStatus_reconnecting' => call_ToolbarStatus_reconnecting,
       'call_description_held' => call_description_held,
       'call_description_peerReportsMuted' => call_description_peerReportsMuted,
@@ -2149,6 +2151,12 @@ extension AppLocalizationsExtension on AppLocalizations {
         [final String name] => call_FocusedActionHint_willBeHeld(name),
         _ => throw ArgumentError(
           'call_FocusedActionHint_willBeHeld requires 1 arguments',
+        ),
+      },
+      'call_SemanticsLabel_noiseReductionOff' => switch (args) {
+        [final String action] => call_SemanticsLabel_noiseReductionOff(action),
+        _ => throw ArgumentError(
+          'call_SemanticsLabel_noiseReductionOff requires 1 arguments',
         ),
       },
       'contact_SemanticsLabel_addFavorite' => switch (args) {

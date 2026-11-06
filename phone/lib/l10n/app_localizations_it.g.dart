@@ -501,6 +501,14 @@ class AppLocalizationsIt extends AppLocalizations {
   String get call_ToolbarStatus_connecting => 'Connessione...';
 
   @override
+  String call_SemanticsLabel_noiseReductionOff(String action) {
+    return '$action. Riduzione del rumore disattivata';
+  }
+
+  @override
+  String get call_ToolbarStatus_noiseReductionOff => 'Riduzione del rumore disattivata';
+
+  @override
   String get call_ToolbarStatus_reconnecting => 'Riconnessione...';
 
   @override

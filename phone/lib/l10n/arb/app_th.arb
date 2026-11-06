@@ -494,6 +494,19 @@
   "@call_ToolbarStatus_connecting": {
     "description": "Toolbar status line while the very first signaling connection is being established (turns into Reconnecting once a connection has existed)."
   },
+  "call_SemanticsLabel_noiseReductionOff": "{action} ปิดการลดเสียงรบกวนแล้ว",
+  "@call_SemanticsLabel_noiseReductionOff": {
+    "description": "Name of the microphone control while the extra noise reduction did not start: the control's action, then the same words as the toolbar",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "call_ToolbarStatus_noiseReductionOff": "ปิดการลดเสียงรบกวนแล้ว",
+  "@call_ToolbarStatus_noiseReductionOff": {
+    "description": "Call screen toolbar status line when extra noise reduction was on in media settings and did not start. Also added to the name of the mute control."
+  },
   "call_ToolbarStatus_reconnecting": "กำลังเชื่อมต่อใหม่...",
   "@call_ToolbarStatus_reconnecting": {
     "description": "Suffix on the call screen toolbar status line while the signaling connection is being re-established."

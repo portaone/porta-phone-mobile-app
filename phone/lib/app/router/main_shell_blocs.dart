@@ -141,15 +141,16 @@ class MainShellBlocs extends StatelessWidget {
             // Initialize media builder with app-configured audio/video constraints
             // Used to capture synchronized MediaStream (audio+video) for WebRTC track addition.
             final appPermissions = context.read<AppPermissions>();
+            final voiceNoiseReduction = VoiceNoiseReduction.isSupported
+                ? VoiceNoiseReduction(
+                    isEnabled: () =>
+                        audioProcessingSettingsRepository.getAudioProcessingSettings().voiceNoiseReduction ??
+                        featureAccess.callConfig.audio.voiceNoiseReduction,
+                  )
+                : null;
             final userMediaBuilder = DefaultUserMediaBuilder(
               audioConstraintsBuilder: AudioConstraintsWithAppSettingsBuilder(audioProcessingSettingsRepository),
-              audioTrackLifecycle: VoiceNoiseReduction.isSupported
-                  ? VoiceNoiseReduction(
-                      isEnabled: () =>
-                          audioProcessingSettingsRepository.getAudioProcessingSettings().voiceNoiseReduction ??
-                          featureAccess.callConfig.audio.voiceNoiseReduction,
-                    )
-                  : null,
+              audioTrackLifecycle: voiceNoiseReduction,
               videoConstraintsBuilder: VideoConstraintsWithAppSettingsBuilder(videoCapturingSettingsRepository),
               isCameraPermissionGranted: () => appPermissions.isPermissionGranted(Permission.camera),
             );
@@ -229,6 +230,7 @@ class MainShellBlocs extends StatelessWidget {
               sdpSanitizer: RemoteSdpSanitizer(),
               webRtcOptionsBuilder: WebrtcOptionsWithAppSettingsBuilder(audioProcessingSettingsRepository),
               userMediaBuilder: userMediaBuilder,
+              voiceNoiseReductionFailed: voiceNoiseReduction?.failed,
               contactResolver: contactResolver,
               callErrorReporter: DefaultCallErrorReporter((n) => notificationsBloc.add(NotificationsSubmitted(n))),
               iceFilter: FilterWithAppSettings(iceSettingsRepository),

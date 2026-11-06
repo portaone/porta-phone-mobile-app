@@ -299,6 +299,12 @@ const String settingsUserInfoNumberId = 'settingsUserInfoNumber';
 /// The About row of the settings list.
 const String settingsAboutTileId = 'settingsAboutTile';
 
+/// The Media settings row of the settings list.
+const String settingsMediaTileId = 'settingsMediaTile';
+
+/// The header of the audio processing section of the media settings.
+const String mediaSettingsAudioProcessingSectionId = 'mediaSettingsAudioProcessingSection';
+
 /// Values on the About screen: the Core address the app is connected to and
 /// the identifier of this app's session.
 const String aboutCoreUrlId = 'aboutCoreUrl';
@@ -307,6 +313,7 @@ const String aboutAppSessionIdentifierId = 'aboutAppSessionIdentifier';
 /// The number of the other party on the call screen, whether or not a name
 /// is shown above it.
 const String callPeerNumberId = 'callPeerNumber';
+const String callToolbarNoiseReductionOffId = 'callToolbarNoiseReductionOff';
 const String signupVerifyResendButtonId = 'signupVerifyResendButton';
 const String statusIconPickerId = 'statusIconPicker';
 const String statusIconPickerSearchId = 'statusIconPickerSearch';
