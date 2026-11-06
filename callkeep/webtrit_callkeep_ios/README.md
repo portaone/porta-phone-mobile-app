@@ -147,6 +147,27 @@ CallKit alone and is answered. Several calls wait in the order they came. The Vo
 waiting call is still reported, under the UUID of a call of ours that lives in CallKit, which
 CallKit refuses as a duplicate - the obligation is met and nothing enters the registry.
 
+### Calls kept in the application in front
+
+With `keepIncomingInAppInFront` as well (off by default), a call that comes while the application
+is in front and one of our calls is in conversation waits in the application too: iOS shows
+nothing over the application for it - no banner, no call-waiting screen - and the plugin's
+call-waiting tone plays. It enters CallKit as an ordinary incoming call once the application goes
+to the background (Home, the app switcher, the screen locked) or no call of ours is in
+conversation any more; the Control Center or the Notification Center, which leave the application
+in the foreground, let nothing in.
+
+A waiting call taken in the application - during a conversation, or while another call rings,
+which is then taken out of CallKit for it - enters CallKit as an outgoing call
+(`CXStartCallAction`), whose start the plugin passes to the application as the answer of the
+incoming call. An incoming report answered at once brings CallKit's own in-call screen over the
+application for about a second (iPhone 12 mini, iOS 27), the application goes to the background
+for it, and the call taken out comes back with the system's call-waiting screen; a start the
+application makes in front brings up nothing. The call in conversation is held in the same transaction, and a conference first, in a
+transaction of its own: riding with the start, the holds of a conference were still pending when
+CallKit ended every member of the room. What this costs: iOS's call history lists the answered
+call as outgoing.
+
 ---
 
 ## Mute after the audio session comes back

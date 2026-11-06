@@ -72,6 +72,19 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
   NSMutableArray<NSUUID *> *_queuedIncomingUuids;
   NSMutableDictionary<NSUUID *, CXCallUpdate *> *_queuedIncomingUpdates;
   NSMutableSet<NSUUID *> *_admittedIncomingUuids;
+  // Calls kept in the application while it is in front (keepIncomingInAppInFront) - see "Incoming
+  // queue". Whether the application went to the background: set when it did, cleared when it
+  // comes back to the foreground. Moments out of the front that keep it in the foreground - the
+  // Control Center, the Notification Center, a system alert - do not set it.
+  BOOL _keepIncomingInAppInFront;
+  BOOL _appInBackground;
+  // Waiting calls taken during a conversation enter CallKit as outgoing - see
+  // answerWaitingCallAsOutgoing. By the CallKit UUID of each such start until its action is
+  // performed: the calls held for it, to take off hold again should the answer fail, and whether
+  // the conference was held for it.
+  NSMutableSet<NSUUID *> *_outgoingEntryUuids;
+  NSMutableDictionary<NSUUID *, NSArray<NSUUID *> *> *_heldForOutgoingEntry;
+  NSMutableSet<NSUUID *> *_groupHeldForOutgoingEntry;
   // Under which UUID CallKit shows each incoming call, now and before: a call this plugin takes
   // out of CallKit to let a waiting one be answered comes back under a new UUID, while the
   // application goes on naming it by its own - see "Incoming queue" and CallPresentations.h. And
@@ -113,6 +126,15 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
     // Created eagerly so it can be pre-warmed from the very first
     // didActivateAudioSession callback, not from the first play request.
     _callWaitingTone = [[CallWaitingTonePlayer alloc] init];
+    _appInBackground = UIApplication.sharedApplication.applicationState == UIApplicationStateBackground;
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationDidEnterBackground:)
+                                                 name:UIApplicationDidEnterBackgroundNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationWillEnterForeground:)
+                                                 name:UIApplicationWillEnterForegroundNotification
+                                               object:nil];
     _ownCallUuids = [NSMutableSet set];
     _videoCallUuids = [NSMutableSet set];
     _answeringCallUuids = [NSMutableSet set];
@@ -124,6 +146,9 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
     _ownEndActionInitiators = [NSMutableDictionary dictionary];
     _mutedCallUuids = [NSMutableSet set];
     _queuedIncomingUuids = [NSMutableArray array];
+    _outgoingEntryUuids = [NSMutableSet set];
+    _heldForOutgoingEntry = [NSMutableDictionary dictionary];
+    _groupHeldForOutgoingEntry = [NSMutableSet set];
     _queuedIncomingUpdates = [NSMutableDictionary dictionary];
     _admittedIncomingUuids = [NSMutableSet set];
     _presentations = [[CallPresentations alloc] init];
@@ -182,6 +207,8 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
         iosOptions.queueIncomingWhileRinging != nil && iosOptions.queueIncomingWhileRinging.boolValue;
     _holdActiveBeforeThirdIncoming =
         iosOptions.holdActiveBeforeThirdIncoming != nil && iosOptions.holdActiveBeforeThirdIncoming.boolValue;
+    _keepIncomingInAppInFront =
+        iosOptions.keepIncomingInAppInFront != nil && iosOptions.keepIncomingInAppInFront.boolValue;
 
     if (iosOptions.ringbackSound != nil) {
       _ringback = [self createRingbackPlayer:iosOptions.ringbackSound];
@@ -247,6 +274,8 @@ static const CFAbsoluteTime kAudioSessionMuteResyncWindow = 1.0;
         iosOptions.queueIncomingWhileRinging != nil && iosOptions.queueIncomingWhileRinging.boolValue;
     _holdActiveBeforeThirdIncoming =
         iosOptions.holdActiveBeforeThirdIncoming != nil && iosOptions.holdActiveBeforeThirdIncoming.boolValue;
+    _keepIncomingInAppInFront =
+        iosOptions.keepIncomingInAppInFront != nil && iosOptions.keepIncomingInAppInFront.boolValue;
     
     if (_ringback == nil && iosOptions.ringbackSound != nil) {
       _ringback = [self createRingbackPlayer:iosOptions.ringbackSound];
@@ -926,6 +955,15 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
 // the other is kept. (The Android core declines the ringing call there -
 // InProcessCallkeepCore.answerQueuedCall.)
 //
+// With keepIncomingInAppInFront a call also waits in the application while the application is in
+// front and a call of ours is in conversation: iOS then shows nothing over the application for it -
+// no banner, no call-waiting screen - and the plugin's call-waiting tone plays. It is let into
+// CallKit as an ordinary incoming call as soon as that no longer holds: the application went to
+// the background (Home, the app switcher, the screen locked), or no call of ours is in
+// conversation any more. A moment out of the front that leaves the application in the foreground -
+// the Control Center, the Notification Center - lets nothing in. A waiting call taken in the
+// application enters CallKit as outgoing - see answerWaitingCallAsOutgoing.
+//
 // The VoIP push of a waiting call must still be reported. It is reported under the UUID of a call
 // of ours that lives in CallKit: CallKit refuses it as a duplicate (callUUIDAlreadyExists), the
 // obligation is met and nothing enters the registry (Apple DTS:
@@ -1041,7 +1079,31 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   if (!_queueIncomingWhileRinging || uuid == nil || [self isInCallKit:uuid]) {
     return NO;
   }
-  return [_queuedIncomingUuids containsObject:uuid] || [self ringingOwnIncomingCallUUIDExcluding:uuid] != nil;
+  return [_queuedIncomingUuids containsObject:uuid] || [self ringingOwnIncomingCallUUIDExcluding:uuid] != nil ||
+         [self keepsIncomingInApp];
+}
+
+/// Whether a call that comes now waits in the application, kept from CallKit while the
+/// application is in front during a conversation (keepIncomingInAppInFront). A conversation, not
+/// any live call: a call that only rings or dials is no reason to keep another one out of the
+/// system, and the call in conversation is what the push of the waiting call is reported behind.
+- (BOOL)keepsIncomingInApp {
+  return _queueIncomingWhileRinging && _keepIncomingInAppInFront && !_appInBackground &&
+         UIApplication.sharedApplication.applicationState != UIApplicationStateBackground &&
+         [self hasConnectedOwnCall];
+}
+
+- (void)applicationDidEnterBackground:(NSNotification *)notification {
+  _appInBackground = YES;
+  if (_queuedIncomingUuids.count > 0) {
+    WTPLog(@"[Callkeep][queue] the application went to the background, %lu waiting",
+          (unsigned long)_queuedIncomingUuids.count);
+    [self releaseQueuedIncomingIfNothingRings];
+  }
+}
+
+- (void)applicationWillEnterForeground:(NSNotification *)notification {
+  _appInBackground = NO;
 }
 
 - (void)queueIncomingCallUUID:(NSUUID *)uuid update:(CXCallUpdate *)update {
@@ -1051,6 +1113,7 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
     [_queuedIncomingUuids addObject:uuid];
   }
   _queuedIncomingUpdates[uuid] = update;
+  [self syncCallWaitingTone:_callController.callObserver];
 }
 
 /// Takes [uuid] out of the queue; NO when it was not waiting.
@@ -1060,6 +1123,7 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   }
   [_queuedIncomingUuids removeObject:uuid];
   [_queuedIncomingUpdates removeObjectForKey:uuid];
+  [self syncCallWaitingTone:_callController.callObserver];
   return YES;
 }
 
@@ -1069,6 +1133,9 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
   [_admittedIncomingUuids removeAllObjects];
   [_presentations reset];
   [_incomingUpdates removeAllObjects];
+  [_outgoingEntryUuids removeAllObjects];
+  [_heldForOutgoingEntry removeAllObjects];
+  [_groupHeldForOutgoingEntry removeAllObjects];
 }
 
 /// The push of a waiting call, reported behind [shield] (see "Incoming queue").
@@ -1110,9 +1177,14 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
                                 }];
 }
 
-/// Lets the oldest waiting call into CallKit once nothing of ours rings there.
+/// Lets the oldest waiting call into CallKit once nothing of ours rings there, unless the
+/// application keeps it while in front (keepsIncomingInApp).
 - (void)releaseQueuedIncomingIfNothingRings {
-  if (_queuedIncomingUuids.count == 0 || [self ringingOwnIncomingCallUUIDExcluding:nil] != nil) {
+  // A call entering CallKit as outgoing counts as ringing until it is answered: the calls taken
+  // out for it would otherwise come back before it, with nothing in conversation to keep them in
+  // the application.
+  if (_queuedIncomingUuids.count == 0 || [self ringingOwnIncomingCallUUIDExcluding:nil] != nil ||
+      _outgoingEntryUuids.count > 0 || [self keepsIncomingInApp]) {
     return;
   }
   NSUUID *uuid = _queuedIncomingUuids.firstObject;
@@ -1234,6 +1306,14 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
     [self forgetCall:ringing];
   }
   NSUInteger takenOut = place;
+  if (_keepIncomingInAppInFront) {
+    // Taken in the application, which is in front: as an incoming report answered at once the
+    // call would bring CallKit's in-call screen over it, the application would go to the
+    // background for it, and the calls taken out would be let in behind it with the system's
+    // call-waiting screen.
+    [self answerWaitingCallAsOutgoing:uuid update:update waitingAt:takenOut completion:completion];
+    return;
+  }
   [self reportQueuedIncomingCallUUID:uuid
                               update:update
                      keepWhenRefused:YES
@@ -1256,6 +1336,127 @@ displayNameOrContactIdentifier:(NSString *)displayNameOrContactIdentifier
                               [self requestAnswerOfCallUUID:presentation.callKitUUID completion:completion];
                             }
                           }];
+}
+
+/// The user takes a waiting call in the application (keepIncomingInAppInFront): it enters CallKit
+/// as outgoing, whether a call is in conversation or one rings and was taken out for it. Should it
+/// come back, it waits at [place] - behind the calls taken out for it, which rang before it.
+///
+/// Reported as incoming and answered at once, the call brings CallKit's own in-call screen over
+/// the application for about a second (iPhone 12 mini, iOS 27) - the very screen the application
+/// kept it from. A start the application makes while in front brings up nothing. So the call
+/// enters with a CXStartCallAction under the UUID of its presentation, and its start reaches the
+/// application as the answer of the incoming call (performStartCallAction). iOS's call history
+/// lists it as outgoing.
+///
+/// The call in conversation is held in the same transaction: a call going active beside another
+/// active ungrouped one makes CallKit end that one. A conference is held first, in a transaction
+/// of its own: riding with the start, its holds were still pending when CallKit ended every member
+/// of the room. Should CallKit refuse either transaction, or the application the answer, what was
+/// held is taken off hold again and the call waits again, at the head of the queue.
+- (void)answerWaitingCallAsOutgoing:(NSUUID *)uuid
+                             update:(CXCallUpdate *)update
+                          waitingAt:(NSUInteger)place
+                         completion:(void (^)(WTPCallRequestError *, FlutterError *))completion {
+  if (update == nil) {
+    update = [[CXCallUpdate alloc] init];
+  }
+  CallPresentation *presentation = [_presentations presentationToReportForLogicalUUID:uuid];
+  NSUUID *callKitUuid = presentation.callKitUUID;
+  WTPLog(@"[Callkeep][queue] %@ is taken in the application - entering CallKit as outgoing %@", uuid.UUIDString,
+        callKitUuid.UUIDString);
+  if (![self hasConnectedOwnCall]) {
+    [self configureAudioSession];
+  }
+  _incomingUpdates[uuid] = update;
+  [_ownCallUuids addObject:callKitUuid];
+  [_outgoingEntryUuids addObject:callKitUuid];
+
+  NSMutableArray<CXAction *> *actions = [NSMutableArray array];
+  NSMutableArray<NSUUID *> *held = [NSMutableArray array];
+  for (CXCall *call in _callController.callObserver.calls) {
+    if (!call.hasEnded && call.hasConnected && !call.isOnHold && [_ownCallUuids containsObject:call.UUID] &&
+        ![_groupMemberUuids containsObject:call.UUID]) {
+      [actions addObject:[[CXSetHeldCallAction alloc] initWithCallUUID:call.UUID onHold:YES]];
+      [held addObject:call.UUID];
+    }
+  }
+  _heldForOutgoingEntry[callKitUuid] = held;
+  CXHandle *handle = update.remoteHandle ?: [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:@"unknown"];
+  CXStartCallAction *start = [[CXStartCallAction alloc] initWithCallUUID:callKitUuid handle:handle];
+  start.video = update.hasVideo;
+  [actions addObject:start];
+
+  void (^requestStart)(void) = ^{
+    [self requestTransaction:[[CXTransaction alloc] initWithActions:actions]
+                  completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+                    if (error != nil || flutterError != nil) {
+                      dispatch_async(dispatch_get_main_queue(), ^{
+                        WTPLog(@"[Callkeep][queue] CallKit refused the outgoing entry of %@", uuid.UUIDString);
+                        // A refused transaction performed none of its actions: only the conference
+                        // may have been held, by the transaction before.
+                        [self->_heldForOutgoingEntry removeObjectForKey:callKitUuid];
+                        [self undoOutgoingEntry:callKitUuid ofLogicalUUID:uuid update:update at:place];
+                      });
+                    }
+                    completion(error, flutterError);
+                  }];
+  };
+  NSArray<CXAction *> *groupHolds = [self holdActionsForGroup:_groupMemberUuids onHold:YES];
+  if (groupHolds.count == 0) {
+    requestStart();
+    return;
+  }
+  [_groupHeldForOutgoingEntry addObject:callKitUuid];
+  [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:groupHolds]
+                         completion:^(WTPCallRequestError *error, FlutterError *flutterError) {
+                           if (error != nil || flutterError != nil) {
+                             dispatch_async(dispatch_get_main_queue(), ^{
+                               [self->_groupHeldForOutgoingEntry removeObject:callKitUuid];
+                               [self->_heldForOutgoingEntry removeObjectForKey:callKitUuid];
+                               [self undoOutgoingEntry:callKitUuid ofLogicalUUID:uuid update:update at:place];
+                             });
+                             completion(error, flutterError);
+                           } else {
+                             dispatch_async(dispatch_get_main_queue(), requestStart);
+                           }
+                         }];
+}
+
+/// An outgoing entry that did not come to an answer: what was held for it is taken off hold
+/// again, and the call waits again at [place] of the queue, under a new presentation next time.
+- (void)undoOutgoingEntry:(NSUUID *)callKitUuid
+            ofLogicalUUID:(NSUUID *)uuid
+                   update:(CXCallUpdate *)update
+                       at:(NSUInteger)place {
+  [_outgoingEntryUuids removeObject:callKitUuid];
+  [_ownCallUuids removeObject:callKitUuid];
+  [_presentations withdrawLivePresentationOfLogicalUUID:uuid];
+  NSMutableArray<CXAction *> *resumes = [NSMutableArray array];
+  for (NSUUID *heldUuid in _heldForOutgoingEntry[callKitUuid] ?: @[]) {
+    if ([self isLiveOwnCallUUID:heldUuid]) {
+      [resumes addObject:[[CXSetHeldCallAction alloc] initWithCallUUID:heldUuid onHold:NO]];
+    }
+  }
+  [_heldForOutgoingEntry removeObjectForKey:callKitUuid];
+  if (resumes.count > 0) {
+    [self requestTransaction:[[CXTransaction alloc] initWithActions:resumes]
+                  completion:^(WTPCallRequestError *error, FlutterError *flutterError) {}];
+  }
+  if ([_groupHeldForOutgoingEntry containsObject:callKitUuid]) {
+    [_groupHeldForOutgoingEntry removeObject:callKitUuid];
+    NSArray<CXAction *> *groupResumes = [self holdActionsForGroup:_groupMemberUuids onHold:NO];
+    if (groupResumes.count > 0) {
+      [self requestGroupHoldTransaction:[[CXTransaction alloc] initWithActions:groupResumes]
+                             completion:^(WTPCallRequestError *error, FlutterError *flutterError) {}];
+    }
+  }
+  if (![_queuedIncomingUuids containsObject:uuid]) {
+    [_queuedIncomingUuids insertObject:uuid atIndex:MIN(place, _queuedIncomingUuids.count)];
+  }
+  _queuedIncomingUpdates[uuid] = update;
+  [self syncCallWaitingTone:_callController.callObserver];
+  [self releaseQueuedIncomingIfNothingRings];
 }
 
 - (BOOL)hasConnectedOwnCall {
@@ -1729,7 +1930,8 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
   NSLog(@"[CallWaitingTone] sync: calls=%lu connected=%d ringingIncoming=%d",
         (unsigned long)callObserver.calls.count, hasConnected, hasRingingIncoming);
 #endif
-  if (hasConnected && hasRingingIncoming) {
+  // A call waiting in the application rings there only: the tone is its sound as well.
+  if (hasConnected && (hasRingingIncoming || _queuedIncomingUuids.count > 0)) {
     [_callWaitingTone play];
   } else {
     [_callWaitingTone stop];
@@ -1755,6 +1957,10 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
 #ifdef DEBUG
   NSLog(@"[Callkeep][CXProviderDelegate][provider:performStartCallAction:]");
 #endif
+  if ([_outgoingEntryUuids containsObject:action.callUUID]) {
+    [self performOutgoingEntryAction:action];
+    return;
+  }
   [_ownCallUuids addObject:action.callUUID];
   [_delegateFlutterApi performStartCall:action.callUUID.UUIDString
                                  handle:[action.handle toPigeon]
@@ -1772,6 +1978,48 @@ continueUserActivity:(nonnull NSUserActivity *)userActivity
                                  }
                                }
                              }];
+}
+
+/// The start of a waiting call taken during a conversation (answerWaitingCallAsOutgoing): for the
+/// application it is the answer of the incoming call, and it is fulfilled only once the
+/// application took that answer.
+- (void)performOutgoingEntryAction:(CXStartCallAction *)action {
+  NSUUID *callKitUuid = action.callUUID;
+  NSUUID *answered = [self applicationUUIDForCallKitUUID:callKitUuid];
+  CXCallUpdate *update = answered != nil ? _incomingUpdates[answered] : nil;
+  if (answered == nil) {
+    // The call moved on while its start was on its way: nothing of the application's to answer.
+    [_outgoingEntryUuids removeObject:callKitUuid];
+    [_heldForOutgoingEntry removeObjectForKey:callKitUuid];
+    [_groupHeldForOutgoingEntry removeObject:callKitUuid];
+    [action fail];
+    return;
+  }
+  WTPLog(@"[Callkeep][queue] the outgoing entry %@ answers %@", callKitUuid.UUIDString, answered.UUIDString);
+  [_answeringCallUuids addObject:callKitUuid];
+  [_delegateFlutterApi performAnswerCall:answered.UUIDString
+                              completion:^(NSNumber *fulfill, FlutterError *error) {
+                                [self->_answeringCallUuids removeObject:callKitUuid];
+                                if (error != nil || [fulfill boolValue] != YES) {
+                                  WTPLog(@"[Callkeep][queue] the application did not answer %@ - it waits again",
+                                        answered.UUIDString);
+                                  [action fail];
+                                  [self undoOutgoingEntry:callKitUuid ofLogicalUUID:answered update:update at:0];
+                                  return;
+                                }
+                                [self->_outgoingEntryUuids removeObject:callKitUuid];
+                                [self->_heldForOutgoingEntry removeObjectForKey:callKitUuid];
+                                [self->_groupHeldForOutgoingEntry removeObject:callKitUuid];
+                                [action fulfill];
+                                [self->_provider reportOutgoingCallWithUUID:callKitUuid startedConnectingAtDate:nil];
+                                [self->_provider reportOutgoingCallWithUUID:callKitUuid connectedAtDate:nil];
+                                if (update != nil) {
+                                  [self->_provider reportCallWithUUID:callKitUuid updated:update];
+                                }
+                                if ([self isLiveOwnCallUUID:callKitUuid]) {
+                                  [self setVideo:action.video forCallUUID:callKitUuid];
+                                }
+                              }];
 }
 
 - (void)provider:(CXProvider *)provider performAnswerCallAction:(CXAnswerCallAction *)action {
