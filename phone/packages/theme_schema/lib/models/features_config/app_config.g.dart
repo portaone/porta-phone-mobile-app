@@ -286,6 +286,12 @@ const _$AppConfigJsonSchema = {
               'Whether media settings offers the control, so a person can change\n[speakerOnMinimize] on their own device.',
           'default': false,
         },
+        'voiceNoiseReduction': {
+          'type': 'boolean',
+          'description':
+              'Whether RNNoise runs on the voice a person sends, for a person who has not\nchosen on their own device.\n\nMedia settings always offers the switch, and a choice made there wins. A\nphone the noise reduction cannot run on ignores this.',
+          'default': false,
+        },
       },
     },
     'AppConfigCall': {
@@ -622,12 +628,14 @@ AppConfigCallAudio _$AppConfigCallAudioFromJson(Map<String, dynamic> json) =>
       speakerOnMinimize: json['speakerOnMinimize'] as bool? ?? true,
       speakerOnMinimizeConfigurable:
           json['speakerOnMinimizeConfigurable'] as bool? ?? false,
+      voiceNoiseReduction: json['voiceNoiseReduction'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$AppConfigCallAudioToJson(AppConfigCallAudio instance) =>
     <String, dynamic>{
       'speakerOnMinimize': instance.speakerOnMinimize,
       'speakerOnMinimizeConfigurable': instance.speakerOnMinimizeConfigurable,
+      'voiceNoiseReduction': instance.voiceNoiseReduction,
     };
 
 AppConfigPeerConnection _$AppConfigPeerConnectionFromJson(

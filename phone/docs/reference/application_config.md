@@ -421,7 +421,8 @@ Embedded web resource tab.
 ```json
 "audio": {
   "speakerOnMinimize": true,
-  "speakerOnMinimizeConfigurable": false
+  "speakerOnMinimizeConfigurable": false,
+  "voiceNoiseReduction": false
 }
 ```
 
@@ -433,6 +434,9 @@ Embedded web resource tab.
 - `speakerOnMinimizeConfigurable`: whether media settings offers the switch, letting a person
   change the value on their own device. `false` by default. Where it is offered the device's
   choice wins; where it is not, a choice stored earlier is ignored and the value above applies.
+- `voiceNoiseReduction`: whether RNNoise runs on the voice a person sends, for everyone who has not
+  chosen in media settings. `false` by default. Media settings always offers the switch, and a choice
+  made there wins over this value, off included. A phone the noise reduction cannot run on ignores it.
 
 ### ICE Configuration
 

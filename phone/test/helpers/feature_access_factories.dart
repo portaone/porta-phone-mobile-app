@@ -102,6 +102,7 @@ AppConfig createMockAppConfig() {
   when(() => call.audio).thenReturn(audio);
   when(() => audio.speakerOnMinimize).thenReturn(true);
   when(() => audio.speakerOnMinimizeConfigurable).thenReturn(false);
+  when(() => audio.voiceNoiseReduction).thenReturn(false);
 
   when(() => contacts.details).thenReturn(contactDetails);
   when(() => contactDetails.actions).thenReturn(contactActions);

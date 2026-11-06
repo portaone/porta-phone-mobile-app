@@ -3,7 +3,11 @@ import 'package:equatable/equatable.dart';
 /// What the deployment decided about a call's audio output at build time, and
 /// whether it lets the person using the app change that decision.
 class CallAudioConfig extends Equatable {
-  const CallAudioConfig({this.speakerOnMinimize = true, this.speakerOnMinimizeConfigurable = false});
+  const CallAudioConfig({
+    this.speakerOnMinimize = true,
+    this.speakerOnMinimizeConfigurable = false,
+    this.voiceNoiseReduction = false,
+  });
 
   /// Whether an audio call moves to the loudspeaker when its screen is left.
   /// The value a device uses until someone changes it there.
@@ -12,6 +16,10 @@ class CallAudioConfig extends Equatable {
   /// Whether the media settings screen shows the control at all.
   final bool speakerOnMinimizeConfigurable;
 
+  /// Whether RNNoise runs on the outgoing voice until someone chooses on the
+  /// device. Media settings always offers that choice.
+  final bool voiceNoiseReduction;
+
   @override
-  List<Object?> get props => [speakerOnMinimize, speakerOnMinimizeConfigurable];
+  List<Object?> get props => [speakerOnMinimize, speakerOnMinimizeConfigurable, voiceNoiseReduction];
 }

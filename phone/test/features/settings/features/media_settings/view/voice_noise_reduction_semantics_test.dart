@@ -35,6 +35,7 @@ void main() {
   setUp(() {
     cubit = _MockMediaSettingsCubit();
     when(() => cubit.setAudioProcessingSettings(any())).thenReturn(null);
+    when(() => cubit.voiceNoiseReductionDefault).thenReturn(false);
   });
 
   Widget wrap() => MaterialApp(
@@ -84,7 +85,7 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('choosing off through semantics clears it', (tester) async {
+  testWidgets('choosing off through semantics stores off', (tester) async {
     final handle = tester.ensureSemantics();
     when(() => cubit.state).thenReturn(_state(const AudioProcessingSettings(voiceNoiseReduction: true)));
 
@@ -93,7 +94,33 @@ void main() {
 
     final saved =
         verify(() => cubit.setAudioProcessingSettings(captureAny())).captured.single as AudioProcessingSettings;
-    expect(saved.voiceNoiseReduction, isNull);
+    expect(saved.voiceNoiseReduction, isFalse);
+
+    handle.dispose();
+  });
+
+  testWidgets('a deployment that turns it on shows on until the person chooses', (tester) async {
+    final handle = tester.ensureSemantics();
+    when(() => cubit.voiceNoiseReductionDefault).thenReturn(true);
+    when(() => cubit.state).thenReturn(_state(AudioProcessingSettings.blank()));
+
+    await tester.pumpWidget(wrap());
+
+    expect(tester.getSemantics(find.bySemanticsIdentifier(onId)), isSemantics(isChecked: true, hasTapAction: true));
+    expect(tester.getSemantics(find.bySemanticsIdentifier(offId)), isSemantics(isChecked: false, hasTapAction: true));
+
+    handle.dispose();
+  });
+
+  testWidgets('a person who chose off keeps it off when the deployment turns it on', (tester) async {
+    final handle = tester.ensureSemantics();
+    when(() => cubit.voiceNoiseReductionDefault).thenReturn(true);
+    when(() => cubit.state).thenReturn(_state(const AudioProcessingSettings(voiceNoiseReduction: false)));
+
+    await tester.pumpWidget(wrap());
+
+    expect(tester.getSemantics(find.bySemanticsIdentifier(offId)), isSemantics(isChecked: true, hasTapAction: true));
+    expect(tester.getSemantics(find.bySemanticsIdentifier(onId)), isSemantics(isChecked: false, hasTapAction: true));
 
     handle.dispose();
   });

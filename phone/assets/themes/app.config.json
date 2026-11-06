@@ -283,7 +283,8 @@
     },
     "audio": {
       "speakerOnMinimize": true,
-      "speakerOnMinimizeConfigurable": true
+      "speakerOnMinimizeConfigurable": true,
+      "voiceNoiseReduction": false
     }
   },
   "contacts": {

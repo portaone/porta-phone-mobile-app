@@ -2537,20 +2537,20 @@ $AppConfigCallAudioCopyWith<AppConfigCallAudio> get copyWith => _$AppConfigCallA
 @override
 bool operator ==(Object other) {
   final _this = this as AppConfigCallAudio;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigCallAudio&&(identical(other.speakerOnMinimize, _this.speakerOnMinimize) || other.speakerOnMinimize == _this.speakerOnMinimize)&&(identical(other.speakerOnMinimizeConfigurable, _this.speakerOnMinimizeConfigurable) || other.speakerOnMinimizeConfigurable == _this.speakerOnMinimizeConfigurable));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppConfigCallAudio&&(identical(other.speakerOnMinimize, _this.speakerOnMinimize) || other.speakerOnMinimize == _this.speakerOnMinimize)&&(identical(other.speakerOnMinimizeConfigurable, _this.speakerOnMinimizeConfigurable) || other.speakerOnMinimizeConfigurable == _this.speakerOnMinimizeConfigurable)&&(identical(other.voiceNoiseReduction, _this.voiceNoiseReduction) || other.voiceNoiseReduction == _this.voiceNoiseReduction));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as AppConfigCallAudio;
-  return Object.hash(runtimeType,_this.speakerOnMinimize,_this.speakerOnMinimizeConfigurable);
+  return Object.hash(runtimeType,_this.speakerOnMinimize,_this.speakerOnMinimizeConfigurable,_this.voiceNoiseReduction);
 }
 
 @override
 String toString() {
   final _this = this as AppConfigCallAudio;
-  return 'AppConfigCallAudio(speakerOnMinimize: ${_this.speakerOnMinimize}, speakerOnMinimizeConfigurable: ${_this.speakerOnMinimizeConfigurable})';
+  return 'AppConfigCallAudio(speakerOnMinimize: ${_this.speakerOnMinimize}, speakerOnMinimizeConfigurable: ${_this.speakerOnMinimizeConfigurable}, voiceNoiseReduction: ${_this.voiceNoiseReduction})';
 }
 
 
@@ -2561,7 +2561,7 @@ abstract mixin class $AppConfigCallAudioCopyWith<$Res>  {
   factory $AppConfigCallAudioCopyWith(AppConfigCallAudio value, $Res Function(AppConfigCallAudio) _then) = _$AppConfigCallAudioCopyWithImpl;
 @useResult
 $Res call({
- bool speakerOnMinimize, bool speakerOnMinimizeConfigurable
+ bool speakerOnMinimize, bool speakerOnMinimizeConfigurable, bool voiceNoiseReduction
 });
 
 
@@ -2578,10 +2578,11 @@ class _$AppConfigCallAudioCopyWithImpl<$Res>
 
 /// Create a copy of AppConfigCallAudio
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? speakerOnMinimize = null,Object? speakerOnMinimizeConfigurable = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? speakerOnMinimize = null,Object? speakerOnMinimizeConfigurable = null,Object? voiceNoiseReduction = null,}) {
   return _then(AppConfigCallAudio(
 speakerOnMinimize: null == speakerOnMinimize ? _self.speakerOnMinimize : speakerOnMinimize // ignore: cast_nullable_to_non_nullable
 as bool,speakerOnMinimizeConfigurable: null == speakerOnMinimizeConfigurable ? _self.speakerOnMinimizeConfigurable : speakerOnMinimizeConfigurable // ignore: cast_nullable_to_non_nullable
+as bool,voiceNoiseReduction: null == voiceNoiseReduction ? _self.voiceNoiseReduction : voiceNoiseReduction // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

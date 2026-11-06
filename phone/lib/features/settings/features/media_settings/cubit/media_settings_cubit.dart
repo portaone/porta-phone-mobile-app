@@ -55,6 +55,9 @@ class MediaSettingsCubit extends Cubit<MediaSettingsState> {
   final CallAudioConfig _audioConfig;
   final CallAudioSettingsRepository _callAudioSettingsRepository;
 
+  /// Whether RNNoise is on for a person who has not chosen here: the deployment's value.
+  bool get voiceNoiseReductionDefault => _audioConfig.voiceNoiseReduction;
+
   void setEncodingSettings(EncodingSettings settings) {
     emit(state.copyWithEncodingSettings(settings));
     _encodingSettingsRepository.setEncodingSettings(settings);
