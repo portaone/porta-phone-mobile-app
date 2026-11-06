@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:signaling/signaling.dart';
@@ -47,6 +48,7 @@ class CallBlocHarness {
     CallkeepConnections? callkeepConnections,
     CallCapabilitiesConfig capabilities = const CallCapabilitiesConfig(),
     bool Function()? speakerOnMinimize,
+    ValueListenable<bool>? voiceNoiseReductionFailed,
     CallMediaManager Function(Callkeep callkeep)? mediaManager,
     ManualOfferDeadline? offerDeadline,
     Timer Function(Duration, void Function())? renegotiationReplayTimer,
@@ -87,6 +89,7 @@ class CallBlocHarness {
       sendPresenceSettings: sendPresenceSettings,
       capabilities: capabilities,
       speakerOnMinimize: speakerOnMinimize,
+      voiceNoiseReductionFailed: voiceNoiseReductionFailed,
       mediaManager: mediaManager?.call(callkeep),
       onDiagnosticReportRequested: (_, _) {},
       signalingModule: signaling,

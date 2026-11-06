@@ -28,26 +28,26 @@ void debugFillProperties(DiagnosticPropertiesBuilder properties) {
   final _this = this as CallState;
   properties
     ..add(DiagnosticsProperty('type', 'CallState'))
-    ..add(DiagnosticsProperty('callServiceState', _this.callServiceState))..add(DiagnosticsProperty('currentAppLifecycleState', _this.currentAppLifecycleState))..add(DiagnosticsProperty('linesCount', _this.linesCount))..add(DiagnosticsProperty('activeCalls', _this.activeCalls))..add(DiagnosticsProperty('minimized', _this.minimized))..add(DiagnosticsProperty('audioDevice', _this.audioDevice))..add(DiagnosticsProperty('audioDeviceRequest', _this.audioDeviceRequest))..add(DiagnosticsProperty('availableAudioDevices', _this.availableAudioDevices))..add(DiagnosticsProperty('selectedCallId', _this.selectedCallId))..add(DiagnosticsProperty('placedCallFocus', _this.placedCallFocus))..add(DiagnosticsProperty('conference', _this.conference))..add(DiagnosticsProperty('linkedCall', _this.linkedCall));
+    ..add(DiagnosticsProperty('callServiceState', _this.callServiceState))..add(DiagnosticsProperty('currentAppLifecycleState', _this.currentAppLifecycleState))..add(DiagnosticsProperty('linesCount', _this.linesCount))..add(DiagnosticsProperty('activeCalls', _this.activeCalls))..add(DiagnosticsProperty('minimized', _this.minimized))..add(DiagnosticsProperty('voiceNoiseReductionFailed', _this.voiceNoiseReductionFailed))..add(DiagnosticsProperty('audioDevice', _this.audioDevice))..add(DiagnosticsProperty('audioDeviceRequest', _this.audioDeviceRequest))..add(DiagnosticsProperty('availableAudioDevices', _this.availableAudioDevices))..add(DiagnosticsProperty('selectedCallId', _this.selectedCallId))..add(DiagnosticsProperty('placedCallFocus', _this.placedCallFocus))..add(DiagnosticsProperty('conference', _this.conference))..add(DiagnosticsProperty('linkedCall', _this.linkedCall));
 }
 
 @override
 bool operator ==(Object other) {
   final _this = this as CallState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallState&&(identical(other.callServiceState, _this.callServiceState) || other.callServiceState == _this.callServiceState)&&(identical(other.currentAppLifecycleState, _this.currentAppLifecycleState) || other.currentAppLifecycleState == _this.currentAppLifecycleState)&&(identical(other.linesCount, _this.linesCount) || other.linesCount == _this.linesCount)&&const DeepCollectionEquality().equals(other.activeCalls, _this.activeCalls)&&(identical(other.minimized, _this.minimized) || other.minimized == _this.minimized)&&(identical(other.audioDevice, _this.audioDevice) || other.audioDevice == _this.audioDevice)&&(identical(other.audioDeviceRequest, _this.audioDeviceRequest) || other.audioDeviceRequest == _this.audioDeviceRequest)&&const DeepCollectionEquality().equals(other.availableAudioDevices, _this.availableAudioDevices)&&(identical(other.selectedCallId, _this.selectedCallId) || other.selectedCallId == _this.selectedCallId)&&(identical(other.placedCallFocus, _this.placedCallFocus) || other.placedCallFocus == _this.placedCallFocus)&&(identical(other.conference, _this.conference) || other.conference == _this.conference)&&(identical(other.linkedCall, _this.linkedCall) || other.linkedCall == _this.linkedCall));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CallState&&(identical(other.callServiceState, _this.callServiceState) || other.callServiceState == _this.callServiceState)&&(identical(other.currentAppLifecycleState, _this.currentAppLifecycleState) || other.currentAppLifecycleState == _this.currentAppLifecycleState)&&(identical(other.linesCount, _this.linesCount) || other.linesCount == _this.linesCount)&&const DeepCollectionEquality().equals(other.activeCalls, _this.activeCalls)&&(identical(other.minimized, _this.minimized) || other.minimized == _this.minimized)&&(identical(other.voiceNoiseReductionFailed, _this.voiceNoiseReductionFailed) || other.voiceNoiseReductionFailed == _this.voiceNoiseReductionFailed)&&(identical(other.audioDevice, _this.audioDevice) || other.audioDevice == _this.audioDevice)&&(identical(other.audioDeviceRequest, _this.audioDeviceRequest) || other.audioDeviceRequest == _this.audioDeviceRequest)&&const DeepCollectionEquality().equals(other.availableAudioDevices, _this.availableAudioDevices)&&(identical(other.selectedCallId, _this.selectedCallId) || other.selectedCallId == _this.selectedCallId)&&(identical(other.placedCallFocus, _this.placedCallFocus) || other.placedCallFocus == _this.placedCallFocus)&&(identical(other.conference, _this.conference) || other.conference == _this.conference)&&(identical(other.linkedCall, _this.linkedCall) || other.linkedCall == _this.linkedCall));
 }
 
 
 @override
 int get hashCode {
   final _this = this as CallState;
-  return Object.hash(runtimeType,_this.callServiceState,_this.currentAppLifecycleState,_this.linesCount,const DeepCollectionEquality().hash(_this.activeCalls),_this.minimized,_this.audioDevice,_this.audioDeviceRequest,const DeepCollectionEquality().hash(_this.availableAudioDevices),_this.selectedCallId,_this.placedCallFocus,_this.conference,_this.linkedCall);
+  return Object.hash(runtimeType,_this.callServiceState,_this.currentAppLifecycleState,_this.linesCount,const DeepCollectionEquality().hash(_this.activeCalls),_this.minimized,_this.voiceNoiseReductionFailed,_this.audioDevice,_this.audioDeviceRequest,const DeepCollectionEquality().hash(_this.availableAudioDevices),_this.selectedCallId,_this.placedCallFocus,_this.conference,_this.linkedCall);
 }
 
 @override
 String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   final _this = this as CallState;
-  return 'CallState(callServiceState: ${_this.callServiceState}, currentAppLifecycleState: ${_this.currentAppLifecycleState}, linesCount: ${_this.linesCount}, activeCalls: ${_this.activeCalls}, minimized: ${_this.minimized}, audioDevice: ${_this.audioDevice}, audioDeviceRequest: ${_this.audioDeviceRequest}, availableAudioDevices: ${_this.availableAudioDevices}, selectedCallId: ${_this.selectedCallId}, placedCallFocus: ${_this.placedCallFocus}, conference: ${_this.conference}, linkedCall: ${_this.linkedCall})';
+  return 'CallState(callServiceState: ${_this.callServiceState}, currentAppLifecycleState: ${_this.currentAppLifecycleState}, linesCount: ${_this.linesCount}, activeCalls: ${_this.activeCalls}, minimized: ${_this.minimized}, voiceNoiseReductionFailed: ${_this.voiceNoiseReductionFailed}, audioDevice: ${_this.audioDevice}, audioDeviceRequest: ${_this.audioDeviceRequest}, availableAudioDevices: ${_this.availableAudioDevices}, selectedCallId: ${_this.selectedCallId}, placedCallFocus: ${_this.placedCallFocus}, conference: ${_this.conference}, linkedCall: ${_this.linkedCall})';
 }
 
 
@@ -58,7 +58,7 @@ abstract mixin class $CallStateCopyWith<$Res>  {
   factory $CallStateCopyWith(CallState value, $Res Function(CallState) _then) = _$CallStateCopyWithImpl;
 @useResult
 $Res call({
- CallServiceState callServiceState, AppLifecycleState? currentAppLifecycleState, int linesCount, List<ActiveCall> activeCalls, bool? minimized, CallAudioDevice? audioDevice, AudioDeviceRequest? audioDeviceRequest, List<CallAudioDevice> availableAudioDevices, String? selectedCallId, ({String callId, String? returnsTo,})? placedCallFocus, ConferenceState conference, LinkedCall? linkedCall
+ CallServiceState callServiceState, AppLifecycleState? currentAppLifecycleState, int linesCount, List<ActiveCall> activeCalls, bool? minimized, CallAudioDevice? audioDevice, AudioDeviceRequest? audioDeviceRequest, List<CallAudioDevice> availableAudioDevices, String? selectedCallId, ({String callId, String? returnsTo,})? placedCallFocus, ConferenceState conference, LinkedCall? linkedCall, bool voiceNoiseReductionFailed
 });
 
 
@@ -75,7 +75,7 @@ class _$CallStateCopyWithImpl<$Res>
 
 /// Create a copy of CallState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? callServiceState = null,Object? currentAppLifecycleState = freezed,Object? linesCount = null,Object? activeCalls = null,Object? minimized = freezed,Object? audioDevice = freezed,Object? audioDeviceRequest = freezed,Object? availableAudioDevices = null,Object? selectedCallId = freezed,Object? placedCallFocus = freezed,Object? conference = null,Object? linkedCall = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? callServiceState = null,Object? currentAppLifecycleState = freezed,Object? linesCount = null,Object? activeCalls = null,Object? minimized = freezed,Object? audioDevice = freezed,Object? audioDeviceRequest = freezed,Object? availableAudioDevices = null,Object? selectedCallId = freezed,Object? placedCallFocus = freezed,Object? conference = null,Object? linkedCall = freezed,Object? voiceNoiseReductionFailed = null,}) {
   return _then(CallState(
 callServiceState: null == callServiceState ? _self.callServiceState : callServiceState // ignore: cast_nullable_to_non_nullable
 as CallServiceState,currentAppLifecycleState: freezed == currentAppLifecycleState ? _self.currentAppLifecycleState : currentAppLifecycleState // ignore: cast_nullable_to_non_nullable
@@ -89,7 +89,8 @@ as List<CallAudioDevice>,selectedCallId: freezed == selectedCallId ? _self.selec
 as String?,placedCallFocus: freezed == placedCallFocus ? _self.placedCallFocus : placedCallFocus // ignore: cast_nullable_to_non_nullable
 as ({String callId, String? returnsTo,})?,conference: null == conference ? _self.conference : conference // ignore: cast_nullable_to_non_nullable
 as ConferenceState,linkedCall: freezed == linkedCall ? _self.linkedCall : linkedCall // ignore: cast_nullable_to_non_nullable
-as LinkedCall?,
+as LinkedCall?,voiceNoiseReductionFailed: null == voiceNoiseReductionFailed ? _self.voiceNoiseReductionFailed : voiceNoiseReductionFailed // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

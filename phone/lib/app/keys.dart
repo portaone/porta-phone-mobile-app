@@ -298,6 +298,7 @@ const String aboutAppSessionIdentifierId = 'aboutAppSessionIdentifier';
 /// The number of the other party on the call screen, whether or not a name
 /// is shown above it.
 const String callPeerNumberId = 'callPeerNumber';
+const String callToolbarNoiseReductionOffId = 'callToolbarNoiseReductionOff';
 const String signupVerifyResendButtonId = 'signupVerifyResendButton';
 const String statusIconPickerId = 'statusIconPicker';
 const String statusIconPickerSearchId = 'statusIconPickerSearch';

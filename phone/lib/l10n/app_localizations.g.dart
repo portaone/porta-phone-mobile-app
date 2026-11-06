@@ -868,6 +868,12 @@ abstract class AppLocalizations {
   /// **'Connecting...'**
   String get call_ToolbarStatus_connecting;
 
+  /// Call screen toolbar status line when extra noise reduction was on in media settings and did not start. Also added to the name of the mute control.
+  ///
+  /// In en, this message translates to:
+  /// **'Noise reduction is off'**
+  String get call_ToolbarStatus_noiseReductionOff;
+
   /// Suffix on the call screen toolbar status line while the signaling connection is being re-established.
   ///
   /// In en, this message translates to:

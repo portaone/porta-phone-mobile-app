@@ -61,6 +61,7 @@ class CallActionArea extends StatelessWidget {
         onCameraPermissionDeniedPressed: params.onCameraPermissionDeniedPressed,
         onCameraChanged: actions.onCameraChanged,
         mutedValue: actions.muted,
+        noiseReductionFailed: params.voiceNoiseReductionFailed,
         onMutedChanged: params.onMutedChanged,
         audioDevice: params.audioDevice,
         availableAudioDevices: params.availableAudioDevices,

@@ -29,6 +29,15 @@ class _ConnectivityResultChanged extends CallEvent {
   List<Object?> get props => [result];
 }
 
+class _VoiceNoiseReductionFailedChanged extends CallEvent {
+  const _VoiceNoiseReductionFailedChanged(this.failed);
+
+  final bool failed;
+
+  @override
+  List<Object?> get props => [failed];
+}
+
 class _NavigatorMediaDevicesChange extends CallEvent {
   const _NavigatorMediaDevicesChange();
 }
