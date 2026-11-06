@@ -1304,6 +1304,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get login_ButtonTooltip_signInToYourInstance => 'Увійти до свого Cloud Backend';
 
   @override
+  String get login_Button_customCoreShort => 'Cloud Backend';
+
+  @override
   String login_CoreVersionUnsupportedExceptionError(String actual, String supportedConstraint) {
     return 'Непідтримувана версія екземпляра, будь ласка, зверніться до адміністратора вашої системи (фактична: $actual, підтримувана: $supportedConstraint)';
   }

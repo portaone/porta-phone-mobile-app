@@ -1,11 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:adaptive_kit/adaptive_kit.dart';
+
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 
 import 'confirm_dialog_style.dart';
 import 'confirm_dialog_styles.dart';
-import 'semantic_action.dart';
 
 export 'confirm_dialog_style.dart';
 export 'confirm_dialog_styles.dart';

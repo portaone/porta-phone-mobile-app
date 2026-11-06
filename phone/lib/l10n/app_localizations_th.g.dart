@@ -1266,6 +1266,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get login_ButtonTooltip_signInToYourInstance => 'เข้าสู่ระบบ Cloud Backend ของคุณ';
 
   @override
+  String get login_Button_customCoreShort => 'Cloud Backend';
+
+  @override
   String login_CoreVersionUnsupportedExceptionError(String actual, String supportedConstraint) {
     return 'เวอร์ชันอินสแตนซ์ที่ระบุไม่รองรับ โปรดติดต่อผู้ดูแลระบบของคุณ (ปัจจุบัน: $actual, ที่รองรับ: $supportedConstraint)';
   }

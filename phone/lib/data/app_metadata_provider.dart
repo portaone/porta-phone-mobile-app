@@ -1,4 +1,4 @@
-import 'package:device_display_name/device_display_name.dart' show userAgentToken;
+import 'package:device_profile/device_profile.dart' show userAgentToken;
 
 import 'package:webtrit_phone/data/data.dart';
 
