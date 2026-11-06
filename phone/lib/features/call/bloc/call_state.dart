@@ -155,9 +155,11 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
 
   /// Whether [anchorCallId] is a conversation a call can be placed for.
   ///
-  /// A call has to be an answered audio call on a numbered line - the server
-  /// merges and transfers calls by line - and not in a transfer or on its way
-  /// out.
+  /// A call has to be answered on a numbered line - the server merges and
+  /// transfers calls by line - and not in a transfer or on its way out. One
+  /// that is joined has to be audio too, as the room takes no video; a video
+  /// call can have a consultation placed for it, as the hand-over that follows
+  /// joins no room.
   ///
   /// A leg of the room stands for the room, and only a call that joins it can
   /// be placed for it: the server transfers no leg. The room has to be up, not
@@ -172,8 +174,8 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
       return purpose == LinkedCallPurpose.join && conference.phase == ConferencePhase.active;
     }
     if (purpose == LinkedCallPurpose.join && conference.isPresent) return false;
+    if (purpose == LinkedCallPurpose.join && anchor.video) return false;
     return anchor.wasAccepted &&
-        !anchor.video &&
         anchor.line != null &&
         anchor.transfer == null &&
         !anchor.wasHungUp &&

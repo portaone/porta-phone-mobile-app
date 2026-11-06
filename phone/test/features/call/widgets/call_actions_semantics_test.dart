@@ -277,8 +277,7 @@ void main() {
     });
 
     testWidgets('a menu that would hold only an inert entry is not opened', (tester) async {
-      // A call still ringing or a video call: no transfer, and nobody can be
-      // called in. The button stays disabled as the plain transfer did,
+      // A call still ringing: no transfer, and nobody can be called in. The button stays disabled as the plain transfer did,
       // rather than open on one greyed entry with no reason.
       await tester.pumpWidget(wrap(buildActive(addParticipantAvailability: AddParticipantAvailability.unavailable)));
 
