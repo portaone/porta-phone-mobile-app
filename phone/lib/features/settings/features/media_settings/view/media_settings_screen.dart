@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/features/settings/features/about/view/about_screen_styles.dart';
 
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -94,11 +95,14 @@ class _MediaSettingsScreenState extends State<MediaSettingsScreen> {
               ExpansionPanelRadio(
                 value: 1,
                 canTapOnHeader: true,
-                headerBuilder: (_, isExpanded) => HeadingSection(
-                  title: l10n.settings_audioProcessing_Section_title,
-                  tooltip: l10n.settings_audioProcessing_Section_tooltip,
-                  icon: const Icon(Icons.multitrack_audio),
-                  selected: isExpanded,
+                headerBuilder: (_, isExpanded) => Semantics(
+                  identifier: mediaSettingsAudioProcessingSectionId,
+                  child: HeadingSection(
+                    title: l10n.settings_audioProcessing_Section_title,
+                    tooltip: l10n.settings_audioProcessing_Section_tooltip,
+                    icon: const Icon(Icons.multitrack_audio),
+                    selected: isExpanded,
+                  ),
                 ),
                 body: Padding(padding: sectionPadding, child: AudioProcessingContent()),
               ),
