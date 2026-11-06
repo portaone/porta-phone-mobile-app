@@ -359,6 +359,57 @@ restart goes out instead of being deferred for the rest of the call. While an of
 both the renegotiation guard and the answer guard of `accepted` ask the native peer connection
 for its signaling state instead of the Dart-side cache, which lags behind `setLocalDescription`.
 
+**An update missed while the socket was down** — a re-INVITE that reaches the server while the
+app has no connection is not sent again: the server keeps it in the call's log and waits for the
+answer. The handshake of the next connection carries the log, and the plan made from it
+(`HandshakeProcessor`) gives a call the BLoC already runs a `DeliverUpdateAction` when the newest
+update in its log has no answer of the client after it. The BLoC feeds that update to the handler a
+live `UpdatingCallEvent` takes. An update that carries no offer owes no answer - the client answers
+none, live or not - so a log never shows it as pending.
+
+One rule decides what happens to the far end's updates: `RemoteUpdateNegotiation` in
+`features/call/utils/`. It does no I/O; the BLoC tells it what happened and does the step it
+returns. The BLoC talks to it from four places only: an update heard live (`heardLive`), an update
+a handshake shows unanswered (`foundUnanswered`), a call restored with one (`restoredWith`), and the
+end of an attempt to answer one (`ended`, from `CallBloc._endUpdateAttempt`), plus `putOffOffer`
+before any offer of its own. What it holds per call:
+
+- **An update is named by its call and its number among the call's updates** (`CallUpdateHistory`).
+  The protocol gives an update no id, but the server's log of a call only grows until the call ends,
+  so "the third update of this call" is the same update in every handshake, however the entry is
+  parsed and whatever it offers. The count is the log's: a handshake sets each call to the updates
+  its log shows (`handshakeShows`) - synchronously, before the handshake handler awaits anything -
+  and every update heard live adds one. A count lower than the one kept (an entry that did not
+  parse) never lowers it, so a number in use is not given to a new update; a call the handshake no
+  longer shows is forgotten.
+- **An update is answered once.** Each one taken in gets a `CallUpdateAttempt`, which travels with
+  the events of both stages of the handler; the stage that ends it says how (`CallUpdateAnswer`). An
+  update being answered, or whose answer the server acknowledged, gets no second attempt: a log
+  cannot say what the client has done since the socket connected, and a second answer to one offer
+  is refused by the media server. An attempt that ended without an acknowledged answer - the update
+  was dropped, carried no offer, the socket was down, the native report threw - leaves the update
+  free, so the next handshake that still shows it hands it over again. A handshake that shows it
+  while its attempt is still open (an answer waiting for its reply on the session that is gone) is
+  kept with the attempt, and the attempt's end hands the update back (`AnswerUpdate`): no later
+  handshake would.
+- **No offer of the client's own while an update is open.** The media server holds every offer of
+  the client back behind an unanswered update, and nothing answers it. `putOffOffer` keeps a wanted
+  offer until the call has no open update and then returns it (`OfferOwn`) - not when the server
+  refused the answer: that refusal's randomized retry renegotiates the call; and not when the answer
+  was lost with its session before the next handshake came (`CallUpdateAnswer.lost`): that
+  handshake shows the update again, or the reconnect's own offer goes and settles it. Whatever ends
+  the attempt without an answer taken also clears the call's `updating` flag first, so the offer it
+  releases is not held back by it.
+
+The reconnect renegotiation keeps that order too. A reconnect owes every call that lived through it
+a renegotiation, since an ICE restart made while the socket was down was dropped; the
+`RenegotiationCoordinator` gives it from the handshake (`handshakeReceived`), not from the connected
+event, so the handshake's missed updates are already open and the offer waits behind them.
+
+What this rests on: the server appends to a call's log and never trims it while the call is up,
+and sends an event and logs it in one step, so an update is either in the handshake's log or
+delivered after the handshake, never both and never neither.
+
 **Blind transfer** — `CallControlEvent.blindTransferInitiated` creates a new outgoing
 `ActiveCall` with status `outgoingCreatedFromRefer`, linked to the original call via `fromReferId`.
 The transfer target follows the normal outgoing flow from that status onward. Picking that target
@@ -496,7 +547,7 @@ have call context:
 
 | Path                         | Where                                                                                                                                                                   | Behaviour                                                                                                                                        |
 |------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
-| Survive-and-recover          | `__onSignalingClientEventConnected` (`safeRenegotiate`), `_onConnectivityResultChanged` / `__onMutationIceConnectionFailed` (`restartIce`), the silent disconnect codes | keep the call in `activeCalls` across the outage and recover it on reconnect instead of finalizing it                                            |
+| Survive-and-recover          | `_renegotiateAfterReconnect` from the handshake (`safeRenegotiate`), `_onConnectivityResultChanged` / `__onMutationIceConnectionFailed` (`restartIce`), the silent disconnect codes | keep the call in `activeCalls` across the outage and recover it on reconnect instead of finalizing it                                            |
 | Signaling lost mid-call      | `isTransientSignalingFailure` in renegotiate and around trickle, end of candidates and hold                                                                             | a loss of signaling keeps the call (and an installed offer, replayed on reconnect or by retry); any other error ends the call                    |
 | Remote hangup                | `__onCallSignalingEventHangup` -> `__onMutationSignalingHangup` -> `callkeep.reportEndCall`                                                                             | when signaling reconnects and the server tore the leg down, its hangup ends the call authoritatively                                             |
 | `requestCallIdError` cleanup | `__onSignalingClientEventDisconnected`                                                                                                                                  | for calls already marked `wasHungUp`, completes them once the disconnect confirms the call id is gone                                            |
