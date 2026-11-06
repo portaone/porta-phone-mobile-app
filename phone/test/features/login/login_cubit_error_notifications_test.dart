@@ -91,6 +91,15 @@ void main() {
     expect(notificationsBloc.state.lastNotification, isA<LoginEmptyEmailNotification>());
   });
 
+  test('maps ambiguous_user_ref to a visible notification', () async {
+    final cubit = buildCubit();
+
+    cubit.handleError(_requestFailure('ambiguous_user_ref'), StackTrace.current, LoginOperation.otpRequest);
+    await pumpEventQueue();
+
+    expect(notificationsBloc.state.lastNotification, isA<LoginAmbiguousUserRefNotification>());
+  });
+
   test('maps addon_required to a visible notification', () async {
     final cubit = buildCubit();
 

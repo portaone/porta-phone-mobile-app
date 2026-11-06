@@ -107,6 +107,15 @@ final class LoginPhoneNotFoundNotification extends MessageNotification {
   }
 }
 
+final class LoginAmbiguousUserRefNotification extends MessageNotification {
+  const LoginAmbiguousUserRefNotification();
+
+  @override
+  String l10n(BuildContext context) {
+    return context.l10n.login_RequestFailureAmbiguousUserRefError;
+  }
+}
+
 final class LoginIncorrectCredentialsNotification extends MessageNotification {
   const LoginIncorrectCredentialsNotification();
 

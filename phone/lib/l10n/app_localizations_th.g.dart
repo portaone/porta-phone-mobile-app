@@ -1340,6 +1340,10 @@ class AppLocalizationsTh extends AppLocalizations {
   String get login_RequestFailurePhoneNotFoundError => 'ไม่พบหมายเลขโทรศัพท์';
 
   @override
+  String get login_RequestFailureAmbiguousUserRefError =>
+      'มีหลายบัญชีที่ใช้อีเมลนี้ โปรดลงชื่อเข้าใช้ด้วยรหัสบัญชี (หมายเลขโทรศัพท์) แทน';
+
+  @override
   String get login_RequestFailureIncorrectCredentialsError => 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
 
   @override
