@@ -219,8 +219,8 @@ void main() {
     });
 
     testWidgets('attended transfer is not offered while the call cannot have one placed for it', (tester) async {
-      // Sent to the lists only to be refused on the choice - a video call,
-      // every line taken, another linked call up - is worse than a disabled
+      // Sent to the lists only to be refused on the choice - every line
+      // taken, another linked call up - is worse than a disabled
       // entry; the one rule lives in the state and the screen reads it.
       await tester.pumpWidget(
         wrap(

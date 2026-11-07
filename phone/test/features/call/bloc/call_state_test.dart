@@ -2118,6 +2118,15 @@ void main() {
       expect(state.canLinkCallTo('a', purpose: LinkedCallPurpose.join, isConferenceEnabled: false), isFalse);
       expect(state.canLinkCallTo('a', purpose: LinkedCallPurpose.attendedTransfer, isConferenceEnabled: true), isFalse);
     });
+
+    test('a video call can have a consultation placed for it, and no call placed to join it', () {
+      final state = CallState(
+        linesCount: 3,
+        activeCalls: [_makeCall(callId: 'a', video: true, acceptedTime: DateTime(2024))],
+      );
+      expect(state.canLinkCallTo('a', purpose: LinkedCallPurpose.attendedTransfer, isConferenceEnabled: true), isTrue);
+      expect(state.canLinkCallTo('a', purpose: LinkedCallPurpose.join, isConferenceEnabled: true), isFalse);
+    });
   });
 
   group('LinkedCall.answeredTransferCallIn', () {
