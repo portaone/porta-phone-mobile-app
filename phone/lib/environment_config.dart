@@ -184,30 +184,30 @@ class EnvironmentConfig {
 
   // iOS: keep at most one incoming call ringing in CallKit - one that comes while another rings
   // waits outside CallKit until that one is answered or ends (the callkeep plugin's incoming
-  // queue, the order the Android core keeps). Off by default: every incoming call registers with
-  // CallKit at once, as before.
+  // queue, the order the Android core keeps). On by default; false registers every incoming call
+  // with CallKit at once, as before.
   static const IOS_QUEUE_INCOMING_WHILE_RINGING__NAME = 'WEBTRIT_APP_IOS_QUEUE_INCOMING_WHILE_RINGING';
   static bool get IOS_QUEUE_INCOMING_WHILE_RINGING => _env.boolean(
     IOS_QUEUE_INCOMING_WHILE_RINGING__NAME,
-    const bool.fromEnvironment(IOS_QUEUE_INCOMING_WHILE_RINGING__NAME, defaultValue: false),
+    const bool.fromEnvironment(IOS_QUEUE_INCOMING_WHILE_RINGING__NAME, defaultValue: true),
   );
 
   // iOS: with one call held and another active, an incoming call is reported to CallKit only
   // after the active one is put on hold, so the system screen offers `Hold & Accept` and no
-  // button that ends a call (the callkeep plugin's hold before a third call). Off by default.
+  // button that ends a call (the callkeep plugin's hold before a third call). On by default.
   static const IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING__NAME = 'WEBTRIT_APP_IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING';
   static bool get IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING => _env.boolean(
     IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING__NAME,
-    const bool.fromEnvironment(IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING__NAME, defaultValue: false),
+    const bool.fromEnvironment(IOS_HOLD_ACTIVE_BEFORE_THIRD_INCOMING__NAME, defaultValue: true),
   );
 
   // iOS, with the incoming queue on: while the app is in front and a call is in conversation, an
   // incoming call waits in the app and iOS shows nothing over it; answered there, it enters
-  // CallKit as an outgoing call (the callkeep plugin's keepIncomingInAppInFront). Off by default.
+  // CallKit as an outgoing call (the callkeep plugin's keepIncomingInAppInFront). On by default.
   static const IOS_KEEP_INCOMING_IN_APP_IN_FRONT__NAME = 'WEBTRIT_APP_IOS_KEEP_INCOMING_IN_APP_IN_FRONT';
   static bool get IOS_KEEP_INCOMING_IN_APP_IN_FRONT => _env.boolean(
     IOS_KEEP_INCOMING_IN_APP_IN_FRONT__NAME,
-    const bool.fromEnvironment(IOS_KEEP_INCOMING_IN_APP_IN_FRONT__NAME, defaultValue: false),
+    const bool.fromEnvironment(IOS_KEEP_INCOMING_IN_APP_IN_FRONT__NAME, defaultValue: true),
   );
 
   // SMS-based incoming call trigger mechanism (fallback).
