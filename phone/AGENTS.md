@@ -109,7 +109,7 @@ UI (a control shipped without this is a defect):
   [accessibility.md](docs/guides/accessibility.md).
 - Renaming in `keys.dart` breaks `patrol_test/` and `integration_test/` silently - they are
   outside analysis; grep them.
-- A new or changed string goes into all four ARB files in the same change, with the key form
+- A new or changed string goes into all five ARB files in the same change, with the key form
   `<bloc>_<Widget><Fields>[_<variant>]`: [localization.md](docs/guides/localization.md).
 
 ## Before a particular change

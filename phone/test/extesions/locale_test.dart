@@ -1,8 +1,8 @@
-import 'dart:ui';
-
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 
 void main() {
   group('parsing', () {
@@ -32,6 +32,37 @@ void main() {
     test('not und country code is not default', () {
       expect(const Locale('en').isDefaultNull, false);
       expect(const Locale.fromSubtags(languageCode: 'uk').isDefaultNull, false);
+    });
+  });
+
+  group('display name', () {
+    Future<String> nameOf(WidgetTester tester, Locale shown, Locale ui) async {
+      late String name;
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: ui,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) {
+              name = shown.l10n(context);
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      return name;
+    }
+
+    testWidgets('every supported locale has a name, not its code', (tester) async {
+      for (final locale in AppLocalizations.supportedLocales) {
+        expect(await nameOf(tester, locale, const Locale('en')), isNot(locale.toString()), reason: '$locale');
+      }
+    });
+
+    testWidgets('French is named in English and in French', (tester) async {
+      expect(await nameOf(tester, const Locale('fr'), const Locale('en')), 'French');
+      expect(await nameOf(tester, const Locale('fr'), const Locale('fr')), 'Français');
     });
   });
 }

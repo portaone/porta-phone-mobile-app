@@ -4,7 +4,8 @@ Git is the source of truth for the keys the app can show; the configurator's tra
 owns the text those keys resolve to for customers. Last reviewed: 2026-08-25.
 
 The ARB files in `lib/l10n/arb/` (`app_en.arb` is the template; `app_uk.arb`, `app_it.arb`,
-`app_th.arb` are the locales) are edited directly in this repository and reviewed as normal code.
+`app_th.arb`, `app_fr.arb` are the locales) are edited directly in this repository and reviewed
+as normal code.
 No third-party translation service is involved: new keys are translated in the same change that
 introduces them (AI-assisted, see the prompt below) and reviewed by a native speaker where
 available.
@@ -46,7 +47,7 @@ consequences:
 
 1. Add or edit the key in `lib/l10n/arb/app_en.arb`, including its `@key` metadata
    (description and `placeholders` where the value has arguments).
-2. Add the translations to `app_uk.arb`, `app_it.arb`, and `app_th.arb` **in the same change**
+2. Add the translations to `app_uk.arb`, `app_it.arb`, `app_th.arb` and `app_fr.arb` **in the same change**
    (AI-assisted; see the prompt below). Keep the key in the same relative position as in
    `app_en.arb`.
 3. Regenerate — **both steps are required**:
@@ -68,7 +69,7 @@ consequences:
    silently at runtime.
 
 4. Validate: `melos run l10n:check`.
-5. Commit everything together: the four ARB files and the regenerated
+5. Commit everything together: the five ARB files and the regenerated
    `lib/l10n/app_localizations*` files.
 
 **Changing the wording of a key that already exists** is the case to be careful with. The steps
@@ -77,7 +78,7 @@ customers: the catalog already holds a value for that key and the sync will not 
 the old wording keeps shipping until it is changed in the catalog too. Reword it there, then
 bring it back with `melos run l10n:fetch` - see [Pulling the Catalog Back](#pulling-the-catalog-back).
 
-Review expectations: Ukrainian is reviewed by the team; Italian and Thai are AI-translated and
+Review expectations: Ukrainian is reviewed by the team; Italian, Thai and French are AI-translated and
 spot-checked. Per-customer wording changes do not belong here — they are configurator overrides.
 
 ## Validation
@@ -184,5 +185,7 @@ reads it. What happens: in Ukrainian it is also used for 21, 31, 101 and so on, 
 hears "message selected" for 21 messages. Why: the CLDR `one` category in uk is every number
 ending in 1 except 11, and `Intl.plural` gives an exact 1 and the rest of the category the same
 `one` text. Instead: put `{count}` in the `one` form and give `few` and `many` as well, as
-`voicemail_SemanticsAnnouncement_selectedCount` in `app_uk.arb` does. `tool/check_l10n.dart`
-does not catch either trap: it lets branch sets differ between locales.
+`voicemail_SemanticsAnnouncement_selectedCount` in `app_uk.arb` does. In French the `one`
+category also takes 0, so a singular `one` text is shown for an empty list; give French a
+`zero{...}` form when `one` names no number (`voicemail_Snackbar_deleteFailed` in `app_fr.arb`).
+`tool/check_l10n.dart` does not catch either trap: it lets branch sets differ between locales.

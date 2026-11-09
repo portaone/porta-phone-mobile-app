@@ -1138,6 +1138,8 @@
   "@locale_uk": {},
   "locale_th": "Тайська",
   "@locale_th": {},
+  "locale_fr": "Французька",
+  "@locale_fr": {},
   "login_Button_coreUrlAssignProceed": "Продовжити",
   "@login_Button_coreUrlAssignProceed": {},
   "login_Button_otpSigninRequestProceed": "Продовжити",
