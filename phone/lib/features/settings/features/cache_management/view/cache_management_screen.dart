@@ -50,7 +50,7 @@ class _CacheSectionTile extends StatelessWidget {
 
   String _formatUsage(BuildContext context, CacheUsage usage) {
     return switch (usage.unit) {
-      CacheUsageUnit.bytes => formatBytes(usage.amount),
+      CacheUsageUnit.bytes => formatBytes(usage.amount, context.l10n),
       CacheUsageUnit.items => context.l10n.cacheManagement_Label_itemsCount(usage.amount),
     };
   }

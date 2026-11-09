@@ -166,6 +166,14 @@
       }
     }
   },
+  "cacheManagement_Label_sizeBytes": "{size} o",
+  "@cacheManagement_Label_sizeBytes": {"description": "A size under a kilobyte, in bytes.", "placeholders": {"size": {"type": "String"}}},
+  "cacheManagement_Label_sizeGigabytes": "{size} Go",
+  "@cacheManagement_Label_sizeGigabytes": {"description": "A size in gigabytes, the number already formatted for the language.", "placeholders": {"size": {"type": "String"}}},
+  "cacheManagement_Label_sizeKilobytes": "{size} Ko",
+  "@cacheManagement_Label_sizeKilobytes": {"description": "A size in kilobytes, the number already formatted for the language.", "placeholders": {"size": {"type": "String"}}},
+  "cacheManagement_Label_sizeMegabytes": "{size} Mo",
+  "@cacheManagement_Label_sizeMegabytes": {"description": "A size in megabytes, the number already formatted for the language.", "placeholders": {"size": {"type": "String"}}},
   "cacheManagement_Label_unknown": "Inconnu",
   "@cacheManagement_Label_unknown": {},
   "cacheManagement_Widget_screenTitle": "Stockage et cache",

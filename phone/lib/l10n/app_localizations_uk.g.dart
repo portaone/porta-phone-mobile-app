@@ -183,6 +183,26 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String cacheManagement_Label_sizeBytes(String size) {
+    return '$size Б';
+  }
+
+  @override
+  String cacheManagement_Label_sizeGigabytes(String size) {
+    return '$size ГБ';
+  }
+
+  @override
+  String cacheManagement_Label_sizeKilobytes(String size) {
+    return '$size КБ';
+  }
+
+  @override
+  String cacheManagement_Label_sizeMegabytes(String size) {
+    return '$size МБ';
+  }
+
+  @override
   String get cacheManagement_Label_unknown => 'Невідомо';
 
   @override
