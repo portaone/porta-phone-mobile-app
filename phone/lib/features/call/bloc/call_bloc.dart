@@ -4975,7 +4975,14 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // proximity flag, and Android keeps the sensor off for a call that has none. The call
       // screen opening is the first moment every call passes through, so the flag is set
       // here; a call that already carries it is told the same value again.
-      await callkeep.reportUpdateCall(currentCall.callId, proximityEnabled: state.shouldListenToProximity);
+      //
+      // Only "on" is sent. On iOS "off" switches the audio session to VideoChat, whose route
+      // is the loudspeaker, so a video call the user had moved to the earpiece went back to
+      // the speaker each time its screen was opened again. Android ignores the flag for a
+      // video call, so nothing is lost there by not sending it.
+      if (state.shouldListenToProximity) {
+        await callkeep.reportUpdateCall(currentCall.callId, proximityEnabled: true);
+      }
 
       final device = _speakerOnMinimize.onCallScreenReturned(
         callId: currentCall.callId,

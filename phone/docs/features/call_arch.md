@@ -515,7 +515,11 @@ audio call the screen goes dark when the sensor is covered.
 
 `didPush` still reports `proximityEnabled` to callkeep. That is not a reaction to the screen: an
 incoming call is reported without the flag, Android keeps the sensor off for a call that has
-none, and the call screen opening is the first moment every call passes through.
+none, and the call screen opening is the first moment every call passes through. It reports only
+`true`: on iOS `false` is the `VideoChat` session mode, whose route is the loudspeaker, and the
+earpiece of a video call lives on `VoiceChat` (`CallMediaManager.setDevice`), so a `false` sent on
+every return took a video call off the earpiece the user had chosen. Android ignores the flag for a
+video call.
 
 **iOS audio reset** — on the first and last call, the BLoC forces audio to earpiece via
 `AppleNativeAudioManagement` to work around a platform bug where speaker stays active across

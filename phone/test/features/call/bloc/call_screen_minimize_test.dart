@@ -77,6 +77,37 @@ void main() {
       expect(h.callkeep.proximityUpdates, [(callId: 'a', enabled: true)]);
     });
 
+    // On iOS "off" is the VideoChat session mode, which routes to the loudspeaker: sent on
+    // every return, it took a video call off the earpiece the user had chosen.
+    test('reports nothing for a video call', () async {
+      h.seedEstablishedCall('a', video: true);
+
+      h.bloc.add(const CallScreenEvent.didPop());
+      h.bloc.add(const CallScreenEvent.didPush());
+      await pumpEventQueue();
+
+      expect(h.bloc.state.minimized, isFalse);
+      expect(h.callkeep.proximityUpdates, isEmpty);
+    });
+
+    test('leaves a video call on the earpiece', () async {
+      h.seedEstablishedCall('a', video: true);
+      await h.bloc.performAudioDevicesUpdate('a', [earpiece, speaker]);
+      await h.bloc.performAudioDeviceSet('a', earpiece);
+      await pumpEventQueue();
+      events.clear();
+
+      for (var round = 0; round < 2; round++) {
+        h.bloc.add(const CallScreenEvent.didPop());
+        h.bloc.add(const CallScreenEvent.didPush());
+        await pumpEventQueue();
+      }
+
+      expect(events.audioDeviceRequests, isEmpty);
+      expect(h.callkeep.proximityUpdates, isEmpty);
+      expect(h.bloc.state.audioDevice?.type, CallAudioDeviceType.earpiece);
+    });
+
     for (final device in [speaker, earpiece]) {
       test('asks for no audio device when the call is on the ${device.type.name}', () async {
         await seedCallOn(device);

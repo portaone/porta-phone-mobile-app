@@ -207,6 +207,7 @@ class CallBlocHarness {
     String? offerSdp,
     String? answerSdp,
     String? fromReplaces,
+    bool video = false,
   }) {
     // The microphone comes from the one builder, so a seeded call holds the
     // same track object the room and every other call hold - as in production.
@@ -230,7 +231,7 @@ class CallBlocHarness {
       callId: callId,
       handle: CallkeepHandle.number(number),
       createdTime: DateTime(2026),
-      video: false,
+      video: video,
       held: held,
       updating: updating,
       processingStatus: CallProcessingStatus.connected,
