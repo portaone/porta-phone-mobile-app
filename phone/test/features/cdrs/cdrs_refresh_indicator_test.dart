@@ -121,6 +121,7 @@ void main() {
               child: CallControllerScope(
                 controller: callController,
                 child: RecentCdrsScreen(
+                  watchTitle: 'Recents',
                   transferEnabled: false,
                   videoEnabled: false,
                   chatsEnabled: false,

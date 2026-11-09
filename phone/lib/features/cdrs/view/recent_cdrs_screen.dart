@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:webtrit_phone/app/constants.dart';
 
 import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/features/recents/view/recents_screen_style.dart';
 import 'package:webtrit_phone/features/recents/view/recents_screen_styles.dart';
 import 'package:webtrit_phone/features/recents/widgets/recents_actions.dart';
 import 'package:webtrit_phone/features/recents/widgets/recents_unified_header.dart';
@@ -21,6 +22,7 @@ import '../widgets/missed_recent_cdrs_list.dart';
 class RecentCdrsScreen extends StatefulWidget {
   const RecentCdrsScreen({
     this.title,
+    required this.watchTitle,
     required this.transferEnabled,
     required this.videoEnabled,
     required this.chatsEnabled,
@@ -37,6 +39,10 @@ class RecentCdrsScreen extends StatefulWidget {
   final bool chatsEnabled;
   final bool smssEnabled;
   final Widget? title;
+
+  /// The section's name on a watch, where the list is headed by it instead of
+  /// the app bar's [title].
+  final String watchTitle;
 
   @override
   State<RecentCdrsScreen> createState() => _RecentCdrsScreenState();
@@ -74,10 +80,32 @@ class _RecentCdrsScreenState extends State<RecentCdrsScreen> with TickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final mediaQueryData = MediaQuery.of(context);
+    final effectiveStyle = Theme.of(context).extension<RecentsScreenStyles>()?.primary;
+    final selected = _filters[_tabController.index];
 
+    return AdaptiveLayout(
+      handset: (context) => _handset(context, effectiveStyle),
+      // One list at a time, the filter flipped by the chip over it; clearing
+      // the history stays on the phone.
+      watch: (context) => ThemedScaffold(
+        background: effectiveStyle?.background,
+        contentThemeOverride: effectiveStyle?.contentThemeOverride ?? ThemeMode.system,
+        body: _listOf(
+          selected,
+          watch: WatchSection(
+            title: widget.watchTitle,
+            options: _filters,
+            selected: selected,
+            onSelected: (filter) => _tabController.index = _filters.indexOf(filter),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context, RecentsScreenStyle? effectiveStyle) {
+    final mediaQueryData = MediaQuery.of(context);
     final themeData = Theme.of(context);
-    final effectiveStyle = themeData.extension<RecentsScreenStyles>()?.primary;
 
     final unified = widget.layout == RecentsLayout.unified;
 
@@ -154,13 +182,14 @@ class _RecentCdrsScreenState extends State<RecentCdrsScreen> with TickerProvider
 
   /// The list a filter's tab opens. Built from the same [_filters] the tabs
   /// are, so the pairing is by value rather than by position.
-  Widget _listOf(RecentsVisibilityFilter filter) {
+  Widget _listOf(RecentsVisibilityFilter filter, {WatchSection<RecentsVisibilityFilter>? watch}) {
     final list = switch (filter) {
       RecentsVisibilityFilter.missed => MissedRecentCdrsList(
         transferEnabled: widget.transferEnabled,
         videoEnabled: widget.videoEnabled,
         chatsEnabled: widget.chatsEnabled,
         smssEnabled: widget.smssEnabled,
+        watch: watch,
       ),
       // The server answers one list of call records; only the missed filter
       // has a narrowed variant, the rest show them all.
@@ -169,6 +198,7 @@ class _RecentCdrsScreenState extends State<RecentCdrsScreen> with TickerProvider
         videoEnabled: widget.videoEnabled,
         chatsEnabled: widget.chatsEnabled,
         smssEnabled: widget.smssEnabled,
+        watch: watch,
       ),
     };
 

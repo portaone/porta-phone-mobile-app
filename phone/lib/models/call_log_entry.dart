@@ -25,6 +25,10 @@ class CallLogEntry extends Equatable {
 
   bool get isComplete => acceptedTime != null;
 
+  /// An incoming call nobody answered: what the Missed filter keeps, and
+  /// what a list marks as missed.
+  bool get isMissedIncoming => !isComplete && direction == CallDirection.incoming;
+
   Duration? get duration {
     final hungUpTime = this.hungUpTime;
     final acceptedTime = this.acceptedTime;

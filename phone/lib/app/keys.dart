@@ -413,6 +413,15 @@ const recentsTabIncomingKey = Key(recentsTabIncomingId);
 const String recentsTabOutgoingId = 'recentsTabOutgoing';
 const recentsTabOutgoingKey = Key(recentsTabOutgoingId);
 
+/// The one filter chip of a recents list on a watch, in place of the tabs: a
+/// tap moves to the next filter.
+const String recentsWatchFilterId = 'recentsWatchFilter';
+const recentsWatchFilterKey = Key(recentsWatchFilterId);
+
+/// The edge button of an empty call history on a watch, in place of the
+/// phone's pull to refresh.
+const String recentsWatchRefreshId = 'recentsWatchRefresh';
+
 /// The button that opens the recents actions, and the entry of that menu that
 /// clears the whole list. One id each for both recents screens, for the same
 /// reason the tabs share theirs.

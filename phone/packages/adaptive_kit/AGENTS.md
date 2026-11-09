@@ -15,8 +15,9 @@ model or plugin of the app. How screens use it: [adaptive_layout.md](../../docs/
   as round.
 - Screen shapes: `WatchActionLayout`, `WatchEdgeLayout`, `WatchScrollList`, `WatchIconGrid`,
   `WatchStatePage`.
-- Parts: `WatchEdgeButton`, `WatchRoundButton`, `WatchKeyGrid`, `WatchListTile`, `WatchPill`,
-  `WatchTitle`, `WatchLink`, `WatchToggleChip`, `WatchSpinner`, `WatchFadeMask`, `WatchStadiumFields`.
+- Parts: `WatchEdgeButton`, `WatchRoundButton`, `WatchKeyGrid`, `WatchListTile`, `WatchPill`, `WatchPillButton`,
+  `WatchTitle`, `WatchLink`, `WatchToggleChip`, `WatchSpinner`, `WatchSeparator`, `WatchFadeMask`,
+  `WatchStadiumFields`.
 - `SemanticAction`: one semantics node for an action, used across the app too.
 
 What stays in the app, because it needs the app: `queryScreenShape()` (asks `device_profile`),

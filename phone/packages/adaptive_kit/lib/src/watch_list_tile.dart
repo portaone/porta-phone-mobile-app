@@ -9,12 +9,14 @@ import 'watch_pill.dart';
 /// trailing mark.
 ///
 /// The row is one button for assistive technology, named by its title and
-/// subtitle; [selected] tints it and is announced.
+/// subtitle (or its [semanticsLabel]); [selected] tints it and is announced.
 class WatchListTile extends StatelessWidget {
   const WatchListTile({
     super.key,
     required this.title,
     this.subtitle,
+    this.subtitleIcon,
+    this.semanticsLabel,
     this.leading,
     this.trailing,
     this.selected = false,
@@ -25,6 +27,16 @@ class WatchListTile extends StatelessWidget {
 
   final String title;
   final String? subtitle;
+
+  /// A small mark before the [subtitle], such as a call's direction; for the
+  /// eye only, the subtitle's words name the row.
+  final Widget? subtitleIcon;
+
+  /// The row's name for assistive technology when the words on it are not
+  /// enough - a mark that says what the eye reads from its colour; the
+  /// title and the subtitle when null.
+  final String? semanticsLabel;
+
   final Widget? leading;
   final Widget? trailing;
 
@@ -47,7 +59,7 @@ class WatchListTile extends StatelessWidget {
     final enabled = onTap != null;
 
     return SemanticAction(
-      label: subtitle == null ? title : '$title, $subtitle',
+      label: semanticsLabel ?? (subtitle == null ? title : '$title, $subtitle'),
       identifier: identifier,
       child: Semantics(
         selected: selected,
@@ -66,10 +78,15 @@ class WatchListTile extends StatelessWidget {
                   child: Row(
                     spacing: 8,
                     children: [
+                      // The marks beside the text are for the eye: the row is
+                      // named by its title and subtitle alone, so an avatar's
+                      // initials do not end up in its name.
                       if (leading case final leading?)
-                        IconTheme.merge(
-                          data: IconThemeData(size: 18, color: colorScheme.primary),
-                          child: leading,
+                        ExcludeSemantics(
+                          child: IconTheme.merge(
+                            data: IconThemeData(size: 18, color: colorScheme.primary),
+                            child: leading,
+                          ),
                         ),
                       Expanded(
                         child: ExcludeSemantics(
@@ -84,20 +101,34 @@ class WatchListTile extends StatelessWidget {
                                 style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
                               ),
                               if (subtitle != null)
-                                Text(
-                                  subtitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                                Row(
+                                  spacing: 3,
+                                  children: [
+                                    if (subtitleIcon case final subtitleIcon?)
+                                      IconTheme.merge(
+                                        data: IconThemeData(size: 12, color: colorScheme.onSurfaceVariant),
+                                        child: subtitleIcon,
+                                      ),
+                                    Flexible(
+                                      child: Text(
+                                        subtitle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                             ],
                           ),
                         ),
                       ),
                       if (trailing case final trailing?)
-                        IconTheme.merge(
-                          data: IconThemeData(size: 16, color: colorScheme.primary),
-                          child: trailing,
+                        ExcludeSemantics(
+                          child: IconTheme.merge(
+                            data: IconThemeData(size: 16, color: colorScheme.primary),
+                            child: trailing,
+                          ),
                         ),
                     ],
                   ),

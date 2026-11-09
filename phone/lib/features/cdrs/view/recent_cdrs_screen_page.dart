@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/environment_config.dart';
+import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -17,6 +19,7 @@ class RecentCdrsScreenPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final featureAccess = context.read<FeatureAccess>();
+    final tab = featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>();
     final cdrsSync = context.read<CdrsSync>();
     final historyWalk = context.read<CdrsHistoryWalk>();
 
@@ -50,7 +53,12 @@ class RecentCdrsScreenPage extends StatelessWidget {
       ],
       child: RecentCdrsScreen(
         title: Text(EnvironmentConfig.APP_NAME),
-        layout: featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>()?.layout ?? RecentsLayout.tabbed,
+        // On a watch the list is headed by the section's own name, as the hub
+        // shows it.
+        watchTitle: context.watchSectionTitle<RecentsBottomMenuTab>(
+          fallback: context.l10n.main_BottomNavigationBarItemLabel_recents,
+        ),
+        layout: tab?.layout ?? RecentsLayout.tabbed,
         transferEnabled: featureAccess.callConfig.capabilities.isBlindTransferEnabled,
         videoEnabled: featureAccess.callConfig.capabilities.isVideoCallEnabled,
         chatsEnabled: featureAccess.messagingConfig.chatsPresent,

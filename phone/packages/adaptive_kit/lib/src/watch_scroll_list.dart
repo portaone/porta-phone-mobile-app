@@ -19,6 +19,11 @@ import 'watch_title.dart';
 /// As a page of its own - a list opened over another screen - it takes an
 /// optional [title], a [spacing] between the [children], and [opaque] paints
 /// the page's background.
+///
+/// [WatchScrollList.builder] is the same list for rows there can be many of -
+/// a call history, contacts: the rows are built as they scroll into view,
+/// after the title and an optional [header] (a filter), and a [controller]
+/// lets the screen load more as the end comes near.
 class WatchScrollList extends StatelessWidget {
   const WatchScrollList({
     super.key,
@@ -27,13 +32,49 @@ class WatchScrollList extends StatelessWidget {
     this.title,
     this.spacing = 0,
     this.opaque = false,
-  });
+  }) : header = const [],
+       itemCount = 0,
+       itemBuilder = null,
+       controller = null;
 
+  const WatchScrollList.builder({
+    super.key,
+    required this.itemCount,
+    required IndexedWidgetBuilder this.itemBuilder,
+    this.title,
+    this.header = const [],
+    this.spacing = 0,
+    this.controller,
+  }) : children = const [],
+       bottom = null,
+       opaque = false;
+
+  /// The rows, all built at once.
   final List<Widget> children;
+
+  /// The choices pinned to the bottom of the face.
   final List<Widget>? bottom;
+
+  /// The list's title, on top of it, scrolling away with it.
   final String? title;
+
+  /// The room between two rows.
   final double spacing;
+
+  /// Whether the list paints the page's background.
   final bool opaque;
+
+  /// What sits between the title and the rows of a [WatchScrollList.builder].
+  final List<Widget> header;
+
+  /// How many rows [itemBuilder] builds.
+  final int itemCount;
+
+  /// Builds the row at an index when it scrolls into view.
+  final IndexedWidgetBuilder? itemBuilder;
+
+  /// The list's scroll controller, to follow how far it is scrolled.
+  final ScrollController? controller;
 
   static const _fadeHeight = 26.0;
 
@@ -56,6 +97,8 @@ class WatchScrollList extends StatelessWidget {
   }
 
   Widget _list(BuildContext context) {
+    final itemBuilder = this.itemBuilder;
+    if (itemBuilder != null) return _lazy(context, itemBuilder);
     final children = _spaced(context);
     final bottom = this.bottom;
     if (bottom != null) {
@@ -87,6 +130,33 @@ class WatchScrollList extends StatelessWidget {
       child: ListView(
         padding: context.watchListPadding(minBottom: _fadeHeight + context.adaptiveMetrics.gap),
         children: children,
+      ),
+    );
+  }
+
+  Widget _lazy(BuildContext context, IndexedWidgetBuilder itemBuilder) {
+    final title = this.title;
+    final gap = context.adaptiveMetrics.gap;
+    final lead = [
+      if (title != null) ...[WatchTitle(title), SizedBox(height: gap)],
+      for (final widget in header) ...[widget, SizedBox(height: gap)],
+    ];
+    return WatchFadeMask(
+      fadeHeight: _fadeHeight,
+      child: ListView.builder(
+        controller: controller,
+        padding: context.watchListPadding(minBottom: _fadeHeight + gap),
+        itemCount: lead.length + itemCount,
+        itemBuilder: (context, index) {
+          if (index < lead.length) return lead[index];
+          final row = index - lead.length;
+          final child = itemBuilder(context, row);
+          if (row == 0 || spacing == 0) return child;
+          return Padding(
+            padding: EdgeInsets.only(top: spacing),
+            child: child,
+          );
+        },
       ),
     );
   }

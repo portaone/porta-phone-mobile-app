@@ -98,6 +98,7 @@ void main() {
                   blfViaSipSupport: false,
                   presenceViaSipSupport: false,
                   child: RecentsScreen(
+                    watchTitle: 'Recents',
                     recentsFilters: filters,
                     transferEnabled: false,
                     videoEnabled: false,

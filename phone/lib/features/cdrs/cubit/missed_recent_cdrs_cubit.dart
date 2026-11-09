@@ -27,5 +27,5 @@ class MissedRecentCdrsCubit extends CdrsListCubit {
   );
 
   @override
-  bool matches(CdrRecord cdr) => cdr.status == CdrStatus.missed && cdr.direction == CallDirection.incoming;
+  bool matches(CdrRecord cdr) => cdr.isMissedIncoming;
 }

@@ -24,6 +24,7 @@ class RecentsScreen extends StatefulWidget {
     super.key,
     this.recentsFilters = const [RecentsVisibilityFilter.all, RecentsVisibilityFilter.missed],
     this.title,
+    required this.watchTitle,
     required this.transferEnabled,
     required this.videoEnabled,
     required this.chatsEnabled,
@@ -42,6 +43,11 @@ class RecentsScreen extends StatefulWidget {
   final bool smssEnabled;
 
   final Widget? title;
+
+  /// The section's name on a watch, where the list is headed by it instead of
+  /// the app bar's [title].
+  final String watchTitle;
+
   final RecentsScreenStyle? style;
 
   @override
@@ -143,6 +149,25 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
     final themeData = Theme.of(context);
     final effectiveStyle = widget.style ?? themeData.extension<RecentsScreenStyles>()?.primary;
 
+    return AdaptiveLayout(
+      handset: (context) => _handset(context, effectiveStyle),
+      watch: (context) => ThemedScaffold(
+        background: effectiveStyle?.background,
+        contentThemeOverride: effectiveStyle?.contentThemeOverride ?? ThemeMode.system,
+        body: _RecentsWatch(
+          title: widget.watchTitle,
+          filters: _filters,
+          // Through the controller, whose listener files the filter, as the
+          // phone's tabs do.
+          onSelected: (filter) => _tabController.index = _filters.indexOf(filter),
+          onOpen: (recent) => openCallLog(number: recent.callLogEntry.number),
+        ),
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context, RecentsScreenStyle? effectiveStyle) {
+    final themeData = Theme.of(context);
     final mediaQueryData = MediaQuery.of(context);
     final unified = widget.layout == RecentsLayout.unified;
 
@@ -218,15 +243,9 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
           } else {
             final recentsFiltered = state.recentsFiltered!; // can not be null if state.recents is not null
             if (recentsFiltered.isEmpty) {
-              final String filterL10n;
-              if (state.filter == RecentsVisibilityFilter.all) {
-                filterL10n = '';
-              } else {
-                filterL10n = '${state.filter.l10nPreposit(context)} ';
-              }
               return Padding(
                 padding: EdgeInsets.only(top: topPadding),
-                child: NoDataPlaceholder(content: Text(context.l10n.recents_BodyCenter_empty(filterL10n))),
+                child: NoDataPlaceholder(content: Text(_emptyMessage(context, state.filter))),
               );
             } else {
               return BlocBuilder<CallBloc, CallState>(
@@ -336,6 +355,60 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
           }
         },
       ),
+    );
+  }
+}
+
+/// What the list says with no calls to show by [filter], on either
+/// arrangement.
+String _emptyMessage(BuildContext context, RecentsVisibilityFilter filter) {
+  final filterL10n = filter == RecentsVisibilityFilter.all ? '' : '${filter.l10nPreposit(context)} ';
+  return context.l10n.recents_BodyCenter_empty(filterL10n);
+}
+
+/// The local recents on a watch: a row per call, a tap opening the calls with
+/// that number - or, while somebody is being chosen, choosing it. Deleting a
+/// call and clearing the log stay on the phone.
+class _RecentsWatch extends StatelessWidget {
+  const _RecentsWatch({required this.title, required this.filters, required this.onSelected, required this.onOpen});
+
+  final String title;
+  final List<RecentsVisibilityFilter> filters;
+  final ValueChanged<RecentsVisibilityFilter> onSelected;
+  final ValueChanged<Recent> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    // The phone's rows' format: the clock time, in the app's language.
+    final timeFormat = context.read<AppTime>().timeFormat(Localizations.localeOf(context));
+    return BlocBuilder<RecentsBloc, RecentsState>(
+      builder: (context, state) {
+        final recents = state.recentsFiltered ?? const <Recent>[];
+        final filter = state.filter;
+        return RecentsWatchBody(
+          section: WatchSection(title: title, options: filters, selected: filter, onSelected: onSelected),
+          loading: state.recents == null,
+          emptyMessage: _emptyMessage(context, filter),
+          itemCount: recents.length,
+          itemBuilder: (context, index) {
+            final recent = recents[index];
+            final entry = recent.callLogEntry;
+            final contact = recent.contact;
+            final pick = context.pickOfferFor(DestinationCandidate(number: entry.number, contact: contact));
+            return RecentsWatchTile(
+              key: ValueKey(recent),
+              name: recent.name,
+              time: timeFormat.format(entry.createdTime),
+              direction: entry.direction,
+              complete: entry.isComplete,
+              missed: entry.isMissedIncoming,
+              thumbnail: contact?.thumbnail,
+              thumbnailUrl: contact?.thumbnailUrl,
+              onTap: pick != null ? pick.onPressed : () => onOpen(recent),
+            );
+          },
+        );
+      },
     );
   }
 }

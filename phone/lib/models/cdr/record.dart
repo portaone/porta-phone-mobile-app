@@ -46,6 +46,11 @@ class CdrRecord extends Equatable {
   /// The other party's number in the call, depending on the call direction
   late final String? participantNumber = direction == CallDirection.outgoing ? calleeNumber : callerNumber;
 
+  /// An incoming call nobody answered - declined, failed or taken on another
+  /// device is not one: what the Missed list keeps, and what a list marks as
+  /// missed.
+  bool get isMissedIncoming => status == CdrStatus.missed && direction == CallDirection.incoming;
+
   /// Tries to parse the [disconnectReason] string into a known [CdrDisconnectReason] enum value.
   /// Returns null if no match is found, so consumer can decide to use the raw string instead.
   late final CdrDisconnectReason? disconnectReasonEnum = CdrDisconnectReason.values.firstWhereOrNull(
