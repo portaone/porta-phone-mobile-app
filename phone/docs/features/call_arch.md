@@ -534,7 +534,8 @@ covers only the CallBloc-side behaviour.
 
 ### Background call-active edge (`onChange`)
 
-`CallBloc.onChange` re-notifies `SignalingReconnectController` whenever `CallState.isActive`
+`CallBloc.onChange` re-notifies the session's reconnect policy (`SignalingReconnect`, the
+`SignalingReconnectController` the shell made) whenever `CallState.isActive`
 flips. This covers a gap the app-lifecycle handler cannot: `_onAppLifecycleStateChanged`
 samples `isActive` only at the instant the app moves between foreground and background, so it
 never re-fires for a call that becomes active (an incoming call answered from a push) or ends
@@ -548,8 +549,8 @@ The block acts only while the app is `paused` / `detached` / `inactive`:
 | active-call presence changed    | `notifyHasActiveCalls(...)`              | refresh the active-call guard so a background reconnect can fire during the call; disconnect if the call just ended |
 | last call ended                 | `notifyAppPaused(hasActiveCalls: false)` | move to the paused-no-calls state so the controller stops holding the connection open                               |
 
-The reconnect/notification policy itself stays in `SignalingReconnectController`; `onChange`
-only feeds it lifecycle edges.
+The reconnect/notification policy itself stays in `SignalingReconnectController`, owned by the
+session (`MainShell`, `lib/services/signaling`); `onChange` only feeds it lifecycle edges.
 
 ### Call finalization on signaling loss (`onError`)
 
