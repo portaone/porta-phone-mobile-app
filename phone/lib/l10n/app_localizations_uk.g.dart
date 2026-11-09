@@ -1261,6 +1261,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get locale_th => 'Тайська';
 
   @override
+  String get locale_fr => 'Французька';
+
+  @override
   String get login_Button_coreUrlAssignProceed => 'Продовжити';
 
   @override
