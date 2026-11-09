@@ -50,6 +50,7 @@ class MainShellBlocs extends StatelessWidget {
     required this.callkeepConnections,
     required this.signalingModule,
     required this.signalingInbound,
+    required this.signalingReconnect,
     required this.child,
   });
 
@@ -62,6 +63,9 @@ class MainShellBlocs extends StatelessWidget {
 
   /// The session's signaling events, split per feature.
   final SignalingInbound signalingInbound;
+
+  /// The session's reconnect policy, told by the call feature what it sees.
+  final SignalingReconnect signalingReconnect;
 
   final Widget child;
 
@@ -247,8 +251,8 @@ class MainShellBlocs extends StatelessWidget {
                 DiagnosticType.androidCallkeepOnly,
                 extras: {'callId': id, 'error': error.name},
               ),
-              signalingModule: signalingModule,
               callSignaling: ModuleCallSignaling(signalingModule, events: signalingInbound.call),
+              signalingReconnect: signalingReconnect,
               signalingEvents: signalingInbound.call,
               callPeerConnectionManager: callPeerConnectionManager,
               connectivityService: context.read<ConnectivityService>(),

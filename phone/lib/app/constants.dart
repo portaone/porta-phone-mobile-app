@@ -13,7 +13,6 @@ const kSignalingClientConnectionTimeout = Duration(seconds: 10);
 const kOutgoingCallSignalingWaitTimeout = Duration(seconds: 30);
 const _kSignalingClientReconnectDelaySeconds = 3;
 const kSignalingClientReconnectDelay = Duration(seconds: _kSignalingClientReconnectDelaySeconds);
-const kSignalingClientFastReconnectDelay = Duration(seconds: 1);
 
 /// Debounce window for transient signaling status transitions (connectIssue,
 /// inProgress, connectError). Slightly longer than [kSignalingClientReconnectDelay]
