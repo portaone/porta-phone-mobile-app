@@ -20,6 +20,7 @@ class MockUnreadCountCubit extends MockCubit<UnreadCountState> implements Unread
 
 void main() {
   late ConversationScreenHarness harness;
+  final timeOrDateFormat = AppTime(is24HourFormat: true).timeOrDateFormat(const Locale('en', 'US'));
 
   setUpAll(() => registerFallbackValue(ContactSourceType.external));
   setUp(() => harness = ConversationScreenHarness());
@@ -98,7 +99,7 @@ void main() {
             value: unreadCount,
             child: Scaffold(
               body: ChatConversationsTile(
-                timeOrDateFormat: AppTime(is24HourFormat: true).timeOrDateFormat(),
+                timeOrDateFormat: timeOrDateFormat,
                 conversation: groupChat(id: 7, name: null),
                 lastMessage: null,
                 userId: 'user-1',
@@ -272,7 +273,7 @@ void main() {
               presenceViaSipSupport: false,
               child: Scaffold(
                 body: ChatConversationsTile(
-                  timeOrDateFormat: AppTime(is24HourFormat: true).timeOrDateFormat(),
+                  timeOrDateFormat: timeOrDateFormat,
                   conversation: chat,
                   lastMessage: lastMessage,
                   userId: 'user-1',
@@ -310,10 +311,7 @@ void main() {
       // look for it in two places down one list.
       double markToTime(WidgetTester tester) {
         final mark = tester.getTopRight(find.byIcon(Icons.notifications_off_outlined)).dx;
-        return tester
-                .getTopLeft(find.text(AppTime(is24HourFormat: true).timeOrDateFormat().format(lastMessage.createdAt)))
-                .dx -
-            mark;
+        return tester.getTopLeft(find.text(timeOrDateFormat.format(lastMessage.createdAt))).dx - mark;
       }
 
       harness.withChatMute(7, const NotificationMute(muted: true));

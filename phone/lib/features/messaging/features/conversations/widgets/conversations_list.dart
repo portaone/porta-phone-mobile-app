@@ -21,7 +21,7 @@ class _ConversationsListState extends State<ConversationsList> {
 
   @override
   Widget build(BuildContext context) {
-    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat();
+    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat(Localizations.localeOf(context));
     late final chats = BlocBuilder<ChatConversationsCubit, ChatConversationsState>(
       builder: (context, state) {
         if (state.initialising) return const Center(child: CircularProgressIndicator());

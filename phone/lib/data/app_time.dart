@@ -12,6 +12,10 @@ final Logger _logger = Logger('AppTime');
 /// or list asks for the formats it needs while it builds and hands the
 /// [DateFormat] down to its rows, so a row only formats and a bloc never
 /// holds a format. Only [fileNameDateFormat], which no reader sees, is kept.
+///
+/// Each format takes the locale the screen is shown in, read with
+/// `Localizations.localeOf(context)`: the screen then rebuilds when the app
+/// language changes and builds its formats again in the new language.
 class AppTime {
   static Future<AppTime> init() async {
     final is24HourFormat = await _determine24HourFormat();
@@ -44,26 +48,33 @@ class AppTime {
 
   /// Time of an entry in a list, following the device's 12/24-hour setting
   /// (e.g. 14:30, 2:30:00 PM).
-  DateFormat timeFormat() => _is24HourFormat ? DateFormat.Hm() : DateFormat.jms();
+  DateFormat timeFormat(Locale locale) =>
+      _is24HourFormat ? DateFormat.Hm(_name(locale)) : DateFormat.jms(_name(locale));
 
   /// Date with time, following the device's 12/24-hour setting
   /// (e.g. Nov 6, 2026 14:30).
-  DateFormat dateTimeFormat() => _is24HourFormat ? DateFormat.yMMMd().add_Hm() : DateFormat.yMMMd().add_jms();
+  DateFormat dateTimeFormat(Locale locale) =>
+      _is24HourFormat ? DateFormat.yMMMd(_name(locale)).add_Hm() : DateFormat.yMMMd(_name(locale)).add_jms();
 
   /// Hours and minutes on a 24-hour clock (e.g. 14:30).
-  DateFormat hourMinuteFormat() => DateFormat('HH:mm');
+  DateFormat hourMinuteFormat(Locale locale) => DateFormat('HH:mm', _name(locale));
 
   /// Day and short month (e.g. 20 Aug).
-  DateFormat dayMonthFormat() => DateFormat('d MMM');
+  DateFormat dayMonthFormat(Locale locale) => DateFormat('d MMM', _name(locale));
 
   /// Full day of the week (e.g. Tuesday).
-  DateFormat weekdayFormat() => DateFormat.EEEE();
+  DateFormat weekdayFormat(Locale locale) => DateFormat.EEEE(_name(locale));
 
   /// Short day of the week, day and short month (e.g. Tue, 6 Jan).
-  DateFormat weekdayDayMonthFormat() => DateFormat('E, d MMM');
+  DateFormat weekdayDayMonthFormat(Locale locale) => DateFormat('E, d MMM', _name(locale));
 
   /// [hourMinuteFormat] for a moment today, [dayMonthFormat] for any other.
-  TimeOrDateFormat timeOrDateFormat() => TimeOrDateFormat(time: hourMinuteFormat(), date: dayMonthFormat());
+  TimeOrDateFormat timeOrDateFormat(Locale locale) =>
+      TimeOrDateFormat(time: hourMinuteFormat(locale), date: dayMonthFormat(locale));
+
+  /// The intl name of [locale] (e.g. fr, en_US), the form Flutter's own
+  /// localizations format their dates with.
+  static String _name(Locale locale) => Intl.canonicalizedLocale(locale.toString());
 }
 
 /// Formats a moment as a clock time when it falls today and as a date

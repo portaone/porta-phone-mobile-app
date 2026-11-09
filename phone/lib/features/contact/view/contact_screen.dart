@@ -59,6 +59,7 @@ class _ContactScreenState extends State<ContactScreen> {
   @override
   Widget build(BuildContext context) {
     final appTime = context.read<AppTime>();
+    final locale = Localizations.localeOf(context);
     final themeData = Theme.of(context);
     final l10n = context.l10n;
     final presenceParams = PresenceViewParams.of(context);
@@ -190,11 +191,11 @@ class _ContactScreenState extends State<ContactScreen> {
                           ),
                         if (showPresenceInfo) ...[
                           const Divider(),
-                          PresenceInfoView(presenceInfo: presenseInfo, timeFormat: appTime.hourMinuteFormat()),
+                          PresenceInfoView(presenceInfo: presenseInfo, timeFormat: appTime.hourMinuteFormat(locale)),
                         ],
                         if (showDialogsInfo) ...[
                           const Divider(),
-                          DialogsInfoView(dialogInfo: dialogInfo, timeFormat: appTime.hourMinuteFormat()),
+                          DialogsInfoView(dialogInfo: dialogInfo, timeFormat: appTime.hourMinuteFormat(locale)),
                         ],
                         if (showOptionsSection) ...[
                           const Divider(),

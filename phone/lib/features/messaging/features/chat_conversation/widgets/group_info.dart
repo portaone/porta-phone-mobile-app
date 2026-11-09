@@ -117,6 +117,7 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
   @override
   Widget build(BuildContext context) {
     final appTime = context.read<AppTime>();
+    final locale = Localizations.localeOf(context);
     final theme = Theme.of(context);
     // Absent on a core without the mute, and showing the mute in force now -
     // see the contact info for the same row.
@@ -182,8 +183,8 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
                         NotificationMuteTile(
                           mute: userSettings.activeChatMute(chat.id),
                           onChoice: onMuteChoice,
-                          timeFormat: appTime.hourMinuteFormat(),
-                          dateFormat: appTime.dayMonthFormat(),
+                          timeFormat: appTime.hourMinuteFormat(locale),
+                          dateFormat: appTime.dayMonthFormat(locale),
                         ),
                         const SizedBox(height: 8),
                       ],
