@@ -153,18 +153,32 @@ void main() {
   });
 
   group('formatBytes', () {
+    final en = lookupAppLocalizations(const Locale('en'));
+
     test('formats each magnitude', () {
-      expect(formatBytes(0), '0 B');
-      expect(formatBytes(500), '500 B');
-      expect(formatBytes(2048), '2.0 KB');
-      expect(formatBytes(5 * 1024 * 1024), '5.0 MB');
-      expect(formatBytes(3 * 1024 * 1024 * 1024), '3.0 GB');
+      expect(formatBytes(0, en), '0 B');
+      expect(formatBytes(500, en), '500 B');
+      expect(formatBytes(2048, en), '2.0 KB');
+      expect(formatBytes(5 * 1024 * 1024, en), '5.0 MB');
+      expect(formatBytes(3 * 1024 * 1024 * 1024, en), '3.0 GB');
     });
 
     test('rolls sizes just below a unit boundary over to the next unit', () {
-      expect(formatBytes(1048570), '1.0 MB');
-      expect(formatBytes(1024 * 1024 * 1024 - 1024), '1.0 GB');
-      expect(formatBytes(1023 * 1024), '1023.0 KB');
+      expect(formatBytes(1048570, en), '1.0 MB');
+      expect(formatBytes(1024 * 1024 * 1024 - 1024, en), '1.0 GB');
+      expect(formatBytes(1023 * 1024, en), '1023.0 KB');
+    });
+
+    test('takes the units and the decimal separator from the language', () {
+      final fr = lookupAppLocalizations(const Locale('fr'));
+      expect(formatBytes(0, fr), '0 o');
+      expect(formatBytes(420 * 1024, fr), '420,0 Ko');
+      expect(formatBytes(5 * 1024 * 1024, fr), '5,0 Mo');
+
+      final uk = lookupAppLocalizations(const Locale('uk'));
+      expect(formatBytes(500, uk), '500 Б');
+      expect(formatBytes(2048, uk), '2,0 КБ');
+      expect(formatBytes(3 * 1024 * 1024 * 1024, uk), '3,0 ГБ');
     });
   });
 }
