@@ -198,6 +198,7 @@ sealed class _CallSignalingEvent extends CallEvent {
     required String callId,
     required String callee,
     required String caller,
+    required CallUpdateAttempt attempt,
     String? callerDisplayName,
     String? referredBy,
     String? replaceCallId,
@@ -453,6 +454,7 @@ class _CallSignalingEventCallUpdating extends _CallSignalingEvent {
     required this.callId,
     required this.callee,
     required this.caller,
+    required this.attempt,
     this.callerDisplayName,
     this.referredBy,
     this.replaceCallId,
@@ -478,6 +480,9 @@ class _CallSignalingEventCallUpdating extends _CallSignalingEvent {
 
   final JsepValue? jsep;
 
+  /// The attempt to handle this update, which the handler reports on.
+  final CallUpdateAttempt attempt;
+
   @override
   List<Object?> get props => [
     line,
@@ -489,6 +494,7 @@ class _CallSignalingEventCallUpdating extends _CallSignalingEvent {
     replaceCallId,
     isFocus,
     jsep,
+    attempt,
   ];
 }
 
@@ -1467,6 +1473,7 @@ class _RestoreAcceptedCall extends CallEvent {
     this.incomingCallEvent,
     this.remoteCameraEnabled,
     this.held = false,
+    this.pendingUpdate,
   });
 
   final int line;
@@ -1481,8 +1488,21 @@ class _RestoreAcceptedCall extends CallEvent {
   /// The call is on hold on the server.
   final bool held;
 
+  /// An update of the far end the restored call answers, see
+  /// [RestoreCallAction.pendingUpdate].
+  final PendingCallUpdate? pendingUpdate;
+
   @override
-  List<Object?> get props => [line, callId, acceptedEvent, acceptedTime, incomingCallEvent, remoteCameraEnabled, held];
+  List<Object?> get props => [
+    line,
+    callId,
+    acceptedEvent,
+    acceptedTime,
+    incomingCallEvent,
+    remoteCameraEnabled,
+    held,
+    pendingUpdate,
+  ];
 }
 
 // ─── Mutation events ────────────────────────────────────────────────────────
@@ -1561,6 +1581,7 @@ sealed class _CallMutationEvent extends CallEvent {
     required String callId,
     required String caller,
     required String callee,
+    required CallUpdateAttempt attempt,
     String? callerDisplayName,
     JsepValue? jsep,
   }) = _CallMutationEventSignalingCallUpdating;
@@ -1592,6 +1613,7 @@ sealed class _CallMutationEvent extends CallEvent {
     IncomingCallEvent? incomingCallEvent,
     required AcceptedEvent acceptedEvent,
     bool held,
+    PendingCallUpdate? pendingUpdate,
   }) = _CallMutationEventRestoreCall;
 
   // conference: the host's intents, then what the server says of the room
@@ -1906,6 +1928,7 @@ class _CallMutationEventSignalingCallUpdating extends _CallMutationEvent {
     required this.callId,
     required this.caller,
     required this.callee,
+    required this.attempt,
     this.callerDisplayName,
     this.jsep,
   });
@@ -1914,8 +1937,11 @@ class _CallMutationEventSignalingCallUpdating extends _CallMutationEvent {
   final String callee;
   final String? callerDisplayName;
   final JsepValue? jsep;
+
+  /// The attempt this stage ends.
+  final CallUpdateAttempt attempt;
   @override
-  List<Object?> get props => [callId, caller, callee, callerDisplayName, jsep];
+  List<Object?> get props => [callId, caller, callee, callerDisplayName, jsep, attempt];
 }
 
 // ── peer connection / ICE variants ───────────────────────────────────────────
@@ -2004,6 +2030,7 @@ class _CallMutationEventRestoreCall extends _CallMutationEvent {
     this.incomingCallEvent,
     required this.acceptedEvent,
     this.held = false,
+    this.pendingUpdate,
   });
   final String callId;
   final int line;
@@ -2011,8 +2038,9 @@ class _CallMutationEventRestoreCall extends _CallMutationEvent {
   final IncomingCallEvent? incomingCallEvent;
   final AcceptedEvent acceptedEvent;
   final bool held;
+  final PendingCallUpdate? pendingUpdate;
   @override
-  List<Object?> get props => [callId, line, acceptedTime, incomingCallEvent, acceptedEvent, held];
+  List<Object?> get props => [callId, line, acceptedTime, incomingCallEvent, acceptedEvent, held, pendingUpdate];
 }
 
 class _CallMutationEventControlMerge extends _CallMutationEvent {

@@ -513,7 +513,7 @@ void main() {
       seedCallOn('b', 1, _pcmu);
       // A renegotiation whose result was lost keeps its offer to replay.
       h.signaling.failure = TimeoutException('update result was not received');
-      h.signaling.emitLifecycle(SignalingConnected());
+      h.reconnect();
       await h.settle(() => h.signaling.requests.whereType<UpdateRequest>().length >= 2);
       h.signaling.failure = null;
       a.nativeSignalingStateValue = RTCSignalingState.RTCSignalingStateHaveLocalOffer;

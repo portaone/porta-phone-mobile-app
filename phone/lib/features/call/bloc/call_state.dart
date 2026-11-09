@@ -300,6 +300,12 @@ class CallState with DiagnosticableTreeMixin, _$CallState {
         call.processingStatus != CallProcessingStatus.disconnecting,
   );
 
+  /// The calls whose media is up: a reconnect owes each of them a
+  /// renegotiation, since an ICE restart made while the socket was down was
+  /// dropped.
+  Iterable<ActiveCall> get connectedCalls =>
+      activeCalls.where((call) => call.processingStatus == CallProcessingStatus.connected);
+
   /// The calls to put on hold before a new outgoing call is placed: every
   /// call not already held, except the room's legs - they stay in the mix,
   /// and the server would refuse the hold anyway.

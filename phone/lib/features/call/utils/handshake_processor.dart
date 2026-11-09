@@ -6,6 +6,8 @@ import 'package:webtrit_phone/features/call/models/models.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
+import 'call_update_history.dart';
+
 final _logger = Logger('HandshakeProcessor');
 
 /// Actions returned by [HandshakeProcessor.process] describing what the BLoC
@@ -59,6 +61,7 @@ final class RestoreCallAction extends HandshakeAction {
     this.incomingCallEvent,
     this.mediaState,
     this.held = false,
+    this.pendingUpdate,
   });
 
   final int line;
@@ -74,6 +77,11 @@ final class RestoreCallAction extends HandshakeAction {
   /// caller may have turned the camera off while nobody here was listening.
   final MediaStatePeerMessageEvent? mediaState;
 
+  /// An update of the far end the log shows unanswered: the restored call
+  /// answers it instead of making an offer of its own, which the media
+  /// server would hold behind the update for good.
+  final PendingCallUpdate? pendingUpdate;
+
   /// The same restore, of a call that is to come back on hold. Every field is
   /// passed on: a field added here has to be added there too.
   RestoreCallAction asHeld() => RestoreCallAction(
@@ -84,6 +92,7 @@ final class RestoreCallAction extends HandshakeAction {
     incomingCallEvent: incomingCallEvent,
     mediaState: mediaState,
     held: true,
+    pendingUpdate: pendingUpdate,
   );
 }
 
@@ -132,6 +141,34 @@ final class DeliverOfferAction extends HandshakeAction {
   /// The remote side's latest media state after the offer, when the log
   /// carries one - see [HandleIncomingCallAction.mediaState].
   final MediaStatePeerMessageEvent? mediaState;
+}
+
+/// Hand an update of the far end that nobody answered to a call the BLoC runs.
+///
+/// A re-INVITE that arrives while the socket is down cannot be forwarded: the
+/// server keeps it in the call's log and waits for the client's answer, and it
+/// does not send the event again. The next handshake carries the
+/// [UpdatingCallEvent] with its offer, and until the client answers it the
+/// media server holds back every offer the client makes itself - an ICE
+/// restart after the outage included - so the call stays without media and
+/// the far end drops it when its wait for the answer runs out.
+///
+/// The BLoC treats it exactly as the live event: the same handler applies the
+/// offer, rolls back a local offer of its own if one is in flight, and sends
+/// the answer. [ordinal] says which update of its call this is, counted from
+/// the call's start: the log of a call only grows, so the number names the
+/// same update in every handshake, and one handed over already is not handed
+/// over twice.
+///
+/// Emitted after the per-line actions, like [DeliverOfferAction], and only
+/// when no [HangupSignalingAction]/[DeclineSignalingAction] cut the plan short.
+final class DeliverUpdateAction extends HandshakeAction {
+  const DeliverUpdateAction({required this.event, required this.ordinal});
+
+  final UpdatingCallEvent event;
+
+  /// Which update of its call this is, counted from the call's start.
+  final int ordinal;
 }
 
 /// Call [Callkeep.endCall] for a local connection that is no longer present in
@@ -227,6 +264,9 @@ final class RejoinConferenceAction extends HandshakeAction {
 /// - If the line's call is in the BLoC but still waiting for its offer
 ///   ([ActiveCall.awaitsOffer]) and the log carries an [IncomingCallEvent] with
 ///   one -> [DeliverOfferAction], appended after the per-line actions.
+/// - If the line's call is in the BLoC and the newest update in its log is an
+///   [UpdatingCallEvent] with no answer of the client after it ->
+///   [DeliverUpdateAction], appended after the per-line actions.
 ///
 /// **Loop C -orphaned local connections:**
 /// - For each local Callkeep connection whose call ID is absent from the handshake
@@ -364,6 +404,17 @@ class HandshakeProcessor {
         }
       }
 
+      // A call the BLoC runs whose log still shows an update of the far end
+      // without the client's answer: it came while the socket was down.
+      if (!log.isTerminated && activeCallIds.contains(log.callId)) {
+        final update = log.updates.pending;
+        if (update != null) {
+          _logger.info('process: call ${log.callId} has an update of the far end unanswered in its log, delivering it');
+          deliveries.add(DeliverUpdateAction(event: update.event, ordinal: update.ordinal));
+          planned = true;
+        }
+      }
+
       if (!planned) {
         _logger.info(
           'process: call ${log.callId} needs nothing: inBloc=${activeCallIds.contains(log.callId)} '
@@ -489,6 +540,7 @@ class HandshakeProcessor {
       incomingCallEvent: earliest is IncomingCallEvent ? earliest : null,
       mediaState: log.mediaState,
       held: log.held,
+      pendingUpdate: log.updates.pending,
     );
   }
 
@@ -538,9 +590,15 @@ class HandshakeProcessor {
 /// What the plan reads from the log of one line. The log is newest first;
 /// each fact is worked out once, when first asked for.
 class _LineLog {
-  _LineLog(Line line) : callId = line.callId, _events = line.callLogs.whereType<CallEventLog>().toList();
+  _LineLog(Line line)
+    : callId = line.callId,
+      updates = CallUpdateHistory(line.callLogs),
+      _events = line.callLogs.whereType<CallEventLog>().toList();
 
   final String callId;
+
+  /// The far end's updates in the log, the client's answers to them counted in.
+  final CallUpdateHistory updates;
   final List<CallEventLog> _events;
 
   late final latest = _events.firstOrNull?.callEvent;
