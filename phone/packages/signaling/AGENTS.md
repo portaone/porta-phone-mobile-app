@@ -44,6 +44,7 @@ already has; an empty tenant id adds none), subprotocol `webtrit-protocol`.
 ```
 Event / Request
   GlobalEvent                         NumberPresenceUpdate, NumberDialogsUpdate
+  MessageSummaryUpdate                the voicemail box changed (not a GlobalEvent: not for calls)
   SessionEvent / SessionRequest       (transaction)
     RegisteringEvent, RegisteredEvent, UnregisteredEvent, RegistrationFailedEvent, ...
     Conference*: ConferenceOfferEvent, ConferenceUpdatedEvent, ...,

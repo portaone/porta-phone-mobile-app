@@ -39,14 +39,14 @@ void main() {
   });
 
   test('an unknown event reaches neither handler', () async {
-    await receive({'event': 'message_summary_update', 'messages_waiting': true});
+    await receive({'event': 'future_event', 'value': 1});
 
     expect(events, isEmpty);
     expect(errors, isEmpty);
   });
 
   test('the client goes on after an unknown event', () async {
-    await receive({'event': 'message_summary_update', 'messages_waiting': true});
+    await receive({'event': 'future_event', 'value': 1});
     await receive({'event': 'conference_terminated', 'room': 4242});
 
     expect(events, [const ConferenceTerminatedEvent(room: 4242)]);
@@ -61,10 +61,10 @@ void main() {
     final subscription = Logger.root.onRecord.listen((record) => logged.add(record.message));
     addTearDown(subscription.cancel);
 
-    await receive({'event': 'message_summary_update', 'messages_waiting': true});
-    await receive({'event': 'message_summary_update', 'messages_waiting': false});
+    await receive({'event': 'future_event', 'value': 1});
+    await receive({'event': 'future_event', 'value': 2});
 
-    expect(logged.where((message) => message.contains('message_summary_update')), hasLength(1));
+    expect(logged.where((message) => message.contains('future_event')), hasLength(1));
   });
 
   test('an error event of no known shape stays a failure', () async {
