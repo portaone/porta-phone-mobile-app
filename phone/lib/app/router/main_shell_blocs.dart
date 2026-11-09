@@ -248,6 +248,7 @@ class MainShellBlocs extends StatelessWidget {
                 extras: {'callId': id, 'error': error.name},
               ),
               signalingModule: signalingModule,
+              callSignaling: ModuleCallSignaling(signalingModule, events: signalingInbound.call),
               signalingEvents: signalingInbound.call,
               callPeerConnectionManager: callPeerConnectionManager,
               connectivityService: context.read<ConnectivityService>(),

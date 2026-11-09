@@ -165,7 +165,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     isWanted: (callId) => state.retrieveActiveCall(callId)?.shouldPlayLocalRingback ?? false,
   );
 
-  late final SignalingModule _signalingModule;
+  late final CallSignaling _callSignaling;
   late final StreamSubscription<SignalingModuleEvent> _signalingSubscription;
   late final SignalingReconnectController _reconnectController;
   Timer? _presenceInfoSyncTimer;
@@ -220,7 +220,9 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     this.webRtcOptionsBuilder,
     this.iceFilter,
     this.peerConnectionPolicyApplier,
+    // Only for the reconnect controller, which drives the connection itself.
     required SignalingModule signalingModule,
+    required CallSignaling callSignaling,
     required Stream<SignalingModuleEvent> signalingEvents,
     required CallPeerConnectionManager callPeerConnectionManager,
     required ConnectivityService connectivityService,
@@ -255,11 +257,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       delay: renegotiationUpdatingDelay,
       createPullResumeTimer: pullResumeTimer,
     );
-    _signalingModule = signalingModule;
+    _callSignaling = callSignaling;
     _callPeerConnectionManager = callPeerConnectionManager;
     _pulledCallResumer = PulledCallResumer(
       coordinator: _renegotiationCoordinator,
-      signaling: signalingModule,
+      signaling: callSignaling,
       peerConnection: callPeerConnectionManager.retrieve,
       readCall: _pulledCallView,
       prepareOffer: _prepareResumeOffer,
@@ -542,7 +544,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           appLifecycleState == AppLifecycleState.detached ||
           appLifecycleState == AppLifecycleState.inactive;
       final hasActiveCalls = change.nextState.isActive;
-      final connected = _signalingModule.isConnected;
+      final connected = _callSignaling.isConnected;
 
       if (appInactive) {
         _reconnectController.notifyHasActiveCalls(hasActiveCalls: hasActiveCalls);
@@ -1156,7 +1158,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       //
       // Consequences:
       // - performEndCall will NOT fire (CallKit never registered the call).
-      // - _signalingModule is very likely disconnected: VoIP push wakes the app
+      // - _callSignaling is very likely disconnected: VoIP push wakes the app
       //   before the WebSocket is established, so the CXProvider completion fires
       //   before signaling reconnects.
       //
@@ -1445,7 +1447,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
 
     final transaction = WebtritSignalingClient.generateTransactionId();
-    _signalingModule
+    _callSignaling
         .execute(
           MediaStatePeerMessageRequest(transaction: transaction, line: call.line, callId: call.callId, video: video),
         )
@@ -2450,7 +2452,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     _logger.info(
       '__onCallPerformEventAnswered: callId=${event.callId} status=${call.processingStatus} '
-      'hasOffer=${call.incomingOffer != null} signalingConnected=${_signalingModule.isConnected} '
+      'hasOffer=${call.incomingOffer != null} signalingConnected=${_callSignaling.isConnected} '
       'appLifecycle=${state.currentAppLifecycleState}',
     );
 
@@ -2730,7 +2732,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
       // Need to initiate outgoing call before set localDescription to avoid races
       // between [OutgoingCallRequest] and [IceTrickleRequest]s.
-      await _signalingModule.execute(
+      await _callSignaling.execute(
         OutgoingCallRequest(
           transaction: WebtritSignalingClient.generateTransactionId(),
           line: activeCall.line,
@@ -2776,12 +2778,12 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       if (call.incomingOffer == null) {
         _logger.info(
           '__onMutationPerformAnswer: wait for offer '
-          'signalingConnected=${_signalingModule.isConnected}',
+          'signalingConnected=${_callSignaling.isConnected}',
         );
 
         // Signaling may still be disconnected when answering from push while the app was in background.
         // Trigger reconnect immediately so the offer can arrive — don't wait for AppLifecycleState.resumed.
-        if (!_signalingModule.isConnected) {
+        if (!_callSignaling.isConnected) {
           _logger.info('__onMutationPerformAnswer: signaling not connected, forcing reconnect');
           _reconnectController.notifyForceReconnect();
         }
@@ -2794,7 +2796,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
                 _logger.fine(
                   '__onMutationPerformAnswer: offer still pending '
                   'status=${activeCall?.processingStatus} '
-                  'signalingConnected=${_signalingModule.isConnected} '
+                  'signalingConnected=${_callSignaling.isConnected} '
                   'elapsed=${DateTime.now().difference(offerWaitStart).inMilliseconds}ms',
                 );
               }
@@ -2805,7 +2807,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
               onTimeout: () {
                 _logger.warning(
                   '__onMutationPerformAnswer: offer wait timed out — '
-                  'signalingConnected=${_signalingModule.isConnected} '
+                  'signalingConnected=${_callSignaling.isConnected} '
                   'elapsed=${DateTime.now().difference(offerWaitStart).inMilliseconds}ms',
                 );
                 throw TimeoutException('Timed out waiting for offer');
@@ -2902,7 +2904,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       _logger.info(
         '__onMutationPerformAnswer: AcceptRequest callId=${call.callId} line=${call.line} eventCallId=${event.callId}',
       );
-      await _signalingModule.execute(
+      await _callSignaling.execute(
         AcceptRequest(
           transaction: WebtritSignalingClient.generateTransactionId(),
           line: call.line,
@@ -3043,7 +3045,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     } finally {
       // Release the post-cancel enqueue guard so the entry does not accumulate
       // for the lifetime of the signaling module.
-      _signalingModule.clearTerminatingMark(event.callId);
+      _callSignaling.clearTerminatingMark(event.callId);
     }
   }
 
@@ -3081,7 +3083,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
               direction: HoldDirection.inactive,
             )
           : UnholdRequest(transaction: transaction, line: activeCall.line, callId: activeCall.callId);
-      final pending = _signalingModule.execute(request);
+      final pending = _callSignaling.execute(request);
       // No future means nothing was sent, not an acknowledged transition.
       // In particular, it must not release a former leg's local isolation.
       if (pending == null) return;
@@ -3361,7 +3363,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     // causing the callee to see a phantom incoming call, and local cleanup
     // (ringback stop, PeerConnection disposal) would be delayed by the
     // 30-second queue timeout.
-    _signalingModule.cancelRequestsByCallId(e.callId);
+    _callSignaling.cancelRequestsByCallId(e.callId);
 
     final error = await callkeep.endCall(e.callId, endedBy: e.endedBy);
     // Handle the case where the local connection is no longer available,
@@ -3541,34 +3543,35 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     //   return;
     // }
 
-    try {
-      final transferRequest = TransferRequest(
-        transaction: WebtritSignalingClient.generateTransactionId(),
-        line: e.line,
-        callId: e.callId,
-        number: e.number,
-      );
+    final transferRequest = TransferRequest(
+      transaction: WebtritSignalingClient.generateTransactionId(),
+      line: e.line,
+      callId: e.callId,
+      number: e.number,
+    );
 
-      await _signalingModule.execute(transferRequest);
-
-      var newState = state.copyWith(minimized: false);
-      newState = newState.copyWithMappedActiveCall(e.callId, (activeCall) {
-        final transfer = Transfer.blindTransferTransferSubmitted(toNumber: e.number);
-        return activeCall.copyWith(transfer: transfer);
-      });
-      emit(newState);
+    switch (await _callSignaling.send(transferRequest)) {
+      // A request nothing could be handed is taken as submitted, as the
+      // `await` of a null execute always took it.
+      case SignalingSent() || SignalingNotSent():
+        var newState = state.copyWith(minimized: false);
+        newState = newState.copyWithMappedActiveCall(e.callId, (activeCall) {
+          final transfer = Transfer.blindTransferTransferSubmitted(toNumber: e.number);
+          return activeCall.copyWith(transfer: transfer);
+        });
+        emit(newState);
 
       // After request succesfully submitted, transfer flow will continue
       // by TransferringEvent event from anus and handled in [_CallSignalingEventTransferring]
       // that means that call transfering is now in progress
-    } on NotConnectedException {
-      _logger.warning('__onMutationControlBlindTransfer: not connected, rollback and survive');
-      emit(state.copyWithMappedActiveCall(e.callId, (activeCall) => activeCall.copyWith(transfer: null)));
-    } on WebtritSignalingTransactionTimeoutException {
-      _logger.warning('__onMutationControlBlindTransfer: transaction timeout, rollback and survive');
-      emit(state.copyWithMappedActiveCall(e.callId, (activeCall) => activeCall.copyWith(transfer: null)));
-    } catch (e, s) {
-      callErrorReporter.handle(e, s, '__onMutationControlBlindTransfer request error:');
+      case SignalingLost(error: NotConnectedException()):
+        _logger.warning('__onMutationControlBlindTransfer: not connected, rollback and survive');
+        emit(state.copyWithMappedActiveCall(e.callId, (activeCall) => activeCall.copyWith(transfer: null)));
+      case SignalingLost(error: WebtritSignalingTransactionTimeoutException()):
+        _logger.warning('__onMutationControlBlindTransfer: transaction timeout, rollback and survive');
+        emit(state.copyWithMappedActiveCall(e.callId, (activeCall) => activeCall.copyWith(transfer: null)));
+      case SignalingLost(:final error, :final stackTrace) || SignalingRefused(:final error, :final stackTrace):
+        callErrorReporter.handle(error, stackTrace, '__onMutationControlBlindTransfer request error:');
     }
   }
 
@@ -3604,39 +3607,40 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       return;
     }
 
-    try {
-      final transferRequest = TransferRequest(
-        transaction: WebtritSignalingClient.generateTransactionId(),
-        line: referorCall.line,
-        callId: referorCall.callId,
-        number: replaceCall.handle.normalizedValue(),
-        replaceCallId: replaceCall.callId,
-      );
+    final transferRequest = TransferRequest(
+      transaction: WebtritSignalingClient.generateTransactionId(),
+      line: referorCall.line,
+      callId: referorCall.callId,
+      number: replaceCall.handle.normalizedValue(),
+      replaceCallId: replaceCall.callId,
+    );
 
-      await _signalingModule.execute(transferRequest);
-
-      emit(
-        state.copyWithMappedActiveCall(referorCall.callId, (activeCall) {
-          final transfer = Transfer.attendedTransferTransferSubmitted(replaceCallId: replaceCall.callId);
-          return activeCall.copyWith(transfer: transfer);
-        }),
-      );
-      // The hand-over is the linked call's purpose fulfilled: from here the
-      // server ends both calls, in either order, and the first of them to go
-      // must not read as the second one failing and take the other off hold.
-      if (state.linkedCall?.callId == replaceCall.callId) emit(state.copyWith(linkedCall: null));
+    switch (await _callSignaling.send(transferRequest)) {
+      // A request nothing could be handed is taken as submitted, as the
+      // `await` of a null execute always took it.
+      case SignalingSent() || SignalingNotSent():
+        emit(
+          state.copyWithMappedActiveCall(referorCall.callId, (activeCall) {
+            final transfer = Transfer.attendedTransferTransferSubmitted(replaceCallId: replaceCall.callId);
+            return activeCall.copyWith(transfer: transfer);
+          }),
+        );
+        // The hand-over is the linked call's purpose fulfilled: from here the
+        // server ends both calls, in either order, and the first of them to go
+        // must not read as the second one failing and take the other off hold.
+        if (state.linkedCall?.callId == replaceCall.callId) emit(state.copyWith(linkedCall: null));
 
       // After request succesfully submitted, transfer flow will continue
       // by TransferringEvent event from anus and handled in [_CallSignalingEventTransferring]
       // that means that call transfering is now in progress
-    } on NotConnectedException {
-      _logger.warning('__onMutationControlAttendedTransfer: not connected, rollback and survive');
-      emit(state.copyWithMappedActiveCall(referorCall.callId, (activeCall) => activeCall.copyWith(transfer: null)));
-    } on WebtritSignalingTransactionTimeoutException {
-      _logger.warning('__onMutationControlAttendedTransfer: transaction timeout, rollback and survive');
-      emit(state.copyWithMappedActiveCall(referorCall.callId, (activeCall) => activeCall.copyWith(transfer: null)));
-    } catch (e, s) {
-      callErrorReporter.handle(e, s, '__onMutationControlAttendedTransfer request error:');
+      case SignalingLost(error: NotConnectedException()):
+        _logger.warning('__onMutationControlAttendedTransfer: not connected, rollback and survive');
+        emit(state.copyWithMappedActiveCall(referorCall.callId, (activeCall) => activeCall.copyWith(transfer: null)));
+      case SignalingLost(error: WebtritSignalingTransactionTimeoutException()):
+        _logger.warning('__onMutationControlAttendedTransfer: transaction timeout, rollback and survive');
+        emit(state.copyWithMappedActiveCall(referorCall.callId, (activeCall) => activeCall.copyWith(transfer: null)));
+      case SignalingLost(:final error, :final stackTrace) || SignalingRefused(:final error, :final stackTrace):
+        callErrorReporter.handle(error, stackTrace, '__onMutationControlAttendedTransfer request error:');
     }
   }
 
@@ -3683,7 +3687,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         referId: e.referId,
       );
 
-      await _signalingModule.execute(declineRequest);
+      await _callSignaling.execute(declineRequest);
 
       emit(
         state.copyWithMappedActiveCall(e.callId, (activeCall) {
@@ -3738,7 +3742,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       //
       // The call was never presented to the user, so performEndCall will NOT fire.
       // Notify the server immediately so the remote party is not left ringing.
-      // _signalingModule.execute returns null when disconnected — the ?. handles that safely.
+      // _callSignaling.execute returns null when disconnected - the ?. handles that safely.
       _logger.warning(
         '__onMutationSignalingIncoming: reportNewIncomingCall error=$error '
         '(callId: ${event.callId}, line: ${event.line}) — sending decline',
@@ -3912,7 +3916,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   Future<void> __onMutationSignalingHangup(_CallMutationEventSignalingHangup event, Emitter<CallState> emit) async {
     _ringback.stopUnawaited(event.callId);
-    _signalingModule.cancelRequestsByCallId(event.callId);
+    _callSignaling.cancelRequestsByCallId(event.callId);
 
     ActiveCall? call = state.retrieveActiveCall(event.callId);
     if (call == null && event.wasHeld) {
@@ -4009,7 +4013,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// while the handshake of the next session is still to come - it decides
   /// whether the update is still owed - and [CallUpdateAnswer.notSent] once it
   /// came and did not show the update again.
-  CallUpdateAnswer _answerLost() => !_signalingModule.isConnected || _renegotiationCoordinator.awaitingHandshake
+  CallUpdateAnswer _answerLost() => !_callSignaling.isConnected || _renegotiationCoordinator.awaitingHandshake
       ? CallUpdateAnswer.lost
       : CallUpdateAnswer.notSent;
 
@@ -4138,7 +4142,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             final transaction = WebtritSignalingClient.generateTransactionId();
             final sentOn = _renegotiationCoordinator.connection;
 
-            final acknowledgement = _signalingModule.execute(
+            final acknowledgement = _callSignaling.execute(
               UpdateRequest(
                 transaction: transaction,
                 line: activeCall.line,
@@ -4163,7 +4167,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             // handshake hands it over again. On a session that lives on
             // nothing will, and the media server holds every offer of ours
             // behind the update, so the call ends.
-            bool sessionLost() => !_signalingModule.isConnected || _renegotiationCoordinator.connection != sentOn;
+            bool sessionLost() => !_callSignaling.isConnected || _renegotiationCoordinator.connection != sentOn;
             try {
               await acknowledgement;
             } catch (e) {
@@ -4177,16 +4181,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
             // so lets wait for the final result to make sure the update request is processed, and only then pass mutation queue to next event
             final Event result;
             try {
-              result = await _signalingModule.events
-                  .firstWhere((event) {
-                    if (event is SignalingProtocolEvent && event.event is SessionEvent) {
-                      final sessionEvent = event.event as SessionEvent;
-                      if (sessionEvent.transaction == transaction) return true;
-                    }
-                    return false;
-                  })
-                  .then((event) => (event as SignalingProtocolEvent).event)
-                  .timeout(const Duration(seconds: 10));
+              result = await _callSignaling.response(transaction, timeout: const Duration(seconds: 10));
             } on TimeoutException {
               // No reply because the session that carried the answer is gone:
               // the call is not lost, the update is still owed.
@@ -4418,20 +4413,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         callId: e.callId,
         jsep: offer.toMap(),
       );
-      await _signalingModule.execute(updateRequest);
+      await _callSignaling.execute(updateRequest);
 
       // Some events have double comfirmation like this,
       // so lets wait for the final result to make sure the update request is processed, and only then pass mutation queue to next event
-      final result = await _signalingModule.events
-          .firstWhere((event) {
-            if (event is SignalingProtocolEvent && event.event is SessionEvent) {
-              final sessionEvent = event.event as SessionEvent;
-              if (sessionEvent.transaction == transaction) return true;
-            }
-            return false;
-          })
-          .then((event) => (event as SignalingProtocolEvent).event)
-          .timeout(const Duration(seconds: 10));
+      final result = await _callSignaling.response(transaction, timeout: const Duration(seconds: 10));
 
       _logger.info('__onMutationSignalingCallUpdating: received response for update request: $result');
 
@@ -4513,7 +4499,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         candidate: event.candidate.toMap(),
       );
       try {
-        await _signalingModule.execute(iceTrickleRequest);
+        await _callSignaling.execute(iceTrickleRequest);
       } catch (e) {
         if (!_renegotiationCoordinator.isTransientSignalingFailure(e)) rethrow;
         // A call that is up loses nothing it cannot get back: the ICE restart that
@@ -4547,7 +4533,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
         candidate: null,
       );
       try {
-        await _signalingModule.execute(iceTrickleRequest);
+        await _callSignaling.execute(iceTrickleRequest);
       } catch (e) {
         if (!_renegotiationCoordinator.isTransientSignalingFailure(e)) rethrow;
         // A call that is up loses nothing it cannot get back: the ICE restart that
@@ -5095,7 +5081,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       lineCallIds,
       await Future.wait(lineCallIds.map(callkeepConnections.getConnection)),
     );
-    final session = _signalingModule.sessionHandshake ?? stateHandshake;
+    final session = _callSignaling.sessionHandshake ?? stateHandshake;
     final actions = _handshakeProcessor.process(
       lines: session.lines,
       guestLine: session.guestLine,
@@ -5184,7 +5170,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           // Never refused, a no-op without a room; the calls in it carry on.
           _logger.info('_handleHandshakeReceived: hanging up conference room ${action.room} this client does not hold');
           unawaited(
-            _signalingModule
+            _callSignaling
                 .execute(ConferenceHangupRequest(transaction: WebtritSignalingClient.generateTransactionId()))
                 ?.catchError(
                   (e, s) => callErrorReporter.handle(e, s, '_handleHandshakeReceived conferenceHangup error'),
@@ -6060,7 +6046,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   /// brings the session back says whether the room still stands, and asks.
   void _askForRejoin() {
     if (_offerWait.rejoinAsked) return;
-    if (!_signalingModule.isConnected) {
+    if (!_callSignaling.isConnected) {
       _logger.info('_askForRejoin: the session is down, the handshake will ask');
       return;
     }
@@ -6155,7 +6141,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // awaited null completes like an acknowledgement would. Quieting the
       // legs for a room the server was never asked for would leave two live
       // calls silent in both directions.
-      final pending = _signalingModule.execute(request);
+      final pending = _callSignaling.execute(request);
       if (pending == null) {
         _logger.warning('$source: not sent, the session is not connected');
         return const ConferenceRequestResult.notSent();
@@ -6325,7 +6311,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       // Sent, not waited on, and each is independent: this is a hint, and
       // holding the queue on a round trip per participant would delay the
       // room's own work behind it.
-      _signalingModule
+      _callSignaling
           .execute(
             ConferenceMutePeerMessageRequest(
               transaction: WebtritSignalingClient.generateTransactionId(),
@@ -6356,7 +6342,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     for (final callId in callIds) {
       final line = state.conference.legs[callId] ?? state.retrieveActiveCall(callId)?.line;
       if (line == null) continue;
-      _signalingModule
+      _callSignaling
           .execute(
             ConferenceHostAwayPeerMessageRequest(
               transaction: WebtritSignalingClient.generateTransactionId(),
@@ -6556,7 +6542,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
   Future<void> _executeTerminationRequest(QueuedTerminationRequest request) async {
     switch (request.type) {
       case QueuedTerminationRequestType.hangup:
-        await _signalingModule.execute(
+        await _callSignaling.execute(
           HangupRequest(
             transaction: WebtritSignalingClient.generateTransactionId(),
             line: request.line,
@@ -6564,7 +6550,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
           ),
         );
       case QueuedTerminationRequestType.decline:
-        await _signalingModule.execute(
+        await _callSignaling.execute(
           DeclineRequest(
             transaction: WebtritSignalingClient.generateTransactionId(),
             line: request.line,
@@ -6650,7 +6636,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     if (shouldUpdate && canUpdate) {
       _logger.fine('_presenceInfoSyncTimer: updating presence settings');
       try {
-        await _signalingModule.execute(
+        await _callSignaling.execute(
           PresenceSettingsUpdateRequest(
             transaction: clock.now().millisecondsSinceEpoch.toString(),
             settings: SignalingPresenceSettingsMapper.toSignaling(presenceSettings),
@@ -6698,7 +6684,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final call = state.retrieveActiveCall(callId);
     if (call == null) return null;
     return (
-      signalingReady: _signalingModule.isConnected && state.isSignalingEstablished,
+      signalingReady: _callSignaling.isConnected && state.isSignalingEstablished,
       pulled: call.fromReplaces != null,
       connected: call.processingStatus == CallProcessingStatus.connected,
       hungUp: call.wasHungUp,

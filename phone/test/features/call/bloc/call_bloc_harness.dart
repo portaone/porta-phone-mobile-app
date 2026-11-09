@@ -94,6 +94,7 @@ class CallBlocHarness {
       mediaManager: mediaManager?.call(callkeep),
       onDiagnosticReportRequested: (_, _) {},
       signalingModule: signaling,
+      callSignaling: ModuleCallSignaling(signaling, events: inbound.call),
       signalingEvents: inbound.call,
       callPeerConnectionManager: peers,
       connectivityService: _FakeConnectivityService(),
