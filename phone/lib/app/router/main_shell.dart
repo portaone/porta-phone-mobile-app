@@ -227,7 +227,8 @@ class _MainShellState extends State<MainShell> {
                       child: CallShell(
                         child: MessagingShell(
                           child: SystemNotificationsShell(
-                            child: VoicemailPushShell(
+                            child: VoicemailShell(
+                              boxChanges: _signalingInbound.voicemail,
                               // Per session on purpose: a fresh login checks for an
                               // update (and may prompt) anew.
                               child: AppUpdateCheck(
