@@ -159,6 +159,9 @@ extension CallkeepIOSOptionsConverter on CallkeepIOSOptions {
       includesCallsInRecents: includesCallsInRecents,
       driveIdleTimerDisabled: driveIdleTimerDisabled,
       callWaitingToneOwnCallsOnly: callWaitingToneOwnCallsOnly,
+      queueIncomingWhileRinging: queueIncomingWhileRinging,
+      holdActiveBeforeThirdIncoming: holdActiveBeforeThirdIncoming,
+      keepIncomingInAppInFront: keepIncomingInAppInFront,
     );
   }
 }

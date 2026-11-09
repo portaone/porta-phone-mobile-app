@@ -131,7 +131,10 @@ typedef NS_ENUM(NSUInteger, WTPEndedByEnum) {
     supportsVideo:(BOOL )supportsVideo
     includesCallsInRecents:(BOOL )includesCallsInRecents
     driveIdleTimerDisabled:(BOOL )driveIdleTimerDisabled
-    callWaitingToneOwnCallsOnly:(nullable NSNumber *)callWaitingToneOwnCallsOnly;
+    callWaitingToneOwnCallsOnly:(nullable NSNumber *)callWaitingToneOwnCallsOnly
+    queueIncomingWhileRinging:(nullable NSNumber *)queueIncomingWhileRinging
+    holdActiveBeforeThirdIncoming:(nullable NSNumber *)holdActiveBeforeThirdIncoming
+    keepIncomingInAppInFront:(nullable NSNumber *)keepIncomingInAppInFront;
 @property(nonatomic, copy) NSString * localizedName;
 @property(nonatomic, copy, nullable) NSString * ringtoneSound;
 @property(nonatomic, copy, nullable) NSString * ringbackSound;
@@ -145,6 +148,9 @@ typedef NS_ENUM(NSUInteger, WTPEndedByEnum) {
 @property(nonatomic, assign) BOOL  includesCallsInRecents;
 @property(nonatomic, assign) BOOL  driveIdleTimerDisabled;
 @property(nonatomic, strong, nullable) NSNumber * callWaitingToneOwnCallsOnly;
+@property(nonatomic, strong, nullable) NSNumber * queueIncomingWhileRinging;
+@property(nonatomic, strong, nullable) NSNumber * holdActiveBeforeThirdIncoming;
+@property(nonatomic, strong, nullable) NSNumber * keepIncomingInAppInFront;
 @end
 
 @interface WTPAndroidOptions : NSObject

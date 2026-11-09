@@ -25,6 +25,9 @@ class CallkeepIOSOptions extends Equatable {
     this.includesCallsInRecents = true,
     this.driveIdleTimerDisabled = true,
     this.callWaitingToneOwnCallsOnly = true,
+    this.queueIncomingWhileRinging = false,
+    this.holdActiveBeforeThirdIncoming = false,
+    this.keepIncomingInAppInFront = false,
   });
 
   final String localizedName;
@@ -43,6 +46,34 @@ class CallkeepIOSOptions extends Equatable {
   /// other VoIP apps) also count towards the connected/ringing combination.
   final bool callWaitingToneOwnCallsOnly;
 
+  /// iOS only: keep at most one of this app's incoming calls ringing in CallKit. A call that
+  /// arrives while another one rings waits outside CallKit - the app has it, the system does
+  /// not show it - and enters CallKit as an ordinary incoming call once the ringing one is
+  /// answered (then it rings beside it) or ends. Answering a waiting call makes the two change
+  /// places: the ringing one waits in turn and comes back once the taken call is connected, so
+  /// whichever call the user picks, the other is kept. Off by default: every incoming call
+  /// registers with CallKit at once, as before - and with two ringing there, the system's own
+  /// Accept on one ends the other.
+  final bool queueIncomingWhileRinging;
+
+  /// iOS only: when an incoming call of this app comes while one of its calls is held and
+  /// another is active, put the active one on hold in CallKit only - not in the app, not on the
+  /// far side - until the new call is reported, and take it off hold again right after. iOS
+  /// builds the system screen of that call while nothing of ours is active, so it offers
+  /// `Hold & Accept`, which keeps all three calls, and `End & Accept` ends only the active call;
+  /// without it iOS offers `End & Accept` and `End Held & Accept`, and the latter silently ends
+  /// the oldest call. Off by default.
+  final bool holdActiveBeforeThirdIncoming;
+
+  /// iOS only, together with [queueIncomingWhileRinging]: while the app is in front and one of its
+  /// calls is in conversation, an incoming call waits in the app, outside CallKit, so iOS shows
+  /// nothing over the app; the call-waiting tone plays. Answered in the app, it enters CallKit as
+  /// an outgoing call, which brings up no system screen either (iOS's call history then lists it
+  /// as outgoing). It enters CallKit as an ordinary incoming call once the app goes to the
+  /// background or the screen locks, or once no call of the app is in conversation. Off by
+  /// default.
+  final bool keepIncomingInAppInFront;
+
   @override
   List<Object?> get props => [
     localizedName,
@@ -56,6 +87,9 @@ class CallkeepIOSOptions extends Equatable {
     includesCallsInRecents,
     driveIdleTimerDisabled,
     callWaitingToneOwnCallsOnly,
+    queueIncomingWhileRinging,
+    holdActiveBeforeThirdIncoming,
+    keepIncomingInAppInFront,
   ];
 }
 
