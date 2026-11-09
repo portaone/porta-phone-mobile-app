@@ -8,7 +8,7 @@ the first screen that got a second arrangement, the active call screen (see
 reference implementation). The next screens follow them rather than invent
 the shape again.
 
-Last reviewed: 2026-11-05.
+Last reviewed: 2026-11-09.
 
 ## The adaptation axes
 
@@ -91,6 +91,14 @@ Screen shapes:
 - `WatchEdgeLayout` - a screen whose content stays put above one main action along the bottom
   (a call, a keypad): the body gets the face less the edge button's room, an optional
   `backdrop` fills the face behind it. The scrolling counterpart is `WatchActionLayout`.
+- `WatchStatePage` - a list section with nothing to list yet: empty, failed, access refused. The
+  section's title stays on top, the middle holds an optional muted icon (smaller on a small face),
+  the message and a hint under it, read as one node; what can be done about it - try again, open the
+  settings, start a chat - is a `WatchAction` on the edge button. `WatchStatePage.loading` is the
+  section on its way: a spinner the screen reader names by the app's `progressLabel`, an optional
+  hint ("Connecting..."), no action. The state is a live region, so a section's loading page turning
+  into what came of it is announced; a middle that does not fit scrolls and fades into the edge below.
+  Every list section shows these states this way, not with the phone's placeholders.
 - `WatchIconGrid` - a screen of round buttons with captions under a short title, three to a
   row (fewer, and larger, when there are fewer). On a round face the grid keeps to two thirds
   of the face, centred, the title above it, so the corner captions clear the bezel. A `header`
@@ -117,6 +125,8 @@ Parts:
 - `WatchKeyGrid` - twelve keys in four rows sharing the height, with no gaps; a held key enters
   its alternate (0 for +) unless `alternates` is off, as for a call's tones. The app gives it
   `watchDialKeys`, its keypad as the grid's `WatchKey`s.
+- `WatchSpinner` - the spinner of something on its way, in the one watch size, named by the
+  app's label; the state page and a list's rows still coming show it.
 - `WatchTitle` - a screen's short centred title, in place of an icon or an app bar.
 - `WatchListTile` - one row of a watch list (a device, a call, a way to transfer): a pill at
   the tap floor with an icon, a title of up to two lines, a one-line subtitle and a trailing

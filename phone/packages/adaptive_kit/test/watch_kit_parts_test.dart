@@ -8,6 +8,18 @@ import 'helpers/screen_presets.dart';
 void main() {
   Widget wrap(Widget body) => MaterialApp(home: Scaffold(body: body));
 
+  group('WatchSpinner', () {
+    testWidgets('is the one spinner size, named by the label it is given', (tester) async {
+      final handle = tester.ensureSemantics();
+      watchPresets.first.apply(tester);
+      await tester.pumpWidget(wrap(const Center(child: WatchSpinner(label: 'Loading'))));
+
+      expect(tester.getSize(find.byType(WatchSpinner)), const Size.square(WatchSpinner.size));
+      expect(find.bySemanticsLabel('Loading'), findsOneWidget);
+      handle.dispose();
+    });
+  });
+
   group('WatchRoundButton', () {
     testWidgets('is one button named by its label, the caption for the eye', (tester) async {
       final handle = tester.ensureSemantics();
