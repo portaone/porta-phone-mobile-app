@@ -193,9 +193,10 @@ How long to wait (delay hint)  →  Whether there are active calls
                                   Whether the controller is still alive
 ```
 
-**`CallBloc`** delegates all reconnect scheduling and failure-notification to
-`SignalingReconnectController`. The subscription only maps events to state — no reconnect
-logic inline.
+**The session** owns reconnect scheduling and failure reporting: `MainShell` makes the
+`SignalingReconnectController` with the module. `CallBloc` has no reconnect logic and no module; it
+tells the controller what it sees (lifecycle, network, active calls, a call that needs the
+connection now) through `SignalingReconnect`.
 
 **`SignalingForegroundIsolateManager`** manages its own lightweight timer directly:
 
@@ -214,15 +215,20 @@ completes the run future with an error.
 
 ## SignalingReconnectController
 
-Centralises all reconnect logic and connection-failure notification decisions for `CallBloc`.
-Lives in `lib/features/call/services/signaling_reconnect_controller.dart`.
+Centralises all reconnect logic and connection-failure decisions for the session's signaling.
+Lives in `lib/services/signaling/signaling_reconnect_controller.dart`; `MainShell` creates it in
+`initState()`, right after the module (so it is the module's first listener), and disposes it first
+when the session goes. `CallBloc` holds it only as `SignalingReconnect` - the six `notify*` calls.
+A failure it gives up waiting on goes to `reportSignalingFailure`
+(`lib/services/signaling/signaling_failure_report.dart`): log, and Crashlytics for the unexpected
+codes.
 
 **Constructor:**
 
 ```dart
 SignalingReconnectController({
   required SignalingModule signalingModule,
-  void Function()? onConnectionFailed,
+  void Function(SignalingFailureInfo)? onConnectionFailed,   // the shell: reportSignalingFailure
   void Function(bool isAvailable)? onConnectionPresenceChanged,
   int notifyAfterConsecutiveFailures = 2,  // notify after this many consecutive failures
   bool reconnectEnabled = true,
@@ -268,24 +274,40 @@ void _scheduleReconnect(Duration delay, {bool force = false}) {
 
 ## Consumers
 
+### SignalingInbound (main isolate, the session)
+
+`lib/app/session/signaling_inbound.dart`. The one place that splits the session's events between
+features: `SignalingInbound.consumerOf(event)` names the single consumer of an event, and each
+feature's stream carries only what it owns. The call stream takes the connection, the handshake and
+the session and global events; an event of no consumer goes nowhere (logged) instead of reaching
+`CallBloc` by default. An error of the module's stream goes to the call stream only.
+
+It holds no subscription: each listener of a feature's stream takes a fresh `module.events` when it
+listens, so it gets the module's replay and hears events in the order it subscribed (the reconnect
+controller, created first, hears an event before `CallBloc`).
+
 ### CallBloc (main isolate)
 
-Creates `SignalingReconnectController` in the constructor and subscribes separately to map
-`SignalingModuleEvent` to internal BLoC events. Reconnect scheduling and failure notifications
-are fully handled by `_reconnectController`.
+Holds no `SignalingModule`. It is given:
+
+- `signalingEvents` - the routed call stream (`SignalingInbound.call`), mapped to internal BLoC
+  events;
+- `callSignaling` - `CallSignaling` (`lib/features/call/services/call_signaling.dart`), the call
+  feature's port: `execute` (the module's contract), `send` (what became of a request as a value:
+  `SignalingSent` / `SignalingNotSent` / `SignalingLost` / `SignalingRefused`; the transfers use it),
+  `response` / `responseUntil` (the answer to a request by its transaction, heard on the routed
+  call stream; given up at its timeout or when `until` completes), `isConnected`,
+  `sessionHandshake` and the cancel guards. The port has no stream of events. `ModuleCallSignaling`
+  is its adapter over the module, made by the shell;
+- `signalingReconnect` - the session's reconnect policy, as above.
+
+`test/architecture/signaling_boundary_test.dart` keeps the seam: in `lib/features` the
+`SignalingModule` type is allowed only in the port's adapter and the background isolate.
 
 ```dart
-_reconnectController = SignalingReconnectController(
-  signalingModule: signalingModule,
-  onConnectionFailed: () => submitNotification(const SignalingConnectFailedNotification()),
-  onConnectionPresenceChanged: (isAvailable) =>
-      _logger.info('signaling presence changed: isAvailable=$isAvailable'),
-);
-
-// Translates SignalingModule events into BLoC state-transition events.
-// Reconnect scheduling and notification decisions are fully handled by
-// [_reconnectController] — this listener only drives [CallState] changes.
-_signalingSubscription = _signalingModule.events.listen((event) {
+// Translates the call feature's signaling events - what the shell's
+// SignalingInbound routes to calls - into BLoC state-transition events.
+_signalingSubscription = signalingEvents.listen((event) {
   switch (event) {
     case SignalingConnecting():
       add(const _SignalingClientEvent.connecting());
@@ -358,14 +380,13 @@ MainShellState.initState()
          │
          │  Stream<SignalingModuleEvent>  (replay buffer → live events)
          │
-         ├──► SignalingReconnectController  (owns reconnect timer + failure notifications)
-         │      fed by: CallBloc lifecycle/network event handlers
-         │      drives: onConnectionFailed → submitNotification(SignalingConnectFailedNotification)
-         │               onConnectionPresenceChanged → persistent UI indicator
+         ├──► SignalingReconnectController  (lib/services/signaling; made and disposed by MainShell)
+         │      fed by: CallBloc through SignalingReconnect (lifecycle, network, active calls)
+         │      drives: connect() / disconnect(); onConnectionFailed → reportSignalingFailure
          │
-         ├──► CallBloc                  (main isolate)
-         │      subscribes in constructor — pure state mapping, no reconnect logic
-         │      commands: connect() / disconnect() / module.execute(request)
+         ├──► SignalingInbound          (lib/app/session; a fresh events stream per listener)
+         │      └──► call stream ──► CallBloc   (main isolate; holds no module)
+         │             commands through CallSignaling (ModuleCallSignaling over the module)
          │
          └──► background isolates
                PushNotificationIsolateManager — direct WebSocket (no FGS), no reconnect, run()/close() API
@@ -442,4 +463,5 @@ isolate when it detects a duplicate session. This produces
 | `recommendedReconnectDelay` in `SignalingConnectionFailed` | **Yes.** Consistent with `SignalingDisconnected`. Consumer never hardcodes delays. |
 | Replay buffer | **Manual `List` + `connect()` clear.** `rxdart` is in the project but `ReplaySubject` has no `clear()` in v0.28. A manual buffer gives full control with no external dependency. |
 | Early connect (before CallBloc) | **`initState()` in `MainShellState`.** Module connects while the widget tree is built. Late subscribers get the full session history via the replay buffer. |
-| Reconnect extraction | **`SignalingReconnectController`.** All reconnect scheduling, failure counting, and connection-presence tracking extracted from `CallBloc` into a dedicated class. `CallBloc` subscription is pure state mapping with no reconnect logic inline. |
+| Reconnect extraction | **`SignalingReconnectController`, owned by the session.** All reconnect scheduling, failure counting, and connection-presence tracking are out of `CallBloc`, in `lib/services/signaling`; `MainShell` makes and disposes the controller, `CallBloc` only notifies it through `SignalingReconnect`. |
+| Feature routing | **`SignalingInbound` (`lib/app/session`).** One classifier names the consumer of each event; a feature's stream carries only its own; no subscription of its own, a fresh module stream per listener. `CallBloc` holds no module: events through the routed call stream, requests through the `CallSignaling` port. Guarded by `test/architecture/signaling_boundary_test.dart`. |
