@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -169,6 +170,9 @@ class _SmsMessageListViewState extends State<SmsMessageListView> {
   }
 
   Widget list() {
+    final appTime = context.read<AppTime>();
+    final timeFormat = appTime.hourMinuteFormat();
+    final dateFormat = appTime.dayMonthFormat();
     return GestureDetector(
       // A tap anywhere puts the keyboard away. It is a convenience for a
       // finger and nothing a screen reader should be taken to - left in the
@@ -193,6 +197,7 @@ class _SmsMessageListViewState extends State<SmsMessageListView> {
                 key: Key(entry.message?.idKey ?? entry.outboxEntry!.idKey),
                 child: SmsMessageView(
                   userNumber: widget.userNumber,
+                  timeFormat: timeFormat,
                   message: entry.message,
                   outboxMessage: entry.outboxEntry,
                   outboxDeleteEntry: entry.outboxDeleteEntry,
@@ -220,7 +225,10 @@ class _SmsMessageListViewState extends State<SmsMessageListView> {
               return Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Center(
-                  child: Text(entry.date.toDayOfMonth, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  child: Text(
+                    dateFormat.format(entry.date.toLocal()),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ),
               );
             }

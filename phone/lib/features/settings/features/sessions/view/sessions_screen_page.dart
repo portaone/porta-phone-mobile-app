@@ -34,7 +34,7 @@ class _SessionsScreenPageState extends State<SessionsScreenPage> {
       (features) => features.coreSupport.supportsSessionAutoTerminate,
     );
     return SessionsScreen(
-      dateFormat: context.read<AppTime>().formatDateTime(true),
+      dateFormat: context.read<AppTime>().dateTimeFormat(),
       appVersion: context.read<AppInfo>().version,
       autoTerminateSelectable: autoTerminateSelectable,
       autoTerminateSnackBar: _autoTerminateSnackBar,

@@ -4,7 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
-import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -12,11 +12,18 @@ import 'package:webtrit_phone/utils/utils.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
 
 class ChatConversationsTile extends StatefulWidget {
-  const ChatConversationsTile({required this.conversation, required this.lastMessage, required this.userId, super.key});
+  const ChatConversationsTile({
+    required this.conversation,
+    required this.lastMessage,
+    required this.userId,
+    required this.timeOrDateFormat,
+    super.key,
+  });
 
   final Chat conversation;
   final ChatMessage? lastMessage;
   final String userId;
+  final TimeOrDateFormat timeOrDateFormat;
 
   @override
   State<ChatConversationsTile> createState() => _ChatConversationsTileState();
@@ -126,7 +133,8 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
               ),
               if (muted) const NotificationMutedIndicator(),
               const SizedBox(width: 4),
-              if (lastMessage != null) Text(lastMessage.createdAt.timeOrDate, style: const TextStyle(fontSize: 12)),
+              if (lastMessage != null)
+                Text(widget.timeOrDateFormat.format(lastMessage.createdAt), style: const TextStyle(fontSize: 12)),
             ],
           ),
           subtitle: subtitle(),
@@ -159,7 +167,8 @@ class _ChatConversationsTileState extends State<ChatConversationsTile> {
           // the row happens to say about itself.
           if (muted) const NotificationMutedIndicator(),
           const SizedBox(width: 4),
-          if (lastMessage != null) Text(lastMessage.createdAt.timeOrDate, style: const TextStyle(fontSize: 12)),
+          if (lastMessage != null)
+            Text(widget.timeOrDateFormat.format(lastMessage.createdAt), style: const TextStyle(fontSize: 12)),
         ],
       ),
       subtitle: subtitle(),

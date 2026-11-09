@@ -8,17 +8,16 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 import '../call_log.dart';
 
 class CallLogHistoryTile extends StatelessWidget {
-  const CallLogHistoryTile({super.key, required this.callLogEntry, this.dateFormat, this.onDeleted});
+  const CallLogHistoryTile({super.key, required this.callLogEntry, required this.dateFormat, this.onDeleted});
 
   final CallLogEntry callLogEntry;
-  final DateFormat? dateFormat;
+  final DateFormat dateFormat;
   final void Function(CallLogEntry)? onDeleted;
 
   @override
   Widget build(BuildContext context) {
     final themeData = Theme.of(context);
     final onDeleted = this.onDeleted;
-    final dateFormat = this.dateFormat ?? DateFormat();
 
     return Dismissible(
       key: ObjectKey(callLogEntry),

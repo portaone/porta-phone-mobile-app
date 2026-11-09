@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 
-import 'package:webtrit_phone/extensions/extensions.dart';
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/system_notification.dart';
 import 'package:webtrit_phone/utils/utils.dart';
@@ -10,6 +10,7 @@ import 'package:webtrit_phone/widgets/widgets.dart';
 class SystemNotificationListTile extends StatefulWidget {
   const SystemNotificationListTile(
     this.notification, {
+    required this.timeOrDateFormat,
     this.seenPending = false,
     this.onSeen,
     this.onDelete,
@@ -17,6 +18,7 @@ class SystemNotificationListTile extends StatefulWidget {
   });
 
   final SystemNotification notification;
+  final TimeOrDateFormat timeOrDateFormat;
   final bool seenPending;
   final VoidCallback? onSeen;
 
@@ -108,7 +110,7 @@ class _SystemNotificationListTileState extends State<SystemNotificationListTile>
     return SizedBox(
       width: double.infinity,
       child: Text(
-        widget.notification.createdAt.timeOrDate,
+        widget.timeOrDateFormat.format(widget.notification.createdAt),
         style: TextStyle(fontSize: 10, color: style.color),
         textAlign: TextAlign.right,
       ),

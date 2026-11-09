@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/features.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
@@ -20,6 +21,7 @@ class _ConversationsListState extends State<ConversationsList> {
 
   @override
   Widget build(BuildContext context) {
+    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat();
     late final chats = BlocBuilder<ChatConversationsCubit, ChatConversationsState>(
       builder: (context, state) {
         if (state.initialising) return const Center(child: CircularProgressIndicator());
@@ -33,7 +35,13 @@ class _ConversationsListState extends State<ConversationsList> {
 
             final (:chat, :message, contacts: _) = e;
             return FadeIn(
-              child: ChatConversationsTile(conversation: chat, lastMessage: message, userId: userId, key: ValueKey(e)),
+              child: ChatConversationsTile(
+                conversation: chat,
+                lastMessage: message,
+                userId: userId,
+                timeOrDateFormat: timeOrDateFormat,
+                key: ValueKey(e),
+              ),
             );
           }).toList(),
         );
@@ -58,6 +66,7 @@ class _ConversationsListState extends State<ConversationsList> {
                 conversation: conversation,
                 lastMessage: lastMessage,
                 userId: userId,
+                timeOrDateFormat: timeOrDateFormat,
                 key: ValueKey(e),
               ),
             );

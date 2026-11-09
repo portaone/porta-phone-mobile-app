@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/system_notification.dart';
 import 'package:webtrit_phone/models/system_notification_outbox_entry.dart';
@@ -51,6 +52,7 @@ class _SystemNotificationsScreenState extends State<SystemNotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat();
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -96,6 +98,7 @@ class _SystemNotificationsScreenState extends State<SystemNotificationsScreen> {
                   key: Key(notifiaction.id.toString()),
                   child: SystemNotificationListTile(
                     notifiaction,
+                    timeOrDateFormat: timeOrDateFormat,
                     seenPending: pendingSeen,
                     onSeen: () => markAsSeen(notifiaction),
                     onDelete: () => cubit.deleteNotification(notifiaction),

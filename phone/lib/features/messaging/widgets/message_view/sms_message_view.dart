@@ -1,7 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
-import 'package:webtrit_phone/extensions/datetime.dart';
+import 'package:intl/intl.dart';
+
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -18,6 +19,7 @@ class SmsMessageView extends StatefulWidget {
   const SmsMessageView({
     super.key,
     required this.userNumber,
+    required this.timeFormat,
     this.message,
     this.outboxMessage,
     this.outboxDeleteEntry,
@@ -30,6 +32,10 @@ class SmsMessageView extends StatefulWidget {
   });
 
   final String? userNumber;
+
+  /// The time under each bubble.
+  final DateFormat timeFormat;
+
   final SmsMessage? message;
   final SmsOutboxMessageEntry? outboxMessage;
   final SmsOutboxMessageDeleteEntry? outboxDeleteEntry;
@@ -153,7 +159,8 @@ class _SmsMessageViewState extends State<SmsMessageView> {
               if (isMine && isSended && !isViewedByMembers) Icon(Icons.done, color: colorScheme.tertiary, size: 12),
               if (isMine && isViewedByMembers) Icon(Icons.done_all, color: colorScheme.tertiary, size: 12),
               const SizedBox(width: 2),
-              if (message?.createdAt != null) Text(message!.createdAt.toHHmm, style: theme.subContentStyle),
+              if (message?.createdAt != null)
+                Text(widget.timeFormat.format(message!.createdAt.toLocal()), style: theme.subContentStyle),
             ],
           ),
         ],

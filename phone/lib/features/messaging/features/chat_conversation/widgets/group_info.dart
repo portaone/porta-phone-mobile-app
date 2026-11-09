@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -115,6 +116,7 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
 
   @override
   Widget build(BuildContext context) {
+    final appTime = context.read<AppTime>();
     final theme = Theme.of(context);
     // Absent on a core without the mute, and showing the mute in force now -
     // see the contact info for the same row.
@@ -177,7 +179,12 @@ class _GroupChatInfoState extends State<GroupChatInfo> {
                       nameField(chat, canChangeName),
                       const SizedBox(height: 24),
                       if (muteAvailable) ...[
-                        NotificationMuteTile(mute: userSettings.activeChatMute(chat.id), onChoice: onMuteChoice),
+                        NotificationMuteTile(
+                          mute: userSettings.activeChatMute(chat.id),
+                          onChoice: onMuteChoice,
+                          timeFormat: appTime.hourMinuteFormat(),
+                          dateFormat: appTime.dayMonthFormat(),
+                        ),
                         const SizedBox(height: 8),
                       ],
                       SizedBox(

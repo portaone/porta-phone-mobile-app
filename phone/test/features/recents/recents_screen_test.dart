@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/features/recents/recents.dart';
@@ -59,7 +59,6 @@ void main() {
     userInfoCubit = MockUserInfoCubit();
     whenListen(sessionStatusCubit, const Stream<SessionStatusState>.empty(), initialState: const SessionStatusState());
     whenListen(userInfoCubit, const Stream<UserInfoState>.empty(), initialState: const UserInfoState());
-    when(() => recentsBloc.dateFormat).thenReturn(DateFormat.Hm());
     whenListen(callBloc, const Stream<CallState>.empty(), initialState: const CallState());
     whenListen(callRoutingCubit, const Stream<CallRoutingState?>.empty(), initialState: null);
     when(() => smsRepository.watchUserSmsNumbers()).thenAnswer((_) => Stream.value(const []));
@@ -76,32 +75,35 @@ void main() {
       settings: const ThemeSettings(),
       lightDynamic: null,
       darkDynamic: null,
-      child: MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: appLocalizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: RepositoryProvider<SmsRepository>.value(
-          value: smsRepository,
-          child: MultiBlocProvider(
-            providers: [
-              BlocProvider<RecentsBloc>.value(value: recentsBloc),
-              BlocProvider<CallBloc>.value(value: callBloc),
-              BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
-              BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
-              BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
-            ],
-            child: CallControllerScope(
-              controller: CallController(callBloc: callBloc),
-              child: PresenceViewParams(
-                hybridPresenceSupport: false,
-                blfViaSipSupport: false,
-                presenceViaSipSupport: false,
-                child: RecentsScreen(
-                  recentsFilters: filters,
-                  transferEnabled: false,
-                  videoEnabled: false,
-                  chatsEnabled: false,
-                  smssEnabled: false,
+      child: RepositoryProvider<AppTime>.value(
+        value: AppTime(is24HourFormat: true),
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: RepositoryProvider<SmsRepository>.value(
+            value: smsRepository,
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider<RecentsBloc>.value(value: recentsBloc),
+                BlocProvider<CallBloc>.value(value: callBloc),
+                BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
+                BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
+                BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
+              ],
+              child: CallControllerScope(
+                controller: CallController(callBloc: callBloc),
+                child: PresenceViewParams(
+                  hybridPresenceSupport: false,
+                  blfViaSipSupport: false,
+                  presenceViaSipSupport: false,
+                  child: RecentsScreen(
+                    recentsFilters: filters,
+                    transferEnabled: false,
+                    videoEnabled: false,
+                    chatsEnabled: false,
+                    smssEnabled: false,
+                  ),
                 ),
               ),
             ),
