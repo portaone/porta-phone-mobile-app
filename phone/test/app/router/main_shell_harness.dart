@@ -129,8 +129,24 @@ class FakeSignalingModule extends Fake implements SignalingModule {
 
   final _events = StreamController<SignalingModuleEvent>.broadcast();
 
+  /// For each listener of the session's events, in the order they
+  /// subscribed: whether it still listens.
+  final List<bool> listening = [];
+
   @override
-  Stream<SignalingModuleEvent> get events => _events.stream;
+  Stream<SignalingModuleEvent> get events => Stream.multi((controller) {
+    final index = listening.length;
+    listening.add(true);
+    final subscription = _events.stream.listen(
+      controller.addSync,
+      onError: controller.addErrorSync,
+      onDone: controller.closeSync,
+    );
+    controller.onCancel = () {
+      listening[index] = false;
+      return subscription.cancel();
+    };
+  });
 
   @override
   bool get isConnected => false;

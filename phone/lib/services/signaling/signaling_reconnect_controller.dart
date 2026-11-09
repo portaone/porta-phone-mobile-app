@@ -5,8 +5,6 @@ import 'package:logging/logging.dart';
 import 'package:signaling/signaling.dart';
 import 'package:signaling_service/signaling_service.dart';
 
-import 'package:webtrit_phone/app/constants.dart';
-
 final _logger = Logger('SignalingReconnectController');
 
 /// Carries the full context of a connection failure passed to
@@ -16,7 +14,27 @@ final _logger = Logger('SignalingReconnectController');
 ///   or the decoded [SignalingDisconnectCode] for unexpected disconnects.
 /// - [systemCode] and [systemReason] are the raw WebSocket close code and reason
 ///   from the server, useful for detailed error display.
+const kSignalingClientFastReconnectDelay = Duration(seconds: 1);
+
 typedef SignalingFailureInfo = ({SignalingDisconnectCode? knownCode, int? systemCode, String? systemReason});
+
+/// What the call feature tells the session's reconnect policy: the app's
+/// lifecycle and network as the call feature sees them, whether calls are
+/// active, and when a call needs the connection now. The policy itself, and
+/// the connection, belong to the session ([SignalingReconnectController]).
+abstract interface class SignalingReconnect {
+  void notifyAppResumed();
+
+  void notifyAppPaused({required bool hasActiveCalls});
+
+  void notifyForceReconnect();
+
+  void notifyHasActiveCalls({required bool hasActiveCalls});
+
+  void notifyNetworkAvailable();
+
+  void notifyNetworkUnavailable();
+}
 
 /// Centralizes all signaling reconnect logic and connection-failure notification
 /// decisions for both the foreground [CallBloc] and background [IsolateManager].
@@ -59,7 +77,7 @@ typedef SignalingFailureInfo = ({SignalingDisconnectCode? knownCode, int? system
 /// controller.notifyNetworkAvailable();
 /// controller.notifyNetworkUnavailable();
 /// ```
-class SignalingReconnectController {
+class SignalingReconnectController implements SignalingReconnect {
   SignalingReconnectController({
     required SignalingModule signalingModule,
     void Function(SignalingFailureInfo)? onConnectionFailed,
@@ -120,6 +138,7 @@ class SignalingReconnectController {
   /// buffer, setting [_wasConnected] to true. Without the reset here the
   /// first post-resume connection failure would bypass the
   /// consecutive-failure threshold and fire [onConnectionFailed] immediately.
+  @override
   void notifyAppResumed() {
     _logger.fine('notifyAppResumed');
     _appActive = true;
@@ -145,6 +164,7 @@ class SignalingReconnectController {
   /// When [hasActiveCalls] is true the signaling connection is kept alive so
   /// the ongoing call is not interrupted, and reconnects remain enabled so
   /// a dropped connection during a call can recover.
+  @override
   void notifyAppPaused({required bool hasActiveCalls}) {
     _logger.fine('notifyAppPaused hasActiveCalls=$hasActiveCalls');
     if (!hasActiveCalls) {
@@ -172,6 +192,7 @@ class SignalingReconnectController {
   /// Spurious "connection failed" toasts on transient failures are suppressed
   /// by the consecutive-failure threshold, not by this delay, so reducing the
   /// delay here is safe.
+  @override
   void notifyForceReconnect() {
     _logger.fine('notifyForceReconnect');
     _scheduleReconnect(Duration.zero, force: true);
@@ -186,6 +207,7 @@ class SignalingReconnectController {
   /// When [hasActiveCalls] is false and the app is not active, disconnects
   /// immediately - the call ended while backgrounded so signaling is no
   /// longer needed.
+  @override
   void notifyHasActiveCalls({required bool hasActiveCalls}) {
     _logger.fine('notifyHasActiveCalls hasActiveCalls=$hasActiveCalls');
     _hasActiveCalls = hasActiveCalls;
@@ -195,6 +217,7 @@ class SignalingReconnectController {
   }
 
   /// Call when network becomes available ([ConnectivityResult] != none).
+  @override
   void notifyNetworkAvailable() {
     _logger.info('notifyNetworkAvailable: isConnected=${_module.isConnected}');
     _networkActive = true;
@@ -220,6 +243,7 @@ class SignalingReconnectController {
   }
 
   /// Call when network is lost ([ConnectivityResult.none]).
+  @override
   void notifyNetworkUnavailable() {
     _logger.info('notifyNetworkUnavailable: isConnected=${_module.isConnected}');
     _networkActive = false;

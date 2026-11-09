@@ -8,3 +8,4 @@ export 'polling_service.dart';
 export 'polling_task_handle.dart';
 export 'polling_worker.dart';
 export 'remote_config_service.dart';
+export 'signaling/signaling.dart';

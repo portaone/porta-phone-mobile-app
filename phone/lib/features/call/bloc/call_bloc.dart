@@ -167,7 +167,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
   late final CallSignaling _callSignaling;
   late final StreamSubscription<SignalingModuleEvent> _signalingSubscription;
-  late final SignalingReconnectController _reconnectController;
+  late final SignalingReconnect _reconnectController;
   Timer? _presenceInfoSyncTimer;
 
   late final CallPeerConnectionManager _callPeerConnectionManager;
@@ -220,9 +220,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     this.webRtcOptionsBuilder,
     this.iceFilter,
     this.peerConnectionPolicyApplier,
-    // Only for the reconnect controller, which drives the connection itself.
-    required SignalingModule signalingModule,
     required CallSignaling callSignaling,
+    required SignalingReconnect signalingReconnect,
     required Stream<SignalingModuleEvent> signalingEvents,
     required CallPeerConnectionManager callPeerConnectionManager,
     required ConnectivityService connectivityService,
@@ -284,12 +283,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       },
     );
 
-    _reconnectController = SignalingReconnectController(
-      signalingModule: signalingModule,
-      onConnectionFailed: _handleConnectionFailed,
-      onConnectionPresenceChanged: (isAvailable) =>
-          _logger.info('signaling presence changed: isAvailable=$isAvailable'),
-    );
+    _reconnectController = signalingReconnect;
 
     voiceNoiseReductionFailed?.addListener(_onVoiceNoiseReductionFailed);
 
@@ -381,8 +375,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
 
     await _connectivityChangedSubscription?.cancel();
     await _foregroundCallPushSubscription?.cancel();
-
-    _reconnectController.dispose();
 
     // First, so nothing below can leave a pending start behind or the tone on.
     await _ringback.stopAll().catchError((Object e) {
@@ -726,43 +718,6 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     }
   }
 
-  void _handleConnectionFailed(SignalingFailureInfo failure) {
-    final (:knownCode, :systemCode, :systemReason) = failure;
-
-    // Skip logging and notification for expected disconnect scenarios that trigger automatic reconnects without user impact.
-    switch (knownCode) {
-      case SignalingDisconnectCode.signalingKeepaliveTimeoutError:
-      case SignalingDisconnectCode.controllerForceAttachClose:
-      case SignalingDisconnectCode.appUnregisteredError:
-        // Expected silent reconnect: keepalive timeout on lock-screen, duplicate-session
-        // cleanup, or SIP unregistration after the user toggles Online off.
-        _logger.fine('onConnectionFailed: silent reconnect for code=$knownCode');
-        return;
-      case SignalingDisconnectCode.controllerUnknownError:
-        // controllerUnknownError (4400): the server-side Controller process died because
-        // the Janus connection went down. The new WebSocket timed out (GenServer.call,
-        // 5s default) waiting for the Controller to finish re-initializing (new Janus
-        // session + SIP registration). The Controller continues initializing in the
-        // background — the next reconnect attempt will succeed once it is ready.
-        //
-        // Silent reconnect: no user-visible notification needed.
-        _logger.warning('onConnectionFailed: silent reconnect for code=$knownCode');
-        return;
-      default:
-        break;
-    }
-
-    // Record unexpected disconnects with as much detail as possible to facilitate debugging and resolution.
-    //
-    // If you encounter a new disconnect code in the wild, add it to the above switch statement
-    // and monitor its frequency and impact before deciding whether to log it as a warning or fine level.
-    _logger.severe('onConnectionFailed: $failure');
-    CrashlyticsUtils.recordError(
-      'CallBloc - onConnectionFailed ${knownCode?.name ?? 'unknown code'}',
-      information: ['knownCode: $knownCode', 'systemCode: $systemCode', 'systemReason: $systemReason'],
-    );
-  }
-
   void _handleSignalingSessionError({required CallServiceState previous, required CallServiceState current}) {
     final signalingChanged =
         previous.signalingClientStatus != current.signalingClientStatus ||
@@ -1084,7 +1039,8 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final code = SignalingDisconnectCode.values.byCode(event.code ?? -1);
 
     // Notification decisions are handled by SignalingReconnectController via its
-    // onConnectionFailed callback. This method only updates [CallState].
+    // onConnectionFailed callback (the shell's, reportSignalingFailure). This
+    // method only updates [CallState].
 
     CallState newState = state.copyWith(
       callServiceState: state.callServiceState.copyWith(
