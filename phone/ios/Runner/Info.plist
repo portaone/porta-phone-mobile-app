@@ -22,6 +22,9 @@
 	<array>
 		<string>en</string>
 		<string>uk</string>
+		<string>fr</string>
+		<string>it</string>
+		<string>th</string>
 	</array>
 	<key>CFBundleName</key>
 	<string>$(WEBTRIT_APP_NAME)</string>

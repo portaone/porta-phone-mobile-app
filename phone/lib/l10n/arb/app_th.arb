@@ -1181,6 +1181,8 @@
   "@locale_uk": {},
   "locale_th": "ไทย",
   "@locale_th": {},
+  "locale_fr": "ฝรั่งเศส",
+  "@locale_fr": {},
   "login_Button_coreUrlAssignProceed": "ดำเนินการต่อ",
   "@login_Button_coreUrlAssignProceed": {},
   "login_Button_otpSigninRequestProceed": "ดำเนินการต่อ",

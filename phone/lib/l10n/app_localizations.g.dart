@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.g.dart';
+import 'app_localizations_fr.g.dart';
 import 'app_localizations_it.g.dart';
 import 'app_localizations_th.g.dart';
 import 'app_localizations_uk.g.dart';
@@ -92,7 +93,13 @@ abstract class AppLocalizations {
   ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en'), Locale('it'), Locale('th'), Locale('uk')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('fr'),
+    Locale('it'),
+    Locale('th'),
+    Locale('uk'),
+  ];
 
   /// Shown when a web self-care password is expired. By default, such passwords may be created in an expired state or set to expire after a period of time. The user must log in to the self-care portal and set a new password. Until refreshed, access to related services is restricted.
   ///
@@ -2325,6 +2332,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thai'**
   String get locale_th;
+
+  /// No description provided for @locale_fr.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get locale_fr;
 
   /// No description provided for @login_Button_coreUrlAssignProceed.
   ///
@@ -8051,7 +8064,7 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['en', 'it', 'th', 'uk'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'fr', 'it', 'th', 'uk'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -8062,6 +8075,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'fr':
+      return AppLocalizationsFr();
     case 'it':
       return AppLocalizationsIt();
     case 'th':
