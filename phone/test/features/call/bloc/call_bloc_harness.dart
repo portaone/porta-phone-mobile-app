@@ -9,6 +9,7 @@ import 'package:signaling/signaling.dart';
 import 'package:signaling_service_platform_interface/signaling_service_platform_interface.dart';
 import 'package:webtrit_callkeep/webtrit_callkeep.dart';
 import 'package:webtrit_phone/app/notifications/notifications.dart';
+import 'package:webtrit_phone/app/session/signaling_inbound.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
@@ -93,6 +94,7 @@ class CallBlocHarness {
       mediaManager: mediaManager?.call(callkeep),
       onDiagnosticReportRequested: (_, _) {},
       signalingModule: signaling,
+      signalingEvents: inbound.call,
       callPeerConnectionManager: peers,
       connectivityService: _FakeConnectivityService(),
       roomOfferDeadlineTimer: offerDeadline?.createTimer,
@@ -115,6 +117,10 @@ class CallBlocHarness {
 
   late final CallBloc bloc;
   final FakeSignalingModule signaling = FakeSignalingModule();
+
+  /// The bloc takes [signaling]'s events through the session's routing, as in
+  /// the app.
+  late final SignalingInbound inbound = SignalingInbound(() => signaling.events);
   final FakeCallkeep callkeep = FakeCallkeep();
   final FakeQueuedTerminationRequestsRepository terminationQueue = FakeQueuedTerminationRequestsRepository();
   final RecordingCallErrorReporter errors = RecordingCallErrorReporter();

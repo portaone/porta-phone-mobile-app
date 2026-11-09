@@ -13,6 +13,7 @@ import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/notifications/notifications.dart';
 import 'package:webtrit_phone/app/router/post_call_refresh.dart';
 import 'package:webtrit_phone/app/session/session.dart';
+import 'package:webtrit_phone/app/session/signaling_inbound.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
@@ -48,6 +49,7 @@ class MainShellBlocs extends StatelessWidget {
     required this.callkeep,
     required this.callkeepConnections,
     required this.signalingModule,
+    required this.signalingInbound,
     required this.child,
   });
 
@@ -57,6 +59,9 @@ class MainShellBlocs extends StatelessWidget {
   /// Created and connected by the shell state before the first build so the
   /// WebSocket handshake runs in parallel while this layer is being built.
   final SignalingModule signalingModule;
+
+  /// The session's signaling events, split per feature.
+  final SignalingInbound signalingInbound;
 
   final Widget child;
 
@@ -243,6 +248,7 @@ class MainShellBlocs extends StatelessWidget {
                 extras: {'callId': id, 'error': error.name},
               ),
               signalingModule: signalingModule,
+              signalingEvents: signalingInbound.call,
               callPeerConnectionManager: callPeerConnectionManager,
               connectivityService: context.read<ConnectivityService>(),
               foregroundCallPushSignal: RemotePushBroker.pendingCallForegroundPushs,

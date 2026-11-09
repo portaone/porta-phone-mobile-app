@@ -221,6 +221,7 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     this.iceFilter,
     this.peerConnectionPolicyApplier,
     required SignalingModule signalingModule,
+    required Stream<SignalingModuleEvent> signalingEvents,
     required CallPeerConnectionManager callPeerConnectionManager,
     required ConnectivityService connectivityService,
     this.onCallEnded,
@@ -294,10 +295,11 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
       (_) => _reconnectController.notifyForceReconnect(),
     );
 
-    // Translates SignalingModule events into BLoC state-transition events.
+    // Translates the call feature's signaling events - what the shell's
+    // SignalingInbound routes to calls - into BLoC state-transition events.
     // Reconnect scheduling and notification decisions are fully handled by
     // [_reconnectController] — this listener only drives [CallState] changes.
-    _signalingSubscription = _signalingModule.events.listen((event) {
+    _signalingSubscription = signalingEvents.listen((event) {
       switch (event) {
         case SignalingConnecting():
           add(const _SignalingClientEvent.connecting());
