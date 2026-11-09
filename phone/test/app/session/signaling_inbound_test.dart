@@ -50,6 +50,16 @@ class _Unowned extends Event {
   Map<String, dynamic> toJson() => {Event.typeKey: 'unowned'};
 }
 
+const _handshake = StateHandshake(
+  keepaliveInterval: Duration(seconds: 30),
+  timestamp: 0,
+  registration: Registration(status: RegistrationStatus.registered),
+  lines: [null],
+  dialogInfos: [],
+  presenceInfos: [],
+  guestLine: null,
+);
+
 void main() {
   late _Module module;
   late SignalingInbound inbound;
@@ -129,6 +139,74 @@ void main() {
     await pumpEventQueue();
 
     expect(errors, hasLength(1));
+  });
+
+  test('the voicemail box change goes to voicemail, not to calls', () async {
+    final calls = <SignalingModuleEvent>[];
+    var reads = 0;
+    inbound.call.listen(calls.add);
+    inbound.voicemail.listen((_) => reads++);
+
+    module
+      ..add(SignalingProtocolEvent(event: const MessageSummaryUpdate(messagesWaiting: true)))
+      ..add(SignalingProtocolEvent(event: const MessageSummaryUpdate(messagesWaiting: false)));
+    await pumpEventQueue();
+
+    expect(reads, 2);
+    expect(calls, isEmpty);
+  });
+
+  test(
+    'each handshake asks voicemail for a read too: a change said while the session was down is not replayed',
+    () async {
+      final calls = <SignalingModuleEvent>[];
+      var reads = 0;
+      inbound.call.listen(calls.add);
+      inbound.voicemail.listen((_) => reads++);
+      final handshake = SignalingHandshakeReceived(handshake: _handshake);
+
+      module
+        ..add(SignalingConnected())
+        ..add(handshake);
+      await pumpEventQueue();
+
+      expect(reads, 1, reason: 'the handshake, not the connection');
+      expect(calls, hasLength(2), reason: 'the call feature keeps both');
+    },
+  );
+
+  test('a late voicemail listener reads the box from the replayed handshake', () async {
+    module
+      ..add(SignalingConnected())
+      ..add(SignalingHandshakeReceived(handshake: _handshake));
+
+    var reads = 0;
+    inbound.voicemail.listen((_) => reads++);
+    await pumpEventQueue();
+
+    expect(reads, 1);
+  });
+
+  test('calls keep presence and dialogs; voicemail takes no error of the transport', () async {
+    final calls = <SignalingModuleEvent>[];
+    final voicemailErrors = <Object>[];
+    inbound.call.listen(calls.add, onError: (_) {});
+    inbound.voicemail.listen((_) {}, onError: voicemailErrors.add);
+    final presence = SignalingProtocolEvent(
+      event: const NumberPresenceUpdate(number: '100', presenceInfo: []),
+    );
+
+    module.add(presence);
+    module.live.addError(StateError('the hub went away'));
+    await pumpEventQueue();
+
+    expect(calls, [presence]);
+    expect(voicemailErrors, isEmpty);
+  });
+
+  test('a feature handed its stream twice gets the same stream', () {
+    expect(identical(inbound.call, inbound.call), isTrue);
+    expect(identical(inbound.voicemail, inbound.voicemail), isTrue);
   });
 
   test('an event reaches the feature in the same turn the module sends it', () {

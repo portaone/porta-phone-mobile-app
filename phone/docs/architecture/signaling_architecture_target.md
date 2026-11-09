@@ -279,8 +279,12 @@ void _scheduleReconnect(Duration delay, {bool force = false}) {
 `lib/app/session/signaling_inbound.dart`. The one place that splits the session's events between
 features: `SignalingInbound.consumerOf(event)` names the single consumer of an event, and each
 feature's stream carries only what it owns. The call stream takes the connection, the handshake and
-the session and global events; an event of no consumer goes nowhere (logged) instead of reaching
-`CallBloc` by default. An error of the module's stream goes to the call stream only.
+the session and global events; `message_summary_update` goes to voicemail, whose stream says when
+to read the box again (that event, and every handshake: the module does not replay protocol events,
+so a change said while the session was down is read then). An event of no consumer goes nowhere
+(logged) instead of reaching `CallBloc` by default. An error of the module's stream goes to the call
+stream only. The streams are made once (`late final`), so a widget handed one again sees the same
+stream.
 
 It holds no subscription: each listener of a feature's stream takes a fresh `module.events` when it
 listens, so it gets the module's replay and hears events in the order it subscribed (the reconnect
