@@ -108,6 +108,15 @@ Screen shapes:
   into what came of it is announced; a middle that does not fit scrolls and fades into the edge below.
   Every list section shows these states this way, not with the phone's placeholders. `footer:` keeps
   what the section offers beside the state - the chip of another list - under it, scrolling with it.
+- `WatchConfirm` - a question asked before doing something, on the whole face: the question (a
+  header) and an optional detail in the middle, inside a list's padding and scrolling with a fade at both
+  edges when they do not fit, and the answers as two `WatchRoundButton`s under them - no on the left,
+  tonal; yes on the right, filled, in the error colours when it is destructive. The labels are the app's
+  and the background is whatever holds it; `questionColor`, `detailColor` and `confirmColor` (its icon
+  black or white, whichever reads on it) fit it to a surface that is not the scheme's. The app's
+  `ConfirmDialog` shows it on a watch as a full-screen dialog named as an alert, in the dialog theme's
+  surface and text colours (the screen's without them) and the theme's colour for its yes button (same
+  answers: yes, no, nothing when dismissed), and its `AlertDialog` elsewhere.
 - `WatchIconGrid` - a screen of round buttons with captions under a short title, three to a
   row (fewer, and larger, when there are fewer). On a round face the grid keeps to two thirds
   of the face, centred, the title above it, so the corner captions clear the bezel. A `header`
@@ -156,7 +165,8 @@ Parts:
   by its `semanticsLabel`.
 - `WatchSeparator` - the short centred bar between a list's controls (a filter, a search) and its rows:
   a line across would run into the bezel of a round face. Decoration, not read out.
-- `WatchFadeMask`, `WatchStadiumFields` - the fade and the pill fields the layouts above apply.
+- `WatchFadeMask`, `WatchStadiumFields` - the fade (at the bottom, and at the top too when asked) and
+  the pill fields the layouts above apply.
 
 Geometry:
 

@@ -4,6 +4,7 @@ export 'src/form_factor.dart';
 export 'src/semantic_action.dart';
 export 'src/screen_shape.dart';
 export 'src/watch_action_layout.dart';
+export 'src/watch_confirm.dart';
 export 'src/watch_edge_button.dart';
 export 'src/watch_edge_layout.dart';
 export 'src/watch_fade_mask.dart';
