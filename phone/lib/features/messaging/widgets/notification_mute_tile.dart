@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'package:clock/clock.dart';
+import 'package:intl/intl.dart';
 
 import 'package:webtrit_phone/app/keys.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
@@ -17,10 +18,20 @@ import 'notification_mute_sheet.dart';
 /// mute that has lapsed reads as none here, the way it does everywhere else.
 /// The row itself decides nothing: it opens the sheet and hands the choice up.
 class NotificationMuteTile extends StatelessWidget {
-  const NotificationMuteTile({required this.mute, required this.onChoice, super.key});
+  const NotificationMuteTile({
+    required this.mute,
+    required this.onChoice,
+    required this.timeFormat,
+    required this.dateFormat,
+    super.key,
+  });
 
   final NotificationMute mute;
   final ValueChanged<MuteChoice> onChoice;
+
+  /// The clock time and the day of a timed mute's end.
+  final DateFormat timeFormat;
+  final DateFormat dateFormat;
 
   Future<void> _onTap(BuildContext context) async {
     final choice = await NotificationMuteSheet.show(context, muted: mute.muted);
@@ -37,7 +48,7 @@ class NotificationMuteTile extends StatelessWidget {
         contentPadding: EdgeInsets.zero,
         leading: Icon(mute.muted ? Icons.notifications_off_outlined : Icons.notifications_outlined),
         title: Text(l10n.messaging_NotificationMute_title),
-        subtitle: Text(notificationMuteSubtitle(l10n, mute)),
+        subtitle: Text(notificationMuteSubtitle(l10n, mute, timeFormat: timeFormat, dateFormat: dateFormat)),
         onTap: () => _onTap(context),
       ),
     );
@@ -49,13 +60,21 @@ class NotificationMuteTile extends StatelessWidget {
 /// A moment later today is given as a clock time; any other is given with its
 /// day, since two days is past midnight by definition. 24-hour, like the
 /// timestamps in the conversation list this row is reached from.
-String notificationMuteSubtitle(AppLocalizations l10n, NotificationMute mute) {
+String notificationMuteSubtitle(
+  AppLocalizations l10n,
+  NotificationMute mute, {
+  required DateFormat timeFormat,
+  required DateFormat dateFormat,
+}) {
   if (!mute.muted) return l10n.messaging_NotificationMute_on;
 
   final until = mute.mutedUntil;
   if (until == null) return l10n.messaging_NotificationMute_muted;
 
-  final time = until.isSameDay(clock.now()) ? until.toHHmm : '${until.toDayOfMonth} ${until.toHHmm}';
+  final local = until.toLocal();
+  final time = until.isSameDay(clock.now())
+      ? timeFormat.format(local)
+      : '${dateFormat.format(local)} ${timeFormat.format(local)}';
   return l10n.messaging_NotificationMute_mutedUntil(time);
 }
 

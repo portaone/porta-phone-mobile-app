@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/call_routing/cubit/call_routing_cubit.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
@@ -235,6 +236,7 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
 
                   return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
                     builder: (context, callRoutingState) {
+                      final timeFormat = context.read<AppTime>().timeFormat();
                       return ListView.builder(
                         padding: EdgeInsets.only(
                           top: topPadding,
@@ -262,7 +264,7 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
                                 recent: recent,
                                 videoEnabled: widget.videoEnabled,
                                 callNumbers: callRoutingState?.allNumbers ?? [],
-                                dateFormat: context.read<RecentsBloc>().dateFormat,
+                                dateFormat: timeFormat,
                                 pick: pick,
                                 onTap: pick != null ? pick.onPressed : () => _toggleExpanded(callLogEntry.id),
                                 expanded: pick == null && _expandedRecentId == callLogEntry.id,

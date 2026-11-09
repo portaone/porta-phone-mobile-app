@@ -43,7 +43,7 @@ class VoicemailScreenHost extends StatelessWidget {
 
     final screenContext = VoicemailScreenContext(
       mediaCacheBasePath: appPath.mediaCacheBasePath,
-      dateFormat: appTime.formatDateTime(true),
+      dateFormat: appTime.dateTimeFormat(),
       mediaHeaders: mediaHeaders,
     );
 

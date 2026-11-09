@@ -17,7 +17,6 @@ class CallLogScreenPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final featureAccess = context.read<FeatureAccess>();
-    final appTime = context.read<AppTime>();
 
     final widget = CallLogScreen(videoVisible: featureAccess.callConfig.capabilities.isVideoCallEnabled);
     var provider = BlocProvider(
@@ -27,7 +26,6 @@ class CallLogScreenPage extends StatelessWidget {
           callLogsRepository: context.read<CallLogsRepository>(),
           recentsRepository: context.read<RecentsRepository>(),
           contactRepository: context.read<ContactsRepository>(),
-          dateFormat: appTime.formatDateTime(true),
         )..add(const CallLogStarted());
       },
       child: widget,

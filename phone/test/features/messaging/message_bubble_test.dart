@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:intl/intl.dart';
+
 import 'package:webtrit_phone/features/messaging/widgets/message_view/chat_message_view.dart';
 import 'package:webtrit_phone/features/messaging/widgets/message_view/message_bubble.dart';
 import 'package:webtrit_phone/features/messaging/widgets/message_view/sms_message_view.dart';
@@ -47,6 +49,7 @@ void main() {
   );
 
   Widget chatRow(ChatMessage message) => ChatMessageView(
+    timeFormat: DateFormat('HH:mm'),
     userId: 'me',
     message: message,
     handleSetForReply: (_) {},
@@ -55,7 +58,8 @@ void main() {
     handleDelete: (_) {},
   );
 
-  Widget smsRow(SmsMessage message) => SmsMessageView(userNumber: '111', message: message, handleDelete: (_) {});
+  Widget smsRow(SmsMessage message) =>
+      SmsMessageView(userNumber: '111', timeFormat: DateFormat('HH:mm'), message: message, handleDelete: (_) {});
 
   /// The one node a screen reader lands on for the bubble: the node that
   /// offers the long press, taken from the traversal a reader would make.

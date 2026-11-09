@@ -7,6 +7,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/features/cdrs/cdrs.dart';
@@ -94,34 +95,37 @@ void main() {
       settings: const ThemeSettings(),
       lightDynamic: null,
       darkDynamic: null,
-      child: MaterialApp(
-        theme: ThemeData(platform: TargetPlatform.iOS),
-        scrollBehavior: const MaterialScrollBehavior().copyWith(physics: const BouncingScrollPhysics()),
-        locale: const Locale('en'),
-        localizationsDelegates: appLocalizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: MultiRepositoryProvider(
-          providers: [
-            RepositoryProvider<ContactsRepository>.value(value: contactsRepository),
-            RepositoryProvider<SmsRepository>.value(value: smsRepository),
-          ],
-          child: MultiBlocProvider(
+      child: RepositoryProvider<AppTime>.value(
+        value: AppTime(is24HourFormat: true),
+        child: MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.iOS),
+          scrollBehavior: const MaterialScrollBehavior().copyWith(physics: const BouncingScrollPhysics()),
+          locale: const Locale('en'),
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: MultiRepositoryProvider(
             providers: [
-              BlocProvider<FullRecentCdrsCubit>.value(value: fullCubit),
-              BlocProvider<MissedRecentCdrsCubit>.value(value: missedCubit),
-              BlocProvider<CdrsHistoryClearCubit>.value(value: clearCubit),
-              BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
-              BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
-              BlocProvider<CallBloc>.value(value: callBloc),
-              BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
+              RepositoryProvider<ContactsRepository>.value(value: contactsRepository),
+              RepositoryProvider<SmsRepository>.value(value: smsRepository),
             ],
-            child: CallControllerScope(
-              controller: callController,
-              child: RecentCdrsScreen(
-                transferEnabled: false,
-                videoEnabled: false,
-                chatsEnabled: false,
-                smssEnabled: false,
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider<FullRecentCdrsCubit>.value(value: fullCubit),
+                BlocProvider<MissedRecentCdrsCubit>.value(value: missedCubit),
+                BlocProvider<CdrsHistoryClearCubit>.value(value: clearCubit),
+                BlocProvider<SessionStatusCubit>.value(value: sessionStatusCubit),
+                BlocProvider<UserInfoCubit>.value(value: userInfoCubit),
+                BlocProvider<CallBloc>.value(value: callBloc),
+                BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
+              ],
+              child: CallControllerScope(
+                controller: callController,
+                child: RecentCdrsScreen(
+                  transferEnabled: false,
+                  videoEnabled: false,
+                  chatsEnabled: false,
+                  smssEnabled: false,
+                ),
               ),
             ),
           ),

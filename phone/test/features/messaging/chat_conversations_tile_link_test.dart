@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/features/messaging/messaging.dart';
 import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
@@ -88,6 +89,7 @@ void main() {
                   value: unreadCount,
                   child: Scaffold(
                     body: ChatConversationsTile(
+                      timeOrDateFormat: AppTime(is24HourFormat: true).timeOrDateFormat(),
                       conversation: Chat(
                         id: 1,
                         type: ChatType.direct,

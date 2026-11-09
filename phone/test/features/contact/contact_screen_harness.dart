@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:webtrit_phone/app/router/app_router.dart';
+import 'package:webtrit_phone/data/app_time.dart';
 import 'package:webtrit_phone/features/call/call.dart';
 import 'package:webtrit_phone/features/call_routing/call_routing.dart';
 import 'package:webtrit_phone/features/contact/contact.dart';
@@ -118,37 +119,40 @@ class ContactScreenHarness {
       StackRouterScope(
         controller: router,
         stateHash: 0,
-        child: MaterialApp(
-          locale: const Locale('en'),
-          localizationsDelegates: appLocalizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: MultiBlocProvider(
-            providers: [
-              BlocProvider<ContactBloc>.value(value: contactBloc),
-              BlocProvider<CallBloc>.value(value: callBloc),
-              BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
-            ],
-            child: CallControllerScope(
-              controller: CallController(callBloc: callBloc),
-              child: DestinationPicking(
-                purpose: pickPurpose,
-                child: PresenceViewParams(
-                  hybridPresenceSupport: presenceViaSip || dialogsViaSip,
-                  blfViaSipSupport: dialogsViaSip,
-                  presenceViaSipSupport: presenceViaSip,
-                  child: RepositoryProvider<SmsRepository>.value(
-                    value: _smsRepository,
-                    child: ContactScreen(
-                      enableAppBarChat: true,
-                      enableTileFavorite: true,
-                      enableTileVoiceCall: true,
-                      enableTileVideoCall: true,
-                      enableTileSms: enableTileSms,
-                      enableTileChat: true,
-                      enableTileTransfer: enableTileTransfer,
-                      enableTileCallLog: true,
-                      enableTileEmail: enableTileEmail,
-                      useCdrsForHistory: false,
+        child: RepositoryProvider<AppTime>.value(
+          value: AppTime(is24HourFormat: true),
+          child: MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: appLocalizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: MultiBlocProvider(
+              providers: [
+                BlocProvider<ContactBloc>.value(value: contactBloc),
+                BlocProvider<CallBloc>.value(value: callBloc),
+                BlocProvider<CallRoutingCubit>.value(value: callRoutingCubit),
+              ],
+              child: CallControllerScope(
+                controller: CallController(callBloc: callBloc),
+                child: DestinationPicking(
+                  purpose: pickPurpose,
+                  child: PresenceViewParams(
+                    hybridPresenceSupport: presenceViaSip || dialogsViaSip,
+                    blfViaSipSupport: dialogsViaSip,
+                    presenceViaSipSupport: presenceViaSip,
+                    child: RepositoryProvider<SmsRepository>.value(
+                      value: _smsRepository,
+                      child: ContactScreen(
+                        enableAppBarChat: true,
+                        enableTileFavorite: true,
+                        enableTileVoiceCall: true,
+                        enableTileVideoCall: true,
+                        enableTileSms: enableTileSms,
+                        enableTileChat: true,
+                        enableTileTransfer: enableTileTransfer,
+                        enableTileCallLog: true,
+                        enableTileEmail: enableTileEmail,
+                        useCdrsForHistory: false,
+                      ),
                     ),
                   ),
                 ),
