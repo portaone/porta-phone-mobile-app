@@ -131,9 +131,6 @@ class _EdgeAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final actionpadStyle = params.style?.actionpadStyle ?? Theme.of(context).extension<ActionpadStyles>()?.primary;
-    final style = overlay.merge(actionpadStyle?.primary?.style);
-
     // Whether there is a number to call comes from the field; what a typed
     // number answers needs the number itself, which the cubit has.
     return ValueListenableBuilder<bool>(
@@ -145,20 +142,21 @@ class _EdgeAction extends StatelessWidget {
           final purpose = pick.purpose;
 
           if (purpose != null) {
-            return SemanticAction(
+            return WatchCallEdgeButton(
+              overlay: overlay,
+              actionpadStyle: params.style?.actionpadStyle,
               label: pick.label,
               identifier: actionPadTransferId,
-              child: TextButton(
-                onPressed: pick.isAnswer ? () => params.onPick(purpose) : null,
-                style: style,
-                child: Icon(purpose.pickIcon),
-              ),
+              icon: purpose.pickIcon,
+              onPressed: pick.isAnswer ? () => params.onPick(purpose) : null,
             );
           }
-          return SemanticAction(
+          return WatchCallEdgeButton(
+            overlay: overlay,
+            actionpadStyle: params.style?.actionpadStyle,
             label: context.l10n.numberActions_audioCall,
             identifier: actionPadVoiceCallId,
-            child: TextButton(onPressed: canCall ? params.onCall : null, style: style, child: const Icon(Icons.call)),
+            onPressed: canCall ? params.onCall : null,
           );
         },
       ),

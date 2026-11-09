@@ -10,6 +10,7 @@ export 'src/watch_fade_mask.dart';
 export 'src/watch_icon_grid.dart';
 export 'src/watch_key_grid.dart';
 export 'src/watch_link.dart';
+export 'src/watch_list_note.dart';
 export 'src/watch_list_tile.dart';
 export 'src/watch_pill.dart';
 export 'src/watch_pill_button.dart';

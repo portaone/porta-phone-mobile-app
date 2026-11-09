@@ -422,6 +422,14 @@ const recentsWatchFilterKey = Key(recentsWatchFilterId);
 /// phone's pull to refresh.
 const String recentsWatchRefreshId = 'recentsWatchRefresh';
 
+/// The call along the bottom of the calls with one number on a watch.
+const String callLogWatchCallId = 'callLogWatchCall';
+const callLogWatchCallKey = Key(callLogWatchCallId);
+
+/// The video call under the name on the calls with one number on a watch.
+const String callLogWatchVideoCallId = 'callLogWatchVideoCall';
+const callLogWatchVideoCallKey = Key(callLogWatchVideoCallId);
+
 /// The button that opens the recents actions, and the entry of that menu that
 /// clears the whole list. One id each for both recents screens, for the same
 /// reason the tabs share theirs.

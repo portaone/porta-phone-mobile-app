@@ -2,12 +2,14 @@ import 'package:material_ui/material_ui.dart';
 
 import 'adaptive_metrics.dart';
 import 'screen_shape.dart';
+import 'watch_edge_button.dart';
 import 'watch_fade_mask.dart';
 import 'watch_title.dart';
 
-/// A watch screen that is only a list - no main action at the bottom: the
-/// [children] scroll with the padding a face needs and fade into its bottom
-/// edge, the last of them able to scroll clear of the fade.
+/// A watch screen that is a list - no main action at the bottom unless a
+/// [WatchScrollList.builder] is given an [edge]: the [children] scroll with
+/// the padding a face needs and fade into its bottom edge, the last of them
+/// able to scroll clear of the fade.
 ///
 /// The counterpart of `WatchActionLayout`, for a menu or a list of choices.
 ///
@@ -23,7 +25,10 @@ import 'watch_title.dart';
 /// [WatchScrollList.builder] is the same list for rows there can be many of -
 /// a call history, contacts: the rows are built as they scroll into view,
 /// after the title and an optional [header] (a filter), and a [controller]
-/// lets the screen load more as the end comes near.
+/// lets the screen load more as the end comes near. With an [edge], the
+/// list is a page of one thing with its one action - the calls with a
+/// number and the call - and fades out above the edge button instead of
+/// into the bottom of the face.
 class WatchScrollList extends StatelessWidget {
   const WatchScrollList({
     super.key,
@@ -35,7 +40,8 @@ class WatchScrollList extends StatelessWidget {
   }) : header = const [],
        itemCount = 0,
        itemBuilder = null,
-       controller = null;
+       controller = null,
+       edge = null;
 
   const WatchScrollList.builder({
     super.key,
@@ -45,6 +51,7 @@ class WatchScrollList extends StatelessWidget {
     this.header = const [],
     this.spacing = 0,
     this.controller,
+    this.edge,
   }) : children = const [],
        bottom = null,
        opaque = false;
@@ -75,6 +82,10 @@ class WatchScrollList extends StatelessWidget {
 
   /// The list's scroll controller, to follow how far it is scrolled.
   final ScrollController? controller;
+
+  /// Builds the edge button of a [WatchScrollList.builder] over [overlay], the
+  /// edge button's size and shape, to merge over the screen's own style.
+  final Widget Function(BuildContext context, ButtonStyle overlay)? edge;
 
   static const _fadeHeight = 26.0;
 
@@ -141,11 +152,14 @@ class WatchScrollList extends StatelessWidget {
       if (title != null) ...[WatchTitle(title), SizedBox(height: gap)],
       for (final widget in header) ...[widget, SizedBox(height: gap)],
     ];
-    return WatchFadeMask(
+    final edge = this.edge;
+    final reserved = edge == null ? 0.0 : WatchEdgeButton.reservedHeight(context);
+    final list = WatchFadeMask(
+      bottomInset: reserved,
       fadeHeight: _fadeHeight,
       child: ListView.builder(
         controller: controller,
-        padding: context.watchListPadding(minBottom: _fadeHeight + gap),
+        padding: context.watchListPadding(minBottom: reserved + _fadeHeight + gap),
         itemCount: lead.length + itemCount,
         itemBuilder: (context, index) {
           if (index < lead.length) return lead[index];
@@ -158,6 +172,16 @@ class WatchScrollList extends StatelessWidget {
           );
         },
       ),
+    );
+    if (edge == null) return list;
+    return Stack(
+      children: [
+        list,
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: WatchEdgeButton(builder: edge),
+        ),
+      ],
     );
   }
 }

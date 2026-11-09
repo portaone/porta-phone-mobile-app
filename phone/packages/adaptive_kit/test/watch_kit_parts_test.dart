@@ -49,6 +49,18 @@ void main() {
     }
   });
 
+  group('WatchListNote', () {
+    testWidgets('is a centred line read out when it appears', (tester) async {
+      final handle = tester.ensureSemantics();
+      watchPresets.first.apply(tester);
+      await tester.pumpWidget(wrap(const WatchListNote('No calls')));
+
+      expect(tester.widget<Text>(find.text('No calls')).textAlign, TextAlign.center);
+      expect(tester.getSemantics(find.text('No calls')).flagsCollection.isLiveRegion, isTrue);
+      handle.dispose();
+    });
+  });
+
   group('WatchSpinner', () {
     testWidgets('is the one spinner size, named by the label it is given', (tester) async {
       final handle = tester.ensureSemantics();
@@ -296,6 +308,50 @@ void main() {
           await tester.pump();
         }
         expect(find.byKey(const Key('row 499')), findsOneWidget);
+      });
+
+      testWidgets('on $preset with an edge the button sits on the bottom and the last row scrolls clear of it', (
+        tester,
+      ) async {
+        preset.apply(tester);
+        var pressed = 0;
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap(
+              WatchScrollList.builder(
+                title: 'Jane Smith',
+                controller: controller,
+                itemCount: 40,
+                itemBuilder: (context, index) => SizedBox(key: Key('row $index'), height: 24),
+                edge: (context, overlay) => TextButton(
+                  key: const Key('edge'),
+                  style: overlay,
+                  onPressed: () => pressed++,
+                  child: const Text('Call'),
+                ),
+              ),
+            ),
+          ),
+          isEmpty,
+        );
+
+        final face = tester.getRect(find.byType(WatchScrollList));
+        final edge = tester.getRect(find.byKey(const Key('edge')));
+        expect(edge.bottom, lessThanOrEqualTo(face.bottom));
+        expect(edge.top, greaterThan(face.center.dy));
+        await tester.tap(find.byKey(const Key('edge')));
+        expect(pressed, 1);
+
+        for (var i = 0; i < 5; i++) {
+          controller.jumpTo(controller.position.maxScrollExtent);
+          await tester.pump();
+        }
+        final last = tester.getRect(find.byKey(const Key('row 39')));
+        expect(last.bottom, lessThanOrEqualTo(edge.top));
       });
     }
   });
