@@ -171,8 +171,9 @@ class _SmsMessageListViewState extends State<SmsMessageListView> {
 
   Widget list() {
     final appTime = context.read<AppTime>();
-    final timeFormat = appTime.hourMinuteFormat();
-    final dateFormat = appTime.dayMonthFormat();
+    final locale = Localizations.localeOf(context);
+    final timeFormat = appTime.hourMinuteFormat(locale);
+    final dateFormat = appTime.dayMonthFormat(locale);
     return GestureDetector(
       // A tap anywhere puts the keyboard away. It is a convenience for a
       // finger and nothing a screen reader should be taken to - left in the

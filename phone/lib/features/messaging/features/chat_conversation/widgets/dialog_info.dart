@@ -59,6 +59,7 @@ class _DialogChatInfoState extends State<DialogChatInfo> {
   @override
   Widget build(BuildContext context) {
     final appTime = context.read<AppTime>();
+    final locale = Localizations.localeOf(context);
     final theme = Theme.of(context);
 
     final participant = widget.participantId;
@@ -137,8 +138,8 @@ class _DialogChatInfoState extends State<DialogChatInfo> {
                             NotificationMuteTile(
                               mute: userSettings.activeChatMute(chatId),
                               onChoice: onMuteChoice,
-                              timeFormat: appTime.hourMinuteFormat(),
-                              dateFormat: appTime.dayMonthFormat(),
+                              timeFormat: appTime.hourMinuteFormat(locale),
+                              dateFormat: appTime.dayMonthFormat(locale),
                             ),
                           ],
                           if (contact != null && contact.kind == ContactKind.visible) ...[

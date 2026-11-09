@@ -50,6 +50,7 @@ class _SmsConversationScreenState extends State<SmsConversationScreen> {
   @override
   Widget build(BuildContext context) {
     final appTime = context.read<AppTime>();
+    final locale = Localizations.localeOf(context);
     final muteAvailable = context.read<FeatureAccess>().conversationMuteAvailable;
     final userSettings =
         context.watch<ConversationUserSettingsCubit?>()?.state ?? const ConversationUserSettingsState();
@@ -149,8 +150,8 @@ class _SmsConversationScreenState extends State<SmsConversationScreen> {
                                     notificationMuteSubtitle(
                                       context.l10n,
                                       mute,
-                                      timeFormat: appTime.hourMinuteFormat(),
-                                      dateFormat: appTime.dayMonthFormat(),
+                                      timeFormat: appTime.hourMinuteFormat(locale),
+                                      dateFormat: appTime.dayMonthFormat(locale),
                                     ),
                                   ),
                                   leading: Icon(

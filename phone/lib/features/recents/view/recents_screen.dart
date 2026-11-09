@@ -236,7 +236,7 @@ class _RecentsScreenState extends State<RecentsScreen> with SingleTickerProvider
 
                   return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
                     builder: (context, callRoutingState) {
-                      final timeFormat = context.read<AppTime>().timeFormat();
+                      final timeFormat = context.read<AppTime>().timeFormat(Localizations.localeOf(context));
                       return ListView.builder(
                         padding: EdgeInsets.only(
                           top: topPadding,

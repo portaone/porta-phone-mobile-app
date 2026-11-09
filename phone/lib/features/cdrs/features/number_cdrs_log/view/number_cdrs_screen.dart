@@ -65,8 +65,9 @@ class _NumberCdrsScreenState extends State<NumberCdrsScreen> {
   @override
   Widget build(BuildContext context) {
     final appTime = context.read<AppTime>();
-    final timeFormat = appTime.hourMinuteFormat();
-    final dateFormat = appTime.dayMonthFormat();
+    final locale = Localizations.localeOf(context);
+    final timeFormat = appTime.hourMinuteFormat(locale);
+    final dateFormat = appTime.dayMonthFormat(locale);
     final theme = Theme.of(context);
     final outlinedButtonStyles = theme.extension<OutlinedButtonStyles>();
     final style = theme.extension<NumberCdrsScreenStyles>()?.primary;

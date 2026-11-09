@@ -14,6 +14,6 @@ class LoginDeviceLimitScreenPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LoginDeviceLimitScreen(dateFormat: context.read<AppTime>().dateTimeFormat());
+    return LoginDeviceLimitScreen(dateFormat: context.read<AppTime>().dateTimeFormat(Localizations.localeOf(context)));
   }
 }

@@ -78,7 +78,7 @@ void main() {
                 value: unreadCount,
                 child: Scaffold(
                   body: SmsConversationsTile(
-                    timeOrDateFormat: AppTime(is24HourFormat: true).timeOrDateFormat(),
+                    timeOrDateFormat: AppTime(is24HourFormat: true).timeOrDateFormat(const Locale('en', 'US')),
                     conversation: SmsConversation(
                       id: 1,
                       firstPhoneNumber: '+380000000001',

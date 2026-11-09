@@ -118,7 +118,7 @@ class _FullRecentCdrsListState extends State<FullRecentCdrsList> {
 
   @override
   Widget build(BuildContext context) {
-    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat();
+    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat(Localizations.localeOf(context));
     return BlocBuilder<FullRecentCdrsCubit, CdrsListState>(
       builder: (context, state) {
         if (state.isLoading) {

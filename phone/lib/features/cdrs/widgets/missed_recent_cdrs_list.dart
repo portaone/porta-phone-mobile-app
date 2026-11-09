@@ -118,7 +118,7 @@ class _MissedRecentCdrsListState extends State<MissedRecentCdrsList> {
 
   @override
   Widget build(BuildContext context) {
-    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat();
+    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat(Localizations.localeOf(context));
     return BlocBuilder<MissedRecentCdrsCubit, CdrsListState>(
       builder: (context, state) {
         if (state.isLoading) {

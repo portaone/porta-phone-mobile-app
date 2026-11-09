@@ -89,7 +89,7 @@ void main() {
                   value: unreadCount,
                   child: Scaffold(
                     body: ChatConversationsTile(
-                      timeOrDateFormat: AppTime(is24HourFormat: true).timeOrDateFormat(),
+                      timeOrDateFormat: AppTime(is24HourFormat: true).timeOrDateFormat(const Locale('en', 'US')),
                       conversation: Chat(
                         id: 1,
                         type: ChatType.direct,

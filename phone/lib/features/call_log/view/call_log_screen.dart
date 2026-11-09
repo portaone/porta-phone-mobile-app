@@ -32,7 +32,7 @@ class CallLogScreen extends StatelessWidget {
 
           final themeData = Theme.of(context);
           final outlinedButtonStyles = themeData.extension<OutlinedButtonStyles>();
-          final dateFormat = context.read<AppTime>().dateTimeFormat();
+          final dateFormat = context.read<AppTime>().dateTimeFormat(Localizations.localeOf(context));
 
           return ListView(
             children: [
