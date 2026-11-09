@@ -1285,6 +1285,8 @@
   "@locale_uk": {},
   "locale_th": "Thai",
   "@locale_th": {},
+  "locale_fr": "French",
+  "@locale_fr": {},
   "login_Button_coreUrlAssignProceed": "Proceed",
   "@login_Button_coreUrlAssignProceed": {},
   "login_Button_otpSigninRequestProceed": "Proceed",

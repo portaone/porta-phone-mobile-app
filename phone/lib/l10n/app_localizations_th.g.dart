@@ -1276,6 +1276,9 @@ class AppLocalizationsTh extends AppLocalizations {
   String get locale_th => 'ไทย';
 
   @override
+  String get locale_fr => 'ฝรั่งเศส';
+
+  @override
   String get login_Button_coreUrlAssignProceed => 'ดำเนินการต่อ';
 
   @override
