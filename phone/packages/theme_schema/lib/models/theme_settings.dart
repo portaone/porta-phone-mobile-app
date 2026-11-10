@@ -13,6 +13,10 @@ part 'theme_settings.freezed.dart';
 
 part 'theme_settings.g.dart';
 
+// A key of this document is never renamed or moved. The new key is added and the
+// old one stays beside it as a @Deprecated field for three releases, so every
+// release finds the key it reads. AGENTS.md of this package, "Keys are never
+// renamed", has the rule and the recipe.
 @freezed
 @JsonSerializable(explicitToJson: true, createJsonSchema: true)
 class ThemeSettings with _$ThemeSettings {

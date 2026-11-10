@@ -106,6 +106,29 @@ field, and what to write instead. You do not have to remember these; read the fa
 Naming an enum property, listing a union's variants and marking a field nullable need no rule:
 they are read off the source. Add the field and run `build_runner`.
 
+### Keys are never renamed
+
+A key that a release has shipped keeps its name and its place for good. To call a setting
+something else, or to hold it on another class, add the new key and keep the old one beside it
+as a `@Deprecated` field; the new field reads the old key when its own is absent.
+
+- These documents are written by a service that serves every release from one copy and hands
+  each release only the keys its published schema declares. A release that reads a new name
+  finds nothing under it until that service learns the name, and one that reads the old name
+  must go on finding it. With both keys declared, every release is handed the one it reads and
+  nothing has to be translated in between.
+- The old key has to stay a **field**. A `readValue` that looks under the old name without a
+  field for it works on a document read straight off disk and on nothing else: the key is not
+  in the schema, so a release is not handed it.
+- The deprecation says when the key goes: `@Deprecated('Renamed to onlineColor in 1.20.0;
+  remove in 1.23.0')`. It stays for three releases after the one that added the new key and is
+  removed in a change of its own.
+- A changed type is a new key by the same rule: the old key keeps its type, the new one has the
+  new type.
+
+Nothing checks this. A renamed key passes every test here and loses the setting in each build
+made for the release that renamed it.
+
 ## Recipes
 
 **A property on an existing type.** Add the field (nullable or with a default), run
@@ -115,6 +138,29 @@ they are read off the source. Add the field and run `build_runner`.
    read those files through the loaders in `test/helpers/fixtures.dart`;
 2. map it in the bridge, `phone/lib/theme/`;
 3. read it in widgets through `Theme.of(context).extension<T>()`.
+
+**A key under a new name.** Both fields on the class, the old one deprecated, and a reader for
+the new one. Nothing in the app reads the old field: the bridge maps the new one.
+
+```dart
+const PresenceBadgeStyleConfig({
+  this.onlineColor,
+  @Deprecated('Renamed to onlineColor in 1.20.0; remove in 1.23.0') this.availableColor,
+});
+
+/// Color used when presence is "available".
+@JsonKey(readValue: _readOnlineColor)
+final String? onlineColor;
+
+/// The name `onlineColor` had before 1.20.0.
+@Deprecated('Renamed to onlineColor in 1.20.0; remove in 1.23.0')
+final String? availableColor;
+
+Object? _readOnlineColor(Map<dynamic, dynamic> json, String key) => json[key] ?? json['availableColor'];
+```
+
+A key that moves to another class is the same on two classes: the field stays where it was,
+deprecated, and the class that holds both reads the new place first.
 
 **A variant of an existing union.** In the same file, a redirecting factory and a `fromJson`
 case on the base:
