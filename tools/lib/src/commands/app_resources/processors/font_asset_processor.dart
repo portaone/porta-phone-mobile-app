@@ -255,5 +255,5 @@ class FontAssetProcessor {
     }
   }
 
-  String _slug(String family) => family.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+  String _slug(String family) => family.toLowerCase().replaceAll(RegExp('[^a-z0-9]'), '');
 }
