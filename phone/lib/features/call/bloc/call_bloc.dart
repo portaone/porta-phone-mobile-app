@@ -4052,12 +4052,15 @@ class CallBloc extends Bloc<CallEvent, CallState> with WidgetsBindingObserver im
     final activeCall = state.retrieveActiveCall(event.callId);
     if (activeCall == null) return answer;
 
+    // The proximity flag goes only as "on". On iOS "off" switches the audio session to
+    // VideoChat, whose route is the loudspeaker, so every update of the far end took a video
+    // call off the earpiece the user had chosen. Android ignores the flag for a video call.
     await callkeep.reportUpdateCall(
       event.callId,
       handle: handle,
       displayName: displayName ?? activeCall.displayName,
       hasVideo: event.jsep?.hasVideo ?? activeCall.video,
-      proximityEnabled: state.shouldListenToProximity,
+      proximityEnabled: state.shouldListenToProximity ? true : null,
     );
 
     try {
