@@ -2055,6 +2055,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messaging_Watch_newSms => 'New SMS';
 
   @override
+  String get messaging_Watch_mine => 'You';
+
+  @override
+  String get messaging_Watch_markDelivered => 'Delivered';
+
+  @override
+  String get messaging_Watch_markPending => 'Sending';
+
+  @override
+  String get messaging_Watch_markSent => 'Sent';
+
+  @override
+  String get messaging_Watch_markRead => 'Read';
+
+  @override
   String get messaging_StateBar_error => 'DISCONNECTED';
 
   @override

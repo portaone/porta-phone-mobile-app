@@ -96,93 +96,95 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
             context.router.navigate(const MainScreenPageRoute(children: [ConversationsScreenPageRoute()]));
           }
         },
-        builder: (context, state) {
-          return Scaffold(
-            extendBodyBehindAppBar: true,
-            appBar: AppBar(
-              // A thread is part of the conversations section, so its bar is
-              // frosted the way the conversations list is.
-              flexibleSpace: BlurredSurface.fromStyle(
-                Theme.of(context).extension<ConversationsScreenStyles>()?.primary?.appBarBlurredSurface,
-              ),
-              // Themes that configure no bar color keep a translucent bar instead
-              // of the opaque framework default.
-              backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.transparent,
-              centerTitle: true,
-              title: FadeIn(
-                child: Builder(
-                  builder: (context) {
-                    if (state is CVSReady) {
-                      final chatName = state.chat?.name;
-                      if (chatName != null) return textTitle(chatName);
+        builder: (context, state) => AdaptiveLayout(
+          handset: (context) => _handset(context, state),
+          watch: (_) => ChatConversationScreenWatch(state: state, userId: userId),
+        ),
+      ),
+    );
+  }
 
-                      final (:chatId, :participantId) = state.credentials;
-                      if (participantId != null) return dialogTitle(participantId);
+  Widget _handset(BuildContext context, ConversationState state) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        // A thread is part of the conversations section, so its bar is
+        // frosted the way the conversations list is.
+        flexibleSpace: BlurredSurface.fromStyle(
+          Theme.of(context).extension<ConversationsScreenStyles>()?.primary?.appBarBlurredSurface,
+        ),
+        // Themes that configure no bar color keep a translucent bar instead
+        // of the opaque framework default.
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Colors.transparent,
+        centerTitle: true,
+        title: FadeIn(
+          child: Builder(
+            builder: (context) {
+              if (state is CVSReady) {
+                final chatName = state.chat?.name;
+                if (chatName != null) return textTitle(chatName);
 
-                      // A group with no name of its own: the same title it
-                      // carries in the list and in Group info, never the bare
-                      // number.
-                      final id = state.chat?.id ?? chatId;
-                      return textTitle(id == null ? '' : context.l10n.messaging_GroupInfo_titlePrefix(id));
-                    }
+                final (:chatId, :participantId) = state.credentials;
+                if (participantId != null) return dialogTitle(participantId);
 
-                    return const SizedBox();
-                  },
-                ),
-              ),
-              actions: [
-                SemanticAction(
-                  label: context.l10n.messaging_SemanticsLabel_conversationDetails,
-                  identifier: conversationMenuId,
-                  child: IconButton(onPressed: canOpenInfo(state) ? onMenuTap : null, icon: const Icon(Icons.menu)),
-                ),
-              ],
-            ),
-            // Anchor of the screen: a flow can tell it is inside a chat before
-            // it touches anything, whichever conversation is open.
-            body: SemanticId(
-              identifier: chatConversationScreenId,
-              child: Builder(
-                builder: (context) {
-                  if (state is CVSReady) {
-                    return ChatMessageListView(
-                      userId: userId,
-                      isGroup: state.chat?.type == ChatType.group,
-                      messages: state.messages,
-                      outboxMessages: state.outboxMessages,
-                      outboxMessageEdits: state.outboxMessageEdits,
-                      outboxMessageDeletes: state.outboxMessageDeletes,
-                      readCursors: state.readCursors,
-                      fetchingHistory: state.fetchingHistory,
-                      historyEndReached: state.historyEndReached,
-                      onSendMessage: (content) => conversationCubit.sendMessage(content),
-                      onSendReply: (content, refMessage) => conversationCubit.sendReply(content, refMessage),
-                      onSendForward: (content, refMessage) => conversationCubit.sendForward(refMessage),
-                      onSendEdit: (content, refMessage) => conversationCubit.sendEdit(content, refMessage),
-                      onDelete: (refMessage) => conversationCubit.deleteMessage(refMessage),
-                      userReadedUntilUpdate: (until) => conversationCubit.userReadedUntilUpdate(until),
-                      onFetchHistory: conversationCubit.fetchHistory,
-                    );
-                  }
+                // A group with no name of its own: the same title it
+                // carries in the list and in Group info, never the bare
+                // number.
+                final id = state.chat?.id ?? chatId;
+                return textTitle(id == null ? '' : context.l10n.messaging_GroupInfo_titlePrefix(id));
+              }
 
-                  if (state is CVSError) {
-                    return NoDataPlaceholder(
-                      content: Text(context.l10n.messaging_Conversation_failure),
-                      actions: [
-                        TextButton(
-                          onPressed: conversationCubit.restart,
-                          child: Text(context.l10n.messaging_ActionBtn_retry),
-                        ),
-                      ],
-                    );
-                  }
+              return const SizedBox();
+            },
+          ),
+        ),
+        actions: [
+          SemanticAction(
+            label: context.l10n.messaging_SemanticsLabel_conversationDetails,
+            identifier: conversationMenuId,
+            child: IconButton(onPressed: canOpenInfo(state) ? onMenuTap : null, icon: const Icon(Icons.menu)),
+          ),
+        ],
+      ),
+      // Anchor of the screen: a flow can tell it is inside a chat before
+      // it touches anything, whichever conversation is open.
+      body: SemanticId(
+        identifier: chatConversationScreenId,
+        child: Builder(
+          builder: (context) {
+            if (state is CVSReady) {
+              return ChatMessageListView(
+                userId: userId,
+                isGroup: state.chat?.type == ChatType.group,
+                messages: state.messages,
+                outboxMessages: state.outboxMessages,
+                outboxMessageEdits: state.outboxMessageEdits,
+                outboxMessageDeletes: state.outboxMessageDeletes,
+                readCursors: state.readCursors,
+                fetchingHistory: state.fetchingHistory,
+                historyEndReached: state.historyEndReached,
+                onSendMessage: (content) => conversationCubit.sendMessage(content),
+                onSendReply: (content, refMessage) => conversationCubit.sendReply(content, refMessage),
+                onSendForward: (content, refMessage) => conversationCubit.sendForward(refMessage),
+                onSendEdit: (content, refMessage) => conversationCubit.sendEdit(content, refMessage),
+                onDelete: (refMessage) => conversationCubit.deleteMessage(refMessage),
+                userReadedUntilUpdate: (until) => conversationCubit.userReadedUntilUpdate(until),
+                onFetchHistory: conversationCubit.fetchHistory,
+              );
+            }
 
-                  return const Center(child: CircularProgressIndicator());
-                },
-              ),
-            ),
-          );
-        },
+            if (state is CVSError) {
+              return NoDataPlaceholder(
+                content: Text(context.l10n.messaging_Conversation_failure),
+                actions: [
+                  TextButton(onPressed: conversationCubit.restart, child: Text(context.l10n.messaging_ActionBtn_retry)),
+                ],
+              );
+            }
+
+            return const Center(child: CircularProgressIndicator());
+          },
+        ),
       ),
     );
   }

@@ -2012,6 +2012,26 @@
   "@messaging_Watch_newSms": {
     "description": "On a watch, the short label of the button that starts an SMS conversation; a screen reader says the full name."
   },
+  "messaging_Watch_mine": "You",
+  "@messaging_Watch_mine": {
+    "description": "On a watch, said by a screen reader before a message the user wrote."
+  },
+  "messaging_Watch_markDelivered": "Delivered",
+  "@messaging_Watch_markDelivered": {
+    "description": "Watch: said after one of the user's own SMS once the network has delivered it"
+  },
+  "messaging_Watch_markPending": "Sending",
+  "@messaging_Watch_markPending": {
+    "description": "On a watch, said by a screen reader after a message of the user still on its way out."
+  },
+  "messaging_Watch_markSent": "Sent",
+  "@messaging_Watch_markSent": {
+    "description": "On a watch, said by a screen reader after a message of the user that has been sent."
+  },
+  "messaging_Watch_markRead": "Read",
+  "@messaging_Watch_markRead": {
+    "description": "On a watch, said by a screen reader after a message of the user that has been read or delivered."
+  },
   "messaging_StateBar_error": "DISCONNECTED",
   "@messaging_StateBar_error": {
     "description": "Shown in the messaging state bar when the app is disconnected from the messaging server. Condition: connection lost or unable to establish a connection."

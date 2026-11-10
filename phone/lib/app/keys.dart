@@ -469,6 +469,12 @@ const conversationsTabSmsKey = Key(conversationsTabSmsId);
 const String conversationsWatchListId = 'conversationsWatchList';
 const conversationsWatchListKey = Key(conversationsWatchListId);
 
+/// The Reply edge button of a conversation on a watch, and the keyboard's
+/// field behind it.
+const String conversationWatchReplyId = 'conversationWatchReply';
+const conversationWatchReplyKey = Key(conversationWatchReplyId);
+const conversationWatchReplyInputKey = Key('conversationWatchReplyInput');
+
 const String conversationsSearchInputId = 'conversationsSearchInput';
 const conversationsSearchInputKey = Key(conversationsSearchInputId);
 const String conversationsSearchInputClearId = 'conversationsSearchInputClear';

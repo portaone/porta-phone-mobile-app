@@ -1852,6 +1852,16 @@
   "@messaging_Watch_newChat": {},
   "messaging_Watch_newSms": "Нове SMS",
   "@messaging_Watch_newSms": {},
+  "messaging_Watch_mine": "Ви",
+  "@messaging_Watch_mine": {},
+  "messaging_Watch_markDelivered": "Доставлено",
+  "@messaging_Watch_markDelivered": {},
+  "messaging_Watch_markPending": "Надсилається",
+  "@messaging_Watch_markPending": {},
+  "messaging_Watch_markSent": "Надіслано",
+  "@messaging_Watch_markSent": {},
+  "messaging_Watch_markRead": "Прочитано",
+  "@messaging_Watch_markRead": {},
   "messaging_StateBar_error": "ВІДКЛЮЧЕНО",
   "@messaging_StateBar_error": {
     "description": "Shown in the messaging state bar when the app is disconnected from the messaging server. Condition: connection lost or unable to establish a connection."

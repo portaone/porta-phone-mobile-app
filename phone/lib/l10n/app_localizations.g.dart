@@ -3734,6 +3734,36 @@ abstract class AppLocalizations {
   /// **'New SMS'**
   String get messaging_Watch_newSms;
 
+  /// On a watch, said by a screen reader before a message the user wrote.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get messaging_Watch_mine;
+
+  /// Watch: said after one of the user's own SMS once the network has delivered it
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get messaging_Watch_markDelivered;
+
+  /// On a watch, said by a screen reader after a message of the user still on its way out.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending'**
+  String get messaging_Watch_markPending;
+
+  /// On a watch, said by a screen reader after a message of the user that has been sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get messaging_Watch_markSent;
+
+  /// On a watch, said by a screen reader after a message of the user that has been read or delivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get messaging_Watch_markRead;
+
   /// Shown in the messaging state bar when the app is disconnected from the messaging server. Condition: connection lost or unable to establish a connection.
   ///
   /// In en, this message translates to:

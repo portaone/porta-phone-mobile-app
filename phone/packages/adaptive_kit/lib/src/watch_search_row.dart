@@ -1,7 +1,7 @@
-import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'semantic_action.dart';
+import 'watch_keyboard_input.dart';
 import 'watch_pill.dart';
 import 'watch_round_button.dart';
 
@@ -11,13 +11,11 @@ import 'watch_round_button.dart';
 /// takes the row as a pill with its cross and the chooser shrinks to a round
 /// button. With nothing to choose the search takes the row as a pill.
 ///
-/// The search is a button, not a field: a watch's keyboard takes the whole
-/// face with a line of its own to type in, so a box on the list to type into
-/// would never be seen. Under the row is a field nobody sees, the one the
-/// keyboard types into - without it the app cannot ask for a keyboard. It is
-/// the same field whichever shape the row takes, so the keyboard stays open
-/// while the query appears; what it holds shows in the row as it is typed,
-/// for a watch whose keyboard leaves the face in view.
+/// The search is a button, not a field ([WatchKeyboardInput]): a watch's
+/// keyboard takes the whole face with a line of its own. It is the same field
+/// whichever shape the row takes, so the keyboard stays open while the query
+/// appears; what it holds shows in the row as it is typed, for a watch whose
+/// keyboard leaves the face in view.
 class WatchSearchRow extends StatefulWidget {
   const WatchSearchRow({
     super.key,
@@ -61,34 +59,11 @@ class WatchSearchRow extends StatefulWidget {
 
 class _WatchSearchRowState extends State<WatchSearchRow> {
   late final _controller = TextEditingController(text: widget.initialQuery);
-  final _focus = FocusNode();
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // A page or a dialog over the list: the field may not take focus back
-    // when it closes. The keyboard closed with Back leaves the field focused,
-    // and the route handing focus back would bring the keyboard up again over
-    // a list nobody is searching. The search button lets it again.
-    if (ModalRoute.isCurrentOf(context) == false) _focus.canRequestFocus = false;
-  }
 
   @override
   void dispose() {
     _controller.dispose();
-    _focus.dispose();
     super.dispose();
-  }
-
-  void _open() {
-    _focus.canRequestFocus = true;
-    if (_focus.hasFocus) {
-      // Focused already, the keyboard may have been closed with Back: ask
-      // for it again.
-      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
-    } else {
-      _focus.requestFocus();
-    }
   }
 
   void _clear() {
@@ -100,67 +75,45 @@ class _WatchSearchRowState extends State<WatchSearchRow> {
   Widget build(BuildContext context) {
     final chooser = widget.chooser;
 
-    return Stack(
-      children: [
-        // Out of sight and out of reach: the keyboard's target only.
-        Positioned(
-          left: 0,
-          top: 0,
-          width: 1,
-          height: 1,
-          child: ExcludeSemantics(
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: 0,
-                child: TextField(
-                  key: widget.fieldKey,
-                  controller: _controller,
-                  focusNode: _focus,
-                  textInputAction: TextInputAction.search,
-                  onChanged: widget.onChanged,
-                  onSubmitted: (value) {
-                    widget.onSubmitted?.call(value);
-                    _focus.unfocus();
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
-        ValueListenableBuilder<TextEditingValue>(
-          valueListenable: _controller,
-          builder: (context, value, _) {
-            final query = value.text;
-            final search = _SearchPill(
-              query: query,
-              searchLabel: widget.searchLabel,
-              clearLabel: widget.clearLabel,
-              searchIdentifier: widget.searchIdentifier,
-              clearKey: widget.clearKey,
-              clearIdentifier: widget.clearIdentifier,
-              onOpen: _open,
-              onClear: _clear,
-            );
-            if (chooser == null) return search;
-            return Row(
-              spacing: 8,
-              children: query.isEmpty
-                  ? [
-                      WatchRoundButton(
-                        identifier: widget.searchIdentifier,
-                        label: widget.searchLabel,
-                        icon: const Icon(Icons.search),
-                        size: WatchPill.height,
-                        width: WatchPill.height,
-                        onPressed: _open,
-                      ),
-                      Expanded(child: chooser(round: false)),
-                    ]
-                  : [Expanded(child: search), chooser(round: true)],
-            );
-          },
-        ),
-      ],
+    return WatchKeyboardInput(
+      controller: _controller,
+      onChanged: widget.onChanged,
+      onSubmitted: widget.onSubmitted,
+      textInputAction: TextInputAction.search,
+      fieldKey: widget.fieldKey,
+      builder: (context, open) => ValueListenableBuilder<TextEditingValue>(
+        valueListenable: _controller,
+        builder: (context, value, _) {
+          final query = value.text;
+          final search = _SearchPill(
+            query: query,
+            searchLabel: widget.searchLabel,
+            clearLabel: widget.clearLabel,
+            searchIdentifier: widget.searchIdentifier,
+            clearKey: widget.clearKey,
+            clearIdentifier: widget.clearIdentifier,
+            onOpen: open,
+            onClear: _clear,
+          );
+          if (chooser == null) return search;
+          return Row(
+            spacing: 8,
+            children: query.isEmpty
+                ? [
+                    WatchRoundButton(
+                      identifier: widget.searchIdentifier,
+                      label: widget.searchLabel,
+                      icon: const Icon(Icons.search),
+                      size: WatchPill.height,
+                      width: WatchPill.height,
+                      onPressed: open,
+                    ),
+                    Expanded(child: chooser(round: false)),
+                  ]
+                : [Expanded(child: search), chooser(round: true)],
+          );
+        },
+      ),
     );
   }
 }

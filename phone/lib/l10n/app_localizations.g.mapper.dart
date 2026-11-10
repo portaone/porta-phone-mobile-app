@@ -897,6 +897,11 @@ extension AppLocalizationsExtension on AppLocalizations {
       'messaging_Watch_notFound' => messaging_Watch_notFound,
       'messaging_Watch_newChat' => messaging_Watch_newChat,
       'messaging_Watch_newSms' => messaging_Watch_newSms,
+      'messaging_Watch_mine' => messaging_Watch_mine,
+      'messaging_Watch_markDelivered' => messaging_Watch_markDelivered,
+      'messaging_Watch_markPending' => messaging_Watch_markPending,
+      'messaging_Watch_markSent' => messaging_Watch_markSent,
+      'messaging_Watch_markRead' => messaging_Watch_markRead,
       'messaging_StateBar_error' => messaging_StateBar_error,
       'messaging_StateBar_initializing' => messaging_StateBar_initializing,
       'notifications_errorSnackBarAction_callSdpConfiguration' =>

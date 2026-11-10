@@ -2087,6 +2087,21 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messaging_Watch_newSms => 'Нове SMS';
 
   @override
+  String get messaging_Watch_mine => 'Ви';
+
+  @override
+  String get messaging_Watch_markDelivered => 'Доставлено';
+
+  @override
+  String get messaging_Watch_markPending => 'Надсилається';
+
+  @override
+  String get messaging_Watch_markSent => 'Надіслано';
+
+  @override
+  String get messaging_Watch_markRead => 'Прочитано';
+
+  @override
   String get messaging_StateBar_error => 'ВІДКЛЮЧЕНО';
 
   @override

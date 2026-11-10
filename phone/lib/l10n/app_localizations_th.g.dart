@@ -2043,6 +2043,21 @@ class AppLocalizationsTh extends AppLocalizations {
   String get messaging_Watch_newSms => 'SMS ใหม่';
 
   @override
+  String get messaging_Watch_mine => 'คุณ';
+
+  @override
+  String get messaging_Watch_markDelivered => 'ส่งถึงแล้ว';
+
+  @override
+  String get messaging_Watch_markPending => 'กำลังส่ง';
+
+  @override
+  String get messaging_Watch_markSent => 'ส่งแล้ว';
+
+  @override
+  String get messaging_Watch_markRead => 'อ่านแล้ว';
+
+  @override
   String get messaging_StateBar_error => 'ถูกตัดการเชื่อมต่อ';
 
   @override
