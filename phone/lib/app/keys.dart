@@ -265,6 +265,12 @@ const String contactPhoneMenuId = 'contactPhoneMenu';
 const String contactPhoneTransferId = 'contactPhoneTransfer';
 const String contactPhoneVideoCallId = 'contactPhoneVideoCall';
 const String contactPhoneVoiceCallId = 'contactPhoneVoiceCall';
+
+/// The call to a contact's main number along the bottom of its page on a
+/// watch, and the row there that opens that number's call history.
+const String contactWatchCallId = 'contactWatchCall';
+const contactWatchCallKey = Key(contactWatchCallId);
+const String contactWatchCallLogId = 'contactWatchCallLog';
 const String contactPresenceSubscriptionId = 'contactPresenceSubscription';
 const String contactPresenceSubscriptionInfoId = 'contactPresenceSubscriptionInfo';
 const String conversationsNewId = 'conversationsNew';

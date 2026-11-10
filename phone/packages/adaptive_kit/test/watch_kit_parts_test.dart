@@ -407,6 +407,57 @@ void main() {
       handle.dispose();
     });
 
+    for (final preset in watchPresets) {
+      testWidgets('on $preset a fitted title stays on one line, smaller, and is read whole', (tester) async {
+        final handle = tester.ensureSemantics();
+        preset.apply(tester);
+        // The test font draws every glyph as a square, far wider than the
+        // app's: eight of them need a little shrinking here, as a full
+        // number does in the app.
+        const number = '+3804412';
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: WatchListTile(
+                  title: number,
+                  subtitle: 'mobile',
+                  fitTitle: true,
+                  identifier: 'row',
+                  onTap: () {},
+                ),
+              ),
+            ),
+          ),
+          isEmpty,
+        );
+
+        final text = tester.getRect(find.text(number));
+        final row = tester.getRect(find.byType(WatchListTile));
+        expect(text.right, lessThanOrEqualTo(row.right));
+        expect(text.height, lessThan(30), reason: 'one line');
+        expect(find.byType(FittedBox), findsOneWidget);
+        expect(tester.getSemantics(find.bySemanticsIdentifier('row')).getSemanticsData().label, '$number, mobile');
+        handle.dispose();
+      });
+
+      testWidgets('on $preset a fitted title too long to read when shrunk wraps to two lines instead', (tester) async {
+        preset.apply(tester);
+        const address = 'a.very.long.address.of.somebody@department.example.com';
+        expect(
+          await pumpCollectingOverflows(tester, wrap(WatchListTile(title: address, fitTitle: true, onTap: () {}))),
+          isEmpty,
+        );
+
+        expect(find.byType(FittedBox), findsNothing);
+        final text = tester.widget<Text>(find.text(address));
+        expect(text.maxLines, 2);
+        expect(text.overflow, TextOverflow.ellipsis);
+      });
+    }
+
     testWidgets('a name of its own replaces the title and subtitle for assistive technology', (tester) async {
       final handle = tester.ensureSemantics();
       watchPresets.first.apply(tester);

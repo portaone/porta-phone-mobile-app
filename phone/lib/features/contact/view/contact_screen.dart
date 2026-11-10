@@ -58,193 +58,219 @@ class _ContactScreenState extends State<ContactScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appTime = context.read<AppTime>();
-    final locale = Localizations.localeOf(context);
-    final themeData = Theme.of(context);
-    final l10n = context.l10n;
-    final presenceParams = PresenceViewParams.of(context);
-
     return BlocConsumer<ContactBloc, ContactState>(
       builder: (context, state) {
         final contact = state.contact;
         if (contact == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-        final contactSourceId = contact.sourceId;
-        final contactSmsNumbers = contact.smsNumbers;
-        final presenseInfo = contact.presenceInfo;
-        final dialogInfo = contact.dialogInfo;
-
-        // Sending needs a number on both sides: without one of the user's
-        // own the message has no sender, and the action would be offered
-        // only to do nothing when pressed.
-        bool canSendSmsTo(String number, List<String> userSmsNumbers) =>
-            widget.enableTileSms && userSmsNumbers.isNotEmpty && contactSmsNumbers.contains(number);
-
         final purpose = context.pickPurpose;
 
-        return BlocBuilder<CallBloc, CallState>(
-          buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
-          builder: (context, callState) {
-            final email = contact.emails.firstOrNull?.address;
-            final hasActiveCall = callState.activeCalls.isNotEmpty;
-
-            return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
-              builder: (context, callRoutingState) {
-                final showPresenceInfo =
-                    presenceParams.hybridPresenceSupport &&
-                    contact.sourceType == ContactSourceType.external &&
-                    presenseInfo.isNotEmpty;
-
-                final showDialogsInfo =
-                    presenceParams.hybridPresenceSupport &&
-                    presenceParams.blfViaSipSupport &&
-                    contact.sourceType == ContactSourceType.external &&
-                    dialogInfo.isNotEmpty;
-
-                final bool dialogSipSubAvaliable =
-                    contact.sourceType == ContactSourceType.external &&
-                    presenceParams.hybridPresenceSupport &&
-                    presenceParams.blfViaSipSupport;
-
-                final bool presenceSipSubAvaliable =
-                    contact.sourceType == ContactSourceType.external &&
-                    presenceParams.hybridPresenceSupport &&
-                    presenceParams.presenceViaSipSupport;
-
-                final bool sipSubsAvailable = dialogSipSubAvaliable || presenceSipSubAvaliable;
-
-                final bool showOptionsSection = sipSubsAvailable; // && yourNextOptionFeature
-
-                return Scaffold(
-                  appBar: AppBar(
-                    actions: [
-                      if (widget.enableAppBarChat && contact.canMessage)
-                        SemanticAction(
-                          label: l10n.numberActions_chat,
-                          identifier: contactChatId,
-                          child: IconButton(
-                            icon: const Icon(Icons.message),
-                            onPressed: () => _navigateToChatConversation(contact),
-                          ),
-                        ),
-                    ],
-                  ),
-                  // Anchor of the screen: a flow can tell it is on a contact
-                  // card before it touches any of the controls.
-                  body: SemanticId(
-                    identifier: contactScreenId,
-                    child: ListView(
-                      children: [
-                        Container(
-                          padding: kAllPadding16,
-                          alignment: Alignment.center,
-                          child: LeadingAvatar(
-                            username: contact.displayTitle,
-                            thumbnail: contact.thumbnail,
-                            thumbnailUrl: contact.thumbnailUrl ?? GravatarUrl.forEmail(email),
-                            radius: 50,
-                          ),
-                        ),
-                        Text(
-                          contact.displayTitle,
-                          style: themeData.textTheme.headlineMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        const Divider(height: 16),
-                        for (final (index, entry) in contact.displayPhoneEntries.indexed)
-                          UserSmsNumbersBuilder(
-                            builder: (context, userSmsNumbers, {required loading}) => ContactPhoneTileAdapter(
-                              number: entry.phone.number,
-                              index: index,
-                              displayLabel: entry.displayLabel,
-                              favorite: entry.displayFavorite,
-                              callNumbers: callRoutingState?.allNumbers ?? [],
-                              isSmsEnabled: canSendSmsTo(entry.phone.number, userSmsNumbers),
-                              isMessageEnabled: widget.enableTileChat && contact.canMessage,
-                              enableTileFavorite: widget.enableTileFavorite,
-                              enableTileVoiceCall: widget.enableTileVoiceCall,
-                              enableTileVideoCall: widget.enableTileVideoCall,
-                              enableTileTransfer: widget.enableTileTransfer,
-                              enableTileCallLog: widget.enableTileCallLog,
-                              hasActiveCall: hasActiveCall,
-                              isPickingDestination: purpose != null,
-                              onPickPressed: _pickCallback(purpose, entry.phone, contact),
-                              pickLabel: purpose?.pickLabel(_candidate(entry.phone, contact)),
-                              pickIcon: purpose?.pickIcon,
-                              onFavoriteChanged: (isFavorite) => _onFavoriteChanged(isFavorite, entry.phone, contact),
-                              onAudioPressed: () => _onAudioPressed(entry.phone, contact),
-                              onVideoPressed: () => _onVideoPressed(entry.phone, contact),
-                              onTransferPressed: () => _onTransferPressed(entry.phone),
-                              onSmsPressed: () => _onSendSmsPressed(entry.phone, contactSourceId, userSmsNumbers),
-                              onCallLogPressed: () => _onCallLogPressed(entry.phone.number),
-                              onMessagePressed: () => _navigateToChatConversation(contact),
-                              onCallFromPressed: (fromNumber) => _onCallFromPressed(entry.phone, contact, fromNumber),
-                            ),
-                          ),
-                        for (final (index, contactEmail) in contact.emails.indexed)
-                          ContactEmailTile(
-                            key: contactEmailTileKey,
-                            index: index,
-                            address: contactEmail.address,
-                            label: contactEmail.label,
-                            onEmailPressed: widget.enableTileEmail ? () => _onEmailPressed(contactEmail) : null,
-                          ),
-                        if (showPresenceInfo) ...[
-                          const Divider(),
-                          PresenceInfoView(presenceInfo: presenseInfo, timeFormat: appTime.hourMinuteFormat(locale)),
-                        ],
-                        if (showDialogsInfo) ...[
-                          const Divider(),
-                          DialogsInfoView(dialogInfo: dialogInfo, timeFormat: appTime.hourMinuteFormat(locale)),
-                        ],
-                        if (showOptionsSection) ...[
-                          const Divider(),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                            child: Column(
-                              spacing: 12,
-                              children: [
-                                Text(
-                                  l10n.contacts_ContactScreen_options,
-                                  style: themeData.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                if (presenceSipSubAvaliable)
-                                  ContactSipSubscriptionOption(
-                                    text: l10n.contacts_ContactScreen_presenceViaSip,
-                                    info: l10n.contacts_ContactScreen_presenceViaSip_tooltip,
-                                    identifier: contactPresenceSubscriptionId,
-                                    infoIdentifier: contactPresenceSubscriptionInfoId,
-                                    subscribed: contact.hasSipSubscription(SipSubscriptionType.presence),
-                                    onChanged: (subscribed) =>
-                                        _onSipSubscriptionChanged(subscribed, SipSubscriptionType.presence),
-                                  ),
-                                if (dialogSipSubAvaliable)
-                                  ContactSipSubscriptionOption(
-                                    text: l10n.contacts_ContactScreen_dialogsViaSipBlf,
-                                    info: l10n.contacts_ContactScreen_dialogsViaSipBlf_tooltip,
-                                    identifier: contactDialogsSubscriptionId,
-                                    infoIdentifier: contactDialogsSubscriptionInfoId,
-                                    subscribed: contact.hasSipSubscription(SipSubscriptionType.blf),
-                                    onChanged: (subscribed) =>
-                                        _onSipSubscriptionChanged(subscribed, SipSubscriptionType.blf),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
+        return AdaptiveLayout(
+          handset: (context) => _handset(context, contact),
+          watch: (context) => Scaffold(
+            body: SemanticId(
+              identifier: contactScreenId,
+              child: ContactWatchView(
+                contact: contact,
+                phones: contact.displayPhoneEntries,
+                onCall: widget.enableTileVoiceCall ? (number) => _call(number, contact, video: false) : null,
+                pickLabel: purpose == null ? null : (phone) => purpose.pickLabel(_candidate(phone, contact)),
+                pickIcon: purpose?.pickIcon,
+                onPick: purpose == null ? null : (phone) => _pickCallback(purpose, phone, contact),
+                onVideoCall: widget.enableTileVideoCall ? (number) => _call(number, contact, video: true) : null,
+                onMessage: (widget.enableTileChat || widget.enableAppBarChat) && contact.canMessage
+                    ? () => _navigateToChatConversation(contact)
+                    : null,
+                onCallLog: widget.enableTileCallLog ? _onCallLogPressed : null,
+                onFavoriteChanged: widget.enableTileFavorite
+                    ? (phone, favorite) => _onFavoriteChanged(favorite, phone, contact)
+                    : null,
+                onEmail: widget.enableTileEmail ? _onEmailPressed : null,
+              ),
+            ),
+          ),
         );
       },
       listener: (BuildContext context, ContactState state) {
         if (state.deleted) _onContactDeleted();
       },
     );
+  }
+
+  Widget _handset(BuildContext context, Contact contact) {
+    final appTime = context.read<AppTime>();
+    final locale = Localizations.localeOf(context);
+    final themeData = Theme.of(context);
+    final l10n = context.l10n;
+    final presenceParams = PresenceViewParams.of(context);
+    final purpose = context.pickPurpose;
+
+    final contactSourceId = contact.sourceId;
+    final contactSmsNumbers = contact.smsNumbers;
+    final presenseInfo = contact.presenceInfo;
+    final dialogInfo = contact.dialogInfo;
+    final email = contact.emails.firstOrNull?.address;
+
+    // Sending needs a number on both sides: without one of the user's
+    // own the message has no sender, and the action would be offered
+    // only to do nothing when pressed.
+    bool canSendSmsTo(String number, List<String> userSmsNumbers) =>
+        widget.enableTileSms && userSmsNumbers.isNotEmpty && contactSmsNumbers.contains(number);
+
+    final showPresenceInfo =
+        presenceParams.hybridPresenceSupport &&
+        contact.sourceType == ContactSourceType.external &&
+        presenseInfo.isNotEmpty;
+
+    final showDialogsInfo =
+        presenceParams.hybridPresenceSupport &&
+        presenceParams.blfViaSipSupport &&
+        contact.sourceType == ContactSourceType.external &&
+        dialogInfo.isNotEmpty;
+
+    final bool dialogSipSubAvaliable =
+        contact.sourceType == ContactSourceType.external &&
+        presenceParams.hybridPresenceSupport &&
+        presenceParams.blfViaSipSupport;
+
+    final bool presenceSipSubAvaliable =
+        contact.sourceType == ContactSourceType.external &&
+        presenceParams.hybridPresenceSupport &&
+        presenceParams.presenceViaSipSupport;
+
+    final bool sipSubsAvailable = dialogSipSubAvaliable || presenceSipSubAvaliable;
+
+    final bool showOptionsSection = sipSubsAvailable; // && yourNextOptionFeature
+
+    return BlocBuilder<CallBloc, CallState>(
+      buildWhen: (previous, current) => previous.activeCalls != current.activeCalls,
+      builder: (context, callState) {
+        final hasActiveCall = callState.activeCalls.isNotEmpty;
+
+        return BlocBuilder<CallRoutingCubit, CallRoutingState?>(
+          builder: (context, callRoutingState) => Scaffold(
+            appBar: AppBar(
+              actions: [
+                if (widget.enableAppBarChat && contact.canMessage)
+                  SemanticAction(
+                    label: l10n.numberActions_chat,
+                    identifier: contactChatId,
+                    child: IconButton(
+                      icon: const Icon(Icons.message),
+                      onPressed: () => _navigateToChatConversation(contact),
+                    ),
+                  ),
+              ],
+            ),
+            // Anchor of the screen: a flow can tell it is on a contact
+            // card before it touches any of the controls.
+            body: SemanticId(
+              identifier: contactScreenId,
+              child: ListView(
+                children: [
+                  Container(
+                    padding: kAllPadding16,
+                    alignment: Alignment.center,
+                    child: LeadingAvatar(
+                      username: contact.displayTitle,
+                      thumbnail: contact.thumbnail,
+                      thumbnailUrl: contact.thumbnailUrl ?? GravatarUrl.forEmail(email),
+                      radius: 50,
+                    ),
+                  ),
+                  Text(contact.displayTitle, style: themeData.textTheme.headlineMedium, textAlign: TextAlign.center),
+                  const Divider(height: 16),
+                  for (final (index, entry) in contact.displayPhoneEntries.indexed)
+                    UserSmsNumbersBuilder(
+                      builder: (context, userSmsNumbers, {required loading}) => ContactPhoneTileAdapter(
+                        number: entry.phone.number,
+                        index: index,
+                        displayLabel: entry.displayLabel,
+                        favorite: entry.displayFavorite,
+                        callNumbers: callRoutingState?.allNumbers ?? [],
+                        isSmsEnabled: canSendSmsTo(entry.phone.number, userSmsNumbers),
+                        isMessageEnabled: widget.enableTileChat && contact.canMessage,
+                        enableTileFavorite: widget.enableTileFavorite,
+                        enableTileVoiceCall: widget.enableTileVoiceCall,
+                        enableTileVideoCall: widget.enableTileVideoCall,
+                        enableTileTransfer: widget.enableTileTransfer,
+                        enableTileCallLog: widget.enableTileCallLog,
+                        hasActiveCall: hasActiveCall,
+                        isPickingDestination: purpose != null,
+                        onPickPressed: _pickCallback(purpose, entry.phone, contact),
+                        pickLabel: purpose?.pickLabel(_candidate(entry.phone, contact)),
+                        pickIcon: purpose?.pickIcon,
+                        onFavoriteChanged: (isFavorite) => _onFavoriteChanged(isFavorite, entry.phone, contact),
+                        onAudioPressed: () => _call(entry.phone.number, contact, video: false),
+                        onVideoPressed: () => _call(entry.phone.number, contact, video: true),
+                        onTransferPressed: () => _onTransferPressed(entry.phone),
+                        onSmsPressed: () => _onSendSmsPressed(entry.phone, contactSourceId, userSmsNumbers),
+                        onCallLogPressed: () => _onCallLogPressed(entry.phone.number),
+                        onMessagePressed: () => _navigateToChatConversation(contact),
+                        onCallFromPressed: (fromNumber) => _onCallFromPressed(entry.phone, contact, fromNumber),
+                      ),
+                    ),
+                  for (final (index, contactEmail) in contact.emails.indexed)
+                    ContactEmailTile(
+                      key: contactEmailTileKey,
+                      index: index,
+                      address: contactEmail.address,
+                      label: contactEmail.label,
+                      onEmailPressed: widget.enableTileEmail ? () => _onEmailPressed(contactEmail) : null,
+                    ),
+                  if (showPresenceInfo) ...[
+                    const Divider(),
+                    PresenceInfoView(presenceInfo: presenseInfo, timeFormat: appTime.hourMinuteFormat(locale)),
+                  ],
+                  if (showDialogsInfo) ...[
+                    const Divider(),
+                    DialogsInfoView(dialogInfo: dialogInfo, timeFormat: appTime.hourMinuteFormat(locale)),
+                  ],
+                  if (showOptionsSection) ...[
+                    const Divider(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Column(
+                        spacing: 12,
+                        children: [
+                          Text(
+                            l10n.contacts_ContactScreen_options,
+                            style: themeData.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          if (presenceSipSubAvaliable)
+                            ContactSipSubscriptionOption(
+                              text: l10n.contacts_ContactScreen_presenceViaSip,
+                              info: l10n.contacts_ContactScreen_presenceViaSip_tooltip,
+                              identifier: contactPresenceSubscriptionId,
+                              infoIdentifier: contactPresenceSubscriptionInfoId,
+                              subscribed: contact.hasSipSubscription(SipSubscriptionType.presence),
+                              onChanged: (subscribed) =>
+                                  _onSipSubscriptionChanged(subscribed, SipSubscriptionType.presence),
+                            ),
+                          if (dialogSipSubAvaliable)
+                            ContactSipSubscriptionOption(
+                              text: l10n.contacts_ContactScreen_dialogsViaSipBlf,
+                              info: l10n.contacts_ContactScreen_dialogsViaSipBlf_tooltip,
+                              identifier: contactDialogsSubscriptionId,
+                              infoIdentifier: contactDialogsSubscriptionInfoId,
+                              subscribed: contact.hasSipSubscription(SipSubscriptionType.blf),
+                              onChanged: (subscribed) => _onSipSubscriptionChanged(subscribed, SipSubscriptionType.blf),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _call(String number, Contact contact, {required bool video}) {
+    _callController.createCall(destination: number, displayName: contact.maybeName, video: video);
   }
 
   void _onFavoriteChanged(bool isFavorite, ContactPhone contactPhone, Contact contact) {
@@ -257,14 +283,6 @@ class _ContactScreenState extends State<ContactScreen> {
 
   void _onSipSubscriptionChanged(bool subscribed, SipSubscriptionType type) {
     context.read<ContactBloc>().add(ContactSipSubscriptionToggled(subscribed, type));
-  }
-
-  void _onAudioPressed(ContactPhone phone, Contact contact) {
-    _callController.createCall(destination: phone.number, displayName: contact.maybeName, video: false);
-  }
-
-  void _onVideoPressed(ContactPhone phone, Contact contact) {
-    _callController.createCall(destination: phone.number, displayName: contact.maybeName, video: true);
   }
 
   DestinationCandidate _candidate(ContactPhone phone, Contact contact) =>

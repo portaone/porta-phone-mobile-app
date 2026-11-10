@@ -22,6 +22,7 @@ class WatchListTile extends StatelessWidget {
     this.selected = false,
     this.outlined = false,
     this.identifier,
+    this.fitTitle = false,
     this.onTap,
   });
 
@@ -47,6 +48,11 @@ class WatchListTile extends StatelessWidget {
   final bool outlined;
 
   final String? identifier;
+
+  /// Keeps the title on one line, set smaller when it does not fit - not
+  /// below a size still read on a face, past which it wraps to two lines:
+  /// for a number or an address, which a line break would cut in the middle.
+  final bool fitTitle;
 
   /// Null shows the row disabled.
   final VoidCallback? onTap;
@@ -94,12 +100,15 @@ class WatchListTile extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-                              ),
+                              if (fitTitle)
+                                _FittedTitle(title, style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600))
+                              else
+                                Text(
+                                  title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                                ),
                               if (subtitle != null)
                                 Row(
                                   spacing: 3,
@@ -138,6 +147,42 @@ class WatchListTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A title kept on one line, set smaller to fit - down to [_minScale] of its
+/// size; a title that would need less to fit (a long address) is not shrunk
+/// past reading and wraps to two lines instead.
+class _FittedTitle extends StatelessWidget {
+  const _FittedTitle(this.title, {required this.style});
+
+  final String title;
+  final TextStyle? style;
+
+  static const _minScale = 0.7;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final painter = TextPainter(
+          text: TextSpan(text: title, style: style),
+          maxLines: 1,
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout();
+        final width = painter.width;
+        painter.dispose();
+        if (width * _minScale > constraints.maxWidth) {
+          return Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: style);
+        }
+        return FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(title, maxLines: 1, style: style),
+        );
+      },
     );
   }
 }
