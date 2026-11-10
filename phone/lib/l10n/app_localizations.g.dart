@@ -2321,6 +2321,36 @@ abstract class AppLocalizations {
   /// **'{name} deleted'**
   String favorites_SnackBar_deleted(String name);
 
+  /// On a watch, the one line of an empty favorites list.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites yet'**
+  String get favorites_Watch_empty;
+
+  /// On a watch, the short hint under the empty favorites line: how a favorite is added.
+  ///
+  /// In en, this message translates to:
+  /// **'Star a contact to add it'**
+  String get favorites_Watch_emptyHint;
+
+  /// On a watch, the line in place of the favorites a search found none of.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites found'**
+  String get favorites_Watch_notFound;
+
+  /// On a watch, what a long press on a favorite does, read by a screen reader.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get favorites_Watch_remove;
+
+  /// On a watch, the question asked before a favorite is removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites?'**
+  String get favorites_Watch_removeQuestion;
+
   /// Formats phone number based on presence of main number and extension, covering four scenarios: both, main only, extension only, and neither.
   ///
   /// In en, this message translates to:

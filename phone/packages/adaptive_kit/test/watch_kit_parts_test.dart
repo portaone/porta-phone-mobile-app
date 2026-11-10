@@ -407,6 +407,53 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('offers its long press to assistive technology under the hint it is given', (tester) async {
+      final handle = tester.ensureSemantics();
+      var taps = 0;
+      var holds = 0;
+      watchPresets.first.apply(tester);
+      await pumpCollectingOverflows(
+        tester,
+        wrap(
+          WatchListTile(
+            title: 'Jane Smith',
+            identifier: 'row',
+            onTap: () => taps++,
+            onLongPress: () => holds++,
+            longPressHint: 'Remove',
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.bySemanticsIdentifier('row')),
+        isSemantics(hasTapAction: true, hasLongPressAction: true, onLongPressHint: 'Remove'),
+      );
+      await tester.longPress(find.text('Jane Smith'));
+      expect((taps, holds), (0, 1));
+      handle.dispose();
+    });
+
+    testWidgets('a disabled row offers no long press either', (tester) async {
+      final handle = tester.ensureSemantics();
+      var holds = 0;
+      watchPresets.first.apply(tester);
+      await pumpCollectingOverflows(
+        tester,
+        wrap(
+          WatchListTile(title: 'Jane Smith', identifier: 'row', onLongPress: () => holds++, longPressHint: 'Remove'),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.bySemanticsIdentifier('row')),
+        isSemantics(hasTapAction: false, hasLongPressAction: false),
+      );
+      await tester.longPress(find.text('Jane Smith'));
+      expect(holds, 0);
+      handle.dispose();
+    });
+
     for (final preset in watchPresets) {
       testWidgets('on $preset a fitted title stays on one line, smaller, and is read whole', (tester) async {
         final handle = tester.ensureSemantics();

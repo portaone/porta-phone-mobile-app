@@ -1275,6 +1275,16 @@
       }
     }
   },
+  "favorites_Watch_empty": "Aucun favori",
+  "@favorites_Watch_empty": {},
+  "favorites_Watch_emptyHint": "Ajoutez un contact avec l'étoile",
+  "@favorites_Watch_emptyHint": {},
+  "favorites_Watch_notFound": "Aucun favori trouvé",
+  "@favorites_Watch_notFound": {},
+  "favorites_Watch_remove": "Retirer des favoris",
+  "@favorites_Watch_remove": {},
+  "favorites_Watch_removeQuestion": "Retirer des favoris ?",
+  "@favorites_Watch_removeQuestion": {},
   "formatPhone": "{style, select, full{{main} (poste : {ext})} simple{{main}} only_ext{poste : {ext}} empty{Aucun numéro de téléphone} other{{main}}}",
   "@formatPhone": {
     "description": "Formats phone number based on presence of main number and extension, covering four scenarios: both, main only, extension only, and neither.",

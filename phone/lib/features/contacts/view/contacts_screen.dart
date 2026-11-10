@@ -100,9 +100,18 @@ class _ContactsScreenState extends State<ContactsScreen> with SingleTickerProvid
     return ContactsWatchSources(
       style: effectiveStyle,
       title: widget.watchTitle,
-      sources: sources,
-      onSelected: (sourceType) => _tabController.index = sources.indexOf(sourceType),
-      bookBuilder: widget.sourceTypeWidgetBuilder,
+      selections: [for (final sourceType in sources) ContactsSourceSelection(sourceType)],
+      shown: (state) => switch (sources.shown(state.sourceType)) {
+        final sourceType? => ContactsSourceSelection(sourceType),
+        null => null,
+      },
+      // Only books are offered here.
+      onSelected: (selection) =>
+          _tabController.index = sources.indexOf((selection as ContactsSourceSelection).sourceType),
+      listBuilder: (context, selection) => switch (selection) {
+        ContactsSourceSelection(:final sourceType) => widget.sourceTypeWidgetBuilder(context, sourceType),
+        ContactsFavoritesSelection() => const SizedBox.shrink(),
+      },
     );
   }
 

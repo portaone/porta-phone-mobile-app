@@ -45,6 +45,8 @@ class FavoritesList extends StatefulWidget {
     this.onReorderStart,
     this.onReorderEnd,
     this.topPadding,
+    this.watchTitle,
+    this.watchBody,
   });
 
   final bool transferEnabled;
@@ -68,6 +70,14 @@ class FavoritesList extends StatefulWidget {
   /// hard-coded zero here slid under the bar of any screen but the one it was
   /// written for.
   final double? topPadding;
+
+  /// What heads the list on a watch, where it draws the whole face: the
+  /// section's name, the favourites' own when null.
+  final String? watchTitle;
+
+  /// Draws the list on a watch where the screen heads it its own way - the
+  /// contacts section's chip and search; [FavoritesWatchBody] when null.
+  final FavoritesWatchBodyBuilder? watchBody;
 
   @override
   State<FavoritesList> createState() => _FavoritesListState();
@@ -122,6 +132,22 @@ class _FavoritesListState extends State<FavoritesList> {
     }
   }
 
+  /// On a watch a favourite goes after a question of its own: the phone asks
+  /// on the swipe, and a watch has no swipe to ask on.
+  Future<void> confirmDelete({required FavoriteWithContact item}) async {
+    final number = item.favorite.number;
+    final name = item.contact?.maybeName;
+    final confirmed = await ConfirmDialog.showDangerous(
+      context,
+      title: context.l10n.favorites_Watch_removeQuestion,
+      content: name == null || name == number ? number : '$name, $number',
+    );
+    if (confirmed != true || !mounted) return;
+    // No snack bar: the row going is the answer, and a bar at the foot of a
+    // round face is cut off.
+    context.read<FavoritesBloc>().add(FavoritesRemoved(favorite: item.favorite));
+  }
+
   void delete({required Favorite favorite}) {
     context.showSnackBar(context.l10n.favorites_SnackBar_deleted(favorite.number));
     context.read<FavoritesBloc>().add(FavoritesRemoved(favorite: favorite));
@@ -140,6 +166,34 @@ class _FavoritesListState extends State<FavoritesList> {
 
   @override
   Widget build(BuildContext context) {
+    return AdaptiveLayout(handset: _handset, watch: _watch);
+  }
+
+  Widget _watch(BuildContext context) {
+    return BlocBuilder<FavoritesBloc, FavoritesState>(
+      builder: (context, state) {
+        Widget tile(FavoriteWithContact item, int index) {
+          final favorite = item.favorite;
+          return FavoritesWatchTile(
+            key: ValueKey('${favorite.number}_${favorite.sourceType.name}_$index'),
+            item: item,
+            onOpen: () => openCallLog(number: favorite.number),
+            onRemove: () => confirmDelete(item: item),
+          );
+        }
+
+        final watchBody = widget.watchBody;
+        if (watchBody != null) return watchBody(context, state.favorites, tile);
+        return FavoritesWatchBody(
+          title: widget.watchTitle ?? context.l10n.main_BottomNavigationBarItemLabel_favorites,
+          favorites: state.favorites,
+          tileBuilder: tile,
+        );
+      },
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     return BlocBuilder<FavoritesBloc, FavoritesState>(
       builder: (context, state) {
         final favorites = state.favorites;

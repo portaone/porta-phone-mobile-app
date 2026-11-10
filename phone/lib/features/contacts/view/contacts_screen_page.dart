@@ -102,6 +102,7 @@ Widget contactsFavoritesWidgetBuilder(
   bool reorderMode = false,
   void Function(int index)? onReorderStart,
   void Function(int index)? onReorderEnd,
+  FavoritesWatchBodyBuilder? watchBody,
 }) {
   final featureAccess = context.read<FeatureAccess>();
   final cdrsEnabled = featureAccess.bottomMenuConfig.getTabEnabled<RecentsBottomMenuTab>()?.supportsCallHistory;
@@ -110,6 +111,7 @@ Widget contactsFavoritesWidgetBuilder(
     reorderMode: reorderMode,
     onReorderStart: onReorderStart,
     onReorderEnd: onReorderEnd,
+    watchBody: watchBody,
     transferEnabled: featureAccess.callConfig.capabilities.isBlindTransferEnabled,
     videoEnabled: featureAccess.callConfig.capabilities.isVideoCallEnabled,
     chatsEnabled: featureAccess.messagingConfig.chatsPresent,

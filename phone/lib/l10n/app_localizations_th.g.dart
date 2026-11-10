@@ -1269,6 +1269,21 @@ class AppLocalizationsTh extends AppLocalizations {
   }
 
   @override
+  String get favorites_Watch_empty => 'ยังไม่มีรายการโปรด';
+
+  @override
+  String get favorites_Watch_emptyHint => 'แตะดาวที่รายชื่อเพื่อเพิ่ม';
+
+  @override
+  String get favorites_Watch_notFound => 'ไม่พบรายการโปรด';
+
+  @override
+  String get favorites_Watch_remove => 'นำออกจากรายการโปรด';
+
+  @override
+  String get favorites_Watch_removeQuestion => 'นำออกจากรายการโปรดหรือไม่';
+
+  @override
   String formatPhone(String style, String main, String ext) {
     String _temp0 = intl.Intl.selectLogic(style, {
       'full': '$main (ต่อ: $ext)',

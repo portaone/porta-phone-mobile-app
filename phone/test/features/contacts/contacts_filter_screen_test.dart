@@ -153,6 +153,7 @@ void main() {
                     bool reorderMode = false,
                     void Function(int index)? onReorderStart,
                     void Function(int index)? onReorderEnd,
+                    FavoritesWatchBodyBuilder? watchBody,
                   }) => Text(reorderMode ? 'favorites rearranging' : 'favorites'),
                 ),
               ),

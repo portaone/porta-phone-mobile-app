@@ -11,6 +11,7 @@ class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({
     super.key,
     this.title,
+    required this.watchTitle,
     required this.transferEnabled,
     required this.videoEnabled,
     required this.chatsEnabled,
@@ -20,6 +21,10 @@ class FavoritesScreen extends StatefulWidget {
   });
 
   final Widget? title;
+
+  /// The section's name, heading the list on a watch.
+  final String watchTitle;
+
   final bool transferEnabled;
   final bool videoEnabled;
   final bool chatsEnabled;
@@ -40,10 +45,33 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     super.dispose();
   }
 
+  FavoritesScreenStyle? _style(BuildContext context) =>
+      widget.style ?? Theme.of(context).extension<FavoritesScreenStyles>()?.primary;
+
   @override
   Widget build(BuildContext context) {
-    final themeData = Theme.of(context);
-    final effectiveStyle = widget.style ?? themeData.extension<FavoritesScreenStyles>()?.primary;
+    return AdaptiveLayout(handset: _handset, watch: _watch);
+  }
+
+  /// No app bar and no reorder button: the list draws the whole face.
+  Widget _watch(BuildContext context) {
+    final effectiveStyle = _style(context);
+    return ThemedScaffold(
+      background: effectiveStyle?.background,
+      contentThemeOverride: effectiveStyle?.contentThemeOverride ?? ThemeMode.system,
+      body: FavoritesList(
+        watchTitle: widget.watchTitle,
+        transferEnabled: widget.transferEnabled,
+        videoEnabled: widget.videoEnabled,
+        chatsEnabled: widget.chatsEnabled,
+        smssEnabled: widget.smssEnabled,
+        cdrsEnabled: widget.cdrsEnabled,
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
+    final effectiveStyle = _style(context);
     final mediaQueryData = MediaQuery.of(context);
     final topPadding = kToolbarHeight + mediaQueryData.padding.top;
 

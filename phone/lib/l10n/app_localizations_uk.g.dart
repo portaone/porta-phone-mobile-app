@@ -1307,6 +1307,21 @@ class AppLocalizationsUk extends AppLocalizations {
   }
 
   @override
+  String get favorites_Watch_empty => 'Обраних ще немає';
+
+  @override
+  String get favorites_Watch_emptyHint => 'Позначте контакт зірочкою';
+
+  @override
+  String get favorites_Watch_notFound => 'Обраних не знайдено';
+
+  @override
+  String get favorites_Watch_remove => 'Видалити з обраних';
+
+  @override
+  String get favorites_Watch_removeQuestion => 'Видалити з обраних?';
+
+  @override
   String formatPhone(String style, String main, String ext) {
     String _temp0 = intl.Intl.selectLogic(style, {
       'full': '$main (розш: $ext)',
