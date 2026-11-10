@@ -139,6 +139,7 @@ void main() {
                 ],
                 child: ContactsFilterScreen(
                   selections: selections,
+                  watchTitle: 'Contacts',
                   sourceTypeWidgetBuilder: (context, sourceType, {bool markFavorites = false}) => Builder(
                     builder: (context) {
                       final inset = MediaQuery.of(context).padding;

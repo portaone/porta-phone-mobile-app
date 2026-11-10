@@ -7,6 +7,7 @@ import 'package:webtrit_phone/app/router/app_router.dart';
 import 'package:webtrit_phone/environment_config.dart';
 import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/features.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
 import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/repositories/repositories.dart';
 
@@ -48,6 +49,11 @@ class ContactsFilterScreenPage extends StatelessWidget {
       ],
       child: ContactsFilterScreen(
         title: Text(EnvironmentConfig.APP_NAME),
+        // On a watch the list is headed by the section's own name, as the hub
+        // shows it.
+        watchTitle: context.watchSectionTitle<ContactsBottomMenuTab>(
+          fallback: context.l10n.main_BottomNavigationBarItemLabel_contacts,
+        ),
         selections: selections,
         sourceTypeWidgetBuilder: contactSourceTypeWidgetBuilder,
         favoritesWidgetBuilder: contactsFavoritesWidgetBuilder,

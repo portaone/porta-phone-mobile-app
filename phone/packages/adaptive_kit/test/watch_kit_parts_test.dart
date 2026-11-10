@@ -8,6 +8,71 @@ import 'helpers/screen_presets.dart';
 void main() {
   Widget wrap(Widget body) => MaterialApp(home: Scaffold(body: body));
 
+  group('WatchPillButton', () {
+    for (final preset in watchPresets) {
+      testWidgets('on $preset it is one button by its name, its label set smaller to fit half a row', (tester) async {
+        final handle = tester.ensureSemantics();
+        preset.apply(tester);
+        var taps = 0;
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap(
+              Center(
+                child: SizedBox(
+                  width: 90,
+                  child: WatchPillButton(
+                    icon: Icons.cloud_outlined,
+                    label: 'A long book name',
+                    semanticsLabel: 'Source: A long book name',
+                    identifier: 'pill',
+                    onPressed: () => taps++,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          isEmpty,
+        );
+
+        expect(
+          tester.getSemantics(find.bySemanticsIdentifier('pill')).getSemanticsData().label,
+          'Source: A long book name',
+        );
+        expect(find.byType(FittedBox), findsOneWidget);
+        final small = tester.view.physicalSize.shortestSide / tester.view.devicePixelRatio < 200;
+        expect(find.byIcon(Icons.cloud_outlined), small ? findsNothing : findsOneWidget);
+        await tester.tap(find.byType(WatchPillButton));
+        expect(taps, 1);
+        handle.dispose();
+      });
+    }
+  });
+
+  group('WatchListNote', () {
+    testWidgets('is a centred line read out when it appears', (tester) async {
+      final handle = tester.ensureSemantics();
+      watchPresets.first.apply(tester);
+      await tester.pumpWidget(wrap(const WatchListNote('No calls')));
+
+      expect(tester.widget<Text>(find.text('No calls')).textAlign, TextAlign.center);
+      expect(tester.getSemantics(find.text('No calls')).flagsCollection.isLiveRegion, isTrue);
+      handle.dispose();
+    });
+  });
+
+  group('WatchSpinner', () {
+    testWidgets('is the one spinner size, named by the label it is given', (tester) async {
+      final handle = tester.ensureSemantics();
+      watchPresets.first.apply(tester);
+      await tester.pumpWidget(wrap(const Center(child: WatchSpinner(label: 'Loading'))));
+
+      expect(tester.getSize(find.byType(WatchSpinner)), const Size.square(WatchSpinner.size));
+      expect(find.bySemanticsLabel('Loading'), findsOneWidget);
+      handle.dispose();
+    });
+  });
+
   group('WatchRoundButton', () {
     testWidgets('is one button named by its label, the caption for the eye', (tester) async {
       final handle = tester.ensureSemantics();
@@ -197,6 +262,223 @@ void main() {
       final b = tester.getRect(find.byKey(const Key('b')));
       expect(b.top - a.bottom, 6);
       expect(find.ancestor(of: find.byType(ListView), matching: find.byType(Material)), findsWidgets);
+    });
+  });
+
+  group('WatchScrollList.builder', () {
+    for (final preset in watchPresets) {
+      testWidgets('on $preset the title, the header, then rows built only as they come into view', (tester) async {
+        preset.apply(tester);
+        final built = <int>{};
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap(
+              WatchScrollList.builder(
+                title: 'Recents',
+                header: const [SizedBox(key: Key('chip'), height: 40)],
+                spacing: 4,
+                controller: controller,
+                itemCount: 500,
+                itemBuilder: (context, index) {
+                  built.add(index);
+                  return SizedBox(key: Key('row $index'), height: 48);
+                },
+              ),
+            ),
+          ),
+          isEmpty,
+        );
+
+        final title = tester.getRect(find.widgetWithText(WatchTitle, 'Recents'));
+        final chip = tester.getRect(find.byKey(const Key('chip')));
+        final first = tester.getRect(find.byKey(const Key('row 0')));
+        final second = tester.getRect(find.byKey(const Key('row 1')));
+        expect(title.bottom, lessThanOrEqualTo(chip.top));
+        expect(chip.bottom, lessThanOrEqualTo(first.top));
+        expect(second.top - first.bottom, 4);
+        expect(built.length, lessThan(30), reason: 'every row was built up front');
+
+        // The end of a lazy list is an estimate until it has been reached.
+        for (var i = 0; i < 5; i++) {
+          controller.jumpTo(controller.position.maxScrollExtent);
+          await tester.pump();
+        }
+        expect(find.byKey(const Key('row 499')), findsOneWidget);
+      });
+
+      testWidgets('on $preset with an edge the button sits on the bottom and the last row scrolls clear of it', (
+        tester,
+      ) async {
+        preset.apply(tester);
+        var pressed = 0;
+        final controller = ScrollController();
+        addTearDown(controller.dispose);
+
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap(
+              WatchScrollList.builder(
+                title: 'Jane Smith',
+                controller: controller,
+                itemCount: 40,
+                itemBuilder: (context, index) => SizedBox(key: Key('row $index'), height: 24),
+                edge: (context, overlay) => TextButton(
+                  key: const Key('edge'),
+                  style: overlay,
+                  onPressed: () => pressed++,
+                  child: const Text('Call'),
+                ),
+              ),
+            ),
+          ),
+          isEmpty,
+        );
+
+        final face = tester.getRect(find.byType(WatchScrollList));
+        final edge = tester.getRect(find.byKey(const Key('edge')));
+        expect(edge.bottom, lessThanOrEqualTo(face.bottom));
+        expect(edge.top, greaterThan(face.center.dy));
+        await tester.tap(find.byKey(const Key('edge')));
+        expect(pressed, 1);
+
+        for (var i = 0; i < 5; i++) {
+          controller.jumpTo(controller.position.maxScrollExtent);
+          await tester.pump();
+        }
+        final last = tester.getRect(find.byKey(const Key('row 39')));
+        expect(last.bottom, lessThanOrEqualTo(edge.top));
+      });
+    }
+  });
+
+  group('WatchSeparator', () {
+    for (final preset in watchPresets) {
+      testWidgets('on $preset it is a short bar in the middle, not read out', (tester) async {
+        final handle = tester.ensureSemantics();
+        preset.apply(tester);
+        expect(await pumpCollectingOverflows(tester, wrap(const Column(children: [WatchSeparator()]))), isEmpty);
+
+        final bar = tester.getRect(find.descendant(of: find.byType(WatchSeparator), matching: find.byType(Container)));
+        final width = tester.view.physicalSize.width / tester.view.devicePixelRatio;
+        expect(bar.width, WatchSeparator.width);
+        expect(bar.height, WatchSeparator.thickness);
+        expect(bar.center.dx, moreOrLessEquals(width / 2, epsilon: 0.5));
+        expect(tester.getSemantics(find.byType(WatchSeparator)).label, isEmpty);
+        handle.dispose();
+      });
+    }
+  });
+
+  group('WatchListTile', () {
+    testWidgets('is one button named by its title and subtitle, not by what sits beside them', (tester) async {
+      final handle = tester.ensureSemantics();
+      var taps = 0;
+      watchPresets.first.apply(tester);
+      await pumpCollectingOverflows(
+        tester,
+        wrap(
+          WatchListTile(
+            title: 'Jane Smith',
+            subtitle: 'Missed, 12:02',
+            leading: const CircleAvatar(child: Text('JS')),
+            subtitleIcon: const Icon(Icons.call_missed, key: Key('direction'), semanticLabel: 'missed'),
+            trailing: const Icon(Icons.chevron_right, semanticLabel: 'more'),
+            identifier: 'row',
+            onTap: () => taps++,
+          ),
+        ),
+      );
+
+      final row = find.bySemanticsIdentifier('row');
+      expect(tester.getSemantics(row).getSemanticsData().label, 'Jane Smith, Missed, 12:02');
+      expect(find.bySemanticsLabel(RegExp('JS|missed|more')), findsNothing);
+      // The mark sits before the subtitle, on its line.
+      final mark = tester.getRect(find.byKey(const Key('direction')));
+      final subtitle = tester.getRect(find.text('Missed, 12:02'));
+      expect(mark.right, lessThanOrEqualTo(subtitle.left));
+      expect((mark.center.dy - subtitle.center.dy).abs(), lessThan(2));
+      await tester.tap(find.text('Jane Smith'));
+      expect(taps, 1);
+      handle.dispose();
+    });
+
+    for (final preset in watchPresets) {
+      testWidgets('on $preset a fitted title stays on one line, smaller, and is read whole', (tester) async {
+        final handle = tester.ensureSemantics();
+        preset.apply(tester);
+        // The test font draws every glyph as a square, far wider than the
+        // app's: eight of them need a little shrinking here, as a full
+        // number does in the app.
+        const number = '+3804412';
+        expect(
+          await pumpCollectingOverflows(
+            tester,
+            wrap(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: WatchListTile(
+                  title: number,
+                  subtitle: 'mobile',
+                  fitTitle: true,
+                  identifier: 'row',
+                  onTap: () {},
+                ),
+              ),
+            ),
+          ),
+          isEmpty,
+        );
+
+        final text = tester.getRect(find.text(number));
+        final row = tester.getRect(find.byType(WatchListTile));
+        expect(text.right, lessThanOrEqualTo(row.right));
+        expect(text.height, lessThan(30), reason: 'one line');
+        expect(find.byType(FittedBox), findsOneWidget);
+        expect(tester.getSemantics(find.bySemanticsIdentifier('row')).getSemanticsData().label, '$number, mobile');
+        handle.dispose();
+      });
+
+      testWidgets('on $preset a fitted title too long to read when shrunk wraps to two lines instead', (tester) async {
+        preset.apply(tester);
+        const address = 'a.very.long.address.of.somebody@department.example.com';
+        expect(
+          await pumpCollectingOverflows(tester, wrap(WatchListTile(title: address, fitTitle: true, onTap: () {}))),
+          isEmpty,
+        );
+
+        expect(find.byType(FittedBox), findsNothing);
+        final text = tester.widget<Text>(find.text(address));
+        expect(text.maxLines, 2);
+        expect(text.overflow, TextOverflow.ellipsis);
+      });
+    }
+
+    testWidgets('a name of its own replaces the title and subtitle for assistive technology', (tester) async {
+      final handle = tester.ensureSemantics();
+      watchPresets.first.apply(tester);
+      await pumpCollectingOverflows(
+        tester,
+        wrap(
+          WatchListTile(
+            title: 'Jane Smith',
+            subtitle: '12:02',
+            semanticsLabel: 'Jane Smith, Missed, 12:02',
+            identifier: 'row',
+            onTap: () {},
+          ),
+        ),
+      );
+
+      expect(
+        tester.getSemantics(find.bySemanticsIdentifier('row')).getSemanticsData().label,
+        'Jane Smith, Missed, 12:02',
+      );
+      handle.dispose();
     });
   });
 }

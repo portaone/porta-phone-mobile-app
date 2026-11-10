@@ -265,6 +265,12 @@ const String contactPhoneMenuId = 'contactPhoneMenu';
 const String contactPhoneTransferId = 'contactPhoneTransfer';
 const String contactPhoneVideoCallId = 'contactPhoneVideoCall';
 const String contactPhoneVoiceCallId = 'contactPhoneVoiceCall';
+
+/// The call to a contact's main number along the bottom of its page on a
+/// watch, and the row there that opens that number's call history.
+const String contactWatchCallId = 'contactWatchCall';
+const contactWatchCallKey = Key(contactWatchCallId);
+const String contactWatchCallLogId = 'contactWatchCallLog';
 const String contactPresenceSubscriptionId = 'contactPresenceSubscription';
 const String contactPresenceSubscriptionInfoId = 'contactPresenceSubscriptionInfo';
 const String conversationsNewId = 'conversationsNew';
@@ -391,6 +397,15 @@ const contactsSourcePickerKey = Key(contactsSourcePickerId);
 const String contactsSearchOpenId = 'contactsSearchOpen';
 const contactsSearchOpenKey = Key(contactsSearchOpenId);
 
+/// The one address book chip of a contacts list on a watch, in place of the
+/// tabs: a tap shows the next book.
+const String contactsWatchSourceId = 'contactsWatchSource';
+const contactsWatchSourceKey = Key(contactsWatchSourceId);
+
+/// The edge button of a cloud address book on a watch that came back empty
+/// or failed, in place of the phone's pull to refresh.
+const String contactsWatchRefreshId = 'contactsWatchRefresh';
+
 const String contactsSearchInputId = 'contactsSearchInput';
 const contactsSearchInputKey = Key(contactsSearchInputId);
 const String contactsSearchInputClearId = 'contactsSearchInputClear';
@@ -412,6 +427,23 @@ const String recentsTabIncomingId = 'recentsTabIncoming';
 const recentsTabIncomingKey = Key(recentsTabIncomingId);
 const String recentsTabOutgoingId = 'recentsTabOutgoing';
 const recentsTabOutgoingKey = Key(recentsTabOutgoingId);
+
+/// The one filter chip of a recents list on a watch, in place of the tabs: a
+/// tap moves to the next filter.
+const String recentsWatchFilterId = 'recentsWatchFilter';
+const recentsWatchFilterKey = Key(recentsWatchFilterId);
+
+/// The edge button of an empty call history on a watch, in place of the
+/// phone's pull to refresh.
+const String recentsWatchRefreshId = 'recentsWatchRefresh';
+
+/// The call along the bottom of the calls with one number on a watch.
+const String callLogWatchCallId = 'callLogWatchCall';
+const callLogWatchCallKey = Key(callLogWatchCallId);
+
+/// The video call under the name on the calls with one number on a watch.
+const String callLogWatchVideoCallId = 'callLogWatchVideoCall';
+const callLogWatchVideoCallKey = Key(callLogWatchVideoCallId);
 
 /// The button that opens the recents actions, and the entry of that menu that
 /// clears the whole list. One id each for both recents screens, for the same

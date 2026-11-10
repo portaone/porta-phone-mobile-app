@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:material_ui/material_ui.dart';
 
 import 'package:adaptive_kit/adaptive_kit.dart';
@@ -59,16 +61,89 @@ class ConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = this.content;
     final localStyle = ConfirmDialogStyle.merge(style, Theme.of(context).extension<ConfirmDialogStyles>()?.primary);
 
+    return AdaptiveLayout(
+      handset: (context) => _ConfirmCard(title: title, content: content, dangerous: dangerous, style: localStyle),
+      watch: (context) => _ConfirmFace(title: title, content: content, dangerous: dangerous, style: localStyle),
+    );
+  }
+}
+
+/// A watch has no room around a card: the question takes the whole face,
+/// answered by two round buttons.
+class _ConfirmFace extends StatelessWidget {
+  const _ConfirmFace({required this.title, required this.content, required this.dangerous, required this.style});
+
+  final String title;
+  final String? content;
+  final bool dangerous;
+  final ConfirmDialogStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final themeData = Theme.of(context);
+    final dialogTheme = DialogTheme.of(context);
+    final apple = switch (themeData.platform) {
+      TargetPlatform.iOS || TargetPlatform.macOS => true,
+      _ => false,
+    };
+
+    // Named as an alert the way AlertDialog names itself, so a screen reader
+    // announces the face as one when it opens; on Apple platforms, as there,
+    // the question names it.
+    return Semantics(
+      scopesRoute: true,
+      namesRoute: true,
+      explicitChildNodes: true,
+      label: apple ? null : MaterialLocalizations.of(context).alertDialogLabel,
+      child: Dialog.fullscreen(
+        // The face shows the dialog's own surface and text colours, so a theme
+        // that colours the dialog colours it on a watch too; without one it is
+        // the screen's.
+        backgroundColor: style.backgroundColor ?? dialogTheme.backgroundColor ?? themeData.scaffoldBackgroundColor,
+        semanticsRole: SemanticsRole.alertDialog,
+        child: WatchConfirm(
+          question: title,
+          detail: content,
+          destructive: dangerous,
+          confirmColor: (dangerous ? style.activeButtonStyle2 : style.defaultButtonStyle)?.foregroundColor?.resolve(
+            const {},
+          ),
+          questionColor: (style.titleTextStyle ?? dialogTheme.titleTextStyle)?.color,
+          detailColor: (style.contentTextStyle ?? dialogTheme.contentTextStyle)?.color,
+          cancelLabel: context.l10n.alertDialogActions_no,
+          confirmLabel: context.l10n.alertDialogActions_yes,
+          cancelIdentifier: confirmDialogNoButtonId,
+          confirmIdentifier: confirmDialogYesButtonId,
+          cancelKey: confirmDialogNoButtonKey,
+          confirmKey: confirmDialogYesButtonKey,
+          onCancel: () => Navigator.of(context).pop(false),
+          onConfirm: () => Navigator.of(context).pop(true),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConfirmCard extends StatelessWidget {
+  const _ConfirmCard({required this.title, required this.content, required this.dangerous, required this.style});
+
+  final String title;
+  final String? content;
+  final bool dangerous;
+  final ConfirmDialogStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = this.content;
     return AlertDialog(
-      backgroundColor: localStyle.backgroundColor,
-      surfaceTintColor: localStyle.surfaceTintColor,
-      elevation: localStyle.elevation,
-      shape: localStyle.shape,
-      titleTextStyle: localStyle.titleTextStyle,
-      contentTextStyle: localStyle.contentTextStyle,
+      backgroundColor: style.backgroundColor,
+      surfaceTintColor: style.surfaceTintColor,
+      elevation: style.elevation,
+      shape: style.shape,
+      titleTextStyle: style.titleTextStyle,
+      contentTextStyle: style.contentTextStyle,
       title: Text(title),
       content: content == null ? null : Text(content),
       actions: [
@@ -77,7 +152,7 @@ class ConfirmDialog extends StatelessWidget {
           child: TextButton(
             key: confirmDialogNoButtonKey,
             onPressed: () => Navigator.of(context).pop(false),
-            style: localStyle.activeButtonStyle1,
+            style: style.activeButtonStyle1,
             child: Text(context.l10n.alertDialogActions_no),
           ),
         ),
@@ -86,7 +161,7 @@ class ConfirmDialog extends StatelessWidget {
           child: TextButton(
             key: confirmDialogYesButtonKey,
             onPressed: () => Navigator.of(context).pop(true),
-            style: dangerous ? localStyle.activeButtonStyle2 : localStyle.defaultButtonStyle,
+            style: dangerous ? style.activeButtonStyle2 : style.defaultButtonStyle,
             child: Text(context.l10n.alertDialogActions_yes),
           ),
         ),

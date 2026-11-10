@@ -33,7 +33,9 @@ class WatchAction {
 
   final Key? buttonKey;
 
-  Widget _build(ButtonStyle overlay) {
+  /// The edge button of this action: its button over [overlay], the edge
+  /// button's size and shape, merged over [style].
+  Widget buildButton(ButtonStyle overlay) {
     final button = OutlinedButton(
       key: buttonKey,
       onPressed: onPressed,
@@ -132,7 +134,7 @@ class WatchActionLayout extends StatelessWidget {
           ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: WatchEdgeButton(builder: (context, overlay) => action?._build(overlay) ?? primary!(overlay)),
+            child: WatchEdgeButton(builder: (context, overlay) => action?.buildButton(overlay) ?? primary!(overlay)),
           ),
         ],
       ),

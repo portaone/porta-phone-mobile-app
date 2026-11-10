@@ -21,6 +21,7 @@ class ContactsScreen extends StatefulWidget {
     required this.sourceTypes,
     required this.sourceTypeWidgetBuilder,
     this.title,
+    required this.watchTitle,
     this.style,
   });
 
@@ -28,6 +29,10 @@ class ContactsScreen extends StatefulWidget {
   final ContactSourceTypeWidgetBuilder sourceTypeWidgetBuilder;
 
   final Widget? title;
+
+  /// The section's name over the list on a watch, as the hub shows it.
+  final String watchTitle;
+
   final ContactsScreenStyle? style;
 
   @override
@@ -80,8 +85,28 @@ class _ContactsScreenState extends State<ContactsScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    final themeData = Theme.of(context);
-    final effectiveStyle = widget.style ?? themeData.extension<ContactsScreenStyles>()?.primary;
+    final effectiveStyle = widget.style ?? Theme.of(context).extension<ContactsScreenStyles>()?.primary;
+    return AdaptiveLayout(
+      handset: (context) => _handset(context, effectiveStyle),
+      watch: (context) => _watch(effectiveStyle),
+    );
+  }
+
+  /// One address book on the face at a time, a chip in place of the tabs;
+  /// the chip moves the tab controller, so both arrangements remember the
+  /// same book.
+  Widget _watch(ContactsScreenStyle? effectiveStyle) {
+    final sources = widget.sourceTypes;
+    return ContactsWatchSources(
+      style: effectiveStyle,
+      title: widget.watchTitle,
+      sources: sources,
+      onSelected: (sourceType) => _tabController.index = sources.indexOf(sourceType),
+      bookBuilder: widget.sourceTypeWidgetBuilder,
+    );
+  }
+
+  Widget _handset(BuildContext context, ContactsScreenStyle? effectiveStyle) {
     final mediaQueryData = MediaQuery.of(context);
 
     final tabBar = widget.sourceTypes.length <= 1

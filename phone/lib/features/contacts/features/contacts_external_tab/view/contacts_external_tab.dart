@@ -43,6 +43,43 @@ class _ContactsExternalTabState extends State<ContactsExternalTab> {
 
   @override
   Widget build(BuildContext context) {
+    return AdaptiveLayout(handset: _handset, watch: _watch);
+  }
+
+  /// The phone's placeholders become the face's state pages; a failed fetch
+  /// gets Refresh on the edge, where the phone has the pull.
+  Widget _watch(BuildContext context) {
+    final l10n = context.l10n;
+    return BlocBuilder<ContactsExternalTabBloc, ContactsExternalTabState>(
+      builder: (context, state) {
+        final refresh = WatchAction(
+          label: l10n.contacts_ExternalTabButton_refresh,
+          identifier: contactsWatchRefreshId,
+          onPressed: _refreshContacts,
+        );
+        return ContactsWatchBody(
+          loading:
+              state.contacts.isEmpty &&
+              (state.status == ContactsExternalTabStatus.initial ||
+                  state.status == ContactsExternalTabStatus.inProgress),
+          contacts: state.contacts,
+          searching: state.searching,
+          empty: switch (state.status) {
+            ContactsExternalTabStatus.failure => ContactsWatchEmpty(
+              message: l10n.contacts_ExternalTabText_failure,
+              icon: Icons.error_outline,
+              action: refresh,
+            ),
+            _ when state.searching => ContactsWatchEmpty(message: l10n.contacts_ExternalTabText_emptyOnSearching),
+            _ => ContactsWatchEmpty(message: l10n.contacts_ExternalTabText_empty, action: refresh),
+          },
+          tileKey: contactsExtContactTileKey,
+        );
+      },
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     return BlocBuilder<ContactsExternalTabBloc, ContactsExternalTabState>(
       builder: (context, state) {
         final contacts = state.contacts;

@@ -18,7 +18,7 @@ class RecentsState with _$RecentsState {
       final callLogEntry = recent.callLogEntry;
 
       if (filter == RecentsVisibilityFilter.missed) {
-        return !callLogEntry.isComplete && callLogEntry.direction == CallDirection.incoming;
+        return callLogEntry.isMissedIncoming;
       } else if (filter == RecentsVisibilityFilter.incoming) {
         return callLogEntry.direction == CallDirection.incoming;
       } else if (filter == RecentsVisibilityFilter.outgoing) {

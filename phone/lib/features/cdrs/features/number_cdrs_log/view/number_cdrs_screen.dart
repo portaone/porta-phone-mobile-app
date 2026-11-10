@@ -7,7 +7,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:webtrit_phone/app/constants.dart';
 import 'package:webtrit_phone/data/data.dart';
+import 'package:webtrit_phone/extensions/extensions.dart';
 import 'package:webtrit_phone/features/features.dart';
+import 'package:webtrit_phone/l10n/l10n.dart';
+import 'package:webtrit_phone/models/models.dart';
 import 'package:webtrit_phone/theme/extension/outlined_button_styles.dart';
 import 'package:webtrit_phone/utils/gravatar.dart';
 import 'package:webtrit_phone/widgets/widgets.dart';
@@ -64,6 +67,54 @@ class _NumberCdrsScreenState extends State<NumberCdrsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return AdaptiveLayout(handset: _handset, watch: _watch);
+  }
+
+  Widget _watch(BuildContext context) {
+    final number = cubit.number;
+    final timeOrDateFormat = context.read<AppTime>().timeOrDateFormat(Localizations.localeOf(context));
+    return ThemedScaffold(
+      background: Theme.of(context).extension<NumberCdrsScreenStyles>()?.primary?.background,
+      body: ContactInfoBuilder(
+        source: ContactSourcePhone(number),
+        builder: (context, contact) {
+          final name = contact?.maybeName;
+          return BlocBuilder<NumberCdrsLogCubit, CdrsListState>(
+            builder: (context, state) {
+              final records = state.records;
+              return CallLogWatchPage(
+                title: contact?.displayTitle ?? number,
+                number: number,
+                loading: state.isLoading,
+                controller: scrollController,
+                // One more for the history fetch's spinner, as on the phone;
+                // it stays while an empty list walks the history further back.
+                itemCount: records.isEmpty && !state.fetchingHistory ? 0 : records.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == records.length) return HistoryFetchIndicator(state.fetchingHistory);
+                  final cdr = records[index];
+                  return CallLogWatchRow(
+                    key: Key(cdr.callId),
+                    direction: cdr.direction,
+                    complete: cdr.status == CdrStatus.accepted,
+                    missed: cdr.isMissedIncoming,
+                    status: cdr.isMissedIncoming
+                        ? context.l10n.recents_HistoryTile_missedCallText
+                        : cdr.duration.format(),
+                    time: timeOrDateFormat.format(cdr.connectTime),
+                  );
+                },
+                onCall: () => _initiateCall(context, number, name, false),
+                onVideoCall: widget.videoVisible ? () => _initiateCall(context, number, name, true) : null,
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final appTime = context.read<AppTime>();
     final locale = Localizations.localeOf(context);
     final timeFormat = appTime.hourMinuteFormat(locale);

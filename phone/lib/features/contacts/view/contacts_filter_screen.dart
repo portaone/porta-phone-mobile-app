@@ -26,6 +26,7 @@ class ContactsFilterScreen extends StatefulWidget {
     required this.sourceTypeWidgetBuilder,
     required this.favoritesWidgetBuilder,
     this.title,
+    required this.watchTitle,
     this.style,
   });
 
@@ -46,6 +47,10 @@ class ContactsFilterScreen extends StatefulWidget {
   favoritesWidgetBuilder;
 
   final Widget? title;
+
+  /// The section's name over the list on a watch, as the hub shows it.
+  final String watchTitle;
+
   final ContactsScreenStyle? style;
 
   @override
@@ -81,6 +86,27 @@ class _ContactsFilterScreenState extends State<ContactsFilterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return AdaptiveLayout(handset: _handset, watch: _watch);
+  }
+
+  /// One address book on the face at a time, a chip in place of the
+  /// chooser. The favourites are not among the chip's choices yet: their
+  /// list has no watch arrangement, and a face showing it would have no chip
+  /// to come back by.
+  Widget _watch(BuildContext context) {
+    return ContactsWatchSources(
+      style: widget.style ?? Theme.of(context).extension<ContactsScreenStyles>()?.primary,
+      title: widget.watchTitle,
+      sources: widget.selections.sourceTypes,
+      onSelected: (sourceType) => _onSelected(ContactsSourceSelection(sourceType)),
+      bookBuilder: (context, sourceType) => widget.sourceTypeWidgetBuilder(context, sourceType, markFavorites: true),
+      // A section with no address book left shows its favourites, as the
+      // phone does; their list has no watch arrangement yet.
+      noBookBuilder: (context) => widget.favoritesWidgetBuilder(context),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final themeData = Theme.of(context);
     final effectiveStyle = widget.style ?? themeData.extension<ContactsScreenStyles>()?.primary;
     final mediaQueryData = MediaQuery.of(context);

@@ -13,9 +13,11 @@ model or plugin of the app. How screens use it: [adaptive_layout.md](../../docs/
 - Face shape: `ScreenShape`, the value the app provides to the tree, and the `BuildContext`
   extension that answers `isRoundScreen`. Without a value, a square window of watch size counts
   as round.
-- Screen shapes: `WatchActionLayout`, `WatchEdgeLayout`, `WatchScrollList`, `WatchIconGrid`.
-- Parts: `WatchEdgeButton`, `WatchRoundButton`, `WatchKeyGrid`, `WatchListTile`, `WatchPill`,
-  `WatchTitle`, `WatchLink`, `WatchToggleChip`, `WatchFadeMask`, `WatchStadiumFields`.
+- Screen shapes: `WatchActionLayout`, `WatchEdgeLayout`, `WatchScrollList`, `WatchIconGrid`,
+  `WatchStatePage`, `WatchConfirm`.
+- Parts: `WatchEdgeButton`, `WatchRoundButton`, `WatchKeyGrid`, `WatchListTile`, `WatchListNote`,
+  `WatchPill`, `WatchPillButton`, `WatchTitle`, `WatchLink`, `WatchToggleChip`, `WatchSpinner`,
+  `WatchSeparator`, `WatchFadeMask`, `WatchStadiumFields`.
 - `SemanticAction`: one semantics node for an action, used across the app too.
 
 What stays in the app, because it needs the app: `queryScreenShape()` (asks `device_profile`),
