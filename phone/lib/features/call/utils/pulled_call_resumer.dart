@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:logging/logging.dart';
 import 'package:signaling/signaling.dart';
-import 'package:signaling_service/signaling_service.dart';
 
+import '../services/call_signaling.dart';
 import 'renegotiation_coordinator.dart';
 
 /// What the resume needs to know about a call, read afresh before each step:
@@ -39,7 +39,7 @@ typedef PulledCallView = ({
 class PulledCallResumer {
   PulledCallResumer({
     required RenegotiationCoordinator coordinator,
-    required SignalingModule signaling,
+    required CallSignaling signaling,
     required Future<RTCPeerConnection?> Function(String callId) peerConnection,
     required PulledCallView? Function(String callId) readCall,
     required void Function(String callId, RTCSessionDescription offer) prepareOffer,
@@ -53,7 +53,7 @@ class PulledCallResumer {
   static final _logger = Logger('PulledCallResumer');
 
   final RenegotiationCoordinator _coordinator;
-  final SignalingModule _signaling;
+  final CallSignaling _signaling;
   final Future<RTCPeerConnection?> Function(String callId) _peerConnection;
   final PulledCallView? Function(String callId) _readCall;
 
@@ -112,20 +112,16 @@ class PulledCallResumer {
       await _signaling.execute(
         UpdateRequest(transaction: transaction, line: line, callId: callId, jsep: offer.toMap()),
       );
-      final response = _signaling.events
-          .firstWhere(
-            (e) =>
-                e is SignalingProtocolEvent &&
-                e.event is SessionEvent &&
-                (e.event as SessionEvent).transaction == transaction,
-          )
-          .then((e) => (e as SignalingProtocolEvent).event)
-          .timeout(responseTimeout);
-
       // The answer is not worth holding the end of the call back: the end is
-      // queued behind this wait. A hold still waits, as a new INVITE must not
-      // start before this one completes (RFC 3261 14.1).
-      final result = await Future.any<Object?>([response, _coordinator.pullCallEnding(callId).then((_) => null)]);
+      // queued behind this wait, so the call ending gives the wait up - and it
+      // lets go of the session's events then, not at its timeout. A hold still
+      // waits, as a new INVITE must not start before this one completes
+      // (RFC 3261 14.1).
+      final result = await _signaling.responseUntil(
+        transaction,
+        timeout: responseTimeout,
+        until: _coordinator.pullCallEnding(callId),
+      );
       switch (result) {
         case null:
           _logger.info('resume of $callId abandoned, the call is ending');

@@ -18,6 +18,7 @@ import 'package:webtrit_phone/app/router/main_shell_blocs.dart';
 import 'package:webtrit_phone/app/router/main_shell_repositories.dart';
 import 'package:webtrit_phone/app/router/main_shell_services.dart';
 import 'package:webtrit_phone/app/router/startup_config_refresh.dart';
+import 'package:webtrit_phone/app/session/signaling_inbound.dart';
 import 'package:webtrit_phone/blocs/blocs.dart';
 import 'package:webtrit_phone/data/data.dart';
 import 'package:webtrit_phone/environment_config.dart';
@@ -62,6 +63,7 @@ class _MainShellState extends State<MainShell> {
   /// Late subscribers (including [CallBloc]) receive all buffered session
   /// events via the replay stream.
   late final SignalingModule _signalingModule;
+  late final SignalingInbound _signalingInbound;
 
   /// Lazily initialised on first [build] once [CallBloc], [CallRoutingCubit],
   /// and [NotificationsBloc] are available in the widget tree. The `??=`
@@ -130,6 +132,7 @@ class _MainShellState extends State<MainShell> {
       ),
       mode: context.read<IncomingCallTypeRepository>().getIncomingCallType().toSignalingServiceMode(),
     )..connect();
+    _signalingInbound = SignalingInbound(() => _signalingModule.events);
 
     _notificationsBloc = context.read<NotificationsBloc>();
 
@@ -196,6 +199,7 @@ class _MainShellState extends State<MainShell> {
             callkeep: _callkeep,
             callkeepConnections: _callkeepConnections,
             signalingModule: _signalingModule,
+            signalingInbound: _signalingInbound,
 
             /// The shell chrome: call, messaging and notification overlays around
             /// the nested [AutoRouter], with a [MainShellNavigatorObserver] attached.

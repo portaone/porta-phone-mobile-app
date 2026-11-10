@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:signaling/signaling.dart';
-import 'package:signaling_service/signaling_service.dart';
 
 import 'package:webtrit_phone/utils/utils.dart';
+
+import '../services/call_signaling.dart';
 
 sealed class RenegotiationCommand {
   const RenegotiationCommand(this.callId);
@@ -195,16 +195,8 @@ class RenegotiationCoordinator {
   /// `updating` flag, so a later update starts its own count of deferrals.
   void updatingSettled(String callId) => _updatingDeferrals.remove(callId);
 
-  bool isTransientSignalingFailure(Object error) {
-    // The signaling client throws a disconnected error when its socket closed
-    // between the module handing it the request and the send: the same loss
-    // of signaling as the others, only met a moment later.
-    return error is NotConnectedException ||
-        error is WebtritSignalingDisconnectedException ||
-        error is WebtritSignalingTransactionTimeoutException ||
-        error is WebtritSignalingTransactionTerminateByDisconnectException ||
-        error is TimeoutException;
-  }
+  /// See [isSignalingLoss].
+  bool isTransientSignalingFailure(Object error) => isSignalingLoss(error);
 
   /// Whether a local offer of this call is kept, replayable or still waiting
   /// for its answer.

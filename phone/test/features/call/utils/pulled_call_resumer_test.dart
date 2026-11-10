@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:signaling/signaling.dart';
 
+import 'package:webtrit_phone/features/call/services/call_signaling.dart';
 import 'package:webtrit_phone/features/call/utils/utils.dart';
 
 import '../bloc/call_bloc_harness.dart';
@@ -40,7 +41,7 @@ void main() {
     updating = [];
     resumer = PulledCallResumer(
       coordinator: coordinator,
-      signaling: signaling,
+      signaling: ModuleCallSignaling(signaling, events: signaling.events),
       peerConnection: (_) async => peer,
       readCall: (_) => call,
       prepareOffer: (_, _) {},
