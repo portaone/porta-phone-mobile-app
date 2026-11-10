@@ -50,9 +50,19 @@ final class DualTabState extends TabsState {
 }
 
 class ConversationsScreen extends StatefulWidget {
-  const ConversationsScreen({super.key, required this.title, required this.initialTabsState, this.style});
+  const ConversationsScreen({
+    super.key,
+    required this.title,
+    required this.watchTitle,
+    required this.initialTabsState,
+    this.style,
+  });
 
   final Widget title;
+
+  /// The section's name, heading the list on a watch.
+  final String watchTitle;
+
   final TabsState initialTabsState;
   final ConversationsScreenStyle? style;
 
@@ -70,6 +80,10 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
   late TabController _tabController;
   late final List<ConversationsTab> _tabs;
   late int _currentIndex;
+
+  /// What the watch's search narrows the lists by; both lists take it, as on
+  /// the phone.
+  String _query = '';
 
   @override
   void initState() {
@@ -170,8 +184,55 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
     );
   }
 
+  void _search(String value) {
+    setState(() => _query = value);
+    _narrow(value);
+  }
+
+  /// The phone's box holds its own text, so nothing is rebuilt; the query is
+  /// kept for the watch's row all the same, should the window become a
+  /// watch's - the lists stay narrowed by it.
+  void _searchOnPhone(String value) {
+    _query = value;
+    _narrow(value);
+  }
+
+  void _narrow(String value) {
+    context.readOrNull<ChatConversationsCubit>()?.updateSearch(value);
+    context.readOrNull<SmsConversationsCubit>()?.updateSearch(value);
+  }
+
   @override
   Widget build(BuildContext context) {
+    return AdaptiveLayout(handset: _handset, watch: _watch);
+  }
+
+  /// One list on the face at a time, a pill in place of the tabs; the pill
+  /// moves the tab controller, so both arrangements remember the same list.
+  Widget _watch(BuildContext context) {
+    final effectiveStyle = widget.style ?? Theme.of(context).extension<ConversationsScreenStyles>()?.primary;
+    final tab = _tabs[_currentIndex];
+    return ThemedScaffold(
+      background: effectiveStyle?.background,
+      contentThemeOverride: effectiveStyle?.contentThemeOverride ?? ThemeMode.system,
+      body: ConversationsWatchBody(
+        section: WatchSection(
+          title: widget.watchTitle,
+          options: _tabs,
+          selected: tab,
+          onSelected: (next) => _tabController.index = _tabs.indexOf(next),
+        ),
+        query: _query,
+        onSearch: _search,
+        onNew: switch (tab) {
+          ConversationsTab.chat => onNewChatConversation,
+          ConversationsTab.sms => onNewSmsConversation,
+        },
+      ),
+    );
+  }
+
+  Widget _handset(BuildContext context) {
     final themeData = Theme.of(context);
     final effectiveStyle = widget.style ?? themeData.extension<ConversationsScreenStyles>()?.primary;
     final colorScheme = themeData.colorScheme;
@@ -233,10 +294,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> with SingleTi
           identifier: conversationsSearchInputId,
           clearButtonKey: conversationsSearchInputClearKey,
           clearButtonIdentifier: conversationsSearchInputClearId,
-          onChanged: (value) {
-            context.readOrNull<ChatConversationsCubit>()?.updateSearch(value);
-            context.readOrNull<SmsConversationsCubit>()?.updateSearch(value);
-          },
+          onChanged: _searchOnPhone,
           onSubmitted: (value) => {},
           iconConstraints: const BoxConstraints.expand(
             width: kMainAppBarBottomControlHeight,

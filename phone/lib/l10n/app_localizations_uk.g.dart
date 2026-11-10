@@ -2060,6 +2060,33 @@ class AppLocalizationsUk extends AppLocalizations {
   String get messaging_StateBar_connecting => 'ПІДКЛЮЧЕННЯ';
 
   @override
+  String get messaging_Watch_search => 'Пошук у чатах';
+
+  @override
+  String get messaging_Watch_searchSms => 'Пошук у SMS';
+
+  @override
+  String get messaging_Watch_list => 'Список';
+
+  @override
+  String get messaging_Watch_statusInitializing => 'Запуск чатів';
+
+  @override
+  String get messaging_Watch_statusConnecting => 'Підключення до чатів';
+
+  @override
+  String get messaging_Watch_statusDisconnected => 'Чати не підключені';
+
+  @override
+  String get messaging_Watch_notFound => 'Розмов не знайдено';
+
+  @override
+  String get messaging_Watch_newChat => 'Новий чат';
+
+  @override
+  String get messaging_Watch_newSms => 'Нове SMS';
+
+  @override
   String get messaging_StateBar_error => 'ВІДКЛЮЧЕНО';
 
   @override

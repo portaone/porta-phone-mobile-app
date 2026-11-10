@@ -886,6 +886,17 @@ extension AppLocalizationsExtension on AppLocalizations {
       'messaging_SmsSendingStatus_waiting' =>
         messaging_SmsSendingStatus_waiting,
       'messaging_StateBar_connecting' => messaging_StateBar_connecting,
+      'messaging_Watch_search' => messaging_Watch_search,
+      'messaging_Watch_searchSms' => messaging_Watch_searchSms,
+      'messaging_Watch_list' => messaging_Watch_list,
+      'messaging_Watch_statusInitializing' =>
+        messaging_Watch_statusInitializing,
+      'messaging_Watch_statusConnecting' => messaging_Watch_statusConnecting,
+      'messaging_Watch_statusDisconnected' =>
+        messaging_Watch_statusDisconnected,
+      'messaging_Watch_notFound' => messaging_Watch_notFound,
+      'messaging_Watch_newChat' => messaging_Watch_newChat,
+      'messaging_Watch_newSms' => messaging_Watch_newSms,
       'messaging_StateBar_error' => messaging_StateBar_error,
       'messaging_StateBar_initializing' => messaging_StateBar_initializing,
       'notifications_errorSnackBarAction_callSdpConfiguration' =>

@@ -3680,6 +3680,60 @@ abstract class AppLocalizations {
   /// **'CONNECTING'**
   String get messaging_StateBar_connecting;
 
+  /// On a watch, the name of the round search button over the conversations.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats'**
+  String get messaging_Watch_search;
+
+  /// Watch: the search button over the SMS conversations, read by a screen reader
+  ///
+  /// In en, this message translates to:
+  /// **'Search SMS'**
+  String get messaging_Watch_searchSms;
+
+  /// Watch: what the pill that switches between Messages and SMS is, read before its value by a screen reader ("List: SMS")
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get messaging_Watch_list;
+
+  /// Watch: the line under the chats while the chat connection is starting
+  ///
+  /// In en, this message translates to:
+  /// **'Starting chats'**
+  String get messaging_Watch_statusInitializing;
+
+  /// Watch: the line under the chats while the chat connection is being made
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to chats'**
+  String get messaging_Watch_statusConnecting;
+
+  /// Watch: the line under the chats when the chat connection is down
+  ///
+  /// In en, this message translates to:
+  /// **'Chats are offline'**
+  String get messaging_Watch_statusDisconnected;
+
+  /// On a watch, the line in place of the conversations a search found none of.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations found'**
+  String get messaging_Watch_notFound;
+
+  /// On a watch, the short label of the button that starts a chat; a screen reader says the full name.
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get messaging_Watch_newChat;
+
+  /// On a watch, the short label of the button that starts an SMS conversation; a screen reader says the full name.
+  ///
+  /// In en, this message translates to:
+  /// **'New SMS'**
+  String get messaging_Watch_newSms;
+
   /// Shown in the messaging state bar when the app is disconnected from the messaging server. Condition: connection lost or unable to establish a connection.
   ///
   /// In en, this message translates to:

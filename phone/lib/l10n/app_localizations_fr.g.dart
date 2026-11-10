@@ -2054,6 +2054,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messaging_StateBar_connecting => 'CONNEXION';
 
   @override
+  String get messaging_Watch_search => 'Rechercher';
+
+  @override
+  String get messaging_Watch_searchSms => 'Rechercher des SMS';
+
+  @override
+  String get messaging_Watch_list => 'Liste';
+
+  @override
+  String get messaging_Watch_statusInitializing => 'Démarrage des discussions';
+
+  @override
+  String get messaging_Watch_statusConnecting => 'Connexion aux discussions';
+
+  @override
+  String get messaging_Watch_statusDisconnected => 'Discussions hors ligne';
+
+  @override
+  String get messaging_Watch_notFound => 'Aucune conversation trouvée';
+
+  @override
+  String get messaging_Watch_newChat => 'Nouveau chat';
+
+  @override
+  String get messaging_Watch_newSms => 'Nouveau SMS';
+
+  @override
   String get messaging_StateBar_error => 'DÉCONNEXION';
 
   @override
