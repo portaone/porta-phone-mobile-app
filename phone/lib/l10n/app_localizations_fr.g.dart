@@ -2081,6 +2081,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messaging_Watch_newSms => 'Nouveau SMS';
 
   @override
+  String get messaging_Watch_mine => 'Vous';
+
+  @override
+  String get messaging_Watch_markDelivered => 'Distribué';
+
+  @override
+  String get messaging_Watch_markPending => 'Envoi';
+
+  @override
+  String get messaging_Watch_markSent => 'Envoyé';
+
+  @override
+  String get messaging_Watch_markRead => 'Lu';
+
+  @override
   String get messaging_StateBar_error => 'DÉCONNEXION';
 
   @override

@@ -41,7 +41,8 @@ class WatchScrollList extends StatelessWidget {
        itemCount = 0,
        itemBuilder = null,
        controller = null,
-       edge = null;
+       edge = null,
+       reverse = false;
 
   const WatchScrollList.builder({
     super.key,
@@ -52,6 +53,7 @@ class WatchScrollList extends StatelessWidget {
     this.spacing = 0,
     this.controller,
     this.edge,
+    this.reverse = false,
   }) : children = const [],
        bottom = null,
        opaque = false;
@@ -86,6 +88,10 @@ class WatchScrollList extends StatelessWidget {
   /// Builds the edge button of a [WatchScrollList.builder] over [overlay], the
   /// edge button's size and shape, to merge over the screen's own style.
   final Widget Function(BuildContext context, ButtonStyle overlay)? edge;
+
+  /// Row 0 at the bottom, the list opening there and scrolling up to the
+  /// older rows and the title - a conversation, newest message last.
+  final bool reverse;
 
   static const _fadeHeight = 26.0;
 
@@ -154,24 +160,27 @@ class WatchScrollList extends StatelessWidget {
     ];
     final edge = this.edge;
     final reserved = edge == null ? 0.0 : WatchEdgeButton.reservedHeight(context);
+    final padding = context.watchListPadding(minBottom: reserved + _fadeHeight + gap);
     final list = WatchFadeMask(
       bottomInset: reserved,
       fadeHeight: _fadeHeight,
-      child: ListView.builder(
-        controller: controller,
-        padding: context.watchListPadding(minBottom: reserved + _fadeHeight + gap),
-        itemCount: lead.length + itemCount,
-        itemBuilder: (context, index) {
-          if (index < lead.length) return lead[index];
-          final row = index - lead.length;
-          final child = itemBuilder(context, row);
-          if (row == 0 || spacing == 0) return child;
-          return Padding(
-            padding: EdgeInsets.only(top: spacing),
-            child: child,
-          );
-        },
-      ),
+      child: reverse
+          ? _reversed(padding, lead, itemBuilder)
+          : ListView.builder(
+              controller: controller,
+              padding: padding,
+              itemCount: lead.length + itemCount,
+              itemBuilder: (context, index) {
+                if (index < lead.length) return lead[index];
+                final row = index - lead.length;
+                final child = itemBuilder(context, row);
+                if (row == 0 || spacing == 0) return child;
+                return Padding(
+                  padding: EdgeInsets.only(top: spacing),
+                  child: child,
+                );
+              },
+            ),
     );
     if (edge == null) return list;
     return Stack(
@@ -180,6 +189,42 @@ class WatchScrollList extends StatelessWidget {
         Align(
           alignment: Alignment.bottomCenter,
           child: WatchEdgeButton(builder: edge),
+        ),
+      ],
+    );
+  }
+
+  /// Row 0 at the bottom, the rows going up from it; the title and header
+  /// above the oldest row, held to the top of the face while the rows are
+  /// too few to fill it - a short conversation keeps its name at the top.
+  Widget _reversed(EdgeInsets padding, List<Widget> lead, IndexedWidgetBuilder itemBuilder) {
+    return CustomScrollView(
+      controller: controller,
+      reverse: true,
+      slivers: [
+        SliverPadding(
+          padding: padding.copyWith(top: 0),
+          sliver: SliverList.builder(
+            itemCount: itemCount,
+            itemBuilder: (context, index) {
+              final child = itemBuilder(context, index);
+              if (index == 0 || spacing == 0) return child;
+              return Padding(
+                padding: EdgeInsets.only(bottom: spacing),
+                child: child,
+              );
+            },
+          ),
+        ),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(padding.left, padding.top, padding.right, 0),
+          sliver: SliverFillRemaining(
+            hasScrollBody: false,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Column(mainAxisSize: MainAxisSize.min, children: lead),
+            ),
+          ),
         ),
       ],
     );

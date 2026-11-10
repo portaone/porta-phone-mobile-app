@@ -2074,6 +2074,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messaging_Watch_newSms => 'Nuovo SMS';
 
   @override
+  String get messaging_Watch_mine => 'Tu';
+
+  @override
+  String get messaging_Watch_markDelivered => 'Consegnato';
+
+  @override
+  String get messaging_Watch_markPending => 'Invio';
+
+  @override
+  String get messaging_Watch_markSent => 'Inviato';
+
+  @override
+  String get messaging_Watch_markRead => 'Letto';
+
+  @override
   String get messaging_StateBar_error => 'DISCONNESSO';
 
   @override
