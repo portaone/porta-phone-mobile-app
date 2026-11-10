@@ -2016,6 +2016,33 @@ class AppLocalizationsTh extends AppLocalizations {
   String get messaging_StateBar_connecting => 'กำลังเชื่อมต่อ';
 
   @override
+  String get messaging_Watch_search => 'ค้นหาแชท';
+
+  @override
+  String get messaging_Watch_searchSms => 'ค้นหา SMS';
+
+  @override
+  String get messaging_Watch_list => 'รายการ';
+
+  @override
+  String get messaging_Watch_statusInitializing => 'กำลังเริ่มแชท';
+
+  @override
+  String get messaging_Watch_statusConnecting => 'กำลังเชื่อมต่อแชท';
+
+  @override
+  String get messaging_Watch_statusDisconnected => 'แชทออฟไลน์';
+
+  @override
+  String get messaging_Watch_notFound => 'ไม่พบการสนทนา';
+
+  @override
+  String get messaging_Watch_newChat => 'แชทใหม่';
+
+  @override
+  String get messaging_Watch_newSms => 'SMS ใหม่';
+
+  @override
   String get messaging_StateBar_error => 'ถูกตัดการเชื่อมต่อ';
 
   @override

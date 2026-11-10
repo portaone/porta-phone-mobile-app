@@ -465,6 +465,10 @@ const conversationsTabChatKey = Key(conversationsTabChatId);
 const String conversationsTabSmsId = 'conversationsTabSms';
 const conversationsTabSmsKey = Key(conversationsTabSmsId);
 
+/// The list pill of the conversations on a watch, in place of the tabs.
+const String conversationsWatchListId = 'conversationsWatchList';
+const conversationsWatchListKey = Key(conversationsWatchListId);
+
 const String conversationsSearchInputId = 'conversationsSearchInput';
 const conversationsSearchInputKey = Key(conversationsSearchInputId);
 const String conversationsSearchInputClearId = 'conversationsSearchInputClear';

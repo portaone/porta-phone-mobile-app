@@ -17,6 +17,7 @@ export 'src/watch_pill.dart';
 export 'src/watch_pill_button.dart';
 export 'src/watch_round_button.dart';
 export 'src/watch_scroll_list.dart';
+export 'src/watch_search_row.dart';
 export 'src/watch_separator.dart';
 export 'src/watch_spinner.dart';
 export 'src/watch_stadium_fields.dart';

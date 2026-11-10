@@ -40,7 +40,7 @@ class SmsConversationsCubit extends Cubit<SmsConversationsState> {
               final (conversations, search) = data;
               final sorted = List<(SmsConversation, SmsMessage?)>.from(conversations);
               sorted.sort(_comparator);
-              final filtered = _filterBySearch(search, sorted);
+              final filtered = filterBySearch(search, sorted);
               return (sorted, filtered);
             }, (event, _searchString));
 
@@ -50,7 +50,7 @@ class SmsConversationsCubit extends Cubit<SmsConversationsState> {
             final (raw, toShow) = await compute((data) {
               final (conversation, conversations, search) = data;
               final newList = _mergeWithChatUpdate(conversation, conversations);
-              final filtered = _filterBySearch(search, newList);
+              final filtered = filterBySearch(search, newList);
               return (newList, filtered);
             }, (event.conversation, state.conversations, _searchString));
 
@@ -60,7 +60,7 @@ class SmsConversationsCubit extends Cubit<SmsConversationsState> {
             final (raw, toShow) = await compute((data) {
               final (conversationId, conversations, search) = data;
               final newList = _removeChat(conversationId, conversations);
-              final filtered = _filterBySearch(search, newList);
+              final filtered = filterBySearch(search, newList);
               return (newList, filtered);
             }, (event.conversationId, state.conversations, _searchString));
 
@@ -70,7 +70,7 @@ class SmsConversationsCubit extends Cubit<SmsConversationsState> {
             final (raw, toShow) = await compute((data) {
               final (message, conversations, search) = data;
               final newList = _mergeWithMessageUpdate(message, conversations);
-              final filtered = _filterBySearch(search, newList);
+              final filtered = filterBySearch(search, newList);
               return (newList, filtered);
             }, (event.message, state.conversations, _searchString));
 
@@ -103,7 +103,7 @@ class SmsConversationsCubit extends Cubit<SmsConversationsState> {
   Future<void> _doUpdateSearch() async {
     final conversationsToShow = await compute((data) {
       final (search, conversations) = data;
-      return _filterBySearch(search, conversations);
+      return filterBySearch(search, conversations);
     }, (_searchString, state.conversations));
     if (isClosed) return;
     emit(state.copyWith(conversationsToShow: conversationsToShow));
@@ -153,18 +153,21 @@ class SmsConversationsCubit extends Cubit<SmsConversationsState> {
     return conversations.where((e) => e.$1.id != id).toList();
   }
 
-  static List<(SmsConversation, SmsMessage?)> _filterBySearch(
+  @visibleForTesting
+  static List<(SmsConversation, SmsMessage?)> filterBySearch(
     String search,
     List<(SmsConversation, SmsMessage?)> conversations,
   ) {
     if (search.isEmpty) return conversations;
+    // Any case finds a message: a watch keyboard capitalises the first letter.
+    final query = search.toLowerCase();
 
     return conversations.where((e) {
       final (conversation, lastMessage) = e;
       final phones = conversation.firstPhoneNumber.toLowerCase() + conversation.secondPhoneNumber.toLowerCase();
-      final lastMessageText = lastMessage?.content ?? '';
+      final lastMessageText = lastMessage?.content.toLowerCase() ?? '';
 
-      return phones.contains(search) || lastMessageText.contains(search);
+      return phones.contains(query) || lastMessageText.contains(query);
     }).toList();
   }
 

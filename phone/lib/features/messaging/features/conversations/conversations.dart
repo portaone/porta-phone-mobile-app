@@ -3,4 +3,5 @@ export 'cubit/sms_conversations_cubit.dart';
 export 'view/conversations_screen.dart';
 export 'view/conversations_screen_unsupported.dart';
 export 'view/conversations_screen_page.dart';
+export 'view/conversations_screen_watch.dart';
 export 'widgets/widgets.dart';

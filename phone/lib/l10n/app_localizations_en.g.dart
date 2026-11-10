@@ -2028,6 +2028,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messaging_StateBar_connecting => 'CONNECTING';
 
   @override
+  String get messaging_Watch_search => 'Search chats';
+
+  @override
+  String get messaging_Watch_searchSms => 'Search SMS';
+
+  @override
+  String get messaging_Watch_list => 'List';
+
+  @override
+  String get messaging_Watch_statusInitializing => 'Starting chats';
+
+  @override
+  String get messaging_Watch_statusConnecting => 'Connecting to chats';
+
+  @override
+  String get messaging_Watch_statusDisconnected => 'Chats are offline';
+
+  @override
+  String get messaging_Watch_notFound => 'No conversations found';
+
+  @override
+  String get messaging_Watch_newChat => 'New chat';
+
+  @override
+  String get messaging_Watch_newSms => 'New SMS';
+
+  @override
   String get messaging_StateBar_error => 'DISCONNECTED';
 
   @override

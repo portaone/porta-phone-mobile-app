@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:auto_route/auto_route.dart';
@@ -275,215 +274,30 @@ class ContactsWatchSourceChip extends StatelessWidget {
   }
 }
 
-/// The row over a contacts list on a watch: the search and the address book
-/// side by side, so the first contact is in view on a small face. With no
-/// query, a round search button and the book as a pill; with one, the query
-/// takes the row as a pill with its cross and the book shrinks to a round
-/// button. With one book there is nothing to choose, and the search takes the
-/// row as a pill.
-///
-/// The search is a button, not a field: a watch's keyboard takes the whole
-/// face with a line of its own to type in, so a box on the list to type into
-/// would never be seen. Under the row is a field nobody sees, the one the
-/// keyboard types into - without it the app cannot ask for a keyboard. It is
-/// the same field whichever shape the row takes, so the keyboard stays open
-/// while the query appears; what it holds shows in the row as it is typed,
-/// for a watch whose keyboard leaves the face in view. Same keys and ids as
-/// the phone's box.
-class ContactsWatchToolbar extends StatefulWidget {
+/// The row over a contacts list on a watch ([WatchSearchRow]): the search and
+/// the address book side by side - a round search button and the book as a
+/// pill, or the query as a pill and the book as a round button; with one book
+/// the search takes the row. Same keys and ids as the phone's box.
+class ContactsWatchToolbar extends StatelessWidget {
   const ContactsWatchToolbar({super.key, required this.section});
 
   final WatchSection<ContactsListSelection> section;
 
   @override
-  State<ContactsWatchToolbar> createState() => _ContactsWatchToolbarState();
-}
-
-class _ContactsWatchToolbarState extends State<ContactsWatchToolbar> {
-  late final _controller = TextEditingController(text: context.read<ContactsBloc>().state.search);
-  final _focus = FocusNode();
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // A page or a dialog over the list: the field may not take focus back
-    // when it closes. The keyboard closed with Back leaves the field focused,
-    // and the route handing focus back would bring the keyboard up again over
-    // a list nobody is searching. The search button lets it again.
-    if (ModalRoute.isCurrentOf(context) == false) _focus.canRequestFocus = false;
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focus.dispose();
-    super.dispose();
-  }
-
-  void _open() {
-    _focus.canRequestFocus = true;
-    if (_focus.hasFocus) {
-      // Focused already, the keyboard may have been closed with Back: ask
-      // for it again.
-      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
-    } else {
-      _focus.requestFocus();
-    }
-  }
-
-  void _clear() {
-    _controller.clear();
-    context.read<ContactsBloc>().add(const ContactsSearchChanged(''));
-  }
-
-  @override
   Widget build(BuildContext context) {
     final contactsBloc = context.read<ContactsBloc>();
-    final section = widget.section;
-    final books = section.choosable;
-
-    return Stack(
-      children: [
-        // Out of sight and out of reach: the keyboard's target only.
-        Positioned(
-          left: 0,
-          top: 0,
-          width: 1,
-          height: 1,
-          child: ExcludeSemantics(
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: 0,
-                child: TextField(
-                  key: contactsSearchInputKey,
-                  controller: _controller,
-                  focusNode: _focus,
-                  textInputAction: TextInputAction.search,
-                  onChanged: (value) => contactsBloc.add(ContactsSearchChanged(value)),
-                  onSubmitted: (value) {
-                    contactsBloc.add(ContactsSearchSubmitted(value));
-                    _focus.unfocus();
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
-        ValueListenableBuilder<TextEditingValue>(
-          valueListenable: _controller,
-          builder: (context, value, _) {
-            final query = value.text;
-            final search = _SearchPill(query: query, onOpen: _open, onClear: _clear);
-            if (!books) return search;
-            return Row(
-              spacing: 8,
-              children: query.isEmpty
-                  ? [_RoundSearch(onOpen: _open), Expanded(child: ContactsWatchSourceChip(section: section))]
-                  : [Expanded(child: search), ContactsWatchSourceChip(section: section, round: true)],
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-/// The search as a round button, beside the book's pill while nothing is
-/// searched for.
-class _RoundSearch extends StatelessWidget {
-  const _RoundSearch({required this.onOpen});
-
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    return WatchRoundButton(
-      identifier: contactsSearchInputId,
-      label: context.l10n.contacts_ContactsScreen_searchSemanticsLabel,
-      icon: const Icon(Icons.search),
-      size: WatchPill.height,
-      width: WatchPill.height,
-      onPressed: onOpen,
-    );
-  }
-}
-
-/// The search as a pill: its name, or the query with a cross to clear it.
-class _SearchPill extends StatelessWidget {
-  const _SearchPill({required this.query, required this.onOpen, required this.onClear});
-
-  final String query;
-  final VoidCallback onOpen;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final themeData = Theme.of(context);
-    final colorScheme = themeData.colorScheme;
-    final textTheme = themeData.textTheme;
     final l10n = context.l10n;
-    final name = l10n.contacts_ContactsScreen_searchSemanticsLabel;
-
-    return Material(
-      color: colorScheme.surfaceContainerHighest,
-      shape: const StadiumBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: Row(
-        children: [
-          Expanded(
-            child: SemanticAction(
-              label: query.isEmpty ? name : query,
-              identifier: contactsSearchInputId,
-              child: InkWell(
-                onTap: onOpen,
-                // The pill's name is the label above; its words are for the eye.
-                child: ExcludeSemantics(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: WatchPill.height),
-                    child: Padding(
-                      padding: EdgeInsetsDirectional.only(start: query.isEmpty ? 12 : 14, end: query.isEmpty ? 16 : 0),
-                      child: Row(
-                        spacing: 8,
-                        children: [
-                          // With a query the pill sits beside the book's button and the
-                          // cross needs its room; the query and the cross say what it is.
-                          if (query.isEmpty) Icon(Icons.search, size: 20, color: colorScheme.onSurfaceVariant),
-                          Expanded(
-                            child: Text(
-                              query.isEmpty ? name : query,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: query.isEmpty
-                                  ? textTheme.labelLarge?.copyWith(color: colorScheme.onSurfaceVariant)
-                                  : textTheme.labelLarge,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          if (query.isNotEmpty)
-            SemanticAction(
-              label: l10n.contacts_SemanticsLabel_clearSearch,
-              identifier: contactsSearchInputClearId,
-              // Narrow, full height: beside the book's button the query
-              // needs the width more than the cross does.
-              child: IconButton(
-                key: contactsSearchInputClearKey,
-                icon: const Icon(Icons.close, size: 18),
-                color: colorScheme.onSurfaceVariant,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(width: 36, height: WatchPill.height),
-                style: IconButton.styleFrom(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                onPressed: onClear,
-              ),
-            ),
-        ],
-      ),
+    return WatchSearchRow(
+      initialQuery: contactsBloc.state.search,
+      onChanged: (value) => contactsBloc.add(ContactsSearchChanged(value)),
+      onSubmitted: (value) => contactsBloc.add(ContactsSearchSubmitted(value)),
+      chooser: section.choosable ? ({required round}) => ContactsWatchSourceChip(section: section, round: round) : null,
+      searchLabel: l10n.contacts_ContactsScreen_searchSemanticsLabel,
+      clearLabel: l10n.contacts_SemanticsLabel_clearSearch,
+      fieldKey: contactsSearchInputKey,
+      searchIdentifier: contactsSearchInputId,
+      clearKey: contactsSearchInputClearKey,
+      clearIdentifier: contactsSearchInputClearId,
     );
   }
 }

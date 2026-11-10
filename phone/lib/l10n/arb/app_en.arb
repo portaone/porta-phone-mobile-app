@@ -1976,6 +1976,42 @@
   "@messaging_SmsSendingStatus_waiting": {},
   "messaging_StateBar_connecting": "CONNECTING",
   "@messaging_StateBar_connecting": {},
+  "messaging_Watch_search": "Search chats",
+  "@messaging_Watch_search": {
+    "description": "On a watch, the name of the round search button over the conversations."
+  },
+  "messaging_Watch_searchSms": "Search SMS",
+  "@messaging_Watch_searchSms": {
+    "description": "Watch: the search button over the SMS conversations, read by a screen reader"
+  },
+  "messaging_Watch_list": "List",
+  "@messaging_Watch_list": {
+    "description": "Watch: what the pill that switches between Messages and SMS is, read before its value by a screen reader (\"List: SMS\")"
+  },
+  "messaging_Watch_statusInitializing": "Starting chats",
+  "@messaging_Watch_statusInitializing": {
+    "description": "Watch: the line under the chats while the chat connection is starting"
+  },
+  "messaging_Watch_statusConnecting": "Connecting to chats",
+  "@messaging_Watch_statusConnecting": {
+    "description": "Watch: the line under the chats while the chat connection is being made"
+  },
+  "messaging_Watch_statusDisconnected": "Chats are offline",
+  "@messaging_Watch_statusDisconnected": {
+    "description": "Watch: the line under the chats when the chat connection is down"
+  },
+  "messaging_Watch_notFound": "No conversations found",
+  "@messaging_Watch_notFound": {
+    "description": "On a watch, the line in place of the conversations a search found none of."
+  },
+  "messaging_Watch_newChat": "New chat",
+  "@messaging_Watch_newChat": {
+    "description": "On a watch, the short label of the button that starts a chat; a screen reader says the full name."
+  },
+  "messaging_Watch_newSms": "New SMS",
+  "@messaging_Watch_newSms": {
+    "description": "On a watch, the short label of the button that starts an SMS conversation; a screen reader says the full name."
+  },
   "messaging_StateBar_error": "DISCONNECTED",
   "@messaging_StateBar_error": {
     "description": "Shown in the messaging state bar when the app is disconnected from the messaging server. Condition: connection lost or unable to establish a connection."
